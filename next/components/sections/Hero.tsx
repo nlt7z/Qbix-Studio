@@ -1,13 +1,55 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import CubeGrid from '@/components/CubeGrid';
 import CubeGlyph from '@/components/CubeGlyph';
 import ContactModal from '@/components/ContactModal';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+const EASE_SPRING = [0.34, 1.4, 0.46, 1] as const;
+
+/**
+ * Per-word reveal. Each word fades + rises + de-blurs on its own micro-spring
+ * so the headline reads as a writing rhythm, not a single block.
+ */
+function WordReveal({
+  text,
+  baseDelay = 0,
+  step = 0.055,
+  className,
+  children,
+}: {
+  text?: string;
+  baseDelay?: number;
+  step?: number;
+  className?: string;
+  children?: ReactNode;
+}) {
+  const words = text ? text.split(' ') : [];
+  return (
+    <span className={className}>
+      {words.map((w, i) => (
+        <motion.span
+          key={i}
+          style={{ display: 'inline-block', whiteSpace: 'pre' }}
+          initial={{ opacity: 0, y: 28, filter: 'blur(14px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{
+            duration: 0.95,
+            ease: EASE_SPRING,
+            delay: baseDelay + i * step,
+          }}
+        >
+          {w}
+          {i < words.length - 1 ? ' ' : ''}
+        </motion.span>
+      ))}
+      {children}
+    </span>
+  );
+}
 
 export default function Hero() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,30 +73,39 @@ export default function Hero() {
           </motion.div>
 
           <h1 className="hero-title">
-            <motion.span
+            <WordReveal
               className="line"
-              initial={{ opacity: 0, y: 36, filter: 'blur(22px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 1.25, ease: EASE_OUT, delay: 0.18 }}
-            >
-              Building with AI is table stakes.
-            </motion.span>
-            <motion.span
-              className="line italic"
-              initial={{ opacity: 0, y: 44, filter: 'blur(26px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 1.45, ease: EASE_OUT, delay: 0.36 }}
-            >
-              We hold the line on{' '}
-              <span className="signal-bg">taste, craft, logic.</span>
-            </motion.span>
+              text="Building with AI is table stakes."
+              baseDelay={0.18}
+              step={0.06}
+            />
+            <span className="line italic">
+              <WordReveal
+                text="We hold the line on"
+                baseDelay={0.62}
+                step={0.06}
+              />
+              <motion.span
+                className="signal-bg"
+                style={{ display: 'inline-block', whiteSpace: 'pre' }}
+                initial={{ opacity: 0, y: 28, filter: 'blur(14px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{
+                  duration: 1.05,
+                  ease: EASE_SPRING,
+                  delay: 0.62 + 4 * 0.06,
+                }}
+              >
+                {' '}taste, craft, logic.
+              </motion.span>
+            </span>
           </h1>
 
           <motion.p
             className="hero-sub"
             initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.9 }}
+            transition={{ duration: 0.6, ease: EASE_OUT, delay: 1.55 }}
           >
             An AI-native product and software studio. Strategy, interface, and the
             AI itself — built by the team that designs it.
@@ -64,7 +115,7 @@ export default function Hero() {
             className="hero-ctas"
             initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.5, ease: EASE_OUT, delay: 1.1 }}
+            transition={{ duration: 0.5, ease: EASE_OUT, delay: 1.85 }}
           >
             <button
               type="button"

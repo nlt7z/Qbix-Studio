@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { processSteps, type ProcessStep } from '@/lib/data';
 import { Reveal, Stagger, RevealItem } from '@/components/Reveal';

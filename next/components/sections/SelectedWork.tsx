@@ -28,7 +28,12 @@ export default function SelectedWork() {
               className="feature-case-media"
               aria-label={`Open ${bidking.title}`}
             >
-              <Reveal className="feature-case-frame" speed="cinematic" delay={0.1}>
+              <Reveal
+                className="feature-case-frame"
+                speed="cinematic"
+                gesture="media"
+                delay={0.1}
+              >
                 <LazyVideo src={bidking.media.src} poster={bidking.media.poster} />
               </Reveal>
             </Link>
@@ -76,6 +81,8 @@ export default function SelectedWork() {
                 key={item.src}
                 className="brand-item"
                 speed="base"
+                gesture="tilt"
+                index={i}
                 delay={0.08 + i * 0.07}
               >
                 <div className="brand-item-frame">

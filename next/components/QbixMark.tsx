@@ -38,12 +38,12 @@ export default function QbixMark({
           aria-hidden
           style={{
             fontFamily: 'var(--font-headline)',
-            fontStyle: 'italic',
-            fontWeight: 400,
-            fontSize: height * 0.92,
-            letterSpacing: '-0.025em',
+            fontStyle: 'normal',
+            fontWeight: 600,
+            fontSize: height * 0.86,
+            letterSpacing: '-0.045em',
             color: 'var(--ink)',
-            transform: 'translateY(2%)',
+            lineHeight: 1,
           }}
         >
           bix

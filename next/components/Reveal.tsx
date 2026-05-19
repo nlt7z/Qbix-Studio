@@ -5,8 +5,16 @@ import { type ComponentProps, type ElementType, type ReactNode } from 'react';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 const EASE_BACK = [0.22, 1.2, 0.36, 1] as const;
+const EASE_SPRING = [0.34, 1.4, 0.46, 1] as const;
 
 export type RevealSpeed = 'snap' | 'fast' | 'base' | 'slow' | 'cinematic';
+/**
+ * Gesture vocabulary — one of three motion *meanings*:
+ *   rise   : default fade + y-offset + blur (entrance grammar)
+ *   media  : scale-from-95 + 0.5° x-skew + blur (project/work media reveal)
+ *   tilt   : random small rotate + y-offset (brand objects, props-on-table)
+ */
+export type RevealGesture = 'rise' | 'media' | 'tilt';
 
 type SpeedSpec = { duration: number; y: number; blur: number };
 
@@ -18,6 +26,72 @@ const SPEEDS: Record<RevealSpeed, SpeedSpec> = {
   cinematic: { duration: 1.5,  y: 44, blur: 26 },
 };
 
+function gestureFor(
+  gesture: RevealGesture,
+  yPx: number,
+  blurPx: number,
+  index: number,
+) {
+  switch (gesture) {
+    case 'media':
+      return {
+        hidden: {
+          opacity: 0,
+          y: yPx * 0.45,
+          scale: 0.96,
+          skewX: '0.5deg',
+          filter: `blur(${blurPx}px)`,
+        },
+        show: {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          skewX: '0deg',
+          filter: 'blur(0px)',
+        },
+      };
+    case 'tilt': {
+      // Alternate rotation direction by index for an organic "props on a table" feel.
+      const dir = index % 2 === 0 ? 1 : -1;
+      const rot = (0.6 + (index % 3) * 0.4) * dir;
+      return {
+        hidden: {
+          opacity: 0,
+          y: yPx * 0.7,
+          rotate: rot * 1.6,
+          filter: `blur(${blurPx}px)`,
+        },
+        show: {
+          opacity: 1,
+          y: 0,
+          rotate: 0,
+          filter: 'blur(0px)',
+        },
+      };
+    }
+    case 'rise':
+    default:
+      return {
+        hidden: {
+          opacity: 0,
+          y: yPx,
+          filter: `blur(${blurPx}px)`,
+        },
+        show: {
+          opacity: 1,
+          y: 0,
+          filter: 'blur(0px)',
+        },
+      };
+  }
+}
+
+function easeFor(gesture: RevealGesture, ease: 'out' | 'back') {
+  if (gesture === 'media') return EASE_SPRING;
+  if (gesture === 'tilt') return EASE_BACK;
+  return ease === 'back' ? EASE_BACK : EASE_OUT;
+}
+
 type CommonProps = {
   speed?: RevealSpeed;
   delay?: number;
@@ -26,6 +100,8 @@ type CommonProps = {
   once?: boolean;
   margin?: string;
   ease?: 'out' | 'back';
+  gesture?: RevealGesture;
+  index?: number;
   children: ReactNode;
 };
 
@@ -42,6 +118,8 @@ export function Reveal<E extends ElementType = 'div'>({
   once = true,
   margin = '-10% 0px -10% 0px',
   ease = 'out',
+  gesture = 'rise',
+  index = 0,
   children,
   ...rest
 }: RevealProps<E>) {
@@ -49,7 +127,8 @@ export function Reveal<E extends ElementType = 'div'>({
   const spec = SPEEDS[speed];
   const yPx = y ?? spec.y;
   const blurPx = blur ?? spec.blur;
-  const easing = ease === 'back' ? EASE_BACK : EASE_OUT;
+  const easing = easeFor(gesture, ease);
+  const variants = gestureFor(gesture, yPx, blurPx, index);
 
   const Tag = (motion as any)[as as string] ?? motion.div;
 
@@ -66,8 +145,8 @@ export function Reveal<E extends ElementType = 'div'>({
 
   return (
     <Tag
-      initial={{ opacity: 0, y: yPx, filter: `blur(${blurPx}px)` }}
-      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={variants.hidden}
+      whileInView={variants.show}
       viewport={{ once, margin }}
       transition={transition}
       {...rest}
@@ -133,6 +212,8 @@ type RevealItemProps<E extends ElementType = 'div'> = {
   y?: number;
   blur?: number;
   ease?: 'out' | 'back';
+  gesture?: RevealGesture;
+  index?: number;
   children: ReactNode;
 } & Omit<ComponentProps<E>, 'as' | 'children'>;
 
@@ -142,6 +223,8 @@ export function RevealItem<E extends ElementType = 'div'>({
   y,
   blur,
   ease = 'out',
+  gesture = 'rise',
+  index = 0,
   children,
   ...rest
 }: RevealItemProps<E>) {
@@ -149,7 +232,8 @@ export function RevealItem<E extends ElementType = 'div'>({
   const spec = SPEEDS[speed];
   const yPx = y ?? spec.y;
   const blurPx = blur ?? spec.blur;
-  const easing = ease === 'back' ? EASE_BACK : EASE_OUT;
+  const easing = easeFor(gesture, ease);
+  const variants = gestureFor(gesture, yPx, blurPx, index);
 
   const Tag = (motion as any)[as as string] ?? motion.div;
 
@@ -159,11 +243,9 @@ export function RevealItem<E extends ElementType = 'div'>({
   }
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: yPx, filter: `blur(${blurPx}px)` },
+    hidden: variants.hidden,
     show: {
-      opacity: 1,
-      y: 0,
-      filter: 'blur(0px)',
+      ...variants.show,
       transition: { duration: spec.duration, ease: easing },
     },
   };

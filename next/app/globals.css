@@ -50,7 +50,7 @@
   /* Type */
   --font-sans:    var(--font-geist-sans), 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:    var(--font-geist-mono), 'Berkeley Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-headline: var(--font-display), 'Instrument Serif', 'Times New Roman', ui-serif, Georgia, serif;
+  --font-headline: var(--font-display), 'Bricolage Grotesque', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
   /* Radius — locked at 6px */
   --r-pill:       6px;
@@ -72,12 +72,23 @@
   --s-24: 96px;
   --s-32: 128px;
 
-  /* Motion — Linear is brief and confident */
+  /* Motion vocabulary — three curves, three durations.
+     - ease            : workhorse for UI feedback (hover, focus, color shifts)
+     - ease-out-expo   : entrance gestures (reveals, page-load)
+     - ease-spring     : emphasis (CTAs, cube, anything that "responds")
+     - ease-ambient    : in-out, used by always-on loops (glow, float, breathe)
+     Heartbeat = 11s, drift in phase across the page; locks because every
+     instance starts at page-load. */
   --ease:          cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.46, 1);
+  --ease-ambient:  cubic-bezier(0.45, 0, 0.55, 1);
   --t-fast:        120ms;
   --t-base:        160ms;
   --t-reveal:      320ms;
+  --t-heartbeat:   11s;
+  --t-breathe:     10s;
+  --t-rotate:      36s;
 }
 
 * { box-sizing: border-box; }
@@ -119,17 +130,19 @@ a { color: inherit; text-decoration: none; }
    ============================================================================= */
 
 h1, h2, h3, h4, h5 { color: var(--ink); margin: 0; font-family: var(--font-headline); text-wrap: balance; }
-h1 { font-weight: 400; letter-spacing: -0.022em; line-height: 0.98; }
-h2 { font-weight: 400; letter-spacing: -0.018em; line-height: 1.02; }
+h1 { font-weight: 600; letter-spacing: -0.034em; line-height: 0.98; font-variation-settings: 'wdth' 100; }
+h2 { font-weight: 500; letter-spacing: -0.028em; line-height: 1.02; font-variation-settings: 'wdth' 100; }
 h3 { font-family: var(--font-sans); font-weight: 500; letter-spacing: -0.022em; line-height: 1.15; }
 h4 { font-family: var(--font-sans); font-weight: 500; letter-spacing: -0.017em; line-height: 1.3; }
 
-/* Display italic — the editorial cue that breaks Qbix away from system-sans clones. */
-.display-italic {
+/* Display emphasis — Bricolage is a sans, so weight-contrast carries the
+   accent instead of italic. Lighter weight + tighter tracking reads as a
+   secondary "voice" against the heavier primary line. */
+.display-accent {
   font-family: var(--font-headline);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -0.012em;
+  font-weight: 300;
+  letter-spacing: -0.030em;
+  color: var(--ink-2);
 }
 
 p { margin: 0; }
@@ -195,6 +208,9 @@ p { margin: 0; }
   color: var(--signal);
   font-weight: 600;
   font-feature-settings: 'ss01';
+  animation: heartbeat-glow var(--t-heartbeat) var(--ease-ambient) infinite;
+  will-change: filter;
+  display: inline-block;
 }
 
 /* FIG annotation — Linear's documented-system signature */
@@ -417,8 +433,9 @@ section { position: relative; }
   line-height: 1;
 }
 .topnav-brand-suffix em {
-  font-style: italic;
-  letter-spacing: -0.02em;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.025em;
   color: var(--ink-2);
 }
 .topnav-brand-suffix .slash {
@@ -493,6 +510,8 @@ section { position: relative; }
   border-radius: var(--r-pill);
   transition: background var(--t-fast) var(--ease),
               color var(--t-fast) var(--ease);
+  animation: heartbeat-glow var(--t-heartbeat) var(--ease-ambient) infinite;
+  will-change: filter;
 }
 .topnav-cta .arrow {
   font-family: var(--font-mono);
@@ -545,6 +564,8 @@ section { position: relative; }
   filter: blur(48px);
   pointer-events: none;
   z-index: 0;
+  animation: hero-glow-breathe var(--t-breathe) var(--ease-ambient) infinite;
+  will-change: opacity, transform;
 }
 .hero-grid-bg {
   position: absolute; inset: 0;
@@ -556,6 +577,7 @@ section { position: relative; }
   pointer-events: none;
   opacity: 0.4;
   z-index: 0;
+  animation: hero-grid-breathe calc(var(--t-breathe) * 1.4) var(--ease-ambient) infinite;
 }
 .hero-inner {
   position: relative;
@@ -592,24 +614,27 @@ section { position: relative; }
 }
 .hero-title {
   font-family: var(--font-headline);
-  font-size: clamp(48px, 7.4vw, 104px);
+  font-size: clamp(46px, 7vw, 96px);
   line-height: 0.96;
-  letter-spacing: -0.024em;
-  font-weight: 400;
+  letter-spacing: -0.036em;
+  font-weight: 600;
   color: var(--ink);
   margin: 0 0 clamp(18px, 3vw, 28px);
   text-wrap: pretty;
+  font-variation-settings: 'wdth' 100;
 }
 .hero-title em,
 .hero-title .italic {
-  font-style: italic;
-  letter-spacing: -0.014em;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.030em;
   color: var(--ink-2);
 }
 .hero-title .line { display: block; }
 .hero-title .line.italic {
-  font-style: italic;
-  letter-spacing: -0.018em;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.030em;
   color: var(--ink-2);
   margin-top: 0.04em;
 }
@@ -623,6 +648,7 @@ section { position: relative; }
   display: inline;
   line-height: inherit;
   font-weight: 400;
+  animation: signal-text-pulse var(--t-heartbeat) var(--ease-ambient) infinite;
 }
 .hero-sub {
   font-family: var(--font-sans);
@@ -801,18 +827,19 @@ section { position: relative; }
 }
 .section-head h2 {
   font-family: var(--font-headline);
-  font-size: clamp(40px, 5.2vw, 68px);
+  font-size: clamp(38px, 5vw, 64px);
   line-height: 1.02;
-  letter-spacing: -0.020em;
-  font-weight: 400;
+  letter-spacing: -0.032em;
+  font-weight: 600;
   margin-top: 14px;
   max-width: 820px;
   text-wrap: balance;
 }
 .section-head h2 em,
 .section-head h2 .italic {
-  font-style: italic;
-  letter-spacing: -0.012em;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: -0.024em;
   color: var(--ink-2);
 }
 .section-head .accent { color: var(--ink); }
@@ -841,6 +868,7 @@ section { position: relative; }
 }
 
 .svc {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -857,10 +885,35 @@ section { position: relative; }
               background var(--t-base) var(--ease),
               transform var(--t-base) var(--ease);
 }
+/* Edge-light sweep: a thin lime gradient runs across the top border on hover */
+.svc::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(184, 255, 0, 0) 30%,
+    rgba(217, 255, 90, 0.9) 50%,
+    rgba(184, 255, 0, 0) 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 280ms var(--ease);
+}
 .svc:hover {
   border-color: var(--line-2);
   background: var(--bg-charcoal);
   transform: translateY(-2px);
+}
+.svc:hover::before {
+  opacity: 1;
+  animation: card-edge-sweep 1.6s var(--ease-out-expo);
 }
 
 .svc-pattern {
@@ -1165,9 +1218,33 @@ section { position: relative; }
   top: 50%;
   transform: translateY(-50%);
   height: 1px;
-  background: var(--line-2);
+  background: linear-gradient(
+    to right,
+    var(--line-2) 0%,
+    var(--signal) 50%,
+    var(--line-2) 100%
+  );
+  background-size: 200% 100%;
   z-index: 0;
+  /* draws in left→right when the .journey-pins gets `.is-in` */
+  clip-path: inset(0 100% 0 0);
 }
+.journey-pins.is-in::before {
+  animation:
+    journey-rail-draw 1.4s var(--ease-out-expo) forwards,
+    card-edge-sweep 6s linear 1.4s infinite;
+}
+/* Each pin pulses once when the rail nominally reaches it.
+   Index-based delays: 6 pins × 0.18s = 1.08s rail walk. */
+.journey-pins.is-in .journey-pin {
+  animation: journey-pin-arrive 1.2s var(--ease-out-expo) forwards;
+}
+.journey-pins.is-in .journey-pin:nth-child(1) { animation-delay: 0.18s; }
+.journey-pins.is-in .journey-pin:nth-child(2) { animation-delay: 0.36s; }
+.journey-pins.is-in .journey-pin:nth-child(3) { animation-delay: 0.54s; }
+.journey-pins.is-in .journey-pin:nth-child(4) { animation-delay: 0.72s; }
+.journey-pins.is-in .journey-pin:nth-child(5) { animation-delay: 0.90s; }
+.journey-pins.is-in .journey-pin:nth-child(6) { animation-delay: 1.08s; }
 .journey-pin {
   position: relative;
   z-index: 1;
@@ -1718,6 +1795,7 @@ section { position: relative; }
     transform 600ms cubic-bezier(0.16, 1, 0.3, 1),
     filter 420ms var(--ease);
   will-change: transform, filter;
+  animation: ribbon-float 14s var(--ease-ambient) infinite;
 }
 .about-ribbon:hover img {
   transform: translateY(-4px) scale(1.012);
@@ -2204,6 +2282,95 @@ section { position: relative; }
 .lab:hover .lab-arrow { color: var(--ink); transform: translate(2px, -2px); }
 
 /* =============================================================================
+   AMBIENT MOTION — always-on loops + the studio heartbeat
+   ----------------------------------------------------------------------------
+   Three motion classes live here:
+   - ambient   : slow, ease-ambient, continuous (glow breathe, cube float)
+   - heartbeat : 11s lub-dub pulse — synchronized across lime accents
+   - sweep     : one-shot scroll-triggered draws (journey rail)
+   ============================================================================= */
+
+@keyframes hero-glow-breathe {
+  0%, 100% { opacity: 0.14; transform: translateX(-50%) scale(1); }
+  50%      { opacity: 0.24; transform: translateX(-50%) scale(1.06); }
+}
+
+@keyframes hero-grid-breathe {
+  0%, 100% { opacity: 0.32; }
+  50%      { opacity: 0.46; }
+}
+
+/* Studio heartbeat — a doublet (lub-dub) at 88–96% of the cycle.
+   The first beat is bigger, the second a small echo. Same keyframes on
+   every lime target so they stay phase-locked. */
+@keyframes heartbeat-opacity {
+  0%, 87%, 100% { opacity: var(--heartbeat-base, 1); }
+  90%           { opacity: var(--heartbeat-peak, 1.35); }
+  93%           { opacity: var(--heartbeat-base, 1); }
+  95%           { opacity: var(--heartbeat-echo, 1.18); }
+  97%           { opacity: var(--heartbeat-base, 1); }
+}
+@keyframes heartbeat-glow {
+  0%, 87%, 100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
+  90%           { filter: brightness(1.25) drop-shadow(0 0 12px rgba(184,255,0,0.55)); }
+  93%           { filter: brightness(1)    drop-shadow(0 0 0 transparent); }
+  95%           { filter: brightness(1.12) drop-shadow(0 0 8px rgba(184,255,0,0.35)); }
+  97%           { filter: brightness(1)    drop-shadow(0 0 0 transparent); }
+}
+
+/* signal-bg lime text — text-shadow doublet (same beat-phase) */
+@keyframes signal-text-pulse {
+  0%, 87%, 100% { text-shadow: 0 0 0 transparent; }
+  90%           { text-shadow: 0 0 24px rgba(184,255,0,0.55), 0 0 6px rgba(217,255,90,0.5); }
+  93%           { text-shadow: 0 0 0 transparent; }
+  95%           { text-shadow: 0 0 16px rgba(184,255,0,0.32); }
+  97%           { text-shadow: 0 0 0 transparent; }
+}
+
+/* Cube totem — slow micro-rotation: it never fully turns, just suggests
+   that the object has volume and time. */
+@keyframes cube-drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%      { transform: translateY(-3px) rotate(0.35deg); }
+  50%      { transform: translateY(-5px) rotate(0deg); }
+  75%      { transform: translateY(-3px) rotate(-0.35deg); }
+}
+
+/* Specular sweep — a moving highlight band that crosses the cube's top
+   face every 7s. Implemented by translating a clipped highlight rect. */
+@keyframes cube-specular {
+  0%, 100% { opacity: 0; transform: translate(-40px, -10px); }
+  10%      { opacity: 0.8; }
+  45%      { opacity: 0.95; transform: translate(40px, 10px); }
+  60%      { opacity: 0; }
+}
+
+/* About ribbon — slow float, slight rotate. Props-on-a-table physics. */
+@keyframes ribbon-float {
+  0%, 100% { transform: translateY(0)   rotate(0deg); }
+  50%      { transform: translateY(-8px) rotate(0.4deg); }
+}
+
+/* Journey rail draw-in — clip from left as the section enters view */
+@keyframes journey-rail-draw {
+  from { clip-path: inset(0 100% 0 0); }
+  to   { clip-path: inset(0 0 0 0); }
+}
+
+/* Pin pulse — when the rail reaches a pin, that pin's dot pulses once */
+@keyframes journey-pin-arrive {
+  0%   { box-shadow: 0 0 0 0   rgba(184,255,0,0.5); }
+  60%  { box-shadow: 0 0 0 10px rgba(184,255,0,0); }
+  100% { box-shadow: 0 0 0 0   rgba(184,255,0,0); }
+}
+
+/* Card hover gradient sweep — the lit edge that moves across feature cards */
+@keyframes card-edge-sweep {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+/* =============================================================================
    REVEAL ANIMATIONS — Linear: brief, confident, single direction
    ============================================================================= */
 
@@ -2630,4 +2797,43 @@ section { position: relative; }
   font-size: 13px;
   color: var(--text-2);
   margin: 0 0 12px;
+}
+
+/* =============================================================================
+   LOADING SCREEN — lime splash that splits open on entry
+   ============================================================================= */
+
+.loading-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: auto;
+}
+.loading-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50vh;
+  background: var(--signal);
+  will-change: transform;
+}
+.loading-half--top    { top: 0; }
+.loading-half--bottom { bottom: 0; }
+
+.loading-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+.loading-logo {
+  display: block;
+  width: clamp(140px, 22vw, 240px);
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 12px 32px rgba(15, 26, 0, 0.18));
 }

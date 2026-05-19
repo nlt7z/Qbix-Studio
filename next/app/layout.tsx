@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
-import { Instrument_Serif } from 'next/font/google';
+import { Bricolage_Grotesque } from 'next/font/google';
 import './globals.css';
 
 import TopNav from '@/components/TopNav';
+import LoadingScreen from '@/components/LoadingScreen';
 
-const instrumentSerif = Instrument_Serif({
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['400'],
-  style: ['normal', 'italic'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal'],
   variable: '--font-display',
   display: 'swap',
 });
@@ -24,9 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable} ${instrumentSerif.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${bricolage.variable}`}
     >
       <body>
+        <LoadingScreen />
         <TopNav />
         {children}
       </body>
