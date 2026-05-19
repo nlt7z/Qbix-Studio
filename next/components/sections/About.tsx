@@ -16,7 +16,7 @@ export default function About() {
               <span className="num">08</span>
               About
             </span>
-            <h2 style={{ marginTop: 14 }}>A small studio with strong opinions.</h2>
+            <h2 style={{ marginTop: 14 }}>A studio built on taste and craft.</h2>
           </div>
         </header>
 

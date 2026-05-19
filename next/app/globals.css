@@ -1285,32 +1285,68 @@ section { position: relative; }
   margin-top: auto;
 }
 
-/* Solo (no side phases) — centered, hero-sized */
+/* Solo (no side phases) — compact horizontal layout */
 .sprint-bignum--solo {
-  margin-top: clamp(24px, 4vw, 36px);
+  margin-top: clamp(20px, 3vw, 28px);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: clamp(20px, 3vw, 36px);
+  row-gap: clamp(10px, 1.2vw, 14px);
   align-items: center;
-  text-align: center;
-  padding: clamp(36px, 5vw, 64px) clamp(28px, 4vw, 48px);
-  gap: clamp(20px, 2.6vw, 28px);
+  text-align: left;
+  padding: clamp(20px, 2.6vw, 32px) clamp(20px, 2.6vw, 32px);
 }
-.sprint-bignum--solo .fig { letter-spacing: 0.06em; }
-.sprint-bignum--solo .sprint-bignum-figure { justify-content: center; }
+.sprint-bignum--solo .fig {
+  grid-column: 1 / -1;
+  letter-spacing: 0.06em;
+  margin-bottom: clamp(2px, 0.5vw, 6px);
+}
+.sprint-bignum--solo .sprint-bignum-figure {
+  grid-column: 1;
+  grid-row: 2 / span 2;
+  justify-content: flex-start;
+  gap: 8px;
+}
 .sprint-bignum--solo .sprint-bignum-n {
-  font-size: clamp(140px, 22vw, 260px);
+  font-size: clamp(76px, 11vw, 132px);
+}
+.sprint-bignum--solo .sprint-bignum-unit {
+  padding-bottom: clamp(8px, 1vw, 14px);
 }
 .sprint-bignum--solo .sprint-bignum-cap {
-  max-width: 520px;
-  text-align: center;
-  font-size: clamp(15px, 1.6vw, 17px);
+  grid-column: 2;
+  grid-row: 2;
+  max-width: 480px;
+  margin: 0;
+  text-align: left;
+  font-size: clamp(13px, 1.4vw, 15px);
+  line-height: 1.55;
 }
-.sprint-bignum--solo .sprint-bignum-cta { justify-content: center; margin-top: 0; }
+.sprint-bignum--solo .sprint-bignum-cta {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: end;
+  justify-content: flex-start;
+  margin-top: 0;
+}
+@media (max-width: 640px) {
+  .sprint-bignum--solo {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+  .sprint-bignum--solo .sprint-bignum-figure { grid-column: 1; grid-row: auto; }
+  .sprint-bignum--solo .sprint-bignum-cap { grid-column: 1; grid-row: auto; }
+  .sprint-bignum--solo .sprint-bignum-cta { grid-column: 1; grid-row: auto; }
+  .sprint-bignum--solo .sprint-bignum-n { font-size: clamp(72px, 22vw, 110px); }
+}
 
 /* Pillars — 3-up row beneath the bignum */
 .sprint-pillars {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0;
-  margin: clamp(28px, 4vw, 40px) 0 0;
+  margin: clamp(16px, 2vw, 24px) 0 0;
   border-top: 1px solid var(--line);
   padding: 0;
 }
@@ -1318,7 +1354,7 @@ section { position: relative; }
   .sprint-pillars { grid-template-columns: 1fr; }
 }
 .sprint-pillar {
-  padding: clamp(20px, 2.6vw, 28px) clamp(12px, 2vw, 20px);
+  padding: clamp(12px, 1.6vw, 18px) clamp(10px, 1.4vw, 16px);
   border-right: 1px solid var(--line);
 }
 .sprint-pillar:last-child { border-right: none; }
@@ -1329,10 +1365,10 @@ section { position: relative; }
 .sprint-pillar-k {
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: clamp(14px, 1.5vw, 16px);
+  font-size: clamp(13px, 1.3vw, 14px);
   letter-spacing: -0.011em;
   color: var(--ink);
-  margin: 0 0 6px;
+  margin: 0 0 4px;
 }
 .sprint-pillar-k::before {
   content: '';
@@ -1346,8 +1382,8 @@ section { position: relative; }
 }
 .sprint-pillar-v {
   font-family: var(--font-sans);
-  font-size: clamp(13px, 1.4vw, 14px);
-  line-height: 1.5;
+  font-size: clamp(12px, 1.2vw, 13px);
+  line-height: 1.45;
   color: var(--text-2);
   letter-spacing: -0.011em;
   margin: 0;

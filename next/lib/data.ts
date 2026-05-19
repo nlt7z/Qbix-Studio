@@ -333,7 +333,7 @@ export const labCards: LabCard[] = [
 // ----- ABOUT -----------------------------------------------------------------
 
 export const aboutLede =
-  'Qbix Studio LLC is a small AI-native product design and software studio based in Seattle.';
+  'Qbix Studio LLC is an AI-native product design and software studio based in Seattle, built on taste and craft.';
 
 export const aboutBody =
   'We work across product strategy, UX/UI design, web and mobile experiences, and AI software development. Our approach combines human-centered design, visual craft, rapid prototyping, and implementation thinking — helping teams move from unclear ideas to usable product experiences.';
