@@ -1,0 +1,30 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / Claude Code workspace state
+.claude/
+.vscode/
+.idea/
+Untitled
+
+# Node / Next.js
+**/node_modules/
+**/.next/
+**/out/
+**/build/
+**/dist/
+**/tsconfig.tsbuildinfo
+**/next-env.d.ts
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Large master assets — compressed versions live under next/public/
+assets/*.mp4
+
+# Unreferenced public videos (keep local, exclude from repo)
+next/public/amnesia-vr.mp4
+next/public/vending-machine.mp4
