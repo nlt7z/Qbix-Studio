@@ -1,17 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
-import { projects, brandLookbook, type Project } from '@/lib/data';
-
-const ease = [0.16, 1, 0.3, 1] as const;
+import { projects, brandLookbook } from '@/lib/data';
+import { Reveal } from '@/components/Reveal';
 
 export default function SelectedWork() {
+  const bidking = projects.find((p) => p.slug === 'bidking');
+
   return (
     <section id="work" className="section-pad">
       <div className="container">
-        <header className="section-head">
+        <Reveal as="header" className="section-head" speed="fast">
           <div>
             <span className="eyebrow">
               <span className="num">03</span>
@@ -19,117 +19,86 @@ export default function SelectedWork() {
             </span>
             <h2 style={{ marginTop: 14 }}>Built and shipped.</h2>
           </div>
-        </header>
+        </Reveal>
 
-        <div className="work-grid">
-          {projects.map((p, i) => (
-            <ProjectCard key={p.slug} project={p} index={i} />
-          ))}
-        </div>
-
-        <div className="work-sub-head">
-          <span className="fig">FIG 3.1 — Brand objects</span>
-          <p className="work-sub-lede">
-            The studio rendered as objects you can hold. Identity stills, brand props, and
-            lookbook frames from the <span className="brand-q">Q</span>bix visual system.
-          </p>
-        </div>
-
-        <div className="brand-grid">
-          {brandLookbook.map((item, i) => (
-            <motion.figure
-              key={item.src}
-              className="brand-card"
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.32, ease, delay: i * 0.06 }}
+        {bidking && bidking.media.kind === 'video' && (
+          <div className="feature-case">
+            <Link
+              href={bidking.href ?? '#'}
+              className="feature-case-media"
+              aria-label={`Open ${bidking.title}`}
             >
-              <div className="brand-card-frame">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className="brand-card-img"
-                  src={item.src}
-                  alt={item.alt}
-                  loading="lazy"
-                  decoding="async"
-                />
+              <Reveal className="feature-case-frame" speed="cinematic" delay={0.1}>
+                <LazyVideo src={bidking.media.src} poster={bidking.media.poster} />
+              </Reveal>
+            </Link>
+
+            <Reveal as="div" className="feature-case-info" speed="base" delay={0.18}>
+              <div className="feature-case-meta">
+                <div>
+                  <div className="feature-case-meta-label">Project</div>
+                  <div className="feature-case-meta-value">{bidking.title}</div>
+                </div>
+                <div>
+                  <div className="feature-case-meta-label">Role</div>
+                  <div className="feature-case-meta-value">{bidking.role}</div>
+                </div>
+                <div>
+                  <div className="feature-case-meta-label">Year</div>
+                  <div className="feature-case-meta-value">{bidking.year}</div>
+                </div>
+                <div>
+                  <div className="feature-case-meta-label">Tags</div>
+                  <div className="feature-case-meta-value">{bidking.tags.join(' · ')}</div>
+                </div>
               </div>
-              <figcaption className="brand-card-caption">
-                <span className="brand-card-num">{item.num}</span>
-                <span className="brand-card-label">{item.label}</span>
-              </figcaption>
-            </motion.figure>
-          ))}
+              <p className="feature-case-hook">{bidking.hook}</p>
+              <Link href={bidking.href ?? '#'} className="feature-case-link">
+                Open case
+                <span className="arrow">→</span>
+              </Link>
+            </Reveal>
+          </div>
+        )}
+
+        <div className="brand-row">
+          <Reveal as="div" className="brand-row-head" speed="fast">
+            <span className="eyebrow">
+              <span className="num">03 / b</span>
+              Brand objects
+            </span>
+          </Reveal>
+
+          <div className="brand-grid-2">
+            {brandLookbook.map((item, i) => (
+              <Reveal
+                as="figure"
+                key={item.src}
+                className="brand-item"
+                speed="base"
+                delay={0.08 + i * 0.07}
+              >
+                <div className="brand-item-frame">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="brand-item-img"
+                    src={item.src}
+                    alt={item.alt}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <figcaption className="brand-item-caption">
+                  <span className="brand-item-num">{item.num}</span>
+                  <span className="brand-item-label">{item.label} · 2026</span>
+                </figcaption>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
-}
-
-function ProjectCard({ project, index }: { project: Project; index: number }) {
-  const hasLink = !!project.href;
-  const inner = (
-    <motion.article
-      className="proj"
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.32, ease, delay: index * 0.08 }}
-    >
-      <div className="proj-preview" style={{ aspectRatio: '16 / 10' }}>
-        <ProjectMedia project={project} />
-        <div className="proj-overlay">
-          <span className="proj-view-chip">
-            <span className="dot" />
-            {hasLink ? 'Open case →' : 'View →'}
-          </span>
-        </div>
-      </div>
-
-      <div className="proj-body">
-        <div className="proj-tags">
-          {project.tags.map((t) => (
-            <span key={t} className="tag">{t}</span>
-          ))}
-        </div>
-        <h3 className="proj-title">{project.title}</h3>
-        <div className="proj-sub">
-          <span>{project.year}</span>
-          <span>·</span>
-          <span>{project.client}</span>
-          <span>·</span>
-          <span>{project.role}</span>
-        </div>
-        <p className="proj-hook">{project.hook}</p>
-      </div>
-    </motion.article>
-  );
-
-  if (!hasLink) return inner;
-  return (
-    <Link
-      href={project.href!}
-      style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
-      aria-label={`Open ${project.title}`}
-    >
-      {inner}
-    </Link>
-  );
-}
-
-function ProjectMedia({ project }: { project: Project }) {
-  const m = project.media;
-  if (m.kind === 'video') {
-    return <LazyVideo src={m.src} poster={m.poster} />;
-  }
-  if (m.kind === 'image') {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img className="proj-img" src={m.src} alt={project.title} loading="lazy" decoding="async" />;
-  }
-  // images
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img className="proj-img" src={m.srcs[0]} alt={project.title} loading="lazy" decoding="async" />;
 }
 
 function LazyVideo({ src, poster }: { src: string; poster?: string }) {
@@ -158,7 +127,7 @@ function LazyVideo({ src, poster }: { src: string; poster?: string }) {
   return (
     <video
       ref={ref}
-      className="proj-video"
+      className="feature-case-video"
       poster={poster}
       muted
       loop

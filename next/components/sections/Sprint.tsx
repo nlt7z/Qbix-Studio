@@ -1,9 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-
-const ease = [0.16, 1, 0.3, 1] as const;
+import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 
 const pillars = [
   { k: 'Speed',      v: '48-hour cap, no exceptions' },
@@ -15,7 +13,7 @@ export default function Sprint() {
   return (
     <section id="sprint" className="sprint section-pad">
       <div className="container">
-        <header className="section-head">
+        <Reveal as="header" className="section-head" speed="fast">
           <div>
             <span className="eyebrow">
               <span className="num">06</span>
@@ -28,14 +26,12 @@ export default function Sprint() {
           <p className="mono" style={{ maxWidth: 320 }}>
             Fastest speed. Best quality. No tradeoff.
           </p>
-        </header>
+        </Reveal>
 
-        <motion.div
+        <Reveal
           className="sprint-bignum sprint-bignum--solo"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.32, ease }}
+          speed="cinematic"
+          delay={0.15}
         >
           <span className="fig">FIG 6.0 — The promise</span>
           <div className="sprint-bignum-figure">
@@ -54,23 +50,25 @@ export default function Sprint() {
             </Link>
             <span className="kbd">S</span>
           </div>
-        </motion.div>
+        </Reveal>
 
-        <dl className="sprint-pillars">
-          {pillars.map((p, i) => (
-            <motion.div
+        <Stagger
+          as="dl"
+          className="sprint-pillars"
+          stagger={0.1}
+          delayChildren={0.2}
+        >
+          {pillars.map((p) => (
+            <RevealItem
               key={p.k}
               className="sprint-pillar"
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.32, ease, delay: i * 0.06 }}
+              speed="fast"
             >
               <dt className="sprint-pillar-k">{p.k}</dt>
               <dd className="sprint-pillar-v">{p.v}</dd>
-            </motion.div>
+            </RevealItem>
           ))}
-        </dl>
+        </Stagger>
       </div>
     </section>
   );

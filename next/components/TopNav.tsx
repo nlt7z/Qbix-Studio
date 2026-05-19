@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { navItems } from '@/lib/data';
+import QbixMark from '@/components/QbixMark';
 
 const HEADER_OFFSET = 64;            // 56px nav + 8px breathing room
 const sectionIds = navItems
@@ -27,6 +28,7 @@ export default function TopNav() {
   const [active, setActive] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [scrolling, setScrolling] = useState(false);
 
   useEffect(() => {
     const els = sectionIds
@@ -48,7 +50,11 @@ export default function TopNav() {
 
   useEffect(() => {
     let ticking = false;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
     const onScroll = () => {
+      setScrolling(true);
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => setScrolling(false), 160);
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
@@ -58,7 +64,10 @@ export default function TopNav() {
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (idleTimer) clearTimeout(idleTimer);
+    };
   }, []);
 
   const onAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -68,11 +77,21 @@ export default function TopNav() {
   };
 
   return (
-    <nav className={`topnav-fixed ${scrolled ? 'is-scrolled' : ''}`} aria-label="primary">
-      <a href="#top" className="topnav-brand" onClick={(e) => onAnchorClick(e, '#top')} aria-label="Qbix Studio — home">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="topnav-logo" src="/qbix-keyboard.png" alt="" aria-hidden />
-        <span className="slash"> / </span>Studio
+    <nav
+      className={`topnav-fixed ${scrolled ? 'is-scrolled' : ''} ${scrolling ? 'is-scrolling' : ''}`}
+      aria-label="primary"
+    >
+      <a
+        href="#top"
+        className="topnav-brand"
+        onClick={(e) => onAnchorClick(e, '#top')}
+        aria-label="Qbix Studio — home"
+      >
+        <QbixMark variant="wordmark" height={22} title="Qbix" />
+        <span className="topnav-brand-suffix">
+          <span className="slash">/</span>
+          <em>studio</em>
+        </span>
       </a>
 
       <div className="topnav-links" onMouseLeave={() => setHovered(null)}>

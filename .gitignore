@@ -24,6 +24,7 @@ Untitled
 
 # Large master assets — compressed versions live under next/public/
 assets/*.mp4
+assets/*.mov
 
 # Unreferenced public videos (keep local, exclude from repo)
 next/public/amnesia-vr.mp4

@@ -194,23 +194,8 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    slug: 'ai-character-chat',
-    num: 'FILE / 001',
-    title: 'AI Character Platform',
-    client: 'Internal',
-    role: 'AI Product Design · Web Experience',
-    year: 2025,
-    category: 'ai-product',
-    tags: ['AI Product', 'Web'],
-    hook:
-      'A premium interactive product showroom for enterprise users to explore LLM character capabilities. Memory, ritual, conversation.',
-    aspect: 2822 / 1440,
-    media: { kind: 'video', src: '/ai-character-chat.mp4' },
-    href: '/work/ai-character-chat',
-  },
-  {
     slug: 'bidking',
-    num: 'FILE / 002',
+    num: 'FILE / 001',
     title: 'BidKing',
     client: 'Studio Product',
     role: 'Game Design · Mobile UI · System',
@@ -227,38 +212,49 @@ export const projects: Project[] = [
 
 // ----- HOW WE WORK (6 steps) -------------------------------------------------
 
-export type ProcessStep = { num: string; title: string; body: string };
+export type ProcessStep = {
+  num: string;
+  title: string;
+  body: string;
+  icon: 'target' | 'search' | 'frame' | 'layers' | 'code' | 'arrow';
+};
 
 export const processSteps: ProcessStep[] = [
   {
     num: '01',
     title: 'Clarify',
-    body: 'Sharpen the problem. Frame the product. Name the user, the constraint, the bet.',
+    body: 'Name the problem, the user, the bet.',
+    icon: 'target',
   },
   {
     num: '02',
     title: 'Research',
-    body: 'User interviews, market scan, model probing, competitive teardown. Evidence before opinions.',
+    body: 'Interviews, market scan, model probing.',
+    icon: 'search',
   },
   {
     num: '03',
     title: 'Prototype',
-    body: 'Sketches, flows, clickable models. Pressure-test the idea before designing pixels.',
+    body: 'Sketches, flows, clickable models.',
+    icon: 'frame',
   },
   {
     num: '04',
     title: 'Design',
-    body: 'IA, interaction, visual systems. AI behavior, model interfaces, end-to-end UX.',
+    body: 'IA, interaction, visual systems.',
+    icon: 'layers',
   },
   {
     num: '05',
     title: 'Build',
-    body: 'Front-end implementation, web and mobile. We ship what we design.',
+    body: 'Front-end build, web and mobile.',
+    icon: 'code',
   },
   {
     num: '06',
     title: 'Launch',
-    body: 'Polish, hand off, document, measure. Stay close past day one.',
+    body: 'Hand off, document, measure.',
+    icon: 'arrow',
   },
 ];
 
@@ -333,16 +329,7 @@ export const labCards: LabCard[] = [
 // ----- ABOUT -----------------------------------------------------------------
 
 export const aboutLede =
-  'Qbix Studio LLC is an AI-native product design and software studio based in Seattle, built on taste and craft.';
-
-export const aboutBody =
-  'We work across product strategy, UX/UI design, web and mobile experiences, and AI software development. Our approach combines human-centered design, visual craft, rapid prototyping, and implementation thinking — helping teams move from unclear ideas to usable product experiences.';
-
-export const aboutStatements = [
-  { num: '01', text: 'We clarify complex ideas.' },
-  { num: '02', text: 'We design usable systems.' },
-  { num: '03', text: 'We prototype until the product feels real.' },
-];
+  'Qbix Studio LLC is an AI-native product and software studio in Seattle — a decade-deep artist and engineer working as one team. In this era, building with AI is table stakes; we also build AI ourselves. What we hold onto, and most have let go, is taste, craft, and logic.';
 
 // ----- BRAND LOOKBOOK (identity stills, not project cases) -------------------
 
@@ -357,38 +344,24 @@ export type LookbookItem = {
 export const brandLookbook: LookbookItem[] = [
   {
     num: '01',
-    label: 'QBIX keycaps',
-    alt: 'Translucent lime and white keycaps spelling QBIX',
-    src: '/brand-keycaps.png',
-    aspect: '270 / 360',
-  },
-  {
-    num: '02',
-    label: 'Studio vinyl',
-    alt: 'Black turntable with a lime record glowing under top light',
-    src: '/brand-vinyl.png',
-    aspect: '316 / 316',
-  },
-  {
-    num: '03',
     label: 'Mixtape, vol. 01',
     alt: 'Clear plastic cassette tape labelled QBIX STUDIO LLC',
     src: '/brand-cassette.png',
     aspect: '316 / 270',
   },
   {
-    num: '04',
-    label: 'Chrome flow',
-    alt: 'Abstract polished chrome ribbon catching white light',
-    src: '/brand-fluid.png',
-    aspect: '236 / 360',
+    num: '02',
+    label: 'Qbix fan',
+    alt: 'Translucent lime fan render with the Qbix mark',
+    src: '/qbix-fan.png',
+    aspect: '1448 / 1086',
   },
   {
-    num: '05',
-    label: 'Modular cube',
-    alt: 'Lime and brushed-metal sub-cubes assembled into a Qbix cube sculpture',
-    src: '/brand-cubes.png',
-    aspect: '270 / 360',
+    num: '03',
+    label: 'Qbix square',
+    alt: 'Qbix square brand object render',
+    src: '/qbix-square.png',
+    aspect: '1 / 1',
   },
 ];
 

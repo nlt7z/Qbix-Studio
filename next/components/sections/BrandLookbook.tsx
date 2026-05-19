@@ -1,15 +1,13 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { brandLookbook } from '@/lib/data';
-
-const ease = [0.16, 1, 0.3, 1] as const;
+import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 
 export default function BrandLookbook() {
   return (
     <section id="brand" className="lookbook section-pad">
       <div className="container">
-        <header className="section-head">
+        <Reveal as="header" className="section-head" speed="fast">
           <div>
             <span className="eyebrow">
               <span className="num">07</span>
@@ -22,17 +20,15 @@ export default function BrandLookbook() {
           <p className="mono" style={{ maxWidth: 360 }}>
             Identity stills, brand props, and lookbook frames from the <span className="brand-q">Q</span>bix visual system.
           </p>
-        </header>
+        </Reveal>
 
-        <div className="lookbook-grid">
-          {brandLookbook.map((item, i) => (
-            <motion.figure
+        <Stagger className="lookbook-grid" stagger={0.09} delayChildren={0.1}>
+          {brandLookbook.map((item) => (
+            <RevealItem
+              as="figure"
               key={item.src}
               className="lookbook-card"
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.32, ease, delay: i * 0.06 }}
+              speed="slow"
               style={{ aspectRatio: item.aspect }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -46,9 +42,9 @@ export default function BrandLookbook() {
                 <span className="lookbook-num">{item.num}</span>
                 <span className="lookbook-label">{item.label}</span>
               </figcaption>
-            </motion.figure>
+            </RevealItem>
           ))}
-        </div>
+        </Stagger>
       </div>
     </section>
   );

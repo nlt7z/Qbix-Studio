@@ -71,7 +71,7 @@ export default function Colophon() {
 
         <div className="footer-line">
           <span>© 2026 <span className="brand-q">Q</span>bix Studio LLC</span>
-          <span>Seattle · NY</span>
+          <span>Seattle</span>
         </div>
       </div>
     </footer>

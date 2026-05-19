@@ -1,6 +1,7 @@
 import Hero from '@/components/sections/Hero';
 import WhatWeDo from '@/components/sections/WhatWeDo';
 import SelectedWork from '@/components/sections/SelectedWork';
+import Testimonial from '@/components/sections/Testimonial';
 import HowWeWork from '@/components/sections/HowWeWork';
 import QbixLabs from '@/components/sections/QbixLabs';
 import Sprint from '@/components/sections/Sprint';
@@ -13,7 +14,8 @@ export default function LandingPage() {
     <main>
       <Hero />           {/* 01 */}
       <WhatWeDo />       {/* 02 */}
-      <SelectedWork />   {/* 03 — includes brand objects */}
+      <SelectedWork />   {/* 03 — BidKing feature + brand objects */}
+      <Testimonial />    {/* — tight quote moment */}
       <HowWeWork />      {/* 04 */}
       <QbixLabs />       {/* 05 */}
       <Sprint />         {/* 06 */}

@@ -1,9 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { CONTACT_EMAIL, BOOKING_URL, CONTACT_NOTE } from '@/lib/data';
-
-const ease = [0.16, 1, 0.3, 1] as const;
+import { Reveal } from '@/components/Reveal';
 
 export default function ContactCTA() {
   return (
@@ -17,41 +15,26 @@ export default function ContactCTA() {
         loading="lazy"
       />
       <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.32, ease }}
-        >
+        <Reveal speed="fast">
           <span className="eyebrow">
             <span className="num">09</span>
             Contact
           </span>
           <h2 className="contact-heading" style={{ marginTop: 14 }}>
-            <span className="line">Have an idea?</span>
-            <span className="line accent">
+            <Reveal as="span" className="line" speed="slow" delay={0.05}>
+              Have an idea?
+            </Reveal>
+            <Reveal as="span" className="line accent" speed="cinematic" delay={0.2}>
               Let’s turn it into something people can use.
-            </span>
+            </Reveal>
           </h2>
-        </motion.div>
+        </Reveal>
 
-        <motion.p
-          className="contact-sub"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.28, ease, delay: 0.1 }}
-        >
+        <Reveal as="p" className="contact-sub" speed="base" delay={0.55}>
           {CONTACT_NOTE}
-        </motion.p>
+        </Reveal>
 
-        <motion.div
-          className="contact-ctas"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.28, ease, delay: 0.18 }}
-        >
+        <Reveal className="contact-ctas" speed="fast" delay={0.75}>
           <a href={`mailto:${CONTACT_EMAIL}`} className="btn btn-primary btn-lg">
             Start a project
             <span className="arrow">→</span>
@@ -64,12 +47,12 @@ export default function ContactCTA() {
           >
             Book an intro call ↗
           </a>
-        </motion.div>
+        </Reveal>
 
         <div className="contact-meta">
           <span>{CONTACT_EMAIL}</span>
           <span>·</span>
-          <span>Seattle · NY</span>
+          <span>Seattle</span>
         </div>
       </div>
     </section>

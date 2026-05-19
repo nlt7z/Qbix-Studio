@@ -14,7 +14,7 @@ const boilerplate =
 
 const facts = [
   { k: 'Founded',  v: '2026' },
-  { k: 'Location', v: 'Seattle · NY' },
+  { k: 'Location', v: 'Seattle' },
   { k: 'Focus',    v: 'AI-native product design & software' },
   { k: 'Team',     v: 'Designers · engineers · strategists' },
   { k: 'Status',   v: 'Booking Q3 — limited slots' },
