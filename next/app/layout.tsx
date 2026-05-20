@@ -1,18 +1,19 @@
 import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
-import { Bricolage_Grotesque } from 'next/font/google';
+import { Fraunces } from 'next/font/google';
 import './globals.css';
 
 import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
 
-const bricolage = Bricolage_Grotesque({
+const displayFont = Fraunces({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  style: ['normal'],
+  weight: 'variable',
+  style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
+  axes: ['SOFT', 'opsz'],
 });
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable} ${bricolage.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${displayFont.variable}`}
     >
       <body>
         <LoadingScreen />

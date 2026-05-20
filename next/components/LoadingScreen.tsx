@@ -1,84 +1,114 @@
 'use client';
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 const HOLD_MS = 1400;
+const EXIT_MS = 900;
 const SPLIT_EASE = [0.85, 0, 0.15, 1] as const;
 const SOFT_EASE = [0.16, 1, 0.3, 1] as const;
+const SEEN_KEY = 'qbix.splashSeen';
 
 export default function LoadingScreen() {
-  const [showing, setShowing] = useState(true);
+  // SSR + first render must match: assume not-seen, then check in effect.
+  // If already seen this session, we'll skip straight to 'gone' on mount.
+  const [phase, setPhase] = useState<'in' | 'out' | 'gone'>('in');
   const reduced = useReducedMotion();
 
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const t = setTimeout(() => setShowing(false), HOLD_MS);
-    return () => {
-      clearTimeout(t);
-      document.body.style.overflow = prev;
-    };
-  }, []);
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem(SEEN_KEY) === '1';
+    } catch {
+      /* private mode / disabled — fall through and play splash */
+    }
+    if (seen) {
+      setPhase('gone');
+      return;
+    }
 
-  useEffect(() => {
-    if (showing) return;
-    document.body.style.overflow = '';
-  }, [showing]);
+    document.body.style.overflow = 'hidden';
+    const exitDur = reduced ? 300 : EXIT_MS;
+    const startExit = window.setTimeout(() => setPhase('out'), HOLD_MS);
+    const unmount = window.setTimeout(() => {
+      setPhase('gone');
+      document.body.style.overflow = '';
+      try {
+        sessionStorage.setItem(SEEN_KEY, '1');
+      } catch {
+        /* ignore */
+      }
+    }, HOLD_MS + exitDur);
+    return () => {
+      window.clearTimeout(startExit);
+      window.clearTimeout(unmount);
+      document.body.style.overflow = '';
+    };
+  }, [reduced]);
+
+  if (phase === 'gone') return null;
+
+  const exiting = phase === 'out';
 
   return (
-    <AnimatePresence>
-      {showing && (
-        <motion.div
-          className="loading-root"
-          aria-hidden
-          initial={false}
-          exit={{ pointerEvents: 'none' }}
-          transition={{ duration: 0 }}
-        >
-          <motion.div
-            className="loading-half loading-half--top"
-            initial={{ y: 0 }}
-            exit={
-              reduced
-                ? { opacity: 0, transition: { duration: 0.3 } }
-                : { y: '-100%', transition: { duration: 0.9, ease: SPLIT_EASE } }
-            }
-          />
-          <motion.div
-            className="loading-half loading-half--bottom"
-            initial={{ y: 0 }}
-            exit={
-              reduced
-                ? { opacity: 0, transition: { duration: 0.3 } }
-                : { y: '100%', transition: { duration: 0.9, ease: SPLIT_EASE } }
-            }
-          />
+    <div
+      className="loading-root"
+      aria-hidden
+      style={{ pointerEvents: exiting ? 'none' : 'auto' }}
+    >
+      <motion.div
+        className="loading-half loading-half--top"
+        initial={{ y: 0 }}
+        animate={
+          exiting
+            ? reduced
+              ? { opacity: 0 }
+              : { y: '-100%' }
+            : { y: 0 }
+        }
+        transition={
+          reduced
+            ? { duration: 0.3 }
+            : { duration: EXIT_MS / 1000, ease: SPLIT_EASE }
+        }
+      />
+      <motion.div
+        className="loading-half loading-half--bottom"
+        initial={{ y: 0 }}
+        animate={
+          exiting
+            ? reduced
+              ? { opacity: 0 }
+              : { y: '100%' }
+            : { y: 0 }
+        }
+        transition={
+          reduced
+            ? { duration: 0.3 }
+            : { duration: EXIT_MS / 1000, ease: SPLIT_EASE }
+        }
+      />
 
-          <div className="loading-center">
-            <motion.img
-              src="/qbix-keyboard.png"
-              alt=""
-              aria-hidden
-              className="loading-logo"
-              initial={{ opacity: 0, scale: 0.9, filter: 'blur(18px)' }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                filter: 'blur(0px)',
-                transition: { duration: 0.75, ease: SOFT_EASE, delay: 0.05 },
-              }}
-              exit={{
-                opacity: 0,
-                scale: 1.08,
-                filter: 'blur(10px)',
-                transition: { duration: 0.45, ease: 'easeIn' },
-              }}
-              draggable={false}
-            />
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      <div className="loading-center">
+        <motion.img
+          src="/qbix-keyboard.png"
+          alt=""
+          aria-hidden
+          className="loading-logo"
+          initial={{ opacity: 0, scale: 0.9, filter: 'blur(18px)' }}
+          animate={
+            exiting
+              ? { opacity: 0, scale: 1.08, filter: 'blur(10px)' }
+              : { opacity: 1, scale: 1, filter: 'blur(0px)' }
+          }
+          transition={
+            exiting
+              ? { duration: 0.45, ease: 'easeIn' }
+              : { duration: 0.75, ease: SOFT_EASE, delay: 0.05 }
+          }
+          draggable={false}
+        />
+      </div>
+    </div>
   );
 }

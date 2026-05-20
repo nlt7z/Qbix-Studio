@@ -1,6 +1,6 @@
 'use client';
 
-import { CONTACT_EMAIL, BOOKING_URL, CONTACT_NOTE } from '@/lib/data';
+import { CONTACT_EMAIL, CONTACT_NOTE } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 
 export default function ContactCTA() {
@@ -17,7 +17,7 @@ export default function ContactCTA() {
       <div className="container">
         <Reveal speed="fast">
           <span className="eyebrow">
-            <span className="num">09</span>
+            <span className="num">06</span>
             Contact
           </span>
           <h2 className="contact-heading" style={{ marginTop: 14 }}>
@@ -39,14 +39,30 @@ export default function ContactCTA() {
             Start a project
             <span className="arrow">→</span>
           </a>
-          <a
-            href={BOOKING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-secondary btn-lg"
-          >
-            Book an intro call ↗
-          </a>
+        </Reveal>
+
+        <Reveal className="contact-sprint" speed="base" delay={0.95}>
+          <div className="contact-sprint-head">
+            <span className="fig">FIG · The 48-hour sprint</span>
+            <span className="contact-sprint-price">
+              From <strong>$2k</strong> · Web design, idea → launch
+            </span>
+            <span className="contact-sprint-status">
+              <span className="contact-sprint-dot" aria-hidden />
+              Live sprint window
+            </span>
+          </div>
+          <div className="contact-sprint-body">
+            <div className="contact-sprint-figure">
+              <span className="contact-sprint-n">48</span>
+              <span className="contact-sprint-unit">hours</span>
+            </div>
+            <p className="contact-sprint-cap">
+              From signed SOW to a working prototype in your inbox — a senior
+              designer-engineer pair, on the clock. Fixed scope, fixed price, one
+              calendar block.
+            </p>
+          </div>
         </Reveal>
 
         <div className="contact-meta">

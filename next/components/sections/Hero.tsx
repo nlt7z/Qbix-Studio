@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
-import CubeGrid from '@/components/CubeGrid';
-import CubeGlyph from '@/components/CubeGlyph';
+import Image from 'next/image';
+import { useRef, useState, type ReactNode } from 'react';
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import ContactModal from '@/components/ContactModal';
+import MagneticButton from '@/components/MagneticButton';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 const EASE_SPRING = [0.34, 1.4, 0.46, 1] as const;
@@ -53,10 +53,33 @@ function WordReveal({
 
 export default function Hero() {
   const [modalOpen, setModalOpen] = useState(false);
+  const heroRef = useRef<HTMLElement | null>(null);
+
+  // Scroll-driven cube: as the hero scrolls past the viewport, the cube
+  // image gets a parallax lift + tilt + slight fade. Bound to the hero's
+  // own scroll progress so it works regardless of viewport height.
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+  const cubeYRaw = useTransform(scrollYProgress, [0, 1], [0, -120]);
+  const cubeRotRaw = useTransform(scrollYProgress, [0, 1], [0, -8]);
+  const cubeScaleRaw = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
+  const cubeOpacityRaw = useTransform(scrollYProgress, [0, 0.7, 1], [1, 0.85, 0.45]);
+  const cubeY = useSpring(cubeYRaw, { stiffness: 80, damping: 22, mass: 0.6 });
+  const cubeRot = useSpring(cubeRotRaw, { stiffness: 80, damping: 22, mass: 0.6 });
+  const cubeScale = useSpring(cubeScaleRaw, { stiffness: 80, damping: 22, mass: 0.6 });
+
+  // Grid background retreats as the hero scrolls past — "system fades back".
+  const gridOpacity = useTransform(scrollYProgress, [0, 0.7, 1], [0.4, 0.1, 0]);
 
   return (
-    <section className="hero" id="top">
-      <div className="hero-grid-bg" aria-hidden />
+    <section ref={heroRef} className="hero" id="top">
+      <motion.div
+        className="hero-grid-bg"
+        aria-hidden
+        style={{ opacity: gridOpacity }}
+      />
 
       <div className="container hero-inner">
         <div>
@@ -67,8 +90,14 @@ export default function Hero() {
             transition={{ duration: 0.55, ease: EASE_OUT }}
           >
             <span className="eyebrow">
-              <CubeGlyph lit size={14} />
-              <span className="brand-q">Q</span>bix Studio
+              <Image
+                src="/qbix-keyboard.png"
+                alt="Qbix"
+                width={96}
+                height={28}
+                priority
+                className="eyebrow-keyboard"
+              />
             </span>
           </motion.div>
 
@@ -79,52 +108,63 @@ export default function Hero() {
               baseDelay={0.18}
               step={0.06}
             />
-            <span className="line italic">
-              <WordReveal
-                text="We hold the line on"
-                baseDelay={0.62}
-                step={0.06}
-              />
-              <motion.span
-                className="signal-bg"
-                style={{ display: 'inline-block', whiteSpace: 'pre' }}
-                initial={{ opacity: 0, y: 28, filter: 'blur(14px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                transition={{
-                  duration: 1.05,
-                  ease: EASE_SPRING,
-                  delay: 0.62 + 4 * 0.06,
-                }}
-              >
-                {' '}taste, craft, logic.
-              </motion.span>
-            </span>
+            <WordReveal
+              className="line italic"
+              text="We hold the line on"
+              baseDelay={0.62}
+              step={0.06}
+            />
+            <motion.span
+              className="line italic signal-bg"
+              style={{ display: 'block' }}
+              initial={{ opacity: 0, y: 28, filter: 'blur(14px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{
+                duration: 1.05,
+                ease: EASE_SPRING,
+                delay: 1.0,
+              }}
+            >
+              taste, craft, logic.
+            </motion.span>
           </h1>
 
           <motion.p
             className="hero-sub"
             initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.6, ease: EASE_OUT, delay: 1.55 }}
+            transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.7 }}
           >
             An AI-native product and software studio. Strategy, interface, and the
             AI itself — built by the team that designs it.
+          </motion.p>
+
+          <motion.p
+            className="hero-trust"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.82 }}
+          >
+            <span className="hero-trust-dot" aria-hidden />
+            Seattle · designer + engineer pair · decade-deep across product, brand, and AI
           </motion.p>
 
           <motion.div
             className="hero-ctas"
             initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.5, ease: EASE_OUT, delay: 1.85 }}
+            transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.92 }}
           >
-            <button
-              type="button"
-              className="btn btn-primary btn-lg"
-              onClick={() => setModalOpen(true)}
-            >
-              Make it real
-              <span className="arrow">→</span>
-            </button>
+            <MagneticButton radius={90} strength={9}>
+              <button
+                type="button"
+                className="btn btn-primary btn-lg"
+                onClick={() => setModalOpen(true)}
+              >
+                Start a project
+                <span className="arrow">→</span>
+              </button>
+            </MagneticButton>
             <Link href="#work" className="btn btn-secondary btn-lg">
               View work
             </Link>
@@ -132,11 +172,31 @@ export default function Hero() {
         </div>
 
         <motion.div
+          className="hero-cube-figure"
           initial={{ opacity: 0, filter: 'blur(20px)', scale: 0.96 }}
           animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
           transition={{ duration: 1.6, ease: EASE_OUT, delay: 0.25 }}
         >
-          <CubeGrid />
+          {/* Scroll-scrubbed inner wrapper — the entrance animation lives
+              on the parent; this child carries the ongoing scroll motion. */}
+          <motion.div
+            style={{
+              y: cubeY,
+              rotate: cubeRot,
+              scale: cubeScale,
+              opacity: cubeOpacityRaw,
+              willChange: 'transform, opacity',
+            }}
+          >
+            <Image
+              src="/qbix-cube.png"
+              alt="Qbix cube totem"
+              width={520}
+              height={560}
+              priority
+              className="hero-cube-img"
+            />
+          </motion.div>
         </motion.div>
       </div>
 

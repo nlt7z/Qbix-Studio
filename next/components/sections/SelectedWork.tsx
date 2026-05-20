@@ -1,13 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
-import { projects, brandLookbook } from '@/lib/data';
+import { useEffect, useRef, useState } from 'react';
+import { projects, type Project } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 
 export default function SelectedWork() {
-  const bidking = projects.find((p) => p.slug === 'bidking');
-
   return (
     <section id="work" className="section-pad">
       <div className="container">
@@ -21,99 +19,129 @@ export default function SelectedWork() {
           </div>
         </Reveal>
 
-        {bidking && bidking.media.kind === 'video' && (
-          <div className="feature-case">
-            <Link
-              href={bidking.href ?? '#'}
-              className="feature-case-media"
-              aria-label={`Open ${bidking.title}`}
-            >
-              <Reveal
-                className="feature-case-frame"
-                speed="cinematic"
-                gesture="media"
-                delay={0.1}
-              >
-                <LazyVideo src={bidking.media.src} poster={bidking.media.poster} />
-              </Reveal>
-            </Link>
-
-            <Reveal as="div" className="feature-case-info" speed="base" delay={0.18}>
-              <div className="feature-case-meta">
-                <div>
-                  <div className="feature-case-meta-label">Project</div>
-                  <div className="feature-case-meta-value">{bidking.title}</div>
-                </div>
-                <div>
-                  <div className="feature-case-meta-label">Role</div>
-                  <div className="feature-case-meta-value">{bidking.role}</div>
-                </div>
-                <div>
-                  <div className="feature-case-meta-label">Year</div>
-                  <div className="feature-case-meta-value">{bidking.year}</div>
-                </div>
-                <div>
-                  <div className="feature-case-meta-label">Tags</div>
-                  <div className="feature-case-meta-value">{bidking.tags.join(' · ')}</div>
-                </div>
-              </div>
-              <p className="feature-case-hook">{bidking.hook}</p>
-              <Link href={bidking.href ?? '#'} className="feature-case-link">
-                Open case
-                <span className="arrow">→</span>
-              </Link>
-            </Reveal>
-          </div>
-        )}
-
-        <div className="brand-row">
-          <Reveal as="div" className="brand-row-head" speed="fast">
-            <span className="eyebrow">
-              <span className="num">03 / b</span>
-              Brand objects
-            </span>
-          </Reveal>
-
-          <div className="brand-grid-2">
-            {brandLookbook.map((item, i) => (
-              <Reveal
-                as="figure"
-                key={item.src}
-                className="brand-item"
-                speed="base"
-                gesture="tilt"
-                index={i}
-                delay={0.08 + i * 0.07}
-              >
-                <div className="brand-item-frame">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    className="brand-item-img"
-                    src={item.src}
-                    alt={item.alt}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-                <figcaption className="brand-item-caption">
-                  <span className="brand-item-num">{item.num}</span>
-                  <span className="brand-item-label">{item.label} · 2026</span>
-                </figcaption>
-              </Reveal>
-            ))}
-          </div>
+        <div className="work-cases">
+          {projects.map((p, i) => (
+            <WorkCard key={p.slug} project={p} index={i} />
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function LazyVideo({ src, poster }: { src: string; poster?: string }) {
+function WorkCard({ project, index }: { project: Project; index: number }) {
+  const p = project;
+  const media = p.media;
+  const hasMedia =
+    media?.kind === 'video' || media?.kind === 'images' || media?.kind === 'image';
+
+  const MediaInner = () => {
+    if (!media) return null;
+    if (media.kind === 'video') return <LazyVideo src={media.src} />;
+    if (media.kind === 'images') return <ImageLoop srcs={media.srcs} alt={p.title} />;
+    if (media.kind === 'image')
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="work-case-still"
+          src={media.src}
+          alt={p.title}
+          loading="lazy"
+          decoding="async"
+        />
+      );
+    return null;
+  };
+
+  return (
+    <Reveal
+      as="article"
+      className={`work-case ${hasMedia ? 'work-case--has-media' : ''}`}
+      speed="base"
+      delay={0.05 + index * 0.06}
+    >
+      {hasMedia && (
+        p.href ? (
+          <Link
+            href={p.href}
+            className="work-case-media"
+            aria-label={`Open ${p.title}`}
+          >
+            <div className="work-case-frame">
+              <MediaInner />
+            </div>
+          </Link>
+        ) : (
+          <div className="work-case-media">
+            <div className="work-case-frame">
+              <MediaInner />
+            </div>
+          </div>
+        )
+      )}
+
+      <div className="work-case-head">
+        <span className="work-case-num mono">{p.num}</span>
+        <span className="work-case-year mono">{p.year}</span>
+      </div>
+
+      <h3 className="work-case-title">{p.title}</h3>
+      <span className="work-case-client">{p.client}</span>
+
+      {p.metric && <span className="work-case-metric mono">{p.metric}</span>}
+    </Reveal>
+  );
+}
+
+function ImageLoop({ srcs, alt }: { srcs: string[]; alt: string }) {
+  const [index, setIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) setVisible(e.isIntersecting);
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!visible || srcs.length <= 1) return;
+    const id = window.setInterval(() => {
+      setIndex((i) => (i + 1) % srcs.length);
+    }, 2000);
+    return () => window.clearInterval(id);
+  }, [visible, srcs.length]);
+
+  return (
+    <div ref={containerRef} className="work-case-loop">
+      {srcs.map((src, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={src}
+          src={src}
+          alt={`${alt} — frame ${i + 1}`}
+          className={`work-case-loop-img${i === index ? ' is-active' : ''}`}
+          loading={i === 0 ? 'eager' : 'lazy'}
+          decoding="async"
+        />
+      ))}
+    </div>
+  );
+}
+
+function LazyVideo({ src }: { src: string }) {
   const ref = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || !src) return;
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -134,8 +162,7 @@ function LazyVideo({ src, poster }: { src: string; poster?: string }) {
   return (
     <video
       ref={ref}
-      className="feature-case-video"
-      poster={poster}
+      className="work-case-video"
       muted
       loop
       playsInline

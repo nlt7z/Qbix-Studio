@@ -13,10 +13,10 @@ export default function WhatWeDo() {
           <div>
             <span className="eyebrow">
               <span className="num">02</span>
-              What we do
+              Who we help
             </span>
             <h2 style={{ marginTop: 14 }}>
-              End-to-end design and build for AI-native products.
+              Four kinds of teams, one studio.
             </h2>
           </div>
         </Reveal>
@@ -37,12 +37,19 @@ export default function WhatWeDo() {
                     <span className="svc-num">{s.num}</span>
                     <span className="svc-arrow" aria-hidden>↗</span>
                   </div>
+                  <span className="svc-audience mono">{s.audience}</span>
                   <h3 className="svc-title"><BrandText>{s.title}</BrandText></h3>
                   <p className="svc-blurb"><BrandText>{s.blurb}</BrandText></p>
                   <div className="svc-tags">
                     {s.tags.map((t) => (
                       <span key={t} className="tag">{t}</span>
                     ))}
+                  </div>
+                  <div className="svc-pricing">
+                    <span className="svc-price">
+                      From <strong>{s.priceFrom}</strong>
+                    </span>
+                    <span className="svc-typical mono">{s.typical}</span>
                   </div>
                 </div>
               </Link>
@@ -78,6 +85,7 @@ function ServicePattern({ slug }: { slug: string }) {
   };
   switch (slug) {
     case 'ai-product-design':
+    case 'ai-products':
       return (
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           {/* Base platform — neural graph footprint */}
@@ -111,6 +119,7 @@ function ServicePattern({ slug }: { slug: string }) {
         </svg>
       );
     case 'ux-ui':
+    case 'saas-b2b':
       return (
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           {/* Canvas slab */}
@@ -144,6 +153,7 @@ function ServicePattern({ slug }: { slug: string }) {
         </svg>
       );
     case 'strategy-prototype':
+    case 'brand-studio':
       return (
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           {/* Tablet 1 — rough sketch */}
@@ -199,6 +209,7 @@ function ServicePattern({ slug }: { slug: string }) {
         </svg>
       );
     case 'web-mobile-build':
+    case 'local-business':
       return (
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           {/* === iMac (left) === */}

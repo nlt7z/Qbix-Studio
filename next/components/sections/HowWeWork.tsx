@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
 import { processSteps, type ProcessStep } from '@/lib/data';
 import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
-
-const EASE_BACK = [0.22, 1.2, 0.36, 1] as const;
 
 const stroke = {
   fill: 'none',
@@ -68,8 +66,51 @@ function StageIcon({ name }: { name: ProcessStep['icon'] }) {
 
 export default function HowWeWork() {
   const reduced = useReducedMotion();
+  const pinsRef = useRef<HTMLDivElement | null>(null);
+  const [activePins, setActivePins] = useState(0);
+
+  // Rail + pins tied to the user's scroll position over the pins row.
+  // start (rail empty)  → pins row reaches 80% of viewport
+  // end   (rail full)   → pins row reaches 30% of viewport
+  const { scrollYProgress } = useScroll({
+    target: pinsRef,
+    offset: ['start 80%', 'start 30%'],
+  });
+
+  // Push progress to a CSS custom property so the rail's ::before
+  // clip-path can read it without a React re-render every frame.
+  useMotionValueEvent(scrollYProgress, 'change', (p) => {
+    const el = pinsRef.current;
+    if (!el) return;
+    if (reduced) {
+      el.style.setProperty('--rail-progress', '1');
+      return;
+    }
+    el.style.setProperty('--rail-progress', String(p));
+    // 6 pins, lit sequentially. progress / (1/6) rounded down, clamped.
+    const next = Math.max(0, Math.min(6, Math.floor(p * 6 + 0.15)));
+    setActivePins((prev) => (prev === next ? prev : next));
+  });
+
+  // Honor reduced-motion immediately on mount.
+  useEffect(() => {
+    if (!reduced) return;
+    if (pinsRef.current) {
+      pinsRef.current.style.setProperty('--rail-progress', '1');
+    }
+    setActivePins(6);
+  }, [reduced]);
+
   return (
     <section id="how" className="how section-pad">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="how-decoration"
+        src="/qbix-turntable.png"
+        alt=""
+        aria-hidden
+        loading="lazy"
+      />
       <div className="container">
         <Reveal as="header" className="section-head" speed="fast">
           <div>
@@ -88,30 +129,18 @@ export default function HowWeWork() {
         </Reveal>
 
         <div className="journey">
-          <Stagger className="journey-pins" stagger={0.07} delayChildren={0.15}>
-            {processSteps.map((s) => (
-              <motion.div
+          <div ref={pinsRef} className="journey-pins is-scrubbed">
+            {processSteps.map((s, i) => (
+              <div
                 key={`pin-${s.num}`}
                 className="journey-pin"
-                variants={
-                  reduced
-                    ? undefined
-                    : {
-                        hidden: { opacity: 0, scale: 0.4, filter: 'blur(6px)' },
-                        show: {
-                          opacity: 1,
-                          scale: 1,
-                          filter: 'blur(0px)',
-                          transition: { duration: 0.55, ease: EASE_BACK },
-                        },
-                      }
-                }
+                data-active={i < activePins ? 'true' : 'false'}
                 aria-hidden
               >
                 <span className="journey-pin-dot" />
-              </motion.div>
+              </div>
             ))}
-          </Stagger>
+          </div>
 
           <Stagger as="ol" className="journey-bodies" stagger={0.09} delayChildren={0.25}>
             {processSteps.map((s) => (

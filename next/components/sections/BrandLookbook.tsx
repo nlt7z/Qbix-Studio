@@ -1,7 +1,8 @@
 'use client';
 
 import { brandLookbook } from '@/lib/data';
-import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
+import { Reveal } from '@/components/Reveal';
+import ScrollScrubbedItem from '@/components/ScrollScrubbedItem';
 
 export default function BrandLookbook() {
   return (
@@ -22,13 +23,15 @@ export default function BrandLookbook() {
           </p>
         </Reveal>
 
-        <Stagger className="lookbook-grid" stagger={0.09} delayChildren={0.1}>
-          {brandLookbook.map((item) => (
-            <RevealItem
+        <div className="lookbook-grid">
+          {brandLookbook.map((item, i) => (
+            <ScrollScrubbedItem
               as="figure"
               key={item.src}
+              index={i}
+              amplitude={2}
+              yRange={28}
               className="lookbook-card"
-              speed="slow"
               style={{ aspectRatio: item.aspect }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -42,9 +45,9 @@ export default function BrandLookbook() {
                 <span className="lookbook-num">{item.num}</span>
                 <span className="lookbook-label">{item.label}</span>
               </figcaption>
-            </RevealItem>
+            </ScrollScrubbedItem>
           ))}
-        </Stagger>
+        </div>
       </div>
     </section>
   );

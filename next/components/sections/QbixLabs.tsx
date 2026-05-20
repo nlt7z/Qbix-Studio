@@ -1,21 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { labCards } from '@/lib/data';
+import { labCards, brandLookbook } from '@/lib/data';
 import BrandText from '@/components/BrandText';
 import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 
 export default function QbixLabs() {
   return (
     <section id="labs" className="labs section-pad">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className="labs-decoration"
-        src="/qbix-turntable.png"
-        alt=""
-        aria-hidden
-        loading="lazy"
-      />
       <div className="container">
         <Reveal
           as="header"
@@ -36,23 +28,41 @@ export default function QbixLabs() {
           </p>
         </Reveal>
 
-        <Stagger className="line-list" stagger={0.08} delayChildren={0.15}>
-          {labCards.map((c) => (
-            <RevealItem key={c.num} speed="base">
-              <Link
-                href={`/labs/${c.slug}`}
-                className="line-row"
-                aria-label={`Open ${c.title}`}
-              >
-                <span className="line-num">{c.num} / Lab</span>
-                <span className="line-body">
-                  <span className="line-title"><BrandText>{c.title}</BrandText></span>
-                  <span className="line-blurb"><BrandText>{c.body}</BrandText></span>
-                </span>
-                <span className="line-arrow" aria-hidden>↗</span>
-              </Link>
-            </RevealItem>
-          ))}
+        <Stagger className="lab-cards" stagger={0.08} delayChildren={0.15}>
+          {labCards.map((c, i) => {
+            const brand = brandLookbook[i];
+            return (
+              <RevealItem key={c.num} speed="base">
+                <Link
+                  href={`/labs/${c.slug}`}
+                  className="lab-card"
+                  aria-label={`Open ${c.title}`}
+                >
+                  {brand && (
+                    <div className="lab-card-deco" aria-hidden>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={brand.src}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  )}
+                  <div className="lab-card-body">
+                    <span className="lab-card-num">{c.num} / Lab</span>
+                    <h3 className="lab-card-title">
+                      <BrandText>{c.title}</BrandText>
+                    </h3>
+                    <p className="lab-card-blurb">
+                      <BrandText>{c.body}</BrandText>
+                    </p>
+                  </div>
+                  <span className="lab-card-arrow" aria-hidden>↗</span>
+                </Link>
+              </RevealItem>
+            );
+          })}
         </Stagger>
       </div>
     </section>

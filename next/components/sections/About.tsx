@@ -1,8 +1,8 @@
 'use client';
 
-import { aboutLede } from '@/lib/data';
+import { aboutLede, teamMembers } from '@/lib/data';
 import BrandText from '@/components/BrandText';
-import { Reveal } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 
 export default function About() {
   return (
@@ -21,6 +21,46 @@ export default function About() {
         <Reveal as="p" className="about-lede" speed="slow" delay={0.15}>
           <BrandText>{aboutLede}</BrandText>
         </Reveal>
+
+        <div className="team-strip">
+          <Reveal as="header" className="team-strip-head" speed="fast">
+            <span className="eyebrow">
+              <span className="num">08 / a</span>
+              Team
+            </span>
+            <p className="mono team-strip-legend">
+              <span className="team-strip-dot" aria-hidden />
+              The two people you actually work with.
+            </p>
+          </Reveal>
+
+          <Stagger
+            as="ul"
+            className="team-strip-list"
+            stagger={0.12}
+            delayChildren={0.2}
+          >
+            {teamMembers.map((m) => (
+              <RevealItem
+                as="li"
+                key={m.initial}
+                className="team-strip-card"
+                speed="base"
+              >
+                <span className="team-strip-sigil" aria-hidden>
+                  {m.initial}
+                </span>
+                <div className="team-strip-body">
+                  <div className="team-strip-name-row">
+                    <span className="team-strip-name">{m.name}</span>
+                    <span className="team-strip-title mono">{m.title}</span>
+                  </div>
+                  <p className="team-strip-bio">{m.bio}</p>
+                </div>
+              </RevealItem>
+            ))}
+          </Stagger>
+        </div>
 
         <Reveal className="about-ribbon" speed="cinematic" delay={0.35}>
           {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -7,11 +7,10 @@
 export type NavItem = { label: string; href: string };
 
 export const navItems: NavItem[] = [
-  { label: 'Work',     href: '#work' },
   { label: 'Services', href: '#services' },
-  { label: 'Sprint',   href: '#sprint' },
+  { label: 'Work',     href: '#work' },
+  { label: 'Process',  href: '#how' },
   { label: 'Labs',     href: '#labs' },
-  { label: 'About',    href: '#about' },
   { label: 'Contact',  href: '#contact' },
 ];
 
@@ -36,9 +35,12 @@ export const cubeCells: CubeCell[] = [
 export type Service = {
   slug: string;
   num: string;       // "01"
+  audience: string;  // "AI startups" / "Local business" / etc — primary buyer
   title: string;
   blurb: string;
   tags: string[];
+  priceFrom: string; // "$2k" / "$15k" — starting anchor
+  typical: string;   // "1 – 3 weeks" — duration anchor
   detail: {
     lede: string;
     deliverables: string[];
@@ -48,12 +50,15 @@ export type Service = {
 
 export const services: Service[] = [
   {
-    slug: 'ai-product-design',
+    slug: 'ai-products',
     num: '01',
-    title: 'AI Product Design',
+    audience: 'AI startups · dev tools',
+    title: 'AI products that real people use',
     blurb:
-      'AI product experience design — agent workflows, LLM interfaces, AI feature design. We make complex model behavior understandable and useful.',
-    tags: ['Agent workflow', 'LLM UI', 'AI features', 'Model behavior'],
+      'Agent flows, LLM interfaces, AI features that ship.',
+    tags: ['Agent UX', 'LLM UI', 'AI features'],
+    priceFrom: '$20k',
+    typical: '6 – 12 weeks',
     detail: {
       lede:
         'We design AI products that real people use — agent workflows, chat surfaces, generative UIs, and AI features inside existing apps. Tight craft, model-aware interaction, behavior you can ship.',
@@ -72,97 +77,83 @@ export const services: Service[] = [
     },
   },
   {
-    slug: 'ux-ui',
+    slug: 'local-business',
     num: '02',
-    title: 'UX/UI & Digital Product Design',
+    audience: 'Local business · SMB',
+    title: 'A marketing site, done with craft',
     blurb:
-      'Web apps, mobile apps, dashboards, SaaS, consumer products. The full stack of interface work — research, IA, interaction, visual.',
-    tags: ['Web app', 'Mobile', 'Dashboard', 'SaaS', 'Consumer'],
+      'Restaurants, services, small brands. Design and build, one team, fixed scope.',
+    tags: ['Marketing site', 'Brand basics', 'Launch'],
+    priceFrom: '$2k',
+    typical: '1 – 3 weeks',
     detail: {
       lede:
-        'Full-stack interface design for web and mobile products. We work from research and IA through to interaction, visual systems, and front-end-ready specs — one team, one critique loop.',
+        'Online presence for local business and small brands — a site that earns trust before the customer calls, books, or walks in. Fixed scope, fast turnaround, no agency overhead.',
       deliverables: [
-        'Discovery and product research',
-        'Information architecture and core flows',
-        'Interaction design and motion specs',
-        'Visual systems and component libraries',
-        'Mobile and responsive UI for iOS, Android, web',
-      ],
-      engagement: [
-        { k: 'Engagement', v: 'Project or retainer' },
-        { k: 'Typical run', v: '8 – 16 weeks' },
-        { k: 'Team',        v: 'Pair of designers, optional engineer' },
-      ],
-    },
-  },
-  {
-    slug: 'strategy-prototype',
-    num: '03',
-    title: 'Product Strategy & Prototyping',
-    blurb:
-      'Positioning, user paths, MVP scope, information architecture, clickable and runnable prototypes. Turning unclear ideas into clear product direction.',
-    tags: ['Positioning', 'MVP scope', 'IA', 'Prototype'],
-    detail: {
-      lede:
-        'We turn unclear ideas into a clear product. Positioning sharpens, scope narrows, prototypes get real. Output is decisions you can act on, not slides.',
-      deliverables: [
-        'Positioning and product narrative',
-        'User and use-case mapping',
-        'MVP scope and feature sequencing',
-        'Clickable prototypes — Figma, Framer, or live React',
-        'Roadmap recommendation with risks',
+        'Marketing site or single-page landing',
+        'Brand basics — type, color, mark direction',
+        'Responsive build with content management',
+        'On-page SEO and analytics setup',
+        'One round of revisions, then launch',
       ],
       engagement: [
         { k: 'Engagement', v: 'Fixed-scope sprint' },
-        { k: 'Typical run', v: '2 – 6 weeks' },
-        { k: 'Team',        v: 'Strategy lead + designer' },
+        { k: 'Typical run', v: '1 – 3 weeks' },
+        { k: 'Team',        v: 'Designer + engineer pair' },
       ],
     },
   },
   {
-    slug: 'web-mobile-build',
+    slug: 'saas-b2b',
+    num: '03',
+    audience: 'Growth-stage SaaS · B2B',
+    title: 'Redesigns and new surfaces',
+    blurb:
+      'Dashboards, onboarding, feature launches. We ship into your repo.',
+    tags: ['Dashboard', 'Onboarding', 'Feature launch'],
+    priceFrom: '$5k',
+    typical: '2 – 4 weeks',
+    detail: {
+      lede:
+        'Full-stack interface design for growth-stage SaaS — dashboards, onboarding, new feature surfaces, design system extensions. One team that ships into your repo, not handoff PDFs.',
+      deliverables: [
+        'Discovery, product research, and user interviews',
+        'Information architecture and core flows',
+        'Interaction design and motion specs',
+        'Visual systems and component libraries',
+        'Front-end-ready specs or direct PR contributions',
+      ],
+      engagement: [
+        { k: 'Engagement', v: 'Fixed-scope or short retainer' },
+        { k: 'Typical run', v: '2 – 4 weeks' },
+        { k: 'Team',        v: 'Designer + engineer pair' },
+      ],
+    },
+  },
+  {
+    slug: 'brand-studio',
     num: '04',
-    title: 'Web & Mobile Build',
+    audience: 'Brand · studio identity',
+    title: 'Identity + site, end-to-end',
     blurb:
-      'Marketing sites, landing pages, web apps, mobile prototypes, front-end implementation. We design and we ship the code.',
-    tags: ['Landing', 'Web app', 'Mobile build', 'Front-end'],
+      'Brand systems, identity objects, and the website to carry them.',
+    tags: ['Identity', 'Brand objects', 'Studio site'],
+    priceFrom: '$3k',
+    typical: '2 – 4 weeks',
     detail: {
       lede:
-        'We design and we ship. Marketing sites, landing pages, web apps, and mobile prototypes — implemented by the same team that designed them, so nothing is lost in translation.',
+        'Brand identity + studio sites for design-forward operators. Logo, type, motion, brand objects, and the website that holds them — built by people who can also code the site.',
       deliverables: [
-        'Marketing site or product landing page',
-        'Web app front-end implementation',
-        'Mobile prototype build (React Native or native)',
-        'CMS integration and content modeling',
-        'Performance budgeting and motion polish',
+        'Brand strategy and naming alignment',
+        'Identity system — mark, type, color, motion',
+        'Brand object renders and lookbook frames',
+        'Studio site design + build',
+        'Hand-off kit with usage rules and component library',
       ],
       engagement: [
-        { k: 'Engagement', v: 'Fixed-scope or T&M' },
-        { k: 'Typical run', v: '4 – 12 weeks' },
-        { k: 'Team',        v: 'Designer + 1 – 2 engineers' },
-      ],
-    },
-  },
-  {
-    slug: 'labs',
-    num: '05',
-    title: 'Qbix Labs',
-    blurb:
-      'Our proprietary AI software products and experiments. The internal playground for new interaction models and intelligent tools.',
-    tags: ['Proprietary', 'Internal', 'AI tools'],
-    detail: {
-      lede:
-        'Qbix Labs is our internal product playground — proprietary AI tools, interface experiments, and small games that test new interaction patterns before they appear in client work.',
-      deliverables: [
-        'In-house AI software products',
-        'Interface experiments around agents and generative UI',
-        'Game and interaction prototypes',
-        'Open releases and writeups when they hold up',
-      ],
-      engagement: [
-        { k: 'Status',     v: 'Self-funded, ongoing' },
-        { k: 'Cadence',    v: 'New experiment ~6 weeks' },
-        { k: 'Output',     v: 'Products, posts, and code' },
+        { k: 'Engagement', v: 'Fixed-scope sprint' },
+        { k: 'Typical run', v: '2 – 4 weeks' },
+        { k: 'Team',        v: 'Designer + engineer pair' },
       ],
     },
   },
@@ -187,17 +178,71 @@ export type Project = {
   category: ProjectCategory;
   tags: string[];
   hook: string;
-  aspect: number;          // intrinsic w/h
-  media: Media;
+  aspect?: number;            // intrinsic w/h (only when media present)
+  media?: Media;              // optional — text-forward cases have no media yet
+  highlights?: string[];      // 2–4 short bullet outcomes
+  metric?: string;            // single mono badge line, e.g. "+200% model calls"
   href?: string;
 };
 
 export const projects: Project[] = [
   {
-    slug: 'bidking',
+    slug: 'qwen-character',
     num: 'FILE / 001',
+    title: 'Qwen Character',
+    client: 'Alibaba Cloud',
+    role: 'AI Product Design · Front-end · Agent flow',
+    year: 2025,
+    category: 'ai-product',
+    tags: ['AI Product', 'Developer tools', 'LLM', 'Agent'],
+    hook:
+      'Replaced static API documentation with four hands-on LLM product surfaces — model call volume grew 200% after launch, validating documentation-as-product for developer adoption.',
+    highlights: [
+      'Four interactive product surfaces replaced static API docs with hands-on LLM demos.',
+      'Prompt-to-deploy framework in HTML, CSS, and component integrations cut design-to-deploy time by 60%.',
+      'Art direction across all four surfaces — motion, state transitions, and a custom illustration set.',
+    ],
+    metric: '+200% model call volume · 60% faster design-to-deploy',
+    aspect: 16 / 9,
+    media: {
+      kind: 'images',
+      srcs: [
+        '/qwen-character/01.png',
+        '/qwen-character/02.png',
+        '/qwen-character/03.png',
+        '/qwen-character/04.png',
+        '/qwen-character/05.png',
+        '/qwen-character/06.png',
+        '/qwen-character/07.png',
+        '/qwen-character/08.png',
+      ],
+    },
+  },
+  {
+    slug: 'spark-tts',
+    num: 'FILE / 002',
+    title: 'Spark TTS Workflow',
+    client: 'Alibaba Cloud',
+    role: 'AI Product Design · Interaction · Motion',
+    year: 2025,
+    category: 'ai-product',
+    tags: ['AI Product', 'Generation UX', 'Design System', 'Patent'],
+    hook:
+      "A text-to-speech workflow that turns a black-box generator into editable steps — patented, and adopted into Alibaba Cloud's Spark Design System as the standard for inspectable, controllable generation.",
+    highlights: [
+      'Patent-winning workflow that breaks black-box text-to-speech into editable steps — pitch, pauses, emotional cues.',
+      'Adopted by the Alibaba Cloud Spark Design System as the reusable template for inspectable, controllable generation.',
+      'Interaction logic, UI states, and motion for preview and edit moments that let users understand, refine, and trust outputs.',
+    ],
+    metric: 'Patent · Innovation award · Spark Design System template',
+    aspect: 16 / 9,
+    media: { kind: 'image', src: '/tts-flow.jpg' },
+  },
+  {
+    slug: 'bidking',
+    num: 'FILE / 003',
     title: 'BidKing',
-    client: 'Studio Product',
+    client: 'Mobile Game',
     role: 'Game Design · Mobile UI · System',
     year: 2025,
     category: 'game',
@@ -205,7 +250,7 @@ export const projects: Project[] = [
     hook:
       'A sealed-bid auction game where strategy hides behind cute chaos. Bid, bluff, or burn — only the last vault standing wins.',
     aspect: 720 / 332,
-    media: { kind: 'video', src: '/bidking.mp4' },
+    media: { kind: 'video', src: '/bidking.mov' },
     href: '/work/bidking',
   },
 ];
@@ -331,6 +376,30 @@ export const labCards: LabCard[] = [
 export const aboutLede =
   'Qbix Studio LLC is an AI-native product and software studio in Seattle — a decade-deep artist and engineer working as one team. In this era, building with AI is table stakes; we also build AI ourselves. What we hold onto, and most have let go, is taste, craft, and logic.';
 
+// ----- TEAM ------------------------------------------------------------------
+
+export type TeamMember = {
+  initial: string;          // single-letter sigil used in lieu of a photo
+  name: string;
+  title: string;
+  bio: string;              // one line — the credibility hook
+};
+
+export const teamMembers: TeamMember[] = [
+  {
+    initial: 'Q',
+    name: 'Q',
+    title: 'Founder · Design Lead',
+    bio: 'A decade of art and design craft across product, brand, and AI surfaces.',
+  },
+  {
+    initial: 'J',
+    name: 'J',
+    title: 'Engineering Lead',
+    bio: 'Four years of FAANG engineering — shipping high-scale production systems.',
+  },
+];
+
 // ----- BRAND LOOKBOOK (identity stills, not project cases) -------------------
 
 export type LookbookItem = {
@@ -347,7 +416,7 @@ export const brandLookbook: LookbookItem[] = [
     label: 'Mixtape, vol. 01',
     alt: 'Clear plastic cassette tape labelled QBIX STUDIO LLC',
     src: '/brand-cassette.png',
-    aspect: '316 / 270',
+    aspect: '1 / 1',
   },
   {
     num: '02',

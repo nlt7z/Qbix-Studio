@@ -17,7 +17,10 @@ export default function Testimonial() {
           </p>
           <div className="testimonial-meta">
             <span className="testimonial-rule" aria-hidden />
-            <span className="testimonial-attrib">Alibaba Cloud</span>
+            <span className="testimonial-attrib">
+              <span className="testimonial-attrib-name">CY</span>
+              <span className="testimonial-attrib-role mono">Alibaba Cloud</span>
+            </span>
           </div>
         </Reveal>
       </div>
