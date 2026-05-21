@@ -3584,6 +3584,7 @@ section { position: relative; }
 .work-case-iframe {
   display: block;
   width: 200%;
+  max-width: none;
   height: 200%;
   border: 0;
   transform: scale(0.5);
