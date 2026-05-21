@@ -174,7 +174,8 @@ export type ProjectCategory = 'all' | 'ai-product' | 'ux-ui' | 'web' | 'mobile' 
 export type Media =
   | { kind: 'video'; src: string; poster?: string }
   | { kind: 'image'; src: string }
-  | { kind: 'images'; srcs: string[] };
+  | { kind: 'images'; srcs: string[] }
+  | { kind: 'iframe'; src: string };
 
 export type Project = {
   slug: string;
@@ -197,69 +198,94 @@ export const projects: Project[] = [
   {
     slug: 'qwen-character',
     num: 'FILE / 001',
-    title: 'Qwen Character',
-    client: 'Alibaba Cloud',
+    title: 'AI Character Product Build',
+    client: 'Enterprise AI Platform',
     role: 'AI Product Design · Front-end · Agent flow',
     year: 2025,
     category: 'ai-product',
     tags: ['AI Product', 'Developer tools', 'LLM', 'Agent'],
     hook:
-      'Replaced static API documentation with four hands-on LLM product surfaces — model call volume grew 200% after launch, validating documentation-as-product for developer adoption.',
+      'Turned static API docs into four hands-on LLM surfaces — model call volume grew 200% after launch, proving documentation can be the product.',
     highlights: [
-      'Four interactive product surfaces replaced static API docs with hands-on LLM demos.',
-      'Prompt-to-deploy framework in HTML, CSS, and component integrations cut design-to-deploy time by 60%.',
-      'Art direction across all four surfaces — motion, state transitions, and a custom illustration set.',
+      'Four interactive surfaces replaced static API docs with hands-on LLM demos developers could touch.',
+      'A prompt-to-deploy framework — HTML, CSS, component integrations — cut design-to-deploy time by 60%.',
+      'Art direction across all four surfaces: motion, state transitions, and a custom illustration set.',
     ],
-    metric: '+200% model call volume · 60% faster design-to-deploy',
+    metric: '+200% model calls · 60% faster ship',
     aspect: 16 / 9,
-    media: {
-      kind: 'images',
-      srcs: [
-        '/qwen-character/01.png',
-        '/qwen-character/02.png',
-        '/qwen-character/03.png',
-        '/qwen-character/04.png',
-        '/qwen-character/05.png',
-        '/qwen-character/06.png',
-        '/qwen-character/07.png',
-        '/qwen-character/08.png',
-      ],
-    },
+    media: { kind: 'video', src: '/figma.mp4' },
   },
   {
     slug: 'spark-tts',
     num: 'FILE / 002',
-    title: 'Spark TTS Workflow',
-    client: 'Alibaba Cloud',
+    title: 'Reframe TTS Workflow',
+    client: 'Enterprise AI Platform',
     role: 'AI Product Design · Interaction · Motion',
     year: 2025,
     category: 'ai-product',
     tags: ['AI Product', 'Generation UX', 'Design System', 'Patent'],
     hook:
-      "A text-to-speech workflow that turns a black-box generator into editable steps — patented, and adopted into Alibaba Cloud's Spark Design System as the standard for inspectable, controllable generation.",
+      'A text-to-speech workflow that opens up the black box — patented, and adopted into an enterprise design system as the standard pattern for inspectable, controllable generation.',
     highlights: [
-      'Patent-winning workflow that breaks black-box text-to-speech into editable steps — pitch, pauses, emotional cues.',
-      'Adopted by the Alibaba Cloud Spark Design System as the reusable template for inspectable, controllable generation.',
-      'Interaction logic, UI states, and motion for preview and edit moments that let users understand, refine, and trust outputs.',
+      'Patent-winning workflow that breaks black-box TTS into editable steps — pitch, pauses, emotional cues.',
+      'Adopted into the enterprise design system as the reusable template for controllable generation.',
+      'Interaction logic, UI states, and motion for the preview and edit moments where users learn to trust the output.',
     ],
-    metric: 'Patent · Innovation award · Spark Design System template',
+    metric: 'Patent · Innovation award · Design system template',
     aspect: 16 / 9,
-    media: { kind: 'image', src: '/tts-flow.jpg' },
+    media: { kind: 'image', src: '/tts-workflow.jpg' },
   },
   {
     slug: 'bidking',
     num: 'FILE / 003',
-    title: 'BidKing',
-    client: 'Mobile Game',
+    title: 'Transform Bid Experience into Mobile Games',
+    client: 'Studio Product',
     role: 'Game Design · Mobile UI · System',
     year: 2025,
     category: 'game',
     tags: ['Studio Product', 'Mobile', 'Game'],
     hook:
-      'A sealed-bid auction game where strategy hides behind cute chaos. Bid, bluff, or burn — only the last vault standing wins.',
+      'A sealed-bid auction reimagined as a mobile game — strategy hidden behind cute chaos, where players bid, bluff, or burn until the last vault standing wins.',
     aspect: 720 / 332,
     media: { kind: 'video', src: '/bidking.mov' },
     href: '/work/bidking',
+  },
+  {
+    slug: 'sde-personal-rebrand',
+    num: 'FILE / 004',
+    title: 'Rebrand SDE to Be Competitive',
+    client: 'Senior SDE · Independent',
+    role: 'Brand · Web · Front-end',
+    year: 2026,
+    category: 'web',
+    tags: ['Branding', 'Web', 'Portfolio'],
+    hook:
+      'Rebrand and rebuild for a senior engineer — turned a stock résumé page into a personal site that reads like product work, sharp enough to stand out in a competitive hiring market.',
+    highlights: [
+      'Identity, type system, and tone rebuilt to feel sharp and engineering-native — not decorative.',
+      'Architecture organized around the work, not the timeline — projects, writing, and contact in three clicks.',
+      'Shipped in Next.js with motion details that read as craft without weighing the page down.',
+    ],
+    aspect: 16 / 9,
+    media: { kind: 'iframe', src: 'https://hancao.space' },
+    href: 'https://hancao.space',
+  },
+  {
+    slug: 'ai-interview-tool',
+    num: 'FILE / 005',
+    title: 'AI Interview Tool · 0→1 Launch',
+    client: 'Studio Product',
+    role: 'Product · AI UX · Front-end · Launch',
+    year: 2026,
+    category: 'ai-product',
+    tags: ['AI Product', 'Developer tools', 'End-to-end'],
+    hook:
+      'An AI-native coding interview tool, taken from zero to one — problem framing through public launch. Designed around how engineers actually think out loud with a model in the room.',
+    highlights: [
+      'Defined the product from zero — target user, core loop, AI behavior, pricing.',
+      'Designed an interview surface where the model coaches, probes, and grades without breaking flow.',
+      'Owned design, front-end, and launch — public beta with onboarding, billing, and telemetry shipped.',
+    ],
   },
 ];
 

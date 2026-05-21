@@ -4,8 +4,9 @@ import Ticker from '@/components/Ticker';
 import Colophon from '@/components/Colophon';
 
 export const metadata: Metadata = {
-  title: 'archive — qbix// studio',
-  description: 'Four small game systems in development. One playable, three in concept build.',
+  title: 'Games archive',
+  description:
+    'Game and interaction-system experiments from Qbix Studio. Four small game systems in development — one playable, three in concept build.',
 };
 
 export default function GamesPage() {

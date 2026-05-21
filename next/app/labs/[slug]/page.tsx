@@ -19,6 +19,7 @@ export async function generateMetadata({
   return {
     title: `${c.title} — Qbix Labs`,
     description: c.detail.lede,
+    alternates: { canonical: `/labs/${c.slug}` },
   };
 }
 

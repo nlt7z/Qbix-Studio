@@ -5,8 +5,8 @@ import Colophon from '@/components/Colophon';
 import './bidking.css';
 
 export const metadata: Metadata = {
-  title: 'BIDKING — qbix// studio',
-  description: 'A blind auction game about risk, bluffing, and opening the wrong box.',
+  title: 'BidKing — a blind-auction game',
+  description: 'BidKing is a blind-auction game about risk, bluffing, and opening the wrong box. A playable prototype from Qbix Studio.',
 };
 
 export default function BidKingPage() {

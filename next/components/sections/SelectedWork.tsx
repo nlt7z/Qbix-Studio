@@ -33,7 +33,10 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
   const p = project;
   const media = p.media;
   const hasMedia =
-    media?.kind === 'video' || media?.kind === 'images' || media?.kind === 'image';
+    media?.kind === 'video' ||
+    media?.kind === 'images' ||
+    media?.kind === 'image' ||
+    media?.kind === 'iframe';
 
   const MediaInner = () => {
     if (!media) return null;
@@ -50,6 +53,7 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
           decoding="async"
         />
       );
+    if (media.kind === 'iframe') return <LazyIframe src={media.src} title={p.title} />;
     return null;
   };
 
@@ -62,15 +66,29 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
     >
       {hasMedia && (
         p.href ? (
-          <Link
-            href={p.href}
-            className="work-case-media"
-            aria-label={`Open ${p.title}`}
-          >
-            <div className="work-case-frame">
-              <MediaInner />
-            </div>
-          </Link>
+          /^https?:\/\//.test(p.href) ? (
+            <a
+              href={p.href}
+              className="work-case-media"
+              aria-label={`Open ${p.title}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div className="work-case-frame">
+                <MediaInner />
+              </div>
+            </a>
+          ) : (
+            <Link
+              href={p.href}
+              className="work-case-media"
+              aria-label={`Open ${p.title}`}
+            >
+              <div className="work-case-frame">
+                <MediaInner />
+              </div>
+            </Link>
+          )
         ) : (
           <div className="work-case-media">
             <div className="work-case-frame">
@@ -132,6 +150,46 @@ function ImageLoop({ srcs, alt }: { srcs: string[]; alt: string }) {
           decoding="async"
         />
       ))}
+    </div>
+  );
+}
+
+function LazyIframe({ src, title }: { src: string; title: string }) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [shouldLoad, setShouldLoad] = useState(false);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setShouldLoad(true);
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      { threshold: 0.1 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div ref={wrapRef} className="work-case-iframe-wrap" aria-hidden="true">
+      {shouldLoad && (
+        <iframe
+          src={src}
+          title={`${title} preview`}
+          className="work-case-iframe"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          sandbox="allow-same-origin allow-scripts"
+          tabIndex={-1}
+        />
+      )}
     </div>
   );
 }

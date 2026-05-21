@@ -4,9 +4,9 @@ import Colophon from '@/components/Colophon';
 import { CONTACT_EMAIL, brandLookbook } from '@/lib/data';
 
 export const metadata: Metadata = {
-  title: 'Press kit — Qbix Studio',
+  title: 'Press kit',
   description:
-    'Press kit for Qbix Studio. Studio boilerplate, wordmark, brand objects, palette, and press contact for editors, writers, and partners.',
+    'Press kit for Qbix Studio — an AI-native product design and software studio in Seattle, WA. Studio boilerplate, wordmark, brand objects, palette, and press contact for editors, writers, and partners.',
 };
 
 const boilerplate =

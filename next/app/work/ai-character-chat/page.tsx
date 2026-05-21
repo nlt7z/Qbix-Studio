@@ -3,9 +3,9 @@ import Link from 'next/link';
 import Colophon from '@/components/Colophon';
 
 export const metadata: Metadata = {
-  title: 'AI Character Platform — Qbix Studio',
+  title: 'AI Character Platform — case study',
   description:
-    'A premium interactive product showroom for enterprise users to explore LLM character capabilities. Memory, ritual, conversation.',
+    'Case study: a premium interactive product showroom for enterprise users to explore LLM character capabilities — memory, ritual, conversation. Designed by Qbix Studio.',
 };
 
 const tags = ['AI Product', 'Web', 'LLM UI', 'Agent workflow'];

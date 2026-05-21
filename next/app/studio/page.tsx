@@ -6,8 +6,9 @@ import Ticker from '@/components/Ticker';
 import Colophon from '@/components/Colophon';
 
 export const metadata: Metadata = {
-  title: 'studio — qbix// studio',
-  description: 'qbix is an independent game studio. Two founders. Small games, sharp systems, strange worlds.',
+  title: 'Studio — Seattle, WA',
+  description:
+    'Qbix is an independent AI-native product design and software studio in Seattle, Washington. Two founders. Small teams, sharp systems, products that ship.',
 };
 
 export default function StudioPage() {

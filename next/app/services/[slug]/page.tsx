@@ -17,8 +17,9 @@ export async function generateMetadata({
   const s = services.find((x) => x.slug === params.slug);
   if (!s) return {};
   return {
-    title: `${s.title} — Qbix Studio`,
+    title: s.title,
     description: s.detail.lede,
+    alternates: { canonical: `/services/${s.slug}` },
   };
 }
 
