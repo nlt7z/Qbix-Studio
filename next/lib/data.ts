@@ -247,7 +247,7 @@ export const projects: Project[] = [
     hook:
       'A sealed-bid auction reimagined as a mobile game — strategy hidden behind cute chaos, where players bid, bluff, or burn until the last vault standing wins.',
     aspect: 720 / 332,
-    media: { kind: 'video', src: '/bidking.mov' },
+    media: { kind: 'video', src: '/bidking-present.mp4' },
     href: '/work/bidking',
   },
   {
@@ -286,6 +286,8 @@ export const projects: Project[] = [
       'Designed an interview surface where the model coaches, probes, and grades without breaking flow.',
       'Owned design, front-end, and launch — public beta with onboarding, billing, and telemetry shipped.',
     ],
+    aspect: 16 / 9,
+    media: { kind: 'video', src: '/interview-tool.mp4' },
   },
 ];
 

@@ -3739,3 +3739,716 @@ section { position: relative; }
   line-height: 1.5;
   color: var(--text);
 }
+
+/* =============================================================================
+   HUD TOKEN ALIASES — bidking.css and studio HUD components use these names
+   ============================================================================= */
+
+:root {
+  --void:          #050608;
+  --carbon:        var(--bg-card);
+  --white:         var(--ink);
+  --off:           var(--ink-2);
+  --dust:          var(--text);
+  --ash:           var(--text-2);
+  --rust:          #C76840;
+  --line-bright:   rgba(255, 255, 255, 0.16);
+  --font-block:    var(--font-sans);
+  --font-terminal: var(--font-mono);
+}
+
+/* =============================================================================
+   HUD SHELL — shared primitives across studio dossier / crew / transmission /
+   archive. Tactical, mono-leaning, hairline borders, lime status.
+   ============================================================================= */
+
+.sub {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.sub-plain {
+  display: block;
+  margin-top: 14px;
+  font-family: var(--font-sans);
+  font-size: clamp(15px, 1.6vw, 17px);
+  letter-spacing: -0.011em;
+  text-transform: none;
+  color: var(--text);
+  line-height: 1.55;
+  max-width: 720px;
+}
+.section-head .left { min-width: 0; flex: 1 1 auto; }
+
+/* ---------- Studio dossier ---------- */
+.dossier {
+  position: relative;
+  padding: clamp(48px, 7vw, 96px) clamp(16px, 4vw, 32px);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.dossier-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(16px, 2.4vw, 28px);
+  align-items: flex-start;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.dossier-meta > div span {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--signal);
+}
+.dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 18px);
+  margin-top: clamp(28px, 4vw, 44px);
+}
+.dossier-block {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: clamp(20px, 2.6vw, 28px);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card-sm);
+  box-shadow: var(--highlight);
+}
+.dossier-block h3 {
+  font-family: var(--font-headline);
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.05;
+  color: var(--ink);
+  margin: 0;
+}
+.dossier-block p {
+  font-family: var(--font-sans);
+  font-size: clamp(13.5px, 1.4vw, 15px);
+  line-height: 1.55;
+  letter-spacing: -0.008em;
+  color: var(--text-2);
+}
+.d-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--signal);
+  text-transform: uppercase;
+}
+.d-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.d-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  padding: 3px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+@media (max-width: 720px) {
+  .dossier-grid { grid-template-columns: 1fr; }
+  .dossier-block[style*="span 2"] { grid-column: auto !important; }
+}
+
+/* ---------- Founders / crew ---------- */
+.crew {
+  position: relative;
+  padding: 0 clamp(16px, 4vw, 32px) clamp(48px, 7vw, 96px);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.crew-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: clamp(20px, 3vw, 28px);
+}
+.crew-bar-left { display: inline-flex; align-items: center; }
+.crew-bar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+.crew-bar-right .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px rgba(184, 255, 0, 0.18);
+}
+.crew-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 20px);
+}
+@media (max-width: 720px) {
+  .crew-grid { grid-template-columns: 1fr; }
+}
+.crew-card {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2.2vw, 22px);
+  padding: clamp(22px, 3vw, 30px);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--highlight), var(--shadow-card);
+  min-width: 0;
+}
+.crew-id {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2vw, 20px);
+}
+.crew-letter {
+  display: grid;
+  place-items: center;
+  width: clamp(56px, 7vw, 76px);
+  height: clamp(56px, 7vw, 76px);
+  border-radius: 50%;
+  background:
+    radial-gradient(120% 120% at 30% 20%, rgba(184, 255, 0, 0.20), transparent 60%),
+    var(--bg-charcoal);
+  border: 1px solid var(--line-3);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(22px, 2.8vw, 28px);
+  color: var(--signal);
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+.crew-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.crew-callsign {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(15px, 1.6vw, 17px);
+  letter-spacing: -0.014em;
+  color: var(--ink);
+}
+.crew-role {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.10em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+.crew-role-cn {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+}
+.crew-blurb {
+  font-family: var(--font-sans);
+  font-size: clamp(13.5px, 1.4vw, 14.5px);
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0;
+}
+.crew-caps {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.crew-caps .cap {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.crew-caps .cap:last-child { border-bottom: none; }
+.crew-caps .cap-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+.crew-caps .cap-label {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.011em;
+  color: var(--ink);
+}
+.crew-caps .cap-cn {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+}
+.crew-caps .cap-note {
+  grid-column: 2 / -1;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-2);
+  letter-spacing: -0.006em;
+  margin-top: 2px;
+}
+@media (max-width: 480px) {
+  .crew-caps .cap { grid-template-columns: 28px minmax(0, 1fr); }
+  .crew-caps .cap-cn { display: none; }
+}
+
+/* ---------- Transmission (contact panel) ---------- */
+.transmission {
+  position: relative;
+  padding: 0 clamp(16px, 4vw, 32px) clamp(64px, 9vw, 120px);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.tm-bar {
+  display: inline-flex;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  margin-bottom: clamp(16px, 2.4vw, 22px);
+}
+.tm-frame {
+  position: relative;
+  padding: clamp(28px, 4vw, 44px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.018) 0%, rgba(0,0,0,0.18) 100%), var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--highlight), var(--shadow-card);
+  overflow: hidden;
+}
+.tm-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--signal);
+  pointer-events: none;
+  opacity: 0.7;
+}
+.tm-corner.tl { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+.tm-corner.br { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+.tm-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: clamp(20px, 2.6vw, 26px);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+.tm-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px rgba(184, 255, 0, 0.22), 0 0 12px rgba(184, 255, 0, 0.45);
+  flex-shrink: 0;
+}
+.tm-title { color: var(--ink); }
+.tm-spacer { flex: 1; }
+.tm-state { color: var(--signal-hover); }
+.tm-body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3vw, 28px);
+  padding-top: clamp(24px, 3vw, 32px);
+}
+.tm-lead {
+  font-family: var(--font-sans);
+  font-size: clamp(16px, 1.8vw, 19px);
+  line-height: 1.55;
+  color: var(--ink-2);
+  letter-spacing: -0.011em;
+  margin: 0;
+  max-width: 640px;
+}
+.tm-mail {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(14px, 1.8vw, 18px) clamp(16px, 2.4vw, 22px);
+  background: rgba(184, 255, 0, 0.05);
+  border: 1px solid rgba(184, 255, 0, 0.28);
+  border-radius: var(--r-card-sm);
+  font-family: var(--font-mono);
+  font-size: clamp(15px, 1.8vw, 18px);
+  letter-spacing: 0;
+  color: var(--signal-hover);
+  text-decoration: none;
+  align-self: flex-start;
+  max-width: 100%;
+  word-break: break-all;
+  transition: background var(--t-base) var(--ease), border-color var(--t-base) var(--ease);
+}
+.tm-mail:hover { background: rgba(184, 255, 0, 0.10); border-color: rgba(184, 255, 0, 0.45); }
+.tm-mail-prefix { color: var(--signal); flex-shrink: 0; }
+.tm-mail-addr { min-width: 0; }
+.tm-note {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+/* =============================================================================
+   GAMES ARCHIVE — mission cards + grid
+   ============================================================================= */
+
+.archive {
+  padding: clamp(48px, 7vw, 96px) clamp(16px, 4vw, 32px);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.mission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 20px);
+  margin-bottom: clamp(20px, 3vw, 28px);
+}
+@media (max-width: 720px) {
+  .mission-grid { grid-template-columns: 1fr; }
+}
+
+.mission {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.8vw, 18px);
+  padding: clamp(22px, 2.8vw, 30px);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--highlight), var(--shadow-card);
+  overflow: hidden;
+  transition: border-color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+  min-width: 0;
+}
+.mission:hover { border-color: var(--line-2); background: var(--bg-charcoal); }
+.mission.locked {
+  opacity: 0.7;
+  filter: saturate(0.8);
+}
+.mission .status-line {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--signal);
+  opacity: 0.6;
+}
+.mission.locked .status-line { background: var(--text-3); opacity: 0.4; }
+
+.mission-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.mission-meta .num { color: var(--signal); }
+.mission .status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 3px;
+  color: var(--text-2);
+}
+.mission .status-tag .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-3);
+}
+.mission .status-tag.tag-live {
+  color: var(--signal-hover);
+  border-color: rgba(184, 255, 0, 0.35);
+  background: rgba(184, 255, 0, 0.05);
+}
+.mission .status-tag.tag-live .dot {
+  background: var(--signal);
+  box-shadow: 0 0 0 3px rgba(184, 255, 0, 0.22);
+}
+
+.mission-title {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 40px);
+  letter-spacing: -0.022em;
+  line-height: 1.0;
+  color: var(--ink);
+  margin: 0;
+  word-break: break-word;
+}
+.mission-locked-title { color: var(--text-2); }
+
+.mission-hook {
+  font-family: var(--font-sans);
+  font-size: clamp(13.5px, 1.4vw, 15px);
+  line-height: 1.55;
+  letter-spacing: -0.008em;
+  color: var(--text);
+  margin: 0;
+}
+.mission-locked-hook { color: var(--text-2); }
+
+.mission-preview {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card-sm);
+  background: #0f1116;
+}
+.mission-preview svg { display: block; width: 100%; height: 100%; }
+.mission-preview .scan-bar {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    rgba(255, 255, 255, 0.025) 3px,
+    rgba(255, 255, 255, 0.025) 4px
+  );
+}
+
+.mission-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: clamp(10px, 1.4vw, 14px);
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+.mission-foot .tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mission-enter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--signal);
+  transition: transform var(--t-fast) var(--ease);
+}
+.mission:hover .mission-enter { transform: translateX(2px); }
+.mission.locked .mission-enter { color: var(--text-3); }
+
+/* =============================================================================
+   TICKER — marquee strip used by /studio, /games, /games/bidking
+   ============================================================================= */
+
+.ticker {
+  position: relative;
+  overflow: hidden;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+.ticker::before,
+.ticker::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: clamp(40px, 8vw, 80px);
+  z-index: 2;
+  pointer-events: none;
+}
+.ticker::before { left: 0;  background: linear-gradient(90deg, var(--bg-2), transparent); }
+.ticker::after  { right: 0; background: linear-gradient(-90deg, var(--bg-2), transparent); }
+
+.ticker-track {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(32px, 5vw, 56px);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 1.05vw, 13px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  animation: ticker-scroll 48s linear infinite;
+  will-change: transform;
+}
+.ticker-track > span {
+  display: inline-block;
+  flex-shrink: 0;
+}
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; transform: translateX(0); }
+}
+
+/* =============================================================================
+   PRESS — brand-card grid for identity stills (figure / frame / img / caption)
+   ============================================================================= */
+
+.brand-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 20px);
+}
+@media (max-width: 900px) { .brand-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .brand-grid { grid-template-columns: 1fr; } }
+
+.brand-card {
+  position: relative;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  box-shadow: var(--highlight);
+  transition: border-color var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+}
+.brand-card:hover { border-color: var(--line-2); transform: translateY(-2px); }
+.brand-card-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--bg-charcoal);
+}
+.brand-card-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 420ms var(--ease-out-expo);
+}
+.brand-card:hover .brand-card-img { transform: scale(1.03); }
+.brand-card-caption {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: clamp(10px, 1.6vw, 14px) clamp(12px, 1.8vw, 16px);
+  border-top: 1px solid var(--line);
+  background: var(--bg-card);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.brand-card-num {
+  color: var(--signal);
+  text-transform: uppercase;
+}
+.brand-card-label {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: clamp(12px, 1.4vw, 13px);
+  font-weight: 500;
+  letter-spacing: -0.011em;
+}
+
+/* =============================================================================
+   MOBILE 390px TUNE-UPS — patch existing rules that feel oversized at 390px
+   ============================================================================= */
+
+@media (max-width: 480px) {
+  /* Hero — pull padding down hard, keep cube modest */
+  .hero { padding: clamp(80px, 18vw, 96px) 0 clamp(40px, 9vw, 56px); }
+  .hero-title { font-size: clamp(34px, 9.2vw, 44px); }
+  .hero-sub   { font-size: 15px; }
+
+  /* Section heads */
+  .section-head h2,
+  .contact-heading,
+  .detail-title { font-size: clamp(32px, 9vw, 42px); }
+
+  /* Sprint big numbers — clamp lower */
+  .sprint-bignum-n { font-size: clamp(80px, 22vw, 110px); }
+  .sprint-brief-figure .sprint-bignum-n { font-size: clamp(72px, 20vw, 100px); }
+  .contact-sprint-n { font-size: clamp(64px, 18vw, 96px); }
+
+  /* Feature-case orange phone frame — thinner border at 390px */
+  .feature-case-frame { border-width: 6px; border-radius: 16px; }
+
+  /* Work-case grid — tighten padding, drop iframe scale */
+  .work-case { padding: 20px 16px; }
+  .work-case-iframe { width: 250%; height: 250%; transform: scale(0.4); }
+
+  /* Buttons — fill row by default on phone */
+  .hero-ctas .btn,
+  .contact-ctas .btn,
+  .detail-cta .btn { flex: 1 1 100%; justify-content: center; }
+  .detail-cta-text { min-width: 0; width: 100%; }
+
+  /* Lab card — drop big deco at phone width */
+  .lab-card { grid-template-columns: 56px minmax(0, 1fr); gap: 14px; padding: 20px 14px; }
+  .lab-card-title { font-size: 20px; }
+  .lab-card-blurb { font-size: 13.5px; }
+
+  /* Footer — keep the line-row stacking gentle */
+  .footer-line { font-size: 11px; gap: 8px; }
+}
+
+/* Bidking detail page — its own CSS doesn't drop vertical padding far enough */
+@media (max-width: 480px) {
+  .bk-hero { padding-bottom: 56px; }
+  .bk-hook { margin-bottom: 40px; font-size: 16px; }
+  .bk-title { font-size: clamp(56px, 16vw, 80px); letter-spacing: -2px; margin-bottom: 24px; }
+  .bk-meta-bar { margin-bottom: 28px; flex-wrap: wrap; gap: 8px; font-size: 10px; }
+  .bk-video-frame { margin-bottom: 40px; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+  .bk-mechanics { padding: 64px 0 88px; }
+  .bk-section-title { font-size: 30px; margin-bottom: 32px; }
+  .bk-mech-body { font-size: 16px; }
+  .bk-cta-row { margin-top: 48px; margin-bottom: 32px; gap: 10px; }
+  .bk-cta { min-width: 0; flex: 1 1 100%; padding: 14px 18px; }
+  .bk-spec li { padding: 18px 18px; }
+}
+
+/* =============================================================================
+   GLOBAL SAFETY — prevent horizontal overflow, cap media, lift tap targets
+   ============================================================================= */
+
+html, body { overflow-x: hidden; }
+img, video, iframe, svg { max-width: 100%; }
+img, video { height: auto; }
+
+@media (max-width: 720px) {
+  /* Slightly larger tap targets for in-flow links and nav links on phone */
+  .topnav-mobile-link { min-height: 44px; }
+  .btn { min-height: 36px; }
+  .btn-lg { min-height: 44px; }
+  /* Detail-crumb a touch easier to tap */
+  .detail-crumb { padding: 6px 0; }
+}
