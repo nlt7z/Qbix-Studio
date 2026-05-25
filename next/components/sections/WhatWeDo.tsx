@@ -18,6 +18,12 @@ export default function WhatWeDo() {
             <h2 style={{ marginTop: 14 }}>
               Four kinds of teams, one studio.
             </h2>
+            <p className="sub-plain">
+              Qbix Studio is an AI product design studio in Seattle. We work across{' '}
+              <Link href="/services/ai-products" className="text-link">AI product design</Link>,{' '}
+              <Link href="/services/saas-b2b" className="text-link">SaaS interface design</Link>, and{' '}
+              <Link href="/services/brand-studio" className="text-link">brand systems</Link> — see how we engage on each.
+            </p>
           </div>
         </Reveal>
 

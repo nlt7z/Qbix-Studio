@@ -43,7 +43,8 @@ export default function Colophon() {
               <span className="slash"> / </span>Studio
             </div>
             <p className="footer-tagline">
-              An AI-native product design and software studio. We design and build AI products
+              An AI-native product design and software studio. We design and build{' '}
+              <Link href="/services/ai-products" className="text-link">AI products</Link>{' '}
               from strategy to interface to launch.
             </p>
           </div>

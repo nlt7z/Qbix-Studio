@@ -2,6 +2,7 @@
 
 import { CONTACT_EMAIL, CONTACT_NOTE } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
+import BrandText from '@/components/BrandText';
 
 export default function ContactCTA() {
   return (
@@ -31,7 +32,7 @@ export default function ContactCTA() {
         </Reveal>
 
         <Reveal as="p" className="contact-sub" speed="base" delay={0.55}>
-          {CONTACT_NOTE}
+          <BrandText>{CONTACT_NOTE}</BrandText>
         </Reveal>
 
         <Reveal className="contact-ctas" speed="fast" delay={0.75}>

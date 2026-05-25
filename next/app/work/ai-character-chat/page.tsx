@@ -8,7 +8,26 @@ export const metadata: Metadata = {
     'Case study: a premium interactive product showroom for enterprise users to explore LLM character capabilities — memory, ritual, conversation. Designed by Qbix Studio.',
 };
 
+const SITE_URL = 'https://qbix.space';
+
 const tags = ['AI Product', 'Web', 'LLM UI', 'Agent workflow'];
+
+const caseStudyJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CreativeWork',
+  '@id': `${SITE_URL}/work/ai-character-chat/#case-study`,
+  name: 'AI Character Platform',
+  headline: 'AI Character Platform — case study',
+  description:
+    'A premium interactive product showroom for enterprise users to explore LLM character capabilities — memory, ritual, and conversation. Designed by Qbix Studio.',
+  url: `${SITE_URL}/work/ai-character-chat`,
+  inLanguage: 'en-US',
+  datePublished: '2025',
+  keywords: tags.join(', '),
+  creator: { '@id': `${SITE_URL}/#organization` },
+  author: { '@id': `${SITE_URL}/#organization` },
+  publisher: { '@id': `${SITE_URL}/#organization` },
+};
 
 const overview = [
   { k: 'Year',     v: '2025' },
@@ -27,6 +46,10 @@ const moments = [
 export default function AiCharacterChatPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(caseStudyJsonLd) }}
+      />
       <main className="detail">
         <div className="container">
           <Link href="/#work" className="detail-crumb">
@@ -136,6 +159,13 @@ export default function AiCharacterChatPage() {
               More work
             </Link>
           </div>
+
+          <p style={{ marginTop: 20, fontSize: 13, lineHeight: 1.6, color: 'var(--text-2)' }}>
+            This was an{' '}
+            <Link href="/services/ai-products" className="text-link">AI product design</Link>{' '}
+            engagement by <Link href="/studio" className="text-link">Qbix Studio</Link>, an
+            AI product design studio in Seattle.
+          </p>
         </div>
       </main>
       <Colophon />

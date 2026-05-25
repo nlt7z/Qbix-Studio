@@ -80,9 +80,9 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
-  // After you register the site in Google Search Console, paste the
-  // verification token here (the value from the "HTML tag" method).
-  // verification: { google: 'PASTE_GOOGLE_SITE_VERIFICATION_TOKEN_HERE' },
+  // Google Search Console verification (HTML-tag method). The file-based check
+  // at /google2e8449b9eae9ef63.html is also in place — either one satisfies GSC.
+  verification: { google: 'WeKiH0kunuDvA_zFIlOCeYo59eEx2j6061rmZJXuWi8' },
 };
 
 const organizationJsonLd = {

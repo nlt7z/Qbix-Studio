@@ -6,6 +6,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
 import ContactModal from '@/components/ContactModal';
 import MagneticButton from '@/components/MagneticButton';
+import BrandText from '@/components/BrandText';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 const EASE_SPRING = [0.34, 1.4, 0.46, 1] as const;
@@ -135,8 +136,10 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.7 }}
           >
-            An AI-native product and software studio. Strategy, interface, and the
-            AI itself — built by the team that designs it.
+            <BrandText>
+              Qbix Studio is an AI-native product and software studio. Strategy,
+              interface, and the AI itself — built by the team that designs it.
+            </BrandText>
           </motion.p>
 
           <motion.p

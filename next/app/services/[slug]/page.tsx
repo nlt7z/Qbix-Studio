@@ -5,6 +5,16 @@ import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
 import { services } from '@/lib/data';
 
+const SITE_URL = 'https://qbix.space';
+
+// "$20k" / "$2k" → 20000 / 2000 (for Offer.price); undefined if unparseable.
+function parsePriceFrom(price: string): number | undefined {
+  const m = price.match(/([\d.]+)\s*k?/i);
+  if (!m) return undefined;
+  const n = parseFloat(m[1]);
+  return /k/i.test(price) ? n * 1000 : n;
+}
+
 export async function generateStaticParams() {
   return services.map((s) => ({ slug: s.slug }));
 }
@@ -27,8 +37,37 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
   const service = services.find((s) => s.slug === params.slug);
   if (!service) notFound();
 
+  const price = parsePriceFrom(service.priceFrom);
+  const serviceJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': `${SITE_URL}/services/${service.slug}/#service`,
+    name: service.title,
+    description: service.detail.lede,
+    serviceType: service.tags,
+    url: `${SITE_URL}/services/${service.slug}`,
+    provider: { '@id': `${SITE_URL}/#organization` },
+    areaServed: [
+      { '@type': 'Place', name: 'Seattle, WA' },
+      { '@type': 'Place', name: 'United States' },
+      { '@type': 'Place', name: 'Worldwide (remote)' },
+    ],
+    ...(price !== undefined && {
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'USD',
+        price,
+        url: `${SITE_URL}/services/${service.slug}`,
+      },
+    }),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+      />
       <main className="detail">
         <div className="container">
           <Link href="/#services" className="detail-crumb">
