@@ -19,6 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`,                 lastModified: HOME_UPDATED,    changeFrequency: 'weekly',  priority: 1.0 },
     { url: `${SITE_URL}/studio`,           lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_URL}/start`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/press`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/games`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/games/bidking`,    lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },

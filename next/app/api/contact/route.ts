@@ -14,21 +14,43 @@ export const runtime = 'nodejs';
  *
  * Read the secret from process.env, not from a hard-coded value.
  */
+type ContactBody = {
+  name?: string;
+  email?: string;
+  brief?: string;
+  // Optional richer fields from the full /start project form. The quick modal
+  // omits these, so they must never be required.
+  company?: string;
+  projectTypes?: string[];
+  budget?: string;
+  timeline?: string;
+  source?: string; // 'modal' | 'start-page'
+};
+
 export async function POST(req: Request) {
-  let body: { name?: string; email?: string; brief?: string } = {};
+  let body: ContactBody = {};
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ ok: false, error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { name, email, brief } = body;
+  const { name, email, brief, company, projectTypes, budget, timeline, source } = body;
   if (!name || !email || !brief) {
     return NextResponse.json({ ok: false, error: 'Missing fields' }, { status: 400 });
   }
 
   // eslint-disable-next-line no-console
-  console.log('[contact]', { name, email, brief });
+  console.log('[contact]', {
+    name,
+    email,
+    brief,
+    company,
+    projectTypes,
+    budget,
+    timeline,
+    source: source ?? 'modal',
+  });
 
   return NextResponse.json({ ok: true });
 }

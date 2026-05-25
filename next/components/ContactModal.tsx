@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 
@@ -155,6 +156,13 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
                     Or book a 30-min call
                   </a>
                 </div>
+
+                <p className="contact-modal-alt">
+                  Prefer more detail?{' '}
+                  <Link href="/start" onClick={onClose} className="contact-modal-alt-link">
+                    Open the full project form →
+                  </Link>
+                </p>
               </form>
             ) : (
               <div className="contact-form-success">

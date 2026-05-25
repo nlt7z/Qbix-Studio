@@ -3446,6 +3446,19 @@ section { position: relative; }
 }
 .contact-form-error a { color: inherit; text-decoration: underline; }
 
+.contact-modal-alt {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  text-align: center;
+}
+.contact-modal-alt-link {
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-3);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.contact-modal-alt-link:hover { color: var(--signal); border-color: var(--signal); }
+
 .contact-form-success {
   display: flex;
   flex-direction: column;
@@ -3477,6 +3490,171 @@ section { position: relative; }
   color: var(--text-2);
   margin: 0 0 12px;
 }
+
+/* =============================================================================
+   START PAGE — full /start project intake (richer than the modal)
+   ============================================================================= */
+
+.start-page { padding-bottom: clamp(64px, 9vw, 110px); }
+
+.start-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: start;
+  margin-top: clamp(8px, 2vw, 16px);
+}
+@media (max-width: 900px) {
+  .start-layout { grid-template-columns: 1fr; gap: clamp(28px, 6vw, 40px); }
+}
+
+/* The form sits in a card panel so it reads as a deliberate surface. */
+.start-form-col {
+  background: var(--bg-card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  box-shadow: var(--highlight);
+  padding: clamp(22px, 3vw, 32px);
+}
+
+.start-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 560px) {
+  .start-form-row { grid-template-columns: 1fr; }
+}
+
+.contact-field-opt {
+  color: var(--text-3);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.start-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.start-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.start-chip {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: -0.006em;
+  color: var(--text);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease),
+    border-color var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease);
+}
+.start-chip:hover { color: var(--ink); border-color: var(--line-3); }
+.start-chip.is-on {
+  color: var(--signal-hover);
+  background: var(--signal-dim);
+  border-color: rgba(184, 255, 0, 0.5);
+}
+
+.start-select-wrap { position: relative; }
+.start-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card-sm);
+  padding: 10px 34px 10px 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.start-select:focus {
+  border-color: rgba(178, 232, 81, 0.45);
+  background: rgba(178, 232, 81, 0.04);
+}
+.start-select option { color: var(--ink); background: var(--bg-card); }
+.start-select-caret {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.start-aside {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(24px, 3vw, 32px);
+}
+@media (min-width: 901px) {
+  .start-aside { position: sticky; top: 88px; }
+}
+
+.start-steps {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line-2);
+}
+.start-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.start-step-k {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--signal);
+  padding-top: 2px;
+}
+.start-step-body h3 {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: -0.014em;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+.start-step-body p {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-2);
+  margin: 0;
+}
+
+/* Reuse the homepage sprint card, but trim it for the narrow sticky column. */
+.start-sprint { margin-top: 0; }
+.start-sprint .contact-sprint-body { grid-template-columns: 1fr; }
+.start-sprint .contact-sprint-n { font-size: clamp(56px, 7vw, 84px); }
+
+.start-reach { display: flex; flex-direction: column; gap: 8px; }
+.start-reach-link {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--ink);
+  width: fit-content;
+  border-bottom: 1px solid var(--line-3);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.start-reach-link:hover { color: var(--signal); border-color: var(--signal); }
+.start-reach-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+.start-success { min-height: 320px; justify-content: center; }
 
 /* =============================================================================
    LOADING SCREEN — lime splash that splits open on entry
