@@ -6,6 +6,7 @@ import './globals.css';
 
 import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
+import { ContactModalProvider } from '@/components/ContactModalProvider';
 
 const displayFont = Fraunces({
   subsets: ['latin'],
@@ -138,8 +139,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body>
         <LoadingScreen />
-        <TopNav />
-        {children}
+        <ContactModalProvider>
+          <TopNav />
+          {children}
+        </ContactModalProvider>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Colophon from '@/components/Colophon';
+import StartProjectButton from '@/components/StartProjectButton';
 
 export const metadata: Metadata = {
   title: 'AI Character Platform — case study',
@@ -151,10 +152,7 @@ export default function AiCharacterChatPage() {
             <p className="detail-cta-text">
               Building something AI-native? <span className="accent">Let&apos;s talk.</span>
             </p>
-            <Link href="/#contact" className="btn btn-primary btn-lg">
-              Start a project
-              <span className="arrow">→</span>
-            </Link>
+            <StartProjectButton />
             <Link href="/#work" className="btn btn-secondary btn-lg">
               More work
             </Link>

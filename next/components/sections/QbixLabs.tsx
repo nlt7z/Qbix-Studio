@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { labCards, brandLookbook } from '@/lib/data';
 import BrandText from '@/components/BrandText';
 import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
@@ -33,11 +32,9 @@ export default function QbixLabs() {
             const brand = brandLookbook[i];
             return (
               <RevealItem key={c.num} speed="base">
-                <Link
-                  href={`/labs/${c.slug}`}
-                  className="lab-card"
-                  aria-label={`Open ${c.title}`}
-                >
+                {/* Lab detail pages are disabled for now — render as a static
+                    card (no link/arrow) until the secondary pages ship. */}
+                <div className="lab-card">
                   {brand && (
                     <div className="lab-card-deco" aria-hidden>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -58,8 +55,7 @@ export default function QbixLabs() {
                       <BrandText>{c.body}</BrandText>
                     </p>
                   </div>
-                  <span className="lab-card-arrow" aria-hidden>↗</span>
-                </Link>
+                </div>
               </RevealItem>
             );
           })}

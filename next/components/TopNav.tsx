@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { navItems } from '@/lib/data';
 import QbixMark from '@/components/QbixMark';
+import { useContactModal } from '@/components/ContactModalProvider';
 
 const HEADER_OFFSET = 64;            // 56px nav + 8px breathing room
 const sectionIds = navItems
@@ -25,6 +26,7 @@ function smoothScrollToId(id: string) {
 }
 
 export default function TopNav() {
+  const { open: openContactModal } = useContactModal();
   const [active, setActive] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -180,7 +182,10 @@ export default function TopNav() {
       <a
         href="#contact"
         className="topnav-cta"
-        onClick={(e) => onAnchorClick(e, '#contact')}
+        onClick={(e) => {
+          e.preventDefault();
+          openContactModal();
+        }}
       >
         Start a project
         <span className="arrow" aria-hidden>→</span>
@@ -225,7 +230,11 @@ export default function TopNav() {
           <li>
             <a
               href="#contact"
-              onClick={(e) => onMobileItemClick(e, '#contact')}
+              onClick={(e) => {
+                e.preventDefault();
+                setMenuOpen(false);
+                openContactModal();
+              }}
               className="topnav-mobile-link is-cta"
               tabIndex={menuOpen ? 0 : -1}
             >

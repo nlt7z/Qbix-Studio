@@ -3,8 +3,10 @@
 import { CONTACT_EMAIL, CONTACT_NOTE } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 import BrandText from '@/components/BrandText';
+import { useContactModal } from '@/components/ContactModalProvider';
 
 export default function ContactCTA() {
+  const { open: openContactModal } = useContactModal();
   return (
     <section id="contact" className="contact section-pad">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -36,7 +38,14 @@ export default function ContactCTA() {
         </Reveal>
 
         <Reveal className="contact-ctas" speed="fast" delay={0.75}>
-          <a href={`mailto:${CONTACT_EMAIL}`} className="btn btn-primary btn-lg">
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="btn btn-primary btn-lg"
+            onClick={(e) => {
+              e.preventDefault();
+              openContactModal();
+            }}
+          >
             Start a project
             <span className="arrow">→</span>
           </a>

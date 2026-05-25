@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { services, labCards } from '@/lib/data';
+import { services } from '@/lib/data';
 
 const SITE_URL = 'https://qbix.space';
 
@@ -33,12 +33,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  const labRoutes: MetadataRoute.Sitemap = labCards.map((l) => ({
-    url: `${SITE_URL}/labs/${l.slug}`,
-    lastModified: CONTENT_UPDATED,
-    changeFrequency: 'monthly',
-    priority: 0.6,
-  }));
+  // Lab detail pages are disabled for now, so they're omitted from the sitemap.
 
-  return [...staticRoutes, ...serviceRoutes, ...labRoutes];
+  return [...staticRoutes, ...serviceRoutes];
 }

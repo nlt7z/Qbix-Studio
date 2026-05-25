@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
+import StartProjectButton from '@/components/StartProjectButton';
 import { services } from '@/lib/data';
 
 const SITE_URL = 'https://qbix.space';
@@ -117,10 +118,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
             <p className="detail-cta-text">
               Need this for your next product? <span className="accent">Start a project.</span>
             </p>
-            <Link href="/#contact" className="btn btn-primary btn-lg">
-              Start a project
-              <span className="arrow">→</span>
-            </Link>
+            <StartProjectButton />
             <Link href="/#services" className="btn btn-secondary btn-lg">
               All services
             </Link>

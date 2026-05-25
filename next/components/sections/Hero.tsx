@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRef, useState, type ReactNode } from 'react';
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
-import ContactModal from '@/components/ContactModal';
+import { useRef, type ReactNode } from 'react';
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
+import { useContactModal } from '@/components/ContactModalProvider';
 import MagneticButton from '@/components/MagneticButton';
 import BrandText from '@/components/BrandText';
 
@@ -53,8 +53,9 @@ function WordReveal({
 }
 
 export default function Hero() {
-  const [modalOpen, setModalOpen] = useState(false);
+  const { open: openContactModal } = useContactModal();
   const heroRef = useRef<HTMLElement | null>(null);
+  const reduceMotion = useReducedMotion();
 
   // Scroll-driven cube: as the hero scrolls past the viewport, the cube
   // image gets a parallax lift + tilt + slight fade. Bound to the hero's
@@ -162,7 +163,7 @@ export default function Hero() {
               <button
                 type="button"
                 className="btn btn-primary btn-lg"
-                onClick={() => setModalOpen(true)}
+                onClick={openContactModal}
               >
                 Start a project
                 <span className="arrow">→</span>
@@ -191,19 +192,33 @@ export default function Hero() {
               willChange: 'transform, opacity',
             }}
           >
-            <Image
-              src="/qbix-cube.png"
-              alt="Qbix cube totem"
-              width={520}
-              height={560}
-              priority
-              className="hero-cube-img"
-            />
+            {/* Ambient float — the totem hovers, never settling. A slow
+                vertical bob with a gentle sway, offset so the two cycles
+                drift in and out of phase rather than ticking like a metronome. */}
+            <motion.div
+              animate={
+                reduceMotion
+                  ? undefined
+                  : { y: [0, -14, 0], rotate: [0, 1.6, 0, -1.6, 0] }
+              }
+              transition={{
+                y: { duration: 6, ease: 'easeInOut', repeat: Infinity },
+                rotate: { duration: 9, ease: 'easeInOut', repeat: Infinity },
+              }}
+              style={{ willChange: 'transform' }}
+            >
+              <Image
+                src="/qbix-cube.png"
+                alt="Qbix cube totem"
+                width={520}
+                height={560}
+                priority
+                className="hero-cube-img"
+              />
+            </motion.div>
           </motion.div>
         </motion.div>
       </div>
-
-      <ContactModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </section>
   );
 }

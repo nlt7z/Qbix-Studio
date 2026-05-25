@@ -5,8 +5,13 @@ import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
 import { labCards } from '@/lib/data';
 
+// Lab detail (secondary) pages are disabled for now. Returning no static
+// params plus dynamicParams=false makes every /labs/* path 404, while the
+// card data in lib/data.ts stays intact so this is easy to re-enable.
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
-  return labCards.map((c) => ({ slug: c.slug }));
+  return [];
 }
 
 export async function generateMetadata({
