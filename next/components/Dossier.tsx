@@ -12,7 +12,7 @@ export default function Dossier() {
           </div>
           <h2>Studio dossier.</h2>
           <div className="sub sub-plain">
-            An independent game studio building compact, replayable web and mobile games with tactical interfaces and strange little worlds.
+            An independent AI-native product design and software studio. We design and build AI products, web and SaaS interfaces, and brand systems — from strategy to launch.
           </div>
         </div>
         <div className="dossier-meta">

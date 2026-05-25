@@ -560,7 +560,7 @@ export type StudioCapability = {
 };
 
 export const studioCapabilities: StudioCapability[] = [
-  { num: '01', tag: 'CORE',     label: 'Game systems',        cn: '游戏系统', note: 'Compact loops, sharp economies, replayable rules.', wide: true },
+  { num: '01', tag: 'CORE',     label: 'Product design',      cn: '产品设计', note: 'Web, SaaS, and AI product interfaces, end to end.', wide: true },
   { num: '02', tag: 'CORE',     label: 'Interface craft',     cn: '界面打磨', note: 'Tactical UI, motion budgets, frame-perfect feel.' },
   { num: '03', tag: 'CORE',     label: 'AI behaviour',        cn: '智能体行为', note: 'Agent workflows, dialogue, dynamic content.' },
   { num: '04', tag: 'SUPPORT',  label: 'Strategy & framing',  cn: '产品策略', note: 'Positioning, audience, scope, the bet.' },
@@ -581,26 +581,26 @@ export const dossierBlocks: DossierBlock[] = [
   {
     num: '01',
     title: 'Independent.',
-    body: 'Self-funded studio, no investors, no roadmap committees. Two founders shipping what they want to play.',
+    body: 'Self-funded studio, no investors, no roadmap committees. Two founders shipping work they believe in.',
     tags: ['No VC', 'No middlemen'],
     span: true,
   },
   {
     num: '02',
     title: 'Compact.',
-    body: 'Small games and small tools. Tight scope, fast cycles, finishable in one sitting.',
-    tags: ['Sub-15-min sessions'],
+    body: 'Small teams, tight scope, fast cycles. A designer–engineer pair that ships in weeks, not quarters.',
+    tags: ['Designer + engineer pair'],
   },
   {
     num: '03',
-    title: 'Strange.',
-    body: 'We chase the games that don\'t exist yet. Tactical interfaces, odd themes, dry humor.',
-    tags: ['One-of-a-kind'],
+    title: 'Sharp.',
+    body: 'We take on the products others over-scope. AI-native interfaces, clear systems, no fluff.',
+    tags: ['Craft-led'],
   },
   {
     num: '04',
     title: 'Shipped.',
-    body: 'Demos that run, not pitch decks. We measure progress in playable builds.',
+    body: 'Working software, not pitch decks. We measure progress in things you can ship.',
     tags: ['Code over slides'],
   },
 ];
@@ -620,9 +620,9 @@ export const founders: Founder[] = [
     callsign: 'Founder · Design',
     role: 'Product · Interaction · Visual',
     roleCn: '产品 · 交互 · 视觉',
-    blurb: 'Designs the systems, runs the visual craft, leads positioning. Decades of interface work across product, game, and brand.',
+    blurb: 'Designs the systems, runs the visual craft, leads positioning. Decades of interface work across product, AI, and brand.',
     capabilities: [
-      { num: '01', label: 'Game design',       cn: '游戏设计', note: 'Loops, economies, rules.' },
+      { num: '01', label: 'Product design',     cn: '产品设计', note: 'Flows, systems, decisions.' },
       { num: '02', label: 'Visual systems',    cn: '视觉系统', note: 'Type, motion, brand language.' },
       { num: '03', label: 'Interaction',       cn: '交互设计', note: 'Feel, friction, frame-perfect detail.' },
     ],
@@ -632,9 +632,9 @@ export const founders: Founder[] = [
     callsign: 'Founder · Engineering',
     role: 'Systems · AI · Implementation',
     roleCn: '系统 · 智能 · 实现',
-    blurb: 'Builds the runtime. Game systems, AI integration, web/mobile shipping. We design and we ship — same person, same week.',
+    blurb: 'Builds the runtime. Product systems, AI integration, web/mobile shipping. We design and we ship — same person, same week.',
     capabilities: [
-      { num: '01', label: 'Game systems',      cn: '游戏系统', note: 'State, balance, save.' },
+      { num: '01', label: 'Product systems',   cn: '产品系统', note: 'State, data, performance.' },
       { num: '02', label: 'AI integration',    cn: '智能集成', note: 'Agents, dialogue, generative UI.' },
       { num: '03', label: 'Web & mobile',      cn: '网页与移动端', note: 'React, native, performance.' },
     ],
@@ -665,8 +665,8 @@ export const tickerItems: string[] = [
   '// NO HIRES',
   '// NO MIDDLEMEN',
   '// CODE OVER SLIDES',
-  '// PLAYABLE OVER PITCH',
-  '// SMALL GAMES · SHARP SYSTEMS',
+  '// PRODUCT OVER PITCH',
+  '// SMALL TEAMS · SHARP SYSTEMS',
   '// HUMAN-LED · SYSTEM-FIRST',
 ];
 
