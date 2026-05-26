@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CONTACT_EMAIL } from '@/lib/data';
+import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 
 const cols = [
   {
@@ -16,16 +16,16 @@ const cols = [
     label: 'Reach',
     links: [
       { label: CONTACT_EMAIL,        href: `mailto:${CONTACT_EMAIL}` },
-      { label: 'Book an intro call', href: 'https://cal.com/qbix' },
+      { label: 'Book an intro call', href: BOOKING_URL },
       { label: 'Press kit',          href: '/press' },
     ],
   },
   {
     label: 'Channels',
     links: [
-      { label: 'Are.na',      href: 'https://www.are.na/qbix-studio' },
-      { label: 'GitHub',      href: 'https://github.com/qbix-studio' },
-      { label: 'X / Twitter', href: 'https://x.com/qbixstudio' },
+      { label: 'Are.na',      href: 'https://www.are.na/q-bix/channels' },
+      { label: 'GitHub',      href: 'https://github.com/qbixstudio-bit' },
+      { label: 'X / Twitter', href: 'https://x.com/QbixStudio' },
       { label: 'LinkedIn',    href: 'https://www.linkedin.com/company/qbix-studio' },
     ],
   },

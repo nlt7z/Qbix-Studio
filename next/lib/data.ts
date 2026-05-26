@@ -682,7 +682,7 @@ export const tickerItems: string[] = [
 
 // ----- CONTACT ---------------------------------------------------------------
 
-export const CONTACT_EMAIL = 'hello@qbixstudio.com';
-export const BOOKING_URL   = 'https://cal.com/qbix';
+export const CONTACT_EMAIL = 'qbixspace@gmail.com';
+export const BOOKING_URL   = 'https://cal.com/qbix-studio/30min';
 export const CONTACT_NOTE =
   'Qbix Studio is available for AI product design, UX/UI systems, web/mobile design, and product strategy consulting.';

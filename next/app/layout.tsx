@@ -68,6 +68,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Qbix Studio — AI-native product design & software',
     description: SITE_DESC,
+    site: '@QbixStudio',
+    creator: '@QbixStudio',
     // image auto-picked from app/twitter-image.png
   },
   robots: {
@@ -96,7 +98,12 @@ const organizationJsonLd = {
   logo: `${SITE_URL}/qbix-square.png`,
   image: `${SITE_URL}/hero.png`,
   description: SITE_DESC,
-  email: 'hello@qbixstudio.com',
+  email: 'qbixspace@gmail.com',
+  sameAs: [
+    'https://github.com/qbixstudio-bit',
+    'https://www.are.na/q-bix/channels',
+    'https://x.com/QbixStudio',
+  ],
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Seattle',
