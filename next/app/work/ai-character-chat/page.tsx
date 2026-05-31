@@ -161,7 +161,7 @@ export default function AiCharacterChatPage() {
           <p style={{ marginTop: 20, fontSize: 13, lineHeight: 1.6, color: 'var(--text-2)' }}>
             This was an{' '}
             <Link href="/services/ai-products" className="text-link">AI product design</Link>{' '}
-            engagement by <Link href="/studio" className="text-link">Qbix Studio</Link>, an
+            engagement by <Link href="/" className="text-link">Qbix Studio</Link>, an
             AI product design studio in Seattle.
           </p>
         </div>

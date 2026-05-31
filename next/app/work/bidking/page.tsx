@@ -110,7 +110,7 @@ export default function BidKingPage() {
 
         <p style={{ marginTop: 24, fontSize: 13, lineHeight: 1.6, color: 'var(--text-2)' }}>
           A studio product from{' '}
-          <Link href="/studio" className="text-link">Qbix Studio</Link>, an AI product design
+          <Link href="/" className="text-link">Qbix Studio</Link>, an AI product design
           studio in Seattle. See our{' '}
           <Link href="/services/ai-products" className="text-link">AI product design</Link> work.
         </p>

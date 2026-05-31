@@ -299,6 +299,25 @@ export const projects: Project[] = [
     aspect: 16 / 9,
     media: { kind: 'video', src: '/interview-tool.mp4' },
   },
+  {
+    slug: 'liner-ai-collaboration',
+    num: 'FILE / 006',
+    title: 'Liner AI Collaboration Feature',
+    client: 'Liner · AI Research Assistant',
+    role: 'AI Product Design · Collaboration UX · Research workflow',
+    year: 2026,
+    category: 'ai-product',
+    tags: ['AI Product', 'Collaboration', 'Research', 'Workflow'],
+    hook:
+      'A research-focused, AI-powered collaboration workflow for Liner — designed so teams can search, annotate, and synthesize sources together with the model in the loop, not bolted on after.',
+    highlights: [
+      'Designed a shared research surface where collaborators and the AI work the same sources in real time.',
+      'Mapped the collaboration workflow end to end — invite, annotate, cite, and synthesize without breaking flow.',
+      'Interaction and state design for the moments where human judgment and model output meet.',
+    ],
+    aspect: 2102 / 1080,
+    media: { kind: 'video', src: '/liner-present.mp4' },
+  },
 ];
 
 // ----- HOW WE WORK (6 steps) -------------------------------------------------
