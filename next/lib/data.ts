@@ -166,8 +166,22 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    slug: 'qwen-character',
+    slug: 'lamdre',
     num: 'FILE / 001',
+    title: 'Lamdre Restaurant Design',
+    client: 'Lamdre · Restaurant',
+    role: 'Brand · Visual Design · Web',
+    year: 2026,
+    category: 'web',
+    tags: ['Brand', 'Restaurant', 'Visual Design'],
+    hook:
+      'Brand and visual design for Lamdre — an identity and design language carried from the space through to the screen.',
+    aspect: 2110 / 1080,
+    media: { kind: 'video', src: '/lamdre.mp4' },
+  },
+  {
+    slug: 'qwen-character',
+    num: 'FILE / 002',
     title: 'AI Character Product Build',
     client: 'Enterprise AI Platform',
     role: 'AI Product Design · Front-end · Agent flow',
@@ -187,7 +201,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'spark-tts',
-    num: 'FILE / 002',
+    num: 'FILE / 003',
     title: 'Reframe TTS Workflow',
     client: 'Enterprise AI Platform',
     role: 'AI Product Design · Interaction · Motion',
@@ -207,7 +221,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'bidking',
-    num: 'FILE / 003',
+    num: 'FILE / 004',
     title: 'Transform Bid Experience into Mobile Games',
     client: 'Studio Product',
     role: 'Game Design · Mobile UI · System',
@@ -222,7 +236,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'sde-personal-rebrand',
-    num: 'FILE / 004',
+    num: 'FILE / 005',
     title: 'Rebrand SDE to Be Competitive',
     client: 'Senior SDE · Independent',
     role: 'Brand · Web · Front-end',
@@ -242,7 +256,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'ai-interview-tool',
-    num: 'FILE / 005',
+    num: 'FILE / 006',
     title: 'AI Interview Tool · 0→1 Launch',
     client: 'Studio Product',
     role: 'Product · AI UX · Front-end · Launch',
@@ -261,7 +275,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'liner-ai-collaboration',
-    num: 'FILE / 006',
+    num: 'FILE / 007',
     title: 'Liner AI Collaboration Feature',
     client: 'Liner · AI Research Assistant',
     role: 'AI Product Design · Collaboration UX · Research workflow',
