@@ -38,7 +38,7 @@ export const cubeCells: CubeCell[] = [
   { num: '04', label: 'Build & Ship',   meta: 'Front-end · launch'   },
 ];
 
-// ----- SERVICES (5 numbered capability cards) --------------------------------
+// ----- SERVICES (3 numbered capability cards) --------------------------------
 
 export type Service = {
   slug: string;
@@ -58,18 +58,48 @@ export type Service = {
 
 export const services: Service[] = [
   {
-    slug: 'ai-products',
+    slug: 'web',
     num: '01',
-    audience: 'AI startups · dev tools',
-    title: 'AI products that real people use',
+    audience: 'Local business · Portfolio · Brand',
+    title: 'Web, shipped.',
     blurb:
-      'Agent flows, LLM interfaces, AI features that ship.',
-    tags: ['Agent UX', 'LLM UI', 'AI features'],
+      'Your idea, faithfully rendered into a live site. Design, code, deploy, domain — end to end.',
+    tags: ['Marketing site', 'Portfolio', 'Brand'],
+    priceFrom: '$500',
+    typical: '1 – 3 weeks',
+    detail: {
+      lede:
+        'We do the whole thing — design to live. Moodboard sets the direction, then we render your idea faithfully into the interface, write the front-end code, push to your GitHub, deploy it, wire up the domain, and hand it over. What you end up with is a live site anyone can visit — and the code you own.',
+      deliverables: [
+        'The live site — deployed to your domain, with the code handed over',
+        'Interface design that renders your idea faithfully — scroll feel and motion built in',
+        'Original logo and brand basics if you want them — type, color, and a mark designed by us (no stock)',
+        'Responsive build with simple content editing for text and images',
+        'On-page SEO and analytics, set up and verified',
+      ],
+      engagement: [
+        { k: 'Moodboard',      v: 'We agree on the look in a day or two, before building' },
+        { k: 'Design + build', v: 'Designed and coded end to end — no handoff gap' },
+        { k: 'Revisions',      v: 'One focused round, then we launch' },
+        { k: 'Launch',         v: 'We deploy to your domain' },
+        { k: 'Add identity',   v: 'Logo, type, color, and motion built alongside the site — moves the tier to ~$20k' },
+        { k: 'Typical run',    v: '1 – 3 weeks' },
+      ],
+    },
+  },
+  {
+    slug: 'app-ai',
+    num: '02',
+    audience: 'AI startups · 0 → 1',
+    title: 'AI products that ship.',
+    blurb:
+      'An AI idea, turned into a real product people can use. Design, front end, back end — we handle it.',
+    tags: ['Agent UX', 'AI chat', '0 → 1'],
     priceFrom: '$20k',
     typical: '6 – 12 weeks',
     detail: {
       lede:
-        'We design and build AI products people actually use — agent workflows, chat and command surfaces, generative UIs, and AI features inside existing apps. One designer-engineer pair designs it, codes the front end, and ships it live.',
+        'Agent flows, LLM interfaces, AI chat, AI features dropped into an existing app. We design it, then write the front end — and the back end if you don\'t have one. This is taking a product from zero to live. Two paths, depending on whether you already have engineering.',
       deliverables: [
         'The shipped product — deployed live, with the production front-end code handed to you',
         'UI design system as markdown — components, tokens, and interaction rules you keep and version',
@@ -78,100 +108,41 @@ export const services: Service[] = [
         'Original illustration and icon set — hand-drawn by us, packaged with the files (no stock)',
       ],
       engagement: [
-        { k: 'Moodboard',   v: 'Visual direction locked before a single screen gets built' },
-        { k: 'Design',      v: 'UI system + IA written as markdown you own' },
-        { k: 'Build',       v: 'We write the production front-end code ourselves' },
-        { k: 'Launch',      v: 'We help you ship it live' },
-        { k: 'Team',        v: '1 designer + 1 engineer — the people doing the work' },
-        { k: 'Typical run', v: '6 – 12 weeks' },
+        { k: 'Moodboard',              v: 'Visual direction locked before a single screen gets built' },
+        { k: 'Design',                 v: 'UI system + IA written as markdown you own' },
+        { k: 'Build — with your team', v: 'You have engineering. We design and write the front end, open PRs into your repo, your team takes it from there' },
+        { k: 'Build — full ship',      v: 'No back end yet? We do design + front end + back end and launch it for you — no need to staff engineering first' },
+        { k: 'Launch',                 v: 'We help you ship it live' },
+        { k: 'Typical run',            v: '6 – 12 weeks' },
       ],
     },
   },
   {
-    slug: 'local-business',
-    num: '02',
-    audience: 'Local business · SMB',
-    title: 'A marketing site, done with craft',
-    blurb:
-      'Restaurants, services, small brands. Design and build, one team, fixed scope.',
-    tags: ['Marketing site', 'Brand basics', 'Launch'],
-    priceFrom: '$2k',
-    typical: '1 – 3 weeks',
-    detail: {
-      lede:
-        'A site that earns trust before someone calls, books, or walks in. We design it and build it as one pair, then put it live for you — fixed scope, no agency overhead.',
-      deliverables: [
-        'The live site — built, deployed to your domain, with the code handed over',
-        'Original logo and brand basics — type, color, and a mark designed by us (no stock)',
-        'Any illustration or imagery the site needs — drawn by us and packaged with the files',
-        'Responsive build with simple content editing for text and images',
-        'On-page SEO and analytics, set up and verified',
-      ],
-      engagement: [
-        { k: 'Moodboard',      v: 'We agree on the look in a day or two, before building' },
-        { k: 'Design + build', v: 'Same pair designs and codes it — no handoff gap' },
-        { k: 'Revisions',      v: 'One focused round, then we launch' },
-        { k: 'Launch',         v: 'We put it live on your domain' },
-        { k: 'Typical run',    v: '1 – 3 weeks' },
-      ],
-    },
-  },
-  {
-    slug: 'saas-b2b',
+    slug: 'redesign',
     num: '03',
-    audience: 'Growth-stage SaaS · B2B',
-    title: 'Redesigns and new surfaces',
+    audience: 'Growth-stage · 1 → 100',
+    title: 'Redesign, from 1 to 100.',
     blurb:
-      'Dashboards, onboarding, feature launches. We ship into your repo.',
-    tags: ['Dashboard', 'Onboarding', 'Feature launch'],
+      'You already have a product. Polish it until it\'s worth sharing — round after round, straight into your repo.',
+    tags: ['Redesign', 'User feedback', 'Iteration'],
     priceFrom: '$5k',
-    typical: '2 – 4 weeks',
+    typical: '5 – 10 weeks',
     detail: {
       lede:
-        'Interface design for growth-stage SaaS — dashboards, onboarding, and new feature surfaces. One pair that designs and writes the code, shipping into your repo instead of handing over PDFs.',
+        'You already have a product, but it needs to move forward. Working from your needs and real user feedback, we upgrade it round by round — not a rewrite from scratch, but lifting it from working to good, from good to worth sharing. Designed and coded end to end; the changes go straight into your product.',
       deliverables: [
-        'Shipped surfaces — production front-end code merged into your repo as PRs, or a deployed prototype',
-        'UI design system as markdown — components, tokens, and states that extend what you already have',
+        'Upgraded surfaces — production front-end code merged into your repo as PRs, or a deployed prototype',
+        'UI design system as markdown — extends the components, tokens, and states you already have',
         'Information architecture as markdown — flows, navigation, and screen hierarchy',
         'Interaction and motion specs for anything new',
-        'Any original icons or illustration the work needs — made by us, no stock',
+        'Original icons or illustration as needed — made by us, no stock',
       ],
       engagement: [
-        { k: 'Moodboard',   v: 'Quick visual alignment against your existing product' },
+        { k: 'Diagnose',    v: 'We look at data and feedback to find what most needs to move' },
         { k: 'IA + design', v: 'Flows and UI system written as markdown' },
-        { k: 'Build',       v: 'We open PRs into your repo — production front-end code' },
+        { k: 'Build',       v: 'Design and code, iterating round by round — every round shippable and verifiable' },
         { k: 'Handover',    v: 'Docs and components stay with your team' },
-        { k: 'Team',        v: '1 designer + 1 engineer' },
-        { k: 'Typical run', v: '2 – 4 weeks' },
-      ],
-    },
-  },
-  {
-    slug: 'brand-studio',
-    num: '04',
-    audience: 'Brand · studio identity',
-    title: 'Identity + site, end-to-end',
-    blurb:
-      'Brand systems, identity objects, and the website to carry them.',
-    tags: ['Identity', 'Brand objects', 'Studio site'],
-    priceFrom: '$3k',
-    typical: '2 – 4 weeks',
-    detail: {
-      lede:
-        'Brand identity plus the website to carry it — logo, type, motion, brand objects, and a built site. Designed and coded by the same pair, with every asset original to you.',
-      deliverables: [
-        'The live studio site — designed, built, deployed, with the code handed over',
-        'Original identity — logo / mark, type system, color, and motion, all hand-designed by us',
-        'Brand objects and illustration — rendered and drawn by us, packaged together (no stock)',
-        'Brand guide as markdown — usage rules, do / don\'t, and tokens',
-        'Organized source files for everything, handed over at the end',
-      ],
-      engagement: [
-        { k: 'Moodboard',   v: 'Direction locked before we draw anything final' },
-        { k: 'Identity',    v: 'Mark, type, color, and motion — all original' },
-        { k: 'Site',        v: 'We design and code the site ourselves' },
-        { k: 'Launch',      v: 'We deploy it live and hand over the files' },
-        { k: 'Typical run', v: '2 – 4 weeks' },
+        { k: 'Typical run', v: '5 – 10 weeks' },
       ],
     },
   },
@@ -258,7 +229,7 @@ export const projects: Project[] = [
       'A sealed-bid auction reimagined as a mobile game — strategy hidden behind cute chaos, where players bid, bluff, or burn until the last vault standing wins.',
     aspect: 720 / 332,
     media: { kind: 'video', src: '/bidking-present.mp4' },
-    href: '/work/bidking',
+    href: '/games/bidking',
   },
   {
     slug: 'sde-personal-rebrand',
@@ -371,97 +342,26 @@ export const processSteps: ProcessStep[] = [
 // ----- QBIX LABS (3 lab cards) -----------------------------------------------
 
 export type LabCard = {
-  slug: string;
   num: string;
   title: string;
   body: string;
-  detail: {
-    lede: string;
-    highlights: { k: string; v: string }[];
-    status: string;
-  };
 };
 
 export const labCards: LabCard[] = [
   {
-    slug: 'ai-software-products',
     num: '01',
     title: 'AI Software Products',
     body: 'Subscription-based AI tools designed and built in-house. Practical, small, sharp.',
-    detail: {
-      lede:
-        'Subscription AI tools we design, build, and run ourselves — small, focused products that solve one annoying problem really well. Each one starts as a Qbix internal need and graduates if it survives daily use.',
-      highlights: [
-        { k: 'Active',      v: '3 internal tools' },
-        { k: 'Public',      v: '1 released, 2 in beta' },
-        { k: 'Stack',       v: 'Next.js · Anthropic · Vercel' },
-        { k: 'Pricing',     v: 'Indie SaaS, sub $20 / mo' },
-      ],
-      status: 'Beta — invite list opens Q3.',
-    },
   },
   {
-    slug: 'interface-experiments',
     num: '02',
     title: 'Interface Experiments',
     body: 'Explorations around agent workflows, generative UI, and human-AI collaboration patterns.',
-    detail: {
-      lede:
-        'Experiments around what an AI-native interface can be. We prototype patterns for agents, generative UI, multi-modal canvases, and collaboration between humans and models — the ones that earn it move into client work.',
-      highlights: [
-        { k: 'Current',     v: 'Generative form patterns' },
-        { k: 'Released',    v: '4 prototypes · 2 writeups' },
-        { k: 'Format',      v: 'Demos · short videos · code' },
-        { k: 'License',     v: 'CC-BY / MIT where possible' },
-      ],
-      status: 'Ongoing — new drop every ~6 weeks.',
-    },
   },
   {
-    slug: 'game-interaction-systems',
     num: '03',
     title: 'Game & Interaction Systems',
     body: 'Small games and playful systems that test behavior, economy, and interaction loops.',
-    detail: {
-      lede:
-        'Small games and playful systems we build to stress-test interaction loops, behavior, and economy. The constraints of a 15-minute game teach us things long-running software never does.',
-      highlights: [
-        { k: 'Shipped',     v: 'BidKing · playable prototype' },
-        { k: 'In progress', v: '2 multiplayer concepts' },
-        { k: 'Platform',    v: 'iOS · Android · Web' },
-        { k: 'Team',        v: 'Designer + engineer pair' },
-      ],
-      status: 'BidKing playable prototype — App Store soon.',
-    },
-  },
-];
-
-// ----- ABOUT -----------------------------------------------------------------
-
-export const aboutLede =
-  'Qbix Studio LLC is an AI-native product and software studio in Seattle — a decade-deep artist and engineer working as one team. In this era, building with AI is table stakes; we also build AI ourselves. What we hold onto, and most have let go, is taste, craft, and logic.';
-
-// ----- TEAM ------------------------------------------------------------------
-
-export type TeamMember = {
-  initial: string;          // single-letter sigil used in lieu of a photo
-  name: string;
-  title: string;
-  bio: string;              // one line — the credibility hook
-};
-
-export const teamMembers: TeamMember[] = [
-  {
-    initial: 'Q',
-    name: 'Q',
-    title: 'Founder · Design Lead',
-    bio: 'A decade of art and design craft across product, brand, and AI surfaces.',
-  },
-  {
-    initial: 'J',
-    name: 'J',
-    title: 'Engineering Lead',
-    bio: 'Four years of FAANG engineering — shipping high-scale production systems.',
   },
 ];
 
@@ -499,11 +399,9 @@ export const brandLookbook: LookbookItem[] = [
   },
 ];
 
-// ----- STUDIO SHELL (HUD/mission-control routes) -----------------------------
+// ----- GAMES SHELL (HUD/mission-control route) -------------------------------
 //
-// Stubs for /studio and /games — supplies the data the Archive, Capabilities,
-// Dossier, Founders, and Ticker components import. Replace blurbs as the shell
-// matures.
+// Supplies the data the Archive and Ticker components import for /games.
 
 export type MissionStatus = 'playable' | 'concept' | 'paused';
 
@@ -579,124 +477,38 @@ export const missions: Mission[] = [
   },
 ];
 
-export type StudioCapability = {
-  num: string;
-  tag: string;
-  label: string;
-  cn: string;
-  note: string;
-  wide?: boolean;
-};
-
-export const studioCapabilities: StudioCapability[] = [
-  { num: '01', tag: 'CORE',     label: 'Product design',      cn: '产品设计', note: 'Web, SaaS, and AI product interfaces, end to end.', wide: true },
-  { num: '02', tag: 'CORE',     label: 'Interface craft',     cn: '界面打磨', note: 'Tactical UI, motion budgets, frame-perfect feel.' },
-  { num: '03', tag: 'CORE',     label: 'AI behaviour',        cn: '智能体行为', note: 'Agent workflows, dialogue, dynamic content.' },
-  { num: '04', tag: 'SUPPORT',  label: 'Strategy & framing',  cn: '产品策略', note: 'Positioning, audience, scope, the bet.' },
-  { num: '05', tag: 'SUPPORT',  label: 'Visual systems',      cn: '视觉系统', note: 'Type, palette, motion, brand object library.' },
-  { num: '06', tag: 'SUPPORT',  label: 'Web & mobile build',  cn: '网页与移动端', note: 'Ship the design as a real, fast product.' },
-  { num: '07', tag: 'LAB',      label: 'Experiments',         cn: '实验',     note: 'Prototypes that test new interaction models.' },
-];
-
-export type DossierBlock = {
-  num: string;
-  title: string;
-  body: string;
-  tags?: string[];
-  span?: boolean;
-};
-
-export const dossierBlocks: DossierBlock[] = [
-  {
-    num: '01',
-    title: 'Independent.',
-    body: 'Self-funded studio, no investors, no roadmap committees. Two founders shipping work they believe in.',
-    tags: ['No VC', 'No middlemen'],
-    span: true,
-  },
-  {
-    num: '02',
-    title: 'Compact.',
-    body: 'Small teams, tight scope, fast cycles. A designer–engineer pair that ships in weeks, not quarters.',
-    tags: ['Designer + engineer pair'],
-  },
-  {
-    num: '03',
-    title: 'Sharp.',
-    body: 'We take on the products others over-scope. AI-native interfaces, clear systems, no fluff.',
-    tags: ['Craft-led'],
-  },
-  {
-    num: '04',
-    title: 'Shipped.',
-    body: 'Working software, not pitch decks. We measure progress in things you can ship.',
-    tags: ['Code over slides'],
-  },
-];
-
-export type Founder = {
-  id: string;
-  callsign: string;
-  role: string;
-  roleCn: string;
-  blurb: string;
-  capabilities: { num: string; label: string; cn: string; note: string }[];
-};
-
-export const founders: Founder[] = [
-  {
-    id: 'A',
-    callsign: 'Founder · Design',
-    role: 'Product · Interaction · Visual',
-    roleCn: '产品 · 交互 · 视觉',
-    blurb: 'Designs the systems, runs the visual craft, leads positioning. Decades of interface work across product, AI, and brand.',
-    capabilities: [
-      { num: '01', label: 'Product design',     cn: '产品设计', note: 'Flows, systems, decisions.' },
-      { num: '02', label: 'Visual systems',    cn: '视觉系统', note: 'Type, motion, brand language.' },
-      { num: '03', label: 'Interaction',       cn: '交互设计', note: 'Feel, friction, frame-perfect detail.' },
-    ],
-  },
-  {
-    id: 'B',
-    callsign: 'Founder · Engineering',
-    role: 'Systems · AI · Implementation',
-    roleCn: '系统 · 智能 · 实现',
-    blurb: 'Builds the runtime. Product systems, AI integration, web/mobile shipping. We design and we ship — same person, same week.',
-    capabilities: [
-      { num: '01', label: 'Product systems',   cn: '产品系统', note: 'State, data, performance.' },
-      { num: '02', label: 'AI integration',    cn: '智能集成', note: 'Agents, dialogue, generative UI.' },
-      { num: '03', label: 'Web & mobile',      cn: '网页与移动端', note: 'React, native, performance.' },
-    ],
-  },
-];
-
-export type LogTemplate = {
-  lvl: 'ok' | 'warn' | 'er';
-  msg: string;
-};
-
-export const logTemplates: LogTemplate[] = [
-  { lvl: 'ok',   msg: 'studio.boot <span style="color:var(--off)">ready</span>' },
-  { lvl: 'ok',   msg: 'mission.archive <span style="color:var(--off)">04 loaded</span>' },
-  { lvl: 'warn', msg: 'cache.stale <span style="color:var(--off)">refreshing</span>' },
-  { lvl: 'ok',   msg: 'render.frame <span style="color:var(--off)">stable 60fps</span>' },
-  { lvl: 'ok',   msg: 'transmission.outbound <span style="color:var(--off)">accepted</span>' },
-  { lvl: 'er',   msg: 'auth.guest <span style="color:var(--off)">read-only</span>' },
-  { lvl: 'ok',   msg: 'queue.empty <span style="color:var(--off)">awaiting input</span>' },
-  { lvl: 'warn', msg: 'experiment.unstable <span style="color:var(--off)">expect drift</span>' },
-];
-
 export const tickerItems: string[] = [
   '// QBIX STUDIO',
   '// EST 2026',
-  '// SEATTLE · NY',
-  '// 02 FOUNDERS',
-  '// NO HIRES',
+  '// SEATTLE',
   '// NO MIDDLEMEN',
   '// CODE OVER SLIDES',
   '// PRODUCT OVER PITCH',
   '// SMALL TEAMS · SHARP SYSTEMS',
   '// HUMAN-LED · SYSTEM-FIRST',
+];
+
+// ----- TESTIMONIALS (real client quotes — rotated in the Testimonial band) ---
+//
+// Add 2–3 verified quotes here and the homepage band auto-rotates through them.
+// `highlight` (optional) is wrapped in the lime signal style if found verbatim
+// in `quote`. Only add quotes you can attribute to a real person + org.
+
+export type Testimonial = {
+  quote: string;
+  highlight?: string;
+  name: string;   // person (initials are fine)
+  org: string;    // company / role
+};
+
+export const testimonials: Testimonial[] = [
+  {
+    quote:
+      'Qbix is one of the few studios that grew up inside the AI era. Their fluency with AI in the workflow — and their grasp of what AI products should feel like — is next level.',
+    highlight: 'next level',
+    name: 'CY',
+    org: 'Alibaba Cloud',
+  },
 ];
 
 // ----- CONTACT ---------------------------------------------------------------

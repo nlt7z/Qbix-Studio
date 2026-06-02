@@ -16,13 +16,13 @@ export default function WhatWeDo() {
               Who we help
             </span>
             <h2 style={{ marginTop: 14 }}>
-              Four kinds of teams, one studio.
+              Three kinds of teams, one studio.
             </h2>
             <p className="sub-plain">
-              Qbix Studio is an AI product design studio in Seattle. We work across{' '}
-              <Link href="/services/ai-products" className="text-link">AI product design</Link>,{' '}
-              <Link href="/services/saas-b2b" className="text-link">SaaS interface design</Link>, and{' '}
-              <Link href="/services/brand-studio" className="text-link">brand systems</Link> — see how we engage on each.
+              Qbix Studio is an AI product design studio in Seattle. We design and build{' '}
+              <Link href="/services/app-ai" className="text-link">AI products</Link>,{' '}
+              <Link href="/services/redesign" className="text-link">SaaS redesigns</Link>, and{' '}
+              <Link href="/services/web" className="text-link">shipped websites</Link> — see how we engage on each.
             </p>
           </div>
         </Reveal>
@@ -92,6 +92,7 @@ function ServicePattern({ slug }: { slug: string }) {
   switch (slug) {
     case 'ai-product-design':
     case 'ai-products':
+    case 'app-ai':
       return (
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           {/* Base platform — neural graph footprint */}
@@ -126,6 +127,7 @@ function ServicePattern({ slug }: { slug: string }) {
       );
     case 'ux-ui':
     case 'saas-b2b':
+    case 'redesign':
       return (
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           {/* Canvas slab */}
@@ -216,6 +218,7 @@ function ServicePattern({ slug }: { slug: string }) {
       );
     case 'web-mobile-build':
     case 'local-business':
+    case 'web':
       return (
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           {/* === iMac (left) === */}

@@ -68,8 +68,8 @@ export default function ContactCTA() {
               <span className="contact-sprint-unit">hours</span>
             </div>
             <p className="contact-sprint-cap">
-              From signed SOW to a working prototype in your inbox — a senior
-              designer-engineer pair, on the clock. Fixed scope, fixed price, one
+              From signed SOW to a working prototype in your inbox — senior
+              craft, on the clock. Fixed scope, fixed price, one
               calendar block.
             </p>
           </div>

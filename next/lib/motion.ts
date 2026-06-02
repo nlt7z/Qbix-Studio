@@ -42,8 +42,3 @@ export const cardHoverTransition: Transition = {
   duration: 0.25,
   ease: easeOutCubic,
 };
-
-export const bootProgressTransition: Transition = {
-  duration: 1.2,
-  ease: easeOutExpo,
-};

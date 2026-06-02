@@ -8,7 +8,7 @@ import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 export const metadata: Metadata = {
   title: 'Start a project',
   description:
-    'Tell Qbix Studio what you’re building. Share your project type, budget, and timeline and we’ll reply within 24 hours — a senior designer-engineer pair in Seattle.',
+    'Tell Qbix Studio what you’re building. Share your project type, budget, and timeline and we’ll reply within 24 hours — a senior AI-native studio in Seattle.',
   alternates: { canonical: '/start' },
 };
 
@@ -16,7 +16,7 @@ const STEPS = [
   {
     k: '01',
     t: 'We read every brief',
-    d: 'A senior pair — not a sales desk — reads what you send. Expect a reply within 24 hours.',
+    d: 'We read what you send — not a sales desk. Expect a reply within 24 hours.',
   },
   {
     k: '02',
@@ -98,8 +98,8 @@ export default function StartPage() {
                     <span className="contact-sprint-unit">hours</span>
                   </div>
                   <p className="contact-sprint-cap">
-                    From signed SOW to a working prototype in your inbox — a senior
-                    designer-engineer pair, on the clock. Pick &ldquo;48-hour sprint&rdquo; above and
+                    From signed SOW to a working prototype in your inbox — senior
+                    craft, on the clock. Pick &ldquo;48-hour sprint&rdquo; above and
                     we&rsquo;ll send the next open slot.
                   </p>
                 </div>

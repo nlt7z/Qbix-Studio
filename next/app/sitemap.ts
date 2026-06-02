@@ -22,8 +22,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/press`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/games`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/games/bidking`,    lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${SITE_URL}/work/bidking`,     lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${SITE_URL}/work/ai-character-chat`, lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.7 },
   ];
 
   const serviceRoutes: MetadataRoute.Sitemap = services.map((s) => ({

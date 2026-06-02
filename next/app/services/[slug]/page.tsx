@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
 import StartProjectButton from '@/components/StartProjectButton';
+import { DeliverableGrid, ProcessFlow } from '@/components/ServiceVisuals';
 import { services } from '@/lib/data';
 
 const SITE_URL = 'https://qbix.space';
@@ -89,30 +90,32 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
             </div>
           </header>
 
-          <div className="detail-grid">
-            <div className="detail-section">
-              <span className="detail-section-label">FIG {service.num}.1 — Deliverables</span>
-              <h3>What we hand over</h3>
-              <ul className="detail-list">
-                {service.detail.deliverables.map((d) => (
-                  <li key={d}>{d}</li>
-                ))}
-              </ul>
+          <dl className="detail-meta">
+            <div className="detail-meta-cell">
+              <dt>Starting from</dt>
+              <dd>{service.priceFrom}</dd>
             </div>
+            <div className="detail-meta-cell">
+              <dt>Typical run</dt>
+              <dd>{service.typical}</dd>
+            </div>
+            <div className="detail-meta-cell">
+              <dt>Built for</dt>
+              <dd>{service.audience}</dd>
+            </div>
+          </dl>
 
-            <div className="detail-section">
-              <span className="detail-section-label">FIG {service.num}.2 — Engagement</span>
-              <h3>How we work together</h3>
-              <div className="detail-specs">
-                {service.detail.engagement.map((e) => (
-                  <div key={e.k} className="detail-spec">
-                    <span className="detail-spec-k">{e.k}</span>
-                    <span className="detail-spec-v">{e.v}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <section className="detail-section">
+            <span className="detail-section-label">FIG {service.num}.1 — Deliverables</span>
+            <h3>What we hand over</h3>
+            <DeliverableGrid items={service.detail.deliverables} />
+          </section>
+
+          <section className="detail-section detail-section--flow">
+            <span className="detail-section-label">FIG {service.num}.2 — Engagement</span>
+            <h3>How we work together</h3>
+            <ProcessFlow steps={service.detail.engagement} />
+          </section>
 
           <div className="detail-cta">
             <p className="detail-cta-text">

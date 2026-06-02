@@ -150,7 +150,7 @@ export default function Hero() {
             transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.82 }}
           >
             <span className="hero-trust-dot" aria-hidden />
-            Seattle · designer + engineer pair · decade-deep across product, brand, and AI
+            Seattle · AI-native product studio · decade-deep across product, brand, and AI
           </motion.p>
 
           <motion.div
