@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useRef, type ReactNode } from 'react';
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useContactModal } from '@/components/ContactModalProvider';
-import MagneticButton from '@/components/MagneticButton';
 import BrandText from '@/components/BrandText';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -159,16 +158,14 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.92 }}
           >
-            <MagneticButton radius={90} strength={9}>
-              <button
-                type="button"
-                className="btn btn-primary btn-lg"
-                onClick={openContactModal}
-              >
-                Start a project
-                <span className="arrow">→</span>
-              </button>
-            </MagneticButton>
+            <button
+              type="button"
+              className="btn btn-primary btn-lg"
+              onClick={openContactModal}
+            >
+              Start a project
+              <span className="arrow">→</span>
+            </button>
             <Link href="#work" className="btn btn-secondary btn-lg">
               View work
             </Link>

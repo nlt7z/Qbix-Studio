@@ -85,7 +85,7 @@ export default function StartPage() {
                 <div className="contact-sprint-head">
                   <span className="fig">FIG · The 48-hour sprint</span>
                   <span className="contact-sprint-price">
-                    From <strong>$2k</strong> · idea → working prototype
+                    From <strong>$500</strong> · idea → working prototype
                   </span>
                   <span className="contact-sprint-status">
                     <span className="contact-sprint-dot" aria-hidden />

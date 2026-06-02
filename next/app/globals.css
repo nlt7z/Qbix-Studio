@@ -698,7 +698,7 @@ section { position: relative; }
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.05fr);
   gap: clamp(28px, 4vw, 56px);
   align-items: center;
 }
@@ -707,7 +707,7 @@ section { position: relative; }
 }
 @media (max-width: 720px) {
   .hero { padding: clamp(88px, 18vw, 104px) 0 clamp(48px, 10vw, 72px); }
-  .hero-cube-img { max-width: 180px; }
+  .hero-cube-img { max-width: 230px; }
   .hero-cube-figure { padding: 8px; }
   .hero-ctas .btn { flex: 1 1 auto; justify-content: center; }
 }
@@ -762,7 +762,7 @@ section { position: relative; }
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: clamp(220px, 26vw, 380px);
+  max-width: clamp(280px, 34vw, 480px);
   height: auto;
   filter: drop-shadow(0 30px 60px rgba(0,0,0,0.5)) drop-shadow(0 0 40px rgba(184,255,0,0.2));
 }
@@ -2749,17 +2749,18 @@ section { position: relative; }
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: clamp(12px, 1.6vw, 16px);
 }
-@media (max-width: 720px) {
+@media (max-width: 860px) {
   .deliv-grid { grid-template-columns: 1fr; }
 }
 .deliv-card {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
   gap: 14px;
-  padding: clamp(18px, 2.2vw, 22px);
+  padding: clamp(20px, 2.2vw, 24px);
   border: 1px solid var(--line);
   border-radius: var(--r-card);
   background: var(--bg-card);

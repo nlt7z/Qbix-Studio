@@ -55,7 +55,7 @@ export default function ContactCTA() {
           <div className="contact-sprint-head">
             <span className="fig">FIG · The 48-hour sprint</span>
             <span className="contact-sprint-price">
-              From <strong>$2k</strong> · Web design, idea → launch
+              From <strong>$500</strong> · Web design, idea → launch
             </span>
             <span className="contact-sprint-status">
               <span className="contact-sprint-dot" aria-hidden />
