@@ -49,6 +49,7 @@ export type Service = {
   tags: string[];
   priceFrom: string; // "$2k" / "$15k" — starting anchor
   typical: string;   // "1 – 3 weeks" — duration anchor
+  caseSlugs?: string[]; // slugs from `projects` shown as cases on the detail page
   detail: {
     lede: string;
     deliverables: string[];
@@ -67,6 +68,7 @@ export const services: Service[] = [
     tags: ['Marketing site', 'Portfolio', 'Brand'],
     priceFrom: '$500',
     typical: '1 – 3 weeks',
+    caseSlugs: ['lamdre', 'sde-personal-rebrand', 'ai-interview-tool'],
     detail: {
       lede:
         'We do the whole thing — design to live. Moodboard sets the direction, then we render your idea faithfully into the interface, write the front-end code, push to your GitHub, deploy it, wire up the domain, and hand it over. What you end up with is a live site anyone can visit — and the code you own.',
@@ -93,6 +95,7 @@ export const services: Service[] = [
     tags: ['Agent UX', 'AI chat', '0 → 1'],
     priceFrom: '$20k',
     typical: '6 – 12 weeks',
+    caseSlugs: ['qwen-character', 'bidking'],
     detail: {
       lede:
         'Agent flows, LLM interfaces, AI chat, AI features dropped into an existing app. We design it, then write the front end — and the back end if you don\'t have one. This is taking a product from zero to live. Two paths, depending on whether you already have engineering.',
@@ -119,6 +122,7 @@ export const services: Service[] = [
     tags: ['Redesign', 'User feedback', 'Iteration'],
     priceFrom: '$5k',
     typical: '5 – 10 weeks',
+    caseSlugs: ['spark-tts', 'liner-ai-collaboration'],
     detail: {
       lede:
         'You already have a product, but it needs to move forward. Working from your needs and real user feedback, we upgrade it round by round — not a rewrite from scratch, but lifting it from working to good, from good to worth sharing. Designed and coded end to end; the changes go straight into your product.',

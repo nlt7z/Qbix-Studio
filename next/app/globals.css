@@ -2861,6 +2861,64 @@ section { position: relative; }
   max-width: 640px;
 }
 
+/* Service detail — editorial case strip (deliberately low on card chrome) */
+.svc-cases {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(32px, 4.5vw, 52px);
+}
+.svc-case { margin: 0; }
+.svc-case-media { display: block; text-decoration: none; color: inherit; }
+.svc-case-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #050505;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  transition: border-color var(--t-fast) var(--ease);
+}
+.svc-case-media:hover .svc-case-frame { border-color: var(--line-2); }
+.svc-case-cap {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 14px;
+  padding-bottom: clamp(12px, 1.4vw, 16px);
+  border-bottom: 1px solid var(--line);
+}
+.svc-case-num {
+  flex-shrink: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+.svc-case-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.svc-case-title {
+  font-family: var(--font-sans);
+  font-size: clamp(16px, 1.7vw, 19px);
+  font-weight: 540;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.svc-case-meta { font-size: 12px; letter-spacing: 0.01em; color: var(--text-3); }
+.svc-case-year {
+  flex-shrink: 0;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);

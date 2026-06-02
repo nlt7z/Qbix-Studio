@@ -5,7 +5,8 @@ import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
 import StartProjectButton from '@/components/StartProjectButton';
 import { DeliverableGrid, ProcessFlow } from '@/components/ServiceVisuals';
-import { services } from '@/lib/data';
+import ServiceCases from '@/components/ServiceCases';
+import { projects, services } from '@/lib/data';
 
 const SITE_URL = 'https://qbix.space';
 
@@ -40,6 +41,9 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
   if (!service) notFound();
 
   const price = parsePriceFrom(service.priceFrom);
+  const cases = (service.caseSlugs ?? [])
+    .map((slug) => projects.find((p) => p.slug === slug))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
   const serviceJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Service',
@@ -116,6 +120,14 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
             <h3>How we work together</h3>
             <ProcessFlow steps={service.detail.engagement} />
           </section>
+
+          {cases.length > 0 && (
+            <section className="detail-section">
+              <span className="detail-section-label">FIG {service.num}.3 — Selected work</span>
+              <h3>From this practice</h3>
+              <ServiceCases cases={cases} />
+            </section>
+          )}
 
           <div className="detail-cta">
             <p className="detail-cta-text">
