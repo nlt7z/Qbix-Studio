@@ -421,10 +421,10 @@ section { position: relative; }
 .topnav-burger { display: none; }
 .topnav-mobile-panel { display: none; }
 
-@media (max-width: 900px) { .topnav-status { display: none; } }
+@media (max-width: 900px) { .topnav-fixed .topnav-status { display: none; } }
 @media (max-width: 720px) {
-  .topnav-links { display: none; }
-  .topnav-cta { display: none; }
+  .topnav-fixed .topnav-links { display: none; }
+  .topnav-fixed .topnav-cta { display: none; }
   .topnav-fixed { justify-content: space-between; gap: 8px; }
   .topnav-burger {
     display: inline-flex;
@@ -529,7 +529,7 @@ section { position: relative; }
 }
 
 @media (max-width: 640px) {
-  .topnav-links { display: none; }
+  .topnav-fixed .topnav-links { display: none; }
   .topnav-fixed { justify-content: space-between; }
 }
 .topnav-brand {
