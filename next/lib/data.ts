@@ -293,7 +293,7 @@ export const projects: Project[] = [
       'Mapped the collaboration workflow end to end — invite, annotate, cite, and synthesize without breaking flow.',
       'Interaction and state design for the moments where human judgment and model output meet.',
     ],
-    aspect: 2102 / 1080,
+    aspect: 1920 / 1302,
     media: { kind: 'video', src: '/liner-present.mp4' },
   },
 ];
