@@ -115,6 +115,7 @@ const organizationJsonLd = {
     'https://github.com/qbixstudio-bit',
     'https://www.are.na/q-bix/channels',
     'https://x.com/QbixStudio',
+    'https://www.instagram.com/qbix_studio/',
   ],
   address: {
     '@type': 'PostalAddress',

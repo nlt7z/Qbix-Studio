@@ -27,6 +27,7 @@ const cols = [
       { label: 'GitHub',      href: 'https://github.com/qbixstudio-bit' },
       { label: 'X / Twitter', href: 'https://x.com/QbixStudio' },
       { label: 'LinkedIn',    href: 'https://www.linkedin.com/company/qbix-studio' },
+      { label: 'Instagram',   href: 'https://www.instagram.com/qbix_studio/' },
     ],
   },
 ];
