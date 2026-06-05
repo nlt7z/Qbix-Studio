@@ -68,7 +68,7 @@ export const services: Service[] = [
     tags: ['Marketing site', 'Portfolio', 'Brand'],
     priceFrom: '$500',
     typical: '1 – 3 weeks',
-    caseSlugs: ['lamdre', 'sde-personal-rebrand', 'ai-interview-tool'],
+    caseSlugs: ['lamdre', 'sde-personal-rebrand'],
     detail: {
       lede:
         'We do the whole thing — design to live. Moodboard sets the direction, then we render your idea faithfully into the interface, write the front-end code, push to your GitHub, deploy it, wire up the domain, and hand it over. What you end up with is a live site anyone can visit — and the code you own.',
@@ -259,27 +259,8 @@ export const projects: Project[] = [
     href: 'https://hancao.space',
   },
   {
-    slug: 'ai-interview-tool',
-    num: 'FILE / 006',
-    title: 'AI Interview Tool · 0→1 Launch',
-    client: 'Studio Product',
-    role: 'Product · AI UX · Front-end · Launch',
-    year: 2026,
-    category: 'ai-product',
-    tags: ['AI Product', 'Developer tools', 'End-to-end'],
-    hook:
-      'An AI-native coding interview tool, taken from zero to one — problem framing through public launch. Designed around how engineers actually think out loud with a model in the room.',
-    highlights: [
-      'Defined the product from zero — target user, core loop, AI behavior, pricing.',
-      'Designed an interview surface where the model coaches, probes, and grades without breaking flow.',
-      'Owned design, front-end, and launch — public beta with onboarding, billing, and telemetry shipped.',
-    ],
-    aspect: 16 / 9,
-    media: { kind: 'video', src: '/interview-tool.mp4' },
-  },
-  {
     slug: 'liner-ai-collaboration',
-    num: 'FILE / 007',
+    num: 'FILE / 006',
     title: 'Liner AI Collaboration Feature',
     client: 'Liner · AI Research Assistant',
     role: 'AI Product Design · Collaboration UX · Research workflow',
