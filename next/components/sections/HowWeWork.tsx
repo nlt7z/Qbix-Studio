@@ -122,8 +122,8 @@ export default function HowWeWork() {
               A six-stage journey from unclear idea to shipped product.
             </h2>
             <p className="sub-plain">
-              Our team has shipped products at companies like Amazon, Google, and
-              Alibaba — products used by millions of people.
+              Our team members have experience at FAANG — shipping products used
+              by millions of people.
             </p>
           </div>
           <p className="mono journey-legend">
