@@ -156,6 +156,79 @@ export function Reveal<E extends ElementType = 'div'>({
   );
 }
 
+type WordsProps<E extends ElementType = 'span'> = {
+  as?: E;
+  text: string;
+  speed?: RevealSpeed;
+  delay?: number;
+  step?: number;
+  once?: boolean;
+  margin?: string;
+} & Omit<ComponentProps<E>, 'as' | 'children'>;
+
+/**
+ * Scroll-triggered per-word reveal — the whileInView counterpart of the
+ * hero's WordReveal. Each word rises + de-blurs on its own beat so section
+ * headlines read as a writing rhythm when they enter the viewport.
+ */
+export function Words<E extends ElementType = 'span'>({
+  as,
+  text,
+  speed = 'base',
+  delay = 0,
+  step = 0.05,
+  once = true,
+  margin = '-10% 0px -10% 0px',
+  ...rest
+}: WordsProps<E>) {
+  const reduced = useReducedMotion();
+  const spec = SPEEDS[speed];
+
+  if (reduced) {
+    const PlainTag = (as ?? 'span') as ElementType;
+    return <PlainTag {...(rest as any)}>{text}</PlainTag>;
+  }
+
+  const Tag = (motion as any)[as as string] ?? motion.span;
+  const words = text.split(' ');
+
+  return (
+    <Tag
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once, margin }}
+      variants={{
+        hidden: {},
+        show: { transition: { staggerChildren: step, delayChildren: delay } },
+      }}
+      {...rest}
+    >
+      {words.map((w, i) => (
+        <motion.span
+          key={i}
+          style={{ display: 'inline-block', whiteSpace: 'pre' }}
+          variants={{
+            hidden: {
+              opacity: 0,
+              y: spec.y,
+              filter: `blur(${spec.blur}px)`,
+            },
+            show: {
+              opacity: 1,
+              y: 0,
+              filter: 'blur(0px)',
+              transition: { duration: spec.duration, ease: EASE_SPRING },
+            },
+          }}
+        >
+          {w}
+          {i < words.length - 1 ? ' ' : ''}
+        </motion.span>
+      ))}
+    </Tag>
+  );
+}
+
 type StaggerProps<E extends ElementType = 'div'> = {
   as?: E;
   stagger?: number;

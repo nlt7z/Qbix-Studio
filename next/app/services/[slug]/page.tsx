@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
 import StartProjectButton from '@/components/StartProjectButton';
+import SplitText from '@/components/SplitText';
 import { DeliverableGrid, ProcessFlow } from '@/components/ServiceVisuals';
 import ServiceCases from '@/components/ServiceCases';
 import { projects, services } from '@/lib/data';
@@ -134,8 +135,8 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
               Need this for your next product? <span className="accent">Start a project.</span>
             </p>
             <StartProjectButton />
-            <Link href="/#services" className="btn btn-secondary btn-lg">
-              All services
+            <Link href="/#services" className="btn btn-secondary btn-lg split-cta">
+              <SplitText text="All services" />
             </Link>
           </div>
         </div>

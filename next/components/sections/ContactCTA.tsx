@@ -1,9 +1,10 @@
 'use client';
 
 import { CONTACT_EMAIL, CONTACT_NOTE } from '@/lib/data';
-import { Reveal } from '@/components/Reveal';
+import { Reveal, Words } from '@/components/Reveal';
 import BrandText from '@/components/BrandText';
 import { useContactModal } from '@/components/ContactModalProvider';
+import SplitText from '@/components/SplitText';
 
 export default function ContactCTA() {
   const { open: openContactModal } = useContactModal();
@@ -24,9 +25,15 @@ export default function ContactCTA() {
             Contact
           </span>
           <h2 className="contact-heading" style={{ marginTop: 14 }}>
-            <Reveal as="span" className="line" speed="slow" delay={0.05}>
-              Have an idea?
-            </Reveal>
+            <Words
+              as="span"
+              className="line"
+              text="Have an idea?"
+              speed="slow"
+              delay={0.05}
+              step={0.09}
+              style={{ display: 'block' }}
+            />
             <Reveal as="span" className="line accent" speed="cinematic" delay={0.2}>
               Let’s turn it into something people can use.
             </Reveal>
@@ -40,14 +47,13 @@ export default function ContactCTA() {
         <Reveal className="contact-ctas" speed="fast" delay={0.75}>
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary btn-lg split-cta"
             onClick={(e) => {
               e.preventDefault();
               openContactModal();
             }}
           >
-            Start a project
-            <span className="arrow">→</span>
+            <SplitText text="Start a project" arrow />
           </a>
         </Reveal>
 
@@ -75,11 +81,11 @@ export default function ContactCTA() {
           </div>
         </Reveal>
 
-        <div className="contact-meta">
+        <Reveal className="contact-meta" speed="fast" delay={1.1}>
           <span>{CONTACT_EMAIL}</span>
           <span>·</span>
           <span>Seattle</span>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -6,6 +6,7 @@ import { useRef, type ReactNode } from 'react';
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useContactModal } from '@/components/ContactModalProvider';
 import BrandText from '@/components/BrandText';
+import SplitText from '@/components/SplitText';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 const EASE_SPRING = [0.34, 1.4, 0.46, 1] as const;
@@ -160,14 +161,13 @@ export default function Hero() {
           >
             <button
               type="button"
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary btn-lg split-cta"
               onClick={openContactModal}
             >
-              Start a project
-              <span className="arrow">→</span>
+              <SplitText text="Start a project" arrow />
             </button>
-            <Link href="#work" className="btn btn-secondary btn-lg">
-              View work
+            <Link href="#work" className="btn btn-secondary btn-lg split-cta">
+              <SplitText text="View work" />
             </Link>
           </motion.div>
         </div>

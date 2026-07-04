@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Colophon from '@/components/Colophon';
+import SplitText from '@/components/SplitText';
 import { CONTACT_EMAIL, brandLookbook } from '@/lib/data';
 
 export const metadata: Metadata = {
@@ -239,13 +240,12 @@ export default function PressKitPage() {
             </p>
             <a
               href={`mailto:${CONTACT_EMAIL}?subject=Press%20inquiry`}
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary btn-lg split-cta"
             >
-              Email press
-              <span className="arrow">→</span>
+              <SplitText text="Email press" arrow />
             </a>
-            <Link href="/#about" className="btn btn-secondary btn-lg">
-              About the studio
+            <Link href="/#about" className="btn btn-secondary btn-lg split-cta">
+              <SplitText text="About the studio" />
             </Link>
           </div>
         </div>

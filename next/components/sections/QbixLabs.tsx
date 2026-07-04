@@ -2,30 +2,33 @@
 
 import { labCards, brandLookbook } from '@/lib/data';
 import BrandText from '@/components/BrandText';
-import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
 
 export default function QbixLabs() {
   return (
     <section id="labs" className="labs section-pad">
       <div className="container">
-        <Reveal
-          as="header"
+        <header
           className="section-head"
           style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 18, marginBottom: 32, position: 'relative', zIndex: 1 }}
-          speed="slow"
         >
-          <span className="eyebrow">
+          <Reveal as="span" className="eyebrow" speed="fast">
             <span className="num">05</span>
             <span><span className="brand-q">Q</span>bix Labs</span>
-          </span>
-          <h2 style={{ maxWidth: 920 }}>
-            Internal AI products, interface experiments, and playful systems.
-          </h2>
-          <p className="labs-lede">
+          </Reveal>
+          <Words
+            as="h2"
+            text="Internal AI products, interface experiments, and playful systems."
+            style={{ maxWidth: 920 }}
+            speed="fast"
+            delay={0.1}
+            step={0.04}
+          />
+          <Reveal as="p" className="labs-lede" speed="base" delay={0.35}>
             Our playground for proprietary AI tools, product experiments, and new interaction
             models. The work that makes us not-just-a-studio.
-          </p>
-        </Reveal>
+          </Reveal>
+        </header>
 
         <Stagger className="lab-cards" stagger={0.08} delayChildren={0.15}>
           {labCards.map((c, i) => {
@@ -36,7 +39,14 @@ export default function QbixLabs() {
                     card (no link/arrow) until the secondary pages ship. */}
                 <div className="lab-card">
                   {brand && (
-                    <div className="lab-card-deco" aria-hidden>
+                    <Reveal
+                      className="lab-card-deco"
+                      aria-hidden
+                      gesture="tilt"
+                      speed="slow"
+                      index={i}
+                      delay={0.2 + i * 0.08}
+                    >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={brand.src}
@@ -44,7 +54,7 @@ export default function QbixLabs() {
                         loading="lazy"
                         decoding="async"
                       />
-                    </div>
+                    </Reveal>
                   )}
                   <div className="lab-card-body">
                     <span className="lab-card-num">{c.num} / Lab</span>

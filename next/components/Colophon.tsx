@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
+import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 
 const cols = [
   {
@@ -36,8 +37,8 @@ export default function Colophon() {
   return (
     <footer className="footer">
       <div className="container">
-        <div className="footer-grid">
-          <div>
+        <Stagger className="footer-grid" stagger={0.1} delayChildren={0.05}>
+          <RevealItem speed="fast">
             <div className="footer-brand">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="footer-logo" src="/qbix-keyboard.png" alt="Qbix" />
@@ -48,10 +49,10 @@ export default function Colophon() {
               <Link href="/services/app-ai" className="text-link">AI products</Link>{' '}
               from strategy to interface to launch.
             </p>
-          </div>
+          </RevealItem>
 
           {cols.map((col) => (
-            <div key={col.label} className="footer-col">
+            <RevealItem key={col.label} className="footer-col" speed="fast">
               <span className="footer-col-label">{col.label}</span>
               <ul>
                 {col.links.map((l) => {
@@ -67,13 +68,13 @@ export default function Colophon() {
                   );
                 })}
               </ul>
-            </div>
+            </RevealItem>
           ))}
-        </div>
+        </Stagger>
 
-        <div className="footer-line">
+        <Reveal className="footer-line" speed="fast" delay={0.4}>
           <span>© 2026 <span className="brand-q">Q</span>bix Studio LLC</span>
-        </div>
+        </Reveal>
       </div>
     </footer>
   );

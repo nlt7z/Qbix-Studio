@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
 import { processSteps, type ProcessStep } from '@/lib/data';
-import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
 
 const stroke = {
   fill: 'none',
@@ -112,25 +112,30 @@ export default function HowWeWork() {
         loading="lazy"
       />
       <div className="container">
-        <Reveal as="header" className="section-head" speed="fast">
+        <header className="section-head">
           <div>
-            <span className="eyebrow">
+            <Reveal as="span" className="eyebrow" speed="fast">
               <span className="num">04</span>
               How we work
-            </span>
-            <h2 style={{ marginTop: 14 }}>
-              A six-stage journey from unclear idea to shipped product.
-            </h2>
-            <p className="sub-plain">
+            </Reveal>
+            <Words
+              as="h2"
+              text="A six-stage journey from unclear idea to shipped product."
+              style={{ marginTop: 14 }}
+              speed="fast"
+              delay={0.1}
+              step={0.04}
+            />
+            <Reveal as="p" className="sub-plain" speed="base" delay={0.35}>
               Our team members have experience at FAANG — shipping products used
               by millions of people.
-            </p>
+            </Reveal>
           </div>
-          <p className="mono journey-legend">
+          <Reveal as="p" className="mono journey-legend" speed="base" delay={0.5}>
             <span className="journey-legend-dot" />
             Loops back as the product gets sharper.
-          </p>
-        </Reveal>
+          </Reveal>
+        </header>
 
         <div className="journey">
           <div ref={pinsRef} className="journey-pins is-scrubbed">

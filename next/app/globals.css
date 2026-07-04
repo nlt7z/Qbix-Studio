@@ -83,6 +83,7 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring:   cubic-bezier(0.34, 1.56, 0.46, 1);
   --ease-ambient:  cubic-bezier(0.45, 0, 0.55, 1);
+  --ease-portfolio: cubic-bezier(0.22, 1, 0.36, 1);  /* SplitText wave */
   --t-fast:        120ms;
   --t-base:        160ms;
   --t-reveal:      320ms;
@@ -282,12 +283,12 @@ p { margin: 0; }
 .btn-sm { height: 26px; padding: 0 10px; font-size: 13px; }
 
 .btn-primary {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--signal);
+  color: var(--signal-dark);
   box-shadow: var(--highlight);
 }
 .btn-primary:hover {
-  background: #ffffff;
+  background: var(--signal-hover);
 }
 .btn-primary .arrow { transition: transform var(--t-fast) var(--ease); }
 .btn-primary:hover .arrow { transform: translateX(2px); }
@@ -308,6 +309,81 @@ p { margin: 0; }
   color: var(--text);
 }
 .btn-ghost:hover { background: rgba(255, 255, 255, 0.04); color: var(--ink); }
+
+/* =============================================================================
+   SPLIT CTA — per-character stagger wave on hover (see components/SplitText)
+   The host element carries `.split-cta`; its :hover drives the letter slide,
+   so the effect is pure CSS and works in Server components.
+   ============================================================================= */
+
+/* Pill-shaped CTAs also nudge up in scale, echoing the reference. */
+.btn.split-cta,
+.topnav-cta.split-cta {
+  transition: transform 300ms var(--ease-portfolio),
+              background var(--t-fast) var(--ease),
+              color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease);
+}
+.btn.split-cta:hover,
+.topnav-cta.split-cta:hover { transform: scale(1.04); }
+
+/* Screen-reader label; the animated layer beside it is aria-hidden. */
+.split-sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.split-text { display: inline-flex; }
+.split-anim {
+  display: inline-flex;
+  align-items: center;
+  /* room for descenders so overflow-hidden chars don't clip 'p','g','j' */
+  padding-block: 0.14em;
+  margin-block: -0.14em;
+}
+
+.split-char {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  line-height: 1.15;
+}
+.split-char.split-arrow { margin-left: 0.42em; }
+
+.split-char-rest,
+.split-char-next {
+  display: block;
+  transition: transform 300ms var(--ease-portfolio);
+  transition-delay: var(--d);
+}
+.split-char-rest { transform: translateY(0); }
+.split-char-next {
+  position: absolute;
+  inset: 0;
+  transform: translateY(110%);
+}
+
+/* Drive the wave from the host CTA's hover / keyboard focus. */
+.split-cta:hover .split-char-rest,
+.split-cta:focus-visible .split-char-rest { transform: translateY(-110%); }
+.split-cta:hover .split-char-next,
+.split-cta:focus-visible .split-char-next { transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.split-cta:hover,
+  .topnav-cta.split-cta:hover { transform: none; }
+  .split-char-rest,
+  .split-char-next { transition: none; }
+  .split-cta:hover .split-char-rest,
+  .split-cta:focus-visible .split-char-rest { transform: translateY(0); }
+  .split-cta:hover .split-char-next,
+  .split-cta:focus-visible .split-char-next { transform: translateY(110%); }
+}
 
 /* =============================================================================
    TAGS — Linear style: bordered, monochrome
@@ -380,7 +456,7 @@ p { margin: 0; }
 
 main { display: block; }
 section { position: relative; }
-.section-pad { padding: clamp(72px, 12vw, 160px) 0; }
+.section-pad { padding: clamp(96px, 16vw, 220px) 0; }
 
 /* =============================================================================
    TOP NAV — full-bleed sticky, transparent → blurred on scroll
@@ -2441,10 +2517,6 @@ section { position: relative; }
   font-size: 12px;
   letter-spacing: 0.02em;
   color: var(--text-2);
-  padding: 5px 12px;
-  border: 1px solid var(--line-2);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.02);
 }
 .contact-sprint-price strong {
   color: var(--ink);

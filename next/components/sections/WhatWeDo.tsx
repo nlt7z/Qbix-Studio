@@ -3,29 +3,33 @@
 import Link from 'next/link';
 import { services } from '@/lib/data';
 import BrandText from '@/components/BrandText';
-import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
 
 export default function WhatWeDo() {
   return (
     <section id="services" className="section-pad">
       <div className="container">
-        <Reveal as="header" className="section-head" speed="fast">
+        <header className="section-head">
           <div>
-            <span className="eyebrow">
+            <Reveal as="span" className="eyebrow" speed="fast">
               <span className="num">02</span>
               Who we help
-            </span>
-            <h2 style={{ marginTop: 14 }}>
-              Three kinds of teams, one studio.
-            </h2>
-            <p className="sub-plain">
+            </Reveal>
+            <Words
+              as="h2"
+              text="Three kinds of teams, one studio."
+              style={{ marginTop: 14 }}
+              speed="fast"
+              delay={0.1}
+            />
+            <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               Qbix Studio is an AI product design studio in Seattle. We design and build{' '}
               <Link href="/services/app-ai" className="text-link">AI products</Link>,{' '}
               <Link href="/services/redesign" className="text-link">SaaS redesigns</Link>, and{' '}
               <Link href="/services/web" className="text-link">shipped websites</Link> — see how we engage on each.
-            </p>
+            </Reveal>
           </div>
-        </Reveal>
+        </header>
 
         <Stagger className="services-wrap" stagger={0.1} delayChildren={0.1}>
           {services.map((s) => (

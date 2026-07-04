@@ -166,6 +166,7 @@ export type Project = {
   highlights?: string[];      // 2–4 short bullet outcomes
   metric?: string;            // single mono badge line, e.g. "+200% model calls"
   href?: string;
+  hidden?: boolean;           // hide from the Selected work grid (still reachable as a service case)
 };
 
 export const projects: Project[] = [
@@ -182,6 +183,7 @@ export const projects: Project[] = [
       'Brand and visual design for Lamdre — an identity and design language carried from the space through to the screen.',
     aspect: 2110 / 1080,
     media: { kind: 'video', src: '/lamdre.mp4' },
+    hidden: true,
   },
   {
     slug: 'qwen-character',
@@ -202,6 +204,7 @@ export const projects: Project[] = [
     metric: '+200% model calls · 60% faster ship',
     aspect: 16 / 9,
     media: { kind: 'video', src: '/figma.mp4' },
+    hidden: true,
   },
   {
     slug: 'spark-tts',
@@ -276,6 +279,7 @@ export const projects: Project[] = [
     ],
     aspect: 1920 / 1302,
     media: { kind: 'video', src: '/liner-present.mp4' },
+    hidden: true,
   },
 ];
 

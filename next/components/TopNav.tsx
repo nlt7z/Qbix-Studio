@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { navItems } from '@/lib/data';
 import QbixMark from '@/components/QbixMark';
 import { useContactModal } from '@/components/ContactModalProvider';
+import SplitText from '@/components/SplitText';
 
 const HEADER_OFFSET = 64;            // 56px nav + 8px breathing room
 const sectionIds = navItems
@@ -181,14 +182,13 @@ export default function TopNav() {
 
       <a
         href="#contact"
-        className="topnav-cta"
+        className="topnav-cta split-cta"
         onClick={(e) => {
           e.preventDefault();
           openContactModal();
         }}
       >
-        Start a project
-        <span className="arrow" aria-hidden>→</span>
+        <SplitText text="Start a project" arrow />
       </a>
 
       <button
@@ -222,7 +222,7 @@ export default function TopNav() {
                   tabIndex={menuOpen ? 0 : -1}
                 >
                   {item.label}
-                  <span className="arrow" aria-hidden>→</span>
+                  <span className="arrow" aria-hidden>↗</span>
                 </a>
               </li>
             );
@@ -235,11 +235,11 @@ export default function TopNav() {
                 setMenuOpen(false);
                 openContactModal();
               }}
-              className="topnav-mobile-link is-cta"
+              className="topnav-mobile-link is-cta split-cta"
               tabIndex={menuOpen ? 0 : -1}
             >
-              Start a project
-              <span className="arrow" aria-hidden>→</span>
+              <SplitText text="Start a project" />
+              <span className="arrow" aria-hidden>↗</span>
             </a>
           </li>
         </ul>

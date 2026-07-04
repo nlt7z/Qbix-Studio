@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
+import SplitText from '@/components/SplitText';
 
 const PROJECT_TYPES = [
   'AI product',
@@ -76,8 +77,8 @@ export default function StartProjectForm() {
           Thanks{first ? `, ${first}` : ''} — we&rsquo;ll reply from {CONTACT_EMAIL} within
           24&nbsp;hours.
         </p>
-        <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="btn btn-secondary btn-lg">
-          Book a 30-min call too
+        <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="btn btn-secondary btn-lg split-cta">
+          <SplitText text="Book a 30-min call too" />
         </a>
       </div>
     );
@@ -213,17 +214,16 @@ export default function StartProjectForm() {
       )}
 
       <div className="contact-form-actions">
-        <button type="submit" className="btn btn-primary btn-lg" disabled={status === 'sending'}>
-          {status === 'sending' ? 'Sending…' : 'Send brief'}
-          <span className="arrow">→</span>
+        <button type="submit" className="btn btn-primary btn-lg split-cta" disabled={status === 'sending'}>
+          <SplitText text={status === 'sending' ? 'Sending…' : 'Send brief'} arrow />
         </button>
         <a
           href={BOOKING_URL}
           target="_blank"
           rel="noreferrer"
-          className="btn btn-secondary btn-lg"
+          className="btn btn-secondary btn-lg split-cta"
         >
-          Or book a 30-min call
+          <SplitText text="Or book a 30-min call" />
         </a>
       </div>
     </form>

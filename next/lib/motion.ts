@@ -42,3 +42,9 @@ export const cardHoverTransition: Transition = {
   duration: 0.25,
   ease: easeOutCubic,
 };
+
+// Boot overlay auto-hides at 1.5s — the progress bar fills just inside that.
+export const bootProgressTransition: Transition = {
+  duration: 1.4,
+  ease: easeOutQuart,
+};

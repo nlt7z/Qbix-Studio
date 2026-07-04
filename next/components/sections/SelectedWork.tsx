@@ -3,26 +3,35 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { projects, type Project } from '@/lib/data';
-import { Reveal } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
 
 export default function SelectedWork() {
   return (
     <section id="work" className="section-pad">
       <div className="container">
-        <Reveal as="header" className="section-head" speed="fast">
+        <header className="section-head">
           <div>
-            <span className="eyebrow">
+            <Reveal as="span" className="eyebrow" speed="fast">
               <span className="num">03</span>
               Selected work
-            </span>
-            <h2 style={{ marginTop: 14 }}>Built and shipped.</h2>
+            </Reveal>
+            <Words
+              as="h2"
+              text="Built and shipped."
+              style={{ marginTop: 14 }}
+              speed="fast"
+              delay={0.1}
+              step={0.08}
+            />
           </div>
-        </Reveal>
+        </header>
 
         <div className="work-cases">
-          {projects.map((p, i) => (
-            <WorkCard key={p.slug} project={p} index={i} />
-          ))}
+          {projects
+            .filter((p) => !p.hidden)
+            .map((p, i) => (
+              <WorkCard key={p.slug} project={p} index={i} />
+            ))}
         </div>
       </div>
     </section>
@@ -57,12 +66,18 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
     return null;
   };
 
+  const MediaFrame = () => (
+    <RevealItem className="work-case-frame" gesture="media" speed="base">
+      <MediaInner />
+    </RevealItem>
+  );
+
   return (
-    <Reveal
+    <Stagger
       as="article"
       className={`work-case ${hasMedia ? 'work-case--has-media' : ''}`}
-      speed="base"
-      delay={0.05 + index * 0.06}
+      stagger={0.09}
+      delayChildren={0.05 + index * 0.06}
     >
       {hasMedia && (
         p.href ? (
@@ -74,9 +89,7 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <div className="work-case-frame">
-                <MediaInner />
-              </div>
+              <MediaFrame />
             </a>
           ) : (
             <Link
@@ -84,30 +97,34 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
               className="work-case-media"
               aria-label={`Open ${p.title}`}
             >
-              <div className="work-case-frame">
-                <MediaInner />
-              </div>
+              <MediaFrame />
             </Link>
           )
         ) : (
           <div className="work-case-media">
-            <div className="work-case-frame">
-              <MediaInner />
-            </div>
+            <MediaFrame />
           </div>
         )
       )}
 
-      <div className="work-case-head">
+      <RevealItem className="work-case-head" speed="fast">
         <span className="work-case-num mono">{p.num}</span>
         <span className="work-case-year mono">{p.year}</span>
-      </div>
+      </RevealItem>
 
-      <h3 className="work-case-title">{p.title}</h3>
-      <span className="work-case-client">{p.client}</span>
+      <RevealItem as="h3" className="work-case-title" speed="fast">
+        {p.title}
+      </RevealItem>
+      <RevealItem as="span" className="work-case-client" speed="fast">
+        {p.client}
+      </RevealItem>
 
-      {p.metric && <span className="work-case-metric mono">{p.metric}</span>}
-    </Reveal>
+      {p.metric && (
+        <RevealItem as="span" className="work-case-metric mono" speed="fast">
+          {p.metric}
+        </RevealItem>
+      )}
+    </Stagger>
   );
 }
 

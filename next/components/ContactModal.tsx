@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
+import SplitText from '@/components/SplitText';
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -141,26 +142,25 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
                 <div className="contact-form-actions">
                   <button
                     type="submit"
-                    className="btn btn-primary btn-lg"
+                    className="btn btn-primary btn-lg split-cta"
                     disabled={status === 'sending'}
                   >
-                    {status === 'sending' ? 'Sending…' : 'Send brief'}
-                    <span className="arrow">→</span>
+                    <SplitText text={status === 'sending' ? 'Sending…' : 'Send brief'} arrow />
                   </button>
                   <a
                     href={BOOKING_URL}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn btn-secondary btn-lg"
+                    className="btn btn-secondary btn-lg split-cta"
                   >
-                    Or book a 30-min call
+                    <SplitText text="Or book a 30-min call" />
                   </a>
                 </div>
 
                 <p className="contact-modal-alt">
                   Prefer more detail?{' '}
                   <Link href="/start" onClick={onClose} className="contact-modal-alt-link">
-                    Open the full project form →
+                    Open the full project form ↗
                   </Link>
                 </p>
               </form>
@@ -171,8 +171,8 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
                 </div>
                 <h3>Brief received.</h3>
                 <p>We&rsquo;ll reply from {CONTACT_EMAIL} within 24 hours.</p>
-                <button type="button" className="btn btn-secondary btn-lg" onClick={onClose}>
-                  Close
+                <button type="button" className="btn btn-secondary btn-lg split-cta" onClick={onClose}>
+                  <SplitText text="Close" />
                 </button>
               </div>
             )}
