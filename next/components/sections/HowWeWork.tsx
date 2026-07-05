@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
+import { useMotionValueEvent, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import { processSteps, type ProcessStep } from '@/lib/data';
-import { Reveal, Words } from '@/components/Reveal';
+import { Reveal, Wipe } from '@/components/Reveal';
 
 const stroke = {
   fill: 'none',
@@ -66,22 +66,30 @@ function StageIcon({ name }: { name: ProcessStep['icon'] }) {
 
 export default function HowWeWork() {
   const reduced = useReducedMotion();
+  const journeyRef = useRef<HTMLDivElement | null>(null);
   const pinsRef = useRef<HTMLDivElement | null>(null);
   const [activePins, setActivePins] = useState(0);
 
-  // Rail + pins tied to the user's scroll position over the pins row.
-  // start (rail empty)  → pins row reaches 80% of viewport
-  // end   (rail full)   → pins row reaches 30% of viewport
-  // Longer runway so the six stops light one by one while scrolling,
-  // instead of all snapping on in a single viewport step.
+  // Rail + pins are scrubbed by scroll, but timed against the WHOLE journey
+  // block so the sequence *finishes as the journey reaches the middle of the
+  // viewport* — not after it has already scrolled up past the fold.
+  //   start (rail empty) → journey top enters from the bottom of the viewport
+  //   end   (rail full)  → journey is (just about) centred
   const { scrollYProgress } = useScroll({
-    target: pinsRef,
-    offset: ['start 85%', 'start 15%'],
+    target: journeyRef,
+    offset: ['start end', 'center 56%'],
+  });
+  // Draw the rail off a spring-smoothed copy of the scroll signal so the lime
+  // line glides and settles rather than twitching frame-to-frame with scroll.
+  const railProgress = useSpring(scrollYProgress, {
+    stiffness: 140,
+    damping: 30,
+    mass: 0.35,
   });
 
   // Push progress to a CSS custom property so the rail's ::before
   // clip-path can read it without a React re-render every frame.
-  useMotionValueEvent(scrollYProgress, 'change', (p) => {
+  useMotionValueEvent(railProgress, 'change', (p) => {
     const el = pinsRef.current;
     if (!el) return;
     if (reduced) {
@@ -104,7 +112,7 @@ export default function HowWeWork() {
   }, [reduced]);
 
   return (
-    <section id="how" className="how section-pad">
+    <section id="how" className="how section-pad" data-nav-theme="dark">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="how-decoration"
@@ -120,14 +128,9 @@ export default function HowWeWork() {
               <span className="num">04</span>
               How we work
             </Reveal>
-            <Words
-              as="h2"
-              text="A six-stage journey from unclear idea to shipped product."
-              style={{ marginTop: 14 }}
-              speed="fast"
-              delay={0.1}
-              step={0.04}
-            />
+            <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1}>
+              A six-stage journey from unclear idea to shipped product.
+            </Wipe>
             <Reveal as="p" className="sub-plain" speed="base" delay={0.35}>
               Our team members have experience at FAANG — shipping products used
               by millions of people.
@@ -139,7 +142,7 @@ export default function HowWeWork() {
           </Reveal>
         </header>
 
-        <div className="journey">
+        <div ref={journeyRef} className="journey">
           <div ref={pinsRef} className="journey-pins is-scrubbed">
             {processSteps.map((s, i) => (
               <div

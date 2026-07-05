@@ -91,6 +91,23 @@
   --t-heartbeat:   11s;
   --t-breathe:     10s;
   --t-rotate:      36s;
+
+  /* Column guide lines — two faint vertical hairlines marking the left and
+     right edges of the centred 1200px reading column (50% ∓ 600px). Positioned
+     viewport-relative so they line up seam to seam across every full-bleed
+     section, running the full height of the page. */
+  --col-line: rgba(255, 255, 255, 0.05);
+  --col-lines:
+    linear-gradient(var(--col-line), var(--col-line)),
+    linear-gradient(var(--col-line), var(--col-line));
+  --col-lines-size: 1px 100%, 1px 100%;
+  --col-lines-pos: calc(50% - 600px) 0, calc(50% + 600px) 0;
+
+  /* Halftone media backing — the dot pad that sits behind every image and
+     scatters (scales out + fades + softens) on hover, like dispersing
+     particles. Two dot weights so they separate at different rates. */
+  --halftone-dot:   rgba(184, 255, 0, 0.20);
+  --halftone-dot-2: rgba(184, 255, 0, 0.11);
 }
 
 * { box-sizing: border-box; }
@@ -118,26 +135,9 @@ body {
   font-feature-settings: 'cv11', 'ss01', 'ss03';
 }
 
-/* Ambient canvas texture — a fine grid with a two-scale halftone dot matrix,
-   heavier toward the edges and airy over the content column, so the page
-   reads as printed paper rather than flat black. Sits above the body fill
-   (z:0) and below all content. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1.4px),
-    radial-gradient(rgba(184, 255, 0, 0.04) 1.4px, transparent 2px),
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 24px 24px, 96px 96px, 96px 96px, 96px 96px;
-  background-position: 0 0, 48px 24px, 0 0, 0 0;
-  -webkit-mask-image: radial-gradient(ellipse 110% 100% at 50% 20%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.95) 100%);
-  mask-image: radial-gradient(ellipse 110% 100% at 50% 20%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.95) 100%);
-}
+/* Background texture is intentionally minimal: four vertical column guide lines
+   (see COLUMN GUIDE LINES at the foot of this file) plus a single halftone
+   accent in the hero's top-right corner (.hero::after). No full-bleed grid. */
 
 ::selection { background: var(--signal); color: var(--signal-dark); }
 
@@ -512,6 +512,26 @@ section { position: relative; }
     -webkit-backdrop-filter 120ms var(--ease),
     backdrop-filter 120ms var(--ease);
 }
+/* Light-skin variant — worn while a [data-nav-theme="light"] section sits
+   under the bar. Ink flips dark so the nav stays legible over a light field. */
+.topnav-fixed[data-theme='light'] .topnav-link { color: rgba(17, 17, 18, 0.66); }
+.topnav-fixed[data-theme='light'] .topnav-link:hover,
+.topnav-fixed[data-theme='light'] .topnav-link:focus-visible,
+.topnav-fixed[data-theme='light'] .topnav-link.active { color: #111112; }
+.topnav-fixed[data-theme='light'] .topnav-link-bg { background: rgba(17, 17, 18, 0.06); }
+.topnav-fixed[data-theme='light'] .topnav-link-underline { background: #111112; }
+.topnav-fixed[data-theme='light'] .topnav-brand,
+.topnav-fixed[data-theme='light'] .topnav-brand-suffix,
+.topnav-fixed[data-theme='light'] .topnav-status { color: #111112; }
+.topnav-fixed[data-theme='light'] .topnav-brand-suffix em,
+.topnav-fixed[data-theme='light'] .topnav-brand-suffix .slash { color: rgba(17, 17, 18, 0.55); }
+.topnav-fixed[data-theme='light'].is-scrolled {
+  background: rgba(244, 244, 237, 0.72);
+  border-bottom-color: rgba(17, 17, 18, 0.1);
+}
+.topnav-fixed[data-theme='light'] .topnav-burger { border-color: rgba(17, 17, 18, 0.18); }
+.topnav-fixed[data-theme='light'] .topnav-burger-bar { background: #111112; }
+
 .topnav-burger { display: none; }
 .topnav-mobile-panel { display: none; }
 
@@ -777,6 +797,24 @@ section { position: relative; }
   pointer-events: none;
   z-index: 0;
 }
+/* Halftone accent — a small cluster of dots fading out of the hero's top-right
+   corner. The only decorative texture on the page; everything else is clean. */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: clamp(200px, 30vw, 440px);
+  height: clamp(170px, 24vw, 360px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1.1px, transparent 1.7px);
+  background-size: 11px 11px;
+  -webkit-mask-image: radial-gradient(135% 135% at 100% 0%, #000 0%, rgba(0, 0, 0, 0.55) 38%, transparent 72%);
+          mask-image: radial-gradient(135% 135% at 100% 0%, #000 0%, rgba(0, 0, 0, 0.55) 38%, transparent 72%);
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .hero-grid-bg {
   position: absolute; inset: 0;
   background:
@@ -879,6 +917,17 @@ section { position: relative; }
   color: var(--ink-2);
 }
 .hero-title .line { display: block; }
+/* Lead line — "Building with AI is table stakes." must sit on a single line.
+   It can't fit one line at the full headline size inside the 2-col hero, so it
+   reads a touch smaller: a one-line setup above the big emphasis lines. The vw
+   term is capped so it never wraps in the narrow 2-col column, and clamps down
+   to stay on one line on phones too. */
+.hero-title .line-lead {
+  white-space: nowrap;
+  font-size: clamp(19px, 4.2vw, 46px);
+  letter-spacing: -0.026em;
+  color: var(--ink-2);
+}
 .hero-title .line.italic {
   font-style: normal;
   font-weight: 400;
@@ -1465,6 +1514,9 @@ section { position: relative; }
   background: var(--bg-2);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
+  /* Taller than the default section rhythm — gives the journey room to breathe
+     and a longer scroll runway so the rail animation reads before it exits. */
+  padding-block: clamp(128px, 20vw, 300px);
 }
 .how > .container { position: relative; z-index: 1; }
 .how-decoration {
@@ -1530,7 +1582,7 @@ section { position: relative; }
   /* Rail length is bound 1:1 to user scroll progress over the pins row.
      `--rail-progress` is updated by HowWeWork.tsx via useMotionValueEvent. */
   clip-path: inset(0 calc((1 - var(--rail-progress)) * 100%) 0 0);
-  transition: clip-path 80ms linear;
+  transition: clip-path 140ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* Pin lit state — toggled by `data-active` as rail progress passes it. */
 .journey-pin[data-active='true'] {
@@ -2187,6 +2239,8 @@ section { position: relative; }
   color: var(--ink);
   position: relative;
   overflow: hidden;
+  /* Match the How-we-work section's larger vertical rhythm. */
+  padding-block: clamp(128px, 20vw, 300px);
 }
 .labs::before {
   content: '';
@@ -4611,7 +4665,7 @@ section { position: relative; }
 .ticker::after  { right: 0; background: linear-gradient(-90deg, var(--bg-2), transparent); }
 
 .ticker-track {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: clamp(32px, 5vw, 56px);
   white-space: nowrap;
@@ -4620,20 +4674,15 @@ section { position: relative; }
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--text-2);
-  animation: ticker-scroll 48s linear infinite;
+  width: max-content;
   will-change: transform;
 }
 .ticker-track > span {
   display: inline-block;
   flex-shrink: 0;
 }
-@keyframes ticker-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ticker-track { animation: none; transform: translateX(0); }
-}
+/* Reduced motion: no JS drive, hold the band still. */
+.ticker-track--static { width: 100%; will-change: auto; }
 
 /* =============================================================================
    PRESS — brand-card grid for identity stills (figure / frame / img / caption)
@@ -4772,4 +4821,147 @@ img, video { height: auto; }
   .btn-lg { min-height: 44px; }
   /* Detail-crumb a touch easier to tap */
   .detail-crumb { padding: 6px 0; }
+}
+
+/* =============================================================================
+   COLUMN GUIDE LINES — two faint vertical hairlines marking the edges of the
+   centred reading column, drawn per full-bleed section so they run seam to seam down
+   the whole page. Placed last so the background-image longhands ride ON TOP of
+   each section's own `background:` shorthand (fill colour is preserved).
+   Desktop only: the positions assume the 1200px column has real side margins,
+   which only holds once the viewport clears 1200 + gutters — below that the
+   lines would fall at arbitrary spots, so we simply drop them.
+   ============================================================================= */
+@media (min-width: 1264px) {
+  .hero,
+  #services,
+  #work,
+  .how,
+  .labs,
+  .contact,
+  .footer,
+  .lookbook,
+  .detail {
+    background-image: var(--col-lines);
+    background-size: var(--col-lines-size);
+    background-position: var(--col-lines-pos);
+    background-repeat: no-repeat;
+  }
+
+  /* Testimonial keeps its vertical gradient; the guide lines layer over it. */
+  .testimonial {
+    background-image:
+      var(--col-lines),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    background-size: var(--col-lines-size), auto;
+    background-position: var(--col-lines-pos), 0 0;
+    background-repeat: no-repeat;
+  }
+}
+
+/* =============================================================================
+   MOBILE ADAPTATION — dynamic viewport heights, lighter scroll choreography,
+   tighter vertical rhythm on phones. Complements the per-component @media rules
+   throughout the file; kept together so the phone pass reads in one place.
+   ============================================================================= */
+
+/* Kill the grey tap-flash on iOS/Android for a cleaner touch feel. */
+html { -webkit-tap-highlight-color: transparent; }
+
+/* Track the *dynamic* viewport so full-height surfaces follow the collapsing
+   mobile URL bar instead of jumping. Progressive — browsers without dvh keep vh. */
+.detail { min-height: 100vh; min-height: 100dvh; }
+
+@media (max-width: 600px) {
+  /* Section rhythm — 96px of dead space top+bottom is a lot on a phone. */
+  .section-pad { padding: clamp(56px, 15vw, 96px) 0; }
+}
+
+@media (max-width: 640px) {
+  /* The tarot-fan opener is decorative (aria-hidden) — shrink its runway and
+     card so it doesn't eat a whole screen of scroll before the real work. */
+  .work-fan-stage { height: 44dvh; }
+  .work-fan {
+    width: clamp(150px, 46vw, 200px);
+    height: clamp(200px, 60vw, 264px);
+  }
+  /* Deal the stack tighter to the top so each case fills the phone screen. */
+  .work-stack-card { margin-bottom: clamp(40px, 8vh, 72px); }
+}
+
+/* =============================================================================
+   HALFTONE MEDIA BACKING — every image sits on a halftone dot pad. At rest the
+   dots form a soft aura hugging the image; on hover they disperse (scale out,
+   fade, soften) like scattering particles while the image itself lifts.
+   Two dot weights on ::before / ::after separate at different rates so the
+   scatter reads as particles rather than a single fading layer.
+   ============================================================================= */
+.work-case-media,
+.lab-card-deco { position: relative; }
+
+.work-case-media::before,
+.work-case-media::after,
+.lab-card-deco::before,
+.lab-card-deco::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.7;
+  transition:
+    transform 720ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 560ms var(--ease),
+    filter 560ms var(--ease);
+}
+/* Fine, dense dots (front layer) */
+.work-case-media::before,
+.lab-card-deco::before {
+  background-image: radial-gradient(var(--halftone-dot) 1.1px, transparent 1.7px);
+  background-size: 9px 9px;
+}
+/* Coarse, sparse dots (back layer) — scales further on hover */
+.work-case-media::after,
+.lab-card-deco::after {
+  background-image: radial-gradient(var(--halftone-dot-2) 1.3px, transparent 2px);
+  background-size: 16px 16px;
+  background-position: 5px 7px;
+  opacity: 0.5;
+}
+
+/* --- Selected-work media: a dotted aura framing the image, fading outward --- */
+.work-case-media::before,
+.work-case-media::after {
+  inset: -16px;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 32%, transparent 74%);
+          mask-image: radial-gradient(circle at 50% 50%, #000 32%, transparent 74%);
+}
+.work-case-frame { position: relative; z-index: 1; }
+.work-case-media:hover::before {
+  transform: scale(1.16);
+  opacity: 0;
+  filter: blur(3px);
+}
+.work-case-media:hover::after {
+  transform: scale(1.32);
+  opacity: 0;
+  filter: blur(5px);
+}
+
+/* --- Lab brand renders are transparent PNGs — the dots show *through* them --- */
+.lab-card-deco::before,
+.lab-card-deco::after {
+  inset: -8%;
+  -webkit-mask-image: radial-gradient(circle at 50% 46%, #000 22%, transparent 72%);
+          mask-image: radial-gradient(circle at 50% 46%, #000 22%, transparent 72%);
+}
+.lab-card-deco img { position: relative; z-index: 1; }
+.lab-card:hover .lab-card-deco::before {
+  transform: scale(1.24);
+  opacity: 0;
+  filter: blur(2px);
+}
+.lab-card:hover .lab-card-deco::after {
+  transform: scale(1.42);
+  opacity: 0;
+  filter: blur(4px);
 }

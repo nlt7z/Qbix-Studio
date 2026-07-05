@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion';
+import { motion, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'framer-motion';
 import { services } from '@/lib/data';
 import BrandText from '@/components/BrandText';
-import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
 
 function ServiceCard({ s }: { s: (typeof services)[number] }) {
   return (
@@ -52,6 +52,8 @@ function DeckSide({
   progress: MotionValue<number>;
   side: -1 | 1;
 }) {
+  // `progress` arrives already spring-smoothed from the parent, so the cards
+  // glide out of the deck and settle instead of tracking scroll 1:1.
   const x = useTransform(progress, [0.08, 0.62], [`${side * -106}%`, '0%']);
   const rotate = useTransform(progress, [0.08, 0.62], [side * -5, 0]);
   const scale = useTransform(progress, [0.08, 0.62], [0.94, 1]);
@@ -82,12 +84,19 @@ export default function WhatWeDo() {
     target: stageRef,
     offset: ['start start', 'end end'],
   });
+  // Smooth the raw scroll signal once, at the source, so every card derived
+  // from it inherits the same silky lag-and-settle.
+  const deckProgress = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 28,
+    mass: 0.4,
+  });
 
   const deckSpread = !reduced && !isMobile;
   const [left, center, right] = [services[0], services[1], services[2]];
 
   return (
-    <section id="services" className="section-pad">
+    <section id="services" className="section-pad" data-nav-theme="dark">
       <div className="container">
         <header className="section-head">
           <div>
@@ -95,13 +104,9 @@ export default function WhatWeDo() {
               <span className="num">02</span>
               Who we help
             </Reveal>
-            <Words
-              as="h2"
-              text="Three kinds of teams, one studio."
-              style={{ marginTop: 14 }}
-              speed="snap"
-              step={0.03}
-            />
+            <Wipe as="h2" style={{ marginTop: 14 }}>
+              Three kinds of teams, one studio.
+            </Wipe>
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               Qbix Studio is an AI product design studio in Seattle. We design and build{' '}
               <Link href="/services/app-ai" className="text-link">AI products</Link>,{' '}
@@ -115,11 +120,11 @@ export default function WhatWeDo() {
           <div ref={stageRef} className="svc-stage">
             <div className="svc-sticky">
               <Reveal className="svc-deck" speed="base" y={40}>
-                <DeckSide s={left} progress={scrollYProgress} side={-1} />
+                <DeckSide s={left} progress={deckProgress} side={-1} />
                 <div className="svc-deck-center">
                   <ServiceCard s={center} />
                 </div>
-                <DeckSide s={right} progress={scrollYProgress} side={1} />
+                <DeckSide s={right} progress={deckProgress} side={1} />
               </Reveal>
             </div>
           </div>

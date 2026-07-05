@@ -223,6 +223,77 @@ export function Words<E extends ElementType = 'span'>({
   );
 }
 
+type WipeProps<E extends ElementType = 'div'> = {
+  as?: E;
+  /** Solid color of the sweeping bar. Defaults to the signal lime. */
+  color?: string;
+  delay?: number;
+  /** Line index — staggers lines 0.15s apart like consecutive wipes. */
+  index?: number;
+  duration?: number;
+  once?: boolean;
+  margin?: string;
+  children: ReactNode;
+} & Omit<ComponentProps<E>, 'as' | 'children'>;
+
+/**
+ * Wipe — highlight-bar text reveal. The block is clipped shut from the
+ * right and opens left→right; a solid signal bar rides inside the same
+ * clip and collapses toward the right edge halfway through, so what reads
+ * is a bar of color sweeping across and handing off to the content it
+ * uncovers. Pure structural motion — no fade, no blur.
+ */
+export function Wipe<E extends ElementType = 'div'>({
+  as,
+  color = 'var(--signal)',
+  delay = 0,
+  index = 0,
+  duration = 0.6,
+  once = true,
+  margin = '-10% 0px -10% 0px',
+  children,
+  ...rest
+}: WipeProps<E>) {
+  const reduced = useReducedMotion();
+
+  if (reduced) {
+    const PlainTag = (as ?? 'div') as ElementType;
+    return <PlainTag {...(rest as any)}>{children}</PlainTag>;
+  }
+
+  const Tag = as ? (motion as any)[as as string] : motion.div;
+  const at = delay + index * 0.15;
+  const { style, ...attrs } = rest as { style?: React.CSSProperties };
+
+  return (
+    <Tag
+      initial={{ clipPath: 'inset(0 100% 0 0)' }}
+      whileInView={{ clipPath: 'inset(0 0% 0 0)' }}
+      viewport={{ once, margin }}
+      transition={{ duration, ease: EASE_OUT, delay: at }}
+      style={{ position: 'relative', ...style }}
+      {...attrs}
+    >
+      {children}
+      <motion.span
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: color,
+          transformOrigin: 'right center',
+          zIndex: 5,
+          pointerEvents: 'none',
+        }}
+        initial={{ scaleX: 1 }}
+        whileInView={{ scaleX: 0 }}
+        viewport={{ once, margin }}
+        transition={{ duration, ease: 'easeInOut', delay: at + duration / 2 }}
+      />
+    </Tag>
+  );
+}
+
 // Deterministic pseudo-random in [0, 1) — same value on server and client,
 // so the scattered start positions never cause a hydration mismatch.
 function seeded(i: number, salt: number) {

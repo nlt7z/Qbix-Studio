@@ -2,11 +2,11 @@
 
 import { labCards, brandLookbook } from '@/lib/data';
 import BrandText from '@/components/BrandText';
-import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
 
 export default function QbixLabs() {
   return (
-    <section id="labs" className="labs section-pad">
+    <section id="labs" className="labs section-pad" data-nav-theme="dark">
       <div className="container">
         <header
           className="section-head"
@@ -16,14 +16,9 @@ export default function QbixLabs() {
             <span className="num">05</span>
             <span><span className="brand-q">Q</span>bix Labs</span>
           </Reveal>
-          <Words
-            as="h2"
-            text="Internal AI products, interface experiments, and playful systems."
-            style={{ maxWidth: 920 }}
-            speed="fast"
-            delay={0.1}
-            step={0.04}
-          />
+          <Wipe as="h2" style={{ maxWidth: 920 }} delay={0.1}>
+            Internal AI products, interface experiments, and playful systems.
+          </Wipe>
           <Reveal as="p" className="labs-lede" speed="base" delay={0.35}>
             Our playground for proprietary AI tools, product experiments, and new interaction
             models. The work that makes us not-just-a-studio.

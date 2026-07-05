@@ -6,16 +6,17 @@ import {
   motion,
   useReducedMotion,
   useScroll,
+  useSpring,
   useTransform,
   type MotionValue,
 } from 'framer-motion';
 import { projects, type Project } from '@/lib/data';
-import { Reveal, Words } from '@/components/Reveal';
+import { Reveal, Wipe } from '@/components/Reveal';
 
 export default function SelectedWork() {
   const visible = projects.filter((p) => !p.hidden);
   return (
-    <section id="work" className="section-pad">
+    <section id="work" className="section-pad" data-nav-theme="dark">
       <div className="container">
         <header className="section-head">
           <div>
@@ -23,14 +24,9 @@ export default function SelectedWork() {
               <span className="num">03</span>
               Selected work
             </Reveal>
-            <Words
-              as="h2"
-              text="Built and shipped."
-              style={{ marginTop: 14 }}
-              speed="fast"
-              delay={0.1}
-              step={0.04}
-            />
+            <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1}>
+              Built and shipped.
+            </Wipe>
           </div>
         </header>
 
@@ -93,16 +89,23 @@ function WorkFan({ items }: { items: Project[] }) {
     target: ref,
     offset: ['start end', 'end start'],
   });
+  // Spring the scroll signal once so the whole hand turns, spreads and lifts
+  // on a single eased curve — no per-frame stutter as the fan opens.
+  const p = useSpring(scrollYProgress, {
+    stiffness: 110,
+    damping: 30,
+    mass: 0.4,
+  });
 
   // The whole hand turns about its pivot as you scroll…
-  const groupRotate = useTransform(scrollYProgress, [0, 1], [-14, 10]);
+  const groupRotate = useTransform(p, [0, 1], [-14, 10]);
   // …the fan opens over the first half…
-  const spread = useTransform(scrollYProgress, [0.05, 0.45], [0.15, 1], {
+  const spread = useTransform(p, [0.05, 0.45], [0.15, 1], {
     clamp: true,
   });
   // …and the hand rises away as the stack takes over.
-  const y = useTransform(scrollYProgress, [0.55, 0.9], [0, -80]);
-  const opacity = useTransform(scrollYProgress, [0.55, 0.85], [1, 0]);
+  const y = useTransform(p, [0.55, 0.9], [0, -80]);
+  const opacity = useTransform(p, [0.55, 0.85], [1, 0]);
 
   if (reduced || items.length === 0) return null;
 
@@ -296,9 +299,19 @@ function LazyIframe({ src, title }: { src: string; title: string }) {
   );
 }
 
+/**
+ * Case video that rests on its first frame and comes alive on hover — the
+ * landonorris.com case-card pattern. On a fine pointer (mouse) the clip only
+ * plays while the frame is hovered or focused, which saves the browser from
+ * decoding every visible case at once. On a coarse pointer (touch, no hover)
+ * it falls back to playing whenever the card is on screen.
+ */
 function LazyVideo({ src }: { src: string }) {
   const ref = useRef<HTMLVideoElement | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
+  // Load the source (metadata → first frame) once the card nears the viewport,
+  // so a still frame is painted at rest without streaming the whole clip.
   useEffect(() => {
     const el = ref.current;
     if (!el || !src) return;
@@ -306,18 +319,65 @@ function LazyVideo({ src }: { src: string }) {
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
-            if (!el.src) el.src = src;
-            void el.play().catch(() => {});
-          } else {
-            el.pause();
+            if (!el.src) {
+              el.src = src;
+              setLoaded(true);
+            }
+            io.disconnect();
+            break;
           }
+        }
+      },
+      { threshold: 0.1 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [src]);
+
+  // Coarse-pointer (touch) fallback: no hover exists, so autoplay while in view.
+  useEffect(() => {
+    if (!loaded) return;
+    const el = ref.current;
+    if (!el) return;
+    const coarse = window.matchMedia('(hover: none)').matches;
+    if (!coarse) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) void el.play().catch(() => {});
+          else el.pause();
         }
       },
       { threshold: 0.25 },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [src]);
+  }, [loaded]);
+
+  // Force a painted first frame so the resting state isn't blank.
+  const onLoadedMetadata = () => {
+    const el = ref.current;
+    if (el && el.currentTime === 0) {
+      try {
+        el.currentTime = 0.05;
+      } catch {
+        /* seeking not ready yet — ignore */
+      }
+    }
+  };
+
+  const play = () => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia('(hover: none)').matches) return; // touch handles itself
+    void el.play().catch(() => {});
+  };
+  const stop = () => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia('(hover: none)').matches) return;
+    el.pause();
+  };
 
   return (
     <video
@@ -326,7 +386,12 @@ function LazyVideo({ src }: { src: string }) {
       muted
       loop
       playsInline
-      preload="none"
+      preload="metadata"
+      onLoadedMetadata={onLoadedMetadata}
+      onMouseEnter={play}
+      onMouseLeave={stop}
+      onFocus={play}
+      onBlur={stop}
     />
   );
 }

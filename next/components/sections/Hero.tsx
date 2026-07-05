@@ -82,17 +82,8 @@ export default function Hero() {
   const cubeRot = useSpring(cubeRotRaw, { stiffness: 80, damping: 22, mass: 0.6 });
   const cubeScale = useSpring(cubeScaleRaw, { stiffness: 80, damping: 22, mass: 0.6 });
 
-  // Grid background retreats as the hero scrolls past — "system fades back".
-  const gridOpacity = useTransform(scrollYProgress, [0, 0.7, 1], [0.4, 0.1, 0]);
-
   return (
-    <section ref={heroRef} className="hero" id="top">
-      <motion.div
-        className="hero-grid-bg"
-        aria-hidden
-        style={{ opacity: gridOpacity }}
-      />
-
+    <section ref={heroRef} className="hero" id="top" data-nav-theme="dark">
       <div className="container hero-inner">
         <div>
           <motion.div
@@ -115,7 +106,7 @@ export default function Hero() {
 
           <h1 className="hero-title">
             <WordReveal
-              className="line"
+              className="line line-lead"
               text="Building with AI is table stakes."
               baseDelay={0.18}
               step={0.06}

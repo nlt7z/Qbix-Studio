@@ -3,6 +3,7 @@
 import { brandLookbook } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 import ScrollScrubbedItem from '@/components/ScrollScrubbedItem';
+import ColumnStaggerGrid from '@/components/ColumnStaggerGrid';
 
 export default function BrandLookbook() {
   return (
@@ -23,7 +24,9 @@ export default function BrandLookbook() {
           </p>
         </Reveal>
 
-        <div className="lookbook-grid">
+        {/* columns=3 matches the desktop grid; each column to the right starts
+            lower and settles into alignment as the wall scrolls in. */}
+        <ColumnStaggerGrid className="lookbook-grid" columns={3} stepRem={4}>
           {brandLookbook.map((item, i) => (
             <ScrollScrubbedItem
               as="figure"
@@ -47,7 +50,7 @@ export default function BrandLookbook() {
               </figcaption>
             </ScrollScrubbedItem>
           ))}
-        </div>
+        </ColumnStaggerGrid>
       </div>
     </section>
   );

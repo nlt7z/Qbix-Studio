@@ -29,6 +29,7 @@ function smoothScrollToId(id: string) {
 export default function TopNav() {
   const { open: openContactModal } = useContactModal();
   const [active, setActive] = useState<string | null>(null);
+  const [navTheme, setNavTheme] = useState<'dark' | 'light'>('dark');
   const [hovered, setHovered] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [scrolling, setScrolling] = useState(false);
@@ -75,6 +76,41 @@ export default function TopNav() {
     return () => io.disconnect();
   }, []);
 
+  // Section-driven nav theme — the landonorris.com pattern. Whichever
+  // `[data-nav-theme]` section sits under the nav's baseline decides whether
+  // the bar wears its light-ink (over dark) or dark-ink (over light) skin.
+  useEffect(() => {
+    const els = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-nav-theme]'),
+    );
+    if (els.length === 0) return;
+
+    let io: IntersectionObserver | null = null;
+    const build = () => {
+      io?.disconnect();
+      // A 1px detection line just below the nav; the section crossing it wins.
+      const bottom = Math.max(0, window.innerHeight - HEADER_OFFSET - 1);
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              const t = e.target.getAttribute('data-nav-theme');
+              setNavTheme(t === 'light' ? 'light' : 'dark');
+            }
+          }
+        },
+        { rootMargin: `-${HEADER_OFFSET}px 0px -${bottom}px 0px`, threshold: 0 },
+      );
+      els.forEach((el) => io!.observe(el));
+    };
+    build();
+    window.addEventListener('resize', build);
+    return () => {
+      io?.disconnect();
+      window.removeEventListener('resize', build);
+    };
+  }, []);
+
   useEffect(() => {
     let ticking = false;
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -111,6 +147,7 @@ export default function TopNav() {
   return (
     <nav
       className={`topnav-fixed ${scrolled ? 'is-scrolled' : ''} ${scrolling ? 'is-scrolling' : ''}`}
+      data-theme={navTheme}
       aria-label="primary"
     >
       <a
@@ -153,7 +190,7 @@ export default function TopNav() {
               onClick={(e) => onAnchorClick(e, item.href)}
               onMouseEnter={() => setHovered(item.href)}
               onFocus={() => setHovered(item.href)}
-              className={`topnav-link ${isActive ? 'active' : ''}`}
+              className={`topnav-link split-cta ${isActive ? 'active' : ''}`}
             >
               {isHovered && (
                 <motion.span
@@ -162,7 +199,9 @@ export default function TopNav() {
                   transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.6 }}
                 />
               )}
-              <span className="topnav-link-label">{item.label}</span>
+              <span className="topnav-link-label">
+                <SplitText text={item.label} stagger={16} />
+              </span>
               {isActive && (
                 <motion.span
                   layoutId="topnav-active"
