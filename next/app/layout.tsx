@@ -1,20 +1,27 @@
 import type { Metadata } from 'next';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
-import { Fraunces } from 'next/font/google';
+import { Encode_Sans, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 
 import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
 import { ContactModalProvider } from '@/components/ContactModalProvider';
 
-const displayFont = Fraunces({
+// Encode Sans carries body and label type; Source Serif 4 carries the
+// headlines — a sharp editorial serif with true italics.
+const sansFont = Encode_Sans({
+  subsets: ['latin'],
+  weight: 'variable',
+  variable: '--font-sans-body',
+  display: 'swap',
+});
+
+const displayFont = Source_Serif_4({
   subsets: ['latin'],
   weight: 'variable',
   style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
-  axes: ['SOFT', 'opsz'],
+  axes: ['opsz'],
 });
 
 const SITE_URL = 'https://qbix.space';
@@ -155,7 +162,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable} ${displayFont.variable}`}
+      className={`${sansFont.variable} ${displayFont.variable}`}
     >
       <body>
         <LoadingScreen />

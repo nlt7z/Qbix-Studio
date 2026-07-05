@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMotionValueEvent, useReducedMotion, useScroll } from 'framer-motion';
 import { processSteps, type ProcessStep } from '@/lib/data';
-import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
+import { Reveal, Words } from '@/components/Reveal';
 
 const stroke = {
   fill: 'none',
@@ -72,9 +72,11 @@ export default function HowWeWork() {
   // Rail + pins tied to the user's scroll position over the pins row.
   // start (rail empty)  → pins row reaches 80% of viewport
   // end   (rail full)   → pins row reaches 30% of viewport
+  // Longer runway so the six stops light one by one while scrolling,
+  // instead of all snapping on in a single viewport step.
   const { scrollYProgress } = useScroll({
     target: pinsRef,
-    offset: ['start 80%', 'start 30%'],
+    offset: ['start 85%', 'start 15%'],
   });
 
   // Push progress to a CSS custom property so the rail's ::before
@@ -151,13 +153,13 @@ export default function HowWeWork() {
             ))}
           </div>
 
-          <Stagger as="ol" className="journey-bodies" stagger={0.09} delayChildren={0.25}>
-            {processSteps.map((s) => (
-              <RevealItem
-                as="li"
+          {/* Each stop wakes only when the rail reaches its pin — the journey
+              is read at the pace of the scroll, never spoiled in one go. */}
+          <ol className="journey-bodies">
+            {processSteps.map((s, i) => (
+              <li
                 key={s.num}
-                className="journey-stop"
-                speed="slow"
+                className={`journey-stop${i < activePins ? ' is-live' : ''}`}
               >
                 <span className="journey-icon" aria-hidden>
                   <StageIcon name={s.icon} />
@@ -165,9 +167,9 @@ export default function HowWeWork() {
                 <span className="journey-stage">STAGE {s.num}</span>
                 <h3 className="journey-title">{s.title}</h3>
                 <p className="journey-body">{s.body}</p>
-              </RevealItem>
+              </li>
             ))}
-          </Stagger>
+          </ol>
         </div>
       </div>
     </section>

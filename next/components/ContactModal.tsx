@@ -153,7 +153,7 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
                     rel="noreferrer"
                     className="btn btn-secondary btn-lg split-cta"
                   >
-                    <SplitText text="Or book a 30-min call" />
+                    <SplitText text="Or book a 30-min call" arrow />
                   </a>
                 </div>
 
@@ -172,7 +172,7 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
                 <h3>Brief received.</h3>
                 <p>We&rsquo;ll reply from {CONTACT_EMAIL} within 24 hours.</p>
                 <button type="button" className="btn btn-secondary btn-lg split-cta" onClick={onClose}>
-                  <SplitText text="Close" />
+                  <SplitText text="Close" arrow />
                 </button>
               </div>
             )}

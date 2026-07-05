@@ -245,7 +245,7 @@ export default function PressKitPage() {
               <SplitText text="Email press" arrow />
             </a>
             <Link href="/#about" className="btn btn-secondary btn-lg split-cta">
-              <SplitText text="About the studio" />
+              <SplitText text="About the studio" arrow />
             </Link>
           </div>
         </div>

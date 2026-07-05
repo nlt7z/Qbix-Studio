@@ -1,11 +1,91 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'framer-motion';
 import { services } from '@/lib/data';
 import BrandText from '@/components/BrandText';
 import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
 
+function ServiceCard({ s }: { s: (typeof services)[number] }) {
+  return (
+    <Link
+      href={`/services/${s.slug}`}
+      className="svc"
+      aria-label={`Open ${s.title}`}
+    >
+      <div className="svc-pattern" aria-hidden>
+        <ServicePattern slug={s.slug} />
+      </div>
+      <div className="svc-body">
+        <div className="svc-meta">
+          <span className="svc-num">{s.num}</span>
+          <span className="svc-arrow" aria-hidden>↗</span>
+        </div>
+        <span className="svc-audience mono">{s.audience}</span>
+        <h3 className="svc-title"><BrandText>{s.title}</BrandText></h3>
+        <p className="svc-blurb"><BrandText>{s.blurb}</BrandText></p>
+        <div className="svc-tags">
+          {s.tags.map((t) => (
+            <span key={t} className="tag">{t}</span>
+          ))}
+        </div>
+        <div className="svc-pricing">
+          <span className="svc-price">
+            From <strong>{s.priceFrom}</strong>
+          </span>
+          <span className="svc-typical mono">{s.typical}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/* One side card of the deck. Starts hidden underneath the centre card and
+   gets pulled out sideways as the user scrolls through the pinned stage. */
+function DeckSide({
+  s,
+  progress,
+  side,
+}: {
+  s: (typeof services)[number];
+  progress: MotionValue<number>;
+  side: -1 | 1;
+}) {
+  const x = useTransform(progress, [0.08, 0.62], [`${side * -106}%`, '0%']);
+  const rotate = useTransform(progress, [0.08, 0.62], [side * -5, 0]);
+  const scale = useTransform(progress, [0.08, 0.62], [0.94, 1]);
+  return (
+    <motion.div
+      className="svc-deck-side"
+      style={{ x, rotate, scale, willChange: 'transform' }}
+    >
+      <ServiceCard s={s} />
+    </motion.div>
+  );
+}
+
 export default function WhatWeDo() {
+  const reduced = useReducedMotion();
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1024px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  const { scrollYProgress } = useScroll({
+    target: stageRef,
+    offset: ['start start', 'end end'],
+  });
+
+  const deckSpread = !reduced && !isMobile;
+  const [left, center, right] = [services[0], services[1], services[2]];
+
   return (
     <section id="services" className="section-pad">
       <div className="container">
@@ -19,8 +99,8 @@ export default function WhatWeDo() {
               as="h2"
               text="Three kinds of teams, one studio."
               style={{ marginTop: 14 }}
-              speed="fast"
-              delay={0.1}
+              speed="snap"
+              step={0.03}
             />
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               Qbix Studio is an AI product design studio in Seattle. We design and build{' '}
@@ -31,41 +111,27 @@ export default function WhatWeDo() {
           </div>
         </header>
 
-        <Stagger className="services-wrap" stagger={0.1} delayChildren={0.1}>
-          {services.map((s) => (
-            <RevealItem key={s.num} speed="base">
-              <Link
-                href={`/services/${s.slug}`}
-                className="svc"
-                aria-label={`Open ${s.title}`}
-              >
-                <div className="svc-pattern" aria-hidden>
-                  <ServicePattern slug={s.slug} />
+        {deckSpread ? (
+          <div ref={stageRef} className="svc-stage">
+            <div className="svc-sticky">
+              <Reveal className="svc-deck" speed="base" y={40}>
+                <DeckSide s={left} progress={scrollYProgress} side={-1} />
+                <div className="svc-deck-center">
+                  <ServiceCard s={center} />
                 </div>
-                <div className="svc-body">
-                  <div className="svc-meta">
-                    <span className="svc-num">{s.num}</span>
-                    <span className="svc-arrow" aria-hidden>↗</span>
-                  </div>
-                  <span className="svc-audience mono">{s.audience}</span>
-                  <h3 className="svc-title"><BrandText>{s.title}</BrandText></h3>
-                  <p className="svc-blurb"><BrandText>{s.blurb}</BrandText></p>
-                  <div className="svc-tags">
-                    {s.tags.map((t) => (
-                      <span key={t} className="tag">{t}</span>
-                    ))}
-                  </div>
-                  <div className="svc-pricing">
-                    <span className="svc-price">
-                      From <strong>{s.priceFrom}</strong>
-                    </span>
-                    <span className="svc-typical mono">{s.typical}</span>
-                  </div>
-                </div>
-              </Link>
-            </RevealItem>
-          ))}
-        </Stagger>
+                <DeckSide s={right} progress={scrollYProgress} side={1} />
+              </Reveal>
+            </div>
+          </div>
+        ) : (
+          <Stagger className="services-wrap" stagger={0.1} delayChildren={0.1}>
+            {services.map((s) => (
+              <RevealItem key={s.num} speed="base">
+                <ServiceCard s={s} />
+              </RevealItem>
+            ))}
+          </Stagger>
+        )}
       </div>
     </section>
   );

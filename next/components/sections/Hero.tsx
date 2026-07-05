@@ -9,11 +9,20 @@ import BrandText from '@/components/BrandText';
 import SplitText from '@/components/SplitText';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
-const EASE_SPRING = [0.34, 1.4, 0.46, 1] as const;
+
+// Mask slot for the headline words — see Words in Reveal.tsx for the
+// descender padding trick.
+const WORD_MASK_STYLE = {
+  display: 'inline-block',
+  overflow: 'hidden',
+  verticalAlign: 'bottom',
+  paddingBottom: '0.14em',
+  marginBottom: '-0.14em',
+} as const;
 
 /**
- * Per-word reveal. Each word fades + rises + de-blurs on its own micro-spring
- * so the headline reads as a writing rhythm, not a single block.
+ * Masked per-word reveal. Each word slides up out of an invisible sleeve on
+ * its own beat, so the headline is uncovered line by line rather than fading.
  */
 function WordReveal({
   text,
@@ -32,20 +41,21 @@ function WordReveal({
   return (
     <span className={className}>
       {words.map((w, i) => (
-        <motion.span
-          key={i}
-          style={{ display: 'inline-block', whiteSpace: 'pre' }}
-          initial={{ opacity: 0, y: 28, filter: 'blur(14px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{
-            duration: 0.95,
-            ease: EASE_SPRING,
-            delay: baseDelay + i * step,
-          }}
-        >
-          {w}
-          {i < words.length - 1 ? ' ' : ''}
-        </motion.span>
+        <span key={i} style={WORD_MASK_STYLE}>
+          <motion.span
+            style={{ display: 'inline-block', whiteSpace: 'pre' }}
+            initial={{ y: '115%' }}
+            animate={{ y: '0%' }}
+            transition={{
+              duration: 0.9,
+              ease: EASE_OUT,
+              delay: baseDelay + i * step,
+            }}
+          >
+            {w}
+            {i < words.length - 1 ? ' ' : ''}
+          </motion.span>
+        </span>
       ))}
       {children}
     </span>
@@ -87,8 +97,8 @@ export default function Hero() {
         <div>
           <motion.div
             className="hero-eyebrow"
-            initial={{ opacity: 0, y: 8, filter: 'blur(6px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: EASE_OUT }}
           >
             <span className="eyebrow">
@@ -116,25 +126,27 @@ export default function Hero() {
               baseDelay={0.62}
               step={0.06}
             />
-            <motion.span
-              className="line italic signal-bg"
-              style={{ display: 'block' }}
-              initial={{ opacity: 0, y: 28, filter: 'blur(14px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{
-                duration: 1.05,
-                ease: EASE_SPRING,
-                delay: 1.0,
-              }}
-            >
-              taste, craft, logic.
-            </motion.span>
+            <span className="line" style={{ ...WORD_MASK_STYLE, display: 'block' }}>
+              <motion.span
+                className="italic signal-bg"
+                style={{ display: 'inline-block' }}
+                initial={{ y: '115%' }}
+                animate={{ y: '0%' }}
+                transition={{
+                  duration: 1.0,
+                  ease: EASE_OUT,
+                  delay: 1.0,
+                }}
+              >
+                taste, craft, logic.
+              </motion.span>
+            </span>
           </h1>
 
           <motion.p
             className="hero-sub"
-            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.7 }}
           >
             <BrandText>
@@ -155,8 +167,8 @@ export default function Hero() {
 
           <motion.div
             className="hero-ctas"
-            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.92 }}
           >
             <button
@@ -167,16 +179,16 @@ export default function Hero() {
               <SplitText text="Start a project" arrow />
             </button>
             <Link href="#work" className="btn btn-secondary btn-lg split-cta">
-              <SplitText text="View work" />
+              <SplitText text="View work" arrow />
             </Link>
           </motion.div>
         </div>
 
         <motion.div
           className="hero-cube-figure"
-          initial={{ opacity: 0, filter: 'blur(20px)', scale: 0.96 }}
-          animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-          transition={{ duration: 1.6, ease: EASE_OUT, delay: 0.25 }}
+          initial={{ opacity: 0, y: 60, scale: 0.9, rotate: 3 }}
+          animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+          transition={{ duration: 1.4, ease: EASE_OUT, delay: 0.25 }}
         >
           {/* Scroll-scrubbed inner wrapper — the entrance animation lives
               on the parent; this child carries the ongoing scroll motion. */}

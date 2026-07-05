@@ -136,7 +136,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
             </p>
             <StartProjectButton />
             <Link href="/#services" className="btn btn-secondary btn-lg split-cta">
-              <SplitText text="All services" />
+              <SplitText text="All services" arrow />
             </Link>
           </div>
         </div>

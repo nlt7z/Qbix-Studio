@@ -39,14 +39,7 @@ export default function QbixLabs() {
                     card (no link/arrow) until the secondary pages ship. */}
                 <div className="lab-card">
                   {brand && (
-                    <Reveal
-                      className="lab-card-deco"
-                      aria-hidden
-                      gesture="tilt"
-                      speed="slow"
-                      index={i}
-                      delay={0.2 + i * 0.08}
-                    >
+                    <div className="lab-card-deco" aria-hidden>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={brand.src}
@@ -54,7 +47,7 @@ export default function QbixLabs() {
                         loading="lazy"
                         decoding="async"
                       />
-                    </Reveal>
+                    </div>
                   )}
                   <div className="lab-card-body">
                     <span className="lab-card-num">{c.num} / Lab</span>

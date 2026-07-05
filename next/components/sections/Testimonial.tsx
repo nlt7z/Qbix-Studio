@@ -1,25 +1,12 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Reveal } from '@/components/Reveal';
+import { Reveal, Scatter } from '@/components/Reveal';
 import { testimonials } from '@/lib/data';
 
 const ROTATE_MS = 7000;
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
-
-// Wrap `highlight` in the lime signal style when it appears verbatim in the quote.
-function renderQuote(quote: string, highlight?: string): ReactNode {
-  if (!highlight || !quote.includes(highlight)) return quote;
-  const [before, after] = quote.split(highlight);
-  return (
-    <>
-      {before}
-      <span className="signal-bg">{highlight}</span>
-      {after}
-    </>
-  );
-}
 
 export default function Testimonial() {
   const [index, setIndex] = useState(0);
@@ -45,8 +32,8 @@ export default function Testimonial() {
           <motion.span
             className="testimonial-mark"
             aria-hidden
-            initial={reduce ? false : { opacity: 0, scale: 0.4, rotate: -12, filter: 'blur(10px)' }}
-            whileInView={{ opacity: 1, scale: 1, rotate: 0, filter: 'blur(0px)' }}
+            initial={reduce ? false : { opacity: 0, scale: 0.3, rotate: -14 }}
+            whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
             viewport={{ once: true, margin: '-10% 0px -10% 0px' }}
             transition={{ duration: 0.9, ease: [0.34, 1.4, 0.46, 1], delay: 0.15 }}
             style={{ display: 'inline-block' }}
@@ -57,12 +44,21 @@ export default function Testimonial() {
           <AnimatePresence mode="wait">
             <motion.div
               key={index}
-              initial={reduce ? false : { opacity: 0, y: 10, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={reduce ? undefined : { opacity: 0, y: -10, filter: 'blur(4px)' }}
-              transition={{ duration: 0.5, ease: EASE_OUT }}
+              initial={reduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduce ? undefined : { opacity: 0, y: -14 }}
+              transition={{ duration: 0.35, ease: EASE_OUT }}
             >
-              <p className="testimonial-quote">{renderQuote(t.quote, t.highlight)}</p>
+              {/* The quote swirls together from scattered characters — the
+                  one place on the page that earns the particle treatment. */}
+              <Scatter
+                as="p"
+                className="testimonial-quote"
+                text={t.quote}
+                highlight={t.highlight}
+                speed="fast"
+                step={0.012}
+              />
               <div className="testimonial-meta">
                 <span className="testimonial-rule" aria-hidden />
                 <span className="testimonial-attrib">

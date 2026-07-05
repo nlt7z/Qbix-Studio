@@ -2,10 +2,18 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from 'framer-motion';
 import { projects, type Project } from '@/lib/data';
-import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
+import { Reveal, Words } from '@/components/Reveal';
 
 export default function SelectedWork() {
+  const visible = projects.filter((p) => !p.hidden);
   return (
     <section id="work" className="section-pad">
       <div className="container">
@@ -21,24 +29,110 @@ export default function SelectedWork() {
               style={{ marginTop: 14 }}
               speed="fast"
               delay={0.1}
-              step={0.08}
+              step={0.04}
             />
           </div>
         </header>
 
-        <div className="work-cases">
-          {projects
-            .filter((p) => !p.hidden)
-            .map((p, i) => (
-              <WorkCard key={p.slug} project={p} index={i} />
-            ))}
+        <WorkFan items={visible} />
+
+        <div className="work-stack">
+          {visible.map((p, i) => (
+            <StackCard key={p.slug} project={p} index={i} />
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function WorkCard({ project, index }: { project: Project; index: number }) {
+/* ============================================================
+   Tarot fan — the cases open the section as a hand of cards
+   pivoting around a low centre point; scrolling turns the whole
+   hand and spreads the fan, then it yields to the stack below.
+   ============================================================ */
+
+function FanCard({
+  project,
+  baseAngle,
+  spread,
+}: {
+  project: Project;
+  baseAngle: number;
+  spread: MotionValue<number>;
+}) {
+  const rotate = useTransform(spread, (s) => baseAngle * s);
+  const still =
+    project.media?.kind === 'image'
+      ? project.media.src
+      : project.media?.kind === 'images'
+        ? project.media.srcs[0]
+        : null;
+  return (
+    <motion.div
+      className="work-fan-card"
+      style={{ rotate, willChange: 'transform' }}
+    >
+      {still ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="work-fan-still" src={still} alt="" loading="lazy" decoding="async" />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="work-fan-emblem" src="/qbix-cube.png" alt="" loading="lazy" decoding="async" />
+      )}
+      <span className="work-fan-num mono">{project.num}</span>
+      <span className="work-fan-title">{project.title}</span>
+    </motion.div>
+  );
+}
+
+function WorkFan({ items }: { items: Project[] }) {
+  const reduced = useReducedMotion();
+  const ref = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['start end', 'end start'],
+  });
+
+  // The whole hand turns about its pivot as you scroll…
+  const groupRotate = useTransform(scrollYProgress, [0, 1], [-14, 10]);
+  // …the fan opens over the first half…
+  const spread = useTransform(scrollYProgress, [0.05, 0.45], [0.15, 1], {
+    clamp: true,
+  });
+  // …and the hand rises away as the stack takes over.
+  const y = useTransform(scrollYProgress, [0.55, 0.9], [0, -80]);
+  const opacity = useTransform(scrollYProgress, [0.55, 0.85], [1, 0]);
+
+  if (reduced || items.length === 0) return null;
+
+  const mid = (items.length - 1) / 2;
+  return (
+    <div ref={ref} className="work-fan-stage" aria-hidden>
+      <motion.div
+        className="work-fan"
+        style={{ rotate: groupRotate, y, opacity, willChange: 'transform, opacity' }}
+      >
+        {items.map((p, i) => (
+          <FanCard
+            key={p.slug}
+            project={p}
+            baseAngle={(i - mid) * 26}
+            spread={spread}
+          />
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Stack — one column, one card per product. Each card pins near
+   the top of the viewport, and the next one slides up over it,
+   layer over layer, so the work is dealt one case at a time.
+   ============================================================ */
+
+function StackCard({ project, index }: { project: Project; index: number }) {
   const p = project;
   const media = p.media;
   const hasMedia =
@@ -66,19 +160,22 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
     return null;
   };
 
-  const MediaFrame = () => (
-    <RevealItem className="work-case-frame" gesture="media" speed="base">
+  const frame = (
+    <Reveal className="work-case-frame" gesture="media" speed="base">
       <MediaInner />
-    </RevealItem>
+    </Reveal>
   );
 
   return (
-    <Stagger
-      as="article"
-      className={`work-case ${hasMedia ? 'work-case--has-media' : ''}`}
-      stagger={0.09}
-      delayChildren={0.05 + index * 0.06}
+    <article
+      className="work-stack-card"
+      style={{ top: `calc(clamp(72px, 10vh, 110px) + ${index * 22}px)` }}
     >
+      <div className="work-case-head">
+        <span className="work-case-num mono">{p.num}</span>
+        <span className="work-case-year mono">{p.year}</span>
+      </div>
+
       {hasMedia && (
         p.href ? (
           /^https?:\/\//.test(p.href) ? (
@@ -89,7 +186,7 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <MediaFrame />
+              {frame}
             </a>
           ) : (
             <Link
@@ -97,34 +194,22 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
               className="work-case-media"
               aria-label={`Open ${p.title}`}
             >
-              <MediaFrame />
+              {frame}
             </Link>
           )
         ) : (
-          <div className="work-case-media">
-            <MediaFrame />
-          </div>
+          <div className="work-case-media">{frame}</div>
         )
       )}
 
-      <RevealItem className="work-case-head" speed="fast">
-        <span className="work-case-num mono">{p.num}</span>
-        <span className="work-case-year mono">{p.year}</span>
-      </RevealItem>
-
-      <RevealItem as="h3" className="work-case-title" speed="fast">
-        {p.title}
-      </RevealItem>
-      <RevealItem as="span" className="work-case-client" speed="fast">
-        {p.client}
-      </RevealItem>
-
-      {p.metric && (
-        <RevealItem as="span" className="work-case-metric mono" speed="fast">
-          {p.metric}
-        </RevealItem>
-      )}
-    </Stagger>
+      <div className="work-stack-meta">
+        <div>
+          <h3 className="work-case-title">{p.title}</h3>
+          <span className="work-case-client">{p.client}</span>
+        </div>
+        {p.metric && <span className="work-case-metric mono">{p.metric}</span>}
+      </div>
+    </article>
   );
 }
 

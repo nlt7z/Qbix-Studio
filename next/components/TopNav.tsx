@@ -238,7 +238,7 @@ export default function TopNav() {
               className="topnav-mobile-link is-cta split-cta"
               tabIndex={menuOpen ? 0 : -1}
             >
-              <SplitText text="Start a project" />
+              <SplitText text="Start a project" arrow />
               <span className="arrow" aria-hidden>↗</span>
             </a>
           </li>

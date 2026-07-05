@@ -5,49 +5,43 @@ import { type ComponentProps, type ElementType, type ReactNode } from 'react';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 const EASE_BACK = [0.22, 1.2, 0.36, 1] as const;
-const EASE_SPRING = [0.34, 1.4, 0.46, 1] as const;
 
 export type RevealSpeed = 'snap' | 'fast' | 'base' | 'slow' | 'cinematic';
 /**
  * Gesture vocabulary — one of three motion *meanings*:
- *   rise   : default fade + y-offset + blur (entrance grammar)
- *   media  : scale-from-95 + 0.5° x-skew + blur (project/work media reveal)
+ *   rise   : default y-offset rise + fade (entrance grammar)
+ *   media  : clip-path wipe — the frame uncovers top-to-bottom (work media reveal)
  *   tilt   : random small rotate + y-offset (brand objects, props-on-table)
  */
 export type RevealGesture = 'rise' | 'media' | 'tilt';
 
-type SpeedSpec = { duration: number; y: number; blur: number };
+type SpeedSpec = { duration: number; y: number };
 
 const SPEEDS: Record<RevealSpeed, SpeedSpec> = {
-  snap:      { duration: 0.45, y: 8,  blur: 4  },
-  fast:      { duration: 0.6,  y: 14, blur: 8  },
-  base:      { duration: 0.85, y: 22, blur: 12 },
-  slow:      { duration: 1.15, y: 32, blur: 18 },
-  cinematic: { duration: 1.5,  y: 44, blur: 26 },
+  snap:      { duration: 0.45, y: 12 },
+  fast:      { duration: 0.6,  y: 20 },
+  base:      { duration: 0.85, y: 32 },
+  slow:      { duration: 1.15, y: 44 },
+  cinematic: { duration: 1.5,  y: 56 },
 };
 
 function gestureFor(
   gesture: RevealGesture,
   yPx: number,
-  blurPx: number,
   index: number,
 ) {
   switch (gesture) {
     case 'media':
+      // The frame stays put; its content is uncovered by a wipe, like a
+      // print being pulled out of a sleeve.
       return {
         hidden: {
-          opacity: 0,
-          y: yPx * 0.45,
-          scale: 0.96,
-          skewX: '0.5deg',
-          filter: `blur(${blurPx}px)`,
+          clipPath: 'inset(0% 0% 100% 0%)',
+          y: yPx * 0.5,
         },
         show: {
-          opacity: 1,
+          clipPath: 'inset(0% 0% 0% 0%)',
           y: 0,
-          scale: 1,
-          skewX: '0deg',
-          filter: 'blur(0px)',
         },
       };
     case 'tilt': {
@@ -58,14 +52,12 @@ function gestureFor(
         hidden: {
           opacity: 0,
           y: yPx * 0.7,
-          rotate: rot * 1.6,
-          filter: `blur(${blurPx}px)`,
+          rotate: rot * 2.2,
         },
         show: {
           opacity: 1,
           y: 0,
           rotate: 0,
-          filter: 'blur(0px)',
         },
       };
     }
@@ -75,19 +67,19 @@ function gestureFor(
         hidden: {
           opacity: 0,
           y: yPx,
-          filter: `blur(${blurPx}px)`,
         },
         show: {
           opacity: 1,
           y: 0,
-          filter: 'blur(0px)',
         },
       };
   }
 }
 
 function easeFor(gesture: RevealGesture, ease: 'out' | 'back') {
-  if (gesture === 'media') return EASE_SPRING;
+  // Wipes read best on a pure decelerating curve — overshoot would fold
+  // the clip mask back on itself.
+  if (gesture === 'media') return EASE_OUT;
   if (gesture === 'tilt') return EASE_BACK;
   return ease === 'back' ? EASE_BACK : EASE_OUT;
 }
@@ -96,7 +88,6 @@ type CommonProps = {
   speed?: RevealSpeed;
   delay?: number;
   y?: number;
-  blur?: number;
   once?: boolean;
   margin?: string;
   ease?: 'out' | 'back';
@@ -114,7 +105,6 @@ export function Reveal<E extends ElementType = 'div'>({
   speed = 'base',
   delay = 0,
   y,
-  blur,
   once = true,
   margin = '-10% 0px -10% 0px',
   ease = 'out',
@@ -126,11 +116,10 @@ export function Reveal<E extends ElementType = 'div'>({
   const reduced = useReducedMotion();
   const spec = SPEEDS[speed];
   const yPx = y ?? spec.y;
-  const blurPx = blur ?? spec.blur;
   const easing = easeFor(gesture, ease);
-  const variants = gestureFor(gesture, yPx, blurPx, index);
+  const variants = gestureFor(gesture, yPx, index);
 
-  const Tag = (motion as any)[as as string] ?? motion.div;
+  const Tag = as ? (motion as any)[as as string] : motion.div;
 
   if (reduced) {
     const PlainTag = (as ?? 'div') as ElementType;
@@ -166,10 +155,20 @@ type WordsProps<E extends ElementType = 'span'> = {
   margin?: string;
 } & Omit<ComponentProps<E>, 'as' | 'children'>;
 
+// Mask slot: each word sits in an overflow-hidden sleeve and slides up out
+// of it. The padding/negative-margin pair keeps descenders (g, p, y) from
+// being clipped by the sleeve while it animates.
+const WORD_MASK_STYLE = {
+  display: 'inline-block',
+  overflow: 'hidden',
+  verticalAlign: 'bottom',
+  paddingBottom: '0.14em',
+  marginBottom: '-0.14em',
+} as const;
+
 /**
- * Scroll-triggered per-word reveal — the whileInView counterpart of the
- * hero's WordReveal. Each word rises + de-blurs on its own beat so section
- * headlines read as a writing rhythm when they enter the viewport.
+ * Scroll-triggered masked word reveal — headlines slide up from behind an
+ * invisible mask, word by word, so they are *uncovered* rather than faded.
  */
 export function Words<E extends ElementType = 'span'>({
   as,
@@ -189,7 +188,7 @@ export function Words<E extends ElementType = 'span'>({
     return <PlainTag {...(rest as any)}>{text}</PlainTag>;
   }
 
-  const Tag = (motion as any)[as as string] ?? motion.span;
+  const Tag = as ? (motion as any)[as as string] : motion.span;
   const words = text.split(' ');
 
   return (
@@ -204,26 +203,135 @@ export function Words<E extends ElementType = 'span'>({
       {...rest}
     >
       {words.map((w, i) => (
-        <motion.span
-          key={i}
+        <span key={i} style={WORD_MASK_STYLE}>
+          <motion.span
+            style={{ display: 'inline-block', whiteSpace: 'pre' }}
+            variants={{
+              hidden: { y: '115%' },
+              show: {
+                y: '0%',
+                transition: { duration: spec.duration, ease: EASE_OUT },
+              },
+            }}
+          >
+            {w}
+            {i < words.length - 1 ? ' ' : ''}
+          </motion.span>
+        </span>
+      ))}
+    </Tag>
+  );
+}
+
+// Deterministic pseudo-random in [0, 1) — same value on server and client,
+// so the scattered start positions never cause a hydration mismatch.
+function seeded(i: number, salt: number) {
+  const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+type ScatterProps<E extends ElementType = 'span'> = {
+  as?: E;
+  text: string;
+  /** Substring rendered with the lime .signal-bg treatment */
+  highlight?: string;
+  speed?: RevealSpeed;
+  delay?: number;
+  step?: number;
+  once?: boolean;
+  margin?: string;
+} & Omit<ComponentProps<E>, 'as' | 'children'>;
+
+/**
+ * Scatter-assemble reveal. Every character starts flung out of place —
+ * offset, rotated, shrunk, invisible — and swirls back into the sentence
+ * one character after another. Reserved for the testimonial quote.
+ */
+export function Scatter<E extends ElementType = 'span'>({
+  as,
+  text,
+  highlight,
+  speed = 'fast',
+  delay = 0,
+  step = 0.012,
+  once = true,
+  margin = '-10% 0px -10% 0px',
+  ...rest
+}: ScatterProps<E>) {
+  const reduced = useReducedMotion();
+  const spec = SPEEDS[speed];
+
+  const hlStart = highlight ? text.indexOf(highlight) : -1;
+  const hlEnd = hlStart >= 0 ? hlStart + (highlight as string).length : -1;
+
+  if (reduced) {
+    const PlainTag = (as ?? 'span') as ElementType;
+    return (
+      <PlainTag {...(rest as any)}>
+        {hlStart >= 0 ? (
+          <>
+            {text.slice(0, hlStart)}
+            <span className="signal-bg">{highlight}</span>
+            {text.slice(hlEnd)}
+          </>
+        ) : (
+          text
+        )}
+      </PlainTag>
+    );
+  }
+
+  const Tag = as ? (motion as any)[as as string] : motion.span;
+  const words = text.split(' ');
+
+  let charIndex = 0;
+  return (
+    <Tag
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once, margin }}
+      variants={{
+        hidden: {},
+        show: { transition: { staggerChildren: step, delayChildren: delay } },
+      }}
+      {...rest}
+    >
+      {words.map((w, wi) => (
+        <span
+          key={wi}
           style={{ display: 'inline-block', whiteSpace: 'pre' }}
-          variants={{
-            hidden: {
-              opacity: 0,
-              y: spec.y,
-              filter: `blur(${spec.blur}px)`,
-            },
-            show: {
-              opacity: 1,
-              y: 0,
-              filter: 'blur(0px)',
-              transition: { duration: spec.duration, ease: EASE_SPRING },
-            },
-          }}
         >
-          {w}
-          {i < words.length - 1 ? ' ' : ''}
-        </motion.span>
+          {(wi < words.length - 1 ? `${w} ` : w).split('').map((ch) => {
+            const i = charIndex++;
+            const inHighlight = i >= hlStart && i < hlEnd;
+            return (
+              <motion.span
+                key={i}
+                className={inHighlight ? 'signal-bg' : undefined}
+                style={{ display: 'inline-block', whiteSpace: 'pre' }}
+                variants={{
+                  hidden: {
+                    opacity: 0,
+                    x: (seeded(i, 1) - 0.5) * 60,
+                    y: (seeded(i, 2) - 0.5) * 110,
+                    rotate: (seeded(i, 3) - 0.5) * 80,
+                    scale: 0.4,
+                  },
+                  show: {
+                    opacity: 1,
+                    x: 0,
+                    y: 0,
+                    rotate: 0,
+                    scale: 1,
+                    transition: { duration: spec.duration, ease: EASE_OUT },
+                  },
+                }}
+              >
+                {ch}
+              </motion.span>
+            );
+          })}
+        </span>
       ))}
     </Tag>
   );
@@ -258,7 +366,7 @@ export function Stagger<E extends ElementType = 'div'>({
   ...rest
 }: StaggerProps<E>) {
   const reduced = useReducedMotion();
-  const Tag = (motion as any)[as as string] ?? motion.div;
+  const Tag = as ? (motion as any)[as as string] : motion.div;
 
   if (reduced) {
     const PlainTag = (as ?? 'div') as ElementType;
@@ -283,7 +391,6 @@ type RevealItemProps<E extends ElementType = 'div'> = {
   as?: E;
   speed?: RevealSpeed;
   y?: number;
-  blur?: number;
   ease?: 'out' | 'back';
   gesture?: RevealGesture;
   index?: number;
@@ -294,7 +401,6 @@ export function RevealItem<E extends ElementType = 'div'>({
   as,
   speed = 'base',
   y,
-  blur,
   ease = 'out',
   gesture = 'rise',
   index = 0,
@@ -304,11 +410,10 @@ export function RevealItem<E extends ElementType = 'div'>({
   const reduced = useReducedMotion();
   const spec = SPEEDS[speed];
   const yPx = y ?? spec.y;
-  const blurPx = blur ?? spec.blur;
   const easing = easeFor(gesture, ease);
-  const variants = gestureFor(gesture, yPx, blurPx, index);
+  const variants = gestureFor(gesture, yPx, index);
 
-  const Tag = (motion as any)[as as string] ?? motion.div;
+  const Tag = as ? (motion as any)[as as string] : motion.div;
 
   if (reduced) {
     const PlainTag = (as ?? 'div') as ElementType;

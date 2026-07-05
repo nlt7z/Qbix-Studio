@@ -57,27 +57,34 @@ export default function ContactCTA() {
           </a>
         </Reveal>
 
-        <Reveal className="contact-sprint" speed="base" delay={0.95}>
-          <div className="contact-sprint-head">
-            <span className="fig">FIG · The 48-hour sprint</span>
-            <span className="contact-sprint-price">
-              From <strong>$500</strong> · Web design, idea → launch
+        {/* The sprint offer reads as an open OS window — a title bar and a
+            pane of content — not a boxed card sealed off with a background. */}
+        <Reveal className="contact-window" speed="base" delay={0.95}>
+          <div className="contact-window-bar">
+            <span className="contact-window-dots" aria-hidden>
+              <i /><i /><i />
             </span>
+            <span className="fig">FIG · The 48-hour sprint</span>
             <span className="contact-sprint-status">
               <span className="contact-sprint-dot" aria-hidden />
               Live sprint window
             </span>
           </div>
-          <div className="contact-sprint-body">
+          <div className="contact-window-pane">
             <div className="contact-sprint-figure">
               <span className="contact-sprint-n">48</span>
               <span className="contact-sprint-unit">hours</span>
             </div>
-            <p className="contact-sprint-cap">
-              From signed SOW to a working prototype in your inbox — senior
-              craft, on the clock. Fixed scope, fixed price, one
-              calendar block.
-            </p>
+            <div>
+              <p className="contact-sprint-cap">
+                From signed SOW to a working prototype in your inbox — senior
+                craft, on the clock. Fixed scope, fixed price, one
+                calendar block.
+              </p>
+              <span className="contact-sprint-price">
+                From <strong>$500</strong> · Web design, idea → launch
+              </span>
+            </div>
           </div>
         </Reveal>
 

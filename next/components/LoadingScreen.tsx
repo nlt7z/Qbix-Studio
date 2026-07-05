@@ -95,11 +95,11 @@ export default function LoadingScreen() {
           alt=""
           aria-hidden
           className="loading-logo"
-          initial={{ opacity: 0, scale: 0.9, filter: 'blur(18px)' }}
+          initial={{ opacity: 0, scale: 0.85, y: 18 }}
           animate={
             exiting
-              ? { opacity: 0, scale: 1.08, filter: 'blur(10px)' }
-              : { opacity: 1, scale: 1, filter: 'blur(0px)' }
+              ? { opacity: 0, scale: 1.08, y: -12 }
+              : { opacity: 1, scale: 1, y: 0 }
           }
           transition={
             exiting

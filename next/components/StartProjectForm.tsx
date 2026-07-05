@@ -78,7 +78,7 @@ export default function StartProjectForm() {
           24&nbsp;hours.
         </p>
         <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="btn btn-secondary btn-lg split-cta">
-          <SplitText text="Book a 30-min call too" />
+          <SplitText text="Book a 30-min call too" arrow />
         </a>
       </div>
     );
@@ -223,7 +223,7 @@ export default function StartProjectForm() {
           rel="noreferrer"
           className="btn btn-secondary btn-lg split-cta"
         >
-          <SplitText text="Or book a 30-min call" />
+          <SplitText text="Or book a 30-min call" arrow />
         </a>
       </div>
     </form>
