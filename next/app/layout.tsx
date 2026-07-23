@@ -25,21 +25,21 @@ const displayFont = Source_Serif_4({
 });
 
 const SITE_URL = 'https://qbix.space';
-const SITE_NAME = 'Qbix Studio';
+const SITE_NAME = 'Qbix';
 const SITE_DESC =
-  'Qbix Studio is an independent AI-native product design and software studio based in Seattle, Washington. We design and build AI products, web and SaaS interfaces, and brand systems for startups and growing teams — from strategy to launch.';
+  'Qbix is an independent AI-native product design and software studio based in Seattle, Washington. We design and build AI products, web and SaaS interfaces, and brand systems for startups and growing teams — from strategy to launch.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Qbix Studio — AI-native product design & software · Seattle, WA',
-    template: '%s · Qbix Studio',
+    default: 'Qbix — AI-native product design & software · Seattle, WA',
+    template: '%s · Qbix',
   },
   description: SITE_DESC,
   applicationName: SITE_NAME,
-  authors: [{ name: 'Qbix Studio', url: SITE_URL }],
-  creator: 'Qbix Studio',
-  publisher: 'Qbix Studio',
+  authors: [{ name: 'Qbix', url: SITE_URL }],
+  creator: 'Qbix',
+  publisher: 'Qbix',
   keywords: [
     'Qbix',
     'Qbix Studio',
@@ -79,13 +79,13 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: 'Qbix Studio — AI-native product design & software',
+    title: 'Qbix — AI-native product design & software',
     description: SITE_DESC,
     // image auto-picked from app/opengraph-image.png
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Qbix Studio — AI-native product design & software',
+    title: 'Qbix — AI-native product design & software',
     description: SITE_DESC,
     site: '@QbixStudio',
     creator: '@QbixStudio',
@@ -112,7 +112,7 @@ const organizationJsonLd = {
   '@type': ['Organization', 'LocalBusiness'],
   '@id': `${SITE_URL}/#organization`,
   name: SITE_NAME,
-  alternateName: ['Qbix', 'Qbix Design Studio', 'Qbix AI Studio', 'Qbix Studios', 'Qbix.space'],
+  alternateName: ['Qbix Studio', 'Qbix Design Studio', 'Qbix AI Studio', 'Qbix Studios', 'Qbix.space'],
   url: SITE_URL,
   logo: `${SITE_URL}/qbix-square.png`,
   image: `${SITE_URL}/hero.png`,

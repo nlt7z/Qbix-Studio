@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMotionValueEvent, useReducedMotion, useScroll, useSpring } from 'framer-motion';
 import { processSteps, type ProcessStep } from '@/lib/data';
 import { Reveal, Wipe } from '@/components/Reveal';
+import TrustLogos from '@/components/TrustLogos';
 
 const stroke = {
   fill: 'none',
@@ -134,6 +135,9 @@ export default function HowWeWork() {
             <Reveal as="p" className="sub-plain" speed="base" delay={0.35}>
               Our team members have experience at FAANG — shipping products used
               by millions of people.
+            </Reveal>
+            <Reveal speed="base" delay={0.5}>
+              <TrustLogos />
             </Reveal>
           </div>
           <Reveal as="p" className="mono journey-legend" speed="base" delay={0.5}>

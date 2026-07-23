@@ -9,7 +9,7 @@ import SplitText from '@/components/SplitText';
 export default function ContactCTA() {
   const { open: openContactModal } = useContactModal();
   return (
-    <section id="contact" className="contact section-pad" data-nav-theme="dark">
+    <section id="contact" className="contact section-pad" data-nav-theme="light">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="contact-decoration"

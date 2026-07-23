@@ -26,7 +26,7 @@ export default function Testimonial() {
   const t = testimonials[index];
 
   return (
-    <section className="testimonial section-pad" aria-label="Client testimonials" data-nav-theme="dark">
+    <section className="testimonial section-pad" aria-label="Client testimonials" data-nav-theme="light">
       <div className="container">
         <Reveal as="div" className="testimonial-inner" speed="slow">
           <motion.span

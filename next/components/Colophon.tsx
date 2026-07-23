@@ -4,12 +4,12 @@ import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 
 const cols = [
   {
-    label: 'Studio',
+    label: 'Qbix',
     links: [
       { label: 'Work',     href: '#work' },
       { label: 'Services', href: '#services' },
       { label: 'How we work', href: '#how' },
-      { label: 'Labs',     href: '#labs' },
+      { label: 'Product',  href: '#product' },
       { label: 'About',    href: '#about' },
     ],
   },
@@ -35,14 +35,13 @@ const cols = [
 
 export default function Colophon() {
   return (
-    <footer className="footer">
+    <footer className="footer" data-nav-theme="dark">
       <div className="container">
         <Stagger className="footer-grid" stagger={0.1} delayChildren={0.05}>
           <RevealItem speed="fast">
             <div className="footer-brand">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="footer-logo" src="/qbix-keyboard.png" alt="Qbix" />
-              <span className="slash"> / </span>Studio
             </div>
             <p className="footer-tagline">
               An AI-native product design and software studio. We design and build{' '}
@@ -73,7 +72,7 @@ export default function Colophon() {
         </Stagger>
 
         <Reveal className="footer-line" speed="fast" delay={0.4}>
-          <span>© 2026 <span className="brand-q">Q</span>bix Studio LLC</span>
+          <span>© 2026 <span className="brand-q">Q</span>bix</span>
         </Reveal>
       </div>
     </footer>

@@ -16,10 +16,8 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { num: '01', label: 'Services', href: '#services', cool: 'SERVICES', plain: 'services', side: 'SVC', tip: 'Services'  },
-  { num: '02', label: 'Work',     href: '#work',     cool: 'WORK',     plain: 'work',     side: 'WRK', tip: 'Selected work' },
-  { num: '03', label: 'Process',  href: '#how',      cool: 'PROCESS',  plain: 'process',  side: 'PRC', tip: 'How we work' },
-  { num: '04', label: 'Labs',     href: '#labs',     cool: 'LABS',     plain: 'labs',     side: 'LAB', tip: 'Qbix Labs' },
-  { num: '05', label: 'Contact',  href: '#contact',  cool: 'CONTACT',  plain: 'contact',  side: 'CON', tip: 'Get in touch' },
+  { num: '02', label: 'Product',  href: '#product',  cool: 'PRODUCT',  plain: 'product',  side: 'PRD', tip: 'Product' },
+  { num: '03', label: 'Contact',  href: '#contact',  cool: 'CONTACT',  plain: 'contact',  side: 'CON', tip: 'Get in touch' },
 ];
 
 // ----- HERO CUBE GRID (4 capability cubes, 1 lit lime) ----------------------
@@ -508,4 +506,4 @@ export const testimonials: Testimonial[] = [
 export const CONTACT_EMAIL = 'qbixspace@gmail.com';
 export const BOOKING_URL   = 'https://cal.com/qbix-studio/30min';
 export const CONTACT_NOTE =
-  'Qbix Studio is available for AI product design, UX/UI systems, web/mobile design, and product strategy consulting.';
+  'Qbix is available for AI product design, UX/UI systems, web/mobile design, and product strategy consulting.';

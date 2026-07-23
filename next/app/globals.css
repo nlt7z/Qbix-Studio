@@ -54,12 +54,12 @@
   --font-headline: var(--font-display), 'Source Serif 4', 'Times New Roman', ui-serif, Georgia, serif;
 
   /* Radius — locked at 6px */
-  --r-pill:       6px;
-  --r-card:       8px;
-  --r-card-sm:    6px;
-  --r-input:      6px;
-  --r-tag:        4px;
-  --r-circle:     999px;
+  --r-pill:       0;
+  --r-card:       0;
+  --r-card-sm:    0;
+  --r-input:      0;
+  --r-tag:        0;
+  --r-circle:     0;
 
   /* Spacing scale */
   --s-1:  4px;
@@ -525,10 +525,21 @@ section { position: relative; }
 .topnav-fixed[data-theme='light'] .topnav-status { color: #111112; }
 .topnav-fixed[data-theme='light'] .topnav-brand-suffix em,
 .topnav-fixed[data-theme='light'] .topnav-brand-suffix .slash { color: rgba(17, 17, 18, 0.55); }
+/* Neutral frost — tint-agnostic so it reads over both the lime and the
+   off-white section without turning muddy. */
 .topnav-fixed[data-theme='light'].is-scrolled {
-  background: rgba(244, 244, 237, 0.72);
-  border-bottom-color: rgba(17, 17, 18, 0.1);
+  background: rgba(255, 255, 255, 0.42);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+          backdrop-filter: saturate(140%) blur(14px);
+  border-bottom-color: rgba(17, 17, 18, 0.12);
 }
+/* Invert the CTA to dark ink so it survives on lime (lime-on-lime would
+   vanish) and on white alike. */
+.topnav-fixed[data-theme='light'] .topnav-cta {
+  background: #111112;
+  color: #F4F4ED;
+}
+.topnav-fixed[data-theme='light'] .topnav-cta:hover { background: #000; }
 .topnav-fixed[data-theme='light'] .topnav-burger { border-color: rgba(17, 17, 18, 0.18); }
 .topnav-fixed[data-theme='light'] .topnav-burger-bar { background: #111112; }
 
@@ -4965,3 +4976,306 @@ html { -webkit-tap-highlight-color: transparent; }
   opacity: 0;
   filter: blur(4px);
 }
+
+/* =============================================================================
+   SECTION TONAL SCORE — page-switch rhythm (Lando-style)
+
+   Each band owns a distinct field so scrolling reads as turning pages, and two
+   hard inversions (lime Testimonial, off-white Contact) re-tone all their
+   descendants by redefining the local colour variables. The nav-theme observer
+   flips in step (Testimonial/Contact are data-nav-theme="light").
+
+   NOTE: intentionally NO overflow on #services / #work / .how — they host
+   position:sticky scroll choreography that any overflow value would break.
+   ============================================================================= */
+
+/* Every band is at least one screen tall. */
+.hero,
+#services,
+#work,
+.testimonial,
+.how,
+.labs,
+.contact {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+/* Short bands centre their content so full height doesn't leave a void; the
+   tall scroll-driven bands (services deck, work stack, how journey) keep their
+   natural top-aligned flow. */
+.hero,
+.testimonial,
+.contact {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* --- Tonal fields (dark ladder) --- */
+.hero      { background: #050608; }
+#services  { background: #14161A; border-top: 1px solid var(--line); }
+#work      { background: #0A0B0C; border-top: 1px solid var(--line); }
+.how       { background: #14161A; }
+.labs      { background: #050608; }
+
+/* --- Inversion 1 · Testimonial → lime field, dark ink --- */
+.testimonial {
+  background: #C7F000;
+  border-top: 1px solid rgba(17, 17, 18, 0.16);
+  border-bottom: 1px solid rgba(17, 17, 18, 0.16);
+  /* Re-tone every descendant. */
+  --ink:    #0F1A00;
+  --ink-2:  #16240a;
+  --text:   #26380c;
+  --text-2: #3d5018;
+  --text-3: #5c6e2c;
+  --signal: #0F1A00;   /* quote mark + active dot read dark on lime */
+}
+.testimonial::before { display: none; }        /* kill lime-on-lime glow */
+.testimonial-mark { opacity: 0.9; }
+.testimonial-quote .signal-bg {
+  color: #0F1A00;
+  background: transparent;
+  border-bottom: 2px solid rgba(15, 26, 0, 0.42);
+  padding-bottom: 0.02em;
+}
+
+/* --- Inversion 2 · Contact → off-white field, dark ink --- */
+.contact {
+  background: #F4F4ED;
+  --ink:    #0F1011;
+  --ink-2:  #1a1c1e;
+  --text:   #33373b;
+  --text-2: #5c616a;
+  --text-3: #666b73;   /* a11y: 4.85:1 on #F4F4ED (was #868b93 → 3.10, fail) */
+  --line:   rgba(17, 17, 18, 0.12);
+  --line-2: rgba(17, 17, 18, 0.16);
+  --line-3: rgba(17, 17, 18, 0.24);
+  --bg-card: #ffffff;
+}
+.contact::before { opacity: 0.10; }             /* faint lime wash on white */
+.contact-window-bar { background: rgba(17, 17, 18, 0.03); }
+.contact-window-dots i { border-color: var(--line-3); }
+/* a11y: bright lime as *text* is only 1.10:1 on off-white — recolour the lime
+   accents to a deep lime (5.21:1) while keeping the button fill bright. */
+.contact .eyebrow,
+.contact .brand-q,
+.contact .num { color: #4f7000; }
+/* a11y: the lime button fill vs off-white is 1.10:1 (WCAG 1.4.11) — give it a
+   dark boundary so the control is perceivable. */
+.contact .btn-primary { border: 1.5px solid var(--signal-dark); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* nothing extra — transitions live on the nav, not the section fields */
+}
+
+/* =============================================================================
+   HERO — centred composition with a switching brand-object centrepiece
+   ============================================================================= */
+.hero-inner.hero-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 940px;
+  margin-inline: auto;
+  gap: 0;
+}
+.hero-centered .hero-eyebrow { justify-content: center; }
+.hero-centered .hero-title { margin-bottom: clamp(6px, 1.4vw, 14px); }
+/* Centred column gives the lead line room, so it can breathe a little larger. */
+.hero-centered .hero-title .line-lead { font-size: clamp(20px, 4.6vw, 52px); }
+.hero-centered .hero-sub { margin-inline: auto; }
+.hero-centered .hero-ctas { justify-content: center; }
+
+.hero-object-figure {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: clamp(14px, 2.6vw, 30px) 0 clamp(20px, 3vw, 34px);
+}
+.hero-object-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 2vw, 20px);
+}
+/* Luminous aura behind the object — lives outside the clipping mask so it is
+   never cut by the wipe. */
+.hero-object-stage::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: clamp(120px, 15vw, 200px);
+  transform: translate(-50%, -50%);
+  width: clamp(320px, 34vw, 460px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(56% 56% at 50% 47%, rgba(184,255,0,0.30), rgba(184,255,0,0.08) 54%, transparent 72%),
+    radial-gradient(100% 100% at 50% 52%, rgba(184,255,0,0.10), transparent 70%);
+  filter: blur(30px);
+  z-index: 0;
+  pointer-events: none;
+}
+/* The mask that the totems ride through as they switch. */
+.hero-object-mask {
+  position: relative;
+  z-index: 1;
+  width: clamp(240px, 30vw, 400px);
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+.hero-object-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-object-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Kept tight so the drop-shadow doesn't get clipped at the mask edge; the
+     ::before aura carries the glow. */
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.45));
+}
+.hero-object-dots {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+}
+.hero-object-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--text-3);
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.2s var(--ease), background 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.hero-object-dot:hover { opacity: 0.8; }
+.hero-object-dot.is-active {
+  background: var(--signal);
+  opacity: 1;
+  transform: scale(1.15);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-object-dot { transition: none; }
+}
+
+/* =============================================================================
+   TRUST LOGOS — monochrome "where our team has shipped" strip (see HowWeWork)
+   ============================================================================= */
+.trust-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(22px, 3.4vw, 40px);
+  margin-top: clamp(20px, 2.6vw, 30px);
+}
+.trust-logo {
+  display: inline-flex;
+  align-items: center;
+  /* #9aa0a8 on the #14161A How-we-work field ≈ 6.6:1 — well past the 3:1 a
+     graphical mark needs, and reads as a muted, unified row. */
+  color: #9aa0a8;
+}
+.trust-logo svg {
+  height: clamp(17px, 1.7vw, 21px);
+  width: auto;
+  display: block;
+}
+/* Amazon's glyph is visually lighter than the compact marks — nudge it up so
+   the row reads as one optical weight. */
+.trust-logo[title='Amazon'] svg { height: clamp(20px, 2vw, 25px); }
+.trust-logo[title='Netflix'] svg { height: clamp(18px, 1.8vw, 22px); }
+
+/* =============================================================================
+   FLAT / SHARP PASS
+   Global aesthetic reset — no gradients, no frosted glass, no rounded corners.
+   Decorative glow auras are removed; colour gradients flatten to solids;
+   backdrop blur is dropped and the affected bars get solid fills. Structural
+   1px grids and dot textures (hard-edged, not gradients) are kept.
+   ============================================================================= */
+
+/* --- Zero radius everywhere (sharp edges) --- */
+*, *::before, *::after { border-radius: 0 !important; }
+
+/* --- No frosted glass anywhere --- */
+*, *::before, *::after {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+}
+/* Solid fills to replace the translucent-blur bars that lost their frost. */
+.topnav-fixed.is-scrolled { background: var(--bg-2); }
+.topnav-fixed[data-theme='light'].is-scrolled { background: #F4F4ED; }
+.topnav-mobile-panel { background: var(--bg); }
+.contact-modal-overlay { background: rgba(4, 6, 8, 0.92); }
+
+/* --- Remove decorative glow / aura pseudo-elements --- */
+.hero::before,
+.hero-cube-figure::before,
+.hero-object-stage::before,
+.sprint::before,
+.sprint-brief::before,
+.labs::before,
+.contact::before,
+.detail::before,
+.testimonial::before { background: none !important; display: none !important; }
+
+/* --- Flatten colour gradients to solids --- */
+.testimonial { background: #C7F000; }               /* stays solid lime */
+.sprint-brief { background: var(--bg-card); }
+.flow-step:not(:last-child) .flow-node::after { background: var(--line); }
+.team-strip-sigil { background: none; }
+.journey-pins::before { background: var(--signal); } /* rail: solid lime, no fade */
+.sprint-bignum-n {
+  background: none;
+  color: var(--signal);
+  -webkit-text-fill-color: var(--signal);
+}
+
+/* --- Remove hover sweeps / running lights / media scrims --- */
+.svc::after,
+.feature-case-frame::after,
+.proj-overlay,
+.lookbook-caption,
+.mission-preview .scan-bar { background: none !important; }
+
+/* --- Ticker: drop the edge-fade masks --- */
+.ticker::before,
+.ticker::after { display: none !important; }
+
+/* =============================================================================
+   NO BORDERS
+   Strip every border line; sections separate by their colour fields, not seams.
+   Focus rings (outline, not border) are kept for accessibility, and the
+   light-section primary button goes solid-dark so its boundary survives
+   without a border.
+   ============================================================================= */
+*, *::before, *::after { border: 0 !important; }
+
+/* Keyboard focus stays visible via an outline (not a border). */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--signal) !important;
+  outline-offset: -2px;
+}
+
+/* On the off-white Contact field the lime fill has almost no edge contrast, so
+   with no border it would read as a floating swatch — make it solid dark. */
+.contact .btn-primary {
+  background: #111112;
+  color: #F4F4ED;
+  -webkit-text-fill-color: #F4F4ED;
+}
+.contact .btn-primary:hover { background: #000; }

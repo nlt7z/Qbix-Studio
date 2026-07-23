@@ -19,7 +19,7 @@ export default function QbixMark({
   variant = 'mark',
   height = 28,
   className,
-  title = 'Qbix Studio',
+  title = 'Qbix',
 }: QbixMarkProps) {
   if (variant === 'wordmark') {
     return (
@@ -28,25 +28,23 @@ export default function QbixMark({
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: height * 0.18,
           lineHeight: 1,
         }}
         aria-label={title}
       >
-        <CubeQ size={height} />
         <span
           aria-hidden
           style={{
             fontFamily: 'var(--font-headline)',
             fontStyle: 'normal',
             fontWeight: 600,
-            fontSize: height * 0.86,
-            letterSpacing: '-0.045em',
+            fontSize: height * 0.92,
+            letterSpacing: '-0.03em',
             color: 'var(--ink)',
             lineHeight: 1,
           }}
         >
-          bix
+          Qbix
         </span>
       </span>
     );

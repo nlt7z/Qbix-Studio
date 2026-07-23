@@ -105,10 +105,10 @@ export default function WhatWeDo() {
               Who we help
             </Reveal>
             <Wipe as="h2" style={{ marginTop: 14 }}>
-              Three kinds of teams, one studio.
+              Three kinds of teams, one Qbix.
             </Wipe>
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
-              Qbix Studio is an AI product design studio in Seattle. We design and build{' '}
+              Qbix is an AI product team in Seattle. We design and build{' '}
               <Link href="/services/app-ai" className="text-link">AI products</Link>,{' '}
               <Link href="/services/redesign" className="text-link">SaaS redesigns</Link>, and{' '}
               <Link href="/services/web" className="text-link">shipped websites</Link> — see how we engage on each.

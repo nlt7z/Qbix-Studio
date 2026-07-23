@@ -154,7 +154,7 @@ export default function TopNav() {
         href="#top"
         className="topnav-brand"
         onClick={(e) => onAnchorClick(e, '#top')}
-        aria-label="Qbix Studio — home"
+        aria-label="Qbix — home"
       >
         <motion.span
           key={pulseKey}
@@ -172,10 +172,6 @@ export default function TopNav() {
         >
           <QbixMark variant="wordmark" height={22} title="Qbix" />
         </motion.span>
-        <span className="topnav-brand-suffix">
-          <span className="slash">/</span>
-          <em>studio</em>
-        </span>
       </a>
 
       <div className="topnav-links" onMouseLeave={() => setHovered(null)}>

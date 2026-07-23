@@ -6,7 +6,7 @@ import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
 
 export default function QbixLabs() {
   return (
-    <section id="labs" className="labs section-pad" data-nav-theme="dark">
+    <section id="product" className="labs section-pad" data-nav-theme="dark">
       <div className="container">
         <header
           className="section-head"
@@ -14,14 +14,14 @@ export default function QbixLabs() {
         >
           <Reveal as="span" className="eyebrow" speed="fast">
             <span className="num">05</span>
-            <span><span className="brand-q">Q</span>bix Labs</span>
+            <span>Product</span>
           </Reveal>
           <Wipe as="h2" style={{ maxWidth: 920 }} delay={0.1}>
-            Internal AI products, interface experiments, and playful systems.
+            The products we design, build, and ship in-house.
           </Wipe>
           <Reveal as="p" className="labs-lede" speed="base" delay={0.35}>
-            Our playground for proprietary AI tools, product experiments, and new interaction
-            models. The work that makes us not-just-a-studio.
+            Proprietary AI tools, interface experiments, and playful systems — the
+            products we build for ourselves and put in people’s hands.
           </Reveal>
         </header>
 
@@ -45,7 +45,7 @@ export default function QbixLabs() {
                     </div>
                   )}
                   <div className="lab-card-body">
-                    <span className="lab-card-num">{c.num} / Lab</span>
+                    <span className="lab-card-num">{c.num} / Product</span>
                     <h3 className="lab-card-title">
                       <BrandText>{c.title}</BrandText>
                     </h3>
