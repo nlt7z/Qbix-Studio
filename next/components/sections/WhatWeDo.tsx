@@ -1,7 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'framer-motion';
 import { services } from '@/lib/data';
 import BrandText from '@/components/BrandText';
 import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
@@ -41,53 +39,7 @@ function ServiceCard({ s }: { s: (typeof services)[number] }) {
   );
 }
 
-/* One card of the two-card deck. Both start stacked at the centre; as the
-   pinned stage scrolls, they slide apart to their columns and settle. */
-function DeckCard({
-  s,
-  progress,
-  side,
-}: {
-  s: (typeof services)[number];
-  progress: MotionValue<number>;
-  side: -1 | 1;
-}) {
-  // side -1 = left card (starts shifted right, toward centre), +1 = right card.
-  const x = useTransform(progress, [0.08, 0.62], [`${side === -1 ? 56 : -56}%`, '0%']);
-  const rotate = useTransform(progress, [0.08, 0.62], [side === -1 ? 4 : -4, 0]);
-  const scale = useTransform(progress, [0.08, 0.62], [0.94, 1]);
-  return (
-    <motion.div
-      className="svc-deck-side"
-      style={{ x, rotate, scale, zIndex: side === -1 ? 2 : 1, willChange: 'transform' }}
-    >
-      <ServiceCard s={s} />
-    </motion.div>
-  );
-}
-
 export default function WhatWeDo() {
-  const reduced = useReducedMotion();
-  const stageRef = useRef<HTMLDivElement | null>(null);
-  const [isNarrow, setIsNarrow] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 760px)');
-    const apply = () => setIsNarrow(mq.matches);
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, []);
-
-  const { scrollYProgress } = useScroll({
-    target: stageRef,
-    offset: ['start start', 'end end'],
-  });
-  const deckProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.4 });
-
-  const deckSpread = !reduced && !isNarrow;
-  const [a, b] = services;
-
   return (
     <section id="services" className="section-pad" data-nav-theme="dark">
       <div className="container">
@@ -108,24 +60,15 @@ export default function WhatWeDo() {
           </div>
         </header>
 
-        {deckSpread ? (
-          <div ref={stageRef} className="svc-stage svc-stage--two">
-            <div className="svc-sticky">
-              <Reveal className="svc-deck svc-deck--two" speed="base" y={40}>
-                <DeckCard s={a} progress={deckProgress} side={-1} />
-                <DeckCard s={b} progress={deckProgress} side={1} />
-              </Reveal>
-            </div>
-          </div>
-        ) : (
-          <Stagger className="services-wrap services-wrap--two" stagger={0.1} delayChildren={0.1}>
-            {services.map((s) => (
-              <RevealItem key={s.num} speed="base">
-                <ServiceCard s={s} />
-              </RevealItem>
-            ))}
-          </Stagger>
-        )}
+        {/* Plain settled grid — the cards reveal in place, no scroll-pinned
+            spread. Keeps this a quiet section so the eye lands on the work. */}
+        <Stagger className="services-wrap services-wrap--two" stagger={0.1} delayChildren={0.1}>
+          {services.map((s) => (
+            <RevealItem key={s.num} speed="base">
+              <ServiceCard s={s} />
+            </RevealItem>
+          ))}
+        </Stagger>
       </div>
     </section>
   );
@@ -147,10 +90,11 @@ function ServicePattern({ slug }: { slug: string }) {
     strokeLinejoin: 'round' as const,
     strokeDasharray: '2 3',
   };
+  // Highlight plane — a brighter monochrome fill, not a lime signal.
   const accent = {
-    fill: 'var(--signal-dim)',
-    stroke: 'var(--signal)',
-    strokeWidth: 1,
+    fill: 'rgba(255, 255, 255, 0.07)',
+    stroke: 'currentColor',
+    strokeWidth: 1.2,
     strokeLinejoin: 'round' as const,
   };
   switch (slug) {
@@ -173,7 +117,7 @@ function ServicePattern({ slug }: { slug: string }) {
           <circle cx="106" cy="116" r="2.2" fill="currentColor" />
           <circle cx="134" cy="116" r="2.2" fill="currentColor" />
           <circle cx="120" cy="82" r="2.2" fill="currentColor" />
-          <circle cx="120" cy="106" r="2.4" fill="var(--signal)" />
+          <circle cx="120" cy="106" r="2.4" fill="currentColor" />
           {/* Connections from surface nodes up to agent */}
           <line x1="92" y1="94" x2="120" y2="52" {...dim} />
           <line x1="148" y1="94" x2="120" y2="52" {...dim} />
@@ -185,8 +129,8 @@ function ServicePattern({ slug }: { slug: string }) {
           <path d="M136 26 L136 44 L120 52 L120 34 Z" {...iso} />
           <polygon points="120,18 136,26 120,34 104,26" {...accent} />
           {/* Pulse indicator on agent face */}
-          <line x1="112" y1="36" x2="128" y2="44" stroke="var(--signal)" strokeWidth="0.75" strokeLinecap="round" />
-          <circle cx="120" cy="40" r="1.1" fill="var(--signal)" />
+          <line x1="112" y1="36" x2="128" y2="44" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" />
+          <circle cx="120" cy="40" r="1.1" fill="currentColor" />
         </svg>
       );
     case 'ux-ui':
@@ -365,7 +309,7 @@ function ServicePattern({ slug }: { slug: string }) {
           <circle cx="148" cy="36" r="1.5" fill="currentColor" />
           <circle cx="110" cy="50" r="1.4" fill="currentColor" />
           <circle cx="130" cy="20" r="1.4" fill="currentColor" />
-          <circle cx="120" cy="58" r="2" fill="var(--signal)" />
+          <circle cx="120" cy="58" r="2" fill="currentColor" />
         </svg>
       );
     default:

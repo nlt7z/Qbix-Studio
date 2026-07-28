@@ -77,8 +77,8 @@ export default function PstClock({ size = 18 }: { size?: number }) {
       ))}
       {hand(hourDeg, 4.6, 1.5, 'currentColor')}
       {hand(minDeg, 6.8, 1.2, 'currentColor')}
-      {hand(secDeg, 7.4, 0.8, 'var(--signal)')}
-      <circle cx="12" cy="12" r="1" fill="var(--signal)" />
+      {hand(secDeg, 7.4, 0.8, 'currentColor')}
+      <circle cx="12" cy="12" r="1" fill="currentColor" />
     </svg>
   );
 }
