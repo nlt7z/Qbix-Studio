@@ -105,13 +105,13 @@ function ExploreButton({ url }: { url: string }) {
   if (external) {
     return (
       <a className="product-explore" href={url} target="_blank" rel="noopener noreferrer">
-        {label}<span className="arrow" aria-hidden>↗</span>
+        {label}<span className="arrow" aria-hidden>↗︎</span>
       </a>
     );
   }
   return (
     <Link className="product-explore" href={url}>
-      {label}<span className="arrow" aria-hidden>↗</span>
+      {label}<span className="arrow" aria-hidden>↗︎</span>
     </Link>
   );
 }

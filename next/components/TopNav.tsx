@@ -284,7 +284,7 @@ export default function TopNav() {
                   tabIndex={menuOpen ? 0 : -1}
                 >
                   {item.label}
-                  <span className="arrow" aria-hidden>↗</span>
+                  <span className="arrow" aria-hidden>↗︎</span>
                 </a>
               </li>
             );
@@ -297,7 +297,7 @@ export default function TopNav() {
               tabIndex={menuOpen ? 0 : -1}
             >
               Use our products
-              <span className="arrow" aria-hidden>↗</span>
+              <span className="arrow" aria-hidden>↗︎</span>
             </a>
           </li>
           <li>
@@ -312,7 +312,7 @@ export default function TopNav() {
               tabIndex={menuOpen ? 0 : -1}
             >
               <SplitText text="Tell us your idea" arrow />
-              <span className="arrow" aria-hidden>↗</span>
+              <span className="arrow" aria-hidden>↗︎</span>
             </a>
           </li>
         </ul>

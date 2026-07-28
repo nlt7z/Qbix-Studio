@@ -23,7 +23,7 @@ function SitePreview({ src, title }: { src: string; title: string }) {
         <span className="about-preview-dots">
           <i /><i /><i />
         </span>
-        <span className="about-preview-arrow">↗</span>
+        <span className="about-preview-arrow">↗︎</span>
       </span>
       <div className="about-preview-frame">
         <SitePreviewFrame src={src} title={`${title} preview`} />

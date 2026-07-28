@@ -159,7 +159,7 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
                 <p className="contact-modal-alt">
                   Prefer more detail?{' '}
                   <Link href="/start" onClick={onClose} className="contact-modal-alt-link">
-                    Open the full project form ↗
+                    Open the full project form ↗︎
                   </Link>
                 </p>
               </form>

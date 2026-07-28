@@ -18,7 +18,7 @@ function ServiceCard({ s }: { s: (typeof services)[number] }) {
       <div className="svc-body">
         <div className="svc-meta">
           <span className="svc-num">{s.num}</span>
-          <span className="svc-arrow" aria-hidden>↗</span>
+          <span className="svc-arrow" aria-hidden>↗︎</span>
         </div>
         <span className="svc-audience mono">{s.audience}</span>
         <h3 className="svc-title"><BrandText>{s.title}</BrandText></h3>

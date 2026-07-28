@@ -110,7 +110,7 @@ export default function StartPage() {
                   {CONTACT_EMAIL}
                 </a>
                 <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="start-reach-link">
-                  Book a 30-min intro call ↗
+                  Book a 30-min intro call ↗︎
                 </a>
                 <span className="start-reach-meta">Seattle, WA · remote worldwide</span>
               </section>

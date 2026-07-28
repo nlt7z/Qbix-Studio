@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Source_Serif_4 } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
 import TopNav from '@/components/TopNav';
@@ -15,6 +16,18 @@ const displayFont = Source_Serif_4({
   variable: '--font-display',
   display: 'swap',
   axes: ['opsz'],
+});
+
+// Technical register — a real monospace for labels, timestamps, tags, and
+// numbers. Self-hosted (400/500) and exposed as --font-commit-mono, which the
+// --font-mono stack in globals.css already prefers over the system fallback.
+const monoFont = localFont({
+  src: [
+    { path: './fonts/CommitMono-400.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/CommitMono-500.woff2', weight: '500', style: 'normal' },
+  ],
+  variable: '--font-commit-mono',
+  display: 'swap',
 });
 
 const SITE_URL = 'https://qbix.space';
@@ -146,7 +159,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${displayFont.variable}`}
+      className={`${displayFont.variable} ${monoFont.variable}`}
     >
       <body>
         <LoadingScreen />

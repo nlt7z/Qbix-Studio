@@ -29,12 +29,12 @@ export default function SplitText({
   return (
     <span className="split-text">
       {/* Accessible name — the animated layer below is aria-hidden. */}
-      <span className="split-sr">{arrow ? `${text} ↗` : text}</span>
+      <span className="split-sr">{arrow ? `${text} ↗︎` : text}</span>
       <span aria-hidden className="split-anim">
         {chars.map((ch, i) => (
           <Char key={i} ch={ch} delay={i * stagger} />
         ))}
-        {arrow && <Char ch="↗" delay={chars.length * stagger} isArrow />}
+        {arrow && <Char ch="↗︎" delay={chars.length * stagger} isArrow />}
       </span>
     </span>
   );
