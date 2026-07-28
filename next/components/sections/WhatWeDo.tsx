@@ -1,11 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'framer-motion';
 import { services } from '@/lib/data';
 import BrandText from '@/components/BrandText';
 import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
+import Link from 'next/link';
 
 function ServiceCard({ s }: { s: (typeof services)[number] }) {
   return (
@@ -41,9 +41,9 @@ function ServiceCard({ s }: { s: (typeof services)[number] }) {
   );
 }
 
-/* One side card of the deck. Starts hidden underneath the centre card and
-   gets pulled out sideways as the user scrolls through the pinned stage. */
-function DeckSide({
+/* One card of the two-card deck. Both start stacked at the centre; as the
+   pinned stage scrolls, they slide apart to their columns and settle. */
+function DeckCard({
   s,
   progress,
   side,
@@ -52,15 +52,14 @@ function DeckSide({
   progress: MotionValue<number>;
   side: -1 | 1;
 }) {
-  // `progress` arrives already spring-smoothed from the parent, so the cards
-  // glide out of the deck and settle instead of tracking scroll 1:1.
-  const x = useTransform(progress, [0.08, 0.62], [`${side * -106}%`, '0%']);
-  const rotate = useTransform(progress, [0.08, 0.62], [side * -5, 0]);
+  // side -1 = left card (starts shifted right, toward centre), +1 = right card.
+  const x = useTransform(progress, [0.08, 0.62], [`${side === -1 ? 56 : -56}%`, '0%']);
+  const rotate = useTransform(progress, [0.08, 0.62], [side === -1 ? 4 : -4, 0]);
   const scale = useTransform(progress, [0.08, 0.62], [0.94, 1]);
   return (
     <motion.div
       className="svc-deck-side"
-      style={{ x, rotate, scale, willChange: 'transform' }}
+      style={{ x, rotate, scale, zIndex: side === -1 ? 2 : 1, willChange: 'transform' }}
     >
       <ServiceCard s={s} />
     </motion.div>
@@ -70,11 +69,11 @@ function DeckSide({
 export default function WhatWeDo() {
   const reduced = useReducedMotion();
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isNarrow, setIsNarrow] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1024px)');
-    const apply = () => setIsMobile(mq.matches);
+    const mq = window.matchMedia('(max-width: 760px)');
+    const apply = () => setIsNarrow(mq.matches);
     apply();
     mq.addEventListener('change', apply);
     return () => mq.removeEventListener('change', apply);
@@ -84,16 +83,10 @@ export default function WhatWeDo() {
     target: stageRef,
     offset: ['start start', 'end end'],
   });
-  // Smooth the raw scroll signal once, at the source, so every card derived
-  // from it inherits the same silky lag-and-settle.
-  const deckProgress = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 28,
-    mass: 0.4,
-  });
+  const deckProgress = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.4 });
 
-  const deckSpread = !reduced && !isMobile;
-  const [left, center, right] = [services[0], services[1], services[2]];
+  const deckSpread = !reduced && !isNarrow;
+  const [a, b] = services;
 
   return (
     <section id="services" className="section-pad" data-nav-theme="dark">
@@ -101,35 +94,31 @@ export default function WhatWeDo() {
         <header className="section-head">
           <div>
             <Reveal as="span" className="eyebrow" speed="fast">
-              <span className="num">02</span>
-              Who we help
+              Turn your idea into something real
             </Reveal>
             <Wipe as="h2" style={{ marginTop: 14 }}>
-              Three kinds of teams, one Qbix.
+              Work with Qbix
             </Wipe>
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
-              Qbix is an AI product team in Seattle. We design and build{' '}
-              <Link href="/services/app-ai" className="text-link">AI products</Link>,{' '}
-              <Link href="/services/redesign" className="text-link">SaaS redesigns</Link>, and{' '}
-              <Link href="/services/web" className="text-link">shipped websites</Link> — see how we engage on each.
+              We do{' '}
+              <Link href="/services/web" className="text-link">UI/UX design</Link>{' '}
+              and{' '}
+              <Link href="/services/redesign" className="text-link">brand upgrades</Link>.
             </Reveal>
           </div>
         </header>
 
         {deckSpread ? (
-          <div ref={stageRef} className="svc-stage">
+          <div ref={stageRef} className="svc-stage svc-stage--two">
             <div className="svc-sticky">
-              <Reveal className="svc-deck" speed="base" y={40}>
-                <DeckSide s={left} progress={deckProgress} side={-1} />
-                <div className="svc-deck-center">
-                  <ServiceCard s={center} />
-                </div>
-                <DeckSide s={right} progress={deckProgress} side={1} />
+              <Reveal className="svc-deck svc-deck--two" speed="base" y={40}>
+                <DeckCard s={a} progress={deckProgress} side={-1} />
+                <DeckCard s={b} progress={deckProgress} side={1} />
               </Reveal>
             </div>
           </div>
         ) : (
-          <Stagger className="services-wrap" stagger={0.1} delayChildren={0.1}>
+          <Stagger className="services-wrap services-wrap--two" stagger={0.1} delayChildren={0.1}>
             {services.map((s) => (
               <RevealItem key={s.num} speed="base">
                 <ServiceCard s={s} />

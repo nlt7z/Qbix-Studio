@@ -179,6 +179,19 @@ export default function TopNav() {
           const id = item.href.startsWith('#') ? item.href.slice(1) : '';
           const isActive = id ? active === id : false;
           const isHovered = hovered === item.href;
+          if (item.disabled) {
+            return (
+              <span
+                key={item.label}
+                className="topnav-link is-disabled"
+                aria-disabled="true"
+                title={item.tip}
+              >
+                <span className="topnav-link-label">{item.label}</span>
+                <span className="topnav-link-soon">Soon</span>
+              </span>
+            );
+          }
           return (
             <a
               key={item.href}
@@ -210,21 +223,25 @@ export default function TopNav() {
         })}
       </div>
 
-      <div className="topnav-status" aria-hidden>
-        <span className="dot" />
-        Open Q3
+      <div className="topnav-ctas">
+        <a
+          href="#products"
+          className="topnav-cta topnav-cta-white split-cta"
+          onClick={(e) => onAnchorClick(e, '#products')}
+        >
+          <SplitText text="Use our products" arrow />
+        </a>
+        <a
+          href="#contact"
+          className="topnav-cta split-cta"
+          onClick={(e) => {
+            e.preventDefault();
+            openContactModal();
+          }}
+        >
+          <SplitText text="Tell us your idea" arrow />
+        </a>
       </div>
-
-      <a
-        href="#contact"
-        className="topnav-cta split-cta"
-        onClick={(e) => {
-          e.preventDefault();
-          openContactModal();
-        }}
-      >
-        <SplitText text="Start a project" arrow />
-      </a>
 
       <button
         type="button"
@@ -248,6 +265,16 @@ export default function TopNav() {
           {navItems.map((item) => {
             const id = item.href.startsWith('#') ? item.href.slice(1) : '';
             const isActive = id ? active === id : false;
+            if (item.disabled) {
+              return (
+                <li key={item.label}>
+                  <span className="topnav-mobile-link is-disabled" aria-disabled="true">
+                    {item.label}
+                    <span className="topnav-link-soon">Soon</span>
+                  </span>
+                </li>
+              );
+            }
             return (
               <li key={item.href}>
                 <a
@@ -264,6 +291,17 @@ export default function TopNav() {
           })}
           <li>
             <a
+              href="#products"
+              onClick={(e) => onMobileItemClick(e, '#products')}
+              className="topnav-mobile-link split-cta"
+              tabIndex={menuOpen ? 0 : -1}
+            >
+              Use our products
+              <span className="arrow" aria-hidden>↗</span>
+            </a>
+          </li>
+          <li>
+            <a
               href="#contact"
               onClick={(e) => {
                 e.preventDefault();
@@ -273,7 +311,7 @@ export default function TopNav() {
               className="topnav-mobile-link is-cta split-cta"
               tabIndex={menuOpen ? 0 : -1}
             >
-              <SplitText text="Start a project" arrow />
+              <SplitText text="Tell us your idea" arrow />
               <span className="arrow" aria-hidden>↗</span>
             </a>
           </li>

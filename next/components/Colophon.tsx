@@ -1,78 +1,54 @@
-import Link from 'next/link';
-import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
-import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
+'use client';
 
-const cols = [
-  {
-    label: 'Qbix',
-    links: [
-      { label: 'Work',     href: '#work' },
-      { label: 'Services', href: '#services' },
-      { label: 'How we work', href: '#how' },
-      { label: 'Product',  href: '#product' },
-      { label: 'About',    href: '#about' },
-    ],
-  },
-  {
-    label: 'Reach',
-    links: [
-      { label: CONTACT_EMAIL,        href: `mailto:${CONTACT_EMAIL}` },
-      { label: 'Book an intro call', href: BOOKING_URL },
-      { label: 'Press kit',          href: '/press' },
-    ],
-  },
-  {
-    label: 'Channels',
-    links: [
-      { label: 'Are.na',      href: 'https://www.are.na/q-bix/channels' },
-      { label: 'GitHub',      href: 'https://github.com/qbixstudio-bit' },
-      { label: 'X / Twitter', href: 'https://x.com/QbixStudio' },
-      { label: 'LinkedIn',    href: 'https://www.linkedin.com/company/qbix-studio' },
-      { label: 'Instagram',   href: 'https://www.instagram.com/qbix_studio/' },
-    ],
-  },
+import { CONTACT_EMAIL } from '@/lib/data';
+import { Reveal } from '@/components/Reveal';
+import SplitText from '@/components/SplitText';
+import { useContactModal } from '@/components/ContactModalProvider';
+
+const socials = [
+  { label: 'Are.na',      href: 'https://www.are.na/q-bix/channels' },
+  { label: 'GitHub',      href: 'https://github.com/qbixstudio-bit' },
+  { label: 'X / Twitter', href: 'https://x.com/QbixStudio' },
+  { label: 'LinkedIn',    href: 'https://www.linkedin.com/company/qbix-studio' },
+  { label: 'Instagram',   href: 'https://www.instagram.com/qbix_studio/' },
 ];
 
 export default function Colophon() {
+  const { open: openContactModal } = useContactModal();
+
   return (
     <footer className="footer" data-nav-theme="dark">
       <div className="container">
-        <Stagger className="footer-grid" stagger={0.1} delayChildren={0.05}>
-          <RevealItem speed="fast">
-            <div className="footer-brand">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="footer-logo" src="/qbix-keyboard.png" alt="Qbix" />
-            </div>
-            <p className="footer-tagline">
-              An AI-native product design and software studio. We design and build{' '}
-              <Link href="/services/app-ai" className="text-link">AI products</Link>{' '}
-              from strategy to interface to launch.
-            </p>
-          </RevealItem>
+        <Reveal className="footer-cta" speed="base" margin="0px 0px 0px 0px">
+          <p className="footer-tagline">
+            The <span className="hi">coolest</span> people, on the{' '}
+            <span className="hi">coolest</span> ideas.
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary btn-lg split-cta"
+            onClick={openContactModal}
+          >
+            <SplitText text="Tell us your idea" arrow />
+          </button>
+        </Reveal>
 
-          {cols.map((col) => (
-            <RevealItem key={col.label} className="footer-col" speed="fast">
-              <span className="footer-col-label">{col.label}</span>
-              <ul>
-                {col.links.map((l) => {
-                  const isInternal = l.href.startsWith('#') || l.href.startsWith('/');
-                  return (
-                    <li key={l.href}>
-                      {isInternal ? (
-                        <Link href={l.href}>{l.label}</Link>
-                      ) : (
-                        <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </RevealItem>
+        <Reveal className="footer-contact" speed="fast" delay={0.1} margin="0px 0px 0px 0px">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="footer-contact-link">
+            {CONTACT_EMAIL}
+          </a>
+        </Reveal>
+
+        <Reveal className="footer-social" speed="fast" delay={0.2} margin="0px 0px 0px 0px">
+          {socials.map((s) => (
+            <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer">
+              {s.label}
+            </a>
           ))}
-        </Stagger>
+        </Reveal>
 
-        <Reveal className="footer-line" speed="fast" delay={0.4}>
-          <span>© 2026 <span className="brand-q">Q</span>bix</span>
+        <Reveal className="footer-line" speed="fast" delay={0.3} margin="0px 0px 0px 0px">
+          <span>© 2026 Qbix</span>
         </Reveal>
       </div>
     </footer>

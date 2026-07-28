@@ -7,11 +7,11 @@ import { CONTACT_EMAIL, brandLookbook } from '@/lib/data';
 export const metadata: Metadata = {
   title: 'Press kit',
   description:
-    'Press kit for Qbix Studio — an AI-native product design and software studio in Seattle, WA. Studio boilerplate, wordmark, brand objects, palette, and press contact for editors, writers, and partners.',
+    'Press kit for Qbix — an independent AI product team in Seattle, WA. Boilerplate, wordmark, brand objects, palette, and press contact for editors, writers, and partners.',
 };
 
 const boilerplate =
-  'Qbix Studio LLC is a small AI-native product design and software studio based in Seattle. We design and build AI products from strategy to interface to launch — across UX/UI systems, web and mobile experiences, strategic prototypes, and proprietary AI tools.';
+  'Qbix is a small, independent AI product team based in Seattle. We design and build AI products from strategy to interface to launch — across UX/UI systems, web and mobile experiences, strategic prototypes, and proprietary AI tools.';
 
 const facts = [
   { k: 'Founded',  v: '2026' },
@@ -31,17 +31,17 @@ const palette = [
 ];
 
 const downloads = [
-  { k: 'Wordmark · SVG',       v: 'Qbix / Studio — vector' },
+  { k: 'Wordmark · SVG',       v: 'Qbix — vector' },
   { k: 'Wordmark · PNG',       v: '2x · transparent · dark' },
   { k: 'Brand objects · ZIP',  v: 'Keycaps · vinyl · cassette · chrome' },
-  { k: 'Boilerplate · TXT',    v: 'Studio one-liner + long form' },
+  { k: 'Boilerplate · TXT',    v: 'One-liner + long form' },
 ];
 
 const principles = [
-  'Use the lowercase wordmark "Qbix / Studio" — capital Q, lime signal accent permitted only on the Q glyph.',
+  'Use the lowercase wordmark "Qbix" — capital Q, lime signal accent permitted only on the Q glyph.',
   'Pair the wordmark with at least 16px of clear space on every side. Never recolor or stretch.',
   'On lime backgrounds, switch to the ink (off-white) wordmark. Never place signal-on-signal.',
-  'When quoting the studio, prefer the boilerplate verbatim — split paragraphs are fine, edits are not.',
+  'When quoting Qbix, prefer the boilerplate verbatim — split paragraphs are fine, edits are not.',
 ];
 
 export default function PressKitPage() {
@@ -50,18 +50,17 @@ export default function PressKitPage() {
       <main className="detail">
         <div className="container">
           <Link href="/" className="detail-crumb">
-            <span className="arrow">←</span> Qbix Studio
+            <span className="arrow">←</span> Qbix
           </Link>
 
           <header className="detail-head">
             <span className="eyebrow">
-              <span className="num">PRESS</span>
-              Studio kit
+              Press kit
             </span>
             <h1 className="detail-title">Press kit.</h1>
             <p className="detail-lede">
               Boilerplate, marks, brand objects, and palette for editors, writers, and
-              partners covering <span className="brand-q">Q</span>bix Studio. Everything
+              partners covering <span className="brand-q">Q</span>bix. Everything
               here is yours to use — credit appreciated, not required.
             </p>
             <div className="detail-tags">
@@ -75,7 +74,7 @@ export default function PressKitPage() {
           <div className="detail-grid">
             <div className="detail-section">
               <span className="detail-section-label">FIG P.1 — Boilerplate</span>
-              <h3>Studio, in one paragraph</h3>
+              <h3>Qbix, in one paragraph</h3>
               <p
                 style={{
                   color: 'var(--text)',
@@ -91,7 +90,7 @@ export default function PressKitPage() {
             </div>
 
             <div className="detail-section">
-              <span className="detail-section-label">FIG P.2 — Studio facts</span>
+              <span className="detail-section-label">FIG P.2 — Qbix facts</span>
               <h3>Quick reference</h3>
               <div className="detail-specs">
                 {facts.map((f) => (
@@ -131,7 +130,7 @@ export default function PressKitPage() {
           <div className="detail-grid">
             <div className="detail-section">
               <span className="detail-section-label">FIG P.4 — Palette</span>
-              <h3>Studio colors</h3>
+              <h3>Brand colors</h3>
               <div
                 style={{
                   display: 'grid',
@@ -236,7 +235,7 @@ export default function PressKitPage() {
 
           <div className="detail-cta">
             <p className="detail-cta-text">
-              Writing about the studio? <span className="accent">Get in touch — fast.</span>
+              Writing about Qbix? <span className="accent">Get in touch — fast.</span>
             </p>
             <a
               href={`mailto:${CONTACT_EMAIL}?subject=Press%20inquiry`}
@@ -245,7 +244,7 @@ export default function PressKitPage() {
               <SplitText text="Email press" arrow />
             </a>
             <Link href="/#about" className="btn btn-secondary btn-lg split-cta">
-              <SplitText text="About the studio" arrow />
+              <SplitText text="About Qbix" arrow />
             </Link>
           </div>
         </div>

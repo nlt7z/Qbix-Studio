@@ -21,7 +21,6 @@ export default function ContactCTA() {
       <div className="container">
         <Reveal speed="fast">
           <span className="eyebrow">
-            <span className="num">06</span>
             Contact
           </span>
           <h2 className="contact-heading" style={{ marginTop: 14 }}>

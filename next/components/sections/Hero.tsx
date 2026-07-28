@@ -7,6 +7,42 @@ import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring, useTra
 import { useContactModal } from '@/components/ContactModalProvider';
 import BrandText from '@/components/BrandText';
 import SplitText from '@/components/SplitText';
+import PstClock from '@/components/PstClock';
+import { LOGOS } from '@/components/TrustLogos';
+
+/**
+ * "Previously at…" — cycles the team's prior-company marks one at a time,
+ * each sliding up out of the slot as the next rides in.
+ */
+function CyclingLogos() {
+  const reduce = useReducedMotion();
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (reduce) return;
+    const id = window.setInterval(() => setI((n) => (n + 1) % LOGOS.length), 1800);
+    return () => window.clearInterval(id);
+  }, [reduce]);
+  const l = LOGOS[i];
+  return (
+    <span className="hg-logo-slot" aria-label={`Previously at ${l.name}`}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.svg
+          key={l.name}
+          viewBox={l.viewBox}
+          fill="currentColor"
+          role="img"
+          aria-hidden
+          initial={reduce ? false : { y: '75%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={reduce ? { opacity: 0 } : { y: '-75%', opacity: 0 }}
+          transition={{ duration: 0.42, ease: EASE_OUT }}
+        >
+          <path d={l.d} />
+        </motion.svg>
+      </AnimatePresence>
+    </span>
+  );
+}
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -174,112 +210,103 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} className="hero" id="top" data-nav-theme="dark">
-      <div className="container hero-inner hero-centered">
-        <motion.div
-          className="hero-eyebrow"
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: EASE_OUT }}
-        >
-          <span className="eyebrow">
-            <Image
-              src="/qbix-keyboard.png"
-              alt="Qbix"
-              width={96}
-              height={28}
-              priority
-              className="eyebrow-keyboard"
-            />
-          </span>
-        </motion.div>
+      <div className="container hero-inner">
+        {/* LEFT — copy */}
+        <div className="hero-copy">
+          <h1 className="hero-title">
+            <WordReveal text="We build the" baseDelay={0.18} step={0.06} />{' '}
+            <span style={{ ...WORD_MASK_STYLE }}>
+              <motion.span
+                className="italic signal-bg"
+                style={{ display: 'inline-block' }}
+                initial={{ y: '115%' }}
+                animate={{ y: '0%' }}
+                transition={{ duration: 1.0, ease: EASE_OUT, delay: 0.5 }}
+              >
+                coolest things.
+              </motion.span>
+            </span>
+          </h1>
 
-        <h1 className="hero-title">
-          <WordReveal
-            className="line line-lead"
-            text="Building with AI is table stakes."
-            baseDelay={0.18}
-            step={0.06}
-          />
-          <WordReveal
-            className="line italic"
-            text="We hold the line on"
-            baseDelay={0.62}
-            step={0.06}
-          />
-          <span className="line" style={{ ...WORD_MASK_STYLE, display: 'block' }}>
-            <motion.span
-              className="italic signal-bg"
-              style={{ display: 'inline-block' }}
-              initial={{ y: '115%' }}
-              animate={{ y: '0%' }}
-              transition={{ duration: 1.0, ease: EASE_OUT, delay: 1.0 }}
-            >
-              taste, craft, logic.
-            </motion.span>
-          </span>
-        </h1>
+          <motion.p
+            className="hero-sub"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.55 }}
+          >
+            <BrandText>
+              Qbix never writes off a small idea. We have a sharp team and we move
+              fast, so we can understand what you want and push it from sketch to
+              product.
+            </BrandText>
+          </motion.p>
 
-        {/* The switching centrepiece. */}
-        <motion.div
-          className="hero-object-figure"
-          initial={{ opacity: 0, y: 48, scale: 0.92 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 1.2, ease: EASE_OUT, delay: 0.35 }}
-        >
           <motion.div
-            style={{ y: objY, rotate: objRot, scale: objScale, opacity: objOpacity, willChange: 'transform, opacity' }}
+            className="hero-ctas"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.68 }}
           >
-            <motion.div
-              animate={reduceMotion ? undefined : { y: [0, -12, 0], rotate: [0, 1.4, 0, -1.4, 0] }}
-              transition={{
-                y: { duration: 6, ease: 'easeInOut', repeat: Infinity },
-                rotate: { duration: 9, ease: 'easeInOut', repeat: Infinity },
-              }}
-              style={{ willChange: 'transform' }}
+            <button
+              type="button"
+              className="btn btn-primary btn-lg split-cta"
+              onClick={openContactModal}
             >
-              <BrandObjectRotator />
-            </motion.div>
+              <SplitText text="Tell us your idea" arrow />
+            </button>
+            <Link href="#products" className="btn btn-white btn-lg split-cta">
+              <SplitText text="Use our products" arrow />
+            </Link>
           </motion.div>
-        </motion.div>
+        </div>
 
-        <motion.p
-          className="hero-sub"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.7 }}
-        >
-          <BrandText>
-            Qbix is an AI-native product and software team. Strategy,
-            interface, and the AI itself — built by the team that designs it.
-          </BrandText>
-        </motion.p>
-
-        <motion.p
-          className="hero-trust"
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.82 }}
-        >
-          <span className="hero-trust-dot" aria-hidden />
-          Seattle · AI-native product studio · decade-deep across product, brand, and AI
-        </motion.p>
-
+        {/* RIGHT — a four-cell grid: object · clock · logos · credibility */}
         <motion.div
-          className="hero-ctas"
-          initial={{ opacity: 0, y: 16 }}
+          className="hero-side"
+          initial={{ opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.92 }}
+          transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.3 }}
         >
-          <button
-            type="button"
-            className="btn btn-primary btn-lg split-cta"
-            onClick={openContactModal}
-          >
-            <SplitText text="Start a project" arrow />
-          </button>
-          <Link href="#work" className="btn btn-secondary btn-lg split-cta">
-            <SplitText text="View work" arrow />
-          </Link>
+          <div className="hero-grid">
+            <div className="hg-row hg-top">
+              {/* top-left (largest) — the switching brand object */}
+              <div className="hg-cell hg-image">
+                <motion.div
+                  style={{ y: objY, rotate: objRot, scale: objScale, opacity: objOpacity, willChange: 'transform, opacity' }}
+                >
+                  <motion.div
+                    animate={reduceMotion ? undefined : { y: [0, -10, 0], rotate: [0, 1.2, 0, -1.2, 0] }}
+                    transition={{
+                      y: { duration: 6, ease: 'easeInOut', repeat: Infinity },
+                      rotate: { duration: 9, ease: 'easeInOut', repeat: Infinity },
+                    }}
+                    style={{ willChange: 'transform' }}
+                  >
+                    <BrandObjectRotator />
+                  </motion.div>
+                </motion.div>
+              </div>
+
+              {/* top-right — live clock */}
+              <div className="hg-cell hg-clock">
+                <PstClock size={72} />
+                <span className="hg-clock-label">PST</span>
+              </div>
+            </div>
+
+            <div className="hg-row hg-bottom">
+              {/* bottom-left — "previously at" cycling marks */}
+              <div className="hg-cell hg-logos">
+                <span className="hg-logos-label">Previously</span>
+                <CyclingLogos />
+              </div>
+
+              {/* bottom-right — credibility line */}
+              <div className="hg-cell hg-text">
+                <p>Ten years across product, brand, and AI</p>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>

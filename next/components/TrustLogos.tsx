@@ -7,9 +7,9 @@
  * brands (Amazon). Trademarks belong to their respective owners; used here only
  * to indicate team experience.
  */
-type Logo = { name: string; viewBox: string; d: string };
+export type Logo = { name: string; viewBox: string; d: string };
 
-const LOGOS: Logo[] = [
+export const LOGOS: Logo[] = [
   {
     name: 'Google',
     viewBox: '0 0 24 24',

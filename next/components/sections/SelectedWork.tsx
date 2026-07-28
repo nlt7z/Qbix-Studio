@@ -17,28 +17,43 @@ export default function SelectedWork() {
   const visible = projects.filter((p) => !p.hidden);
   return (
     <section id="work" className="section-pad" data-nav-theme="dark">
+      <span id="product" aria-hidden style={{ position: 'absolute', top: 0 }} />
       <div className="container">
         <header className="section-head">
           <div>
             <Reveal as="span" className="eyebrow" speed="fast">
-              <span className="num">03</span>
               Selected work
             </Reveal>
             <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1}>
               Built and shipped.
             </Wipe>
+            <Reveal as="p" className="lede" speed="base" delay={0.3} style={{ marginTop: 18 }}>
+              The coolest ideas we wanted to exist, so we built them — a TTS
+              editor, moodboard-to-design-system, AI bid, and an interview
+              assistant, alongside work shipped with partners.
+            </Reveal>
           </div>
         </header>
 
-        <WorkFan items={visible} />
-
-        <div className="work-stack">
-          {visible.map((p, i) => (
-            <StackCard key={p.slug} project={p} index={i} />
-          ))}
-        </div>
+        <WorkShowcase items={visible} />
       </div>
     </section>
+  );
+}
+
+/* Reusable big-media showcase: the hand of cards opens from a stacked fan,
+   then yields to a pinned column that stacks the cards layer over layer —
+   big media, small text. Fed by SelectedWork and the Products section alike. */
+export function WorkShowcase({ items }: { items: Project[] }) {
+  return (
+    <>
+      <WorkFan items={items} />
+      <div className="work-stack">
+        {items.map((p, i) => (
+          <StackCard key={p.slug} project={p} index={i} />
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -76,7 +91,6 @@ function FanCard({
         // eslint-disable-next-line @next/next/no-img-element
         <img className="work-fan-emblem" src="/qbix-cube.png" alt="" loading="lazy" decoding="async" />
       )}
-      <span className="work-fan-num mono">{project.num}</span>
       <span className="work-fan-title">{project.title}</span>
     </motion.div>
   );
@@ -175,7 +189,6 @@ function StackCard({ project, index }: { project: Project; index: number }) {
       style={{ top: `calc(clamp(72px, 10vh, 110px) + ${index * 22}px)` }}
     >
       <div className="work-case-head">
-        <span className="work-case-num mono">{p.num}</span>
         <span className="work-case-year mono">{p.year}</span>
       </div>
 

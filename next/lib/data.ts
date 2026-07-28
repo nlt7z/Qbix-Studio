@@ -1,5 +1,5 @@
 // =============================================================================
-// QBIX STUDIO — content / positioning
+// QBIX — content / positioning
 // =============================================================================
 
 // ----- NAVIGATION -------------------------------------------------------------
@@ -12,12 +12,14 @@ export type NavItem = {
   plain: string;  // HUD plain echo (lowercase)
   side: string;   // SideNav short label
   tip: string;    // SideNav tooltip
+  disabled?: boolean; // shown but not navigable (e.g. Careers — coming soon)
 };
 
 export const navItems: NavItem[] = [
   { num: '01', label: 'Services', href: '#services', cool: 'SERVICES', plain: 'services', side: 'SVC', tip: 'Services'  },
-  { num: '02', label: 'Product',  href: '#product',  cool: 'PRODUCT',  plain: 'product',  side: 'PRD', tip: 'Product' },
-  { num: '03', label: 'Contact',  href: '#contact',  cool: 'CONTACT',  plain: 'contact',  side: 'CON', tip: 'Get in touch' },
+  { num: '02', label: 'Products', href: '#products', cool: 'PRODUCTS', plain: 'products', side: 'PRD', tip: 'Products' },
+  { num: '03', label: 'About us', href: '#about',    cool: 'ABOUT',    plain: 'about',    side: 'ABT', tip: 'About us' },
+  { num: '04', label: 'Careers',  href: '#',         cool: 'CAREERS',  plain: 'careers',  side: 'CAR', tip: 'Careers — coming soon', disabled: true },
 ];
 
 // ----- HERO CUBE GRID (4 capability cubes, 1 lit lime) ----------------------
@@ -60,12 +62,12 @@ export const services: Service[] = [
     slug: 'web',
     num: '01',
     audience: 'Local business · Portfolio · Brand',
-    title: 'Web, shipped.',
+    title: 'Design service',
     blurb:
-      'Your idea, faithfully rendered into a live site. Design, code, deploy, domain — end to end.',
+      'From moodboard to a live domain. We design it, write the code, and ship it ready for business. Done in one to three weeks.',
     tags: ['Marketing site', 'Portfolio', 'Brand'],
     priceFrom: '$500',
-    typical: '1 – 3 weeks',
+    typical: '1 to 3 weeks',
     caseSlugs: ['lamdre', 'sde-personal-rebrand'],
     detail: {
       lede:
@@ -84,42 +86,15 @@ export const services: Service[] = [
     },
   },
   {
-    slug: 'app-ai',
-    num: '02',
-    audience: 'AI startups · 0 → 1',
-    title: 'AI products that ship.',
-    blurb:
-      'An AI idea, turned into a real product people can use. Design, front end, back end — we handle it.',
-    tags: ['Agent UX', 'AI chat', '0 → 1'],
-    priceFrom: '$20k',
-    typical: '6 – 12 weeks',
-    caseSlugs: ['qwen-character', 'bidking'],
-    detail: {
-      lede:
-        'Agent flows, LLM interfaces, AI chat, AI features dropped into an existing app. We design it, then write the front end — and the back end if you don\'t have one. This is taking a product from zero to live. Two paths, depending on whether you already have engineering.',
-      deliverables: [
-        'The shipped product — deployed live, with the production front-end code handed to you',
-        'Design system + IA as markdown — components, tokens, agent flows, and every state, versioned and yours',
-        'Model behavior spec — prompts, fallbacks, and empty / error / loading states',
-      ],
-      engagement: [
-        { k: 'Moodboard', v: 'Visual direction locked before a single screen gets built' },
-        { k: 'Design',    v: 'UI system + IA written as markdown you own' },
-        { k: 'Build',     v: 'We design and write the front end into your repo — or design, front end, and back end for a full ship if you have no engineering yet' },
-        { k: 'Launch',    v: 'We help you ship it live' },
-      ],
-    },
-  },
-  {
     slug: 'redesign',
-    num: '03',
-    audience: 'Growth-stage · 1 → 100',
-    title: 'Redesign, from 1 to 100.',
+    num: '02',
+    audience: 'Growing teams · 1 → 100',
+    title: 'Brand upgrade',
     blurb:
-      'You already have a product. Polish it until it\'s worth sharing — round after round, straight into your repo.',
+      'Your product already runs. We take it from usable to worth sharing. We iterate round by round and merge code straight into your repo.',
     tags: ['Redesign', 'User feedback', 'Iteration'],
-    priceFrom: '$5k',
-    typical: '5 – 10 weeks',
+    priceFrom: '$5,000',
+    typical: '5 to 10 weeks',
     caseSlugs: ['spark-tts', 'liner-ai-collaboration'],
     detail: {
       lede:
@@ -228,11 +203,11 @@ export const projects: Project[] = [
     slug: 'bidking',
     num: 'FILE / 004',
     title: 'Transform Bid Experience into Mobile Games',
-    client: 'Studio Product',
+    client: 'Qbix · In-house',
     role: 'Game Design · Mobile UI · System',
     year: 2025,
     category: 'game',
-    tags: ['Studio Product', 'Mobile', 'Game'],
+    tags: ['In-house', 'Mobile', 'Game'],
     hook:
       'A sealed-bid auction reimagined as a mobile game — strategy hidden behind cute chaos, where players bid, bluff, or burn until the last vault standing wins.',
     aspect: 720 / 332,
@@ -335,23 +310,32 @@ export type LabCard = {
   num: string;
   title: string;
   body: string;
+  previewLabel?: string; // e.g. "stratadesign.app"
+  previewUrl?: string;   // live product link
 };
 
 export const labCards: LabCard[] = [
   {
     num: '01',
-    title: 'AI Software Products',
-    body: 'Subscription-based AI tools designed and built in-house. Practical, small, sharp.',
+    title: 'TTS Editor',
+    body: 'Opens the black box of speech synthesis. Adjust pitch, pauses, and emotion step by step, and edit the script to decide how the final voice sounds.',
   },
   {
     num: '02',
-    title: 'Interface Experiments',
-    body: 'Explorations around agent workflows, generative UI, and human-AI collaboration patterns.',
+    title: 'Image to Design System',
+    body: 'Pull images from Pinterest, Cosmos, or your own folder, organize them into a moodboard on our canvas, and let AI turn it into a design system. Tokens, components, and code, ready to hand off to AI or drop into your component library.',
+    previewLabel: 'stratadesign.app',
+    previewUrl: 'https://stratadesign.app',
   },
   {
     num: '03',
-    title: 'Game & Interaction Systems',
-    body: 'Small games and playful systems that test behavior, economy, and interaction loops.',
+    title: 'AI Bidding',
+    body: 'Blind auctions as a game. Bid, bluff, or go all in, while the model on the other side reads your hand.',
+  },
+  {
+    num: '04',
+    title: 'Interview Assistant',
+    body: 'AI follows the interviewer’s questions and thinks along with you in real time. Live hints, follow-up suggestions, and clean notes, so you can stay in the conversation.',
   },
 ];
 
@@ -369,7 +353,7 @@ export const brandLookbook: LookbookItem[] = [
   {
     num: '01',
     label: 'Mixtape, vol. 01',
-    alt: 'Clear plastic cassette tape labelled QBIX STUDIO LLC',
+    alt: 'Clear plastic cassette tape, a Qbix brand object',
     src: '/brand-cassette.png',
     aspect: '1 / 1',
   },
@@ -468,14 +452,14 @@ export const missions: Mission[] = [
 ];
 
 export const tickerItems: string[] = [
-  '// QBIX STUDIO',
+  '// QBIX',
   '// EST 2026',
   '// SEATTLE',
-  '// NO MIDDLEMEN',
-  '// CODE OVER SLIDES',
+  '// COOLEST PEOPLE',
+  '// COOLEST IDEAS',
   '// PRODUCT OVER PITCH',
-  '// SMALL TEAMS · SHARP SYSTEMS',
-  '// HUMAN-LED · SYSTEM-FIRST',
+  '// CODE OVER SLIDES',
+  '// MADE IN-HOUSE',
 ];
 
 // ----- TESTIMONIALS (real client quotes — rotated in the Testimonial band) ---

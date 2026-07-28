@@ -12,11 +12,10 @@ export default function BrandLookbook() {
         <Reveal as="header" className="section-head" speed="fast">
           <div>
             <span className="eyebrow">
-              <span className="num">07</span>
               Brand objects
             </span>
             <h2 style={{ marginTop: 14 }}>
-              The studio, rendered as objects you can hold.
+              Qbix, rendered as objects you can hold.
             </h2>
           </div>
           <p className="mono" style={{ maxWidth: 360 }}>

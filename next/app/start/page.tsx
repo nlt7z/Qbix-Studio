@@ -8,7 +8,7 @@ import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 export const metadata: Metadata = {
   title: 'Start a project',
   description:
-    'Tell Qbix Studio what you’re building. Share your project type, budget, and timeline and we’ll reply within 24 hours — a senior AI-native studio in Seattle.',
+    'Tell Qbix what you’re building. Share your project type, budget, and timeline and we’ll reply within 24 hours — a senior AI product team in Seattle.',
   alternates: { canonical: '/start' },
 };
 
@@ -38,13 +38,12 @@ export default function StartPage() {
           <Link href="/" className="detail-crumb">
             <span className="arrow">←</span>{' '}
             <span>
-              <span className="brand-q">Q</span>bix Studio
+              <span className="brand-q">Q</span>bix
             </span>
           </Link>
 
           <header className="detail-head">
             <span className="eyebrow">
-              <span className="signal-dot" />
               Start a project
             </span>
             <h1 className="detail-title">

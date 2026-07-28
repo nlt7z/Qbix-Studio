@@ -6,7 +6,7 @@ import './bidking.css';
 
 export const metadata: Metadata = {
   title: 'BidKing — a blind-auction game',
-  description: 'BidKing is a blind-auction game about risk, bluffing, and opening the wrong box. A playable prototype from Qbix Studio.',
+  description: 'BidKing is a blind-auction game about risk, bluffing, and opening the wrong box. A playable prototype from Qbix.',
 };
 
 export default function BidKingPage() {

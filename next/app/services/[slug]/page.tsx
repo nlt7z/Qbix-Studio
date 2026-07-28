@@ -83,7 +83,6 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
 
           <header className="detail-head">
             <span className="eyebrow">
-              <span className="num">{service.num}</span>
               Service
             </span>
             <h1 className="detail-title"><BrandText>{service.title}</BrandText></h1>

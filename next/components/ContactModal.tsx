@@ -83,7 +83,6 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
 
             <div className="contact-modal-head">
               <span className="eyebrow">
-                <span className="signal-dot" />
                 Start a project
               </span>
               <h2 id="contact-modal-title" className="contact-modal-title">

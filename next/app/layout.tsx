@@ -1,20 +1,13 @@
 import type { Metadata } from 'next';
-import { Encode_Sans, Source_Serif_4 } from 'next/font/google';
+import { Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 
 import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
 import { ContactModalProvider } from '@/components/ContactModalProvider';
 
-// Encode Sans carries body and label type; Source Serif 4 carries the
-// headlines — a sharp editorial serif with true italics.
-const sansFont = Encode_Sans({
-  subsets: ['latin'],
-  weight: 'variable',
-  variable: '--font-sans-body',
-  display: 'swap',
-});
-
+// One serif carries the whole site — display, body, and labels alike.
+// Source Serif 4: a sharp editorial serif with true italics and optical sizing.
 const displayFont = Source_Serif_4({
   subsets: ['latin'],
   weight: 'variable',
@@ -27,7 +20,7 @@ const displayFont = Source_Serif_4({
 const SITE_URL = 'https://qbix.space';
 const SITE_NAME = 'Qbix';
 const SITE_DESC =
-  'Qbix is an independent AI-native product design and software studio based in Seattle, Washington. We design and build AI products, web and SaaS interfaces, and brand systems for startups and growing teams — from strategy to launch.';
+  'Qbix is where the coolest people build the coolest ideas — an independent AI product team in Seattle, Washington. We build our own products (a TTS editor, moodboard-to-design-system, AI bid, interview assistant) and design and build AI products, web, and SaaS for startups — from strategy to launch.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -42,35 +35,26 @@ export const metadata: Metadata = {
   publisher: 'Qbix',
   keywords: [
     'Qbix',
-    'Qbix Studio',
-    'Qbix Studios',
     'Qbix space',
     'qbix.space',
     'Qbix AI',
-    'Qbix AI studio',
-    'Qbix design studio',
-    'Qbix product studio',
-    'Qbix Studio Seattle',
     'Qbix Seattle',
     'Qbix team',
     'what is Qbix',
-    'Qubix studio',
+    'Qubix',
     'Q bix',
     'AI-native product design',
-    'AI product design studio',
+    'AI product team',
     'AI design and engineering',
-    'independent design studio',
-    'boutique design studio',
-    'Seattle design studio',
-    'Seattle AI studio',
-    'Washington design studio',
-    'software development studio',
-    'web development studio',
+    'TTS editor',
+    'moodboard to design system',
+    'AI bid',
+    'interview assistant',
+    'Seattle AI team',
     'SaaS product design',
     'design and engineering for startups',
-    'startup design studio Seattle',
   ],
-  category: 'Design & Software Studio',
+  category: 'AI Product Team',
   alternates: {
     canonical: '/',
   },
@@ -112,7 +96,7 @@ const organizationJsonLd = {
   '@type': ['Organization', 'LocalBusiness'],
   '@id': `${SITE_URL}/#organization`,
   name: SITE_NAME,
-  alternateName: ['Qbix Studio', 'Qbix Design Studio', 'Qbix AI Studio', 'Qbix Studios', 'Qbix.space'],
+  alternateName: ['Qbix', 'Qbix AI', 'Qbix Seattle', 'Qbix.space'],
   url: SITE_URL,
   logo: `${SITE_URL}/qbix-square.png`,
   image: `${SITE_URL}/hero.png`,
@@ -162,7 +146,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${sansFont.variable} ${displayFont.variable}`}
+      className={`${displayFont.variable}`}
     >
       <body>
         <LoadingScreen />

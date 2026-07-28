@@ -126,7 +126,6 @@ export default function HowWeWork() {
         <header className="section-head">
           <div>
             <Reveal as="span" className="eyebrow" speed="fast">
-              <span className="num">04</span>
               How we work
             </Reveal>
             <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1}>

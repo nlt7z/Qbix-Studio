@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.CONTACT_TO || CONTACT_EMAIL;
-  const from = process.env.CONTACT_FROM || 'Qbix Studio <onboarding@resend.dev>';
+  const from = process.env.CONTACT_FROM || 'Qbix <onboarding@resend.dev>';
 
   // No key configured (local dev / preview) — log and succeed so the form works.
   if (!apiKey) {
