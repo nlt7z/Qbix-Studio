@@ -188,7 +188,6 @@ export default function TopNav() {
                 title={item.tip}
               >
                 <span className="topnav-link-label">{item.label}</span>
-                <span className="topnav-link-soon">Soon</span>
               </span>
             );
           }
@@ -270,7 +269,6 @@ export default function TopNav() {
                 <li key={item.label}>
                   <span className="topnav-mobile-link is-disabled" aria-disabled="true">
                     {item.label}
-                    <span className="topnav-link-soon">Soon</span>
                   </span>
                 </li>
               );

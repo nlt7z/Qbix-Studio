@@ -38,13 +38,14 @@ export default function PstClock({ size = 18 }: { size?: number }) {
   const minDeg = m * 6 + s * 0.1;
   const hourDeg = (h % 12) * 30 + m * 0.5;
 
-  const hand = (deg: number, len: number, w: number, color: string) => (
+  const hand = (deg: number, len: number, w: number, opacity = 1) => (
     <line
       x1="12"
       y1="12"
       x2="12"
       y2={12 - len}
-      stroke={color}
+      stroke="currentColor"
+      strokeOpacity={opacity}
       strokeWidth={w}
       strokeLinecap="round"
       transform={`rotate(${deg} 12 12)`}
@@ -60,25 +61,48 @@ export default function PstClock({ size = 18 }: { size?: number }) {
       role="img"
       aria-label="Current time in Seattle (Pacific)"
     >
-      <circle cx="12" cy="12" r="10.4" fill="none" stroke="currentColor" strokeOpacity="0.28" strokeWidth="1" />
-      {/* 12 / 3 / 6 / 9 ticks */}
-      {[0, 90, 180, 270].map((d) => (
-        <line
-          key={d}
-          x1="12"
-          y1="2.6"
-          x2="12"
-          y2="4"
-          stroke="currentColor"
-          strokeOpacity="0.4"
-          strokeWidth="1"
-          transform={`rotate(${d} 12 12)`}
-        />
-      ))}
-      {hand(hourDeg, 4.6, 1.5, 'currentColor')}
-      {hand(minDeg, 6.8, 1.2, 'currentColor')}
-      {hand(secDeg, 7.4, 0.8, 'currentColor')}
-      <circle cx="12" cy="12" r="1" fill="currentColor" />
+      {/* Bezel — two concentric rings for a little instrument depth */}
+      <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" strokeOpacity="0.26" strokeWidth="0.7" />
+      <circle cx="12" cy="12" r="9.9" fill="none" stroke="currentColor" strokeOpacity="0.1" strokeWidth="0.6" />
+
+      {/* 60 minute ticks; every fifth (the hours) reads longer + brighter */}
+      {Array.from({ length: 60 }, (_, i) => {
+        const major = i % 5 === 0;
+        return (
+          <line
+            key={i}
+            x1="12"
+            y1="2.3"
+            x2="12"
+            y2={major ? 3.9 : 3.0}
+            stroke="currentColor"
+            strokeOpacity={major ? 0.55 : 0.22}
+            strokeWidth={major ? 0.9 : 0.45}
+            strokeLinecap="round"
+            transform={`rotate(${i * 6} 12 12)`}
+          />
+        );
+      })}
+
+      {/* Hands — hour, minute, and a thin second hand with a counterweight tail */}
+      {hand(hourDeg, 4.4, 1.4, 0.95)}
+      {hand(minDeg, 6.4, 1.0, 0.95)}
+      <line
+        x1="12"
+        y1="13.9"
+        x2="12"
+        y2={12 - 7.0}
+        stroke="currentColor"
+        strokeOpacity="0.8"
+        strokeWidth="0.5"
+        strokeLinecap="round"
+        transform={`rotate(${secDeg} 12 12)`}
+      />
+
+      {/* Live core — fluorescent lime hub with a soft bloom */}
+      <circle cx="12" cy="12" r="2" fill="var(--signal)" opacity="0.22" />
+      <circle cx="12" cy="12" r="1.05" fill="var(--signal)" />
+      <circle cx="12" cy="12" r="0.4" fill="var(--signal-dark)" />
     </svg>
   );
 }

@@ -5356,16 +5356,8 @@ select:focus-visible {
   background: var(--bg-2);
   overflow: hidden;
 }
-.about-preview-frame iframe {
-  position: absolute;
-  top: 0; left: 0;
-  width: 143%;
-  height: 143%;
-  border: 0;
-  transform: scale(0.7);
-  transform-origin: 0 0;
-  pointer-events: none;   /* click routes to the wrapping <a> */
-}
+/* SitePreviewFrame owns the iframe sizing/scaling now (renders at a desktop
+   viewport, scales to fit) — no CSS transform here or it would double up. */
 
 /* --- Footer (simplified) ------------------------------------------------- */
 .footer-cta {
@@ -5538,14 +5530,7 @@ html, body { overflow-x: clip; }
   width: 100%; height: 100%;
   object-fit: cover;
 }
-.product-media iframe {
-  position: absolute; top: 0; left: 0;
-  width: 167%; height: 167%;
-  border: 0;
-  transform: scale(0.6);
-  transform-origin: 0 0;
-  pointer-events: none;
-}
+/* SitePreviewFrame owns the iframe sizing/scaling now — see SitePreviewFrame.tsx. */
 .product-media--empty { display: flex; align-items: center; justify-content: center; }
 .product-media-soon {
   font-family: var(--font-serif);
@@ -5766,4 +5751,60 @@ html, body { overflow-x: clip; }
   pointer-events: none;
   justify-content: flex-start;
   gap: 10px;
+}
+
+/* =============================================================================
+   STACKED SECTIONS — each panel pins at the top of the viewport and the next
+   section scrolls up over it, layer on layer. Every panel carries its own base
+   colour (a dark gray ladder), so the page shifts tone section to section as
+   the stack builds. Sharp corners preserved — the "lift" reads through the top
+   hairline + upward shadow the covering panel casts, not a radius.
+   Requires the html/body `overflow-x: clip` already in place (NOT hidden), or
+   position:sticky breaks.
+   ============================================================================= */
+.stacked > section,
+.stacked > footer {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+}
+/* Center each panel's content in its full-height frame (hero keeps its own
+   internal layout). */
+.stacked > section:not(.hero),
+.stacked > footer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* min-height gives the breathing room now, so the section's own vertical
+     padding can shrink — keeps content inside one screen before the next
+     panel covers it. */
+  padding-top: clamp(72px, 9vh, 112px);
+  padding-bottom: clamp(72px, 9vh, 112px);
+}
+/* Every panel after the first lifts over the one beneath it. */
+.stacked > section:not(:first-child),
+.stacked > footer {
+  border-top: 1px solid var(--line-2);
+  box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.6), 0 -28px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* Base colour is one continuous value driven by scroll (see StackTint.tsx):
+   every panel paints with the same evolving --stack-bg, so the page tone shifts
+   smoothly top → bottom instead of in hard per-section steps, while each opaque
+   panel still covers the one beneath it. Fallback to --bg before JS mounts. */
+.stacked > section,
+.stacked > footer { background: var(--stack-bg, var(--bg)); }
+
+/* Below the two-column breakpoint the panels can exceed one screen, so the
+   stack would hide content — fall back to plain vertical flow. */
+@media (max-width: 900px) {
+  .stacked > section,
+  .stacked > footer {
+    position: static;
+    min-height: 0;
+    display: block;
+    box-shadow: none;
+  }
+  .stacked > section:not(:first-child),
+  .stacked > footer { border-top: none; }
 }
