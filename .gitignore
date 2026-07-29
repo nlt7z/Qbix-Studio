@@ -29,3 +29,8 @@ assets/**/*.mov
 # Unreferenced public videos (keep local, exclude from repo)
 next/public/amnesia-vr.mp4
 next/public/vending-machine.mp4
+
+# Licensed font masters — keep out of the repo (web embeds live in next/app/fonts)
+assets/*.ttf
+assets/*.TTF
+assets/*.otf
