@@ -82,6 +82,10 @@ export default function SitePreviewFrame({
             left: 0,
             width: `${baseWidth}px`,
             height: `${baseHeight}px`,
+            // Beat the global `iframe { max-width: 100% }` — the whole point is
+            // rendering at desktop width and scaling down, so the cap must go.
+            maxWidth: 'none',
+            maxHeight: 'none',
             border: 0,
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
