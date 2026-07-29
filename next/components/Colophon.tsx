@@ -50,6 +50,12 @@ export default function Colophon() {
         <Reveal className="footer-line" speed="fast" delay={0.3} margin="0px 0px 0px 0px">
           <span>© 2026 Qbix</span>
         </Reveal>
+
+        {/* Sign-off — the wordmark fills the frame, the campaign's last shot. */}
+        <Reveal className="footer-mark" speed="base" delay={0.15} margin="0px 0px 0px 0px">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/qbix-wordmark.png" alt="" aria-hidden loading="lazy" decoding="async" />
+        </Reveal>
       </div>
     </footer>
   );

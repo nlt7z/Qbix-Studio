@@ -4,6 +4,7 @@ import './globals.css';
 
 import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
+import SiteCursor from '@/components/SiteCursor';
 import { ContactModalProvider } from '@/components/ContactModalProvider';
 
 // Headlines — Eurostile (licensed, self-hosted). Single Regular weight, so the
@@ -173,6 +174,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TopNav />
           {children}
         </ContactModalProvider>
+        {/* Campaign texture: film grain over everything, lime cursor accent. */}
+        <div className="site-grain" aria-hidden />
+        <SiteCursor />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

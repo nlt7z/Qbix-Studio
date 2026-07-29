@@ -228,24 +228,29 @@ export default function Hero() {
             </span>
           </h1>
 
-          <motion.p
-            className="hero-sub"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.55 }}
-          >
-            <BrandText>
-              Qbix never writes off a small idea. We have a sharp team and we move
-              fast, so we can understand what you want and push it from sketch to
-              product.
-            </BrandText>
-          </motion.p>
+          {/* Masked rise: the paragraph slides up out of an invisible sleeve
+              while its tracking settles from airy to tight — no fade-in-place. */}
+          <span style={{ display: 'block', overflow: 'hidden', marginBottom: 'clamp(24px, 4vw, 32px)' }}>
+            <motion.p
+              className="hero-sub"
+              style={{ margin: 0 }}
+              initial={{ y: '110%', letterSpacing: '0.05em' }}
+              animate={{ y: '0%', letterSpacing: '-0.011em' }}
+              transition={{ duration: 0.85, ease: EASE_OUT, delay: 0.5 }}
+            >
+              <BrandText>
+                Qbix never writes off a small idea. We have a sharp team and we move
+                fast, so we can understand what you want and push it from sketch to
+                product.
+              </BrandText>
+            </motion.p>
+          </span>
 
           <motion.div
             className="hero-ctas"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: EASE_OUT, delay: 0.68 }}
+            initial={{ opacity: 0, y: 26, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24, mass: 0.7, delay: 0.72 }}
           >
             <button
               type="button"
@@ -254,7 +259,18 @@ export default function Hero() {
             >
               <SplitText text="Tell us your idea" arrow />
             </button>
-            <Link href="#products" className="btn btn-white btn-lg split-cta">
+            <Link
+              href="#products"
+              className="btn btn-white btn-lg split-cta"
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById('products');
+                if (!el) return;
+                const top = el.getBoundingClientRect().top + window.scrollY - 64;
+                window.scrollTo({ top, behavior: 'smooth' });
+                history.replaceState(null, '', '#products');
+              }}
+            >
               <SplitText text="Use our products" arrow />
             </Link>
           </motion.div>

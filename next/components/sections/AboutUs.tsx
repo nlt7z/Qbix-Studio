@@ -34,7 +34,7 @@ function SitePreview({ src, title }: { src: string; title: string }) {
 
 export default function AboutUs() {
   return (
-    <section id="about" className="about section-pad" data-nav-theme="dark">
+    <section id="about" className="about section-pad" data-nav-theme="light">
       <div className="container">
         <header className="section-head">
           <div>
@@ -60,7 +60,7 @@ export default function AboutUs() {
             AI has lowered the technical barrier, but the fact that anyone can
             build does not mean anyone can <span className="about-hi">build well</span>.
             We bring <span className="about-hi">unusually sharp instincts</span>, more
-            than ten years of training toward the <span className="about-hi">best taste</span>{' '}
+            than 10 years of training toward the <span className="about-hi">best taste</span>{' '}
             in the industry, real curiosity about new things (which means you get
             the <span className="about-hi">newest tech</span>), and respect for every
             idea that comes in. We put weight on early exploration and research,

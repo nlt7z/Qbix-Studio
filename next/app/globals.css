@@ -2719,7 +2719,7 @@ section { position: relative; }
    ============================================================================= */
 
 .footer {
-  background: #0E1400;   /* dark lime-black — continues the electric-lime palette */
+  background: var(--bg);   /* black close after the lime About panel */
   border-top: 1px solid var(--line);
   padding: clamp(48px, 8vw, 72px) 0 clamp(20px, 3vw, 32px);
 }
@@ -5320,8 +5320,9 @@ select:focus-visible {
 /* --- About us ------------------------------------------------------------ */
 .about-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);  /* media left · text right */
-  gap: clamp(32px, 6vw, 80px);
+  /* Previews get the wider column so the live sites render at real width. */
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: clamp(32px, 5vw, 64px);
   align-items: center;
 }
 @media (max-width: 900px) { .about-grid { grid-template-columns: 1fr; gap: clamp(28px, 6vw, 36px); align-items: start; } }
@@ -5376,7 +5377,9 @@ select:focus-visible {
   display: block;
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  /* Wider than 16/9 — the column grew, so this keeps the height roughly the
+     same while the frame (and the site inside) gets meaningfully longer. */
+  aspect-ratio: 21 / 10;
   background: var(--bg-2);
   overflow: hidden;
 }
@@ -5501,25 +5504,34 @@ html, body { overflow-x: clip; }
   .hero-copy { align-items: flex-start; }
 }
 
-/* --- Services: two-card deck (stacked → spread on scroll) ---------------- */
-.svc-stage--two { height: 190vh; }
+/* --- Services: two-card deck (stacked → spread on section entrance) ------ */
 .svc-deck--two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   max-width: 920px;
   margin: 0 auto;
   gap: clamp(14px, 2vw, 24px);
+  /* Breathing room below the cards before the next panel covers them. */
+  margin-bottom: clamp(28px, 6vh, 72px);
 }
+/* Keep the whole section inside one viewport so nothing is cut before the
+   next panel slides over — shorter cards than the free-flow default. */
+.svc-deck--two .svc { min-height: clamp(300px, 24vw, 380px); }
 @media (max-width: 760px) {
   .services-wrap--two { grid-template-columns: 1fr; max-width: 100%; }
 }
 
-/* --- Products: a single row of image cards, each with a button ----------- */
+/* --- Products: a single row of image cards, each with a button.
+   5 column units: the live-site iframe card spans 2 so the embedded page gets
+   real width (height unchanged); the other three cards take 1 unit each. --- */
 .product-row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: clamp(14px, 1.6vw, 20px);
   align-items: stretch;
 }
+.product-cell--wide { grid-column: span 2; }
+/* Twice the width at the same rendered height as the 4/3 neighbours. */
+.product-card--wide .product-media { aspect-ratio: 8 / 3; }
 .product-row > * { display: flex; }
 .product-card {
   display: flex;
@@ -5607,8 +5619,16 @@ html, body { overflow-x: clip; }
   font-size: 13px;
   letter-spacing: 0.02em;
 }
-@media (max-width: 1024px) { .product-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px)  { .product-row { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) {
+  .product-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Wide card takes the full row on the 2-col layout. */
+  .product-cell--wide { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .product-row { grid-template-columns: 1fr; }
+  .product-cell--wide { grid-column: auto; }
+  .product-card--wide .product-media { aspect-ratio: 16 / 9; }
+}
 
 /* --- Alternation: push the Products header to the right ------------------ */
 .section-head--right { justify-content: flex-end; text-align: right; }
@@ -5804,8 +5824,8 @@ html, body { overflow-x: clip; }
   /* min-height gives the breathing room now, so the section's own vertical
      padding can shrink — keeps content inside one screen before the next
      panel covers it. */
-  padding-top: clamp(72px, 9vh, 112px);
-  padding-bottom: clamp(72px, 9vh, 112px);
+  padding-top: clamp(56px, 7vh, 96px);
+  padding-bottom: clamp(56px, 7vh, 96px);
 }
 /* Every panel after the first lifts over the one beneath it. */
 .stacked > section:not(:first-child),
@@ -5814,11 +5834,44 @@ html, body { overflow-x: clip; }
   box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.6), 0 -28px 60px rgba(0, 0, 0, 0.5);
 }
 
-/* Each panel gets its own scroll-interpolated base colour set inline by
-   StackTint.tsx (distinct dark-tinted centres that converge at the seams). This
-   is just the opaque pre-hydration fallback so the stack covers correctly. */
-.stacked > section,
-.stacked > footer { background: var(--bg); }
+/* Alternating solid panels — black / electric lime / black / electric lime.
+   No gradients, no interpolation: each layer that covers the last is a flat
+   plane of the opposite colour, campaign-style. */
+.stacked > section { background: var(--bg); }
+.stacked > #services,
+.stacked > #about {
+  background: var(--signal);
+  border-top-color: rgba(15, 26, 0, 0.3);
+}
+
+/* Ink flips on the lime panels — headings, labels, and prose go dark so they
+   read on the bright field. Cards inside stay dark surfaces (strong contrast). */
+.stacked > #services h2,
+.stacked > #about h2 { color: var(--signal-dark); }
+.stacked > #services .section-head h2 em,
+.stacked > #about .section-head h2 em { color: rgba(15, 26, 0, 0.75); }
+.stacked > #services .eyebrow,
+.stacked > #about .eyebrow { color: rgba(15, 26, 0, 0.72); }
+.stacked > #services .sub-plain,
+.stacked > #about .sub-plain { color: rgba(15, 26, 0, 0.82); }
+.stacked > #services .text-link,
+.stacked > #about .text-link {
+  color: var(--signal-dark);
+  text-decoration-color: rgba(15, 26, 0, 0.45);
+}
+.stacked > #services .text-link:hover,
+.stacked > #about .text-link:hover {
+  color: #000;
+  text-decoration-color: #000;
+}
+.stacked > #about .about-body { color: rgba(15, 26, 0, 0.85); }
+.stacked > #about .about-hi {
+  color: var(--signal-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
 
 /* Below the two-column breakpoint the panels can exceed one screen, so the
    stack would hide content — fall back to plain vertical flow. */
@@ -5832,4 +5885,59 @@ html, body { overflow-x: clip; }
   }
   .stacked > section:not(:first-child),
   .stacked > footer { border-top: none; }
+}
+
+/* =============================================================================
+   CAMPAIGN LAYERS — film grain + lime cursor + footer sign-off mark
+   ============================================================================= */
+
+/* Fine photographic grain over the whole page — gives the flat panels a
+   printed-campaign texture. Pure CSS/SVG, no requests, pointer-transparent. */
+.site-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* Lime cursor accent — dot rides the pointer, ring trails on a spring.
+   difference-blend keeps it legible over both black and lime panels. */
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 96;
+  pointer-events: none;
+  border-radius: 50%;
+  mix-blend-mode: difference;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  background: var(--signal);
+}
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px solid var(--signal);
+}
+
+/* Footer sign-off — the giant lowercase wordmark closing the page like the
+   final frame of a spot. */
+.footer-mark {
+  margin-top: clamp(48px, 8vw, 96px);
+  overflow: hidden;
+}
+.footer-mark img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 60px rgba(184, 255, 0, 0.18));
 }

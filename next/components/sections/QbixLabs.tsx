@@ -13,6 +13,7 @@ type Product = {
   media: Media | null;
   url?: string;   // live link → "Explore the product"
   soon?: boolean; // no live build yet → "Coming soon"
+  wide?: boolean; // live-site iframe → double-width cell, same height
 };
 
 const products: Product[] = [
@@ -31,6 +32,7 @@ const products: Product[] = [
       'Turn a moodboard into a working design system — tokens, components, and code, ready to hand off to AI or your library.',
     media: { kind: 'iframe', src: 'https://stratadesign.app' },
     url: 'https://stratadesign.app',
+    wide: true,
   },
   {
     key: 'ai-bid',
@@ -136,8 +138,8 @@ export default function QbixLabs() {
 
         <Stagger className="product-row" stagger={0.1} delayChildren={0.1}>
           {products.map((p) => (
-            <RevealItem key={p.key} speed="base">
-              <article className="product-card">
+            <RevealItem key={p.key} speed="base" className={p.wide ? 'product-cell--wide' : undefined}>
+              <article className={`product-card${p.wide ? ' product-card--wide' : ''}`}>
                 <ProductMedia media={p.media} />
                 <div className="product-card-body">
                   <h3 className="product-title">{p.title}</h3>
