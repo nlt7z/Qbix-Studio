@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { navItems } from '@/lib/data';
-import QbixMark from '@/components/QbixMark';
 import { useContactModal } from '@/components/ContactModalProvider';
 import SplitText from '@/components/SplitText';
 
@@ -170,7 +170,14 @@ export default function TopNav() {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], times: [0, 0.4, 1] }}
           style={{ display: 'inline-flex', alignItems: 'center', willChange: 'transform, filter' }}
         >
-          <QbixMark variant="wordmark" height={22} title="Qbix" />
+          <Image
+            src="/qbix-wordmark.png"
+            alt="Qbix"
+            width={59}
+            height={22}
+            priority
+            className="topnav-logo"
+          />
         </motion.span>
       </a>
 

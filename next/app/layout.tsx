@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Source_Serif_4 } from 'next/font/google';
 import localFont from 'next/font/local';
 import './globals.css';
 
@@ -7,26 +6,33 @@ import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
 import { ContactModalProvider } from '@/components/ContactModalProvider';
 
-// One serif carries the whole site — display, body, and labels alike.
-// Source Serif 4: a sharp editorial serif with true italics and optical sizing.
-const displayFont = Source_Serif_4({
-  subsets: ['latin'],
-  weight: 'variable',
-  style: ['normal', 'italic'],
-  variable: '--font-display',
+// Headlines — Eurostile (licensed, self-hosted). Single Regular weight, so the
+// CSS disables weight synthesis on headings to avoid faux-bold smearing.
+const headlineFont = localFont({
+  src: [{ path: './fonts/Eurostile-400.woff2', weight: '400', style: 'normal' }],
+  variable: '--font-eurostile',
   display: 'swap',
-  axes: ['opsz'],
 });
 
-// Technical register — a real monospace for labels, timestamps, tags, and
-// numbers. Self-hosted (400/500) and exposed as --font-commit-mono, which the
-// --font-mono stack in globals.css already prefers over the system fallback.
+// Body voice — Geist (self-hosted 400/500/600), exposed as --font-geist.
+const bodyFont = localFont({
+  src: [
+    { path: './fonts/Geist-400.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/Geist-500.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/Geist-600.woff2', weight: '600', style: 'normal' },
+  ],
+  variable: '--font-geist',
+  display: 'swap',
+});
+
+// Technical register — Encode Sans (labels, tags, timestamps, numbers),
+// exposed as --font-encode. Kept tabular so digits still align.
 const monoFont = localFont({
   src: [
-    { path: './fonts/CommitMono-400.woff2', weight: '400', style: 'normal' },
-    { path: './fonts/CommitMono-500.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/EncodeSans-400.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/EncodeSans-500.woff2', weight: '500', style: 'normal' },
   ],
-  variable: '--font-commit-mono',
+  variable: '--font-encode',
   display: 'swap',
 });
 
@@ -159,7 +165,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${displayFont.variable} ${monoFont.variable}`}
+      className={`${headlineFont.variable} ${bodyFont.variable} ${monoFont.variable}`}
     >
       <body>
         <LoadingScreen />

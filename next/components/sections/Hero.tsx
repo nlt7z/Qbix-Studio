@@ -303,7 +303,7 @@ export default function Hero() {
 
               {/* bottom-right — credibility line */}
               <div className="hg-cell hg-text">
-                <p>Ten years across product, brand, and AI</p>
+                <p>10 years across product, brand, and AI</p>
               </div>
             </div>
           </div>

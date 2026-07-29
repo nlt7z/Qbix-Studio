@@ -7,13 +7,16 @@ import StackTint from '@/components/StackTint';
 
 export default function LandingPage() {
   return (
-    <main className="stacked">
-      <StackTint />  {/* scroll-driven continuous base colour → --stack-bg */}
-      <Hero />       {/* 1 — headline + PST clock + two CTAs */}
-      <WhatWeDo />   {/* 2 — Who we work with: Design service + Brand upgrade */}
-      <QbixLabs />   {/* 3 — Products: the live things we've built */}
-      <AboutUs />    {/* 4 — Our story + founders */}
-      <Colophon />   {/* 5 — Footer CTA + contact + social */}
-    </main>
+    <>
+      <main className="stacked">
+        <StackTint />  {/* per-panel scroll-interpolated base colours */}
+        <Hero />       {/* 1 — headline + PST clock + two CTAs */}
+        <WhatWeDo />   {/* 2 — Who we work with: Design service + Brand upgrade */}
+        <QbixLabs />   {/* 3 — Products: the live things we've built */}
+        <AboutUs />    {/* 4 — Our story + founders */}
+      </main>
+      {/* Footer is NOT part of the stack — it flows normally right after About. */}
+      <Colophon />
+    </>
   );
 }
