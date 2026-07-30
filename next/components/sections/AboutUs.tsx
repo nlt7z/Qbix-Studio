@@ -4,13 +4,13 @@ import { Reveal, Wipe } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
 
 const SITES = [
-  { href: 'https://nltstudio7.space', title: 'nltstudio7.space' },
-  { href: 'https://hancao.space', title: 'hancao.space' },
+  { href: 'https://nltstudio7.space', title: 'nltstudio7.space', poster: '/previews/nlt.jpg' },
+  { href: 'https://hancao.space', title: 'hancao.space', poster: '/previews/hancao.jpg' },
 ];
 
-/** Founder-site preview — browser-chrome frame, no domain text, device-adaptive
- *  live iframe (shows the phone layout on phones, desktop on wide screens). */
-function SitePreview({ src, title }: { src: string; title: string }) {
+/** Founder-site preview — browser-chrome frame showing the site's full desktop
+ *  layout (pre-captured poster; live iframes were crashing mobile Safari). */
+function SitePreview({ src, title, poster }: { src: string; title: string; poster: string }) {
   return (
     <a
       className="about-preview"
@@ -26,7 +26,7 @@ function SitePreview({ src, title }: { src: string; title: string }) {
         <span className="about-preview-arrow">↗︎</span>
       </span>
       <div className="about-preview-frame">
-        <SitePreviewFrame src={src} title={`${title} preview`} />
+        <SitePreviewFrame src={src} title={`${title} preview`} poster={poster} />
       </div>
     </a>
   );
@@ -51,7 +51,7 @@ export default function AboutUs() {
           {/* Two founder sites, stacked — the work speaks, not the URLs. */}
           <Reveal className="about-previews" speed="base" delay={0.15}>
             {SITES.map((s) => (
-              <SitePreview key={s.href} src={s.href} title={s.title} />
+              <SitePreview key={s.href} src={s.href} title={s.title} poster={s.poster} />
             ))}
           </Reveal>
 

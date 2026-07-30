@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
@@ -16,11 +16,41 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
   const [brief, setBrief] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    const focusables = () =>
+      panel
+        ? Array.from(
+            panel.querySelectorAll<HTMLElement>(
+              'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
+            ),
+          ).filter((el) => !el.hasAttribute('disabled'))
+        : [];
+    // Move focus into the dialog: first form field, else first focusable.
+    const firstField = panel?.querySelector<HTMLElement>('input, textarea');
+    (firstField ?? focusables()[0])?.focus({ preventScroll: true });
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      // Trap Tab inside the dialog.
+      if (e.key !== 'Tab') return;
+      const els = focusables();
+      if (!els.length) return;
+      const first = els[0];
+      const last = els[els.length - 1];
+      const active = document.activeElement;
+      const inside = panel?.contains(active) ?? false;
+      if (e.shiftKey ? active === first || !inside : active === last || !inside) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
     };
     document.addEventListener('keydown', onKey);
     const { overflow } = document.body.style;
@@ -28,8 +58,32 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = overflow;
+      previouslyFocused?.focus({ preventScroll: true });
     };
   }, [open, onClose]);
+
+  // The form swaps to the success view, dropping the focused submit button —
+  // land focus on the success view's Close button instead.
+  useEffect(() => {
+    if (status !== 'sent') return;
+    panelRef.current
+      ?.querySelector<HTMLElement>('.contact-form-success button')
+      ?.focus({ preventScroll: true });
+  }, [status]);
+
+  // Once the close animation finishes after a successful send, clear the form
+  // so reopening starts a fresh brief instead of the stale success screen.
+  const resetAfterClose = () => {
+    if (status === 'sent') {
+      setName('');
+      setEmail('');
+      setBrief('');
+    }
+    if (status !== 'idle' && status !== 'sending') {
+      setStatus('idle');
+      setErrorMsg('');
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +105,7 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={resetAfterClose}>
       {open && (
         <motion.div
           className="contact-modal-overlay"
@@ -65,6 +119,7 @@ export default function ContactModal({ open, onClose }: { open: boolean; onClose
           aria-labelledby="contact-modal-title"
         >
           <motion.div
+            ref={panelRef}
             className="contact-modal"
             initial={{ opacity: 0, y: 18, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

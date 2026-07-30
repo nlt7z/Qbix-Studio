@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
 
-type Media = { kind: 'image' | 'video' | 'iframe'; src: string };
+type Media = { kind: 'image' | 'video' | 'iframe'; src: string; poster?: string };
 type Product = {
   key: string;
   title: string;
@@ -30,7 +30,7 @@ const products: Product[] = [
     title: 'Image to Design System',
     blurb:
       'Turn a moodboard into a working design system — tokens, components, and code, ready to hand off to AI or your library.',
-    media: { kind: 'iframe', src: 'https://stratadesign.app' },
+    media: { kind: 'iframe', src: 'https://stratadesign.app', poster: '/previews/strata.jpg' },
     url: 'https://stratadesign.app',
     wide: true,
   },
@@ -95,7 +95,7 @@ function ProductMedia({ media }: { media: Media | null }) {
         <video src={media.src} muted loop playsInline autoPlay preload="metadata" />
       )}
       {media.kind === 'iframe' && show && (
-        <SitePreviewFrame src={media.src} title="Product preview" />
+        <SitePreviewFrame src={media.src} title="Product preview" poster={media.poster} />
       )}
     </div>
   );

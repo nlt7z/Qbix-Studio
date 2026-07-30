@@ -13,7 +13,8 @@ export default function Archive() {
             <span style={{ color: 'var(--signal)' }}>// 02 ARCHIVE</span>
             &nbsp;&nbsp;<span style={{ color: 'var(--off)' }}>our games</span>
           </div>
-          <h2>Mission archive.</h2>
+          {/* h1: Archive is the /games page's top-level heading. */}
+          <h1>Mission archive.</h1>
           <div className="sub sub-plain">
             Four small game systems in development. One playable. Three in concept build.
           </div>
