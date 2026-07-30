@@ -4,13 +4,14 @@ import { Reveal, Wipe } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
 
 const SITES = [
-  { href: 'https://nltstudio7.space', title: 'nltstudio7.space', poster: '/previews/nlt.jpg' },
-  { href: 'https://hancao.space', title: 'hancao.space', poster: '/previews/hancao.jpg' },
+  { href: 'https://nltstudio7.space', title: 'nltstudio7.space', poster: '/previews/nlt.jpg', motion: '/previews/nlt.mp4' },
+  { href: 'https://hancao.space', title: 'hancao.space', poster: '/previews/hancao.jpg', motion: '/previews/hancao.mp4' },
 ];
 
 /** Founder-site preview — browser-chrome frame showing the site's full desktop
- *  layout (pre-captured poster; live iframes were crashing mobile Safari). */
-function SitePreview({ src, title, poster }: { src: string; title: string; poster: string }) {
+ *  layout: crisp 2x still that upgrades to a looping desktop screen-recording
+ *  (live iframes were crashing mobile Safari). */
+function SitePreview({ src, title, poster, motion }: { src: string; title: string; poster: string; motion?: string }) {
   return (
     <a
       className="about-preview"
@@ -26,7 +27,7 @@ function SitePreview({ src, title, poster }: { src: string; title: string; poste
         <span className="about-preview-arrow">↗︎</span>
       </span>
       <div className="about-preview-frame">
-        <SitePreviewFrame src={src} title={`${title} preview`} poster={poster} />
+        <SitePreviewFrame src={src} title={`${title} preview`} poster={poster} motion={motion} />
       </div>
     </a>
   );
@@ -51,7 +52,7 @@ export default function AboutUs() {
           {/* Two founder sites, stacked — the work speaks, not the URLs. */}
           <Reveal className="about-previews" speed="base" delay={0.15}>
             {SITES.map((s) => (
-              <SitePreview key={s.href} src={s.href} title={s.title} poster={s.poster} />
+              <SitePreview key={s.href} src={s.href} title={s.title} poster={s.poster} motion={s.motion} />
             ))}
           </Reveal>
 

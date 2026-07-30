@@ -5,27 +5,30 @@ import { useEffect, useRef, useState } from 'react';
 /**
  * A website preview that always shows the *complete* desktop layout.
  *
- * Preferred mode — `poster`: a pre-captured 1600px-wide desktop screenshot of
- * the site, shown as a plain image filling the frame. Visually identical to a
- * live embed at these scales (the iframe was pointer-disabled and unreadable
- * anyway) but it cannot crash the page: three live sites rendering desktop
- * layouts with WebGL inside iframes was OOM-killing mobile Safari ("can't
- * open page") and could take down desktop tabs too.
+ * Preferred mode — `poster` (+ optional `motion`): a pre-captured 2x desktop
+ * screenshot shown immediately, upgraded to a short muted looping screen
+ * recording (desktop scroll tour) once the frame nears the viewport. The
+ * video preserves the site's real animations at a fraction of a live embed's
+ * cost — three live sites rendering desktop layouts with WebGL inside
+ * iframes was OOM-killing mobile Safari ("can't open page").
  *
  * Fallback mode — no `poster`: a live iframe rendered at a fixed desktop
  * viewport (default 1600px) scaled down to fit the frame exactly. Kept for
- * cases where no capture exists yet; streams in only near the viewport.
+ * sources without a capture yet; streams in only near the viewport.
  */
 export default function SitePreviewFrame({
   src,
   title,
   poster,
+  motion,
   baseWidth = 1600,
 }: {
   src: string;
   title: string;
-  /** Path to a pre-captured desktop screenshot (public/…) — preferred. */
+  /** Path to a pre-captured 2x desktop screenshot (public/…) — preferred. */
   poster?: string;
+  /** Path to a short muted looping screen-recording (public/…, mp4). */
+  motion?: string;
   /** Logical desktop viewport width the live site renders at before scaling. */
   baseWidth?: number;
 }) {
@@ -33,9 +36,9 @@ export default function SitePreviewFrame({
   const [load, setLoad] = useState(false);
   const [box, setBox] = useState<{ w: number; h: number } | null>(null);
 
-  // Stream the live iframe only once the frame nears the viewport.
+  // Stream the heavy media (motion video / live iframe) only near viewport.
   useEffect(() => {
-    if (poster) return;
+    if (poster && !motion) return;
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
@@ -52,7 +55,7 @@ export default function SitePreviewFrame({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [poster]);
+  }, [poster, motion]);
 
   // Measure the frame so a full-desktop render can be scaled to fit it exactly.
   useEffect(() => {
@@ -68,24 +71,31 @@ export default function SitePreviewFrame({
   }, [poster]);
 
   if (poster) {
+    const mediaStyle = {
+      position: 'absolute',
+      inset: 0,
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      objectPosition: 'top',
+      maxWidth: 'none',
+    } as const;
     return (
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'var(--bg-2)' }}>
+      <div ref={ref} style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: 'var(--bg-2)' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={poster}
-          alt={title}
-          loading="lazy"
-          decoding="async"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'top',
-            maxWidth: 'none',
-          }}
-        />
+        <img src={poster} alt={title} loading="lazy" decoding="async" style={mediaStyle} />
+        {motion && load && (
+          <video
+            src={motion}
+            poster={poster}
+            muted
+            loop
+            autoPlay
+            playsInline
+            preload="metadata"
+            style={mediaStyle}
+          />
+        )}
       </div>
     );
   }
