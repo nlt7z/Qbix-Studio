@@ -76,38 +76,43 @@ export default function TopNav() {
     return () => io.disconnect();
   }, []);
 
-  // Section-driven nav theme — the landonorris.com pattern. Whichever
-  // `[data-nav-theme]` section sits under the nav's baseline decides whether
-  // the bar wears its light-ink (over dark) or dark-ink (over light) skin.
+  // Section-driven nav theme — whichever `[data-nav-theme]` section sits under
+  // the nav's baseline decides the bar's skin. Computed directly on scroll
+  // rather than via IntersectionObserver: with the stacked panels, covered
+  // sections stay pinned at the top forever, so they never re-fire an
+  // intersection event when scrolling back up — the theme got stuck and the
+  // bar "vanished" (dark ink over a dark panel). Scanning in DOM order and
+  // keeping the LAST section that spans the detection line matches paint
+  // order (later panels cover earlier ones), so it's always the visible one.
   useEffect(() => {
     const els = Array.from(
       document.querySelectorAll<HTMLElement>('[data-nav-theme]'),
     );
     if (els.length === 0) return;
 
-    let io: IntersectionObserver | null = null;
-    const build = () => {
-      io?.disconnect();
-      // A 1px detection line just below the nav; the section crossing it wins.
-      const bottom = Math.max(0, window.innerHeight - HEADER_OFFSET - 1);
-      io = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            if (e.isIntersecting) {
-              const t = e.target.getAttribute('data-nav-theme');
-              setNavTheme(t === 'light' ? 'light' : 'dark');
-            }
-          }
-        },
-        { rootMargin: `-${HEADER_OFFSET}px 0px -${bottom}px 0px`, threshold: 0 },
-      );
-      els.forEach((el) => io!.observe(el));
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const line = HEADER_OFFSET; // just below the nav bar
+      let theme: 'dark' | 'light' = 'dark';
+      for (const el of els) {
+        const r = el.getBoundingClientRect();
+        if (r.top <= line && r.bottom >= line) {
+          theme = el.getAttribute('data-nav-theme') === 'light' ? 'light' : 'dark';
+        }
+      }
+      setNavTheme(theme);
     };
-    build();
-    window.addEventListener('resize', build);
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
     return () => {
-      io?.disconnect();
-      window.removeEventListener('resize', build);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 

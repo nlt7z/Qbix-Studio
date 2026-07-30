@@ -207,6 +207,14 @@ h4 { font-weight: 500; letter-spacing: -0.01em; line-height: 1.3; }
 }
 
 p { margin: 0; }
+
+/* No orphan words — a sentence never leaves a single word alone on its last
+   line; the closing words travel together. (Headings already get the same
+   treatment from text-wrap: balance.) */
+p, li, dd, figcaption, blockquote {
+  text-wrap: pretty;
+}
+
 .lede { font-size: 19px; line-height: 1.6; color: var(--text); letter-spacing: -0.005em; max-width: 660px; }
 .muted { color: var(--text-2); }
 .tertiary { color: var(--text-3); }
