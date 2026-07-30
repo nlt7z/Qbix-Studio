@@ -8,34 +8,15 @@ export type NavItem = {
   num: string;
   label: string;
   href: string;
-  cool: string;   // HUD callsign (uppercase)
-  plain: string;  // HUD plain echo (lowercase)
-  side: string;   // SideNav short label
-  tip: string;    // SideNav tooltip
+  tip: string;    // hover tooltip / title
   disabled?: boolean; // shown but not navigable (e.g. Careers — coming soon)
 };
 
 export const navItems: NavItem[] = [
-  { num: '01', label: 'Services', href: '#services', cool: 'SERVICES', plain: 'services', side: 'SVC', tip: 'Services'  },
-  { num: '02', label: 'Products', href: '#products', cool: 'PRODUCTS', plain: 'products', side: 'PRD', tip: 'Products' },
-  { num: '03', label: 'About us', href: '#about',    cool: 'ABOUT',    plain: 'about',    side: 'ABT', tip: 'About us' },
-  { num: '04', label: 'Careers',  href: '#',         cool: 'CAREERS',  plain: 'careers',  side: 'CAR', tip: 'Careers — coming soon', disabled: true },
-];
-
-// ----- HERO CUBE GRID (4 capability cubes, 1 lit lime) ----------------------
-
-export type CubeCell = {
-  num: string;
-  label: string;
-  meta: string;       // mono sub-label, e.g. "Agent · LLM · UI"
-  lit?: 1 | 2;        // 1 = lime accent, 2 = ink solid
-};
-
-export const cubeCells: CubeCell[] = [
-  { num: '01', label: 'AI Product',     meta: 'Agent · LLM · UI',     lit: 1 },
-  { num: '02', label: 'UX / UI',        meta: 'Web · Mobile · SaaS' },
-  { num: '03', label: 'Prototype',      meta: 'Sketch → clickable'   },
-  { num: '04', label: 'Build & Ship',   meta: 'Front-end · launch'   },
+  { num: '01', label: 'Services', href: '#services', tip: 'Services'  },
+  { num: '02', label: 'Products', href: '#products', tip: 'Products' },
+  { num: '03', label: 'About us', href: '#about',    tip: 'About us' },
+  { num: '04', label: 'Careers',  href: '#',         tip: 'Careers — coming soon', disabled: true },
 ];
 
 // ----- SERVICES (3 numbered capability cards) --------------------------------
@@ -256,89 +237,6 @@ export const projects: Project[] = [
   },
 ];
 
-// ----- HOW WE WORK (6 steps) -------------------------------------------------
-
-export type ProcessStep = {
-  num: string;
-  title: string;
-  body: string;
-  icon: 'target' | 'search' | 'frame' | 'layers' | 'code' | 'arrow';
-};
-
-export const processSteps: ProcessStep[] = [
-  {
-    num: '01',
-    title: 'Clarify',
-    body: 'Name the problem, the user, the bet.',
-    icon: 'target',
-  },
-  {
-    num: '02',
-    title: 'Research',
-    body: 'Interviews, market scan, model probing.',
-    icon: 'search',
-  },
-  {
-    num: '03',
-    title: 'Prototype',
-    body: 'Sketches, flows, clickable models.',
-    icon: 'frame',
-  },
-  {
-    num: '04',
-    title: 'Design',
-    body: 'IA, interaction, visual systems.',
-    icon: 'layers',
-  },
-  {
-    num: '05',
-    title: 'Build',
-    body: 'Front-end build, web and mobile.',
-    icon: 'code',
-  },
-  {
-    num: '06',
-    title: 'Launch',
-    body: 'Hand off, document, measure.',
-    icon: 'arrow',
-  },
-];
-
-// ----- QBIX LABS (3 lab cards) -----------------------------------------------
-
-export type LabCard = {
-  num: string;
-  title: string;
-  body: string;
-  previewLabel?: string; // e.g. "stratadesign.app"
-  previewUrl?: string;   // live product link
-};
-
-export const labCards: LabCard[] = [
-  {
-    num: '01',
-    title: 'TTS Editor',
-    body: 'Opens the black box of speech synthesis. Adjust pitch, pauses, and emotion step by step, and edit the script to decide how the final voice sounds.',
-  },
-  {
-    num: '02',
-    title: 'Image to Design System',
-    body: 'Pull images from Pinterest, Cosmos, or your own folder, organize them into a moodboard on our canvas, and let AI turn it into a design system. Tokens, components, and code, ready to hand off to AI or drop into your component library.',
-    previewLabel: 'stratadesign.app',
-    previewUrl: 'https://stratadesign.app',
-  },
-  {
-    num: '03',
-    title: 'AI Bidding',
-    body: 'Blind auctions as a game. Bid, bluff, or go all in, while the model on the other side reads your hand.',
-  },
-  {
-    num: '04',
-    title: 'Interview Assistant',
-    body: 'AI follows the interviewer’s questions and thinks along with you in real time. Live hints, follow-up suggestions, and clean notes, so you can stay in the conversation.',
-  },
-];
-
 // ----- BRAND LOOKBOOK (identity stills, not project cases) -------------------
 
 export type LookbookItem = {
@@ -460,29 +358,6 @@ export const tickerItems: string[] = [
   '// PRODUCT OVER PITCH',
   '// CODE OVER SLIDES',
   '// MADE IN-HOUSE',
-];
-
-// ----- TESTIMONIALS (real client quotes — rotated in the Testimonial band) ---
-//
-// Add 2–3 verified quotes here and the homepage band auto-rotates through them.
-// `highlight` (optional) is wrapped in the lime signal style if found verbatim
-// in `quote`. Only add quotes you can attribute to a real person + org.
-
-export type Testimonial = {
-  quote: string;
-  highlight?: string;
-  name: string;   // person (initials are fine)
-  org: string;    // company / role
-};
-
-export const testimonials: Testimonial[] = [
-  {
-    quote:
-      'Qbix is one of the few studios that grew up inside the AI era. Their fluency with AI in the workflow — and their grasp of what AI products should feel like — is next level.',
-    highlight: 'next level',
-    name: 'CY',
-    org: 'Alibaba Cloud',
-  },
 ];
 
 // ----- CONTACT ---------------------------------------------------------------
