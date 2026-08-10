@@ -5880,9 +5880,6 @@ html, body { overflow-x: clip; }
 .stacked > #about .about-hi {
   color: var(--signal-dark);
   font-weight: 600;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 4px;
 }
 
 /* Below the two-column breakpoint the panels can exceed one screen, so the
@@ -5946,6 +5943,9 @@ html, body { overflow-x: clip; }
 .footer-mark {
   margin-top: clamp(48px, 8vw, 96px);
   overflow: hidden;
+  /* The wordmark PNG is 2:1 — a 4:1 window shows exactly its top half, so the
+     giant mark reads as sinking below the page edge. */
+  aspect-ratio: 4 / 1;
 }
 .footer-mark img {
   display: block;
