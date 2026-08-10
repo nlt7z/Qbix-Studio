@@ -5943,9 +5943,9 @@ html, body { overflow-x: clip; }
 .footer-mark {
   margin-top: clamp(48px, 8vw, 96px);
   overflow: hidden;
-  /* The wordmark PNG is 2:1 — a 4:1 window shows exactly its top half, so the
-     giant mark reads as sinking below the page edge. */
-  aspect-ratio: 4 / 1;
+  /* The wordmark PNG is 2:1 — a 6:1 window keeps only the top third, so the
+     giant mark reads as sunk deep below the page edge. */
+  aspect-ratio: 6 / 1;
 }
 .footer-mark img {
   display: block;
