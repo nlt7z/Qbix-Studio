@@ -3,6 +3,7 @@ import WhatWeDo from '@/components/sections/WhatWeDo';
 import QbixLabs from '@/components/sections/QbixLabs';
 import AboutUs from '@/components/sections/AboutUs';
 import Colophon from '@/components/Colophon';
+import StackFit from '@/components/StackFit';
 
 export default function LandingPage() {
   return (
@@ -16,6 +17,7 @@ export default function LandingPage() {
       </main>
       {/* Footer is NOT part of the stack — it flows normally right after About. */}
       <Colophon />
+      <StackFit />
     </>
   );
 }

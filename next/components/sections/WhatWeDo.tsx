@@ -2,22 +2,65 @@
 
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { services } from '@/lib/data';
+import { services, offers } from '@/lib/data';
 import BrandText from '@/components/BrandText';
 import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
 import Link from 'next/link';
+import DitherField from '@/components/DitherField';
+import ServiceScene from '@/components/ServiceScene';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
-function ServiceCard({ s }: { s: (typeof services)[number] }) {
+// Cards that have a 3D scene; anything else keeps its SVG blueprint.
+const SCENES: Record<string, 'design' | 'brand' | 'listing' | 'practice'> = {
+  web: 'design',
+  redesign: 'brand',
+  'listing-kit': 'listing',
+  'practice-websites': 'practice',
+};
+
+/** One shape for both studio services and fixed-price offers. */
+type Card = {
+  slug: string;
+  href: string;
+  num: string;
+  audience: string;
+  title: string;
+  blurb: string;
+  tags: string[];
+  priceLead: string;
+  price: string;
+  typical: string;
+};
+
+const studioCards: Card[] = services.map((s) => ({
+  slug: s.slug,
+  href: `/services/${s.slug}`,
+  num: s.num,
+  audience: s.audience,
+  title: s.title,
+  blurb: s.blurb,
+  tags: s.tags,
+  priceLead: 'From',
+  price: s.priceFrom,
+  typical: s.typical,
+}));
+// Studio services and fixed-price offers are one list of services.
+const CARDS: Card[] = [...studioCards, ...offers.map((o) => ({ ...o }))];
+
+function ServiceCard({ s }: { s: Card }) {
   return (
     <Link
-      href={`/services/${s.slug}`}
+      href={s.href}
       className="svc"
       aria-label={`Open ${s.title}`}
     >
       <div className="svc-pattern" aria-hidden>
-        <ServicePattern slug={s.slug} />
+        {SCENES[s.slug] ? (
+          <ServiceScene variant={SCENES[s.slug]} fallback={<ServicePattern slug={s.slug} />} />
+        ) : (
+          <ServicePattern slug={s.slug} />
+        )}
       </div>
       <div className="svc-body">
         <div className="svc-meta">
@@ -34,7 +77,8 @@ function ServiceCard({ s }: { s: (typeof services)[number] }) {
         </div>
         <div className="svc-pricing">
           <span className="svc-price">
-            From <strong>{s.priceFrom}</strong>
+            {s.priceLead && <>{s.priceLead} </>}
+            <strong>{s.price}</strong>
           </span>
           <span className="svc-typical mono">{s.typical}</span>
         </div>
@@ -47,7 +91,7 @@ function ServiceCard({ s }: { s: (typeof services)[number] }) {
    columns when the section enters the viewport — the deck being dealt. Runs
    once, entrance-triggered (no scroll pin, so it coexists with the panel
    stacking). side -1 = left card, +1 = right card. */
-function DeckCard({ s, side }: { s: (typeof services)[number]; side: -1 | 1 }) {
+function DeckCard({ s, side }: { s: Card; side: -1 | 1 }) {
   return (
     <motion.div
       className="svc-deck-side"
@@ -75,10 +119,10 @@ export default function WhatWeDo() {
   }, []);
 
   const deckSpread = !reduced && !isNarrow;
-  const [a, b] = services;
 
   return (
     <section id="services" className="section-pad" data-nav-theme="light">
+      <DitherField />
       <div className="container">
         <header className="section-head">
           <div>
@@ -90,23 +134,25 @@ export default function WhatWeDo() {
             </Wipe>
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               We do{' '}
-              <Link href="/services/web" className="text-link">UI/UX design</Link>{' '}
-              and{' '}
-              <Link href="/services/redesign" className="text-link">brand upgrades</Link>.
+              <Link href="/services/web" className="text-link">UI/UX design</Link>,{' '}
+              <Link href="/services/redesign" className="text-link">brand upgrades</Link>,{' '}
+              <Link href="/listing-kit" className="text-link">listing launch kits</Link>, and{' '}
+              <Link href="/practice-websites" className="text-link">practice websites</Link>.
             </Reveal>
           </div>
         </header>
 
         {deckSpread ? (
-          <div className="svc-deck svc-deck--two">
-            <DeckCard s={a} side={-1} />
-            <DeckCard s={b} side={1} />
+          <div className="svc-deck svc-deck--two svc-deck--grid">
+            {CARDS.map((c, i) => (
+              <DeckCard key={c.slug} s={c} side={i % 2 === 0 ? -1 : 1} />
+            ))}
           </div>
         ) : (
           <Stagger className="services-wrap services-wrap--two" stagger={0.1} delayChildren={0.1}>
-            {services.map((s) => (
-              <RevealItem key={s.num} speed="base">
-                <ServiceCard s={s} />
+            {CARDS.map((c) => (
+              <RevealItem key={c.slug} speed="base">
+                <ServiceCard s={c} />
               </RevealItem>
             ))}
           </Stagger>

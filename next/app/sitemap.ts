@@ -14,6 +14,8 @@ export const revalidate = false;
 // "updated today" on each deploy and erode crawl trust.
 const HOME_UPDATED = new Date('2026-05-24');     // homepage + selected work refresh
 const CONTENT_UPDATED = new Date('2026-05-20');  // studio / services / work / labs copy
+const STRATA_UPDATED = new Date('2026-08-25');   // Strata product intro page
+const OFFERS_UPDATED = new Date('2026-10-09');   // fixed-price offer pages
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -22,6 +24,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/press`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/games`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/games/bidking`,    lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${SITE_URL}/products/strata`,  lastModified: STRATA_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_URL}/listing-kit`,       lastModified: OFFERS_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_URL}/practice-websites`, lastModified: OFFERS_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
   ];
 
   const serviceRoutes: MetadataRoute.Sitemap = services.map((s) => ({

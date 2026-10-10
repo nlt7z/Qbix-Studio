@@ -31,7 +31,7 @@ const products: Product[] = [
     blurb:
       'Turn a moodboard into a working design system — tokens, components, and code, ready to hand off to AI or your library.',
     media: { kind: 'iframe', src: 'https://stratadesign.app', poster: '/previews/strata.jpg', motion: '/previews/strata.mp4' },
-    url: 'https://stratadesign.app',
+    url: '/products/strata',
     wide: true,
   },
   {
@@ -128,7 +128,7 @@ export default function QbixLabs() {
               No idea is too small
             </Reveal>
             <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1}>
-              Cool things we&rsquo;ve built.
+              Things we&rsquo;ve shipped.
             </Wipe>
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               Qbix also builds products. Try the ones we have live.
