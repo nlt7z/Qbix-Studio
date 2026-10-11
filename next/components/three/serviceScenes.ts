@@ -584,8 +584,9 @@ export function mountServiceScene(
   variant: SceneVariant,
   opts: { reduced: boolean; pointerTarget: HTMLElement | null; onReady: () => void },
 ) {
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;   // whites stay white, lime stays lime
   renderer.toneMappingExposure = 1.0;
@@ -603,7 +604,7 @@ export function mountServiceScene(
   const key = new THREE.DirectionalLight('#ffffff', 1.8);
   key.position.set(3.5, 8, 4);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.mapSize.set(coarse ? 512 : 1024, coarse ? 512 : 1024);
   key.shadow.camera.left = -5; key.shadow.camera.right = 5;
   key.shadow.camera.top = 5; key.shadow.camera.bottom = -5;
   key.shadow.radius = 4;

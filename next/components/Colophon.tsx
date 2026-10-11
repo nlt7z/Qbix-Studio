@@ -76,7 +76,7 @@ export default function Colophon() {
   const { open: openContactModal } = useContactModal();
 
   return (
-    <footer className="footer ft" data-nav-theme="dark">
+    <footer className="footer ft" data-nav-theme="dark" data-cta-zone>
       <div className="container">
         {/* Sign-off line + the one action. */}
         <Reveal className="ft-head" speed="base" margin="0px 0px 0px 0px">

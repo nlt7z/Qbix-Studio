@@ -12,7 +12,7 @@ import ServiceScene from '@/components/ServiceScene';
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
 // Cards that have a 3D scene; anything else keeps its SVG blueprint.
-const SCENES: Record<string, 'design' | 'brand' | 'listing' | 'practice'> = {
+export const SCENES: Record<string, 'design' | 'brand' | 'listing' | 'practice'> = {
   web: 'design',
   redesign: 'brand',
   'listing-kit': 'listing',
@@ -162,7 +162,7 @@ export default function WhatWeDo() {
   );
 }
 
-function ServicePattern({ slug }: { slug: string }) {
+export function ServicePattern({ slug }: { slug: string }) {
   const iso = {
     stroke: 'currentColor',
     strokeWidth: 1,

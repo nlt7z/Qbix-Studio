@@ -5,15 +5,17 @@ import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
 import StartProjectButton from '@/components/StartProjectButton';
 import SplitText from '@/components/SplitText';
-import { DeliverableGrid, ProcessFlow } from '@/components/ServiceVisuals';
 import ServiceCases from '@/components/ServiceCases';
 import { projects, services } from '@/lib/data';
+import SubHero from '@/components/sub/SubHero';
+import SubSection from '@/components/sub/SubSection';
+import ServiceHeroScene from '@/components/sub/ServiceHeroScene';
 
 const SITE_URL = 'https://qbix.space';
 
 // "$20k" / "$2k" → 20000 / 2000 (for Offer.price); undefined if unparseable.
 function parsePriceFrom(price: string): number | undefined {
-  const m = price.match(/([\d.]+)\s*k?/i);
+  const m = price.replace(/,/g, '').match(/([\d.]+)\s*k?/i);   // "$5,000" → 5000
   if (!m) return undefined;
   const n = parseFloat(m[1]);
   return /k/i.test(price) ? n * 1000 : n;
@@ -69,76 +71,83 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
     }),
   };
 
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const split = (t: string) => {
+    const i = t.indexOf(' — ');
+    return i === -1 ? { lead: t, rest: '' } : { lead: t.slice(0, i), rest: t.slice(i + 3) };
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
       />
-      <main className="detail">
-        <div className="container">
-          <Link href="/#services" className="detail-crumb">
-            <span className="arrow">←</span> Services
-          </Link>
+      <main className="sp">
+        <SubHero
+          crumb={{ href: '/#services', label: 'Services' }}
+          eyebrow={`Service ${service.num}`}
+          title={<BrandText>{service.title}</BrandText>}
+          lede={<BrandText>{service.detail.lede}</BrandText>}
+          actions={
+            <>
+              <StartProjectButton />
+              <Link href="/#services" className="btn btn-secondary btn-lg split-cta">
+                <SplitText text="All services" arrow />
+              </Link>
+            </>
+          }
+          visual={<ServiceHeroScene slug={service.slug} />}
+          meta={[
+            { k: 'Starting from', v: service.priceFrom },
+            { k: 'Typical run', v: service.typical },
+            { k: 'Built for', v: service.audience },
+          ]}
+        />
 
-          <header className="detail-head">
-            <span className="eyebrow">
-              Service
-            </span>
-            <h1 className="detail-title"><BrandText>{service.title}</BrandText></h1>
-            <p className="detail-lede"><BrandText>{service.detail.lede}</BrandText></p>
-            <div className="detail-tags">
-              {service.tags.map((t) => (
-                <span key={t} className="tag">{t}</span>
-              ))}
-            </div>
-          </header>
+        <SubSection index={`${service.num}.1 — Deliverables`} title="What we hand over" narrow>
+          <ol className="sp-list">
+            {service.detail.deliverables.map((d, i) => {
+              const { lead, rest } = split(d);
+              return (
+                <li key={d}>
+                  <span className="n mono">{pad(i + 1)}</span>
+                  <span>
+                    <strong>{lead}</strong>
+                    {rest && <span className="rest">{rest}</span>}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </SubSection>
 
-          <dl className="detail-meta">
-            <div className="detail-meta-cell">
-              <dt>Starting from</dt>
-              <dd>{service.priceFrom}</dd>
-            </div>
-            <div className="detail-meta-cell">
-              <dt>Typical run</dt>
-              <dd>{service.typical}</dd>
-            </div>
-            <div className="detail-meta-cell">
-              <dt>Built for</dt>
-              <dd>{service.audience}</dd>
-            </div>
-          </dl>
+        <SubSection tone="lime" index={`${service.num}.2 — Engagement`} title="How we work together">
+          <ol className="sp-steps">
+            {service.detail.engagement.map((step, i) => (
+              <li key={step.k}>
+                <span className="sp-step-n">{pad(i + 1)}</span>
+                <span className="sp-step-k">{step.k}</span>
+                <span className="sp-step-v">{step.v}</span>
+              </li>
+            ))}
+          </ol>
+        </SubSection>
 
-          <section className="detail-section">
-            <span className="detail-section-label">FIG {service.num}.1 — Deliverables</span>
-            <h3>What we hand over</h3>
-            <DeliverableGrid items={service.detail.deliverables} />
-          </section>
+        {cases.length > 0 && (
+          <SubSection index={`${service.num}.3 — Selected work`} title="From this practice">
+            <ServiceCases cases={cases} />
+          </SubSection>
+        )}
 
-          <section className="detail-section detail-section--flow">
-            <span className="detail-section-label">FIG {service.num}.2 — Engagement</span>
-            <h3>How we work together</h3>
-            <ProcessFlow steps={service.detail.engagement} />
-          </section>
-
-          {cases.length > 0 && (
-            <section className="detail-section">
-              <span className="detail-section-label">FIG {service.num}.3 — Selected work</span>
-              <h3>From this practice</h3>
-              <ServiceCases cases={cases} />
-            </section>
-          )}
-
-          <div className="detail-cta">
-            <p className="detail-cta-text">
+        <section className="sp-close" data-nav-theme="dark">
+          <div className="container sp-close-inner">
+            <p className="sp-close-line">
               Need this for your next product? <span className="accent">Start a project.</span>
             </p>
             <StartProjectButton />
-            <Link href="/#services" className="btn btn-secondary btn-lg split-cta">
-              <SplitText text="All services" arrow />
-            </Link>
           </div>
-        </div>
+        </section>
       </main>
       <Colophon />
     </>

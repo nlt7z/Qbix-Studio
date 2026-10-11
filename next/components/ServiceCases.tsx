@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { Project } from '@/lib/data';
+import SitePreviewFrame from '@/components/SitePreviewFrame';
 
 // Editorial case strip for the service detail pages. Deliberately low on card
 // chrome — each case is a media block with a thin frame and a quiet caption
@@ -74,7 +75,14 @@ function CaseMedia({ project: p }: { project: Project }) {
         decoding="async"
       />
     );
-  if (media.kind === 'iframe') return <LazyIframe src={media.src} title={p.title} />;
+  // Live site embeds crash mobile Safari — show the desktop-capture poster
+  // (and its looping tour) instead.
+  if (media.kind === 'iframe')
+    return media.poster ? (
+      <SitePreviewFrame src={media.src} title={`${p.title} preview`} poster={media.poster} motion={media.motion} />
+    ) : (
+      <LazyIframe src={media.src} title={p.title} />
+    );
   return null;
 }
 

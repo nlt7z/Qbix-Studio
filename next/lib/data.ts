@@ -157,7 +157,7 @@ export type Media =
   | { kind: 'video'; src: string; poster?: string }
   | { kind: 'image'; src: string }
   | { kind: 'images'; srcs: string[] }
-  | { kind: 'iframe'; src: string };
+  | { kind: 'iframe'; src: string; poster?: string; motion?: string };   // shown as a desktop-capture poster, never a live embed
 
 export type Project = {
   slug: string;
@@ -266,7 +266,7 @@ export const projects: Project[] = [
       'Shipped in Next.js with motion details that read as craft without weighing the page down.',
     ],
     aspect: 16 / 9,
-    media: { kind: 'iframe', src: 'https://hancao.space' },
+    media: { kind: 'iframe', src: 'https://hancao.space', poster: '/previews/hancao.jpg', motion: '/previews/hancao.mp4' },
     href: 'https://hancao.space',
   },
   {

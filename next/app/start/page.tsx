@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
 import StartProjectForm from '@/components/StartProjectForm';
+import SubHero from '@/components/sub/SubHero';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 
 export const metadata: Metadata = {
@@ -33,30 +33,19 @@ const STEPS = [
 export default function StartPage() {
   return (
     <>
-      <main className="detail start-page">
-        <div className="container">
-          <Link href="/" className="detail-crumb">
-            <span className="arrow">←</span>{' '}
-            <span>
-              <span className="brand-q">Q</span>bix
-            </span>
-          </Link>
-
-          <header className="detail-head">
-            <span className="eyebrow">
-              Start a project
-            </span>
-            <h1 className="detail-title">
-              Tell us what you&rsquo;re building.
-            </h1>
-            <p className="detail-lede">
-              <BrandText>
-                A few more details than the quick form — project type, budget, timeline — so our
-                first reply is already useful. We read every brief and answer within 24 hours.
-              </BrandText>
-            </p>
-          </header>
-
+      <main className="sp start-page">
+        <SubHero
+          crumb={{ href: '/', label: 'Qbix' }}
+          eyebrow="Start a project"
+          title={<>Tell us what you&rsquo;re building.</>}
+          lede={
+            <BrandText>
+              A few more details than the quick form — project type, budget, timeline — so our first reply is already
+              useful. We read every brief and answer within 24 hours.
+            </BrandText>
+          }
+        />
+        <div className="container sp-start">
           <div className="start-layout">
             <div className="start-form-col">
               <StartProjectForm />
@@ -112,7 +101,7 @@ export default function StartPage() {
                 <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="start-reach-link">
                   Book a 30-min intro call ↗︎
                 </a>
-                <span className="start-reach-meta">Seattle, WA · remote worldwide</span>
+                <span className="start-reach-meta">Remote, worldwide</span>
               </section>
             </aside>
           </div>

@@ -20,8 +20,14 @@ export default function ServiceScene({ variant, fallback }: { variant: SceneVari
     if (!host) return;
     let dispose: (() => void) | undefined;
     let cancelled = false;
+    let mounting = false;
+    // Phones keep only the scenes near the viewport alive (each is a WebGL
+    // context); desktop mounts once and keeps them.
+    const recycle = window.matchMedia('(pointer: coarse)').matches;
 
     const start = async () => {
+      if (dispose || mounting) return;
+      mounting = true;
       try {
         const { mountServiceScene } = await import('@/components/three/serviceScenes');
         if (cancelled) return;
@@ -32,14 +38,21 @@ export default function ServiceScene({ variant, fallback }: { variant: SceneVari
         });
       } catch {
         /* no WebGL — the SVG stays */
+      } finally {
+        mounting = false;
       }
+    };
+    const stop = () => {
+      dispose?.();
+      dispose = undefined;
+      setReady(false);
     };
 
     const io = new IntersectionObserver(
       ([e]) => {
-        if (!e.isIntersecting) return;
-        io.disconnect();
-        start();
+        if (e.isIntersecting) start();
+        else if (recycle) stop();
+        if (e.isIntersecting && !recycle) io.disconnect();
       },
       { rootMargin: '600px 0px' },
     );
