@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { studioEnvironment } from './studio';
 import { createStage, siteFonts, canvasTexture, clamp01, seg, lerp, inOut, outQuint, outBack, smooth } from './stage';
-import { drawFlyer, drawPost, drawPhoneOverlay, drawSign, drawStamp, drawSky, LISTING } from './listingArt';
+import { drawFlyer, drawPost, drawPhoneOverlay, drawSign, drawStamp, drawSky, drawTerrazzo, LISTING, FLYER_PHOTO, POST } from './listingArt';
 
 /**
  * Listing Launch Kit — the house as an architectural model on a plinth, and
@@ -30,25 +30,41 @@ export type KitOptions = {
 const LIME = new THREE.Color('#B8FF00');
 const BUILD_END = 2.7;   // seconds — the hero's load sequence
 
-function woodTexture() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
-  const ctx = c.getContext('2d')!;
-  ctx.fillStyle = '#a6764d';
-  ctx.fillRect(0, 0, 256, 256);
-  let seed = 5;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (let x = 0; x < 256; x += 32) {
-    ctx.fillStyle = `rgba(120, 80, 48, ${0.15 + rnd() * 0.2})`;
-    ctx.fillRect(x + 4, 0, 26, 256);
-    ctx.fillStyle = '#7f5737';
-    ctx.fillRect(x, 0, 4, 256);
+/** Tangent-space normal map of fine vertical ribs — the satin-silver cladding. */
+function ribsNormal(size = 256, ribs = 18) {
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const s = Math.cos((x / size) * Math.PI * 2 * ribs);   // slope of a rounded rib
+      const dx = s * 0.85;
+      const len = Math.hypot(dx, 1);
+      const o = (y * size + x) * 4;
+      data[o] = (-dx / len * 0.5 + 0.5) * 255;
+      data[o + 1] = 128;
+      data[o + 2] = (1 / len * 0.5 + 0.5) * 255;
+      data[o + 3] = 255;
+    }
   }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
+  const t = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
   t.anisotropy = 8;
+  t.needsUpdate = true;
   return t;
+}
+
+/** A plane that shows only the [u0, v0]–[u1, v1] window of its texture. */
+function cropPlane(w: number, h: number, [u0, v0, u1, v1]: [number, number, number, number]) {
+  const g = new THREE.PlaneGeometry(w, h);
+  const uv = g.attributes.uv;
+  uv.setXY(0, u0, v1);
+  uv.setXY(1, u1, v1);
+  uv.setXY(2, u0, v0);
+  uv.setXY(3, u1, v0);
+  uv.needsUpdate = true;
+  return g;
 }
 
 export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
@@ -57,15 +73,15 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   const { renderer, scene, coarse } = stage;
   const tour = opts.mode === 'tour';
 
-  renderer.toneMappingExposure = 1.06;
+  renderer.toneMappingExposure = 1.04;
   const envTex = studioEnvironment(renderer);
   scene.environment = envTex;
-  scene.environmentIntensity = 0.85;
+  scene.environmentIntensity = 1.0;
   stage.onDispose(() => envTex.dispose());
 
   /* ---------------------------------------------------------------- light */
-  const hemi = new THREE.HemisphereLight('#f6f3ec', '#1b1d20', 1.0);
-  const key = new THREE.DirectionalLight('#fff6e8', 2.4);
+  const hemi = new THREE.HemisphereLight('#f3f6f9', '#15181b', 0.95);
+  const key = new THREE.DirectionalLight('#ffffff', 2.3);
   key.position.set(4.5, 8, 5.5);
   key.castShadow = true;
   key.shadow.mapSize.set(coarse ? 1024 : 2048, coarse ? 1024 : 2048);
@@ -73,31 +89,40 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   key.shadow.radius = 5;
   key.shadow.bias = -0.0004;
   key.shadow.normalBias = 0.02;
-  const rim = new THREE.DirectionalLight('#dfe8ff', 0.9);
+  const rim = new THREE.DirectionalLight('#e2ecff', 1.1);
   rim.position.set(-6, 3, -4);
   for (const l of [hemi, key, rim]) {
-    l.layers.enable(1);   // the phone's video camera sees layer 1
+    l.layers.enable(1);   // the photo and video cameras see layer 1
     scene.add(l);
   }
 
   /* ------------------------------------------------------------ materials */
-  const wood = woodTexture();
+  // The Qbix material set: white ceramic, satin silver, frosted glass, ink, one lime.
+  const ribs = ribsNormal();
+  ribs.repeat.set(1, 1);
+  const terrazzo = canvasTexture(1024, 732, (ctx, w, h) => drawTerrazzo(ctx, w, h));
   const M = {
-    plinth: new THREE.MeshPhysicalMaterial({ color: '#16181b', metalness: 0.35, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.08 }),
-    lawn: new THREE.MeshStandardMaterial({ color: '#8f9c70', roughness: 0.92 }),
-    ceramic: new THREE.MeshPhysicalMaterial({ color: '#f3f0ea', roughness: 0.4, clearcoat: 0.5, clearcoatRoughness: 0.22 }),
-    roof: new THREE.MeshPhysicalMaterial({ color: '#22211f', roughness: 0.42, metalness: 0.15, clearcoat: 0.6 }),
-    wood: new THREE.MeshPhysicalMaterial({ map: wood, roughness: 0.62, clearcoat: 0.15 }),
-    glow: new THREE.MeshStandardMaterial({ color: '#3a2c18', emissive: '#ffcf7a', emissiveIntensity: 0, roughness: 0.18 }),
-    brass: new THREE.MeshStandardMaterial({ color: '#c9a86a', metalness: 0.8, roughness: 0.3 }),
-    drive: new THREE.MeshStandardMaterial({ color: '#d8d2c6', roughness: 0.9 }),
-    planter: new THREE.MeshStandardMaterial({ color: '#6f7560', roughness: 0.8 }),
-    trunk: new THREE.MeshStandardMaterial({ color: '#5f4a36', roughness: 0.85 }),
-    leafA: new THREE.MeshStandardMaterial({ color: '#76875a', roughness: 0.8 }),
-    leafB: new THREE.MeshStandardMaterial({ color: '#6b7b51', roughness: 0.8 }),
-    leafC: new THREE.MeshStandardMaterial({ color: '#829364', roughness: 0.8 }),
-    white: new THREE.MeshStandardMaterial({ color: '#f4f5f1', roughness: 0.5 }),
-    paper: new THREE.MeshStandardMaterial({ color: '#f1eee7', roughness: 0.85 }),
+    plinth: new THREE.MeshPhysicalMaterial({ color: '#121417', metalness: 0.4, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.06 }),
+    terrazzo: new THREE.MeshPhysicalMaterial({ map: terrazzo, roughness: 0.42, clearcoat: 0.7, clearcoatRoughness: 0.12 }),
+    ceramic: new THREE.MeshPhysicalMaterial({ color: '#f4f6f7', roughness: 0.34, clearcoat: 0.6, clearcoatRoughness: 0.18 }),
+    silver: new THREE.MeshPhysicalMaterial({
+      color: '#e6e9ec', metalness: 0.6, roughness: 0.32, clearcoat: 0.5, clearcoatRoughness: 0.2,
+      normalMap: ribs, normalScale: new THREE.Vector2(0.9, 0.9),
+    }),
+    ink: new THREE.MeshPhysicalMaterial({ color: '#15171a', roughness: 0.38, metalness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.1 }),
+    glass: new THREE.MeshPhysicalMaterial({
+      color: '#0d1216', roughness: 0.04, metalness: 0.3, clearcoat: 1, clearcoatRoughness: 0.02,
+      envMapIntensity: 0.9, emissive: '#cfe6ff', emissiveIntensity: 0,
+    }),
+    chrome: new THREE.MeshPhysicalMaterial({ color: '#eef0f2', metalness: 1, roughness: 0.12 }),
+    drive: new THREE.MeshPhysicalMaterial({ color: '#dde1e4', roughness: 0.5, clearcoat: 0.3 }),
+    // Frosted glass without a transmission pass (that re-renders the scene per camera).
+    frost: new THREE.MeshPhysicalMaterial({
+      color: '#e9f0ef', roughness: 0.22, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06,
+      transparent: true, opacity: 0.82, sheen: 1, sheenColor: new THREE.Color('#ffffff'), sheenRoughness: 0.4,
+    }),
+    white: new THREE.MeshStandardMaterial({ color: '#f4f6f7', roughness: 0.5 }),
+    paper: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.8, emissive: '#ffffff', emissiveIntensity: 0.12 }),
     phone: new THREE.MeshPhysicalMaterial({ color: '#0f1113', metalness: 0.55, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.05 }),
     lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
     edge: new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.16 }),
@@ -119,7 +144,7 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
 
   const world = new THREE.Group();   // turned by drag / pointer lean
   scene.add(world);
-  const model = new THREE.Group();   // everything the phone's video sees
+  const model = new THREE.Group();   // everything the photo and video cameras see
   world.add(model);
 
   // Plinth — grows up out of the floor.
@@ -129,12 +154,18 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   plinth.position.y = 0.13;
   plinth.add(new THREE.LineSegments(new THREE.EdgesGeometry(plinth.geometry), M.edge));
   plinthG.add(plinth);
+  // A lit lime edge along the plinth's top — the pedestal's one line of light.
+  for (const [w, d, x, z] of [[4.6, 0.012, 0, 1.7], [0.012, 3.4, 2.3, 0]] as const) {
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.012, 0.012, d + 0.012), M.lime);
+    strip.position.set(x, 0.26, z);
+    plinthG.add(strip);
+  }
   model.add(plinthG);
 
-  // Lawn — wipes in from the left edge.
+  // Terrazzo top — wipes in from the left edge.
   const lawnGeo = new THREE.BoxGeometry(4.2, 0.04, 3.0);
   lawnGeo.translate(2.1, 0, 0);
-  const lawn = new THREE.Mesh(lawnGeo, M.lawn);
+  const lawn = new THREE.Mesh(lawnGeo, M.terrazzo);
   lawn.receiveShadow = true;
   lawn.position.set(-2.1, 0.02, 0);
   model.add(lawn);
@@ -143,74 +174,72 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   house.position.set(-0.15, 0.04, -0.2);
   model.add(house);
 
-  // White stucco volume.
+  // White ceramic volume with a band of smoked glass.
   const whiteG = new THREE.Group();
   whiteG.position.set(-0.55, 0, 0);
   const whiteBody = box(1.9, 0.84, 1.3, M.ceramic);
   whiteBody.position.y = 0.42;
   whiteG.add(whiteBody);
-  const pane = box(1.04, 0.5, 0.02, M.glow, false);
-  pane.position.set(-0.28, 0.44, 0.655);
+  const pane = box(1.12, 0.46, 0.02, M.glass, false);
+  pane.position.set(-0.3, 0.44, 0.655);
   whiteG.add(pane);
-  for (const x of [-0.45, -0.11]) {
-    const v = box(0.025, 0.5, 0.03, M.roof, false);
-    v.position.set(x, 0.44, 0.66);
+  for (const x of [-0.58, -0.3, -0.02]) {
+    const v = box(0.02, 0.46, 0.03, M.ink, false);
+    v.position.set(x, 0.44, 0.662);
     whiteG.add(v);
   }
-  const hbar = box(1.04, 0.025, 0.03, M.roof, false);
-  hbar.position.set(-0.28, 0.44, 0.66);
-  whiteG.add(hbar);
-  const door = box(0.24, 0.62, 0.03, M.roof, false);
+  const sill = box(1.2, 0.025, 0.06, M.chrome, false);
+  sill.position.set(-0.3, 0.2, 0.67);
+  whiteG.add(sill);
+  const door = box(0.24, 0.62, 0.03, M.ink, false);
   door.position.set(0.55, 0.31, 0.66);
   whiteG.add(door);
-  const handle = box(0.015, 0.06, 0.02, M.brass, false);
-  handle.position.set(0.64, 0.33, 0.68);
+  const handle = box(0.012, 0.16, 0.02, M.chrome, false);
+  handle.position.set(0.635, 0.34, 0.682);
   whiteG.add(handle);
-  const sidePane = box(0.02, 0.3, 0.42, M.glow, false);
+  const sidePane = box(0.02, 0.3, 0.5, M.glass, false);
   sidePane.position.set(-0.955, 0.48, 0.1);
   whiteG.add(sidePane);
-  const whiteRoof = box(2.02, 0.08, 1.42, M.roof);
-  whiteRoof.position.set(-0.55, 0.88, 0);
+  const whiteRoof = box(2.02, 0.07, 1.42, M.ink);
+  whiteRoof.position.set(-0.55, 0.875, 0);
   house.add(whiteG, whiteRoof);
 
-  // Wood-clad volume.
+  // Ribbed satin-silver volume with one tall window.
   const woodG = new THREE.Group();
   woodG.position.set(0.95, 0, -0.05);
-  const woodBody = box(0.95, 1.32, 1.1, M.wood);
+  const woodBody = box(0.95, 1.32, 1.1, M.silver);
   woodBody.position.y = 0.66;
   woodG.add(woodBody);
-  const tall = box(0.36, 0.86, 0.02, M.glow, false);
-  tall.position.set(-0.05, 0.72, 0.555);
+  const tall = box(0.34, 0.9, 0.02, M.glass, false);
+  tall.position.set(-0.08, 0.7, 0.555);
   woodG.add(tall);
-  const tallBar = box(0.025, 0.86, 0.03, M.roof, false);
-  tallBar.position.set(-0.05, 0.72, 0.56);
-  woodG.add(tallBar);
-  const woodRoof = box(1.05, 0.08, 1.2, M.roof);
-  woodRoof.position.set(0.95, 1.36, -0.05);
+  const tallFrame = box(0.38, 0.94, 0.012, M.ink, false);
+  tallFrame.position.set(-0.08, 0.7, 0.552);
+  woodG.add(tallFrame);
+  const woodRoof = box(1.05, 0.07, 1.2, M.ink);
+  woodRoof.position.set(0.95, 1.355, -0.05);
   house.add(woodG, woodRoof);
 
-  const planter = box(1.7, 0.12, 0.18, M.planter);
-  planter.position.set(-0.55, 0.06, 0.82);
+  const planter = box(1.7, 0.1, 0.18, M.ink);
+  planter.position.set(-0.55, 0.05, 0.82);
   const drive = box(0.62, 0.012, 1.25, M.drive, false);
   drive.position.set(0.62, 0.0, 1.05);
   house.add(planter, drive);
 
-  // A voxel tree — sharp cubes, no spheres.
+  // A tree of frosted-glass cubes on an ink stem — sharp, no spheres.
   const tree = new THREE.Group();
   tree.position.set(-1.95, 0.04, -0.95);
-  const trunk = box(0.07, 0.55, 0.07, M.trunk);
+  const trunk = box(0.05, 0.55, 0.05, M.ink);
   trunk.position.y = 0.27;
   tree.add(trunk);
   const leaves: THREE.Mesh[] = [];
-  ([[0, 0.74, 0, 0.5, M.leafA, 0.3], [-0.2, 0.58, 0.12, 0.34, M.leafB, -0.4], [0.21, 0.62, -0.08, 0.32, M.leafC, 0.7]] as const).forEach(
-    ([x, y, z, s, mat, r]) => {
-      const c = box(s, s, s, mat);
-      c.position.set(x, y, z);
-      c.rotation.y = r;
-      tree.add(c);
-      leaves.push(c);
-    },
-  );
+  ([[0, 0.74, 0, 0.5, 0.3], [-0.2, 0.56, 0.12, 0.34, -0.4], [0.21, 0.6, -0.08, 0.3, 0.7]] as const).forEach(([x, y, z, s, r]) => {
+    const c = box(s, s, s, M.frost);
+    c.position.set(x, y, z);
+    c.rotation.y = r;
+    tree.add(c);
+    leaves.push(c);
+  });
   model.add(tree);
 
   // The lime yard sign — the scene's one signal.
@@ -218,7 +247,7 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   const signFace = new THREE.MeshBasicMaterial({ map: signTex, toneMapped: false });
   const sign = new THREE.Group();
   sign.position.set(-1.2, 0.04, 1.22);
-  const post = box(0.035, 0.66, 0.035, M.white);
+  const post = box(0.03, 0.66, 0.03, M.chrome);
   post.position.y = 0.33;
   const board = box(0.64, 0.34, 0.02, [M.lime, M.lime, M.lime, M.lime, signFace, M.lime]);
   board.position.y = 0.56;
@@ -227,17 +256,34 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
 
   model.traverse((o) => o.layers.enable(1));
 
+  /* ------------------------------------------------------- listing photos */
+  // The photos on the flyer and posts are a render of this very house.
+  const skyTex = canvasTexture(64, 256, drawSky);
+  stage.onDispose(() => skyTex.dispose());
+  const photoRT = new THREE.WebGLRenderTarget(coarse ? 512 : 1024, coarse ? 512 : 1024, { samples: coarse ? 0 : 4 });
+  stage.onDispose(() => photoRT.dispose());
+  const photoCam = new THREE.PerspectiveCamera(30, 1, 0.1, 60);
+  photoCam.layers.set(1);
+  photoCam.position.set(1.4, 0.95, 6.2);
+  photoCam.lookAt(-0.25, 0.62, 0);
+  let photoFrozen = false;
+  const photoMat = new THREE.MeshBasicMaterial({ map: photoRT.texture });
+
   /* ----------------------------------------------------------------- flyer */
   let flyerPrice = LISTING.price;
   let flyerCaret = false;
   const flyerTex = canvasTexture(1024, 1325, (ctx, w, h) => drawFlyer(ctx, w, h, F));
-  const flyerFace = new THREE.MeshStandardMaterial({ map: flyerTex, roughness: 0.78 });
   const flyer = new THREE.Group();
-  const sheet = box(1.7, 2.2, 0.012, [M.paper, M.paper, M.paper, M.paper, flyerFace, M.paper]);
-  flyer.add(sheet);
+  flyer.add(box(1.7, 2.2, 0.012, M.paper));
+  const photoH = 2.2 * FLYER_PHOTO;
+  const fPhoto = new THREE.Mesh(cropPlane(1.7, photoH, [0, 0.2, 1, 0.2 + photoH / 1.7]), photoMat);
+  fPhoto.position.set(0, 1.1 - photoH / 2, 0.0065);
+  const fFace = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 2.2), new THREE.MeshStandardMaterial({ map: flyerTex, transparent: true, roughness: 0.8, emissive: '#ffffff', emissiveMap: flyerTex, emissiveIntensity: 0.22 }));
+  fFace.position.z = 0.007;
+  flyer.add(fPhoto, fFace);
   const stampTex = canvasTexture(512, 128, (ctx, w, h) => drawStamp(ctx, w, h, F));
   const stamp = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.215), new THREE.MeshBasicMaterial({ map: stampTex, toneMapped: false }));
-  stamp.position.set(0.3, -0.18, 0.012);
+  stamp.position.set(0.3, -0.18, 0.01);
   stamp.rotation.z = -0.12;
   stamp.visible = false;
   flyer.add(stamp);
@@ -249,10 +295,31 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   world.add(fan);
   const FAN_REST = { p: new THREE.Vector3(1.55, 1.35, -0.55), r: new THREE.Euler(0, -0.42, 0) };
   const FAN_ROW = { p: new THREE.Vector3(0.1, 2.05, 0.9), r: new THREE.Euler(0, -0.32, 0) };
+  // Which part of the photo each post crops to (the map post has none).
+  const CROPS: ([number, number, number, number] | null)[] = [
+    [0.04, 0.12, 0.96, 0.92],
+    [0.42, 0.22, 0.78, 0.58],
+    [0.56, 0.28, 0.92, 0.64],
+    null,
+    [0.02, 0.1, 0.98, 0.94],
+  ];
+  const PW = 0.96;
+  const PH = 1.2;
   const posts = [0, 1, 2, 3, 4].map((i) => {
     const tex = canvasTexture(640, 800, (ctx, w, h) => drawPost(ctx, w, h, F, i));
-    const face = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 });
-    const m = box(0.96, 1.2, 0.01, [M.paper, M.paper, M.paper, M.paper, face, M.paper]);
+    const m = new THREE.Group();
+    m.add(box(PW, PH, 0.01, M.paper));
+    const crop = CROPS[i];
+    if (crop) {
+      const ph = PH * POST.photo;
+      const photo = new THREE.Mesh(cropPlane(PW, ph, crop), photoMat);
+      photo.position.set(0, PH / 2 - PH * POST.head - ph / 2, 0.0055);
+      m.add(photo);
+    }
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.6, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.22 }));
+    face.position.z = 0.006;
+    m.add(face);
+    m.traverse((o) => ((o as THREE.Mesh).castShadow = true));
     fan.add(m);
     const a = (i - 2) * 0.21;
     return {
@@ -269,8 +336,6 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   stage.onDispose(() => rt.dispose());
   const rtCam = new THREE.PerspectiveCamera(30, 0.6 / 1.27, 0.1, 60);
   rtCam.layers.set(1);
-  const skyTex = canvasTexture(64, 256, drawSky);
-  stage.onDispose(() => skyTex.dispose());
 
   const phone = new THREE.Group();
   const body = box(0.66, 1.34, 0.07, M.phone);
@@ -298,8 +363,8 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   const PHONE_FWD = { p: new THREE.Vector3(2.3, 1.25, 2.6), r: new THREE.Euler(-0.02, -0.34, 0) };
 
   /* ---------------------------------------------------------------- camera */
-  const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 100);
-  const HERO_DIR = new THREE.Vector3(5.6, 3.4, 8.6).normalize();
+  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
+  const HERO_DIR = new THREE.Vector3(5.4, 2.7, 8.8).normalize();
   const HERO_TARGET = new THREE.Vector3(0, 1.2, 0.15);
   const HERO_R = 3.55;   // radius of the composition the hero must fit
   let aspect = 1;
@@ -410,7 +475,7 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
     drop(whiteRoof, 0.78, 1.2, 2.4);
     drop(woodG, 0.85, 1.35, 2.8);
     drop(woodRoof, 1.05, 1.5, 2.8);
-    M.glow.emissiveIntensity = 1.35 * inOut(seg(build, 1.35, 1.7));
+    M.glass.emissiveIntensity = 0.32 * inOut(seg(build, 1.35, 1.7));
     planter.scale.y = Math.max(0.001, outQuint(seg(build, 1.1, 1.4)));
     drive.scale.z = Math.max(0.001, inOut(seg(build, 1.1, 1.5)));
     leaves.forEach((c, i) => c.scale.setScalar(Math.max(0.001, outBack(seg(build, 1.3 + i * 0.08, 1.65 + i * 0.08), 2))));
@@ -492,7 +557,23 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
     world.rotation.y = spin.yaw + sway + lean.x * (tour ? 0.05 : 0.12);
     world.rotation.x = lean.y * 0.03;
 
-    // ---- the phone's video: a slow orbit of the house at golden hour ----
+    // ---- the listing photo: re-rendered while the house builds, then frozen ----
+    if (!photoFrozen) {
+      const bg = scene.background;
+      const yaw = world.rotation.y;
+      const pitch = world.rotation.x;
+      world.rotation.set(0, 0, 0);
+      world.updateMatrixWorld(true);
+      scene.background = skyTex;
+      renderer.setRenderTarget(photoRT);
+      renderer.render(scene, photoCam);
+      renderer.setRenderTarget(null);
+      scene.background = bg;
+      world.rotation.set(pitch, yaw, 0);
+      if (build >= BUILD_END + 0.3) photoFrozen = true;
+    }
+
+    // ---- the phone's video: a slow orbit of the house ----
     if (phone.visible && (!coarse || Math.floor(t * 60) % 2 === 0)) {
       const th = 0.35 + seconds * 0.055;
       rtCam.position.set(Math.sin(th) * 6.4, 1.15 + Math.sin(seconds * 0.2) * 0.25, Math.cos(th) * 6.4);

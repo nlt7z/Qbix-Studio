@@ -1,10 +1,10 @@
 import type { SiteFonts } from './stage';
 
 /**
- * 2D artwork the listing kit prints onto its 3D pieces — the flyer, the five
- * posts, the phone's captions, the yard sign. The listing photo is the same
- * golden-hour house as components/offers/HouseIllustration.tsx, drawn here
- * with the canvas API so it can live on a texture.
+ * 2D layers the listing kit prints onto its 3D pieces — the flyer, the five
+ * posts, the phone's captions, the yard sign, the stamp. The listing photos
+ * themselves are live renders of the 3D house, shown through the transparent
+ * windows these layers leave open.
  */
 
 type Ctx = CanvasRenderingContext2D;
@@ -23,11 +23,11 @@ export const LISTING = {
 
 export const POST_LABELS = ['Just listed', 'Open house', 'Feature detail', 'Neighborhood', 'In escrow'];
 
-const PAPER = '#faf8f3';
-const INK = '#1e1d1a';
-const MUTE = '#6b675f';
-const BRASS = '#9c7a44';
-const RULE = '#e1dbcf';
+const PAPER = '#f7f8f9';
+const INK = '#121417';
+const MUTE = '#5f656d';
+const RULE = '#e2e5e8';
+const LIME = '#B8FF00';
 
 function spaced(ctx: Ctx, text: string, x: number, y: number, spacing: number) {
   // letter-spacing without relying on ctx.letterSpacing support
@@ -39,130 +39,24 @@ function spaced(ctx: Ctx, text: string, x: number, y: number, spacing: number) {
   return cx - x;
 }
 
-/** The listing photo, cover-fitted into (x, y, w, h). `zoom` crops into the house. */
-export function housePhoto(ctx: Ctx, x: number, y: number, w: number, h: number, zoom = 1, shiftX = 0) {
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y, w, h);
-  ctx.clip();
-  const s = Math.max(w / 600, h / 400) * zoom;
-  ctx.translate(x + w / 2 - 300 * s + shiftX * s, y + h / 2 - 200 * s);
-  ctx.scale(s, s);
+/** Share of the flyer's height taken by the photo window at its top. */
+export const FLYER_PHOTO = 0.5;
 
-  const sky = ctx.createLinearGradient(0, 0, 0, 400);
-  sky.addColorStop(0, '#d9c3a5');
-  sky.addColorStop(0.55, '#efe2cf');
-  sky.addColorStop(1, '#f7efe3');
-  ctx.fillStyle = sky;
-  ctx.fillRect(-400, -200, 1400, 800);
-
-  ctx.globalAlpha = 0.55;
-  ctx.fillStyle = '#cdb894';
-  ctx.beginPath();
-  ctx.moveTo(-400, 262);
-  ctx.bezierCurveTo(90, 236, 170, 248, 260, 240);
-  ctx.bezierCurveTo(360, 232, 440, 214, 1000, 236);
-  ctx.lineTo(1000, 300);
-  ctx.lineTo(-400, 300);
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  const lawn = ctx.createLinearGradient(0, 296, 0, 400);
-  lawn.addColorStop(0, '#a9b48c');
-  lawn.addColorStop(1, '#8d9a6f');
-  ctx.fillStyle = lawn;
-  ctx.fillRect(-400, 296, 1400, 400);
-
-  ctx.fillStyle = '#d8d2c6';
-  ctx.beginPath();
-  ctx.moveTo(318, 300);
-  ctx.lineTo(372, 300);
-  ctx.lineTo(470, 400);
-  ctx.lineTo(330, 400);
-  ctx.closePath();
-  ctx.fill();
-
-  const glow = () => {
-    const g = ctx.createLinearGradient(0, 120, 0, 290);
-    g.addColorStop(0, '#ffe7b0');
-    g.addColorStop(1, '#f6c56f');
-    return g;
-  };
-  ctx.fillStyle = '#f5f2ec';
-  ctx.fillRect(120, 176, 236, 124);
-  ctx.fillStyle = '#2a2926';
-  ctx.fillRect(110, 166, 262, 12);
-  ctx.fillStyle = glow();
-  ctx.fillRect(138, 202, 128, 80);
-  ctx.strokeStyle = '#2a2926';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(180, 202); ctx.lineTo(180, 282);
-  ctx.moveTo(222, 202); ctx.lineTo(222, 282);
-  ctx.moveTo(138, 242); ctx.lineTo(266, 242);
-  ctx.stroke();
-  ctx.fillStyle = '#2a2926';
-  ctx.fillRect(290, 214, 34, 86);
-  ctx.fillStyle = '#c9a86a';
-  ctx.fillRect(317, 252, 3, 10);
-
-  ctx.fillStyle = '#a6764d';
-  ctx.fillRect(352, 126, 146, 174);
-  ctx.strokeStyle = '#8c6240';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let bx = 366; bx <= 492; bx += 14) {
-    ctx.moveTo(bx, 126);
-    ctx.lineTo(bx, 300);
-  }
-  ctx.stroke();
-  ctx.fillStyle = '#2a2926';
-  ctx.fillRect(344, 116, 162, 12);
-  ctx.fillStyle = glow();
-  ctx.fillRect(378, 150, 62, 118);
-  ctx.strokeStyle = '#2a2926';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(409, 150);
-  ctx.lineTo(409, 268);
-  ctx.stroke();
-
-  ctx.fillStyle = '#7a7f69';
-  ctx.fillRect(112, 286, 230, 14);
-  ctx.fillStyle = '#5f4a36';
-  ctx.fillRect(66, 214, 8, 86);
-  const blob = (cx: number, cy: number, r: number, c: string) => {
-    ctx.fillStyle = c;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fill();
-  };
-  blob(70, 196, 40, '#76875a');
-  blob(46, 214, 26, '#6b7b51');
-  blob(94, 216, 24, '#829364');
-  ctx.fillStyle = '#6f8052';
-  ctx.beginPath();
-  ctx.ellipse(540, 292, 40, 16, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-/** Print flyer, 8.5 × 11. `price` lets the "editable copies" beat retype it; `caret` draws the text cursor. */
+/** Print flyer, 8.5 × 11 — the photo window is left transparent. */
 export function drawFlyer(ctx: Ctx, w: number, h: number, F: SiteFonts, price = LISTING.price, caret = false) {
   const u = w / 100;   // 1% of the sheet width
   ctx.fillStyle = PAPER;
-  ctx.fillRect(0, 0, w, h);
-  housePhoto(ctx, 0, 0, w, h * 0.5);
+  ctx.fillRect(0, h * FLYER_PHOTO, w, h * (1 - FLYER_PHOTO));
 
-  let y = h * 0.5 + u * 7;
+  let y = h * FLYER_PHOTO + u * 8;
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = BRASS;
-  ctx.font = `600 ${u * 3.3}px ${F.body}`;
-  spaced(ctx, 'JUST LISTED', u * 7, y, u * 0.66);
+  ctx.fillStyle = LIME;
+  ctx.fillRect(u * 7, y - u * 2.9, u * 2.9, u * 2.9);
+  ctx.fillStyle = INK;
+  ctx.font = `600 ${u * 3.1}px ${F.body}`;
+  spaced(ctx, 'JUST LISTED', u * 11.6, y, u * 0.7);
 
   y += u * 10.4;
-  ctx.fillStyle = INK;
   ctx.font = `400 ${u * 9.4}px ${F.head}`;
   ctx.fillText(LISTING.address, u * 7, y);
 
@@ -212,97 +106,88 @@ export function drawFlyer(ctx: Ctx, w: number, h: number, F: SiteFonts, price = 
   ctx.fillText(LISTING.brokerage, u * 19.5, ay + u * 8.4);
 }
 
-/** One social post (4:5). */
+/** Post layout (4:5): header band, square photo window, caption band — as fractions of the height. */
+export const POST = { head: 0.09, photo: 0.8 };
+
+/** Map for the neighborhood post (drawn instead of a photo). */
+function streetMap(ctx: Ctx, x: number, y: number, s: number) {
+  const u = s / 100;
+  ctx.fillStyle = '#e7ebee';
+  ctx.fillRect(x, y, s, s);
+  ctx.fillStyle = '#d3d9de';
+  for (let k = 0; k < 6; k++) ctx.fillRect(x, y + u * (8 + k * 17), s, u * 3);
+  for (let k = 0; k < 5; k++) ctx.fillRect(x + u * (10 + k * 21), y, u * 3, s);
+  ctx.fillStyle = '#c9d2d8';
+  ctx.fillRect(x + u * 56, y + u * 46, u * 24, u * 20);
+  ctx.fillStyle = INK;
+  ctx.fillRect(x + u * 36, y + u * 32, u * 11, u * 11);
+  ctx.fillStyle = LIME;
+  ctx.fillRect(x + u * 39, y + u * 35, u * 5, u * 5);
+  ctx.fillStyle = INK;
+  ctx.fillRect(x + u * 40.8, y + u * 43, u * 1.4, u * 8);
+}
+
+/** One social post — the photo window is transparent (except the map post). */
 export function drawPost(ctx: Ctx, w: number, h: number, F: SiteFonts, i: number) {
   const u = w / 100;
+  const head = h * POST.head;
+  const iy = head;
+  const ih = h * POST.photo;
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, w, h);
+  ctx.fillRect(0, 0, w, head);
+  ctx.fillRect(0, iy + ih, w, h - iy - ih);
 
   // header
   ctx.fillStyle = INK;
-  ctx.fillRect(u * 4, u * 3.4, u * 8, u * 8);
+  ctx.fillRect(u * 4, head / 2 - u * 4, u * 8, u * 8);
   ctx.fillStyle = '#ffffff';
   ctx.font = `600 ${u * 3}px ${F.body}`;
   ctx.textAlign = 'center';
-  ctx.fillText('JL', u * 8, u * 8.6);
+  ctx.fillText('JL', u * 8, head / 2 + u * 1.1);
   ctx.textAlign = 'left';
-  ctx.fillStyle = '#111111';
+  ctx.fillStyle = INK;
   ctx.font = `600 ${u * 4}px ${F.body}`;
-  ctx.fillText(LISTING.handle, u * 15, u * 8.8);
+  ctx.fillText(LISTING.handle, u * 15, head / 2 + u * 1.4);
 
-  const iy = u * 15;
-  const ih = w;   // square image
-  if (i === 2) {
-    // feature detail: the wood volume up close, one lit window
-    ctx.fillStyle = '#a6764d';
-    ctx.fillRect(0, iy, w, ih);
-    ctx.strokeStyle = '#8c6240';
-    ctx.lineWidth = u * 1.1;
-    ctx.beginPath();
-    for (let x = u * 4; x < w; x += u * 7) {
-      ctx.moveTo(x, iy);
-      ctx.lineTo(x, iy + ih);
-    }
-    ctx.stroke();
-    const g = ctx.createLinearGradient(0, iy, 0, iy + ih);
-    g.addColorStop(0, '#ffe7b0');
-    g.addColorStop(1, '#f6c56f');
-    ctx.fillStyle = g;
-    ctx.fillRect(u * 30, iy + u * 12, u * 36, u * 74);
-    ctx.fillStyle = '#2a2926';
-    ctx.fillRect(u * 47, iy + u * 12, u * 1.6, u * 74);
-  } else if (i === 3) {
-    // neighborhood: a quiet street map with one pin
-    ctx.fillStyle = '#ece6d8';
-    ctx.fillRect(0, iy, w, ih);
-    ctx.fillStyle = '#dcd3c0';
-    for (let k = 0; k < 6; k++) ctx.fillRect(0, iy + u * (8 + k * 17), w, u * 3);
-    for (let k = 0; k < 5; k++) ctx.fillRect(u * (10 + k * 21), iy, u * 3, ih);
-    ctx.fillStyle = '#b9c49d';
-    ctx.fillRect(u * 56, iy + u * 46, u * 24, u * 20);
-    ctx.fillStyle = INK;
-    ctx.fillRect(u * 38, iy + u * 34, u * 9, u * 9);
-    ctx.fillRect(u * 41.8, iy + u * 43, u * 1.4, u * 8);
-  } else {
-    housePhoto(ctx, 0, iy, w, ih, i === 1 ? 1.25 : 1, i === 1 ? -40 : 0);
-  }
+  if (i === 3) streetMap(ctx, 0, iy, ih);
 
   // on-image badge
   const label = POST_LABELS[i].toUpperCase();
   ctx.font = `600 ${u * 3.6}px ${F.body}`;
-  const bw = u * 6.8 + label.length * u * 3.15;
   if (i === 4) {
     ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, iy, w, ih);
+    ctx.clip();
     ctx.translate(w / 2, iy + ih / 2);
     ctx.rotate(-0.42);
-    ctx.fillStyle = 'rgba(30, 29, 26, 0.92)';
+    ctx.fillStyle = INK;
     ctx.fillRect(-w, -u * 6, w * 2, u * 12);
     ctx.fillStyle = PAPER;
-    ctx.textAlign = 'center';
     spaced(ctx, label, -u * 18, u * 1.4, u * 0.9);
-    ctx.textAlign = 'left';
     ctx.restore();
   } else {
-    ctx.fillStyle = PAPER;
+    const bw = u * 6.8 + label.length * u * 3.15;
+    ctx.fillStyle = i === 0 ? LIME : PAPER;
     ctx.fillRect(u * 5, iy + ih - u * 15, bw, u * 9.4);
     ctx.fillStyle = INK;
     spaced(ctx, label, u * 8.4, iy + ih - u * 8.8, u * 0.7);
   }
 
   // caption
-  const cy = iy + ih + u * 8;
-  ctx.fillStyle = '#111111';
+  const cy = iy + ih + u * 7.2;
+  ctx.fillStyle = INK;
   ctx.font = `600 ${u * 4}px ${F.body}`;
   ctx.fillText(LISTING.address, u * 4, cy);
-  ctx.fillStyle = '#666666';
-  ctx.font = `400 ${u * 3.6}px ${F.body}`;
-  ctx.fillText(i === 1 ? 'Sat & Sun, 1 to 4 pm' : i === 3 ? 'Five minutes to downtown' : `${LISTING.price} · Open Sat & Sun`, u * 4, cy + u * 6);
+  ctx.fillStyle = MUTE;
+  ctx.font = `400 ${u * 3.4}px ${F.body}`;
+  ctx.fillText(i === 1 ? 'Sat & Sun, 1 to 4 pm' : i === 3 ? 'Five minutes to downtown' : `${LISTING.price} · Open Sat & Sun`, u * 4, cy + u * 5.4);
 }
 
 /** Captions over the phone's video (transparent background). */
 export function drawPhoneOverlay(ctx: Ctx, w: number, h: number, F: SiteFonts, seconds: number) {
   const u = w / 100;
-  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowColor = 'rgba(0,0,0,0.35)';
   ctx.shadowBlur = u * 2;
   ctx.fillStyle = '#ffffff';
   ctx.font = `600 ${u * 7.2}px ${F.body}`;
@@ -319,7 +204,7 @@ export function drawPhoneOverlay(ctx: Ctx, w: number, h: number, F: SiteFonts, s
 
 /** The lime yard sign. */
 export function drawSign(ctx: Ctx, w: number, h: number, F: SiteFonts) {
-  ctx.fillStyle = '#B8FF00';
+  ctx.fillStyle = LIME;
   ctx.fillRect(0, 0, w, h);
   ctx.fillStyle = '#0F1A00';
   ctx.font = `500 ${h * 0.26}px ${F.mono}`;
@@ -334,7 +219,7 @@ export function drawSign(ctx: Ctx, w: number, h: number, F: SiteFonts) {
 
 /** "Final files" stamp that lands on the flyer after the one round of changes. */
 export function drawStamp(ctx: Ctx, w: number, h: number, F: SiteFonts) {
-  ctx.fillStyle = '#B8FF00';
+  ctx.fillStyle = LIME;
   ctx.fillRect(0, 0, w, h);
   ctx.fillStyle = '#0F1A00';
   ctx.font = `500 ${h * 0.38}px ${F.mono}`;
@@ -343,12 +228,29 @@ export function drawStamp(ctx: Ctx, w: number, h: number, F: SiteFonts) {
   spaced(ctx, label, (w - tw) / 2, h * 0.64, h * 0.05);
 }
 
-/** Golden-hour sky behind the house in the phone's video. */
+/** Cool studio sky behind the house in the photos and the video. */
 export function drawSky(ctx: Ctx, w: number, h: number) {
   const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, '#cdb08c');
-  g.addColorStop(0.5, '#ead9c0');
-  g.addColorStop(1, '#f7efe3');
+  g.addColorStop(0, '#c9d3da');
+  g.addColorStop(0.55, '#e4e9ed');
+  g.addColorStop(1, '#f3f5f6');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
+}
+
+/** White terrazzo with lime and graphite chips — the plinth's top. */
+export function drawTerrazzo(ctx: Ctx, w: number, h: number) {
+  ctx.fillStyle = '#e1e5e8';
+  ctx.fillRect(0, 0, w, h);
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const n = Math.round((w * h) / 520);
+  for (let i = 0; i < n; i++) {
+    const r = rnd();
+    ctx.fillStyle = r < 0.3 ? '#b8ff00' : r < 0.6 ? '#9aa1a8' : r < 0.82 ? '#3b4148' : '#d6dbe0';
+    ctx.beginPath();
+    const s = 1 + rnd() * rnd() * 5.5;
+    ctx.ellipse(rnd() * w, rnd() * h, s, s * (0.5 + rnd() * 0.6), rnd() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
