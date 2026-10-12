@@ -104,13 +104,13 @@ export function oldFoot(ctx: Ctx, w: number, h: number) {
 /* ------------------------------------------------------------ the calm site */
 
 export function calmNav(ctx: Ctx, w: number, h: number, F: SiteFonts) {
-  ctx.fillStyle = '#f7f5f0';
+  ctx.fillStyle = '#f8f9fa';
   ctx.fillRect(0, 0, w, h);
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#20211d';
+  ctx.fillStyle = '#15171a';
   ctx.font = `500 ${h * 0.34}px ${F.body}`;
   ctx.fillText('Dana Reyes, LMFT', 0, h * 0.5);
-  ctx.fillStyle = '#62635c';
+  ctx.fillStyle = '#5f656c';
   ctx.font = `400 ${h * 0.3}px ${F.body}`;
   ctx.textAlign = 'right';
   let x = w;
@@ -122,50 +122,57 @@ export function calmNav(ctx: Ctx, w: number, h: number, F: SiteFonts) {
 }
 
 export function calmPhoto(ctx: Ctx, w: number, h: number) {
-  const g = ctx.createLinearGradient(0, 0, w * 0.4, h);
-  g.addColorStop(0, '#ece1d1');
-  g.addColorStop(0.48, '#dccab0');
-  g.addColorStop(1, '#c2aa8b');
+  // A sunlit white room: pale wall, a tall window, a slate chair, a sage plant.
+  const g = ctx.createLinearGradient(0, 0, w * 0.5, h);
+  g.addColorStop(0, '#f4f7f8');
+  g.addColorStop(0.55, '#e3e9ed');
+  g.addColorStop(1, '#ccd6dd');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
-  // window light
-  const l = ctx.createLinearGradient(0, h * 0.12, 0, h * 0.62);
-  l.addColorStop(0, 'rgba(255, 252, 244, 0.85)');
-  l.addColorStop(1, 'rgba(255, 248, 232, 0.45)');
-  ctx.fillStyle = l;
-  ctx.fillRect(w * 0.16, h * 0.12, w * 0.36, h * 0.5);
-  ctx.fillStyle = 'rgba(255, 250, 238, 0.35)';
-  ctx.fillRect(w * 0.58, h * 0.12, w * 0.22, h * 0.5);
-  ctx.fillStyle = 'rgba(194, 170, 139, 0.6)';
-  ctx.fillRect(w * 0.335, h * 0.12, w * 0.012, h * 0.5);
-  // a low chair and a plant
-  const c = ctx.createLinearGradient(0, h * 0.74, 0, h);
-  c.addColorStop(0, '#8f7a5f');
-  c.addColorStop(1, '#7a664d');
-  ctx.fillStyle = c;
-  ctx.fillRect(w * 0.1, h * 0.74, w * 0.52, h * 0.26);
-  ctx.fillStyle = '#6f7d5c';
-  ctx.fillRect(w * 0.7, h * 0.6, w * 0.16, h * 0.28);
-  ctx.fillStyle = '#5f6b4f';
-  ctx.fillRect(w * 0.73, h * 0.88, w * 0.1, h * 0.12);
+  const sky = ctx.createLinearGradient(0, h * 0.1, 0, h * 0.62);
+  sky.addColorStop(0, '#dcebf5');
+  sky.addColorStop(1, '#f6fafc');
+  ctx.fillStyle = sky;
+  ctx.fillRect(w * 0.16, h * 0.1, w * 0.38, h * 0.52);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(w * 0.345, h * 0.1, w * 0.012, h * 0.52);
+  ctx.fillRect(w * 0.16, h * 0.355, w * 0.38, h * 0.01);
+  // light falling across the floor
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.16, h * 0.62);
+  ctx.lineTo(w * 0.54, h * 0.62);
+  ctx.lineTo(w * 0.78, h);
+  ctx.lineTo(w * 0.3, h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#3c4650';
+  ctx.fillRect(w * 0.08, h * 0.76, w * 0.46, h * 0.16);
+  ctx.fillRect(w * 0.08, h * 0.66, w * 0.08, h * 0.26);
+  ctx.fillStyle = '#7f9a7a';
+  ctx.fillRect(w * 0.7, h * 0.56, w * 0.15, h * 0.3);
+  ctx.fillStyle = '#8fae8a';
+  ctx.fillRect(w * 0.74, h * 0.5, w * 0.08, h * 0.14);
+  ctx.fillStyle = '#e8ecef';
+  ctx.fillRect(w * 0.72, h * 0.86, w * 0.11, h * 0.14);
 }
 
 export function calmText(ctx: Ctx, w: number, h: number, F: SiteFonts) {
-  ctx.fillStyle = '#f7f5f0';
+  ctx.fillStyle = '#f8f9fa';
   ctx.fillRect(0, 0, w, h);
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#7b7c73';
+  ctx.fillStyle = '#767c83';
   ctx.font = `400 ${h * 0.05}px ${F.body}`;
   let x = 0;
   for (const ch of 'THERAPY IN OAKLAND AND ONLINE') {
     ctx.fillText(ch, x, h * 0.1);
     x += ctx.measureText(ch).width + h * 0.007;
   }
-  ctx.fillStyle = '#20211d';
+  ctx.fillStyle = '#15171a';
   ctx.font = `400 ${h * 0.2}px ${F.body}`;
   ctx.fillText('Feel more like', 0, h * 0.36);
   ctx.fillText('yourself again.', 0, h * 0.57);
-  ctx.fillStyle = '#5d5e57';
+  ctx.fillStyle = '#5a6067';
   ctx.font = `400 ${h * 0.066}px ${F.body}`;
   ctx.fillText('Individual and couples therapy for anxiety,', 0, h * 0.75);
   ctx.fillText('life changes, and relationships.', 0, h * 0.85);
@@ -174,7 +181,7 @@ export function calmText(ctx: Ctx, w: number, h: number, F: SiteFonts) {
 export function calmButton(ctx: Ctx, w: number, h: number, F: SiteFonts) {
   ctx.fillStyle = '#2f4a3e';
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = '#f7f5f0';
+  ctx.fillStyle = '#f8f9fa';
   ctx.font = `500 ${h * 0.36}px ${F.body}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -183,13 +190,13 @@ export function calmButton(ctx: Ctx, w: number, h: number, F: SiteFonts) {
 }
 
 export function chromeBar(ctx: Ctx, w: number, h: number) {
-  ctx.fillStyle = '#edece7';
+  ctx.fillStyle = '#eceef0';
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = '#d3d1c9';
+  ctx.fillStyle = '#d2d6da';
   for (let i = 0; i < 3; i++) ctx.fillRect(h * 0.45 + i * h * 0.55, h * 0.36, h * 0.3, h * 0.3);
-  ctx.fillStyle = '#f7f5f0';
+  ctx.fillStyle = '#f8f9fa';
   ctx.fillRect(w * 0.3, h * 0.25, w * 0.4, h * 0.5);
-  ctx.fillStyle = '#9a9b93';
+  ctx.fillStyle = '#8f959c';
   ctx.font = `${h * 0.32}px system-ui, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

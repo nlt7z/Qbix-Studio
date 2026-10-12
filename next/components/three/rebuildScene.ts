@@ -31,8 +31,8 @@ export async function mountRebuildScene(host: HTMLElement, opts: RebuildOptions)
   const { scene, coarse } = stage;
 
   /* ---------------------------------------------------------------- light */
-  scene.add(new THREE.HemisphereLight('#ffffff', '#d9d4c8', 1.6));
-  const key = new THREE.DirectionalLight('#fffaf0', 1.5);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#d3d9de', 1.6));
+  const key = new THREE.DirectionalLight('#ffffff', 1.5);
   key.position.set(-3.5, 9, 5);
   key.castShadow = true;
   key.shadow.mapSize.set(coarse ? 1024 : 2048, coarse ? 1024 : 2048);
@@ -42,21 +42,21 @@ export async function mountRebuildScene(host: HTMLElement, opts: RebuildOptions)
   key.shadow.normalBias = 0.02;
   scene.add(key);
 
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ color: '#2a2418', opacity: 0.13 }));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ color: '#141a20', opacity: 0.13 }));
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.16;
   ground.receiveShadow = true;
   scene.add(ground);
 
   /* ------------------------------------------------------------ materials */
-  const paperEdge = new THREE.MeshStandardMaterial({ color: '#e7e3da', roughness: 0.9 });
-  const paperTop = new THREE.MeshStandardMaterial({ color: '#fbf9f4', roughness: 0.95 });
+  const paperEdge = new THREE.MeshStandardMaterial({ color: '#dfe3e7', roughness: 0.9 });
+  const paperTop = new THREE.MeshStandardMaterial({ color: '#fbfcfd', roughness: 0.95, emissive: '#ffffff', emissiveIntensity: 0.14 });
   const bezelMat = new THREE.MeshPhysicalMaterial({ color: '#1d1e1b', roughness: 0.35, metalness: 0.3, clearcoat: 0.8 });
 
   /** A flat piece of page: a thin slab with its artwork on top. */
   const piece = (w: number, d: number, draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void, thick = 0.03) => {
     const tex = canvasTexture(Math.round(w * PX), Math.round(d * PX), draw);
-    const top = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85 });
+    const top = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.18 });
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, thick, d), [paperEdge, paperEdge, top, paperEdge, paperEdge, paperEdge]);
     m.castShadow = true;
     m.receiveShadow = true;
