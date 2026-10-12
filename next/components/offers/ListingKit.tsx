@@ -1,9 +1,14 @@
 import { CHECKOUT } from '@/lib/data';
-import { Reveal } from '@/components/Reveal';
+import { Reveal, Words } from '@/components/Reveal';
 import CheckoutButton from './CheckoutButton';
 import Faq from './Faq';
 import StickyCta from './StickyCta';
 import HouseIllustration from './HouseIllustration';
+import KitStage from './KitStage';
+import KitTour from './KitTour';
+import HourRail from './HourRail';
+import Odometer from './Odometer';
+import AboutPhoto from './AboutPhoto';
 
 const CTA_LABEL = 'Start my listing kit, $199';
 const OFFER = 'Listing Launch Kit';
@@ -18,11 +23,14 @@ const GET = [
   { k: 'One round of changes', v: '' },
 ];
 
-const STEPS = [
+const STEPS: [string, string, string] = [
   'Pay and send your listing link, plus your logo if you have one.',
   'Get drafts in 48 hours.',
   'Ask for changes once, then get your final files.',
 ];
+
+// Blueprint labels the 3D hero pins to the flyer, the posts and the phone.
+const KIT_LABELS = ['01 · Print flyer · 8.5 × 11', '02 · Social posts × 5', '03 · Video · 0:30 vertical'];
 
 const FAQ = [
   { q: 'Do you need to visit the house?', a: 'No. Everything comes from your listing photos and details.' },
@@ -34,7 +42,7 @@ const FAQ = [
   },
 ];
 
-/** The finished sample: a print flyer with a social post laid over it. */
+/** The flat sample — a print flyer with a social post over it. Shown when WebGL isn't available. */
 function SampleKit() {
   return (
     <figure className="lk-sample" aria-label="Sample listing kit: a print flyer and an Instagram post">
@@ -90,98 +98,84 @@ export default function ListingKit() {
             <Reveal as="span" className="offer-eyebrow mono" speed="fast">
               Listing Launch Kit · $199 per listing
             </Reveal>
-            <Reveal as="h1" className="lk-title" speed="base" delay={0.05}>
-              Your listing, ready to share in 48 hours.
-            </Reveal>
-            <Reveal as="p" className="lk-lede" speed="base" delay={0.15}>
+            <Words as="h1" className="lk-title" text="Your listing, ready to share in 48 hours." speed="slow" step={0.06} delay={0.05} />
+            <Reveal as="p" className="lk-lede" speed="base" delay={0.35}>
               A print flyer, five social posts, and a 30-second video for one property. Made by a designer,
               delivered as files you own.
             </Reveal>
-            <Reveal className="lk-hero-cta" speed="base" delay={0.25}>
+          </div>
+          <div className="lk-hero-visual">
+            <KitStage mode="hero" labels={KIT_LABELS} fallback={<SampleKit />} />
+            <span className="lk-drag mono" aria-hidden>Drag to turn</span>
+          </div>
+          <div className="lk-hero-act">
+            <Reveal className="lk-hero-cta" speed="base" delay={0.45}>
               <span className="lk-hero-ctas" data-cta-zone>
                 <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-primary" />
                 <CheckoutButton href="" offer={VIDEO_OFFER} label={VIDEO_LABEL} className="btn-secondary" />
               </span>
             </Reveal>
+            <div className="lk-meta mono" aria-hidden>
+              <span>Drafts · 48 h</span>
+              <span>1 flyer · 5 posts · 1 video</span>
+              <span>Files you own</span>
+            </div>
           </div>
-          <Reveal className="lk-hero-visual" speed="base" delay={0.2}>
-            <SampleKit />
-          </Reveal>
         </div>
       </section>
 
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
-          <h2 className="offer-h2">Why it matters</h2>
+          <Words as="h2" className="offer-h2" text="Why it matters" />
           <div className="offer-prose">
-            <p>
+            <Reveal as="p" speed="base">
               Most listings go live with the same photos and the same template as every other house on the
               street. Buyers scroll past in a second. A clean flyer and a short video give your open house
               something people remember. They also show your sellers that you are working hard for them.
-            </p>
-            <p className="offer-pull">You already have the photos. Send me the listing link and I will do the rest.</p>
+            </Reveal>
+            <Reveal as="p" className="offer-pull" speed="slow" delay={0.1}>
+              You already have the photos. Send me the listing link and I will do the rest.
+            </Reveal>
           </div>
         </div>
       </section>
 
+      <KitTour items={GET} />
+
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
-          <h2 className="offer-h2">What you get</h2>
-          <ol className="offer-list">
-            {GET.map((g, i) => (
-              <li key={g.k}>
-                <span className="offer-num mono">{String(i + 1).padStart(2, '0')}</span>
-                <span>
-                  <strong>{g.k}.</strong>
-                  {g.v && <> {g.v}</>}
-                </span>
-              </li>
-            ))}
-          </ol>
+          <Words as="h2" className="offer-h2" text="How it works" />
+          <HourRail steps={STEPS} />
         </div>
       </section>
 
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
-          <h2 className="offer-h2">How it works</h2>
-          <ol className="offer-steps">
-            {STEPS.map((s, i) => (
-              <li key={s}>
-                <span className="offer-step-n">{i + 1}</span>
-                <span>{s}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <section className="offer-section" data-nav-theme="dark">
-        <div className="container offer-narrow">
-          <h2 className="offer-h2">Price</h2>
+          <Words as="h2" className="offer-h2" text="Price" />
           <div className="offer-price">
-            <span className="offer-price-big">$199</span>
+            <Odometer value="$199" className="offer-price-big" />
             <span className="offer-price-unit">per listing</span>
           </div>
-          <p className="offer-price-note">Just the video: $99.</p>
+          <Reveal as="p" className="offer-price-note" speed="base" delay={0.4}>Just the video: $99.</Reveal>
         </div>
       </section>
 
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
-          <h2 className="offer-h2">Questions</h2>
+          <Words as="h2" className="offer-h2" text="Questions" />
           <Faq items={FAQ} />
         </div>
       </section>
 
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
-          <h2 className="offer-h2">About me</h2>
+          <Words as="h2" className="offer-h2" text="About me" />
           <div className="offer-me">
-            <img className="offer-me-photo" src="/assets/sera.jpg" alt="Sera" width={120} height={120} loading="lazy" />
-            <p className="offer-about">
+            <AboutPhoto />
+            <Reveal as="p" className="offer-about" speed="base" delay={0.15}>
               I&rsquo;m Sera. I trained as a painter at Pratt and now design software products in the Bay Area. I make
               marketing for local agents on the side, so I keep it fast and simple.
-            </p>
+            </Reveal>
           </div>
           <div className="offer-close" data-cta-zone>
             <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-primary" />

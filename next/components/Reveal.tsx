@@ -1,6 +1,7 @@
 'use client';
 
-import { motion, useReducedMotion, type Variants, type Transition } from 'framer-motion';
+import { motion, type Variants, type Transition } from 'framer-motion';
+import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
 import { type ComponentProps, type ElementType, type ReactNode } from 'react';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -113,7 +114,7 @@ export function Reveal<E extends ElementType = 'div'>({
   children,
   ...rest
 }: RevealProps<E>) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionSafe();
   const spec = SPEEDS[speed];
   const yPx = y ?? spec.y;
   const easing = easeFor(gesture, ease);
@@ -180,7 +181,7 @@ export function Words<E extends ElementType = 'span'>({
   margin = '-10% 0px -10% 0px',
   ...rest
 }: WordsProps<E>) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionSafe();
   const spec = SPEEDS[speed];
 
   if (reduced) {
@@ -254,7 +255,7 @@ export function Wipe<E extends ElementType = 'div'>({
   children,
   ...rest
 }: WipeProps<E>) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionSafe();
 
   if (reduced) {
     const PlainTag = (as ?? 'div') as ElementType;
@@ -329,7 +330,7 @@ export function Scatter<E extends ElementType = 'span'>({
   margin = '-10% 0px -10% 0px',
   ...rest
 }: ScatterProps<E>) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionSafe();
   const spec = SPEEDS[speed];
 
   const hlStart = highlight ? text.indexOf(highlight) : -1;
@@ -436,7 +437,7 @@ export function Stagger<E extends ElementType = 'div'>({
   children,
   ...rest
 }: StaggerProps<E>) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionSafe();
   const Tag = as ? (motion as any)[as as string] : motion.div;
 
   if (reduced) {
@@ -478,7 +479,7 @@ export function RevealItem<E extends ElementType = 'div'>({
   children,
   ...rest
 }: RevealItemProps<E>) {
-  const reduced = useReducedMotion();
+  const reduced = useReducedMotionSafe();
   const spec = SPEEDS[speed];
   const yPx = y ?? spec.y;
   const easing = easeFor(gesture, ease);
