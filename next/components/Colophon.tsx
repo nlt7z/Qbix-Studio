@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { CONTACT_EMAIL, offers } from '@/lib/data';
+import { CONTACT_EMAIL, offers, services } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 import SplitText from '@/components/SplitText';
 import PstClock from '@/components/PstClock';
@@ -21,7 +21,10 @@ type Item = { label: string; href?: string; external?: boolean };
 const COLUMNS: { title: string; items: Item[] }[] = [
   {
     title: 'Services',
-    items: offers.map((o) => ({ label: o.title, href: o.href })),
+    items: [
+      ...services.map((s) => ({ label: s.title, href: '/start' })),
+      ...offers.map((o) => ({ label: o.title, href: o.href })),
+    ],
   },
   {
     title: 'Products',

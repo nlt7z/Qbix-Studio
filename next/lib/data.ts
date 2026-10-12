@@ -19,6 +19,44 @@ export const navItems: NavItem[] = [
   { num: '04', label: 'Careers',  href: '#',         tip: 'Careers — coming soon', disabled: true },
 ];
 
+// ----- SERVICES (studio cards on the homepage; enquiries go to the contact form)
+
+export type Service = {
+  slug: string;
+  num: string;       // "01"
+  audience: string;  // "AI startups" / "Local business" / etc — primary buyer
+  title: string;
+  blurb: string;
+  tags: string[];
+  priceFrom: string; // "$2k" / "$15k" — starting anchor
+  typical: string;   // "1 – 3 weeks" — duration anchor
+};
+
+export const services: Service[] = [
+  {
+    slug: 'web',
+    num: '01',
+    audience: 'Local business · Portfolio · Brand',
+    title: 'Design service',
+    blurb:
+      'From moodboard to a live domain. We design it, write the code, and ship it ready for business. Done in one to three weeks.',
+    tags: ['Marketing site', 'Portfolio', 'Brand'],
+    priceFrom: '$500',
+    typical: '1 to 3 weeks',
+  },
+  {
+    slug: 'redesign',
+    num: '02',
+    audience: 'Growing teams · 1 → 100',
+    title: 'Brand upgrade',
+    blurb:
+      'Your product already runs. We take it from usable to worth sharing. We iterate round by round and merge code straight into your repo.',
+    tags: ['Redesign', 'User feedback', 'Iteration'],
+    priceFrom: '$5,000',
+    typical: '5 to 10 weeks',
+  },
+];
+
 // ----- FIXED-PRICE OFFERS (own landing pages, Stripe checkout) --------------
 
 /**
@@ -48,7 +86,7 @@ export const offers: Offer[] = [
   {
     slug: 'listing-kit',
     href: '/listing-kit',
-    num: '01',
+    num: '03',
     audience: 'Real estate agents · per listing',
     title: 'Listing Launch Kit',
     blurb:
@@ -61,7 +99,7 @@ export const offers: Offer[] = [
   {
     slug: 'practice-websites',
     href: '/practice-websites',
-    num: '02',
+    num: '04',
     audience: 'Solo practices · therapists',
     title: 'Practice Website Refresh',
     blurb:
