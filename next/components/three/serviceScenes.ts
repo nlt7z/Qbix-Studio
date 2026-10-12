@@ -3,22 +3,15 @@ import { studioEnvironment } from './studio';
 
 /**
  * Service-card scenes — two small isometric 3D stories rendered with three.js,
- * one per service:
- *
- *  · design — moodboard tiles hang scattered in the air, then drop one by one
- *    into a website layout on a dark browser slab; the hero block lights lime
- *    ("live"), a phone slides in carrying the same layout, then it all lifts
- *    apart again.
- *  · brand  — a three-plate brand stack (grid → colour/type → mark) explodes,
- *    a scan plane sweeps it round by round while the swatches refine and the
- *    mark turns and tightens, then the plates press back into one slab.
+ * one per offer: listing (flyer, posts and video for one property) and
+ * practice (a calm practice website assembling on a browser slab).
  *
  * Orthographic camera, satin-dark materials with hairline edges (the blueprint
  * language of the old SVGs), one lime signal per scene. Motion is a pure
  * function of time, so reduced-motion simply renders one composed frame.
  */
 
-export type SceneVariant = 'design' | 'brand' | 'listing' | 'practice';
+export type SceneVariant = 'listing' | 'practice';
 
 const LIME = new THREE.Color('#B8FF00');
 const WHITE = new THREE.Color('#f2f3ef');
@@ -77,282 +70,6 @@ function slab(w: number, h: number, d: number, mat: THREE.Material, edge: THREE.
   const lines = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)), edge);
   g.add(lines);
   return Object.assign(g, { mesh, lines });
-}
-
-/* ------------------------------------------------------------------ design */
-
-function buildDesign(scene: THREE.Group, M: Mats) {
-  const SLAB_H = 0.14;
-  const win = slab(4.2, SLAB_H, 2.8, M.body, M.edge, 0.06);
-  win.position.y = SLAB_H / 2;
-  scene.add(win);
-
-  // Title bar + window dots along the back edge.
-  const bar = slab(4.2, 0.02, 0.3, M.chrome, M.edge, 0.01);
-  bar.position.set(0, SLAB_H + 0.01, -1.25);
-  scene.add(bar);
-  [-1.88, -1.72, -1.56].forEach((x, i) => {
-    const dot = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.08), i === 0 ? M.lime : M.chrome);
-    dot.position.set(x, SLAB_H + 0.035, -1.25);
-    scene.add(dot);
-  });
-
-  // Layout slots on the slab's top face: nav, hero, media, three cards.
-  const TOP = SLAB_H + 0.02 + 0.04;
-  const heroMat = M.body.clone();
-  const slots: { w: number; d: number; x: number; z: number; mat: THREE.Material }[] = [
-    { w: 3.8, d: 0.16, x: 0, z: -0.88, mat: M.chrome },
-    { w: 2.35, d: 1.0, x: -0.68, z: -0.2, mat: heroMat },
-    { w: 1.3, d: 1.0, x: 1.25, z: -0.2, mat: M.chrome },
-    { w: 1.17, d: 0.62, x: -1.31, z: 0.82, mat: M.frost },
-    { w: 1.17, d: 0.62, x: 0, z: 0.82, mat: M.frost },
-    { w: 1.17, d: 0.62, x: 1.31, z: 0.82, mat: M.frost },
-  ];
-  const tiles = slots.map((s, i) => {
-    const t = slab(s.w, 0.08, s.d, s.mat, M.edge, 0.025);
-    const home = new THREE.Vector3(s.x, TOP, s.z);
-    // Moodboard pose: lifted, spread, tumbled.
-    const away = new THREE.Vector3(
-      s.x * 1.25 + (rand(i) - 0.5) * 1.6,
-      1.5 + rand(i + 9) * 1.3,
-      s.z * 1.2 + (rand(i + 3) - 0.5) * 1.2,
-    );
-    const rot = new THREE.Euler((rand(i + 5) - 0.5) * 1.1, (rand(i + 7) - 0.5) * 1.4, (rand(i + 11) - 0.5) * 0.9);
-    scene.add(t);
-    return { t, home, away, rot, phase: rand(i + 13) * Math.PI * 2 };
-  });
-  // Image hint on the media tile: a small lime square "sun".
-  const sun = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.02, 0.22), M.lime);
-  sun.position.set(0.3, 0.05, -0.2);
-  tiles[2].t.add(sun);
-
-  // Interface detail riding on the tiles: headline bars + a button on the hero,
-  // a thumbnail and two text lines on each card. Ink-dark, so they read as
-  // type once the hero turns lime.
-  const ink = M.ink;
-  const detail = (parent: THREE.Object3D, w: number, d: number, x: number, z: number, mat: THREE.Material = ink) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.018, d), mat);
-    m.position.set(x, 0.049, z);
-    parent.add(m);
-  };
-  detail(tiles[1].t, 1.35, 0.09, -0.35, -0.28, M.inkDark);
-  detail(tiles[1].t, 0.95, 0.09, -0.55, -0.1, M.inkDark);
-  detail(tiles[1].t, 0.42, 0.14, -0.78, 0.22, M.inkDark);
-  [3, 4, 5].forEach((i) => {
-    detail(tiles[i].t, 0.3, 0.3, -0.36, 0, M.chrome);
-    detail(tiles[i].t, 0.55, 0.05, 0.17, -0.07);
-    detail(tiles[i].t, 0.4, 0.05, 0.1, 0.06);
-  });
-  detail(tiles[0].t, 0.32, 0.06, -1.6, 0, M.lime);
-  [0.6, 0.95, 1.3].forEach((x) => detail(tiles[0].t, 0.22, 0.04, x, 0));
-
-  // Scan line that sweeps the slab as the build goes live.
-  const scan = new THREE.Mesh(
-    new THREE.BoxGeometry(4.24, 0.01, 0.02),
-    new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-  );
-  scan.position.y = SLAB_H + 0.13;
-  scene.add(scan);
-
-  // Phone carrying the same layout in miniature.
-  const phone = new THREE.Group();
-  const pBody = slab(0.95, 0.12, 1.8, M.body, M.edge, 0.08);
-  pBody.position.y = 0.06;
-  phone.add(pBody);
-  const pTiles = [
-    { w: 0.75, d: 0.5, z: -0.5, mat: heroMat },
-    { w: 0.75, d: 0.34, z: 0.0, mat: M.chrome },
-    { w: 0.75, d: 0.22, z: 0.36, mat: M.frost },
-    { w: 0.75, d: 0.22, z: 0.64, mat: M.frost },
-  ].map((s) => {
-    const t = slab(s.w, 0.04, s.d, s.mat, M.edge, 0.015);
-    t.position.set(0, 0.14, s.z);
-    phone.add(t);
-    return t;
-  });
-  scene.add(phone);
-
-  const LOOP = 9.5;
-  return (time: number) => {
-    const t = time % LOOP;
-    tiles.forEach((tile, i) => {
-      const land = outBack(seg(t, 0.7 + i * 0.32, 1.6 + i * 0.32), 1.1);
-      const lift = inOut(seg(t, 7.9 + i * 0.06, 8.9 + i * 0.06));
-      const k = clamp01(land - lift);
-      const bob = Math.sin(time * 1.3 + tile.phase) * 0.06 * (1 - k);
-      tile.t.position.lerpVectors(tile.away, tile.home, k);
-      tile.t.position.y += bob;
-      tile.t.rotation.set(tile.rot.x * (1 - k), tile.rot.y * (1 - k), tile.rot.z * (1 - k));
-    });
-
-    // Go live: scan sweeps back→front, hero block turns lime behind it.
-    const sweep = inOut(seg(t, 3.0, 3.9));
-    scan.position.z = lerp(-1.4, 1.4, sweep);
-    scan.visible = sweep > 0 && sweep < 1;
-    const live = clamp01(inOut(seg(t, 3.35, 3.9)) - inOut(seg(t, 7.6, 8.2)));
-    // Going live = the block's own light takes over: surface colour drops out
-    // as the lime emission comes in, so it lands on the exact brand lime.
-    heroMat.color.copy(WHITE).multiplyScalar(1 - live);
-    heroMat.emissive.copy(LIME).multiplyScalar(live);
-    heroMat.opacity = lerp(0.08, 1, live);
-    heroMat.depthWrite = live > 0.5;
-
-    // Phone rides in from the right, holds, rides out.
-    const pin = outQuint(seg(t, 4.1, 5.0));
-    const pout = inOut(seg(t, 7.3, 8.0));
-    phone.position.set(lerp(6.4, 3.0, pin) + pout * 3.4, 0, 0.95);
-    phone.rotation.y = lerp(-0.5, 0, pin) + pout * -0.3;
-    phone.visible = pin > 0.001 && pout < 0.999;   // parked off-frame otherwise
-    pTiles.forEach((pt, i) => {
-      const pop = outBack(seg(t, 4.6 + i * 0.12, 5.1 + i * 0.12), 1.6);
-      pt.scale.setScalar(Math.max(0.0001, pop));
-    });
-  };
-}
-
-/* ------------------------------------------------------------------- brand */
-
-function buildBrand(scene: THREE.Group, M: Mats) {
-  const S = 2.6;
-  const H = 0.1;
-
-  // Plate 1 — foundation grid.
-  const base = slab(S, H, S, M.body, M.edge, 0.05);
-  const gridPts: number[] = [];
-  const N = 8;
-  for (let i = 1; i < N; i++) {
-    const c = -S / 2 + (S * i) / N;
-    gridPts.push(c, H / 2 + 0.002, -S / 2, c, H / 2 + 0.002, S / 2);
-    gridPts.push(-S / 2, H / 2 + 0.002, c, S / 2, H / 2 + 0.002, c);
-  }
-  const gridGeo = new THREE.BufferGeometry();
-  gridGeo.setAttribute('position', new THREE.Float32BufferAttribute(gridPts, 3));
-  base.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.28 })));
-  scene.add(base);
-
-  // Plate 2 — colour + type.
-  const mid = slab(S, H, S, M.frost, M.edge, 0.05);
-  const swatchMats = [0, 1, 2, 3].map(() => M.chrome.clone());   // solid, so the palette reads
-  const swatches = swatchMats.map((m, i) => {
-    const sw = slab(0.42, 0.06, 0.42, m, M.edge, 0.03);
-    sw.position.set(-0.84 + i * 0.56, H / 2 + 0.03, -0.62);
-    mid.add(sw);
-    return sw;
-  });
-  [0.95, 1.6, 1.25].forEach((w, i) => {
-    const bar = slab(w, 0.03, 0.12, i === 0 ? M.chrome : M.ink, M.edge, 0.01);
-    bar.position.set(-1.0 + w / 2, H / 2 + 0.015, 0.12 + i * 0.28);
-    mid.add(bar);
-  });
-  scene.add(mid);
-
-  // Plate 3 — lime glass carrying the mark: four chrome blocks around a lime cross.
-  const top = new THREE.Group();
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(S, H * 0.6, S), M.glass);
-  top.add(glass);
-  top.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(S, H * 0.6, S)), M.edgeLime));
-  const mark = new THREE.Group();
-  const blocks = [-1, 1].flatMap((sx) =>
-    [-1, 1].map((sz) => {
-      const b = slab(0.42, 0.42, 0.42, M.chrome, M.edge, 0.06);
-      mark.add(b);
-      return { b, sx, sz };
-    }),
-  );
-  const crossA = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.07, 0.07), M.lime);
-  const crossB = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 1.0), M.lime);
-  crossA.position.y = crossB.position.y = 0.21;
-  mark.add(crossA, crossB);
-  mark.position.y = H * 0.3 + 0.21;
-  top.add(mark);
-  scene.add(top);
-
-  // Explode dimension rail on the front-left corner.
-  const railGeo = new THREE.BufferGeometry();
-  railGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Array(18).fill(0), 3));
-  const rail = new THREE.LineSegments(railGeo, M.edge);
-  scene.add(rail);
-
-  // Scan plane that passes up through the stack each round.
-  const scan = new THREE.Mesh(
-    new THREE.BoxGeometry(S + 0.3, 0.008, S + 0.3),
-    new THREE.MeshBasicMaterial({ color: LIME, transparent: true, opacity: 0.22, toneMapped: false, depthWrite: false }),
-  );
-  const scanEdge = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(S + 0.3, 0.008, S + 0.3)),
-    new THREE.LineBasicMaterial({ color: LIME, toneMapped: false }),
-  );
-  scan.add(scanEdge);
-  scene.add(scan);
-
-  // Swatch palettes: each round moves the plate one step, P[r] → P[r+1] —
-  // greys → chrome → refined, and the last round lands the one lime signal.
-  const INK = new THREE.Color('#111316');
-  const STEEL = new THREE.Color('#aab0b6');
-  const P = [
-    [PALE, WHITE, PALE, WHITE],
-    [WHITE, CHROME, PALE, WHITE],
-    [INK, CHROME, WHITE, STEEL],
-    [INK, CHROME, LIME, STEEL],
-  ];
-  const tmp = new THREE.Color();
-
-  const LOOP = 10;
-  const ROUND0 = 1.4;
-  const ROUND = 1.9;
-  return (time: number) => {
-    const t = time % LOOP;
-    const explode = clamp01(inOut(seg(t, 0.2, 1.3)) - outBack(seg(t, 7.3, 8.1), 1.4));
-    const gap = lerp(0.0, 0.78, explode);
-    base.position.y = H / 2;
-    mid.position.y = H / 2 + H + gap;
-    top.position.y = H / 2 + 2 * H + 2 * gap - H * 0.2;
-
-    const r = Math.floor((t - ROUND0) / ROUND);
-    const inRound = t >= ROUND0 && r < 3;
-    const rp = inRound ? (t - ROUND0 - r * ROUND) / ROUND : 0;
-
-    scan.visible = inRound && rp < 0.55;
-    scan.position.y = lerp(-0.05, top.position.y + 0.5, inOut(seg(rp, 0, 0.55)));
-
-    // Swatches change as the scan passes plate 2; the active one hops up.
-    const reset = inOut(seg(t, 9.2, 9.9));
-    swatchMats.forEach((m, i) => {
-      if (t < ROUND0) tmp.copy(P[0][i]);
-      else if (inRound) tmp.copy(P[r][i]).lerp(P[r + 1][i], inOut(seg(rp, 0.2, 0.45)));
-      else tmp.copy(P[3][i]);
-      tmp.lerp(P[0][i], reset);
-      const limeness = clamp01((tmp.g - tmp.b - 0.5) * 2.5);
-      m.color.copy(tmp).multiplyScalar(1 - limeness);
-      m.emissive.copy(LIME).multiplyScalar(limeness);
-      const hop = inRound && i === (r + 1) % 4 ? Math.sin(Math.PI * seg(rp, 0.15, 0.5)) * 0.12 : 0;
-      swatches[i].position.y = H / 2 + 0.03 + hop;
-    });
-
-    // Mark: a quarter turn per round (four-fold symmetric, so the loop seam is
-    // invisible), and the blocks pull tighter with every iteration.
-    const turn = t < ROUND0 ? 0 : inRound ? r + inOut(seg(rp, 0.45, 0.9)) : 3;
-    mark.rotation.y = (Math.PI / 2) * turn;
-    const tight = lerp(0.3, 0.232, (turn / 3) * (1 - reset));
-    blocks.forEach(({ b, sx, sz }) => b.position.set(sx * tight, 0, sz * tight));
-
-    // Press-together flash on the glass edge.
-    const press = Math.sin(Math.PI * seg(t, 7.8, 8.5));
-    (M.edgeLime as THREE.LineBasicMaterial).opacity = 0.55 + 0.45 * press;
-    M.glass.opacity = 0.12 + 0.16 * press;
-
-    // Dimension rail tracks the explode height.
-    const x = -S / 2 - 0.28;
-    const z = S / 2 + 0.28;
-    const y0 = H;
-    const y1 = top.position.y;
-    const p = railGeo.attributes.position as THREE.BufferAttribute;
-    p.setXYZ(0, x, y0, z); p.setXYZ(1, x, y1, z);
-    p.setXYZ(2, x - 0.08, y0, z); p.setXYZ(3, x + 0.08, y0, z);
-    p.setXYZ(4, x - 0.08, y1, z); p.setXYZ(5, x + 0.08, y1, z);
-    p.needsUpdate = true;
-    rail.visible = explode > 0.05;
-  };
 }
 
 /* ----------------------------------------------------------------- listing */
@@ -624,7 +341,7 @@ export function mountServiceScene(
   const M = materials();
   const rig = new THREE.Group();
   scene.add(rig);
-  const BUILD = { design: buildDesign, brand: buildBrand, listing: buildListing, practice: buildPractice };
+  const BUILD = { listing: buildListing, practice: buildPractice };
   const update = BUILD[variant](rig, M);
 
   // Isometric orthographic camera.
@@ -632,14 +349,12 @@ export function mountServiceScene(
   const camBase = new THREE.Vector3(7, 6.2, 7);
   camera.position.copy(camBase);
   const FOCUS = {
-    design: new THREE.Vector3(0.5, 0.85, 0),
-    brand: new THREE.Vector3(0, 1.0, 0),
     listing: new THREE.Vector3(0.45, 0.45, -0.1),
     practice: new THREE.Vector3(0.55, 0.7, 0),
   };
   const focus = FOCUS[variant];
   camera.lookAt(focus);
-  const VIEW = { design: 2.6, brand: 2.25, listing: 2.15, practice: 2.6 }[variant];   // half-height of the view in world units
+  const VIEW = { listing: 2.15, practice: 2.6 }[variant];   // half-height of the view in world units
 
   const resize = () => {
     const r = host.getBoundingClientRect();
@@ -676,7 +391,7 @@ export function mountServiceScene(
   target?.addEventListener('pointermove', onMove);
   target?.addEventListener('pointerleave', onLeave);
 
-  const STILL = { design: 6.2, brand: 8.8, listing: 6.0, practice: 7.5 }[variant];   // a composed, fully-assembled moment
+  const STILL = { listing: 6.0, practice: 7.5 }[variant];   // a composed, fully-assembled moment
   let start = performance.now();
   let ready = false;
   const render = (now: number) => {

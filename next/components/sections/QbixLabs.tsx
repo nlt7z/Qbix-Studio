@@ -40,7 +40,6 @@ const products: Product[] = [
     blurb:
       'Blind auctions as a game. Bid, bluff, or go all in, while the model on the other side reads your hand.',
     media: { kind: 'video', src: '/bidking-present.mp4' },
-    url: '/games/bidking',
   },
   {
     key: 'interview',

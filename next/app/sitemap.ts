@@ -1,5 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { services } from '@/lib/data';
 
 const SITE_URL = 'https://qbix.space';
 
@@ -21,22 +20,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`,                 lastModified: HOME_UPDATED,    changeFrequency: 'weekly',  priority: 1.0 },
     { url: `${SITE_URL}/start`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${SITE_URL}/press`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${SITE_URL}/games`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${SITE_URL}/games/bidking`,    lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/products/strata`,  lastModified: STRATA_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/listing-kit`,       lastModified: OFFERS_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/practice-websites`, lastModified: OFFERS_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
   ];
 
-  const serviceRoutes: MetadataRoute.Sitemap = services.map((s) => ({
-    url: `${SITE_URL}/services/${s.slug}`,
-    lastModified: CONTENT_UPDATED,
-    changeFrequency: 'monthly',
-    priority: 0.8,
-  }));
-
-  // Lab detail pages are disabled for now, so they're omitted from the sitemap.
-
-  return [...staticRoutes, ...serviceRoutes];
+  return staticRoutes;
 }

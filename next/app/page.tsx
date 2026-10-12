@@ -11,7 +11,7 @@ export default function LandingPage() {
       {/* Panels alternate solid black / electric lime — set in globals.css. */}
       <main className="stacked">
         <Hero />       {/* 1 — headline + PST clock + two CTAs */}
-        <WhatWeDo />   {/* 2 — Who we work with: Design service + Brand upgrade */}
+        <WhatWeDo />   {/* 2 — Services: Listing Launch Kit + Practice Website Refresh */}
         <QbixLabs />   {/* 3 — Products: the live things we've built */}
         <AboutUs />    {/* 4 — Our story + founders */}
       </main>

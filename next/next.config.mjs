@@ -16,10 +16,12 @@ const nextConfig = {
     return [
       { source: '/studio', destination: '/', permanent: true },
       { source: '/studio/:path*', destination: '/', permanent: true },
-      // /work/bidking has a live counterpart at the games route — keep it useful.
-      { source: '/work/bidking', destination: '/games/bidking', permanent: true },
       { source: '/work/:path*', destination: '/', permanent: true },
       { source: '/labs/:path*', destination: '/', permanent: true },
+      { source: '/games', destination: '/', permanent: true },
+      { source: '/games/:path*', destination: '/', permanent: true },
+      { source: '/press', destination: '/', permanent: true },
+      { source: '/services/:path*', destination: '/#services', permanent: true },
     ];
   },
 };

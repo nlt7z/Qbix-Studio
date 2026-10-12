@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { CONTACT_EMAIL, offers, services } from '@/lib/data';
+import { CONTACT_EMAIL, offers } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 import SplitText from '@/components/SplitText';
 import PstClock from '@/components/PstClock';
@@ -21,16 +21,13 @@ type Item = { label: string; href?: string; external?: boolean };
 const COLUMNS: { title: string; items: Item[] }[] = [
   {
     title: 'Services',
-    items: [
-      ...services.map((s) => ({ label: s.title, href: `/services/${s.slug}` })),
-      ...offers.map((o) => ({ label: o.title, href: o.href })),
-    ],
+    items: offers.map((o) => ({ label: o.title, href: o.href })),
   },
   {
     title: 'Products',
     items: [
       { label: 'Strata', href: '/products/strata' },
-      { label: 'AI Bidding', href: '/games/bidking' },
+      { label: 'AI Bidding' },
       { label: 'TTS Editor' },
       { label: 'Interview Assistant' },
     ],
@@ -39,7 +36,6 @@ const COLUMNS: { title: string; items: Item[] }[] = [
     title: 'Studio',
     items: [
       { label: 'About', href: '/#about' },
-      { label: 'Press', href: '/press' },
       { label: 'Careers' },
     ],
   },
