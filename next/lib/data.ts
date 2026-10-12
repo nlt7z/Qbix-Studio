@@ -103,7 +103,7 @@ export const services: Service[] = [
  * CONTACT_EMAIL with the offer named in the subject.
  */
 export const CHECKOUT = {
-  listingKit: '',        // $249 — Listing Launch Kit
+  listingKit: '',        // $199 — Listing Launch Kit
   practiceDeposit: '',   // $400 deposit — Practice Website Refresh
 };
 
@@ -131,7 +131,7 @@ export const offers: Offer[] = [
       'A print flyer, five social posts, and a 30-second video for one property. Ready to share in 48 hours.',
     tags: ['Print flyer', '5 social posts', '30s video'],
     priceLead: 'Per listing',
-    price: '$249',
+    price: '$199',
     typical: '48 hours',
   },
   {
@@ -144,7 +144,7 @@ export const offers: Offer[] = [
       'A calm, clean website for your practice, rebuilt in one week. Your words, your photos, and it works on any phone.',
     tags: ['3 to 5 pages', 'Mobile first', 'You own it'],
     priceLead: '',
-    price: 'Contact for price',
+    price: '$800 flat',
     typical: '7 days',
   },
 ];

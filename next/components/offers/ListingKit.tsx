@@ -5,8 +5,10 @@ import Faq from './Faq';
 import StickyCta from './StickyCta';
 import HouseIllustration from './HouseIllustration';
 
-const CTA_LABEL = 'Start my listing kit, $249';
+const CTA_LABEL = 'Start my listing kit, $199';
 const OFFER = 'Listing Launch Kit';
+const VIDEO_LABEL = 'Just the video, $99';
+const VIDEO_OFFER = 'Listing video';
 
 const GET = [
   { k: 'Print flyer', v: '8.5 x 11 PDF, front and back, with your brokerage name and DRE number.' },
@@ -86,7 +88,7 @@ export default function ListingKit() {
         <div className="container lk-hero-grid">
           <div className="lk-hero-copy">
             <Reveal as="span" className="offer-eyebrow mono" speed="fast">
-              Listing Launch Kit · $249 per listing
+              Listing Launch Kit · $199 per listing
             </Reveal>
             <Reveal as="h1" className="lk-title" speed="base" delay={0.05}>
               Your listing, ready to share in 48 hours.
@@ -96,8 +98,9 @@ export default function ListingKit() {
               delivered as files you own.
             </Reveal>
             <Reveal className="lk-hero-cta" speed="base" delay={0.25}>
-              <span data-cta-zone>
+              <span className="lk-hero-ctas" data-cta-zone>
                 <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-primary" />
+                <CheckoutButton href="" offer={VIDEO_OFFER} label={VIDEO_LABEL} className="btn-secondary" />
               </span>
             </Reveal>
           </div>
@@ -156,10 +159,10 @@ export default function ListingKit() {
         <div className="container offer-narrow">
           <h2 className="offer-h2">Price</h2>
           <div className="offer-price">
-            <span className="offer-price-big">$249</span>
+            <span className="offer-price-big">$199</span>
             <span className="offer-price-unit">per listing</span>
           </div>
-          <p className="offer-price-note">Your next listing in the same month is $199.</p>
+          <p className="offer-price-note">Just the video: $99.</p>
         </div>
       </section>
 
