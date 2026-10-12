@@ -176,10 +176,13 @@ export default function ListingKit() {
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
           <h2 className="offer-h2">About me</h2>
-          <p className="offer-about">
-            I&rsquo;m Yuan. I trained as a painter at Pratt and now design software products in the Bay Area. I make
-            marketing for local agents on the side, so I keep it fast and simple.
-          </p>
+          <div className="offer-me">
+            <img className="offer-me-photo" src="/assets/sera.jpg" alt="Sera" width={120} height={120} loading="lazy" />
+            <p className="offer-about">
+              I&rsquo;m Sera. I trained as a painter at Pratt and now design software products in the Bay Area. I make
+              marketing for local agents on the side, so I keep it fast and simple.
+            </p>
+          </div>
           <div className="offer-close" data-cta-zone>
             <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-primary" />
           </div>

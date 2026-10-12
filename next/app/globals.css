@@ -6431,6 +6431,14 @@ a.ft-link:hover { color: var(--ink); }
 .offer-faq-item[open] .offer-faq-mark { transform: rotate(45deg); }
 .offer-faq-item p { margin: 0 0 22px; max-width: 40em; font-size: 17px; line-height: 1.6; color: var(--text); }
 .offer-about { margin: 0; font-size: clamp(18px, 1.8vw, 21px); line-height: 1.6; color: var(--text); }
+/* About me: round portrait above the text on phones, left of it on desktop. */
+.offer-me { display: grid; gap: 24px; justify-items: start; }
+/* Round on purpose: opts out of the global square-corner rule. */
+.offer-me-photo { display: block; width: 120px; height: 120px; border-radius: 50% !important; object-fit: cover; }
+.offer-me > p { margin: 0; }
+@media (min-width: 761px) {
+  .offer-me { grid-template-columns: 120px minmax(0, 1fr); gap: 36px; align-items: center; }
+}
 .offer-close { margin-top: 40px; }
 
 /* Phone-only sticky buy bar */
@@ -6532,6 +6540,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f6f5f
 .ba-label--before { left: calc(2.4 * var(--u)); }
 .ba-label--after { right: calc(2.4 * var(--u)); }
 .ba-cap { margin-top: 16px; text-align: center; font-size: 13px; color: #6d6e66; }
+.ba-note { display: block; margin-top: 4px; font-size: 12px; }
 
 /* the dated site */
 .ba-old { background: #fdfdf7; color: #333; font-family: Georgia, 'Times New Roman', serif; }

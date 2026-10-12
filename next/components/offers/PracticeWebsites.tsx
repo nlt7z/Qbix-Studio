@@ -125,11 +125,14 @@ export default function PracticeWebsites() {
       <section className="pw-section pw-section--last" data-nav-theme="light">
         <div className="container pw-narrow">
           <h2 className="pw-h2">About me</h2>
-          <p className="pw-text">
-            I&rsquo;m Yuan. I studied human-centered design at the University of Washington and trained as a painter at
-            Pratt. I design software products for a living, and I rebuild websites for independent practices because a
-            good one makes a real difference to a small business.
-          </p>
+          <div className="offer-me">
+            <img className="offer-me-photo" src="/assets/sera.jpg" alt="Sera" width={120} height={120} loading="lazy" />
+            <p className="pw-text">
+              I&rsquo;m Sera. I studied human-centered design at the University of Washington and trained as a painter at
+              Pratt. I design software products for a living, and I rebuild websites for independent practices because a
+              good one makes a real difference to a small business.
+            </p>
+          </div>
           <div className="pw-close">
             <CheckoutButton href={CHECKOUT.practiceDeposit} offer={OFFER} label={CTA_LABEL} className="pw-btn" />
           </div>

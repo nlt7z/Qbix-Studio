@@ -6,6 +6,7 @@ import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
 import SiteCursor from '@/components/SiteCursor';
 import { ContactModalProvider } from '@/components/ContactModalProvider';
+import { CONTACT_EMAIL } from '@/lib/data';
 
 // Headlines — Eurostile (licensed, self-hosted). Single Regular weight, so the
 // CSS disables weight synthesis on headings to avoid faux-bold smearing.
@@ -121,7 +122,7 @@ const organizationJsonLd = {
   logo: `${SITE_URL}/qbix-square.png`,
   image: `${SITE_URL}/hero.png`,
   description: SITE_DESC,
-  email: 'qbixspace@gmail.com',
+  email: CONTACT_EMAIL,
   sameAs: [
     'https://github.com/qbixstudio-bit',
     'https://www.are.na/q-bix/channels',

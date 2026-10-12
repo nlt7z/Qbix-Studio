@@ -93,7 +93,10 @@ export default function BeforeAfter() {
           />
         </div>
       </div>
-      <figcaption className="ba-cap">Drag to compare. Sample homepage, before and after.</figcaption>
+      <figcaption className="ba-cap">
+        Drag to compare. Sample homepage, before and after.
+        <span className="ba-note">Sample redesign of an invented practice.</span>
+      </figcaption>
     </figure>
   );
 }
