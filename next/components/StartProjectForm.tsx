@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 import SplitText from '@/components/SplitText';
+import type { BriefDraft } from '@/components/three/briefScene';
 
 const PROJECT_TYPES = [
   'AI product',
@@ -23,7 +24,7 @@ type Status = 'idle' | 'sending' | 'sent' | 'error';
  * posts to the same /api/contact endpoint with the extra fields plus a source
  * tag so submissions can be told apart.
  */
-export default function StartProjectForm() {
+export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft) => void } = {}) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
@@ -33,6 +34,20 @@ export default function StartProjectForm() {
   const [brief, setBrief] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Tell the 3D brief what has been filled in so far.
+  useEffect(() => {
+    onDraft?.({
+      name: name.trim().length > 0,
+      email: /\S+@\S+/.test(email),
+      company: company.trim().length > 0,
+      types,
+      budget: BUDGETS.indexOf(budget),
+      timeline: TIMELINES.indexOf(timeline),
+      brief: brief.trim().length,
+      status,
+    });
+  }, [onDraft, name, email, company, types, budget, timeline, brief, status]);
 
   const toggleType = (t: string) =>
     setTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));

@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import Colophon from '@/components/Colophon';
 import BrandText from '@/components/BrandText';
-import StartProjectForm from '@/components/StartProjectForm';
-import SubHero from '@/components/sub/SubHero';
+import StartStudio from '@/components/StartStudio';
+import Odometer from '@/components/offers/Odometer';
+import { Reveal, Words } from '@/components/Reveal';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 
 export const metadata: Metadata = {
@@ -33,79 +35,79 @@ const STEPS = [
 export default function StartPage() {
   return (
     <>
-      <main className="sp start-page">
-        <SubHero
-          crumb={{ href: '/', label: 'Qbix' }}
-          eyebrow="Start a project"
-          title={<>Tell us what you&rsquo;re building.</>}
-          lede={
-            <BrandText>
-              A few more details than the quick form — project type, budget, timeline — so our first reply is already
-              useful. We read every brief and answer within 24 hours.
-            </BrandText>
-          }
-        />
-        <div className="container sp-start">
-          <div className="start-layout">
-            <div className="start-form-col">
-              <StartProjectForm />
-            </div>
-
-            <aside className="start-aside">
-              <section className="start-aside-block">
-                <span className="detail-section-label">FIG · What happens next</span>
-                <ol className="start-steps">
-                  {STEPS.map((s) => (
-                    <li key={s.k} className="start-step">
-                      <span className="start-step-k">{s.k}</span>
-                      <div className="start-step-body">
-                        <h3>{s.t}</h3>
-                        <p>
-                          <BrandText>{s.d}</BrandText>
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-
-              <section className="contact-sprint start-sprint">
-                <div className="contact-sprint-head">
-                  <span className="fig">FIG · The 48-hour sprint</span>
-                  <span className="contact-sprint-price">
-                    From <strong>$500</strong> · idea → working prototype
-                  </span>
-                  <span className="contact-sprint-status">
-                    <span className="contact-sprint-dot" aria-hidden />
-                    Live sprint window
-                  </span>
-                </div>
-                <div className="contact-sprint-body">
-                  <div className="contact-sprint-figure">
-                    <span className="contact-sprint-n">48</span>
-                    <span className="contact-sprint-unit">hours</span>
-                  </div>
-                  <p className="contact-sprint-cap">
-                    From signed SOW to a working prototype in your inbox — senior
-                    craft, on the clock. Pick &ldquo;48-hour sprint&rdquo; above and
-                    we&rsquo;ll send the next open slot.
-                  </p>
-                </div>
-              </section>
-
-              <section className="start-aside-block start-reach">
-                <span className="detail-section-label">FIG · Reach us directly</span>
-                <a href={`mailto:${CONTACT_EMAIL}`} className="start-reach-link">
-                  {CONTACT_EMAIL}
-                </a>
-                <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="start-reach-link">
-                  Book a 30-min intro call ↗︎
-                </a>
-                <span className="start-reach-meta">Remote, worldwide</span>
-              </section>
-            </aside>
+      <main className="start">
+        <section className="start-hero" data-nav-theme="dark">
+          <div className="container">
+            <Link href="/" className="sp-crumb mono">
+              ← Qbix
+            </Link>
+            <Reveal as="span" className="sp-eyebrow mono" speed="fast">
+              Start a project
+            </Reveal>
+            <Words as="h1" className="start-title" text="Tell us what you’re building." speed="slow" step={0.06} />
+            <Reveal as="p" className="sp-lede" speed="base" delay={0.35}>
+              <BrandText>
+                A few more details than the quick form — project type, budget, timeline — so our first reply is already
+                useful. We read every brief and answer within 24 hours.
+              </BrandText>
+            </Reveal>
           </div>
-        </div>
+        </section>
+
+        <section className="start-work" data-nav-theme="dark">
+          <StartStudio />
+        </section>
+
+        <section className="start-next" data-nav-theme="dark">
+          <div className="container">
+            <Words as="h2" className="start-h2" text="What happens next" />
+            <ol className="start-next-list">
+              {STEPS.map((s, i) => (
+                <Reveal as="li" key={s.k} className="start-next-step" speed="base" delay={i * 0.12}>
+                  <span className="start-next-k mono">{s.k}</span>
+                  <h3>{s.t}</h3>
+                  <p>
+                    <BrandText>{s.d}</BrandText>
+                  </p>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="start-sprint-panel" data-nav-theme="light">
+          <div className="container start-sprint-grid">
+            <div>
+              <span className="start-sprint-eyebrow mono">The 48-hour sprint</span>
+              <p className="start-sprint-figure">
+                <Odometer value="48" className="start-sprint-n" />
+                <span className="start-sprint-unit">hours</span>
+              </p>
+            </div>
+            <div className="start-sprint-copy">
+              <p className="start-sprint-price">
+                From <strong>$500</strong> · idea → working prototype
+              </p>
+              <Reveal as="p" speed="base">
+                From signed SOW to a working prototype in your inbox — senior craft, on the clock. Pick &ldquo;48-hour
+                sprint&rdquo; above and we&rsquo;ll send the next open slot.
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        <section className="start-reach-panel" data-nav-theme="dark">
+          <div className="container start-reach-grid">
+            <span className="sp-eyebrow mono">Reach us directly</span>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="start-reach-big">
+              {CONTACT_EMAIL}
+            </a>
+            <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="start-reach-big">
+              Book a 30-min intro call ↗︎
+            </a>
+            <span className="start-reach-meta mono">Remote, worldwide</span>
+          </div>
+        </section>
       </main>
       <Colophon />
     </>
