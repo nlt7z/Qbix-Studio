@@ -6001,41 +6001,34 @@ html, body { overflow-x: clip; }
 .pd-lime .eyebrow { color: rgba(15, 26, 0, 0.72); }
 .pd-lime h2 { color: var(--signal-dark); }
 
-.pd-steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(24px, 4vw, 56px);
+/* Hero: the claim beside the Strata object. */
+.pd-hero-grid { display: grid; gap: 12px; }
+@media (min-width: 960px) {
+  .pd-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: clamp(32px, 4vw, 56px); }
+  .pd-head { margin-bottom: 0; }
 }
-.pd-step {
-  display: grid;
-  align-content: start;
-  gap: 10px;
+.pd-hero-visual { position: relative; }
+.pd-h2 { display: block; margin-top: 14px; }
+
+/* The strata labels run out to the right of each layer. */
+.scene-strata .kit-label::before { left: 0; top: 0; bottom: auto; width: 0; height: 1px; transition: width 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+.scene-strata .kit-label.is-on::before { width: 48px; height: 1px; }
+.scene-strata .kit-label > span { left: 56px; top: -5px; bottom: auto; }
+
+/* What you get — four outputs on the lime panel. */
+.pd-outputs-grid { display: grid; gap: clamp(24px, 3vw, 40px); }
+@media (min-width: 760px) { .pd-outputs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .pd-outputs-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.pd-output {
+  display: grid; align-content: start; gap: 12px;
   padding-top: clamp(16px, 2vw, 22px);
-  border-top: 1px solid rgba(15, 26, 0, 0.35);
+  box-shadow: inset 0 1px 0 rgba(15, 26, 0, 0.35);
 }
-.pd-step-num {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  color: rgba(15, 26, 0, 0.6);
-}
-.pd-step h3 {
-  color: var(--signal-dark);
-  font-size: clamp(20px, 2.2vw, 26px);
-  letter-spacing: -0.02em;
-}
-.pd-step p {
-  color: rgba(15, 26, 0, 0.78);
-  font-size: 15px;
-  line-height: 1.55;
-  letter-spacing: -0.011em;
-  max-width: 40ch;
-}
-@media (max-width: 860px) {
-  .pd-steps { grid-template-columns: 1fr; }
-  .pd-step p { max-width: 56ch; }
-}
+.pd-output-num { font-family: var(--font-headline); font-size: clamp(48px, 6vw, 84px); line-height: 0.9; letter-spacing: -0.04em; color: var(--signal-dark); }
+.pd-output h3 { color: var(--signal-dark); font-size: clamp(20px, 2vw, 24px); letter-spacing: -0.02em; }
+.pd-output p { color: rgba(15, 26, 0, 0.78); font-size: 15px; line-height: 1.55; letter-spacing: -0.011em; max-width: 40ch; }
+.pd-product .about-preview { display: block; }
+
 
 /* =============================================================================
    HERO STAGE — the headline set huge over three lines, one large brand object

@@ -2,21 +2,31 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useReducedMotion, type MotionValue } from 'framer-motion';
-import type { KitMode } from '@/components/three/kitScene';
+
+// Each scene is its own chunk, fetched only when its stage nears the viewport.
+const SCENES = {
+  kit: () => import('@/components/three/kitScene').then((m) => m.mountKitScene),
+  strata: () => import('@/components/three/strataScene').then((m) => m.mountStrataScene),
+};
+export type SceneName = keyof typeof SCENES;
+type Mode = 'hero' | 'tour';
 
 /**
- * The listing kit in 3D. three.js loads only when the stage nears the
- * viewport; the canvas is uncovered by a wipe once its first frame is drawn.
- * Without WebGL the `fallback` (the flat flyer + post sample) stays.
+ * A three.js scene on an offer or product page (the listing kit, Strata).
+ * three.js loads only when the stage nears the viewport; the canvas is
+ * uncovered by a wipe once its first frame is drawn. Without WebGL the
+ * `fallback` stays.
  */
-export default function KitStage({
+export default function SceneStage({
+  scene,
   mode,
   progress,
   fallback,
   labels,
   className = '',
 }: {
-  mode: KitMode;
+  scene: SceneName;
+  mode: Mode;
   progress?: MotionValue<number>;
   fallback?: ReactNode;
   /** Blueprint labels pinned to the flyer, the posts and the phone. */
@@ -43,9 +53,9 @@ export default function KitStage({
       if (dispose || mounting) return;
       mounting = true;
       try {
-        const { mountKitScene } = await import('@/components/three/kitScene');
+        const mount = await SCENES[scene]();
         if (cancelled) return;
-        const d = await mountKitScene(host, {
+        const d = await mount(host, {
           mode,
           reduced,
           getProgress: progress ? () => progress.get() : undefined,
@@ -92,10 +102,10 @@ export default function KitStage({
       io.disconnect();
       dispose?.();
     };
-  }, [mode, progress, reduced, labels]);
+  }, [scene, mode, progress, reduced, labels]);
 
   return (
-    <div className={`kit-stage kit-stage--${mode}${ready ? ' is-ready' : ''}${failed ? ' is-failed' : ''} ${className}`}>
+    <div className={`kit-stage kit-stage--${mode} scene-${scene}${ready ? ' is-ready' : ''}${failed ? ' is-failed' : ''} ${className}`}>
       {failed && fallback}
       <div ref={hostRef} className="kit-stage-host" aria-hidden />
       {labels && ready && (

@@ -4,16 +4,29 @@ import { useRef, useState } from 'react';
 import { useMotionValueEvent, useScroll } from 'framer-motion';
 import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
 import { Words } from '@/components/Reveal';
-import KitStage from './KitStage';
+import SceneStage, { type SceneName } from './SceneStage';
 
 type Item = { k: string; v: string };
 
 /**
- * "What you get" as a guided tour: the section pins, the 3D kit sits beside
- * the list, and scrolling walks the camera from piece to piece. Each row is
- * a button that jumps to its stop. With reduced motion it's a plain list.
+ * A pinned scroll tour: the section pins, a 3D scene sits beside the list,
+ * and scrolling walks the scene from stop to stop. Each row is a button that
+ * jumps to its stop. With reduced motion it's a plain list.
  */
-export default function KitTour({ items }: { items: Item[] }) {
+export default function KitTour({
+  items,
+  scene = 'kit',
+  title = 'What you get',
+  id,
+  labels,
+}: {
+  items: Item[];
+  scene?: SceneName;
+  title?: string;
+  id?: string;
+  /** Blueprint labels pinned to the scene's pieces (a stable, module-level array). */
+  labels?: string[];
+}) {
   const ref = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
   const [active, setActive] = useState(0);
@@ -34,9 +47,9 @@ export default function KitTour({ items }: { items: Item[] }) {
 
   if (reduced) {
     return (
-      <section className="offer-section" data-nav-theme="dark">
+      <section id={id} className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
-          <h2 className="offer-h2">What you get</h2>
+          <h2 className="offer-h2">{title}</h2>
           <ol className="offer-list">
             {items.map((g, i) => (
               <li key={g.k}>
@@ -54,11 +67,11 @@ export default function KitTour({ items }: { items: Item[] }) {
   }
 
   return (
-    <section ref={ref} className="lk-tour" data-nav-theme="dark" style={{ ['--stops' as string]: n }}>
+    <section ref={ref} id={id} className="lk-tour" data-nav-theme="dark" style={{ ['--stops' as string]: n }}>
       <div className="lk-tour-pin">
         <div className="container lk-tour-grid">
           <div className="lk-tour-copy">
-            <Words as="h2" className="offer-h2" text="What you get" />
+            <Words as="h2" className="offer-h2" text={title} />
             <ol className="lk-tour-list">
               {items.map((g, i) => (
                 <li key={g.k} className={i === active ? 'is-on' : i < active ? 'is-past' : ''}>
@@ -78,7 +91,7 @@ export default function KitTour({ items }: { items: Item[] }) {
               <span style={{ transform: `scaleX(${(active + 1) / n})` }} />
             </div>
           </div>
-          <KitStage mode="tour" progress={scrollYProgress} className="lk-tour-stage" />
+          <SceneStage scene={scene} mode="tour" progress={scrollYProgress} labels={labels} className="lk-tour-stage" />
         </div>
       </div>
     </section>

@@ -1,11 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Wipe, Words } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
 import SplitText from '@/components/SplitText';
+import SceneStage from '@/components/offers/SceneStage';
+import KitTour from '@/components/offers/KitTour';
 
 const STRATA_URL = 'https://stratadesign.app';
+
+// The strata the 3D image separates into, top to bottom.
+const LAYERS = ['Image', 'Color', 'Type', 'Spacing', 'Components', 'Code'];
 
 // FIG 01 — the pipeline, three verbs.
 const steps = [
@@ -25,6 +30,8 @@ const steps = [
     body: 'Export CSS variables, Tailwind config, and component code. Hand it to your library — or straight to AI.',
   },
 ];
+
+const tourSteps = steps.map((s) => ({ k: s.title, v: s.body }));
 
 // FIG 02 — what actually comes out.
 const outputs = [
@@ -53,14 +60,13 @@ const outputs = [
 export default function StrataIntro() {
   return (
     <main className="pd">
-      {/* 1 — hero: name, claim, CTAs, and the product itself in a frame */}
+      {/* 1 — hero: the claim beside the object — an image that separates into a system */}
       <section className="pd-hero" data-nav-theme="dark">
-        <div className="container">
-          <Link href="/#products" className="detail-crumb">
-            <span className="arrow">←</span> Products
-          </Link>
-
+        <div className="container pd-hero-grid">
           <header className="pd-head">
+            <Link href="/#products" className="detail-crumb">
+              <span className="arrow">←</span> Products
+            </Link>
             <Reveal as="span" className="eyebrow" speed="fast">
               Qbix Labs · Strata · Live
             </Reveal>
@@ -91,8 +97,71 @@ export default function StrataIntro() {
               </a>
             </Reveal>
           </header>
+          <div className="pd-hero-visual">
+            <SceneStage scene="strata" mode="hero" labels={LAYERS} />
+          </div>
+        </div>
+        <div className="container">
+          <Reveal speed="base" delay={0.1}>
+            <dl className="detail-meta pd-meta">
+              <div className="detail-meta-cell">
+                <dt>Input</dt>
+                <dd>Any image or moodboard</dd>
+              </div>
+              <div className="detail-meta-cell">
+                <dt>Output</dt>
+                <dd>Tokens · Components · Code</dd>
+              </div>
+              <div className="detail-meta-cell">
+                <dt>Status</dt>
+                <dd>Live — stratadesign.app</dd>
+              </div>
+            </dl>
+          </Reveal>
+        </div>
+      </section>
 
-          <Reveal gesture="media" speed="slow" delay={0.15}>
+      {/* 2 — how it works: the section pins and scroll reads, drafts, ships */}
+      <KitTour id="how" items={tourSteps} scene="strata" title="Drop in an image. Ship a system." labels={LAYERS} />
+
+      {/* 3 — the campaign gesture: full-bleed lime, what comes out */}
+      <section id="outputs" className="pd-lime section-pad" data-nav-theme="light">
+        <div className="container">
+          <header className="section-head">
+            <div>
+              <Reveal as="span" className="eyebrow" speed="fast">
+                FIG 02 — What you get
+              </Reveal>
+              <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1} color="var(--signal-dark)">
+                Everything a system needs.
+              </Wipe>
+            </div>
+          </header>
+
+          <Stagger className="pd-outputs-grid" stagger={0.1} delayChildren={0.15}>
+            {outputs.map((o) => (
+              <RevealItem key={o.num} as="article" className="pd-output" speed="base">
+                <span className="pd-output-num">{o.num}</span>
+                <h3>{o.title}</h3>
+                <p>{o.body}</p>
+              </RevealItem>
+            ))}
+          </Stagger>
+        </div>
+      </section>
+
+      {/* 4 — the product itself, in a window */}
+      <section className="pd-product section-pad" data-nav-theme="dark">
+        <div className="container">
+          <header className="section-head">
+            <div>
+              <Reveal as="span" className="eyebrow" speed="fast">
+                FIG 03 — The product
+              </Reveal>
+              <Words as="h2" className="pd-h2" text="See it live." />
+            </div>
+          </header>
+          <Reveal gesture="media" speed="slow" delay={0.1}>
             <a
               className="about-preview"
               href={STRATA_URL}
@@ -116,79 +185,6 @@ export default function StrataIntro() {
               </div>
             </a>
           </Reveal>
-
-          <Reveal speed="base" delay={0.1}>
-            <dl className="detail-meta pd-meta">
-              <div className="detail-meta-cell">
-                <dt>Input</dt>
-                <dd>Any image or moodboard</dd>
-              </div>
-              <div className="detail-meta-cell">
-                <dt>Output</dt>
-                <dd>Tokens · Components · Code</dd>
-              </div>
-              <div className="detail-meta-cell">
-                <dt>Status</dt>
-                <dd>Live — stratadesign.app</dd>
-              </div>
-            </dl>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* 2 — the campaign gesture: full-bleed lime, dark ink, three verbs */}
-      <section id="how" className="pd-lime section-pad" data-nav-theme="light">
-        <div className="container">
-          <header className="section-head">
-            <div>
-              <Reveal as="span" className="eyebrow" speed="fast">
-                FIG 01 — How it works
-              </Reveal>
-              <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1} color="var(--signal-dark)">
-                Drop in an image. Ship a system.
-              </Wipe>
-            </div>
-          </header>
-
-          <Stagger className="pd-steps" stagger={0.12} delayChildren={0.15}>
-            {steps.map((s) => (
-              <RevealItem key={s.num} as="article" className="pd-step" speed="base">
-                <span className="pd-step-num">{s.num}</span>
-                <h3>{s.title}</h3>
-                <p>{s.body}</p>
-              </RevealItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-
-      {/* 3 — deliverables, back on black */}
-      <section id="outputs" className="pd-outputs section-pad" data-nav-theme="dark">
-        <div className="container">
-          <header className="section-head">
-            <div>
-              <Reveal as="span" className="eyebrow" speed="fast">
-                FIG 02 — What you get
-              </Reveal>
-              <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1}>
-                Everything a system needs.
-              </Wipe>
-            </div>
-          </header>
-
-          <Stagger className="line-list" stagger={0.08} delayChildren={0.1}>
-            {outputs.map((o) => (
-              <RevealItem key={o.num} speed="fast">
-                <div className="line-row">
-                  <span className="line-num">{o.num}</span>
-                  <div className="line-body">
-                    <span className="line-title">{o.title}</span>
-                    <span className="line-blurb">{o.body}</span>
-                  </div>
-                </div>
-              </RevealItem>
-            ))}
-          </Stagger>
 
           <div className="detail-cta">
             <p className="detail-cta-text">

@@ -4,7 +4,7 @@ import CheckoutButton from './CheckoutButton';
 import Faq from './Faq';
 import StickyCta from './StickyCta';
 import HouseIllustration from './HouseIllustration';
-import KitStage from './KitStage';
+import SceneStage from './SceneStage';
 import KitTour from './KitTour';
 import HourRail from './HourRail';
 import Odometer from './Odometer';
@@ -105,7 +105,7 @@ export default function ListingKit() {
             </Reveal>
           </div>
           <div className="lk-hero-visual">
-            <KitStage mode="hero" labels={KIT_LABELS} fallback={<SampleKit />} />
+            <SceneStage scene="kit" mode="hero" labels={KIT_LABELS} fallback={<SampleKit />} />
             <span className="lk-drag mono" aria-hidden>Drag to turn</span>
           </div>
           <div className="lk-hero-act">
