@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { watchCovered } from '@/components/three/covered';
+import { whenLinked } from '@/components/three/glLink';
 
 /**
  * 1-bit dither field for the lime panels — a slow-drifting noise field pushed
@@ -96,116 +97,128 @@ export default function DitherField() {
     gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
     gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
     gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      canvas.remove();
-      return;
-    }
-    gl.useProgram(prog);
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-    const loc = gl.getAttribLocation(prog, 'aPos');
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    const u = {
-      res: gl.getUniformLocation(prog, 'uRes'),
-      scale: gl.getUniformLocation(prog, 'uScale'),
-      time: gl.getUniformLocation(prog, 'uTime'),
-      mouse: gl.getUniformLocation(prog, 'uMouse'),
-      reveal: gl.getUniformLocation(prog, 'uReveal'),
-    };
 
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let scale = 1;
-    const resize = () => {
-      // Dots are whole CSS px, so render at 1× and let the browser scale up
-      // with image-rendering: pixelated — same crisp dots, a quarter of the
-      // fragments on retina screens.
-      scale = 1;
-      const r = host.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.round(r.width * scale));
-      canvas.height = Math.max(1, Math.round(r.height * scale));
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      if (reduce) draw(performance.now());
-    };
+    // The rest waits for the link to finish off the main thread.
+    let cancelled = false;
+    let teardown: (() => void) | undefined;
+    const setup = () => {
+      gl.useProgram(prog);
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, 'aPos');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      const u = {
+        res: gl.getUniformLocation(prog, 'uRes'),
+        scale: gl.getUniformLocation(prog, 'uScale'),
+        time: gl.getUniformLocation(prog, 'uTime'),
+        mouse: gl.getUniformLocation(prog, 'uMouse'),
+        reveal: gl.getUniformLocation(prog, 'uReveal'),
+      };
 
-    const mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return;
-      const r = host.getBoundingClientRect();
-      mouse.tx = e.clientX - r.left;
-      mouse.ty = e.clientY - r.top;
-      if (mouse.x < -9000) {
-        mouse.x = mouse.tx;
-        mouse.y = mouse.ty;
-      }
-    };
-    if (!reduce) window.addEventListener('pointermove', onMove, { passive: true });
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let scale = 1;
+      const resize = () => {
+        // Dots are whole CSS px, so render at 1× and let the browser scale up
+        // with image-rendering: pixelated — same crisp dots, a quarter of the
+        // fragments on retina screens.
+        scale = 1;
+        const r = host.getBoundingClientRect();
+        canvas.width = Math.max(1, Math.round(r.width * scale));
+        canvas.height = Math.max(1, Math.round(r.height * scale));
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        if (reduce) draw(performance.now());
+      };
 
-    let reveal = reduce ? 1 : 0;
-    const draw = (now: number) => {
-      const r = panel.getBoundingClientRect();
-      const vh = window.innerHeight;
-      // How far the panel has risen into the viewport: 0 at the fold, 1 once
-      // its top has climbed 70% of the screen.
-      const target = reduce ? 1 : Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.7)));
-      reveal += (target - reveal) * 0.12;
-      mouse.x += (mouse.tx - mouse.x) * 0.18;
-      mouse.y += (mouse.ty - mouse.y) * 0.18;
+      const mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
+      const onMove = (e: PointerEvent) => {
+        if (e.pointerType !== 'mouse') return;
+        const r = host.getBoundingClientRect();
+        mouse.tx = e.clientX - r.left;
+        mouse.ty = e.clientY - r.top;
+        if (mouse.x < -9000) {
+          mouse.x = mouse.tx;
+          mouse.y = mouse.ty;
+        }
+      };
+      if (!reduce) window.addEventListener('pointermove', onMove, { passive: true });
 
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.uniform2f(u.res, canvas.width, canvas.height);
-      gl.uniform1f(u.scale, scale);
-      gl.uniform1f(u.time, reduce ? 12 : now / 1000);
-      gl.uniform2f(u.mouse, mouse.x, mouse.y);
-      gl.uniform1f(u.reveal, reveal);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    };
+      let reveal = reduce ? 1 : 0;
+      const draw = (now: number) => {
+        const r = panel.getBoundingClientRect();
+        const vh = window.innerHeight;
+        // How far the panel has risen into the viewport: 0 at the fold, 1 once
+        // its top has climbed 70% of the screen.
+        const target = reduce ? 1 : Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.7)));
+        reveal += (target - reveal) * 0.12;
+        mouse.x += (mouse.tx - mouse.x) * 0.18;
+        mouse.y += (mouse.ty - mouse.y) * 0.18;
 
-    let raf = 0;
-    let last = 0;
-    let visible = false;
-    let covered = false;
-    const loop = (now: number) => {
-      raf = 0;
-      if (!visible || covered || document.hidden) return;
-      if (now - last >= FRAME_MS) {
-        last = now;
-        draw(now);
-      }
-      raf = requestAnimationFrame(loop);
-    };
-    const kick = () => {
-      if (!reduce && visible && !covered && !raf) raf = requestAnimationFrame(loop);
-    };
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform2f(u.res, canvas.width, canvas.height);
+        gl.uniform1f(u.scale, scale);
+        gl.uniform1f(u.time, reduce ? 12 : now / 1000);
+        gl.uniform2f(u.mouse, mouse.x, mouse.y);
+        gl.uniform1f(u.reveal, reveal);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      };
 
-    const ro = new ResizeObserver(resize);
-    ro.observe(host);
-    resize();
-    // -1px: a panel whose edge merely touches the viewport isn't "visible".
-    const io = new IntersectionObserver(
-      ([e]) => {
-        visible = e.isIntersecting;
+      let raf = 0;
+      let last = 0;
+      let visible = false;
+      let covered = false;
+      const loop = (now: number) => {
+        raf = 0;
+        if (!visible || covered || document.hidden) return;
+        if (now - last >= FRAME_MS) {
+          last = now;
+          draw(now);
+        }
+        raf = requestAnimationFrame(loop);
+      };
+      const kick = () => {
+        if (!reduce && visible && !covered && !raf) raf = requestAnimationFrame(loop);
+      };
+
+      const ro = new ResizeObserver(resize);
+      ro.observe(host);
+      resize();
+      // -1px: a panel whose edge merely touches the viewport isn't "visible".
+      const io = new IntersectionObserver(
+        ([e]) => {
+          visible = e.isIntersecting;
+          kick();
+        },
+        { rootMargin: '-1px 0px' },
+      );
+      io.observe(host);
+      // The lime panels are sticky: stop drawing once the next panel covers them.
+      const unwatch = watchCovered(host, (c) => {
+        covered = c;
         kick();
-      },
-      { rootMargin: '-1px 0px' },
-    );
-    io.observe(host);
-    // The lime panels are sticky: stop drawing once the next panel covers them.
-    const unwatch = watchCovered(host, (c) => {
-      covered = c;
-      kick();
+      });
+      document.addEventListener('visibilitychange', kick);
+
+      return () => {
+        cancelAnimationFrame(raf);
+        ro.disconnect();
+        io.disconnect();
+        unwatch();
+        window.removeEventListener('pointermove', onMove);
+        document.removeEventListener('visibilitychange', kick);
+      };
+    };
+    whenLinked(gl, prog).then((ok) => {
+      if (cancelled) return;
+      if (ok) teardown = setup();
+      else canvas.remove();
     });
-    document.addEventListener('visibilitychange', kick);
 
     return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      io.disconnect();
-      unwatch();
-      window.removeEventListener('pointermove', onMove);
-      document.removeEventListener('visibilitychange', kick);
+      cancelled = true;
+      teardown?.();
       gl.getExtension('WEBGL_lose_context')?.loseContext();
       canvas.remove();
     };

@@ -127,6 +127,8 @@ export function mountHeroCube(
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.domElement.className = 'hero-cube-canvas';
+  // Reading shader logs back stalls the main thread on the first draw.
+  renderer.debug.checkShaderErrors = false;
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -211,7 +213,7 @@ export function mountHeroCube(
   };
   const ro = new ResizeObserver(() => {
     resize();
-    if (opts.reduced) render(performance.now());
+    if (opts.reduced && compiled) render(performance.now());
   });
   ro.observe(host);
   resize();
@@ -416,6 +418,8 @@ export function mountHeroCube(
 
   /* --- render loop --- */
   let ready = false;
+  let compiled = false;
+  let disposed = false;
   let prev = performance.now();
   let clock = 0;
   const render = (now: number) => {
@@ -459,7 +463,7 @@ export function mountHeroCube(
     raf = requestAnimationFrame(loop);
   };
   const kick = () => {
-    if (opts.reduced) return;
+    if (opts.reduced || !compiled) return;
     if (visible && !covered && !document.hidden && !raf) {
       prev = performance.now();
       raf = requestAnimationFrame(loop);
@@ -476,11 +480,19 @@ export function mountHeroCube(
     kick();
   });
   document.addEventListener('visibilitychange', kick);
-  // Draw the first frame now, independent of visibility — the reveal waits on
-  // onReady, so gating it behind the observer could deadlock behind a clip.
-  render(performance.now());
+  // Shaders link off the main thread (KHR_parallel_shader_compile). Then draw
+  // the first frame independent of visibility — the reveal waits on onReady,
+  // so gating it behind the observer could deadlock behind a clip.
+  renderer.compileAsync(scene, camera).then(() => {
+    if (disposed) return;
+    compiled = true;
+    prev = performance.now();
+    render(prev);
+    kick();
+  });
 
   return () => {
+    disposed = true;
     cancelAnimationFrame(raf);
     ro.disconnect();
     io.disconnect();

@@ -4,15 +4,19 @@ import { useEffect, useState } from 'react';
 
 type T = { h: number; m: number; s: number };
 
+let fmt: Intl.DateTimeFormat | null = null;
+
 /** Current wall-clock time in Pacific (America/Los_Angeles), DST-aware. */
 function pstNow(): T {
-  const parts = new Intl.DateTimeFormat('en-US', {
+  // Building a DateTimeFormat costs far more than using one; make it once.
+  fmt ??= new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Los_Angeles',
     hour12: false,
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  }).formatToParts(new Date());
+  });
+  const parts = fmt.formatToParts(new Date());
   const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? '0');
   let h = get('hour');
   if (h === 24) h = 0; // some engines emit 24 at midnight

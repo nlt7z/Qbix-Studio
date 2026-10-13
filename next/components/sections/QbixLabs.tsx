@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
 import { PixelEdge, StripTitle } from '@/components/ScrollMotion';
+import { useQuietPlayback } from '@/components/useQuietPlayback';
 
 type Media = { kind: 'image' | 'video' | 'iframe'; src: string; poster?: string; motion?: string };
 type Product = {
@@ -55,7 +56,9 @@ const products: Product[] = [
 /** Streams video/iframe media only once the card nears the viewport. */
 function ProductMedia({ media }: { media: Media | null }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [show, setShow] = useState(false);
+  useQuietPlayback(videoRef, media?.kind === 'video' && show);
 
   useEffect(() => {
     if (!media || media.kind === 'image') return;
@@ -92,7 +95,7 @@ function ProductMedia({ media }: { media: Media | null }) {
         <img src={media.src} alt="" loading="lazy" decoding="async" />
       )}
       {media.kind === 'video' && show && (
-        <video src={media.src} muted loop playsInline autoPlay preload="metadata" />
+        <video ref={videoRef} src={media.src} muted loop playsInline preload="metadata" />
       )}
       {media.kind === 'iframe' && show && (
         <SitePreviewFrame src={media.src} title="Product preview" poster={media.poster} motion={media.motion} />

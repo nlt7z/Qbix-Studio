@@ -586,6 +586,8 @@ export function mountServiceScene(
   renderer.toneMapping = THREE.NeutralToneMapping;   // whites stay white, lime stays lime
   renderer.toneMappingExposure = 1.0;
   renderer.domElement.className = 'svc-scene-canvas';
+  // Reading shader logs back stalls the main thread on every first draw.
+  renderer.debug.checkShaderErrors = false;
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -633,7 +635,7 @@ export function mountServiceScene(
   };
   const ro = new ResizeObserver(() => {
     resize();
-    if (opts.reduced) render(0);
+    if (opts.reduced && compiled) render(0);
   });
   ro.observe(host);
   resize();
@@ -657,6 +659,8 @@ export function mountServiceScene(
   const STILL = { design: 6.2, brand: 8.8, listing: 6.0, practice: 7.5 }[variant];   // a composed, fully-assembled moment
   let start = performance.now();
   let ready = false;
+  let compiled = false;
+  let disposed = false;
   const render = (now: number) => {
     const t = opts.reduced ? STILL : (now - start) / 1000;
     update(t);
@@ -692,7 +696,7 @@ export function mountServiceScene(
     raf = requestAnimationFrame(loop);
   };
   const kick = () => {
-    if (opts.reduced) return;
+    if (opts.reduced || !compiled) return;
     if (visible && !covered && !document.hidden && !raf) {
       // Resume where it paused rather than jumping ahead.
       if (pausedAt) start += performance.now() - pausedAt;
@@ -716,9 +720,19 @@ export function mountServiceScene(
     kick();
   });
   document.addEventListener('visibilitychange', kick);
-  render(performance.now());   // first frame (and onReady) regardless of visibility
+  // Shaders link off the main thread (KHR_parallel_shader_compile); the first
+  // frame (and onReady) follows once they're ready, regardless of visibility.
+  update(opts.reduced ? STILL : 0);
+  renderer.compileAsync(scene, camera).then(() => {
+    if (disposed) return;
+    compiled = true;
+    start = performance.now();
+    render(start);
+    kick();
+  });
 
   return () => {
+    disposed = true;
     cancelAnimationFrame(raf);
     ro.disconnect();
     io.disconnect();

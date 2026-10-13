@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useQuietPlayback } from '@/components/useQuietPlayback';
 
 /**
  * A website preview that always shows the *complete* desktop layout.
  *
  * Preferred mode — `poster` (+ optional `motion`): a pre-captured 2x desktop
  * screenshot shown immediately, upgraded to a short muted looping screen
- * recording (desktop scroll tour) once the frame nears the viewport. The
+ * recording (desktop scroll tour) once the frame nears the viewport; it plays
+ * only while seen and at rest (useQuietPlayback). The
  * video preserves the site's real animations at a fraction of a live embed's
  * cost — three live sites rendering desktop layouts with WebGL inside
  * iframes was OOM-killing mobile Safari ("can't open page").
@@ -33,7 +35,9 @@ export default function SitePreviewFrame({
   baseWidth?: number;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [load, setLoad] = useState(false);
+  useQuietPlayback(videoRef, Boolean(poster && motion && load));
   const [box, setBox] = useState<{ w: number; h: number } | null>(null);
 
   // Stream the heavy media (motion video / live iframe) only near viewport.
@@ -86,11 +90,11 @@ export default function SitePreviewFrame({
         <img src={poster} alt={title} loading="lazy" decoding="async" style={mediaStyle} />
         {motion && load && (
           <video
+            ref={videoRef}
             src={motion}
             poster={poster}
             muted
             loop
-            autoPlay
             playsInline
             preload="metadata"
             style={mediaStyle}

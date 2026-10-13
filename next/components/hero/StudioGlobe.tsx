@@ -56,6 +56,13 @@ function subsolar(d: Date) {
   return { lat: decl, lon: -15 * (hours - 12) };
 }
 
+// Building a DateTimeFormat costs far more than using one; make it once.
+let fmt: Intl.DateTimeFormat | null = null;
+const clockFormat = () =>
+  (fmt ??= new Intl.DateTimeFormat('en-US', {
+    timeZone: TZ, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true, timeZoneName: 'short',
+  }));
+
 function useStudioTime() {
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
@@ -64,9 +71,7 @@ function useStudioTime() {
     return () => window.clearInterval(id);
   }, []);
   if (!now) return null;
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: TZ, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true, timeZoneName: 'short',
-  }).formatToParts(now);
+  const parts = clockFormat().formatToParts(now);
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
   return { hm: `${get('hour')}:${get('minute')}`, s: get('second'), ampm: get('dayPeriod'), zone: get('timeZoneName') };
 }
