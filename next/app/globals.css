@@ -2630,11 +2630,7 @@ html, body { overflow-x: clip; }
 }
 .marquee-item { display: flex; align-items: center; height: 40px; color: var(--ink-2); white-space: nowrap; }
 .marquee-item svg { height: 24px; width: auto; display: block; }
-.marquee-item--school span {
-  font-family: var(--font-headline);
-  font-size: clamp(17px, 1.5vw, 22px);
-  letter-spacing: -0.01em;
-}
+.marquee-item--school svg { height: var(--h, 22px); }
 @media (prefers-reduced-motion: no-preference) {
   .marquee-track { animation: marquee 38s linear infinite; }
   .marquee:hover .marquee-track { animation-play-state: paused; }

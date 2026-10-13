@@ -1,19 +1,27 @@
+import type { CSSProperties } from 'react';
 import { LOGOS } from '@/components/TrustLogos';
+import { SCHOOL_LOGOS } from '@/components/hero/schoolLogos';
 
 /**
- * Where the team studied and worked — company marks and school names in one
+ * Where the team studied and worked — company and school marks in one
  * looping strip. Pure CSS (compositor translate), two copies for a seamless
  * loop; hovering holds it, reduced motion shows a static wrapped row.
  */
 
-const SCHOOLS = ['University of Washington', 'Pratt Institute', 'Northwestern University'];
+type Item = { kind: 'logo' | 'school'; name: string; viewBox: string; d: string; transform?: string };
 
-type Item = { kind: 'logo'; name: string; viewBox: string; d: string } | { kind: 'school'; name: string };
+// Wordmarks carry their own cap height, so each school gets a height that
+// sets its letters level with the company glyphs.
+const SCHOOL_H: Record<string, number> = {
+  'University of Washington': 23,
+  'Pratt Institute': 21,
+  'Northwestern University': 20,
+};
 
 // Interleave so schools and companies alternate along the strip.
 const ITEMS: Item[] = (() => {
   const logos: Item[] = LOGOS.map((l) => ({ kind: 'logo', ...l }));
-  const schools: Item[] = SCHOOLS.map((name) => ({ kind: 'school', name }));
+  const schools: Item[] = SCHOOL_LOGOS.map((l) => ({ kind: 'school', ...l }));
   const out: Item[] = [];
   const max = Math.max(logos.length, schools.length);
   for (let i = 0; i < max; i++) {
@@ -27,14 +35,14 @@ function Row({ hidden = false }: { hidden?: boolean }) {
   return (
     <ul className="marquee-row" aria-hidden={hidden || undefined}>
       {ITEMS.map((it) => (
-        <li key={it.name} className={`marquee-item marquee-item--${it.kind}`}>
-          {it.kind === 'logo' ? (
-            <svg viewBox={it.viewBox} fill="currentColor" role="img" aria-label={it.name}>
-              <path d={it.d} />
-            </svg>
-          ) : (
-            <span>{it.name}</span>
-          )}
+        <li
+          key={it.name}
+          className={`marquee-item marquee-item--${it.kind}`}
+          style={it.kind === 'school' ? ({ '--h': `${SCHOOL_H[it.name] ?? 22}px` } as CSSProperties) : undefined}
+        >
+          <svg viewBox={it.viewBox} fill="currentColor" role="img" aria-label={it.name}>
+            <path d={it.d} transform={it.transform} />
+          </svg>
         </li>
       ))}
     </ul>
