@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { whenIdle } from '@/components/whenIdle';
 import { useReducedMotion, type MotionValue } from 'framer-motion';
 
 // Each scene is its own chunk, fetched only when its stage nears the viewport.
@@ -91,7 +92,7 @@ export default function SceneStage({
 
     const io = new IntersectionObserver(
       ([e]) => {
-        if (e.isIntersecting) start();
+        if (e.isIntersecting) whenIdle(start);
         else if (recycle) stop();
       },
       { rootMargin: '400px 0px' },

@@ -205,7 +205,7 @@ export async function mountRebuildScene(host: HTMLElement, opts: RebuildOptions)
     camera.position.copy(camPos);
     camera.lookAt(look);
     return camera;
-  });
+  }, camera);
 
   return () => stage.dispose();
 }

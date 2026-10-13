@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { whenIdle } from '@/components/whenIdle';
 import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
 import BeforeAfter from './BeforeAfter';
 
@@ -50,7 +51,7 @@ export default function RebuildHero({ children }: { children: ReactNode }) {
     };
     const io = new IntersectionObserver(
       ([e]) => {
-        if (e.isIntersecting) start();
+        if (e.isIntersecting) whenIdle(start);
         else if (recycle) {
           dispose?.();
           dispose = undefined;

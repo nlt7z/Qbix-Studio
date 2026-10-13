@@ -637,7 +637,7 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
       opts.onAnchors(pts, seg(build, BUILD_END - 0.2, BUILD_END + 0.4));
     }
     return camera;
-  });
+  }, camera);
 
   if (opts.reduced && tour && opts.getProgress) {
     // Reduced motion still follows scroll, one frame per scroll event.

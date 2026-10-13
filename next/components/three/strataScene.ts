@@ -477,7 +477,7 @@ export async function mountStrataScene(host: HTMLElement, opts: StrataOptions) {
       opts.onAnchors(pts, tour ? explode * (1 - press) : explode);
     }
     return camera;
-  });
+  }, camera);
 
   if (opts.reduced && tour) {
     const onScroll = () => stage.redraw();

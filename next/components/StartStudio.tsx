@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import StartProjectForm from '@/components/StartProjectForm';
 import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
+import { whenIdle } from '@/components/whenIdle';
 import type { BriefDraft } from '@/components/three/briefScene';
 
 const EMPTY: BriefDraft = { name: false, email: false, company: false, types: [], budget: -1, timeline: -1, brief: 0, status: 'idle' };
@@ -36,28 +37,31 @@ export default function StartStudio() {
     let dispose: (() => void) | undefined;
     let cancelled = false;
     const io = new IntersectionObserver(
-      async ([e]) => {
+      ([e]) => {
         if (!e.isIntersecting || dispose) return;
         io.disconnect();
-        try {
-          const { mountBriefScene } = await import('@/components/three/briefScene');
-          if (cancelled) return;
-          const s = await mountBriefScene(host, {
-            reduced,
-            getDraft: () => draft.current,
-            onReady: () => !cancelled && setReady(true),
-          });
-          if (cancelled) s.dispose();
-          else {
-            dispose = s.dispose;
-            redraw.current = s.redraw;
-          }
-        } catch {
-          if (!cancelled) setFailed(true);
-        }
+        whenIdle(mount);
       },
       { rootMargin: '300px 0px' },
     );
+    const mount = async () => {
+      try {
+        const { mountBriefScene } = await import('@/components/three/briefScene');
+        if (cancelled) return;
+        const s = await mountBriefScene(host, {
+          reduced,
+          getDraft: () => draft.current,
+          onReady: () => !cancelled && setReady(true),
+        });
+        if (cancelled) s.dispose();
+        else {
+          dispose = s.dispose;
+          redraw.current = s.redraw;
+        }
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    };
     io.observe(host);
     return () => {
       cancelled = true;

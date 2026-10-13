@@ -95,8 +95,10 @@ export function createStage(host: HTMLElement, opts: StageOptions) {
   });
 
   const disposers: (() => void)[] = [];
+  let disposed = false;
+  let compiling = false;
 
-  return {
+  const stage = {
     THREE,
     renderer,
     scene,
@@ -108,14 +110,30 @@ export function createStage(host: HTMLElement, opts: StageOptions) {
     onDispose(f: () => void) {
       disposers.push(f);
     },
-    /** Start drawing. `fn` advances the scene and returns the camera to render with. */
-    run(fn: (f: Frame) => THREE.Camera) {
-      update = fn;
+    /**
+     * Start drawing. `fn` advances the scene and returns the camera to render
+     * with. Given that camera, every shader is compiled first with
+     * compileAsync — off the main thread where the browser supports parallel
+     * shader compilation — so the page never freezes while the scene warms up.
+     */
+    run(fn: (f: Frame) => THREE.Camera, camera?: THREE.Camera) {
       resize();
-      ro.observe(host);
-      io.observe(host);
-      document.addEventListener('visibilitychange', kick);
-      draw(performance.now());   // first frame now, so the fallback can hand over
+      const start = () => {
+        compiling = false;
+        if (disposed) {
+          teardown();
+          return;
+        }
+        update = fn;
+        ro.observe(host);
+        io.observe(host);
+        document.addEventListener('visibilitychange', kick);
+        draw(performance.now());   // first frame now, so the fallback can hand over
+      };
+      if (camera) {
+        compiling = true;
+        renderer.compileAsync(scene, camera).then(start, start);
+      } else start();
     },
     /** Request frames again after an idle stretch (reduced motion still redraws on scroll). */
     redraw() {
@@ -125,29 +143,39 @@ export function createStage(host: HTMLElement, opts: StageOptions) {
       return !opts.reduced;
     },
     dispose() {
-      cancelAnimationFrame(raf);
-      io.disconnect();
-      ro.disconnect();
-      document.removeEventListener('visibilitychange', kick);
-      disposers.forEach((f) => f());
-      scene.traverse((o) => {
-        const m = o as THREE.Mesh;
-        m.geometry?.dispose();
-        const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-        const mats = Array.isArray(mat) ? mat : mat ? [mat] : [];
-        mats.forEach((x) => {
-          const withMaps = x as THREE.MeshStandardMaterial;
-          withMaps.map?.dispose();
-          withMaps.normalMap?.dispose();
-          withMaps.emissiveMap?.dispose();
-          x.dispose();
-        });
-      });
-      renderer.dispose();
-      renderer.forceContextLoss();
-      renderer.domElement.remove();
+      disposed = true;
+      // three.js polls the shaders while compileAsync is pending; freeing them
+      // mid-compile throws, so teardown waits for the compile to settle.
+      if (compiling) return;
+      teardown();
     },
   };
+
+  function teardown() {
+    cancelAnimationFrame(raf);
+    io.disconnect();
+    ro.disconnect();
+    document.removeEventListener('visibilitychange', kick);
+    disposers.forEach((f) => f());
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      m.geometry?.dispose();
+      const mat = m.material as THREE.Material | THREE.Material[] | undefined;
+      const mats = Array.isArray(mat) ? mat : mat ? [mat] : [];
+      mats.forEach((x) => {
+        const withMaps = x as THREE.MeshStandardMaterial;
+        withMaps.map?.dispose();
+        withMaps.normalMap?.dispose();
+        withMaps.emissiveMap?.dispose();
+        x.dispose();
+      });
+    });
+    renderer.dispose();
+    renderer.forceContextLoss();
+    renderer.domElement.remove();
+  }
+
+  return stage;
 }
 
 export type Stage = ReturnType<typeof createStage>;

@@ -275,7 +275,7 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
     camera.position.copy(DIR).multiplyScalar(fit(2.35)).add(TARGET);
     camera.lookAt(TARGET);
     return camera;
-  });
+  }, camera);
 
   // Reduced motion draws on demand, so the form asks for a frame on each change.
   return { dispose: () => stage.dispose(), redraw: () => stage.redraw() };
