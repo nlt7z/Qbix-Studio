@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { studioEnvironment } from './studio';
 
 /**
  * Service-card scenes — two small isometric 3D stories rendered with three.js,
@@ -41,24 +40,21 @@ function rand(i: number) {
 function materials() {
   // Translucent layer language: clear and lime-tinted glass plates with white
   // hairline edges, a few solid accents (pearl, light type bars, exact lime).
-  const layer = (color: THREE.ColorRepresentation, opacity: number, glow = 0) =>
-    new THREE.MeshPhysicalMaterial({
-      color, transparent: true, opacity, metalness: 0, roughness: 0.14,
-      clearcoat: 1, clearcoatRoughness: 0.08, depthWrite: false, side: THREE.DoubleSide,
-      // A touch of self-light so tinted glass reads lit, not muddy, on the dark card.
-      emissive: color, emissiveIntensity: glow,
+  // Kept deliberately cheap — unlit glass, Lambert solids, no environment map
+  // or shadows — so four scenes compile and draw without stalling the page.
+  const layer = (color: THREE.ColorRepresentation, opacity: number) =>
+    new THREE.MeshBasicMaterial({
+      color, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide,
     });
   return {
-    body: layer('#ffffff', 0.08, 0.05),   // clear glass plate
-    frost: layer(LIME, 0.26, 0.35),       // lime-tinted glass plate
-    chrome: new THREE.MeshPhysicalMaterial({
-      color: '#e9ecef', metalness: 0.45, roughness: 0.24, clearcoat: 0.8, clearcoatRoughness: 0.1,
-    }),
-    ink: new THREE.MeshPhysicalMaterial({ color: '#eceee8', metalness: 0, roughness: 0.4, clearcoat: 0.4 }),
-    inkDark: new THREE.MeshPhysicalMaterial({ color: '#15171a', metalness: 0.2, roughness: 0.35, clearcoat: 0.6 }),
+    body: layer('#ffffff', 0.09),     // clear glass plate
+    frost: layer(LIME, 0.3),          // lime-tinted glass plate
+    chrome: new THREE.MeshLambertMaterial({ color: '#e9ecef' }),
+    ink: new THREE.MeshLambertMaterial({ color: '#eceee8' }),
+    inkDark: new THREE.MeshLambertMaterial({ color: '#15171a' }),
     // The signal colour is unlit and skips tone mapping so it lands as exact #B8FF00.
     lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-    glass: layer(LIME, 0.22, 0.3),
+    glass: layer(LIME, 0.24),
     edge: new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.62 }),
     edgeLime: new THREE.LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.95, toneMapped: false }),
   };
@@ -71,8 +67,6 @@ type Mats = ReturnType<typeof materials>;
 function slab(w: number, h: number, d: number, mat: THREE.Material, edge: THREE.LineBasicMaterial, _r = 0) {
   const g = new THREE.Group();
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-  mesh.castShadow = !mat.transparent;   // glass layers stay airy — no solid shadow
-  mesh.receiveShadow = true;
   g.add(mesh);
   const lines = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)), edge);
   g.add(lines);
@@ -190,11 +184,9 @@ function buildDesign(scene: THREE.Group, M: Mats) {
     scan.position.z = lerp(-1.4, 1.4, sweep);
     scan.visible = sweep > 0 && sweep < 1;
     const live = clamp01(inOut(seg(t, 3.35, 3.9)) - inOut(seg(t, 7.6, 8.2)));
-    // Going live = the block's own light takes over: surface colour drops out
-    // as the lime emission comes in, so it lands on the exact brand lime.
-    heroMat.color.copy(WHITE).multiplyScalar(1 - live);
-    heroMat.emissive.copy(LIME).multiplyScalar(live);
-    heroMat.opacity = lerp(0.08, 1, live);
+    // Going live: the clear glass block fills with the exact brand lime.
+    heroMat.color.copy(WHITE).lerp(LIME, live);
+    heroMat.opacity = lerp(0.09, 1, live);
     heroMat.depthWrite = live > 0.5;
 
     // Phone rides in from the right, holds, rides out.
@@ -590,36 +582,19 @@ export function mountServiceScene(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;   // whites stay white, lime stays lime
   renderer.toneMappingExposure = 1.0;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = 'svc-scene-canvas';
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const envTex = studioEnvironment(renderer);
-  scene.environment = envTex;
-  scene.environmentIntensity = 0.9;
-
-  scene.add(new THREE.HemisphereLight('#f2f6fa', '#1a1c20', 0.7));
-  const key = new THREE.DirectionalLight('#ffffff', 1.8);
+  scene.add(new THREE.HemisphereLight('#f2f6fa', '#1a1c20', 1.1));
+  const key = new THREE.DirectionalLight('#ffffff', 1.9);
   key.position.set(3.5, 8, 4);
-  key.castShadow = true;
-  key.shadow.mapSize.set(coarse ? 512 : 1024, coarse ? 512 : 1024);
-  key.shadow.camera.left = -5; key.shadow.camera.right = 5;
-  key.shadow.camera.top = 5; key.shadow.camera.bottom = -5;
-  key.shadow.radius = 4;
-  key.shadow.bias = -0.0005;
   scene.add(key);
   // Cool rim from front-left, low — its highlight lands on the slabs' side
   // faces (crisp edges), never flooding the flat tops.
   const rim = new THREE.DirectionalLight('#e6eeff', 0.8);
   rim.position.set(-5, 2, 6);
   scene.add(rim);
-
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.32 }));
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
 
   const M = materials();
   const rig = new THREE.Group();
@@ -741,7 +716,6 @@ export function mountServiceScene(
       if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
       else mat?.dispose();
     });
-    envTex.dispose();
     renderer.dispose();
     renderer.forceContextLoss();
     renderer.domElement.remove();

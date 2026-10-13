@@ -1,134 +1,57 @@
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { studioEnvironment } from './studio';
 
 /**
- * Hero centrepiece — the Qbix cube as a live object: a 2×2×2 assembly of eight
- * material studies (knurled silver, lime satin, frosted glass with a lime core,
- * ribbed lime, terrazzo, dark satin, mirror chrome, lime glass).
+ * Hero centrepiece — the Qbix cube in glass: a 2×2×2 assembly of clear glass
+ * cubelets with white hairline edges around one solid lime core, the same
+ * translucent-layer language as the service cards and the footer's reeded
+ * glass.
+ *
+ * Built to be light: one small fresnel shader for every glass face (faces
+ * turned to the viewer stay clear, silhouettes brighten), unlit lines for the
+ * edges, an unlit core. No environment map, no shadows, no transmission pass,
+ * no generated textures — so it compiles and draws in a few milliseconds.
  *
  * Motion is structural only: a slow drift, a puzzle-style quarter twist of one
  * layer every couple of seconds, and every few moves a "breath" where the
- * cubelets part to show their inner faces and click back together. The cube
- * leans toward the pointer and can be dragged (with inertia).
+ * cubelets part and click back together. The cube leans toward the pointer
+ * and can be dragged (with inertia).
  */
 
 const LIME = new THREE.Color('#B8FF00');
 
-/* ---------------------------------------------------------------- textures */
+const GLASS_VERT = `
+varying vec3 vN;
+varying vec3 vV;
+varying vec3 vWN;
+varying vec3 vWP;
+void main() {
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWP = wp.xyz;
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vN = normalize(normalMatrix * normal);
+  vV = normalize(-mv.xyz);
+  vWN = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * mv;
+}`;
 
-/** Tangent-space normal map from a height function h(u, v) ∈ [0, 1]. */
-function normalMap(size: number, h: (u: number, v: number) => number, strength: number) {
-  const data = new Uint8Array(size * size * 4);
-  const H = (x: number, y: number) => h(((x % size) + size) % size / size, ((y % size) + size) % size / size);
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const dx = (H(x + 1, y) - H(x - 1, y)) * strength;
-      const dy = (H(x, y + 1) - H(x, y - 1)) * strength;
-      const len = Math.hypot(dx, dy, 1);
-      const o = (y * size + x) * 4;
-      data[o] = (-dx / len * 0.5 + 0.5) * 255;
-      data[o + 1] = (-dy / len * 0.5 + 0.5) * 255;
-      data[o + 2] = (1 / len * 0.5 + 0.5) * 255;
-      data[o + 3] = 255;
-    }
-  }
-  const t = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.generateMipmaps = true;
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.magFilter = THREE.LinearFilter;
-  t.anisotropy = 4;
-  t.needsUpdate = true;
-  return t;
-}
-
-/** Off-white terrazzo with lime and graphite chips. */
-function terrazzo(size: number) {
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const ctx = c.getContext('2d')!;
-  ctx.fillStyle = '#e9eae4';
-  ctx.fillRect(0, 0, size, size);
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < 900; i++) {
-    const r = rnd();
-    ctx.fillStyle = r < 0.42 ? '#b8ff00' : r < 0.7 ? '#9aa39a' : r < 0.85 ? '#5d6560' : '#d5e8a8';
-    ctx.beginPath();
-    const x = rnd() * size;
-    const y = rnd() * size;
-    const s = 0.6 + rnd() * rnd() * 3.4;
-    ctx.ellipse(x, y, s, s * (0.5 + rnd() * 0.6), rnd() * Math.PI, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
-  return t;
-}
-
-/** Per-pixel hash — the grain of a bead-blasted surface. */
-function grain(u: number, v: number) {
-  const x = Math.sin(u * 12.9898 * 977 + v * 78.233 * 991) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-export function materials() {
-  const knurl = normalMap(512, (u, v) => {
-    const f = Math.PI * 2 * 16;
-    const k = Math.abs(Math.sin(f * (u + v) / 2)) * Math.abs(Math.sin(f * (u - v) / 2));
-    return Math.pow(k, 0.6) * 0.92 + grain(u, v) * 0.08;
-  }, 3.6);
-  const ribs = normalMap(512, (u, v) => {
-    const s = Math.sin(Math.PI * 2 * 10 * u);
-    return (Math.sign(s) * Math.pow(Math.abs(s), 0.3) * 0.5 + 0.5) * 0.94 + grain(u, v) * 0.06;
-  }, 7);
-  // Spun-metal finish: fine concentric lathe rings around the face centre.
-  const spun = normalMap(512, (u, v) => {
-    const r = Math.hypot(u - 0.5, v - 0.5);
-    return (Math.sin(r * Math.PI * 2 * 90) * 0.5 + 0.5) * 0.85 + grain(u, v) * 0.15;
-  }, 1.4);
-  const blast = normalMap(256, grain, 0.9);
-
-  const anodised = (extra: Partial<THREE.MeshPhysicalMaterialParameters> = {}) =>
-    new THREE.MeshPhysicalMaterial({
-      color: LIME, metalness: 0.32, roughness: 0.3, clearcoat: 0.35, clearcoatRoughness: 0.18,
-      normalMap: blast, normalScale: new THREE.Vector2(0.22, 0.22),
-      ...extra,
-    });
-
-  return {
-    knurled: new THREE.MeshPhysicalMaterial({
-      color: '#dfe2e6', metalness: 1, roughness: 0.24, normalMap: knurl, normalScale: new THREE.Vector2(0.75, 0.75),
-    }),
-    limeSatin: anodised(),
-    limeRibs: anodised({ normalMap: ribs, normalScale: new THREE.Vector2(1.1, 1.1), roughness: 0.36 }),
-    limeFine: anodised({ normalMap: spun, normalScale: new THREE.Vector2(0.7, 0.7), roughness: 0.24, color: '#c4f53a' }),
-    frost: new THREE.MeshPhysicalMaterial({
-      color: '#f6f9f1', metalness: 0, roughness: 0.22, transmission: 1, thickness: 0.7, ior: 1.42,
-      attenuationColor: new THREE.Color('#eef8d6'), attenuationDistance: 3.5, clearcoat: 0.8, clearcoatRoughness: 0.08,
-    }),
-    limeGlass: new THREE.MeshPhysicalMaterial({
-      color: '#d9ff7a', metalness: 0, roughness: 0.06, transmission: 1, thickness: 0.8, ior: 1.5,
-      attenuationColor: LIME, attenuationDistance: 0.9, clearcoat: 1, clearcoatRoughness: 0.04,
-    }),
-    terrazzo: new THREE.MeshPhysicalMaterial({
-      map: terrazzo(1024), roughness: 0.5, clearcoat: 0.75, clearcoatRoughness: 0.12,
-      normalMap: blast, normalScale: new THREE.Vector2(0.12, 0.12),
-    }),
-    dark: new THREE.MeshPhysicalMaterial({
-      color: '#121417', metalness: 0.4, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06,
-      normalMap: blast, normalScale: new THREE.Vector2(0.1, 0.1),
-    }),
-    chrome: new THREE.MeshPhysicalMaterial({ color: '#e6e8ea', metalness: 1, roughness: 0.06 }),
-    core: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-    // The mechanism inside — matte black, so every seam reads as a dark line.
-    mech: new THREE.MeshStandardMaterial({ color: '#050506', roughness: 0.9, metalness: 0 }),
-  };
-}
-
-/* ------------------------------------------------------------------ helpers */
+const GLASS_FRAG = `
+varying vec3 vN;
+varying vec3 vV;
+varying vec3 vWN;
+varying vec3 vWP;
+uniform vec3 uTint;
+uniform vec3 uCenter;
+void main() {
+  float facing = abs(dot(normalize(vN), normalize(vV)));
+  float fres = pow(1.0 - facing, 2.2);
+  float top = max(normalize(vWN).y, 0.0);               // a soft overhead light
+  // Light from the lime core, picked up by the glass nearest to it.
+  float glow = 1.0 - smoothstep(0.2, 1.05, length(vWP - uCenter));
+  float a = 0.025 + 0.4 * fres + 0.05 * top + 0.14 * glow;
+  vec3 col = mix(vec3(0.86, 0.9, 0.95), vec3(1.0), fres);
+  col = mix(col, uTint, glow * 0.55);
+  gl_FragColor = vec4(col, a);
+}`;
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const inOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
@@ -141,8 +64,6 @@ const AXES: Record<Axis, THREE.Vector3> = {
   z: new THREE.Vector3(0, 0, 1),
 };
 
-/* -------------------------------------------------------------------- mount */
-
 export function mountHeroCube(
   host: HTMLElement,
   opts: { reduced: boolean; onReady: () => void },
@@ -151,92 +72,63 @@ export function mountHeroCube(
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NeutralToneMapping;   // keeps the lime saturated
-  renderer.toneMappingExposure = 1.0;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = 'hero-cube-canvas';
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const envTex = studioEnvironment(renderer);
-  scene.environment = envTex;
-  scene.environmentIntensity = 1.0;
 
-  scene.add(new THREE.HemisphereLight('#eef3f8', '#0a0b0d', 0.35));
-  const key = new THREE.DirectionalLight('#ffffff', 1.5);
-  key.position.set(3, 6, 4);
-  key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
-  key.shadow.camera.left = -3; key.shadow.camera.right = 3;
-  key.shadow.camera.top = 3; key.shadow.camera.bottom = -3;
-  key.shadow.radius = 6;
-  key.shadow.bias = -0.0004;
-  scene.add(key);
-  const rim = new THREE.DirectionalLight('#e8f0ff', 1.1);
-  rim.position.set(-5, 2.5, -3);
-  scene.add(rim);
+  // --- materials -------------------------------------------------------------
+  const glass = new THREE.ShaderMaterial({
+    vertexShader: GLASS_VERT,
+    fragmentShader: GLASS_FRAG,
+    uniforms: { uTint: { value: LIME.clone() }, uCenter: { value: new THREE.Vector3() } },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const edge = new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.7 });
+  const coreMat = new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false });
+  const coreEdge = new THREE.LineBasicMaterial({ color: '#efffc2', transparent: true, opacity: 0.9, toneMapped: false });
 
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.42 }));
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -1.55;
-  ground.receiveShadow = true;
-  scene.add(ground);
-
-  const M = materials();
-
-  // Eight cubelets. Order matches the PNG's composition from the front view.
-  const SIZE = 0.962;   // tight tolerances — seams read as fine dark lines
-  const geo = new RoundedBoxGeometry(SIZE, SIZE, SIZE, 6, 0.07);
-  const looks: THREE.Material[] = [
-    M.knurled,   // top front-left
-    M.limeSatin, // top back-left
-    M.frost,     // top back-right (carries the lime core)
-    M.limeFine,  // top front-right
-    M.limeRibs,  // bottom front-left
-    M.dark,      // bottom back-left
-    M.chrome,    // bottom back-right
-    M.terrazzo,  // bottom front-right
-  ];
+  // --- the cube --------------------------------------------------------------
+  const SIZE = 0.94;   // sharp cubelets, a clear seam between them
+  const box = new THREE.BoxGeometry(SIZE, SIZE, SIZE);
+  const boxEdges = new THREE.EdgesGeometry(box);
   const coords = [
     [-1, 1, 1], [-1, 1, -1], [1, 1, -1], [1, 1, 1],
     [-1, -1, 1], [-1, -1, -1], [1, -1, -1], [1, -1, 1],
   ];
   const cube = new THREE.Group();
-  const cubelets = coords.map(([x, y, z], i) => {
+  const cubelets = coords.map(([x, y, z]) => {
     const g = new THREE.Group();
-    const mesh = new THREE.Mesh(geo, looks[i]);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    const mesh = new THREE.Mesh(box, glass);
+    mesh.renderOrder = 2;
     g.add(mesh);
-    if (looks[i] === M.frost || looks[i] === M.limeGlass) {
-      const core = new THREE.Mesh(new RoundedBoxGeometry(0.5, 0.5, 0.5, 3, 0.05), M.core);
-      g.add(core);
-    }
+    const lines = new THREE.LineSegments(boxEdges, edge);
+    lines.renderOrder = 3;
+    g.add(lines);
     const home = new THREE.Vector3(x * 0.5, y * 0.5, z * 0.5);
     g.position.copy(home);
     cube.add(g);
     return { g, home, quat: new THREE.Quaternion() };
   });
-  // Swap the hidden back-bottom chrome for lime glass so twists reveal it.
-  (cubelets[6].g.children[0] as THREE.Mesh).material = M.limeGlass;
-  const core6 = new THREE.Mesh(new RoundedBoxGeometry(0.36, 0.36, 0.36, 3, 0.04), M.dark);
-  cubelets[6].g.add(core6);
 
-  // The mechanism: a matte-black core that fills the seams with shadow and
-  // shows, like a real puzzle cube's, mid-twist and when the cubelets part.
-  const mech = new THREE.Mesh(new RoundedBoxGeometry(0.98, 0.98, 0.98, 3, 0.12), M.mech);
-  cube.add(mech);
+  // The one solid thing: a lime core held in the middle of the glass.
+  const coreGeo = new THREE.BoxGeometry(0.46, 0.46, 0.46);
+  const core = new THREE.Mesh(coreGeo, coreMat);
+  core.renderOrder = 1;
+  const coreLines = new THREE.LineSegments(new THREE.EdgesGeometry(coreGeo), coreEdge);
+  core.add(coreLines);
+  cube.add(core);
 
   const rig = new THREE.Group();
   rig.add(cube);
   scene.add(rig);
 
-  // High three-quarter view — the top face always reads, so the cube never
-  // flattens into a square as it turns.
+  // High three-quarter view — the top face always reads.
   const camera = new THREE.PerspectiveCamera(23, 1, 0.1, 100);
   camera.position.set(5.2, 5.4, 6.4);
-  camera.lookAt(0, -0.12, 0);
+  camera.lookAt(0, -0.05, 0);
 
   const resize = () => {
     const r = host.getBoundingClientRect();
@@ -269,8 +161,8 @@ export function mountHeroCube(
   };
 
   const MOVE_S = 0.9;
-  const REST_S = 1.35;
-  const BREATH_S = 1.5;
+  const REST_S = 1.6;
+  const BREATH_S = 1.6;
   type Phase =
     | { kind: 'rest'; t0: number }
     | { kind: 'move'; t0: number; axis: Axis; layer: number; dir: number; sel: typeof cubelets }
@@ -303,8 +195,11 @@ export function mountHeroCube(
       if (k >= 1) {
         // Bake the quarter turn into each cubelet's resting state.
         for (const c of phase.sel) {
-          c.home.copy(c.g.position);
-          c.home.set(Math.round(c.home.x * 2) / 2, Math.round(c.home.y * 2) / 2, Math.round(c.home.z * 2) / 2);
+          c.home.set(
+            Math.round(c.g.position.x * 2) / 2,
+            Math.round(c.g.position.y * 2) / 2,
+            Math.round(c.g.position.z * 2) / 2,
+          );
           c.quat.copy(c.g.quaternion).normalize();
           c.g.position.copy(c.home);
         }
@@ -314,7 +209,7 @@ export function mountHeroCube(
       const k = clamp01((t - phase.t0) / BREATH_S);
       // Part (0→0.45), hold, then click home with a small snap.
       const open = k < 0.45 ? inOut(k / 0.45) : 1 - outBack(clamp01((k - 0.6) / 0.4), 2.2);
-      const spread = 1 + 0.32 * Math.max(-0.08, open);
+      const spread = 1 + 0.36 * Math.max(-0.06, open);
       for (const c of cubelets) {
         c.g.position.copy(c.home).multiplyScalar(spread);
         c.g.quaternion.copy(c.quat);
@@ -328,7 +223,7 @@ export function mountHeroCube(
 
   /* --- pointer: lean + drag with inertia --- */
   const lean = { x: 0, y: 0, tx: 0, ty: 0 };
-  const spin = { yaw: 0, pitch: 0, vel: 0.22, dragging: false, lastX: 0, lastY: 0, lastT: 0 };
+  const spin = { yaw: 0.35, pitch: 0, vel: 0.2, dragging: false, lastX: 0, lastY: 0, lastT: 0 };
   const onMove = (e: PointerEvent) => {
     if (e.pointerType === 'mouse') {
       const r = host.getBoundingClientRect();
@@ -374,15 +269,19 @@ export function mountHeroCube(
       step(clock);
       if (!spin.dragging) {
         // Inertia decays back to the idle drift speed.
-        spin.vel += (0.22 - spin.vel) * Math.min(1, dt * 1.6);
+        spin.vel += (0.2 - spin.vel) * Math.min(1, dt * 1.6);
         spin.yaw += spin.vel * dt;
         spin.pitch += (0 - spin.pitch) * Math.min(1, dt * 1.2);
       }
+      // The core turns slowly against the shell.
+      core.rotation.set(clock * 0.35, -clock * 0.5, 0);
     }
     lean.x += (lean.tx - lean.x) * 0.05;
     lean.y += (lean.ty - lean.y) * 0.05;
     rig.rotation.set(spin.pitch + lean.y * 0.16, spin.yaw + lean.x * 0.28, 0);
     rig.position.y = opts.reduced ? 0 : Math.sin(clock * 0.9) * 0.06;
+    rig.updateMatrixWorld();
+    core.getWorldPosition(glass.uniforms.uCenter.value);
     renderer.render(scene, camera);
     if (!ready) {
       ready = true;
@@ -423,17 +322,11 @@ export function mountHeroCube(
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', onUp);
     host.removeEventListener('pointerdown', onDown);
-    scene.traverse((o) => {
-      const m = o as THREE.Mesh;
-      m.geometry?.dispose();
-    });
-    Object.values(M).forEach((mat) => {
-      const withMaps = mat as THREE.MeshPhysicalMaterial;
-      withMaps.map?.dispose();
-      withMaps.normalMap?.dispose();
-      mat.dispose();
-    });
-    envTex.dispose();
+    box.dispose();
+    boxEdges.dispose();
+    coreGeo.dispose();
+    coreLines.geometry.dispose();
+    [glass, edge, coreMat, coreEdge].forEach((m) => m.dispose());
     renderer.dispose();
     renderer.forceContextLoss();
     renderer.domElement.remove();

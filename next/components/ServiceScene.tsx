@@ -30,6 +30,13 @@ export default function ServiceScene({ variant, fallback }: { variant: SceneVari
       mounting = true;
       try {
         const { mountServiceScene } = await import('@/components/three/serviceScenes');
+        // Wait for an idle slot so the cards don't all build in the same frame.
+        await new Promise<void>((resolve) => {
+          const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number })
+            .requestIdleCallback;
+          if (ric) ric(() => resolve(), { timeout: 700 });
+          else window.setTimeout(resolve, 60);
+        });
         if (cancelled) return;
         dispose = mountServiceScene(host, variant, {
           reduced,
