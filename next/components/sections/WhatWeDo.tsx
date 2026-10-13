@@ -31,6 +31,8 @@ type Card = {
   tags: string[];
   priceLead: string;
   price: string;
+  /** Regular price, struck through next to an exclusive-offer price. */
+  wasPrice?: string;
   typical: string;
   /** Studio services have no page of their own — the card opens the contact form. */
   enquire?: boolean;
@@ -85,6 +87,14 @@ function ServiceCard({ s }: { s: Card }) {
           <span className="svc-price">
             {s.priceLead && <>{s.priceLead} </>}
             <strong>{s.price}</strong>
+            {s.wasPrice && (
+              <>
+                {' '}
+                <del className="was-price" aria-label={`Regular price ${s.wasPrice}`}>
+                  {s.wasPrice}
+                </del>
+              </>
+            )}
           </span>
           <span className="svc-typical mono">{s.typical}</span>
         </div>

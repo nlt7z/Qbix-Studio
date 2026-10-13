@@ -3588,3 +3588,69 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   .sp-meta { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .sp-meta > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
+
+/* =============================================================================
+   EXCLUSIVE-OFFER PRICING — sale price + struck regular price + badge, and the
+   Stripe note under every pay button (/listing-kit, /practice-websites, cards)
+   ============================================================================= */
+/* Odometer digits are CSS-generated so the page text is only the price. */
+.odo-strip::before {
+  content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9';
+  display: block;
+  white-space: pre;
+  line-height: 1.05;
+}
+.was-price {
+  color: var(--text-2);
+  font-weight: 400;
+  text-decoration: line-through;
+  text-decoration-thickness: 0.08em;
+}
+.offer-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  background: var(--signal);
+  color: var(--signal-dark);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.offer-eyebrow .was-price { color: var(--text-3); }
+.offer-eyebrow .offer-badge { margin-left: 6px; }
+.offer-price { align-items: baseline; }
+.offer-price-was {
+  font-family: var(--font-headline);
+  font-size: clamp(28px, 4.4vw, 52px);
+  letter-spacing: -0.03em;
+}
+.offer-price .offer-badge { align-self: baseline; }
+.offer-price-note strong { color: var(--ink); font-weight: 500; }
+.offer-price-note .offer-badge { margin-left: 4px; }
+
+.pw .was-price { color: var(--pw-mute); }
+.pw-price-was { font-size: clamp(30px, 4.6vw, 60px); letter-spacing: -0.04em; }
+.pw-price .offer-badge { margin-left: 4px; }
+.pw-cta-note .offer-badge { margin-left: 4px; }
+
+.svc-price .was-price { margin-left: 4px; color: var(--text-3); font-size: 0.9em; }
+
+.checkout-note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.checkout-note a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.checkout-note a:hover { color: var(--ink); }
+.checkout-note--paper { color: var(--pw-mute); }
+.checkout-note--paper a:hover { color: var(--pw-ink); }
+.checkout-note--bar { margin-top: 8px; font-size: 11.5px; text-align: center; }

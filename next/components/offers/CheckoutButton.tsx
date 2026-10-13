@@ -3,8 +3,8 @@ import { CONTACT_EMAIL } from '@/lib/data';
 
 /**
  * "Start" button for a fixed-price offer. Goes straight to the Stripe Payment
- * Link when one is set in CHECKOUT (lib/data.ts); until then it opens an email
- * with the offer named in the subject, so the page is never a dead end.
+ * Link in CHECKOUT (lib/data.ts), in the same tab; if a link is ever empty it
+ * opens an email with the offer named in the subject, so it's never a dead end.
  */
 export default function CheckoutButton({
   href,
@@ -22,5 +22,15 @@ export default function CheckoutButton({
     <a className={`btn btn-lg split-cta offer-cta ${className}`} href={url}>
       <SplitText text={label} arrow />
     </a>
+  );
+}
+
+/** The one muted line under every pay button. */
+export function CheckoutNote({ className = '' }: { className?: string }) {
+  return (
+    <p className={`checkout-note ${className}`}>
+      Secure checkout through Stripe. Questions first? Email{' '}
+      <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+    </p>
   );
 }

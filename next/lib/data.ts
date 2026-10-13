@@ -60,13 +60,24 @@ export const services: Service[] = [
 // ----- FIXED-PRICE OFFERS (own landing pages, Stripe checkout) --------------
 
 /**
- * Stripe Payment Links for the fixed-price offers. Paste the live links here.
- * While a link is empty, its "Start" button falls back to an email to
+ * Live Stripe Payment Links for the fixed-price offers (same-tab checkout).
+ * If a link is ever left empty, its "Start" button falls back to an email to
  * CONTACT_EMAIL with the offer named in the subject.
  */
 export const CHECKOUT = {
-  listingKit: '',        // $199 — Listing Launch Kit
-  practiceDeposit: '',   // $400 deposit — Practice Website Refresh
+  listingKit: 'https://buy.stripe.com/14AfZ946b4J11o04zi6Vq00',        // $99, Listing Launch Kit
+  listingVideo: 'https://buy.stripe.com/5kQbIT1Y31wP5Eg3ve6Vq01',      // $49, listing video only
+  practiceDeposit: 'https://buy.stripe.com/4gMeV5auz4J16Ik6Hq6Vq02',   // $300 deposit, Practice Website Refresh
+};
+
+/**
+ * Exclusive-offer pricing, shown as the sale price next to the regular price
+ * struck through. One source for both offer pages and the homepage cards.
+ */
+export const PRICES = {
+  listingKit: { now: '$99', was: '$249' },
+  listingVideo: { now: '$49', was: '$99' },
+  practice: { now: '$600', was: '$800', deposit: '$300' },
 };
 
 export type Offer = {
@@ -79,6 +90,7 @@ export type Offer = {
   tags: string[];
   priceLead: string;     // "Per listing" — or '' when price is a phrase
   price: string;
+  wasPrice?: string;     // regular price, shown struck through next to an offer price
   typical: string;
 };
 
@@ -93,7 +105,8 @@ export const offers: Offer[] = [
       'A print flyer, five social posts, and a 30-second video for one property. Ready to share in 48 hours.',
     tags: ['Print flyer', '5 social posts', '30s video'],
     priceLead: 'Per listing',
-    price: '$199',
+    price: PRICES.listingKit.now,
+    wasPrice: PRICES.listingKit.was,
     typical: '48 hours',
   },
   {
@@ -105,8 +118,9 @@ export const offers: Offer[] = [
     blurb:
       'A calm, clean website for your practice, rebuilt in one week. Your words, your photos, and it works on any phone.',
     tags: ['3 to 5 pages', 'Mobile first', 'You own it'],
-    priceLead: '',
-    price: '$800 flat',
+    priceLead: 'Flat',
+    price: PRICES.practice.now,
+    wasPrice: PRICES.practice.was,
     typical: '7 days',
   },
 ];

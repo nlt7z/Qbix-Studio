@@ -1,6 +1,7 @@
-import { CHECKOUT } from '@/lib/data';
+import { CHECKOUT, PRICES } from '@/lib/data';
 import { Reveal, Words } from '@/components/Reveal';
-import CheckoutButton from './CheckoutButton';
+import CheckoutButton, { CheckoutNote } from './CheckoutButton';
+import { OfferBadge, WasPrice } from './OfferPrice';
 import Faq from './Faq';
 import RebuildHero from './RebuildHero';
 import PracticeTour from './PracticeTour';
@@ -9,7 +10,8 @@ import PriceHalves from './PriceHalves';
 import Odometer from './Odometer';
 import AboutPhoto from './AboutPhoto';
 
-const CTA_LABEL = 'Start my website, $400 deposit';
+const PRICE = PRICES.practice;
+const CTA_LABEL = `Start my website, ${PRICE.deposit} deposit`;
 const OFFER = 'Practice Website Refresh';
 
 const GET = [
@@ -58,8 +60,11 @@ export default function PracticeWebsites() {
         </Reveal>
         <Reveal className="pw-cta-row" speed="slow" delay={0.55}>
           <CheckoutButton href={CHECKOUT.practiceDeposit} offer={OFFER} label={CTA_LABEL} className="pw-btn" />
-          <span className="pw-cta-note">$800 flat · live in 7 days</span>
+          <span className="pw-cta-note">
+            {PRICE.now} <WasPrice value={PRICE.was} /> flat · live in 7 days <OfferBadge />
+          </span>
         </Reveal>
+        <CheckoutNote className="checkout-note--paper" />
       </RebuildHero>
 
       <section className="pw-section" data-nav-theme="light">
@@ -89,10 +94,13 @@ export default function PracticeWebsites() {
         <div className="container pw-narrow">
           <Words as="h2" className="pw-h2" text="Price" />
           <p className="pw-price">
-            <Odometer value="$800" className="pw-price-big" /> flat.
+            <Odometer value={PRICE.now} className="pw-price-big" /> <WasPrice value={PRICE.was} className="pw-price-was" /> flat.{' '}
+            <OfferBadge />
           </p>
-          <PriceHalves />
-          <p className="pw-text">$400 to start, $400 when the site goes live.</p>
+          <PriceHalves amount={PRICE.deposit} />
+          <p className="pw-text">
+            {PRICE.deposit} to start, {PRICE.deposit} when the site goes live.
+          </p>
         </div>
       </section>
 
@@ -116,6 +124,7 @@ export default function PracticeWebsites() {
           </div>
           <div className="pw-close">
             <CheckoutButton href={CHECKOUT.practiceDeposit} offer={OFFER} label={CTA_LABEL} className="pw-btn" />
+            <CheckoutNote className="checkout-note--paper" />
           </div>
         </div>
       </section>

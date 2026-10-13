@@ -4,17 +4,17 @@ import { motion } from 'framer-motion';
 import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
-const DIGITS = '0123456789';
 
 /**
  * A price that rolls into place like a mechanical counter: each digit is a
  * 0–9 strip inside its own mask, turning to its value when scrolled into view.
- * Screen readers get the plain value.
+ * The strip's digits are CSS-generated (.odo-strip::before), so the page text
+ * is just the price: no stray "0123456789" in copy/paste, reader mode or
+ * search snippets. Screen readers get the plain value.
  */
 export default function Odometer({ value, className = '' }: { value: string; className?: string }) {
   const reduced = useReducedMotionSafe();
   let d = 0;
-  const strip = DIGITS.split('').map((x) => <span key={x}>{x}</span>);
   return (
     <span className={`odo ${className}`}>
       <span className="sr-only">{value}</span>
@@ -27,9 +27,7 @@ export default function Odometer({ value, className = '' }: { value: string; cla
             <span key={i} className="odo-cell">
               <span className="odo-ghost">{ch}</span>
               {reduced ? (
-                <span className="odo-strip" style={{ transform: `translateY(${-n * 10}%)` }}>
-                  {strip}
-                </span>
+                <span className="odo-strip" style={{ transform: `translateY(${-n * 10}%)` }} />
               ) : (
                 <motion.span
                   className="odo-strip"
@@ -37,9 +35,7 @@ export default function Odometer({ value, className = '' }: { value: string; cla
                   whileInView={{ y: `${-n * 10}%` }}
                   viewport={{ once: true, margin: '-15% 0px' }}
                   transition={{ duration: 1.25, ease: EASE_OUT, delay }}
-                >
-                  {strip}
-                </motion.span>
+                />
               )}
             </span>
           );

@@ -1,6 +1,7 @@
-import { CHECKOUT } from '@/lib/data';
+import { CHECKOUT, PRICES } from '@/lib/data';
 import { Reveal, Words } from '@/components/Reveal';
-import CheckoutButton from './CheckoutButton';
+import CheckoutButton, { CheckoutNote } from './CheckoutButton';
+import { OfferBadge, WasPrice } from './OfferPrice';
 import Faq from './Faq';
 import StickyCta from './StickyCta';
 import HouseIllustration from './HouseIllustration';
@@ -10,9 +11,11 @@ import HourRail from './HourRail';
 import Odometer from './Odometer';
 import AboutPhoto from './AboutPhoto';
 
-const CTA_LABEL = 'Start my listing kit, $199';
+const KIT = PRICES.listingKit;
+const VIDEO = PRICES.listingVideo;
+const CTA_LABEL = `Start my listing kit, ${KIT.now}`;
 const OFFER = 'Listing Launch Kit';
-const VIDEO_LABEL = 'Just the video, $99';
+const VIDEO_LABEL = `Just the video, ${VIDEO.now}`;
 const VIDEO_OFFER = 'Listing video';
 
 const GET = [
@@ -96,7 +99,7 @@ export default function ListingKit() {
         <div className="container lk-hero-grid">
           <div className="lk-hero-copy">
             <Reveal as="span" className="offer-eyebrow mono" speed="fast">
-              Listing Launch Kit · $199 per listing
+              Listing Launch Kit · {KIT.now} <WasPrice value={KIT.was} /> per listing <OfferBadge />
             </Reveal>
             <Words as="h1" className="lk-title" text="Your listing, ready to share in 48 hours." speed="slow" step={0.06} delay={0.05} />
             <Reveal as="p" className="lk-lede" speed="base" delay={0.35}>
@@ -112,8 +115,9 @@ export default function ListingKit() {
             <Reveal className="lk-hero-cta" speed="base" delay={0.45}>
               <span className="lk-hero-ctas" data-cta-zone>
                 <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-primary" />
-                <CheckoutButton href="" offer={VIDEO_OFFER} label={VIDEO_LABEL} className="btn-secondary" />
+                <CheckoutButton href={CHECKOUT.listingVideo} offer={VIDEO_OFFER} label={VIDEO_LABEL} className="btn-secondary" />
               </span>
+              <CheckoutNote />
             </Reveal>
             <div className="lk-meta mono" aria-hidden>
               <span>Drafts · 48 h</span>
@@ -153,10 +157,14 @@ export default function ListingKit() {
         <div className="container offer-narrow">
           <Words as="h2" className="offer-h2" text="Price" />
           <div className="offer-price">
-            <Odometer value="$199" className="offer-price-big" />
+            <Odometer value={KIT.now} className="offer-price-big" />
+            <WasPrice value={KIT.was} className="offer-price-was" />
             <span className="offer-price-unit">per listing</span>
+            <OfferBadge />
           </div>
-          <Reveal as="p" className="offer-price-note" speed="base" delay={0.4}>Just the video: $99.</Reveal>
+          <Reveal as="p" className="offer-price-note" speed="base" delay={0.4}>
+            Just the video: <strong>{VIDEO.now}</strong> <WasPrice value={VIDEO.was} /> <OfferBadge />
+          </Reveal>
         </div>
       </section>
 
@@ -179,12 +187,14 @@ export default function ListingKit() {
           </div>
           <div className="offer-close" data-cta-zone>
             <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-primary" />
+            <CheckoutNote />
           </div>
         </div>
       </section>
 
       <StickyCta>
         <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-primary" />
+        <CheckoutNote className="checkout-note--bar" />
       </StickyCta>
     </main>
   );
