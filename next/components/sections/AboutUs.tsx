@@ -37,8 +37,10 @@ export default function AboutUs() {
           </div>
         </header>
 
-        {/* The story is the whole panel — set large, key phrases weighted. */}
-        <Reveal as="p" className="about-body about-body--solo" speed="base" delay={0.2}>
+        {/* The story is the whole panel — set large, key phrases weighted. It
+            arrives with the panel itself (no timed reveal), so a fast scroll
+            never outruns it; the bars on the key phrases are scroll-scrubbed. */}
+        <p className="about-body about-body--solo">
           AI has lowered the technical barrier, but the fact that anyone can
           build does not mean anyone can <Hi k={0}>build well</Hi>.
           We bring <Hi k={1}>unusually sharp instincts</Hi>, more
@@ -47,7 +49,7 @@ export default function AboutUs() {
           the <Hi k={3}>newest tech</Hi>), and respect for every
           idea that comes in. We put weight on early exploration and research,
           because <Hi k={4}>no idea deserves to be wasted</Hi>.
-        </Reveal>
+        </p>
       </div>
     </section>
   );

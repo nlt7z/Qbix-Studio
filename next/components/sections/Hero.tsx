@@ -1,49 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
+import { useRef, type ReactNode } from 'react';
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useContactModal } from '@/components/ContactModalProvider';
 import BrandText from '@/components/BrandText';
 import SplitText from '@/components/SplitText';
-import StudioClock from '@/components/StudioClock';
-import { LOGOS } from '@/components/TrustLogos';
+import StudioGlobe from '@/components/hero/StudioGlobe';
+import LogoMarquee from '@/components/hero/LogoMarquee';
 import HeroCube from '@/components/HeroCube';
-
-/**
- * "Previously at…" — cycles the team's prior-company marks one at a time,
- * each sliding up out of the slot as the next rides in.
- */
-function CyclingLogos() {
-  const reduce = useReducedMotion();
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    if (reduce) return;
-    const id = window.setInterval(() => setI((n) => (n + 1) % LOGOS.length), 1800);
-    return () => window.clearInterval(id);
-  }, [reduce]);
-  const l = LOGOS[i];
-  return (
-    <span className="hg-logo-slot" aria-label={`Previously at ${l.name}`}>
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.svg
-          key={l.name}
-          viewBox={l.viewBox}
-          preserveAspectRatio="xMinYMid meet"
-          fill="currentColor"
-          role="img"
-          aria-hidden
-          initial={reduce ? false : { y: '75%', opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={reduce ? { opacity: 0 } : { y: '-75%', opacity: 0 }}
-          transition={{ duration: 0.42, ease: EASE_OUT }}
-        >
-          <path d={l.d} />
-        </motion.svg>
-      </AnimatePresence>
-    </span>
-  );
-}
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -119,53 +84,38 @@ export default function Hero() {
 
   return (
     <section ref={heroRef} className="hero hero--stage" id="top" data-nav-theme="dark">
-      <div className="hero-stage">
-        {/* Headline — set huge over two lines, so the type is the first thing
-            you meet. The lime accent is the whole second line. */}
-        <h1 className="hero-title hero-title--xl">
-          <WordReveal text="We build the" baseDelay={0.18} step={0.06} className="hero-line" />
-          <span className="hero-line">
-            <span style={WORD_MASK_STYLE}>
-              <motion.span
-                className="signal-bg"
-                style={{ display: 'inline-block' }}
-                initial={{ y: '115%' }}
-                animate={{ y: '0%' }}
-                transition={{ duration: 1.0, ease: EASE_OUT, delay: 0.42 }}
-              >
-                coolest things.
-              </motion.span>
-            </span>
-          </span>
-        </h1>
-
-        {/* The centrepiece — the Qbix cube in 3D, uncovered by a clip wipe
-            rising from the floor of its frame; drifts up on scroll. */}
-        <motion.div
-          className="hero-visual"
-          initial={reduceMotion ? false : { clipPath: 'inset(100% -20% 0% -20%)' }}
-          animate={{ clipPath: 'inset(-20% -20% -20% -20%)' }}
-          transition={{ duration: 1.1, ease: EASE_OUT, delay: 0.35 }}
-        >
-          <motion.div style={{ y: objY, scale: objScale, opacity: objOpacity, willChange: 'transform, opacity' }}>
-            <HeroCube />
-          </motion.div>
-        </motion.div>
-
+      <div className="hero-stage hero-stage--v2">
         <div className="hero-copy">
-          {/* Masked rise: the paragraph slides up out of an invisible sleeve
-              while its tracking settles from airy to tight — no fade-in-place. */}
-          <span style={{ display: 'block', overflow: 'hidden', marginBottom: 'clamp(20px, 3vw, 28px)' }}>
+          {/* Headline: one line, the lime phrase at its end. */}
+          <h1 className="hero-title hero-title--xl hero-title--one">
+            <span className="hero-line">
+              <WordReveal text="We build the" baseDelay={0.18} step={0.06} />{' '}
+              <span style={WORD_MASK_STYLE}>
+                <motion.span
+                  className="signal-bg"
+                  style={{ display: 'inline-block' }}
+                  initial={{ y: '115%' }}
+                  animate={{ y: '0%' }}
+                  transition={{ duration: 1.0, ease: EASE_OUT, delay: 0.42 }}
+                >
+                  coolest things.
+                </motion.span>
+              </span>
+            </span>
+          </h1>
+
+          {/* Masked rise: the line slides up out of an invisible sleeve. */}
+          <span className="hero-sub-mask">
             <motion.p
               className="hero-sub"
               style={{ margin: 0 }}
-              initial={{ y: '110%', letterSpacing: '0.05em' }}
-              animate={{ y: '0%', letterSpacing: '-0.011em' }}
-              transition={{ duration: 0.85, ease: EASE_OUT, delay: 0.6 }}
+              initial={{ y: '110%' }}
+              animate={{ y: '0%' }}
+              transition={{ duration: 0.85, ease: EASE_OUT, delay: 0.55 }}
             >
               <BrandText>
-                Qbix never writes off a small idea. We&rsquo;re a sharp team that moves
-                fast, from sketch to shipped product.
+                Qbix never writes off a small idea. We&rsquo;re a sharp team that moves fast, from sketch
+                to shipped product.
               </BrandText>
             </motion.p>
           </span>
@@ -174,13 +124,9 @@ export default function Hero() {
             className="hero-ctas"
             initial={{ opacity: 0, y: 26, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 24, mass: 0.7, delay: 0.8 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24, mass: 0.7, delay: 0.7 }}
           >
-            <button
-              type="button"
-              className="btn btn-primary btn-lg split-cta"
-              onClick={openContactModal}
-            >
+            <button type="button" className="btn btn-primary btn-lg split-cta" onClick={openContactModal}>
               <SplitText text="Tell us your idea" arrow />
             </button>
             <Link
@@ -200,10 +146,22 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* Meta strip — clock · previous companies · track record, set as one
-            instrument line under a hairline instead of four boxed cells. The
-            hairline draws itself left to right. */}
-        <div className="hero-meta">
+        {/* The cube, uncovered by a clip wipe rising from the floor of its
+            frame; drifts up on scroll. */}
+        <motion.div
+          className="hero-visual"
+          initial={reduceMotion ? false : { clipPath: 'inset(100% -20% 0% -20%)' }}
+          animate={{ clipPath: 'inset(-20% -20% -20% -20%)' }}
+          transition={{ duration: 1.1, ease: EASE_OUT, delay: 0.35 }}
+        >
+          <motion.div style={{ y: objY, scale: objScale, opacity: objOpacity, willChange: 'transform, opacity' }}>
+            <HeroCube />
+          </motion.div>
+        </motion.div>
+
+        {/* The band: where and when the studio works, and where the team
+            studied and worked. The hairline draws itself left to right. */}
+        <div className="hero-band">
           <motion.span
             className="hero-meta-rule"
             aria-hidden
@@ -211,19 +169,8 @@ export default function Hero() {
             animate={{ scaleX: 1 }}
             transition={{ duration: 1.2, ease: EASE_OUT, delay: 0.7 }}
           />
-          <div className="hero-meta-item hero-meta-item--clock">
-            <StudioClock />
-          </div>
-          <div className="hero-meta-item">
-            <span className="hero-meta-label">Previously</span>
-            <span className="hero-meta-value">
-              <CyclingLogos />
-            </span>
-          </div>
-          <div className="hero-meta-item">
-            <span className="hero-meta-label">Track record</span>
-            <span className="hero-meta-value">10 years across product, brand, and AI</span>
-          </div>
+          <StudioGlobe />
+          <LogoMarquee />
         </div>
       </div>
     </section>

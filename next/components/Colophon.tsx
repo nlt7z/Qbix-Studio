@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import { CONTACT_EMAIL, offers, services } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 import SplitText from '@/components/SplitText';
@@ -71,6 +72,39 @@ function FooterLink({ item }: { item: Item }) {
   );
 }
 
+/**
+ * "We'll build the thing." — a lime bar pulls across the line, left to right,
+ * leaving it in dark ink (the bar is a clipped window holding a dark copy of
+ * the words that counter-slides, so the type never moves). Time-based once
+ * the line is on screen, so it always finishes, even at the very end of the
+ * page where there's no scroll left to drive it.
+ */
+function MarkedLine({ children }: { children: string }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        el.classList.add('is-in');
+        io.disconnect();
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <span ref={ref} className="ft-mark">
+      {children}
+      <span className="ft-mark-bar" aria-hidden>
+        <span className="ft-mark-in">{children}</span>
+      </span>
+    </span>
+  );
+}
+
 export default function Colophon() {
   const { open: openContactModal } = useContactModal();
 
@@ -82,9 +116,9 @@ export default function Colophon() {
           <div>
             <span className="ft-eyebrow mono">Start a project</span>
             <p className="ft-tagline">
-              Bring the idea.
-              <br />
-              We&rsquo;ll build the thing.
+              Bring the idea.{' '}
+              <br className="ft-br" />
+              <MarkedLine>{'We\u2019ll build the thing.'}</MarkedLine>
             </p>
           </div>
           <div className="ft-head-cta">

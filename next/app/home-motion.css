@@ -130,16 +130,18 @@
       }
     }
 
-    /* --- About: a dark bar sweeps across each key phrase, uncovering it in lime */
+    /* --- About: a dark bar pulls across each key phrase, left to right,
+       uncovering it in lime. Starts as soon as the copy is on screen and is
+       done before the panel is fully up, so even a fast scroll sees all five. */
     .stacked > #about .hi-bar {
       animation: hm-bar cubic-bezier(0.65, 0, 0.35, 1) both;
       animation-timeline: --p-about;
-      animation-range: entry calc(48% + var(--k, 0) * 9%) entry calc(62% + var(--k, 0) * 9%);
+      animation-range: entry calc(26% + var(--k, 0) * 8%) entry calc(44% + var(--k, 0) * 8%);
     }
     .stacked > #about .hi-bar-in {
       animation: hm-bar-in cubic-bezier(0.65, 0, 0.35, 1) both;
       animation-timeline: --p-about;
-      animation-range: entry calc(48% + var(--k, 0) * 9%) entry calc(62% + var(--k, 0) * 9%);
+      animation-range: entry calc(26% + var(--k, 0) * 8%) entry calc(44% + var(--k, 0) * 8%);
     }
 
     /* --- The panel being covered sinks back under the one arriving ----------- */
@@ -150,13 +152,12 @@
         animation-timeline: --p-services;
         animation-range: entry 0% entry 100%;
       }
-      /* The headline's two lines part like a curtain as the lime comes up. */
+      /* The one-line headline drifts off to the left as the lime comes up. */
       .stacked > .hero .hero-title--xl > .hero-line {
         animation: hm-part linear both;
         animation-timeline: --p-services;
         animation-range: entry 0% entry 100%;
       }
-      .stacked > .hero .hero-title--xl > .hero-line + .hero-line { --dir: 1; }
 
       .stacked > #services > .container {
         transform-origin: 50% calc(100% - 50vh);

@@ -5,6 +5,7 @@ import './globals.css';
 import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
 import SiteCursor from '@/components/SiteCursor';
+import FastScroll from '@/components/FastScroll';
 import { ContactModalProvider } from '@/components/ContactModalProvider';
 import { CONTACT_EMAIL } from '@/lib/data';
 
@@ -178,6 +179,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Campaign texture: film grain over everything, lime cursor accent. */}
         <div className="site-grain" aria-hidden />
         <SiteCursor />
+        <FastScroll />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}

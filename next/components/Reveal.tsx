@@ -107,7 +107,7 @@ export function Reveal<E extends ElementType = 'div'>({
   delay = 0,
   y,
   once = true,
-  margin = '-10% 0px -10% 0px',
+  margin = '0px 0px -4% 0px',
   ease = 'out',
   gesture = 'rise',
   index = 0,
@@ -178,7 +178,7 @@ export function Words<E extends ElementType = 'span'>({
   delay = 0,
   step = 0.05,
   once = true,
-  margin = '-10% 0px -10% 0px',
+  margin = '0px 0px -4% 0px',
   ...rest
 }: WordsProps<E>) {
   const reduced = useReducedMotionSafe();
@@ -251,7 +251,7 @@ export function Wipe<E extends ElementType = 'div'>({
   index = 0,
   duration = 0.6,
   once = true,
-  margin = '-10% 0px -10% 0px',
+  margin = '0px 0px -4% 0px',
   children,
   ...rest
 }: WipeProps<E>) {
@@ -327,7 +327,7 @@ export function Scatter<E extends ElementType = 'span'>({
   delay = 0,
   step = 0.012,
   once = true,
-  margin = '-10% 0px -10% 0px',
+  margin = '0px 0px -4% 0px',
   ...rest
 }: ScatterProps<E>) {
   const reduced = useReducedMotionSafe();
@@ -433,7 +433,7 @@ export function Stagger<E extends ElementType = 'div'>({
   stagger = 0.08,
   delayChildren = 0,
   once = true,
-  margin = '-10% 0px -10% 0px',
+  margin = '0px 0px -4% 0px',
   children,
   ...rest
 }: StaggerProps<E>) {
