@@ -86,10 +86,10 @@ export default function Hero() {
     <section ref={heroRef} className="hero hero--stage" id="top" data-nav-theme="dark">
       <div className="hero-stage hero-stage--v2">
         <div className="hero-copy">
-          {/* Headline: one line, the lime phrase at its end. */}
-          <h1 className="hero-title hero-title--xl hero-title--one">
+          {/* Headline: two lines, the lime phrase on its own. */}
+          <h1 className="hero-title hero-title--xl">
+            <WordReveal className="hero-line" text="We build the" baseDelay={0.18} step={0.06} />{' '}
             <span className="hero-line">
-              <WordReveal text="We build the" baseDelay={0.18} step={0.06} />{' '}
               <span style={WORD_MASK_STYLE}>
                 <motion.span
                   className="signal-bg"

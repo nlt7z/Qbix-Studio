@@ -2547,9 +2547,9 @@ html, body { overflow-x: clip; }
 .hero--stage .hero-copy { grid-area: copy; min-width: 0; }
 .hero-title.hero-title--xl {
   margin: 0;
-  /* One line: sized to the copy column, and by height so the stage fits. */
-  font-size: clamp(36px, min(6.1vw, 11vh), 88px);
-  line-height: 1;
+  /* Two lines: sized to the copy column, and by height so the stage fits. */
+  font-size: clamp(40px, min(7.4vw, 11.5vh), 120px);
+  line-height: 0.96;
   letter-spacing: -0.045em;
   white-space: nowrap;
 }
@@ -2652,7 +2652,7 @@ html, body { overflow-x: clip; }
     grid-template-areas: 'copy' 'visual' 'band';
     align-items: start;
   }
-  .hero-title.hero-title--xl { white-space: normal; font-size: clamp(36px, 11.5vw, 72px); line-height: 0.98; }
+  .hero-title.hero-title--xl { font-size: clamp(36px, 13.5vw, 88px); line-height: 0.98; }
   .hero--stage .hero-ctas { flex-wrap: wrap; }
   .hero-band { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .globe { width: clamp(120px, 34vw, 180px); }

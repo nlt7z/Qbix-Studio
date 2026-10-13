@@ -152,12 +152,13 @@
         animation-timeline: --p-services;
         animation-range: entry 0% entry 100%;
       }
-      /* The one-line headline drifts off to the left as the lime comes up. */
+      /* The headline's two lines part like a curtain as the lime comes up. */
       .stacked > .hero .hero-title--xl > .hero-line {
         animation: hm-part linear both;
         animation-timeline: --p-services;
         animation-range: entry 0% entry 100%;
       }
+      .stacked > .hero .hero-title--xl > .hero-line + .hero-line { --dir: 1; }
 
       .stacked > #services > .container {
         transform-origin: 50% calc(100% - 50vh);
