@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { watchCovered } from '@/components/three/covered';
 
 /**
  * 1-bit dither field for the lime panels — a slow-drifting noise field pushed
@@ -16,7 +17,7 @@ import { useEffect, useRef } from 'react';
 
 const CELL = 7;          // CSS px per dither cell
 const DOT = 3;           // CSS px dot inside each cell
-const FRAME_MS = 1000 / 30;
+const FRAME_MS = 1000 / 24;   // a slow drift — 24fps is plenty
 
 const VERT = `
 attribute vec2 aPos;
@@ -117,8 +118,10 @@ export default function DitherField() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let scale = 1;
     const resize = () => {
-      // Dots are whole CSS px — cap at 2× so retina stays crisp but cheap.
-      scale = Math.min(window.devicePixelRatio || 1, 2);
+      // Dots are whole CSS px, so render at 1× and let the browser scale up
+      // with image-rendering: pixelated — same crisp dots, a quarter of the
+      // fragments on retina screens.
+      scale = 1;
       const r = host.getBoundingClientRect();
       canvas.width = Math.max(1, Math.round(r.width * scale));
       canvas.height = Math.max(1, Math.round(r.height * scale));
@@ -163,9 +166,10 @@ export default function DitherField() {
     let raf = 0;
     let last = 0;
     let visible = false;
+    let covered = false;
     const loop = (now: number) => {
       raf = 0;
-      if (!visible || document.hidden) return;
+      if (!visible || covered || document.hidden) return;
       if (now - last >= FRAME_MS) {
         last = now;
         draw(now);
@@ -173,23 +177,33 @@ export default function DitherField() {
       raf = requestAnimationFrame(loop);
     };
     const kick = () => {
-      if (!reduce && visible && !raf) raf = requestAnimationFrame(loop);
+      if (!reduce && visible && !covered && !raf) raf = requestAnimationFrame(loop);
     };
 
     const ro = new ResizeObserver(resize);
     ro.observe(host);
     resize();
-    const io = new IntersectionObserver(([e]) => {
-      visible = e.isIntersecting;
+    // -1px: a panel whose edge merely touches the viewport isn't "visible".
+    const io = new IntersectionObserver(
+      ([e]) => {
+        visible = e.isIntersecting;
+        kick();
+      },
+      { rootMargin: '-1px 0px' },
+    );
+    io.observe(host);
+    // The lime panels are sticky: stop drawing once the next panel covers them.
+    const unwatch = watchCovered(host, (c) => {
+      covered = c;
       kick();
     });
-    io.observe(host);
     document.addEventListener('visibilitychange', kick);
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
       io.disconnect();
+      unwatch();
       window.removeEventListener('pointermove', onMove);
       document.removeEventListener('visibilitychange', kick);
       gl.getExtension('WEBGL_lose_context')?.loseContext();

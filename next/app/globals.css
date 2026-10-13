@@ -3664,3 +3664,35 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   .ft-top { padding: 12px 0; }
   .sp-crumb { padding: 12px 0; margin-bottom: 16px; }
 }
+
+/* Dither renders at 1× (DitherField.tsx); scale up with hard pixel edges. */
+.dither-canvas { image-rendering: pixelated; }
+
+/* "coolest things." — a band of light runs through the lime every few
+   seconds, like current through a tube. Paint-only and short: the gradient
+   holds still for most of the cycle, so there is nothing to repaint. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-title--xl .signal-bg {
+    background-image: linear-gradient(
+      100deg,
+      var(--signal-ink) 0%,
+      var(--signal-ink) 41%,
+      #f4ffd6 49%,
+      #ffffff 50%,
+      #f4ffd6 51%,
+      var(--signal-ink) 59%,
+      var(--signal-ink) 100%
+    );
+    background-size: 260% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: signal-sweep 6.5s cubic-bezier(0.65, 0, 0.35, 1) 1.6s infinite;
+  }
+}
+@keyframes signal-sweep {
+  0% { background-position: 100% 0; }
+  26%, 100% { background-position: 0% 0; }
+}

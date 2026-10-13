@@ -164,7 +164,7 @@ export function mountFooterMark(host: HTMLElement, opts: { reduced: boolean; onR
   };
 
   const resize = () => {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);   // a full-width canvas: 1.5× keeps the type crisp, ~44% fewer pixels
     const r = host.getBoundingClientRect();
     W = Math.max(1, Math.round(r.width * dpr));
     H = Math.max(1, Math.round(r.height * dpr));

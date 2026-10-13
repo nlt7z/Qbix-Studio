@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { watchCovered } from './covered';
 
 /**
  * Service-card scenes — two small isometric 3D stories rendered with three.js,
@@ -578,7 +579,9 @@ export function mountServiceScene(
 ) {
   const coarse = window.matchMedia('(pointer: coarse)').matches;
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2));
+  // Small card canvases: 1.5× on desktop retina is visually the same as 2×
+  // with ~44% fewer pixels; phones go lower still.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.25 : 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;   // whites stay white, lime stays lime
   renderer.toneMappingExposure = 1.0;
@@ -657,8 +660,8 @@ export function mountServiceScene(
   const render = (now: number) => {
     const t = opts.reduced ? STILL : (now - start) / 1000;
     update(t);
-    tilt.x += (tilt.tx - tilt.x) * 0.06;
-    tilt.y += (tilt.ty - tilt.y) * 0.06;
+    tilt.x += (tilt.tx - tilt.x) * 0.11;
+    tilt.y += (tilt.ty - tilt.y) * 0.11;
     rig.rotation.y = tilt.x * 0.14 + (opts.reduced ? 0 : Math.sin(t * 0.35) * 0.04);
     rig.rotation.x = tilt.y * 0.05;
     renderer.render(scene, camera);
@@ -668,21 +671,29 @@ export function mountServiceScene(
     }
   };
 
+  // The scenes are slow, deliberate builds: 30fps reads the same and halves
+  // the GPU work of four canvases on one panel.
+  const FRAME_MS = 1000 / 30;
   let raf = 0;
+  let last = 0;
   let visible = false;
+  let covered = false;
   let pausedAt = 0;
   const loop = (now: number) => {
     raf = 0;
-    if (!visible || document.hidden) {
+    if (!visible || covered || document.hidden) {
       pausedAt = now;
       return;
     }
-    render(now);
+    if (now - last >= FRAME_MS - 2) {
+      last = now;
+      render(now);
+    }
     raf = requestAnimationFrame(loop);
   };
   const kick = () => {
     if (opts.reduced) return;
-    if (visible && !document.hidden && !raf) {
+    if (visible && !covered && !document.hidden && !raf) {
       // Resume where it paused rather than jumping ahead.
       if (pausedAt) start += performance.now() - pausedAt;
       pausedAt = 0;
@@ -699,6 +710,11 @@ export function mountServiceScene(
     kick();
   });
   io.observe(host);
+  // Sticky panel: pause once the next panel has slid over it.
+  const unwatch = watchCovered(host, (c) => {
+    covered = c;
+    kick();
+  });
   document.addEventListener('visibilitychange', kick);
   render(performance.now());   // first frame (and onReady) regardless of visibility
 
@@ -706,6 +722,7 @@ export function mountServiceScene(
     cancelAnimationFrame(raf);
     ro.disconnect();
     io.disconnect();
+    unwatch();
     document.removeEventListener('visibilitychange', kick);
     target?.removeEventListener('pointermove', onMove);
     target?.removeEventListener('pointerleave', onLeave);
