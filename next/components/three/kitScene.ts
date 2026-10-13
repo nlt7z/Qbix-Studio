@@ -74,6 +74,9 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   const tour = opts.mode === 'tour';
 
   renderer.toneMappingExposure = 1.04;
+  // One shadow pass per frame, shared by the screen and the photo/video renders.
+  renderer.shadowMap.autoUpdate = false;
+  let frame = 0;
   const envTex = studioEnvironment(renderer);
   scene.environment = envTex;
   scene.environmentIntensity = 1.0;
@@ -458,6 +461,7 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
 
   /* ------------------------------------------------------------------ loop */
   stage.run(({ t, dt }) => {
+    frame++;
     const build = tour || opts.reduced || opts.intro === false ? BUILD_END + 1 : t;
     const idle = tour ? t : Math.max(0, t - BUILD_END);
 
@@ -574,7 +578,10 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
     }
 
     // ---- the phone's video: a slow orbit of the house ----
-    if (phone.visible && (!coarse || Math.floor(t * 60) % 2 === 0)) {
+    // The phone's video runs at a video frame rate, not the screen's: every
+    // 2nd frame on desktop, every 3rd on phones (each extra render re-resolves
+    // every material's shader variant for the render target).
+    if (phone.visible && frame % (coarse ? 3 : 2) === 0) {
       const th = 0.35 + seconds * 0.055;
       rtCam.position.set(Math.sin(th) * 6.4, 1.15 + Math.sin(seconds * 0.2) * 0.25, Math.cos(th) * 6.4);
       rtCam.lookAt(0.1, 0.55, 0);
@@ -636,6 +643,9 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
       });
       opts.onAnchors(pts, seg(build, BUILD_END - 0.2, BUILD_END + 0.4));
     }
+    // The screen render refreshes the shadows (its camera sees every layer);
+    // the photo and video renders reuse them.
+    renderer.shadowMap.needsUpdate = true;
     return camera;
   }, camera);
 
