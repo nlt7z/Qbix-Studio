@@ -2345,11 +2345,10 @@ html, body { overflow-x: clip; }
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* min-height gives the breathing room now, so the section's own vertical
-     padding can shrink — keeps content inside one screen before the next
-     panel covers it. */
-  padding-top: clamp(56px, 7vh, 96px);
-  padding-bottom: clamp(56px, 7vh, 96px);
+  /* Generous air above and below each panel's content, so one section never
+     crowds the next. A panel that outgrows the screen is pinned by StackFit. */
+  padding-top: clamp(88px, 12vh, 150px);
+  padding-bottom: clamp(88px, 12vh, 150px);
 }
 /* Every panel after the first lifts over the one beneath it. */
 .stacked > section:not(:first-child),
@@ -3720,10 +3719,10 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
    it and for its reveals to finish, however fast the visitor is going. Tall
    panels (StackFit) hold with their bottom edge in view. */
 @media (min-width: 901px) {
-  .stacked > section:not(:last-child) { margin-bottom: 24vh; }
+  .stacked > section:not(:last-child) { margin-bottom: 32vh; }
   /* The last panel holds via a transparent spacer at the end of the stack
      (a margin would let it un-stick early and open a gap above the footer). */
-  .stacked::after { content: ''; display: block; height: 24vh; }
+  .stacked::after { content: ''; display: block; height: 32vh; }
 }
 
 /* Footer, desktop: the sign-off on one line, a tighter sitemap. */
