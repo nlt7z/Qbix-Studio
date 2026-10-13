@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
-import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
+import { PixelEdge, StripTitle } from '@/components/ScrollMotion';
 
 type Media = { kind: 'image' | 'video' | 'iframe'; src: string; poster?: string; motion?: string };
 type Product = {
@@ -120,15 +121,14 @@ function ExploreButton({ url }: { url: string }) {
 export default function QbixLabs() {
   return (
     <section id="products" className="section-pad" data-nav-theme="dark">
+      <PixelEdge />
       <div className="container">
         <header className="section-head section-head--right">
           <div>
             <Reveal as="span" className="eyebrow" speed="fast">
               No idea is too small
             </Reveal>
-            <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1}>
-              Things we&rsquo;ve shipped.
-            </Wipe>
+            <StripTitle text="Things we’ve shipped." style={{ marginTop: 14 }} />
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               Qbix also builds products. Try the ones we have live.
             </Reveal>
@@ -136,9 +136,12 @@ export default function QbixLabs() {
         </header>
 
         <Stagger className="product-row" stagger={0.1} delayChildren={0.1}>
-          {products.map((p) => (
+          {products.map((p, i) => (
             <RevealItem key={p.key} speed="base" className={p.wide ? 'product-cell--wide' : undefined}>
-              <article className={`product-card${p.wide ? ' product-card--wide' : ''}`}>
+              <article
+                className={`product-card${p.wide ? ' product-card--wide' : ''}`}
+                style={{ '--k': i } as CSSProperties}
+              >
                 <ProductMedia media={p.media} />
                 <div className="product-card-body">
                   <h3 className="product-title">{p.title}</h3>

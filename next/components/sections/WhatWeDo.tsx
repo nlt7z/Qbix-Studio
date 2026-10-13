@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { services, offers } from '@/lib/data';
 import BrandText from '@/components/BrandText';
-import { Reveal, Stagger, RevealItem, Wipe } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 import Link from 'next/link';
 import DitherField from '@/components/DitherField';
 import ServiceScene from '@/components/ServiceScene';
+import { PixelEdge, StripTitle } from '@/components/ScrollMotion';
 import { useContactModal } from '@/components/ContactModalProvider';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -138,6 +139,7 @@ export default function WhatWeDo() {
 
   return (
     <section id="services" className="section-pad" data-nav-theme="light">
+      <PixelEdge />
       <DitherField />
       <div className="container">
         <header className="section-head">
@@ -145,9 +147,7 @@ export default function WhatWeDo() {
             <Reveal as="span" className="eyebrow" speed="fast">
               Turn your idea into something real
             </Reveal>
-            <Wipe as="h2" style={{ marginTop: 14 }}>
-              Work with Qbix
-            </Wipe>
+            <StripTitle text="Work with Qbix" style={{ marginTop: 14 }} />
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               We do UI/UX design, brand upgrades,{' '}
               <Link href="/listing-kit" className="text-link">listing launch kits</Link>, and{' '}

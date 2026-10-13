@@ -4,6 +4,7 @@ import QbixLabs from '@/components/sections/QbixLabs';
 import AboutUs from '@/components/sections/AboutUs';
 import Colophon from '@/components/Colophon';
 import StackFit from '@/components/StackFit';
+import './home-motion.css';
 
 export default function LandingPage() {
   return (

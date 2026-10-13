@@ -1,0 +1,203 @@
+/* =============================================================================
+   HOMEPAGE SCROLL CHOREOGRAPHY
+   Every effect is a CSS scroll-driven animation on the panel stack: the
+   compositor scrubs transforms (and one veil's opacity) straight from the
+   scroll position — no JS per frame, no blur, no filters.
+
+   Each rising panel names its view timeline; `entry 0% → 100%` is the stretch
+   of scroll where it slides up from the bottom edge until it fills the view —
+   which is also exactly when the panel beneath it is being covered.
+     --p-services   hero is covered
+     --p-products   services is covered
+     --p-about      products is covered
+   Browsers without scroll timelines, and reduced motion, get the page at rest.
+   ============================================================================= */
+
+/* At rest (and the fallback): pixels hidden, strips assembled, shutters open,
+   key phrases already set in lime on their dark bars. */
+.about-hi {
+  position: relative;
+  white-space: nowrap;
+  /* Hides the bar while it waits off to the left of its phrase. */
+  clip-path: inset(-0.06em -0.18em -0.08em);
+}
+.hi-bar {
+  position: absolute;
+  inset: -0.02em -0.16em -0.04em;
+  overflow: hidden;
+  background: var(--signal-dark);
+}
+.hi-bar-in {
+  position: absolute;
+  inset: 0;
+  padding: 0.02em 0.16em 0.04em;
+  line-height: normal;
+  white-space: nowrap;
+  color: var(--signal);
+}
+.px-edge i { scale: 0; }
+.strip-stack { position: relative; display: inline-block; }
+.strip-base { visibility: hidden; }
+.strip {
+  position: absolute;
+  inset: 0;
+  /* One band of the heading; a half pixel of overlap hides the seams. */
+  clip-path: inset(
+    calc(var(--i) * 100% / var(--n) - 0.5px) -2% calc((var(--n) - 1 - var(--i)) * 100% / var(--n) - 0.5px) -2%
+  );
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    body:has(main.stacked) { timeline-scope: --p-services, --p-products, --p-about; }
+    .stacked > #services { view-timeline-name: --p-services; --tl: --p-services; --px-c: var(--signal); }
+    .stacked > #products { view-timeline-name: --p-products; --tl: --p-products; --px-c: var(--bg); }
+    .stacked > #about { view-timeline-name: --p-about; --tl: --p-about; --px-c: var(--signal); }
+
+    /* --- Pixel takeover at each rising panel's leading edge ------------------- */
+    .px-edge {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 100%;
+      display: grid;
+      grid-template-columns: repeat(24, minmax(0, 1fr));
+      pointer-events: none;
+    }
+    .px-edge i {
+      display: block;
+      aspect-ratio: 1;
+      background: var(--px-c);
+      animation: hm-px cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-timeline: var(--tl);
+      animation-range: entry calc(var(--a) * 1%) entry calc(var(--a) * 1% + 22%);
+    }
+    .px-edge i.px-flash { animation-name: hm-px-flash; }
+    /* Below the stacking breakpoint the panels flow; the edge still needs its
+       panel as the containing block. */
+    @media (max-width: 900px) {
+      .stacked > section:has(> .px-edge) { position: relative; }
+      /* Panels don't overlap here, so a settled edge would sit on the last
+         line of the section above — every pixel flashes through and clears. */
+      .px-edge i { animation-name: hm-px-flash; }
+    }
+    /* The pixels replace the hard top hairline the panel used to lift on. */
+    .stacked > section:has(> .px-edge) {
+      border-top-color: transparent;
+      box-shadow: 0 -28px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    /* --- Strip-sliced headings: bands lock together as the panel arrives ----- */
+    .strip {
+      /* Ease-out-cubic, not expo: an expo tail leaves the bands a pixel or two
+         apart for a long stretch, which reads as a smeared heading. Every band
+         is locked by 75% of the panel's rise. */
+      animation: hm-strip cubic-bezier(0.33, 1, 0.68, 1) both;
+      animation-timeline: var(--tl);
+      animation-range: entry calc(18% + var(--i) * 4%) entry calc(52% + var(--i) * 4.5%);
+    }
+
+    /* --- Services: the cards trail the panel, then settle -------------------- */
+    .stacked > #services .svc-deck > * {
+      animation: hm-lag cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-timeline: --p-services;
+      animation-range: entry 45% contain 60%;
+    }
+    .stacked > #services .svc-deck > :nth-child(2) { --k: 1; }
+    .stacked > #services .svc-deck > :nth-child(3) { --k: 2; }
+    .stacked > #services .svc-deck > :nth-child(4) { --k: 3; }
+
+    /* --- Products: each preview is uncovered bottom-up, one after another ---- */
+    .stacked > #products .product-media::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: linear-gradient(to top, var(--signal) 0 2px, var(--bg-2) 2px);
+      transform-origin: 50% 0;
+      animation: hm-shutter cubic-bezier(0.65, 0, 0.35, 1) both;
+      animation-timeline: --p-products;
+      animation-range: entry calc(52% + var(--k, 0) * 9%) entry calc(74% + var(--k, 0) * 8%);
+    }
+
+    /* Phones: the products panel runs several screens tall, so each preview
+       opens as it scrolls into view rather than on the panel's entry. */
+    @media (max-width: 900px) {
+      .stacked > #products .product-media::after {
+        animation-timeline: view();
+        animation-range: entry 30% cover 45%;
+      }
+    }
+
+    /* --- About: a dark bar sweeps across each key phrase, uncovering it in lime */
+    .stacked > #about .hi-bar {
+      animation: hm-bar cubic-bezier(0.65, 0, 0.35, 1) both;
+      animation-timeline: --p-about;
+      animation-range: entry calc(48% + var(--k, 0) * 9%) entry calc(62% + var(--k, 0) * 9%);
+    }
+    .stacked > #about .hi-bar-in {
+      animation: hm-bar-in cubic-bezier(0.65, 0, 0.35, 1) both;
+      animation-timeline: --p-about;
+      animation-range: entry calc(48% + var(--k, 0) * 9%) entry calc(62% + var(--k, 0) * 9%);
+    }
+
+    /* --- The panel being covered sinks back under the one arriving ----------- */
+    @media (min-width: 901px) {
+      .stacked > .hero .hero-stage {
+        transform-origin: 50% 40%;
+        animation: hm-recede linear both;
+        animation-timeline: --p-services;
+        animation-range: entry 0% entry 100%;
+      }
+      /* The headline's two lines part like a curtain as the lime comes up. */
+      .stacked > .hero .hero-title--xl > .hero-line {
+        animation: hm-part linear both;
+        animation-timeline: --p-services;
+        animation-range: entry 0% entry 100%;
+      }
+      .stacked > .hero .hero-title--xl > .hero-line + .hero-line { --dir: 1; }
+
+      .stacked > #services > .container {
+        transform-origin: 50% calc(100% - 50vh);
+        animation: hm-recede linear both;
+        animation-timeline: --p-products;
+        animation-range: entry 0% entry 100%;
+      }
+      .stacked > #products > .container {
+        transform-origin: 50% 50%;
+        animation: hm-recede linear both;
+        animation-timeline: --p-about;
+        animation-range: entry 0% entry 100%;
+      }
+      .stacked > .hero::after,
+      .stacked > #services::after,
+      .stacked > #products::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        pointer-events: none;
+        background: #000;
+        opacity: 0;
+        animation: hm-veil linear both;
+        animation-range: entry 0% entry 100%;
+      }
+      .stacked > .hero::after { animation-timeline: --p-services; }
+      .stacked > #services::after { animation-timeline: --p-products; }
+      .stacked > #products::after { animation-timeline: --p-about; }
+    }
+  }
+}
+
+/* 1.02, so neighbouring pixels overlap and no hairline seams show. */
+@keyframes hm-px { from { scale: 0; } to { scale: 1.02; } }
+@keyframes hm-px-flash { 0%, 100% { scale: 0; } 45% { scale: 1; } }
+@keyframes hm-strip { from { translate: calc(var(--dir) * 62vw) 0; } to { translate: 0 0; } }
+@keyframes hm-lag { from { translate: 0 calc(14vh + var(--k, 0) * 9vh); } to { translate: 0 0; } }
+@keyframes hm-shutter { from { scale: 1 1; } to { scale: 1 0; } }
+@keyframes hm-bar { from { translate: -101% 0; } to { translate: 0 0; } }
+@keyframes hm-bar-in { from { translate: 101% 0; } to { translate: 0 0; } }
+@keyframes hm-recede { to { scale: 0.9; translate: 0 -4vh; } }
+@keyframes hm-part { to { translate: calc(var(--dir, -1) * 9vw) 0; } }
+@keyframes hm-veil { to { opacity: 0.62; } }
