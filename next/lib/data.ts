@@ -129,5 +129,3 @@ export const offers: Offer[] = [
 
 export const CONTACT_EMAIL = 'contact@qbix.space';
 export const BOOKING_URL   = 'https://cal.com/qbix-studio/30min';
-export const CONTACT_NOTE =
-  'Qbix is available for AI product design, UX/UI systems, web/mobile design, and product strategy consulting.';
