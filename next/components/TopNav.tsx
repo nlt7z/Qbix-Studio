@@ -176,7 +176,7 @@ export default function TopNav() {
           style={{ display: 'inline-flex', alignItems: 'center', willChange: 'transform, filter' }}
         >
           <Image
-            src="/qbix-wordmark.png"
+            src="/qbix-wordmark.svg"
             alt="Qbix"
             width={59}
             height={22}
