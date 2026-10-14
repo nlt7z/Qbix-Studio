@@ -113,10 +113,10 @@ export default function Hero() {
               animate={{ y: '0%' }}
               transition={{ duration: 0.85, ease: EASE_OUT, delay: 0.55 }}
             >
-              <BrandText>
-                Qbix never writes off a small idea. We&rsquo;re a sharp team that moves fast, from sketch
-                to shipped product.
-              </BrandText>
+              {/* Two lines: the promise, then who we are. */}
+              <BrandText>Qbix never writes off a small idea.</BrandText>
+              <br />
+              We&rsquo;re a sharp team that moves fast, from sketch to shipped product.
             </motion.p>
           </span>
 

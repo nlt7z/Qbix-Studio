@@ -4,7 +4,9 @@ import QbixLabs from '@/components/sections/QbixLabs';
 import AboutUs from '@/components/sections/AboutUs';
 import Colophon from '@/components/Colophon';
 import StackFit from '@/components/StackFit';
+import Momentum from '@/components/Momentum';
 import './home-motion.css';
+import './momentum.css';
 
 export default function LandingPage() {
   return (
@@ -19,6 +21,7 @@ export default function LandingPage() {
       {/* Footer is NOT part of the stack — it flows normally right after About. */}
       <Colophon />
       <StackFit />
+      <Momentum />
     </>
   );
 }

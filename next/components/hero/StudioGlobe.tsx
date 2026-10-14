@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { LAND_DOTS_B64 } from './globeDots';
+import { momentum } from '@/lib/momentum';
 import { watchCovered } from '@/components/three/covered';
 
 /**
@@ -262,7 +263,8 @@ function Globe() {
         last = now;
         clock += dt;
         if (!view.drag) {
-          view.offset += view.vel * dt * 1000;
+          // Scrolling turns the globe with it (eastward going down).
+          view.offset += view.vel * dt * 1000 - momentum.vel * 90 * dt;
           view.vel *= Math.exp(-dt * 3);
           view.offset *= Math.exp(-dt * 0.6);   // drift home
         }

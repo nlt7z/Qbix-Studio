@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { momentum } from '@/lib/momentum';
 import { watchCovered } from './covered';
 
 /**
@@ -431,7 +432,8 @@ export function mountHeroCube(
       if (!spin.dragging) {
         // Inertia decays back to the idle drift speed.
         spin.vel += (0.2 - spin.vel) * Math.min(1, dt * 1.6);
-        spin.yaw += spin.vel * dt;
+        // Scrolling winds the cube on with the page.
+        spin.yaw += (spin.vel + momentum.vel * 2.4) * dt;
         spin.pitch += (0 - spin.pitch) * Math.min(1, dt * 1.2);
       }
       // The core turns slowly against the shell (faster while exploded).
