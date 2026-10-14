@@ -1,36 +1,6 @@
 /* =============================================================================
    SCROLL MOMENTUM (components/Momentum.tsx)
-   --vel is the sprung scroll velocity in [-1, 1] (positive scrolling down),
-   --spd its size. They live only on the elements below and are 0 at rest, so
-   everything sits exactly where home-motion.css puts it once the scroll stops.
-   `transform` is used on purpose: the scroll choreography animates the
-   individual translate / scale properties, and the two compose.
+   The driver writes inline transforms while the page moves and clears them
+   at rest; the pixel edge stretches from the side that meets its panel.
    ============================================================================= */
-@media (prefers-reduced-motion: no-preference) {
-  /* Headings split along their strip bands, alternate bands each way. */
-  .strip {
-    transform: translateX(calc(var(--dir) * var(--vel, 0) * 0.28em));
-  }
-
-  /* The pixel edge stretches toward the panel it leads, like a smear in
-     whole pixels. */
-  .px-edge i {
-    transform-origin: 50% 100%;
-    transform: scaleY(calc(1 + var(--spd, 0) * 1.6));
-  }
-
-  /* Cards trail the scroll, each a little more than the one before it. */
-  .svc,
-  .product-card {
-    transform: translateY(calc(var(--vel, 0) * var(--lag, 1) * 30px));
-  }
-  .product-card { --lag: calc(0.45 + var(--k, 0) * 0.28); }
-  .svc-deck > :nth-child(1) .svc,
-  .services-wrap > :nth-child(1) .svc { --lag: 0.45; }
-  .svc-deck > :nth-child(2) .svc,
-  .services-wrap > :nth-child(2) .svc { --lag: 0.75; }
-  .svc-deck > :nth-child(3) .svc,
-  .services-wrap > :nth-child(3) .svc { --lag: 1.05; }
-  .svc-deck > :nth-child(4) .svc,
-  .services-wrap > :nth-child(4) .svc { --lag: 1.35; }
-}
+.px-edge { transform-origin: 50% 100%; }

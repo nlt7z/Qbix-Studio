@@ -10,25 +10,69 @@ import { momentum } from '@/lib/momentum';
  * behind with a little lag, the pixel edges stretch, the logo strip speeds up
  * or runs backwards, and the hero cube and globe spin with it.
  *
- * One spring runs only while there is momentum to show. It writes two custom
- * properties (`--vel` signed, `--spd` its size) onto the few elements that
- * use them, never onto the root, so each frame restyles only those subtrees;
- * the CSS in app/momentum.css turns them into transforms.
+ * One spring runs only while there is momentum to show, and writes inline
+ * transforms straight onto the few elements that move. No custom properties:
+ * a variable inherits into every pixel and strip below it, and each of those
+ * carries a scroll-driven animation, so a per-frame variable made the browser
+ * re-resolve hundreds of animations a frame (30fps scrolling). `transform`
+ * composes with the individual translate / scale the choreography animates.
  */
-const TARGETS = '.strip-stack, .px-edge, .svc, .product-card';
 const SCALE = 2.2;     // px/ms that maps to ~0.76 of full momentum (tanh)
 const STIFF = 0.12;    // spring per 60fps frame
 const DAMP = 0.36;     // ≈0.5 damping ratio: a small overshoot as it settles
 const MARQUEE_GAIN = 7;
 
+type Target = { el: HTMLElement; kind: 'strip' | 'edge' | 'card'; k: number };
+
+const SVC_LAG = [0.45, 0.75, 1.05, 1.35];
+
 export default function Momentum() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    let targets: HTMLElement[] = [];
+    let targets: Target[] = [];
     let marquee: Animation | null = null;
+    // Only what's on screen is written to; anything that scrolls away is put
+    // back at rest once.
+    const seen = new Set<Element>();
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) seen.add(e.target);
+        else {
+          seen.delete(e.target);
+          (e.target as HTMLElement).style.transform = '';
+        }
+      }
+    });
+    // Touch devices keep the free parts (marquee, cube and globe read the
+    // shared value); the per-element transforms cost a phone ~30% more main
+    // thread while scrolling, so they're desktop only.
+    const lite = window.matchMedia('(pointer: coarse)').matches;
     const collect = () => {
-      targets = Array.from(document.querySelectorAll<HTMLElement>(TARGETS));
+      io.disconnect();
+      seen.clear();
+      targets = [];
+      if (lite) {
+        findMarquee();
+        return;
+      }
+      document.querySelectorAll<HTMLElement>('.strip-in').forEach((el) => {
+        const band = el.parentElement!;
+        targets.push({ el, kind: 'strip', k: Number(band.style.getPropertyValue('--dir')) || 1 });
+      });
+      document.querySelectorAll<HTMLElement>('.px-edge').forEach((el) => targets.push({ el, kind: 'edge', k: 1 }));
+      document.querySelectorAll<HTMLElement>('.svc').forEach((el) => {
+        const cell = el.closest('.svc-deck > *, .services-wrap > *');
+        const i = cell ? Array.prototype.indexOf.call(cell.parentElement!.children, cell) : 0;
+        targets.push({ el, kind: 'card', k: SVC_LAG[i] ?? 1 });
+      });
+      document.querySelectorAll<HTMLElement>('.product-card').forEach((el) => {
+        targets.push({ el, kind: 'card', k: 0.45 + (Number(el.style.getPropertyValue('--k')) || 0) * 0.28 });
+      });
+      targets.forEach((t) => io.observe(t.el));
+      findMarquee();
+    };
+    const findMarquee = () => {
       marquee =
         document
           .querySelector('.marquee-track')
@@ -46,16 +90,17 @@ export default function Momentum() {
     let prev = 0;
 
     const write = (val: number) => {
-      const s = val.toFixed(3);
-      const a = Math.abs(val).toFixed(3);
-      for (const el of targets) {
-        el.style.setProperty('--vel', s);
-        el.style.setProperty('--spd', a);
+      const rest = val === 0;
+      for (const t of targets) {
+        if (!rest && !seen.has(t.el)) continue;
+        if (rest) t.el.style.transform = '';
+        else if (t.kind === 'strip') t.el.style.transform = `translateX(${(t.k * val * 0.28).toFixed(3)}em)`;
+        else if (t.kind === 'edge') t.el.style.transform = `scaleY(${(1 + Math.abs(val) * 1.6).toFixed(3)})`;
+        else t.el.style.transform = `translateY(${(val * t.k * 30).toFixed(1)}px)`;
       }
       if (marquee) marquee.playbackRate = 1 + val * MARQUEE_GAIN;
       momentum.vel = val;
     };
-
     const frame = (now: number) => {
       raf = 0;
       const k = Math.min(3, (now - prev) / 16.67);   // frames elapsed at 60fps
@@ -88,7 +133,8 @@ export default function Momentum() {
       lastT = t;
       quietAt = t;
       if (!raf) {
-        collect();
+        // Gather the movers once (and again only if the page re-rendered them).
+        if (!marquee || !targets.every((tg) => tg.el.isConnected)) collect();
         prev = t;
         raf = requestAnimationFrame(frame);
       }
@@ -98,6 +144,7 @@ export default function Momentum() {
     return () => {
       window.removeEventListener('scroll', onScroll);
       cancelAnimationFrame(raf);
+      io.disconnect();
       write(0);
     };
   }, []);

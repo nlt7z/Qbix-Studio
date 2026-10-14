@@ -34,6 +34,8 @@ export function createStage(host: HTMLElement, opts: StageOptions) {
   renderer.shadowMap.enabled = opts.shadows ?? true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.className = 'stage-canvas';
+  // Reading shader logs back stalls the main thread on every first draw.
+  renderer.debug.checkShaderErrors = false;
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();

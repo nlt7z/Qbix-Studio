@@ -43,9 +43,10 @@
   inset: 0;
   /* One band of the heading; a half pixel of overlap hides the seams. */
   clip-path: inset(
-    calc(var(--i) * 100% / var(--n) - 0.5px) -2% calc((var(--n) - 1 - var(--i)) * 100% / var(--n) - 0.5px) -2%
+    calc(var(--i) * 100% / var(--n) - 0.5px) -6% calc((var(--n) - 1 - var(--i)) * 100% / var(--n) - 0.5px) -6%
   );
 }
+.strip-in { display: block; }
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

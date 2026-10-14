@@ -204,9 +204,11 @@ function codeSheet(ctx: CanvasRenderingContext2D, w: number, h: number, F: SiteF
 
 export async function mountStrataScene(host: HTMLElement, opts: StrataOptions) {
   const F = await siteFonts();
-  const stage = createStage(host, { reduced: opts.reduced, onReady: opts.onReady });
-  const { renderer, scene, coarse } = stage;
   const tour = opts.mode === 'tour';
+  // The tour stage fills the whole viewport: 1.5x is visually the same as 2x
+  // there and draws ~44% fewer pixels a frame.
+  const stage = createStage(host, { reduced: opts.reduced, onReady: opts.onReady, maxDpr: tour ? 1.5 : 2 });
+  const { renderer, scene, coarse } = stage;
   renderer.toneMappingExposure = 1.05;
   const envTex = studioEnvironment(renderer);
   scene.environment = envTex;

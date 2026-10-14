@@ -69,9 +69,11 @@ function cropPlane(w: number, h: number, [u0, v0, u1, v1]: [number, number, numb
 
 export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   const F = await siteFonts();
-  const stage = createStage(host, { reduced: opts.reduced, onReady: opts.onReady });
-  const { renderer, scene, coarse } = stage;
   const tour = opts.mode === 'tour';
+  // The tour stage fills the whole viewport: 1.5x is visually the same as 2x
+  // there and draws ~44% fewer pixels a frame.
+  const stage = createStage(host, { reduced: opts.reduced, onReady: opts.onReady, maxDpr: tour ? 1.5 : 2 });
+  const { renderer, scene, coarse } = stage;
 
   renderer.toneMappingExposure = 1.04;
   // One shadow pass per frame, shared by the screen and the photo/video renders.

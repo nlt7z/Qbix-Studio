@@ -71,7 +71,8 @@ export function StripTitle({
         <span className="strip-base">{text}</span>
         {Array.from({ length: bands }, (_, i) => (
           <span key={i} className="strip" style={{ '--i': i, '--dir': i % 2 ? 1 : -1 } as CSSProperties}>
-            {text}
+            {/* Scroll momentum shifts this inner copy, never the animated band. */}
+            <span className="strip-in">{text}</span>
           </span>
         ))}
       </span>
