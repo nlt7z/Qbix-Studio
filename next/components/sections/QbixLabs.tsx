@@ -15,6 +15,7 @@ type Product = {
   media: Media | null;
   url?: string;   // live link → "Explore the product"
   soon?: boolean; // no live build yet → "Coming soon"
+  live?: boolean; // shipped, no public link yet → a "Live" status, nothing to click
   wide?: boolean; // live-site iframe → double-width cell, same height
 };
 
@@ -42,6 +43,7 @@ const products: Product[] = [
     blurb:
       'Blind auctions as a game. Bid, bluff, or go all in, while the model on the other side reads your hand.',
     media: { kind: 'video', src: '/bidking-present.mp4' },
+    live: true,
   },
   {
     key: 'interview',
@@ -142,9 +144,9 @@ export default function QbixLabs() {
           {products.map((p, i) => (
             <RevealItem key={p.key} speed="base" className={p.wide ? 'product-cell--wide' : undefined}>
               <article
-                className={`product-card${p.wide ? ' product-card--wide' : ''}${p.url ? ' product-card--live' : ' product-card--soon'}`}
+                className={`product-card${p.wide ? ' product-card--wide' : ''}${p.url ? ' product-card--live' : p.live ? ' product-card--static' : ' product-card--soon'}`}
                 style={{ '--k': i } as CSSProperties}
-                data-cursor={p.url ? 'Explore ↗' : 'Not live yet'}
+                data-cursor={p.url ? 'Explore ↗' : p.live ? undefined : 'Not live yet'}
               >
                 <ProductMedia media={p.media} />
                 <div className="product-card-body">
@@ -153,6 +155,10 @@ export default function QbixLabs() {
                   <div className="product-card-foot">
                     {p.url ? (
                       <ExploreButton url={p.url} />
+                    ) : p.live ? (
+                      <span className="product-status mono">
+                        <i aria-hidden /> Live
+                      </span>
                     ) : (
                       <span className="product-soon">Coming soon</span>
                     )}

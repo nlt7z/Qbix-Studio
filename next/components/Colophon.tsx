@@ -17,7 +17,7 @@ const socials = [
   { label: 'Instagram',   href: 'https://www.instagram.com/qbix_studio/' },
 ];
 
-type Item = { label: string; href?: string; external?: boolean };
+type Item = { label: string; href?: string; external?: boolean; live?: boolean };
 
 const COLUMNS: { title: string; items: Item[] }[] = [
   {
@@ -31,7 +31,7 @@ const COLUMNS: { title: string; items: Item[] }[] = [
     title: 'Products',
     items: [
       { label: 'Strata', href: '/products/strata' },
-      { label: 'AI Bidding' },
+      { label: 'AI Bidding', live: true },
       { label: 'TTS Editor' },
       { label: 'Interview Assistant' },
     ],
@@ -50,6 +50,8 @@ const COLUMNS: { title: string; items: Item[] }[] = [
 ];
 
 function FooterLink({ item }: { item: Item }) {
+  // Shipped, but no public link yet: listed plainly, no "Soon" chip.
+  if (!item.href && item.live) return <span className="ft-link is-static">{item.label}</span>;
   if (!item.href) {
     return (
       <span className="ft-link is-soon">
