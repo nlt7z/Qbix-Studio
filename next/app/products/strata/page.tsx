@@ -7,10 +7,30 @@ const STRATA_URL = 'https://stratadesign.app';
 const DESC =
   'Strata turns a moodboard into a working design system — tokens, components, and code, ready to hand to AI or your library. A Qbix Labs product, live at stratadesign.app.';
 
+const SHARE_TITLE = 'Strata: one image in, a working design system out';
+
 export const metadata: Metadata = {
   title: 'Strata — image to design system',
   description: DESC,
   alternates: { canonical: '/products/strata' },
+  // Its own share card, so a shared link previews Strata rather than the studio.
+  openGraph: {
+    type: 'website',
+    siteName: 'Qbix',
+    locale: 'en_US',
+    images: [{ url: '/og/strata.png', width: 1200, height: 630, alt: 'Strata: one image in, a working system out.' }],
+    url: `${SITE_URL}/products/strata`,
+    title: SHARE_TITLE,
+    description: DESC,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@QbixStudio',
+    creator: '@QbixStudio',
+    images: ['/og/strata.png'],
+    title: SHARE_TITLE,
+    description: DESC,
+  },
 };
 
 const strataJsonLd = {

@@ -7,11 +7,31 @@ import Odometer from '@/components/offers/Odometer';
 import { Reveal, Words } from '@/components/Reveal';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 
+const START_DESC =
+  'Tell Qbix what you’re building. Share your project type, budget, and timeline and we’ll reply within 24 hours — a senior AI product team in Seattle.';
+
 export const metadata: Metadata = {
   title: 'Start a project',
-  description:
-    'Tell Qbix what you’re building. Share your project type, budget, and timeline and we’ll reply within 24 hours — a senior AI product team in Seattle.',
+  description: START_DESC,
   alternates: { canonical: '/start' },
+  // Its own share card and URL, not the studio homepage's.
+  openGraph: {
+    type: 'website',
+    siteName: 'Qbix',
+    locale: 'en_US',
+    images: [{ url: '/og/start.png', width: 1200, height: 630, alt: 'Start a project with Qbix: tell us what you’re building.' }],
+    url: 'https://qbix.space/start',
+    title: 'Start a project with Qbix',
+    description: START_DESC,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@QbixStudio',
+    creator: '@QbixStudio',
+    images: ['/og/start.png'],
+    title: 'Start a project with Qbix',
+    description: START_DESC,
+  },
 };
 
 const STEPS = [

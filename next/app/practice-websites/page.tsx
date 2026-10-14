@@ -10,13 +10,14 @@ export const metadata: Metadata = {
   title: 'Practice Website Refresh: a website as calm as your office',
   description: DESC,
   alternates: { canonical: '/practice-websites' },
-  // A page-level openGraph replaces the layout's, so the share image, site
-  // name and handles are restated here.
+  // A page-level openGraph replaces the layout's, so site name and handles are
+  // restated here. The share card is this offer's own (public/og), never the
+  // studio card: the link goes to agents and therapists, not startups.
   openGraph: {
     type: 'website',
     siteName: 'Qbix',
     locale: 'en_US',
-    images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+    images: [{ url: '/og/practice-websites.png', width: 1200, height: 630, alt: 'Practice Website Refresh: a website that feels as calm as your office. $600 flat, regular $800.' }],
     url: `${SITE_URL}/practice-websites`,
     title: 'Practice Website Refresh: $600 flat, regular $800',
     description: DESC,
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@QbixStudio',
     creator: '@QbixStudio',
-    images: ['/twitter-image.png'],
+    images: ['/og/practice-websites.png'],
     title: 'Practice Website Refresh: $600 flat, regular $800',
     description: DESC,
   },
