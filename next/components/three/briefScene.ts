@@ -95,22 +95,20 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
   const M = {
     plinth: new THREE.MeshPhysicalMaterial({ color: '#121417', metalness: 0.4, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.06 }),
     ceramic: new THREE.MeshPhysicalMaterial({ color: '#f4f6f7', roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.15 }),
+    // Ribbed ink (was ribbed silver: no greys in the 3D).
     silver: new THREE.MeshPhysicalMaterial({
-      color: '#e6e9ec', metalness: 0.6, roughness: 0.3, clearcoat: 0.5,
+      color: '#16181b', metalness: 0.3, roughness: 0.35, clearcoat: 0.8,
       normalMap: ribsNormal(), normalScale: new THREE.Vector2(0.8, 0.8),
     }),
     ink: new THREE.MeshPhysicalMaterial({ color: '#16181b', roughness: 0.35, metalness: 0.3, clearcoat: 0.9, clearcoatRoughness: 0.08 }),
-    frost: new THREE.MeshPhysicalMaterial({
-      color: '#e8f0ef', roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true, opacity: 0.8,
-      sheen: 1, sheenColor: new THREE.Color('#ffffff'), sheenRoughness: 0.4,
-    }),
+    frost: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.08 }),
     limeSatin: new THREE.MeshPhysicalMaterial({ color: LIME, metalness: 0.3, roughness: 0.32, clearcoat: 0.4 }),
-    chrome: new THREE.MeshPhysicalMaterial({ color: '#eef0f2', metalness: 1, roughness: 0.1 }),
+    chrome: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.3, clearcoat: 0.8 }),   // was grey chrome
     paper: new THREE.MeshStandardMaterial({ color: '#f7f8f9', roughness: 0.8 }),
     paperTop: new THREE.MeshStandardMaterial({ map: lines, roughness: 0.8, emissive: '#ffffff', emissiveMap: lines, emissiveIntensity: 0.12 }),
     lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-    ghost: new THREE.LineDashedMaterial({ color: '#ffffff', transparent: true, opacity: 0.22, dashSize: 0.06, gapSize: 0.05 }),
-    edge: new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.14 }),
+    ghost: new THREE.LineDashedMaterial({ color: LIME, transparent: true, opacity: 0.5, dashSize: 0.06, gapSize: 0.05, toneMapped: false }),
+    edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
   };
 
   const mesh = (geo: THREE.BufferGeometry, mat: THREE.Material | THREE.Material[]) => {
@@ -265,7 +263,7 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
     done.scale.setScalar(opts.reduced ? 1 : Math.max(0.001, outBack(seg(t - sentAt, 1.0, 1.5), 1.8)));
     done.rotation.y = t * 0.4;
     ghost.visible = sentAt < 0;
-    (M.ghost as THREE.LineDashedMaterial).opacity = lerp(0.24, 0.08, clamp01(filled / GHOST_H));
+    (M.ghost as THREE.LineDashedMaterial).opacity = lerp(0.55, 0.15, clamp01(filled / GHOST_H));
 
     // ---- camera + idle ----
     lean.x += (lean.tx - lean.x) * 0.05;

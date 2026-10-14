@@ -110,8 +110,9 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
     plinth: new THREE.MeshPhysicalMaterial({ color: '#121417', metalness: 0.4, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.06 }),
     terrazzo: new THREE.MeshPhysicalMaterial({ map: terrazzo, roughness: 0.42, clearcoat: 0.7, clearcoatRoughness: 0.12 }),
     ceramic: new THREE.MeshPhysicalMaterial({ color: '#f4f6f7', roughness: 0.34, clearcoat: 0.6, clearcoatRoughness: 0.18 }),
+    // Ribbed ink cladding (was ribbed silver: no greys in the 3D).
     silver: new THREE.MeshPhysicalMaterial({
-      color: '#e6e9ec', metalness: 0.6, roughness: 0.32, clearcoat: 0.5, clearcoatRoughness: 0.2,
+      color: '#16181b', metalness: 0.3, roughness: 0.36, clearcoat: 0.8, clearcoatRoughness: 0.12,
       normalMap: ribs, normalScale: new THREE.Vector2(0.9, 0.9),
     }),
     ink: new THREE.MeshPhysicalMaterial({ color: '#15171a', roughness: 0.38, metalness: 0.25, clearcoat: 0.8, clearcoatRoughness: 0.1 }),
@@ -119,18 +120,15 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
       color: '#0d1216', roughness: 0.04, metalness: 0.3, clearcoat: 1, clearcoatRoughness: 0.02,
       envMapIntensity: 0.9, emissive: '#cfe6ff', emissiveIntensity: 0,
     }),
-    chrome: new THREE.MeshPhysicalMaterial({ color: '#eef0f2', metalness: 1, roughness: 0.12 }),
-    drive: new THREE.MeshPhysicalMaterial({ color: '#dde1e4', roughness: 0.5, clearcoat: 0.3 }),
-    // Frosted glass without a transmission pass (that re-renders the scene per camera).
-    frost: new THREE.MeshPhysicalMaterial({
-      color: '#e9f0ef', roughness: 0.22, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06,
-      transparent: true, opacity: 0.82, sheen: 1, sheenColor: new THREE.Color('#ffffff'), sheenRoughness: 0.4,
-    }),
+    chrome: new THREE.MeshPhysicalMaterial({ color: '#16181b', metalness: 0.3, roughness: 0.3, clearcoat: 0.9 }),
+    drive: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.5, clearcoat: 0.3 }),
+    // Solid white (was frosted see-through glass: the user's rule for all 3D).
+    frost: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.08 }),
     white: new THREE.MeshStandardMaterial({ color: '#f4f6f7', roughness: 0.5 }),
     paper: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.8, emissive: '#ffffff', emissiveIntensity: 0.12 }),
     phone: new THREE.MeshPhysicalMaterial({ color: '#0f1113', metalness: 0.55, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.05 }),
     lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-    edge: new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.16 }),
+    edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
   };
 
   const box = (w: number, h: number, d: number, mat: THREE.Material | THREE.Material[], cast = true) => {
@@ -356,7 +354,7 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   );
   overlay.position.z = 0.037;
   phone.add(overlay);
-  const track = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.012), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45 }));
+  const track = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.012), new THREE.MeshBasicMaterial({ color: '#0b0c0d' }));
   track.position.set(0, -0.52, 0.038);
   const fillGeo = new THREE.PlaneGeometry(0.5, 0.016);
   fillGeo.translate(0.25, 0, 0);

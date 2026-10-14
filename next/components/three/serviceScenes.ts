@@ -22,8 +22,8 @@ export type SceneVariant = 'design' | 'brand' | 'listing' | 'practice';
 
 const LIME = new THREE.Color('#B8FF00');
 const WHITE = new THREE.Color('#f2f3ef');
-const PALE = new THREE.Color('#dcdfd8');
-const CHROME = new THREE.Color('#c9cdd3');
+// No greys: what used to be the pale tone is white now.
+const PALE = new THREE.Color('#f2f3ef');
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const seg = (t: number, a: number, b: number) => clamp01((t - a) / (b - a));
@@ -39,24 +39,26 @@ function rand(i: number) {
 }
 
 function materials() {
-  // Translucent layer language: clear and lime-tinted glass plates with white
-  // hairline edges, a few solid accents (pearl, light type bars, exact lime).
-  // Kept deliberately cheap — unlit glass, Lambert solids, no environment map
+  // Solid objects only (user: no grey or white see-through 3D): white paper
+  // bodies held by ink hairlines, ink for images and type, exact lime. The one
+  // translucent material left is the lime glass, and it reads lime.
+  // Kept deliberately cheap — Lambert solids, unlit lime, no environment map
   // or shadows — so four scenes compile and draw without stalling the page.
-  const layer = (color: THREE.ColorRepresentation, opacity: number) =>
-    new THREE.MeshBasicMaterial({
-      color, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide,
-    });
+  // Whites carry an emissive floor so their shaded sides stay white, not grey.
+  const white = () => new THREE.MeshLambertMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.55 });
+  const ink = () => new THREE.MeshLambertMaterial({ color: '#15171a' });
   return {
-    body: layer('#ffffff', 0.09),     // clear glass plate
-    frost: layer(LIME, 0.3),          // lime-tinted glass plate
-    chrome: new THREE.MeshLambertMaterial({ color: '#e9ecef' }),
-    ink: new THREE.MeshLambertMaterial({ color: '#eceee8' }),
-    inkDark: new THREE.MeshLambertMaterial({ color: '#15171a' }),
+    body: white(),                    // the object itself: white, opaque
+    frost: ink(),                     // image wells and inset panels
+    chrome: white(),
+    ink: ink(),
+    inkDark: ink(),
     // The signal colour is unlit and skips tone mapping so it lands as exact #B8FF00.
     lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-    glass: layer(LIME, 0.24),
-    edge: new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.62 }),
+    glass: new THREE.MeshBasicMaterial({
+      color: LIME, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide, toneMapped: false,
+    }),
+    edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
     edgeLime: new THREE.LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.95, toneMapped: false }),
   };
 }
@@ -94,7 +96,7 @@ function buildDesign(scene: THREE.Group, M: Mats) {
 
   // Layout slots on the slab's top face: nav, hero, media, three cards.
   const TOP = SLAB_H + 0.02 + 0.04;
-  const heroMat = M.body.clone();
+  const heroMat = new THREE.MeshBasicMaterial({ color: WHITE });
   const slots: { w: number; d: number; x: number; z: number; mat: THREE.Material }[] = [
     { w: 3.8, d: 0.16, x: 0, z: -0.88, mat: M.chrome },
     { w: 2.35, d: 1.0, x: -0.68, z: -0.2, mat: heroMat },
@@ -185,10 +187,8 @@ function buildDesign(scene: THREE.Group, M: Mats) {
     scan.position.z = lerp(-1.4, 1.4, sweep);
     scan.visible = sweep > 0 && sweep < 1;
     const live = clamp01(inOut(seg(t, 3.35, 3.9)) - inOut(seg(t, 7.6, 8.2)));
-    // Going live: the clear glass block fills with the exact brand lime.
+    // Going live: the white hero block fills with the exact brand lime.
     heroMat.color.copy(WHITE).lerp(LIME, live);
-    heroMat.opacity = lerp(0.09, 1, live);
-    heroMat.depthWrite = live > 0.5;
 
     // Phone rides in from the right, holds, rides out.
     const pin = outQuint(seg(t, 4.1, 5.0));
@@ -220,11 +220,11 @@ function buildBrand(scene: THREE.Group, M: Mats) {
   }
   const gridGeo = new THREE.BufferGeometry();
   gridGeo.setAttribute('position', new THREE.Float32BufferAttribute(gridPts, 3));
-  base.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.28 })));
+  base.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: '#15171a', transparent: true, opacity: 0.22 })));
   scene.add(base);
 
   // Plate 2 — colour + type.
-  const mid = slab(S, H, S, M.frost, M.edge, 0.05);
+  const mid = slab(S, H, S, M.frost, M.edgeLime, 0.05);
   const swatchMats = [0, 1, 2, 3].map(() => M.chrome.clone());   // solid, so the palette reads
   const swatches = swatchMats.map((m, i) => {
     const sw = slab(0.42, 0.06, 0.42, m, M.edge, 0.03);
@@ -263,7 +263,7 @@ function buildBrand(scene: THREE.Group, M: Mats) {
   // Explode dimension rail on the front-left corner.
   const railGeo = new THREE.BufferGeometry();
   railGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Array(18).fill(0), 3));
-  const rail = new THREE.LineSegments(railGeo, M.edge);
+  const rail = new THREE.LineSegments(railGeo, M.edgeLime);
   scene.add(rail);
 
   // Scan plane that passes up through the stack each round.
@@ -279,14 +279,14 @@ function buildBrand(scene: THREE.Group, M: Mats) {
   scene.add(scan);
 
   // Swatch palettes: each round moves the plate one step, P[r] → P[r+1] —
-  // greys → chrome → refined, and the last round lands the one lime signal.
+  // all ink → paper and ink → refined, and the last round lands the one lime
+  // signal. No greys.
   const INK = new THREE.Color('#111316');
-  const STEEL = new THREE.Color('#aab0b6');
   const P = [
-    [PALE, WHITE, PALE, WHITE],
-    [WHITE, CHROME, PALE, WHITE],
-    [INK, CHROME, WHITE, STEEL],
-    [INK, CHROME, LIME, STEEL],
+    [INK, INK, INK, INK],
+    [WHITE, INK, WHITE, INK],
+    [INK, WHITE, WHITE, INK],
+    [INK, WHITE, LIME, INK],
   ];
   const tmp = new THREE.Color();
 
@@ -317,7 +317,8 @@ function buildBrand(scene: THREE.Group, M: Mats) {
       tmp.lerp(P[0][i], reset);
       const limeness = clamp01((tmp.g - tmp.b - 0.5) * 2.5);
       m.color.copy(tmp).multiplyScalar(1 - limeness);
-      m.emissive.copy(LIME).multiplyScalar(limeness);
+      // Whites keep their emissive floor (so they stay white); lime glows.
+      m.emissive.copy(tmp).multiplyScalar(0.55 * (1 - limeness)).add(LIME.clone().multiplyScalar(limeness));
       const hop = inRound && i === (r + 1) % 4 ? Math.sin(Math.PI * seg(rp, 0.15, 0.5)) * 0.12 : 0;
       swatches[i].position.y = H / 2 + 0.03 + hop;
     });
@@ -332,7 +333,7 @@ function buildBrand(scene: THREE.Group, M: Mats) {
     // Press-together flash on the glass edge.
     const press = Math.sin(Math.PI * seg(t, 7.8, 8.5));
     (M.edgeLime as THREE.LineBasicMaterial).opacity = 0.55 + 0.45 * press;
-    M.glass.opacity = 0.12 + 0.16 * press;
+    M.glass.opacity = 0.38 + 0.2 * press;
 
     // Dimension rail tracks the explode height.
     const x = -S / 2 - 0.28;
@@ -378,7 +379,7 @@ function buildListing(scene: THREE.Group, M: Mats) {
   door.position.set(-0.12, 0.1, 0.225);
   house.add(door);
   [0.1, 0.23].forEach((x) => {
-    const w = slab(0.1, 0.1, 0.02, M.chrome, M.edge, 0.005);
+    const w = slab(0.1, 0.1, 0.02, M.inkDark, M.edge, 0.005);   // windows read dark on white walls
     w.position.set(x, 0.2, 0.225);
     house.add(w);
   });

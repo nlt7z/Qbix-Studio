@@ -49,7 +49,7 @@ export async function mountRebuildScene(host: HTMLElement, opts: RebuildOptions)
   scene.add(ground);
 
   /* ------------------------------------------------------------ materials */
-  const paperEdge = new THREE.MeshStandardMaterial({ color: '#dfe3e7', roughness: 0.9 });
+  const paperEdge = new THREE.MeshStandardMaterial({ color: '#1d1e1b', roughness: 0.6 });   // ink sides, not grey
   const paperTop = new THREE.MeshStandardMaterial({ color: '#fbfcfd', roughness: 0.95, emissive: '#ffffff', emissiveIntensity: 0.14 });
   const bezelMat = new THREE.MeshPhysicalMaterial({ color: '#1d1e1b', roughness: 0.35, metalness: 0.3, clearcoat: 0.8 });
 

@@ -238,13 +238,11 @@ export async function mountStrataScene(host: HTMLElement, opts: StrataOptions) {
     plinth: new THREE.MeshPhysicalMaterial({ color: '#121417', metalness: 0.4, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.06 }),
     ink: new THREE.MeshPhysicalMaterial({ color: '#16181b', roughness: 0.35, metalness: 0.3, clearcoat: 0.9, clearcoatRoughness: 0.08 }),
     ceramic: new THREE.MeshPhysicalMaterial({ color: '#f4f6f7', roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.15 }),
-    frost: new THREE.MeshPhysicalMaterial({
-      color: '#e8f0ef', roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true, opacity: 0.85,
-      sheen: 1, sheenColor: new THREE.Color('#ffffff'), sheenRoughness: 0.4,
-    }),
+    // Solid white plate (no see-through white: the user's rule for all 3D).
+    frost: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.08 }),
     lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
     limeSatin: new THREE.MeshPhysicalMaterial({ color: LIME, metalness: 0.3, roughness: 0.32, clearcoat: 0.4 }),
-    edge: new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.18 }),
+    edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
   };
   const face = (draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void, emissive = 0.18) => {
     const tex = canvasTexture(1024, Math.round((1024 * D) / W), draw);
