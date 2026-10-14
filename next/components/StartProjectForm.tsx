@@ -10,7 +10,7 @@ const PROJECT_TYPES = [
   'SaaS / web app',
   'Marketing site',
   'Brand / identity',
-  '48-hour sprint',
+  'Design service',
   'Something else',
 ];
 const BUDGETS = ['Not sure yet', 'Under $5k', '$5k – $20k', '$20k – $50k', '$50k+'];

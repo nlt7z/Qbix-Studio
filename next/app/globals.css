@@ -1710,10 +1710,12 @@ section { position: relative; }
 /* The 48-hour sprint as a full-bleed lime panel. */
 .start-sprint-panel { padding: clamp(64px, 9vw, 120px) 0; background: var(--signal); color: var(--signal-dark); }
 .start-sprint-grid { display: grid; gap: 24px; align-items: end; }
-@media (min-width: 900px) { .start-sprint-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+/* The figure column takes the figure's own width ("1–3 weeks" is wider than
+   the old "48 hours"), so the unit never runs into the copy. */
+@media (min-width: 900px) { .start-sprint-grid { grid-template-columns: auto minmax(0, 1fr); column-gap: clamp(40px, 5vw, 88px); } }
 .start-sprint-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(15, 26, 0, 0.75); }
 .start-sprint-figure { display: flex; align-items: baseline; gap: 16px; margin: 10px 0 0; font-family: var(--font-headline); }
-.start-sprint-n { font-size: clamp(120px, 20vw, 280px); letter-spacing: -0.05em; color: var(--signal-dark); }
+.start-sprint-n { font-size: clamp(110px, 15vw, 230px); letter-spacing: -0.05em; color: var(--signal-dark); }
 .start-sprint-unit { font-size: clamp(28px, 4vw, 52px); color: rgba(15, 26, 0, 0.8); }
 .start-sprint-copy p { margin: 0 0 14px; max-width: 32em; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: rgba(15, 26, 0, 0.85); }
 .start-sprint-copy .start-sprint-price { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }

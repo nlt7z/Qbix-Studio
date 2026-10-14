@@ -98,19 +98,19 @@ export default function StartPage() {
         <section className="start-sprint-panel" data-nav-theme="light">
           <div className="container start-sprint-grid">
             <div>
-              <span className="start-sprint-eyebrow mono">The 48-hour sprint</span>
+              <span className="start-sprint-eyebrow mono">Design service</span>
               <p className="start-sprint-figure">
-                <Odometer value="48" className="start-sprint-n" />
-                <span className="start-sprint-unit">hours</span>
+                <Odometer value="1–3" className="start-sprint-n" />
+                <span className="start-sprint-unit">weeks</span>
               </p>
             </div>
             <div className="start-sprint-copy">
               <p className="start-sprint-price">
-                From <strong>$500</strong> · idea → working prototype
+                From <strong>$500</strong> · moodboard → live domain
               </p>
               <Reveal as="p" speed="base">
-                From signed SOW to a working prototype in your inbox — senior craft, on the clock. Pick &ldquo;48-hour
-                sprint&rdquo; above and we&rsquo;ll send the next open slot.
+                From moodboard to a live domain. We design it, write the code, and ship it ready for business in one
+                to three weeks. Pick &ldquo;Design service&rdquo; above and we&rsquo;ll send the next open slot.
               </Reveal>
             </div>
           </div>
