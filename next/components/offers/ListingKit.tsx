@@ -37,11 +37,11 @@ const KIT_LABELS = ['01 · Print flyer · 8.5 × 11', '02 · Social posts × 5',
 
 const FAQ = [
   { q: 'Do you need to visit the house?', a: 'No. Everything comes from your listing photos and details.' },
-  { q: 'Can it match my brand?', a: 'Yes. Send your logo and colors, or I will match your brokerage style.' },
+  { q: 'Can it match my brand?', a: 'Yes. Send your logo and colors, or we will match your brokerage style.' },
   { q: 'Who owns the files?', a: 'You do.' },
   {
     q: "What if I don't like the drafts?",
-    a: "Tell me what feels off and I will redo them. If they still don't work for you, I refund you in full.",
+    a: "Tell us what feels off and we will redo them. If they still don't work for you, we refund you in full.",
   },
 ];
 
@@ -138,7 +138,7 @@ export default function ListingKit() {
               something people remember. They also show your sellers that you are working hard for them.
             </Reveal>
             <Reveal as="p" className="offer-pull" speed="slow" delay={0.1}>
-              You already have the photos. Send me the listing link and I will do the rest.
+              You already have the photos. Send us the listing link and we will do the rest.
             </Reveal>
           </div>
         </div>
@@ -177,12 +177,13 @@ export default function ListingKit() {
 
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
-          <Words as="h2" className="offer-h2" text="About me" />
+          <Words as="h2" className="offer-h2" text="About us" />
           <div className="offer-me">
             <AboutPhoto />
             <Reveal as="p" className="offer-about" speed="base" delay={0.15}>
-              I&rsquo;m Sera. I trained as a painter at Pratt and now design software products in the Bay Area. I make
-              marketing for local agents on the side, so I keep it fast and simple.
+              We&rsquo;re Sera and the Qbix team, a small design studio in Seattle and the Bay Area. We trained at Pratt
+              and the University of Washington and design software products for a living. We make marketing for local
+              agents on the side, so we keep it fast and simple.
             </Reveal>
           </div>
           <div className="offer-close" data-cta-zone>

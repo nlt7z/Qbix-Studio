@@ -5,7 +5,7 @@ import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
-/** The round About-me portrait, opened by a circular iris as it scrolls in. */
+/** The round portrait in the offer pages' About us, opened by a circular iris as it scrolls in. */
 export default function AboutPhoto() {
   const reduced = useReducedMotionSafe();
   return (

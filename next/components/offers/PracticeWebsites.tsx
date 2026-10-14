@@ -24,7 +24,7 @@ const GET = [
   { k: 'Found on Google.', v: 'Your name, city, and specialties set up so search results show the right information.' },
   {
     k: 'You own it.',
-    v: 'Built on Squarespace in your name. Hosting is billed to you directly by the platform, not through me.',
+    v: 'Built on Squarespace in your name. Hosting is billed to you directly by the platform, not through us.',
   },
   { k: 'A short how-to video', v: 'showing how to edit your text yourself.' },
   { k: '30 days of small fixes', v: 'after launch.' },
@@ -32,16 +32,16 @@ const GET = [
 
 const STEPS = [
   { k: 'Fill out a short questionnaire by email.', v: 'It takes about 15 minutes.', day: 1 },
-  { k: 'See your new homepage in 3 days', v: 'and tell me what to change.', day: 3 },
-  { k: 'Your full site goes live in 7 days.', v: 'I connect your existing domain and keep your email working.', day: 7 },
+  { k: 'See your new homepage in 3 days', v: 'and tell us what to change.', day: 3 },
+  { k: 'Your full site goes live in 7 days.', v: 'We connect your existing domain and keep your email working.', day: 7 },
 ];
 
 const FAQ = [
   { q: 'Do we need to meet?', a: 'No. Everything happens by email. A phone call is fine if you prefer one.' },
-  { q: 'What happens to my current text?', a: 'I reuse it and tighten it. You approve every word before launch.' },
+  { q: 'What happens to my current text?', a: 'We reuse it and tighten it. You approve every word before launch.' },
   {
     q: 'Do you see client information?',
-    a: 'No. I never handle client messages or records. The site links to your own email, phone, or secure booking tool.',
+    a: 'No. We never handle client messages or records. The site links to your own email, phone, or secure booking tool.',
   },
   { q: 'Will I lose my domain?', a: 'No. Your domain stays yours.' },
 ];
@@ -55,7 +55,7 @@ export default function PracticeWebsites() {
         </Reveal>
         <Words as="h1" className="pw-title" text="A website that feels as calm as your office." speed="slow" step={0.07} delay={0.05} />
         <Reveal as="p" className="pw-lede" speed="slow" delay={0.4}>
-          I rebuild websites for solo practices in one week. Your words, your photos, a clean design that works on
+          We rebuild websites for solo practices in one week. Your words, your photos, a clean design that works on
           any phone. You never have to touch the tech.
         </Reveal>
         <Reveal className="pw-cta-row" speed="slow" delay={0.55}>
@@ -113,13 +113,13 @@ export default function PracticeWebsites() {
 
       <section className="pw-section pw-section--last" data-nav-theme="light">
         <div className="container pw-narrow">
-          <Words as="h2" className="pw-h2" text="About me" />
+          <Words as="h2" className="pw-h2" text="About us" />
           <div className="offer-me">
             <AboutPhoto />
             <Reveal as="p" className="pw-text" speed="slow" delay={0.15}>
-              I&rsquo;m Sera. I studied human-centered design at the University of Washington and trained as a painter at
-              Pratt. I design software products for a living, and I rebuild websites for independent practices because a
-              good one makes a real difference to a small business.
+              We&rsquo;re Sera and the Qbix team. We studied human-centered design at the University of Washington and
+              trained as painters at Pratt. We design software products for a living, and we rebuild websites for
+              independent practices because a good one makes a real difference to a small business.
             </Reveal>
           </div>
           <div className="pw-close">
