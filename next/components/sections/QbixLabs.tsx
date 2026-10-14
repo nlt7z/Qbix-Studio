@@ -142,8 +142,9 @@ export default function QbixLabs() {
           {products.map((p, i) => (
             <RevealItem key={p.key} speed="base" className={p.wide ? 'product-cell--wide' : undefined}>
               <article
-                className={`product-card${p.wide ? ' product-card--wide' : ''}`}
+                className={`product-card${p.wide ? ' product-card--wide' : ''}${p.url ? ' product-card--live' : ' product-card--soon'}`}
                 style={{ '--k': i } as CSSProperties}
+                data-cursor={p.url ? 'Explore ↗' : 'Not live yet'}
               >
                 <ProductMedia media={p.media} />
                 <div className="product-card-body">

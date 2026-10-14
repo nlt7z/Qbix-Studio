@@ -55,6 +55,7 @@ export default function HeroCube() {
       <div
         ref={hostRef}
         className={`hero-cube-stage${state === 'ready' ? ' is-ready' : ''}`}
+        data-cursor="Drag to spin"
         role="img"
         aria-label="The Qbix cube: eight material studies around a lime core, twisting layer by layer"
       />

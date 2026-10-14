@@ -310,7 +310,7 @@ function Globe() {
     };
   }, []);
 
-  return <div ref={hostRef} className="globe" aria-hidden />;
+  return <div ref={hostRef} className="globe" aria-hidden data-cursor="Drag to turn" />;
 }
 
 export default function StudioGlobe() {

@@ -61,6 +61,7 @@ function ServiceCard({ s }: { s: Card }) {
     <Link
       href={s.href}
       className="svc"
+      data-cursor={s.enquire ? 'Start a brief ↗' : 'See the offer ↗'}
       aria-label={s.enquire ? `Tell us about your ${s.title.toLowerCase()} project` : `Open ${s.title}`}
       onClick={s.enquire ? (e) => { e.preventDefault(); open(); } : undefined}
     >

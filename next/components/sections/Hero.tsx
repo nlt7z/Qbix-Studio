@@ -9,6 +9,7 @@ import SplitText from '@/components/SplitText';
 import StudioGlobe from '@/components/hero/StudioGlobe';
 import LogoMarquee from '@/components/hero/LogoMarquee';
 import HeroCube from '@/components/HeroCube';
+import { smoothScrollToId } from '@/components/TopNav';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -134,11 +135,7 @@ export default function Hero() {
               className="btn btn-white btn-lg split-cta"
               onClick={(e) => {
                 e.preventDefault();
-                const el = document.getElementById('products');
-                if (!el) return;
-                const top = el.getBoundingClientRect().top + window.scrollY - 64;
-                window.scrollTo({ top, behavior: 'smooth' });
-                history.replaceState(null, '', '#products');
+                smoothScrollToId('products');
               }}
             >
               <SplitText text="Use our products" arrow />

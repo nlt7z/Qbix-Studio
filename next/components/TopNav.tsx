@@ -2,8 +2,8 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { navItems } from '@/lib/data';
+import { useEffect, useState, type CSSProperties } from 'react';
+import { navItems, CONTACT_EMAIL } from '@/lib/data';
 import { useContactModal } from '@/components/ContactModalProvider';
 import SplitText from '@/components/SplitText';
 
@@ -12,15 +12,31 @@ const sectionIds = navItems
   .map((n) => (n.href.startsWith('#') ? n.href.slice(1) : null))
   .filter((s): s is string => !!s);
 
-function smoothScrollToId(id: string) {
+/**
+ * Where a section starts in the document. The homepage panels are sticky, so
+ * once one is stuck its rect says "top: 0" wherever the page is; measure its
+ * flow position from the panels before it instead. A stacked panel fills the
+ * screen and is scrolled to exactly; anything else clears the nav bar.
+ */
+export function sectionTop(el: HTMLElement) {
+  if (getComputedStyle(el).position !== 'sticky' || !el.parentElement) {
+    return el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+  }
+  let y = el.parentElement.getBoundingClientRect().top + window.scrollY;
+  for (let s = el.parentElement.firstElementChild; s && s !== el; s = s.nextElementSibling) {
+    if (s instanceof HTMLElement) y += s.offsetHeight + parseFloat(getComputedStyle(s).marginBottom);
+  }
+  return y;
+}
+
+export function smoothScrollToId(id: string) {
   const el = document.getElementById(id);
   if (!el) {
     // Not on the landing page — route home with the hash so the browser can resolve it.
     window.location.assign(`/#${id}`);
     return;
   }
-  const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
-  window.scrollTo({ top, behavior: 'smooth' });
+  window.scrollTo({ top: sectionTop(el), behavior: 'smooth' });
   if (window.location.hash !== `#${id}`) {
     history.replaceState(null, '', `#${id}`);
   }
@@ -58,24 +74,6 @@ export default function TopNav() {
     };
   }, [menuOpen]);
 
-  useEffect(() => {
-    const els = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => !!el);
-    if (els.length === 0) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible.length > 0) setActive(visible[0].target.id);
-      },
-      { rootMargin: `-${HEADER_OFFSET + 8}px 0px -55% 0px`, threshold: [0, 0.2, 0.5] },
-    );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-
   // Section-driven nav theme — whichever `[data-nav-theme]` section sits under
   // the nav's baseline decides the bar's skin. Computed directly on scroll
   // rather than via IntersectionObserver: with the stacked panels, covered
@@ -84,16 +82,29 @@ export default function TopNav() {
   // bar "vanished" (dark ink over a dark panel). Scanning in DOM order and
   // keeping the LAST section that spans the detection line matches paint
   // order (later panels cover earlier ones), so it's always the visible one.
+  // The active link is resolved the same way, for the same reason.
   useEffect(() => {
     const els = Array.from(
       document.querySelectorAll<HTMLElement>('[data-nav-theme]'),
     );
     if (els.length === 0) return;
 
+    // Active link: the section under the nav bar. Later panels cover earlier
+    // stuck ones, so the last match in page order is the one on screen.
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el);
+
     let raf = 0;
     const update = () => {
       raf = 0;
       const line = HEADER_OFFSET; // just below the nav bar
+      let current: string | null = null;
+      for (const el of sections) {
+        const r = el.getBoundingClientRect();
+        if (r.top <= line + 8 && r.bottom > line + 8) current = el.id;
+      }
+      setActive(current);
       let theme: 'dark' | 'light' = 'dark';
       for (const el of els) {
         const r = el.getBoundingClientRect();
@@ -200,6 +211,7 @@ export default function TopNav() {
                 title={item.tip}
               >
                 <span className="topnav-link-label">{item.label}</span>
+                <span className="ft-soon mono">Soon</span>
               </span>
             );
           }
@@ -273,33 +285,36 @@ export default function TopNav() {
         role="dialog"
       >
         <ul className="topnav-mobile-list">
-          {navItems.map((item) => {
+          {navItems.map((item, i) => {
             const id = item.href.startsWith('#') ? item.href.slice(1) : '';
             const isActive = id ? active === id : false;
             if (item.disabled) {
               return (
-                <li key={item.label}>
+                <li key={item.label} style={{ '--i': i } as CSSProperties}>
                   <span className="topnav-mobile-link is-disabled" aria-disabled="true">
+                    <span className="topnav-mobile-num mono">{item.num}</span>
                     {item.label}
+                    <span className="ft-soon mono">Soon</span>
                   </span>
                 </li>
               );
             }
             return (
-              <li key={item.href}>
+              <li key={item.href} style={{ '--i': i } as CSSProperties}>
                 <a
                   href={item.href}
                   onClick={(e) => onMobileItemClick(e, item.href)}
                   className={`topnav-mobile-link ${isActive ? 'active' : ''}`}
                   tabIndex={menuOpen ? 0 : -1}
                 >
+                  <span className="topnav-mobile-num mono">{item.num}</span>
                   {item.label}
                   <span className="arrow" aria-hidden>↗︎</span>
                 </a>
               </li>
             );
           })}
-          <li>
+          <li className="topnav-mobile-gap" style={{ '--i': navItems.length } as CSSProperties}>
             <a
               href="#products"
               onClick={(e) => onMobileItemClick(e, '#products')}
@@ -310,7 +325,7 @@ export default function TopNav() {
               <span className="arrow" aria-hidden>↗︎</span>
             </a>
           </li>
-          <li>
+          <li style={{ '--i': navItems.length + 1 } as CSSProperties}>
             <a
               href="#contact"
               onClick={(e) => {
@@ -321,11 +336,15 @@ export default function TopNav() {
               className="topnav-mobile-link is-cta split-cta"
               tabIndex={menuOpen ? 0 : -1}
             >
-              <SplitText text="Tell us your idea" arrow />
+              Tell us your idea
               <span className="arrow" aria-hidden>↗︎</span>
             </a>
           </li>
         </ul>
+        <div className="topnav-mobile-foot mono" style={{ '--i': navItems.length + 2 } as CSSProperties}>
+          <a href={`mailto:${CONTACT_EMAIL}`} tabIndex={menuOpen ? 0 : -1}>{CONTACT_EMAIL}</a>
+          <span><i aria-hidden /> Taking new projects</span>
+        </div>
       </div>
     </nav>
   );
