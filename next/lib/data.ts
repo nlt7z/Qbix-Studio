@@ -36,7 +36,7 @@ export const services: Service[] = [
   {
     slug: 'web',
     num: '01',
-    audience: 'Local business · Portfolio · Brand',
+    audience: 'Founders · Launch sites · Brand',
     title: 'Design service',
     blurb:
       'From moodboard to a live domain. We design it, write the code, and ship it ready for business. Done in one to three weeks.',

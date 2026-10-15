@@ -10,6 +10,7 @@ import DitherField from '@/components/DitherField';
 import ServiceScene from '@/components/ServiceScene';
 import { PixelEdge, StripTitle } from '@/components/ScrollMotion';
 import { useContactModal } from '@/components/ContactModalProvider';
+import { useAudience, type Audience } from '@/components/Audience';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -52,10 +53,32 @@ const studioCards: Card[] = services.map((s) => ({
   price: s.priceFrom,
   typical: s.typical,
 }));
-// Studio services and fixed-price offers are one list of services.
-const CARDS: Card[] = [...studioCards, ...offers.map((o) => ({ ...o }))];
+// Two lines, never one grid: studio services for founders and product teams,
+// the fixed-price kits for local businesses.
+const CARDS: Record<Audience, Card[]> = {
+  ai: studioCards,
+  business: offers.map((o) => ({ ...o })),
+};
 
-function ServiceCard({ s }: { s: Card }) {
+/** Each audience's heading, and the line that crosses to the other one. */
+const HEAD: Record<Audience, { eyebrow: string; title: string; sub: string; cross: string; crossTo: Audience }> = {
+  ai: {
+    eyebrow: 'Turn your idea into something real',
+    title: 'Work with Qbix',
+    sub: 'UI/UX design and brand upgrades for founders and growing product teams.',
+    cross: 'Run a local business? See our fixed-price kits',
+    crossTo: 'business',
+  },
+  business: {
+    eyebrow: 'Fixed price, fixed timeline',
+    title: 'For local businesses',
+    sub: 'Two fixed-price kits. Each has its own page with what you get, how long it takes, and the price.',
+    cross: 'Building a product? See our studio services',
+    crossTo: 'ai',
+  },
+};
+
+function ServiceCard({ s, n }: { s: Card; n: number }) {
   const { open } = useContactModal();
   return (
     <Link
@@ -74,7 +97,7 @@ function ServiceCard({ s }: { s: Card }) {
       </div>
       <div className="svc-body">
         <div className="svc-meta">
-          <span className="svc-num">{s.num}</span>
+          <span className="svc-num">{String(n).padStart(2, '0')}</span>
           <span className="svc-arrow" aria-hidden>↗︎</span>
         </div>
         <span className="svc-audience mono">{s.audience}</span>
@@ -109,7 +132,7 @@ function ServiceCard({ s }: { s: Card }) {
    columns when the section enters the viewport — the deck being dealt. Runs
    once, entrance-triggered (no scroll pin, so it coexists with the panel
    stacking). side -1 = left card, +1 = right card. */
-function DeckCard({ s, side }: { s: Card; side: -1 | 1 }) {
+function DeckCard({ s, n, side }: { s: Card; n: number; side: -1 | 1 }) {
   return (
     <motion.div
       className="svc-deck-side"
@@ -119,13 +142,16 @@ function DeckCard({ s, side }: { s: Card; side: -1 | 1 }) {
       viewport={{ once: true, amount: 0.45 }}
       transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.2, opacity: { duration: 0.35, delay: 0.2 } }}
     >
-      <ServiceCard s={s} />
+      <ServiceCard s={s} n={n} />
     </motion.div>
   );
 }
 
 export default function WhatWeDo() {
   const reduced = useReducedMotion();
+  const { audience, setAudience } = useAudience();
+  const head = HEAD[audience];
+  const cards = CARDS[audience];
   const [isNarrow, setIsNarrow] = useState(false);
 
   useEffect(() => {
@@ -143,35 +169,39 @@ export default function WhatWeDo() {
       <PixelEdge />
       <DitherField />
       <div className="container">
-        <header className="section-head">
+        <header className="section-head" key={`head-${audience}`}>
           <div>
             <Reveal as="span" className="eyebrow" speed="fast">
-              Turn your idea into something real
+              {head.eyebrow}
             </Reveal>
-            <StripTitle text="Work with Qbix" style={{ marginTop: 14 }} />
+            <StripTitle text={head.title} style={{ marginTop: 14 }} />
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
-              We do UI/UX design, brand upgrades,{' '}
-              <Link href="/listing-kit" className="text-link">listing launch kits</Link>, and{' '}
-              <Link href="/practice-websites" className="text-link">practice websites</Link>.
+              {head.sub}
             </Reveal>
           </div>
         </header>
 
         {deckSpread ? (
-          <div className="svc-deck svc-deck--two svc-deck--grid">
-            {CARDS.map((c, i) => (
-              <DeckCard key={c.slug} s={c} side={i % 2 === 0 ? -1 : 1} />
+          <div className="svc-deck svc-deck--two svc-deck--grid" key={`deck-${audience}`}>
+            {cards.map((c, i) => (
+              <DeckCard key={c.slug} s={c} n={i + 1} side={i % 2 === 0 ? -1 : 1} />
             ))}
           </div>
         ) : (
-          <Stagger className="services-wrap services-wrap--two" stagger={0.1} delayChildren={0.1}>
-            {CARDS.map((c) => (
+          <Stagger className="services-wrap services-wrap--two" stagger={0.1} delayChildren={0.1} key={`wrap-${audience}`}>
+            {cards.map((c, i) => (
               <RevealItem key={c.slug} speed="base">
-                <ServiceCard s={c} />
+                <ServiceCard s={c} n={i + 1} />
               </RevealItem>
             ))}
           </Stagger>
         )}
+
+        {/* The other line, one click away: switches the page in place. */}
+        <button type="button" className="svc-cross" onClick={() => setAudience(head.crossTo)}>
+          {head.cross}
+          <span className="arrow" aria-hidden>→</span>
+        </button>
       </div>
     </section>
   );

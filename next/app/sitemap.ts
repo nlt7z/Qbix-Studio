@@ -15,10 +15,12 @@ const HOME_UPDATED = new Date('2026-05-24');     // homepage + selected work ref
 const CONTENT_UPDATED = new Date('2026-05-20');  // studio / services / work / labs copy
 const STRATA_UPDATED = new Date('2026-08-25');   // Strata product intro page
 const OFFERS_UPDATED = new Date('2026-10-09');   // fixed-price offer pages
+const BUSINESS_UPDATED = new Date('2026-10-15'); // homepage in its local-business mode
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`,                 lastModified: HOME_UPDATED,    changeFrequency: 'weekly',  priority: 1.0 },
+    { url: `${SITE_URL}/business`,         lastModified: BUSINESS_UPDATED, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${SITE_URL}/start`,            lastModified: CONTENT_UPDATED, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/products/strata`,  lastModified: STRATA_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/listing-kit`,       lastModified: OFFERS_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },

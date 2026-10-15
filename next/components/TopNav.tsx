@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { useEffect, useState, type CSSProperties } from 'react';
+import { usePathname } from 'next/navigation';
 import { navItems, CONTACT_EMAIL } from '@/lib/data';
 import { useContactModal } from '@/components/ContactModalProvider';
 import SplitText from '@/components/SplitText';
@@ -44,6 +45,14 @@ export function smoothScrollToId(id: string) {
 
 export default function TopNav() {
   const { open: openContactModal } = useContactModal();
+  // The homepage's local-business mode (/business) has no Products panel, so
+  // the links to it go too. usePathname follows the in-place audience switch.
+  const pathname = usePathname();
+  const forBusiness = pathname === '/business';
+  const items = forBusiness ? navItems.filter((n) => n.href !== '#products') : navItems;
+  // The two CTAs speak to the same audience as the page under them.
+  const second = forBusiness ? { label: 'See the offers', href: '#services' } : { label: 'Use our products', href: '#products' };
+  const firstLabel = forBusiness ? 'Tell us what you need' : 'Tell us your idea';
   const [active, setActive] = useState<string | null>(null);
   const [navTheme, setNavTheme] = useState<'dark' | 'light'>('dark');
   const [hovered, setHovered] = useState<string | null>(null);
@@ -198,7 +207,7 @@ export default function TopNav() {
       </a>
 
       <div className="topnav-links" onMouseLeave={() => setHovered(null)}>
-        {navItems.map((item) => {
+        {items.map((item) => {
           const id = item.href.startsWith('#') ? item.href.slice(1) : '';
           const isActive = id ? active === id : false;
           const isHovered = hovered === item.href;
@@ -248,11 +257,11 @@ export default function TopNav() {
 
       <div className="topnav-ctas">
         <a
-          href="#products"
+          href={second.href}
           className="topnav-cta topnav-cta-white split-cta"
-          onClick={(e) => onAnchorClick(e, '#products')}
+          onClick={(e) => onAnchorClick(e, second.href)}
         >
-          <SplitText text="Use our products" arrow />
+          <SplitText key={second.label} text={second.label} arrow />
         </a>
         <a
           href="#contact"
@@ -262,7 +271,7 @@ export default function TopNav() {
             openContactModal();
           }}
         >
-          <SplitText text="Tell us your idea" arrow />
+          <SplitText key={firstLabel} text={firstLabel} arrow />
         </a>
       </div>
 
@@ -285,7 +294,7 @@ export default function TopNav() {
         role="dialog"
       >
         <ul className="topnav-mobile-list">
-          {navItems.map((item, i) => {
+          {items.map((item, i) => {
             const id = item.href.startsWith('#') ? item.href.slice(1) : '';
             const isActive = id ? active === id : false;
             if (item.disabled) {
@@ -316,12 +325,12 @@ export default function TopNav() {
           })}
           <li className="topnav-mobile-gap" style={{ '--i': navItems.length } as CSSProperties}>
             <a
-              href="#products"
-              onClick={(e) => onMobileItemClick(e, '#products')}
+              href={second.href}
+              onClick={(e) => onMobileItemClick(e, second.href)}
               className="topnav-mobile-link split-cta"
               tabIndex={menuOpen ? 0 : -1}
             >
-              Use our products
+              {second.label}
               <span className="arrow" aria-hidden>↗︎</span>
             </a>
           </li>
@@ -336,7 +345,7 @@ export default function TopNav() {
               className="topnav-mobile-link is-cta split-cta"
               tabIndex={menuOpen ? 0 : -1}
             >
-              Tell us your idea
+              {firstLabel}
               <span className="arrow" aria-hidden>↗︎</span>
             </a>
           </li>

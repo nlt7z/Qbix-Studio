@@ -1,27 +1,5 @@
-import Hero from '@/components/sections/Hero';
-import WhatWeDo from '@/components/sections/WhatWeDo';
-import QbixLabs from '@/components/sections/QbixLabs';
-import AboutUs from '@/components/sections/AboutUs';
-import Colophon from '@/components/Colophon';
-import StackFit from '@/components/StackFit';
-import Momentum from '@/components/Momentum';
-import './home-motion.css';
-import './momentum.css';
+import HomePage from '@/components/HomePage';
 
 export default function LandingPage() {
-  return (
-    <>
-      {/* Panels alternate solid black / electric lime — set in globals.css. */}
-      <main className="stacked">
-        <Hero />       {/* 1 — headline + PST clock + two CTAs */}
-        <WhatWeDo />   {/* 2 — Services: two studio services + two fixed-price offers */}
-        <QbixLabs />   {/* 3 — Products: the live things we've built */}
-        <AboutUs />    {/* 4 — Our story + founders */}
-      </main>
-      {/* Footer is NOT part of the stack — it flows normally right after About. */}
-      <Colophon />
-      <StackFit />
-      <Momentum />
-    </>
-  );
+  return <HomePage audience="ai" />;
 }

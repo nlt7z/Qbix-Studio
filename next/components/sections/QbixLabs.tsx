@@ -6,6 +6,7 @@ import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
 import { PixelEdge, StripTitle } from '@/components/ScrollMotion';
 import { useQuietPlayback } from '@/components/useQuietPlayback';
+import { useAudience } from '@/components/Audience';
 
 type Media = { kind: 'image' | 'video' | 'iframe'; src: string; poster?: string; motion?: string };
 type Product = {
@@ -124,6 +125,10 @@ function ExploreButton({ url }: { url: string }) {
 }
 
 export default function QbixLabs() {
+  // Qbix Labs speaks to founders and product teams; a local business sees
+  // the kits and the story, not the lab.
+  const { audience } = useAudience();
+  if (audience !== 'ai') return null;
   return (
     <section id="products" className="section-pad" data-nav-theme="dark">
       <PixelEdge />
