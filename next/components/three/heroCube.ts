@@ -3,13 +3,14 @@ import { momentum } from '@/lib/momentum';
 import { watchCovered } from './covered';
 
 /**
- * Hero centrepiece — the Qbix cube as eight material studies around one lime
- * core, all solid and all in the Qbix palette (no grey, no white see-through
- * glass): gloss white, solid lime, a lime grid, signal stripes, satin black,
- * an inverse halftone, halftone and lime glass. All eight are one small
- * shader switched by a `uKind` uniform (flat light from above, patterns from
- * the face UVs): no environment map, no shadows, no textures, so it compiles
- * and draws in a few milliseconds.
+ * Hero centrepiece — the Qbix cube as eight material studies around one white
+ * core, all solid, all ink and white, all built from the square (no grey, no
+ * see-through, no lime: lime is kept for the one action on screen): gloss
+ * white, an ink grid on white, a white grid on ink, stripes, satin black, an
+ * inverse square halftone, a square halftone and a 1-bit pixel dither. All
+ * eight are one small shader switched by a `uKind` uniform (flat light from
+ * above, patterns from the face UVs): no environment map, no shadows, no
+ * textures, so it compiles and draws in a few milliseconds.
  *
  * Choreography (structural motion only):
  *  · intro    — the cube starts parted; the cubelets dock one by one, each
@@ -23,9 +24,9 @@ import { watchCovered } from './covered';
  * stops drawing once the next homepage panel has covered it.
  */
 
-// sRGB values: the shader writes them straight out, so #B8FF00 lands exact.
-const LIME_SRGB = new THREE.Vector3(184 / 255, 1, 0);
-const LIME = new THREE.Color('#B8FF00');
+// sRGB values: the shader writes them straight out.
+const WHITE_SRGB = new THREE.Vector3(0.957, 0.961, 0.949);
+const WHITE = new THREE.Color('#f4f5f2');
 
 const VERT = `
 varying vec3 vN;
@@ -60,34 +61,40 @@ void main() {
   vec3 wn = normalize(vWN);
   float lam = max(dot(wn, normalize(vec3(0.35, 0.9, 0.45))), 0.0);   // light from above
   float top = max(wn.y, 0.0);
-  float glow = 1.0 - smoothstep(0.2, 1.05, length(vWP - uCenter));  // the lime core's light
+  float glow = 1.0 - smoothstep(0.2, 1.05, length(vWP - uCenter));  // the core's light (unused by the solid studies)
   vec4 c;
   vec3 ink = vec3(0.055, 0.06, 0.065) * (0.8 + 0.5 * lam);
   if (uKind < 0.5) {            // gloss white: opaque, a soft sheen, never grey
     vec3 col = vec3(0.985, 0.988, 0.975) * (0.9 + 0.1 * lam) + vec3(0.04) * fres;
     c = vec4(col, 1.0);
-  } else if (uKind < 1.5) {     // solid lime
-    c = vec4(uTint * (0.74 + 0.26 * lam) + vec3(0.05) * fres, 1.0);
-  } else if (uKind < 2.5) {     // lime grid on ink
+  } else if (uKind < 1.5) {     // ink grid on white
+    vec2 g = abs(fract(vUv * 6.0) - 0.5);
+    float line = step(0.44, max(g.x, g.y));
+    c = vec4(mix(uTint * (0.9 + 0.1 * lam), ink, line), 1.0);
+  } else if (uKind < 2.5) {     // white grid on ink
     vec2 g = abs(fract(vUv * 6.0) - 0.5);
     float line = step(0.44, max(g.x, g.y));
     c = vec4(mix(ink, uTint, line), 1.0);
-  } else if (uKind < 3.5) {     // signal stripes: diagonal lime on ink
+  } else if (uKind < 3.5) {     // stripes: diagonal white on ink
     float st = step(0.5, fract((vUv.x + vUv.y) * 3.0));
     c = vec4(mix(ink, uTint * (0.8 + 0.2 * lam), st), 1.0);
   } else if (uKind < 4.5) {     // satin black: a dark sheen, no grey bloom
     vec3 col = vec3(0.07, 0.075, 0.085) * (0.7 + 0.7 * lam) + vec3(0.25) * pow(fres, 3.0) * 0.4;
     c = vec4(col, 1.0);
-  } else if (uKind < 5.5) {     // inverse halftone: ink squares on lime
+  } else if (uKind < 5.5) {     // inverse halftone: ink squares on white
     vec2 g = fract(vUv * 8.0) - 0.5;
     float d = step(max(abs(g.x), abs(g.y)), 0.23);   // square dots: the pixel, not a circle
     c = vec4(mix(uTint * (0.78 + 0.22 * lam), ink, d), 1.0);
-  } else if (uKind < 6.5) {     // halftone: lime squares on ink
+  } else if (uKind < 6.5) {     // halftone: white squares on ink
     vec2 g = fract(vUv * 8.0) - 0.5;
     float d = step(max(abs(g.x), abs(g.y)), 0.23);   // square dots: the pixel, not a circle
     c = vec4(mix(ink, uTint, d), 1.0);
-  } else {                      // lime glass: the one see-through study, and it reads lime
-    c = vec4(mix(uTint, uTint * 0.55, fres), 0.5 + 0.4 * fres);
+  } else {                      // 1-bit pixel dither: an ordered 4x4 Bayer ramp, white into ink
+    vec2 px = floor(vUv * 16.0);
+    vec2 q = mod(px, 4.0);
+    float b = mod(q.x + q.y * 4.0 + q.x * q.y * 2.0, 16.0) / 16.0;   // cheap ordered threshold
+    float ramp = vUv.x * 0.7 + vUv.y * 0.3;
+    c = vec4(mix(ink, uTint * (0.9 + 0.1 * lam), step(b, ramp)), 1.0);
   }
   gl_FragColor = c;
 }`;
@@ -95,13 +102,13 @@ void main() {
 /** The eight studies, in the order they dock in the intro. */
 const KINDS = [
   { name: 'Gloss white', kind: 0, glass: false, edge: '#0b0c0d', edgeA: 0.85 },
-  { name: 'Halftone', kind: 6, glass: false, edge: '#B8FF00', edgeA: 0.45 },
-  { name: 'Lime grid', kind: 2, glass: false, edge: '#B8FF00', edgeA: 0.9 },
-  { name: 'Solid lime', kind: 1, glass: false, edge: '#0f1a00', edgeA: 0.55 },
-  { name: 'Satin black', kind: 4, glass: false, edge: '#B8FF00', edgeA: 0.35 },
-  { name: 'Signal stripes', kind: 3, glass: false, edge: '#0f1a00', edgeA: 0.6 },
-  { name: 'Lime glass', kind: 7, glass: true, edge: '#B8FF00', edgeA: 0.9 },
-  { name: 'Inverse halftone', kind: 5, glass: false, edge: '#0f1a00', edgeA: 0.6 },
+  { name: 'Halftone', kind: 6, glass: false, edge: '#f4f5f2', edgeA: 0.4 },
+  { name: 'White grid', kind: 2, glass: false, edge: '#f4f5f2', edgeA: 0.7 },
+  { name: 'Ink grid', kind: 1, glass: false, edge: '#0b0c0d', edgeA: 0.7 },
+  { name: 'Satin black', kind: 4, glass: false, edge: '#f4f5f2', edgeA: 0.3 },
+  { name: 'Stripes', kind: 3, glass: false, edge: '#0b0c0d', edgeA: 0.6 },
+  { name: 'Pixel dither', kind: 7, glass: false, edge: '#0b0c0d', edgeA: 0.6 },
+  { name: 'Inverse halftone', kind: 5, glass: false, edge: '#0b0c0d', edgeA: 0.6 },
 ];
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
@@ -156,7 +163,7 @@ export function mountHeroCube(
       fragmentShader: FRAG,
       uniforms: {
         uKind: { value: look.kind },
-        uTint: { value: LIME_SRGB },
+        uTint: { value: WHITE_SRGB },
         uCenter: { value: center },
       },
       transparent: look.glass,
@@ -177,9 +184,9 @@ export function mountHeroCube(
     return { g, mat, edgeMat, name: look.name, home, quat: new THREE.Quaternion(), spin: new THREE.Quaternion() };
   });
 
-  // The lime core held in the middle (seen through the lime glass, and whenever the cube opens).
-  const coreMat = new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false });
-  const coreEdge = new THREE.LineBasicMaterial({ color: '#efffc2', transparent: true, opacity: 0.9, toneMapped: false });
+  // The white core held in the middle (seen whenever the cube opens).
+  const coreMat = new THREE.MeshBasicMaterial({ color: WHITE, toneMapped: false });
+  const coreEdge = new THREE.LineBasicMaterial({ color: '#0b0c0d', transparent: true, opacity: 0.8, toneMapped: false });
   const coreGeo = new THREE.BoxGeometry(0.46, 0.46, 0.46);
   const coreEdgeGeo = new THREE.EdgesGeometry(coreGeo);
   const core = new THREE.Mesh(coreGeo, coreMat);

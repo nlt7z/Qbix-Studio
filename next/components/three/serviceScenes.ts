@@ -40,8 +40,8 @@ function rand(i: number) {
 
 function materials() {
   // Solid objects only (user: no grey or white see-through 3D): white paper
-  // bodies held by ink hairlines, ink for images and type, exact lime. The one
-  // translucent material left is the lime glass, and it reads lime.
+  // bodies held by ink hairlines, ink for images, type and accents. Lime is
+  // kept for the one live moment (the design card's hero block going live).
   // Kept deliberately cheap — Lambert solids, unlit lime, no environment map
   // or shadows — so four scenes compile and draw without stalling the page.
   // Whites carry an emissive floor so their shaded sides stay white, not grey.
@@ -53,13 +53,13 @@ function materials() {
     chrome: white(),
     ink: ink(),
     inkDark: ink(),
-    // The signal colour is unlit and skips tone mapping so it lands as exact #B8FF00.
-    lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-    glass: new THREE.MeshBasicMaterial({
-      color: LIME, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide, toneMapped: false,
-    }),
+    // Accents are ink on the white objects (a page's button, a door, a tag)
+    // and white on ink (hi). Lime appears once: the design card going live.
+    accent: ink(),
+    hi: new THREE.MeshBasicMaterial({ color: WHITE }),
+    glass: ink(),                     // the top plate of the brand stack, solid
     edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
-    edgeLime: new THREE.LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.95, toneMapped: false }),
+    edgeHi: new THREE.LineBasicMaterial({ color: '#f4f5f2', transparent: true, opacity: 0.95 }),
   };
 }
 type Mats = ReturnType<typeof materials>;
@@ -89,7 +89,7 @@ function buildDesign(scene: THREE.Group, M: Mats) {
   bar.position.set(0, SLAB_H + 0.01, -1.25);
   scene.add(bar);
   [-1.88, -1.72, -1.56].forEach((x, i) => {
-    const dot = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.08), i === 0 ? M.lime : M.chrome);
+    const dot = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.08), i === 0 ? M.accent : M.chrome);
     dot.position.set(x, SLAB_H + 0.035, -1.25);
     scene.add(dot);
   });
@@ -119,7 +119,7 @@ function buildDesign(scene: THREE.Group, M: Mats) {
     return { t, home, away, rot, phase: rand(i + 13) * Math.PI * 2 };
   });
   // Image hint on the media tile: a small lime square "sun".
-  const sun = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.02, 0.22), M.lime);
+  const sun = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.02, 0.22), M.accent);
   sun.position.set(0.3, 0.05, -0.2);
   tiles[2].t.add(sun);
 
@@ -140,13 +140,14 @@ function buildDesign(scene: THREE.Group, M: Mats) {
     detail(tiles[i].t, 0.55, 0.05, 0.17, -0.07);
     detail(tiles[i].t, 0.4, 0.05, 0.1, 0.06);
   });
-  detail(tiles[0].t, 0.32, 0.06, -1.6, 0, M.lime);
+  detail(tiles[0].t, 0.32, 0.06, -1.6, 0, M.accent);
   [0.6, 0.95, 1.3].forEach((x) => detail(tiles[0].t, 0.22, 0.04, x, 0));
 
-  // Scan line that sweeps the slab as the build goes live.
+  // Scan line (ink) that sweeps the slab as the build goes live; the hero
+  // block turning lime behind it is the one lime moment.
   const scan = new THREE.Mesh(
     new THREE.BoxGeometry(4.24, 0.01, 0.02),
-    new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
+    new THREE.MeshBasicMaterial({ color: '#15171a' }),
   );
   scan.position.y = SLAB_H + 0.13;
   scene.add(scan);
@@ -224,7 +225,7 @@ function buildBrand(scene: THREE.Group, M: Mats) {
   scene.add(base);
 
   // Plate 2 — colour + type.
-  const mid = slab(S, H, S, M.frost, M.edgeLime, 0.05);
+  const mid = slab(S, H, S, M.frost, M.edgeHi, 0.05);
   const swatchMats = [0, 1, 2, 3].map(() => M.chrome.clone());   // solid, so the palette reads
   const swatches = swatchMats.map((m, i) => {
     const sw = slab(0.42, 0.06, 0.42, m, M.edge, 0.03);
@@ -243,7 +244,7 @@ function buildBrand(scene: THREE.Group, M: Mats) {
   const top = new THREE.Group();
   const glass = new THREE.Mesh(new THREE.BoxGeometry(S, H * 0.6, S), M.glass);
   top.add(glass);
-  top.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(S, H * 0.6, S)), M.edgeLime));
+  top.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(S, H * 0.6, S)), M.edgeHi));
   const mark = new THREE.Group();
   const blocks = [-1, 1].flatMap((sx) =>
     [-1, 1].map((sz) => {
@@ -252,8 +253,8 @@ function buildBrand(scene: THREE.Group, M: Mats) {
       return { b, sx, sz };
     }),
   );
-  const crossA = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.07, 0.07), M.lime);
-  const crossB = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 1.0), M.lime);
+  const crossA = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.07, 0.07), M.hi);
+  const crossB = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 1.0), M.hi);
   crossA.position.y = crossB.position.y = 0.21;
   mark.add(crossA, crossB);
   mark.position.y = H * 0.3 + 0.21;
@@ -263,17 +264,18 @@ function buildBrand(scene: THREE.Group, M: Mats) {
   // Explode dimension rail on the front-left corner.
   const railGeo = new THREE.BufferGeometry();
   railGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Array(18).fill(0), 3));
-  const rail = new THREE.LineSegments(railGeo, M.edgeLime);
+  const rail = new THREE.LineSegments(railGeo, M.edgeHi);
   scene.add(rail);
 
   // Scan plane that passes up through the stack each round.
   const scan = new THREE.Mesh(
     new THREE.BoxGeometry(S + 0.3, 0.008, S + 0.3),
-    new THREE.MeshBasicMaterial({ color: LIME, transparent: true, opacity: 0.22, toneMapped: false, depthWrite: false }),
+    // No fill (no see-through plates): the scan reads as its outline alone.
+    new THREE.MeshBasicMaterial({ color: WHITE, transparent: true, opacity: 0, depthWrite: false }),
   );
   const scanEdge = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.BoxGeometry(S + 0.3, 0.008, S + 0.3)),
-    new THREE.LineBasicMaterial({ color: LIME, toneMapped: false }),
+    new THREE.LineBasicMaterial({ color: WHITE }),
   );
   scan.add(scanEdge);
   scene.add(scan);
@@ -286,7 +288,7 @@ function buildBrand(scene: THREE.Group, M: Mats) {
     [INK, INK, INK, INK],
     [WHITE, INK, WHITE, INK],
     [INK, WHITE, WHITE, INK],
-    [INK, WHITE, LIME, INK],
+    [INK, WHITE, WHITE, INK],
   ];
   const tmp = new THREE.Color();
 
@@ -332,7 +334,7 @@ function buildBrand(scene: THREE.Group, M: Mats) {
 
     // Press-together flash on the glass edge.
     const press = Math.sin(Math.PI * seg(t, 7.8, 8.5));
-    (M.edgeLime as THREE.LineBasicMaterial).opacity = 0.55 + 0.45 * press;
+    (M.edgeHi as THREE.LineBasicMaterial).opacity = 0.55 + 0.45 * press;
     M.glass.opacity = 0.38 + 0.2 * press;
 
     // Dimension rail tracks the explode height.
@@ -375,7 +377,7 @@ function buildListing(scene: THREE.Group, M: Mats) {
   const top = roof(0.74, 0.28, 0.5, M.ink);
   top.position.y = 0.36;
   house.add(top);
-  const door = slab(0.12, 0.2, 0.02, M.lime, M.edgeLime, 0.005);
+  const door = slab(0.12, 0.2, 0.02, M.accent, M.edgeHi, 0.005);
   door.position.set(-0.12, 0.1, 0.225);
   house.add(door);
   [0.1, 0.23].forEach((x) => {
@@ -393,7 +395,7 @@ function buildListing(scene: THREE.Group, M: Mats) {
   line(0.9, 0.36, M.ink, 0.11);
   line(1.2, 0.54);
   line(0.7, 0.68);
-  line(0.34, 0.92, M.lime);   // open-house tag
+  line(0.34, 0.92, M.accent);   // open-house tag
   flyer.position.set(-0.95, 0.03, -0.1);
   scene.add(flyer);
 
@@ -404,7 +406,7 @@ function buildListing(scene: THREE.Group, M: Mats) {
     const img = slab(0.56, 0.015, 0.4, M.frost, M.edge, 0.006);
     img.position.set(0, 0.02, -0.08);
     g.add(img);
-    const tag = slab(i === 0 ? 0.32 : 0.22, 0.012, 0.06, i === 0 ? (M.lime) : M.ink, M.edge, 0.004);
+    const tag = slab(i === 0 ? 0.32 : 0.22, 0.012, 0.06, i === 0 ? (M.accent) : M.ink, M.edge, 0.004);
     tag.position.set(-0.28 + (i === 0 ? 0.16 : 0.11), 0.02, 0.21);
     g.add(tag);
     scene.add(g);
@@ -426,14 +428,14 @@ function buildListing(scene: THREE.Group, M: Mats) {
   const screen = slab(0.56, 0.01, 1.04, M.frost, M.edge, 0.02);
   screen.position.y = 0.035;
   handset.add(screen);
-  const play = roof(0.2, 0.18, 0.02, M.lime);
+  const play = roof(0.2, 0.18, 0.02, M.hi);
   play.rotation.set(-Math.PI / 2, 0, -Math.PI / 2);
   play.position.set(-0.04, 0.05, -0.05);
   handset.add(play);
   const track = slab(0.46, 0.008, 0.025, M.ink, M.edge, 0.004);
   track.position.set(0, 0.045, 0.42);
   handset.add(track);
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(1, 0.012, 0.03), M.lime);
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(1, 0.012, 0.03), M.hi);
   bar.position.set(-0.23, 0.05, 0.42);
   handset.add(bar);
   handset.rotation.x = Math.PI / 2 - 0.22;   // screen faces out, top up, leaning back
@@ -524,7 +526,7 @@ function buildPractice(scene: THREE.Group, M: Mats) {
   add(slab(1.4, 0.03, 0.16, M.ink, M.edge, 0.01), -1.2, TOP + 0.015, -0.3);
   add(slab(1.6, 0.015, 0.06, M.chrome, M.edge, 0.005), -1.1, TOP + 0.008, 0.02);
   add(slab(1.2, 0.015, 0.06, M.chrome, M.edge, 0.005), -1.3, TOP + 0.008, 0.16);
-  const cta = slab(0.95, 0.08, 0.24, M.lime, M.edgeLime, 0.1);
+  const cta = slab(0.95, 0.08, 0.24, M.accent, M.edgeHi, 0.1);
   add(cta, -1.42, TOP + 0.04, 0.6);
 
   // Phone with the same calm page and its button.
@@ -536,7 +538,7 @@ function buildPractice(scene: THREE.Group, M: Mats) {
   const pHead = slab(0.46, 0.012, 0.06, M.ink, M.edge, 0.004);
   pHead.position.set(-0.04, 0.045, 0.08);
   phone.add(pHead);
-  const pBtn = slab(0.4, 0.03, 0.11, M.lime, M.edgeLime, 0.05);
+  const pBtn = slab(0.4, 0.03, 0.11, M.accent, M.edgeHi, 0.05);
   pBtn.position.set(0, 0.05, 0.4);
   phone.add(pBtn);
   scene.add(phone);

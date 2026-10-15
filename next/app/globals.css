@@ -36,11 +36,14 @@
      TEXT so large runs of it don't buzz or fatigue the eye. */
   --signal:        #B8FF00;                  /* primary lime — fills only */
   --signal-hover:  #C9F24A;                  /* fill hover */
-  --signal-ink:    #CDFF4D;                  /* bright electric lime — for text on dark */
+  --signal-ink:    #F4F5F2;                  /* was lime text on dark; lime is for action/live only now */
   --signal-shade:  #6FAE00;                  /* deep shadow / refraction */
-  --signal-dim:    rgba(184, 255, 0, 0.10);
-  --signal-glow:   rgba(184, 255, 0, 0.24);
-  --signal-dark:   #0F1A00;
+  --signal-dim:    rgba(255, 255, 255, 0.06);
+  --signal-glow:   rgba(255, 255, 255, 0.12);
+  /* Paper panels (black / paper alternate; lime is never a surface). */
+  --paper:         #f3f4f5;
+  --paper-ink:     #121417;
+  --signal-dark:   #121417;                  /* ink on light surfaces (was lime-panel green-black) */
 
   /* Inner highlight — the glassy top edge */
   --highlight:        inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
@@ -119,8 +122,8 @@
   /* Halftone media backing — the dot pad that sits behind every image and
      scatters (scales out + fades + softens) on hover, like dispersing
      particles. Two dot weights so they separate at different rates. */
-  --halftone-dot:   rgba(184, 255, 0, 0.20);
-  --halftone-dot-2: rgba(184, 255, 0, 0.11);
+  --halftone-dot:   rgba(255, 255, 255, 0.14);
+  --halftone-dot-2: rgba(255, 255, 255, 0.08);
 }
 
 * { box-sizing: border-box; }
@@ -152,7 +155,7 @@ body {
    lines (see COLUMN GUIDE LINES at the foot of this file) plus a single soft
    lime glow behind the hero headline. No halftone, no full-bleed grid. */
 
-::selection { background: var(--signal); color: var(--signal-dark); }
+::selection { background: var(--ink); color: var(--bg); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -400,7 +403,7 @@ p, li, dd, figcaption, blockquote {
 .tag.active {
   background: var(--signal-dim);
   color: var(--signal-ink);
-  border-color: rgba(184, 255, 0, 0.32);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 .tag .count { color: var(--text-3); font-family: var(--font-mono); font-size: 11px; }
 .tag.active .count { color: var(--signal-ink); opacity: 0.7; }
@@ -585,8 +588,8 @@ section { position: relative; }
     outline: none;
   }
   .topnav-mobile-link.active {
-    background: rgba(184, 255, 0, 0.05);
-    border-color: rgba(184, 255, 0, 0.18);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.09);
   }
   .topnav-mobile-link.is-cta {
     margin-top: 12px;
@@ -626,6 +629,9 @@ section { position: relative; }
 /* Over a light section the lime wordmark would wash out — flip it to solid ink,
    matching how the rest of the brand lettering flips on the light nav skin. */
 .topnav-fixed[data-theme='light'] .topnav-logo { filter: brightness(0); }
+/* The wordmark is white on dark: lime is kept for action and live. */
+.topnav-fixed:not([data-theme='light']) .topnav-logo,
+.topnav-mobile-panel .topnav-logo { filter: brightness(0) invert(1); }
 .topnav-brand .signal {
   color: var(--signal-ink);
   background: var(--signal-dim);
@@ -682,8 +688,9 @@ section { position: relative; }
   height: 44px;                 /* match site btn-lg */
   padding: 0 22px;
   min-width: 150px;
-  background: var(--signal);
-  color: var(--signal-dark);
+  /* Not lime: the nav is on every screen, and lime is one action per screen. */
+  background: #F7F8F8;
+  color: #0F1011;
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.011em;
@@ -698,12 +705,12 @@ section { position: relative; }
   transition: transform var(--t-fast) var(--ease);
 }
 .topnav-cta:hover {
-  background: var(--signal-hover);
+  background: #fff;
 }
 .topnav-cta:hover .arrow { transform: translateX(2px); }
 .topnav-cta:active {
-  background: var(--signal-shade);
-  color: var(--signal-ink);
+  background: #E6E8EA;
+  color: #0F1011;
 }
 
 /* =============================================================================
@@ -889,8 +896,8 @@ section { position: relative; }
   transition: border-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);
 }
 .svc:hover {
-  border-color: rgba(184, 255, 0, 0.4);
-  box-shadow: var(--highlight), 0 0 0 1px rgba(184, 255, 0, 0.18), 0 12px 48px rgba(184, 255, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.20);
+  box-shadow: var(--highlight), 0 0 0 1px rgba(255, 255, 255, 0.09), 0 12px 48px rgba(255, 255, 255, 0.10);
 }
 /* Running-light: a lime arc traces the 1px border ring while hovered.
    Pseudo-element fills the card, masked so only the 1px ring shows. */
@@ -906,7 +913,7 @@ section { position: relative; }
     transparent 0deg,
     transparent 60deg,
     rgba(217, 255, 90, 0.95) 90deg,
-    rgba(184, 255, 0, 0.55) 105deg,
+    rgba(255, 255, 255, 0.28) 105deg,
     transparent 130deg,
     transparent 360deg
   );
@@ -1074,7 +1081,7 @@ section { position: relative; }
   transform: translateY(-50%);
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle at center, var(--signal) 0%, transparent 60%);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
   opacity: 0.08;
   filter: blur(60px);
   pointer-events: none;
@@ -1102,7 +1109,7 @@ section { position: relative; }
   transform: translateX(-50%);
   width: 1200px;
   height: 500px;
-  background: radial-gradient(ellipse at center, var(--signal) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
   opacity: 0.14;
   filter: blur(48px);
   pointer-events: none;
@@ -1129,7 +1136,7 @@ section { position: relative; }
   transform: translate(-50%, -50%);
   width: 1200px;
   height: 600px;
-  background: radial-gradient(ellipse at center, var(--signal) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
   opacity: 0.12;
   filter: blur(48px);
   pointer-events: none;
@@ -1164,7 +1171,7 @@ section { position: relative; }
   top: -200px; left: 50%;
   transform: translateX(-50%);
   width: 1200px; height: 600px;
-  background: radial-gradient(ellipse at center, var(--signal) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
   opacity: 0.1;
   filter: blur(48px);
   pointer-events: none;
@@ -1295,18 +1302,18 @@ section { position: relative; }
 }
 @keyframes heartbeat-glow {
   0%, 87%, 100% { filter: brightness(1) drop-shadow(0 0 0 transparent); }
-  90%           { filter: brightness(1.25) drop-shadow(0 0 12px rgba(184,255,0,0.55)); }
+  90%           { filter: brightness(1.25) drop-shadow(0 0 12px rgba(255, 255, 255, 0.28)); }
   93%           { filter: brightness(1)    drop-shadow(0 0 0 transparent); }
-  95%           { filter: brightness(1.12) drop-shadow(0 0 8px rgba(184,255,0,0.35)); }
+  95%           { filter: brightness(1.12) drop-shadow(0 0 8px rgba(255, 255, 255, 0.17)); }
   97%           { filter: brightness(1)    drop-shadow(0 0 0 transparent); }
 }
 
 /* signal-bg lime text — text-shadow doublet (same beat-phase) */
 @keyframes signal-text-pulse {
   0%, 87%, 100% { text-shadow: 0 0 0 transparent; }
-  90%           { text-shadow: 0 0 24px rgba(184,255,0,0.55), 0 0 6px rgba(217,255,90,0.5); }
+  90%           { text-shadow: 0 0 24px rgba(255, 255, 255, 0.28), 0 0 6px rgba(255, 255, 255, 0.25); }
   93%           { text-shadow: 0 0 0 transparent; }
-  95%           { text-shadow: 0 0 16px rgba(184,255,0,0.32); }
+  95%           { text-shadow: 0 0 16px rgba(255, 255, 255, 0.16); }
   97%           { text-shadow: 0 0 0 transparent; }
 }
 
@@ -1349,9 +1356,9 @@ section { position: relative; }
 
 /* Pin pulse — when the rail reaches a pin, that pin's dot pulses once */
 @keyframes journey-pin-arrive {
-  0%   { box-shadow: 0 0 0 0   rgba(184,255,0,0.5); }
-  60%  { box-shadow: 0 0 0 10px rgba(184,255,0,0); }
-  100% { box-shadow: 0 0 0 0   rgba(184,255,0,0); }
+  0%   { box-shadow: 0 0 0 0   rgba(255, 255, 255, 0.25); }
+  60%  { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.00); }
+  100% { box-shadow: 0 0 0 0   rgba(255, 255, 255, 0.00); }
 }
 
 /* Card hover gradient sweep — the lit edge that moves across feature cards */
@@ -1606,7 +1613,7 @@ section { position: relative; }
 .start-chip.is-on {
   color: var(--signal-ink);
   background: var(--signal-dim);
-  border-color: rgba(184, 255, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .start-select-wrap { position: relative; }
@@ -1677,7 +1684,7 @@ section { position: relative; }
 }
 .start-stage-meter { position: relative; flex: 1; height: 1px; background: var(--line-3); }
 .start-stage-meter i {
-  position: absolute; inset: -0.5px 0; background: var(--signal); transform-origin: left;
+  position: absolute; inset: -0.5px 0; background: var(--ink); transform-origin: left;
   transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .start-studio.is-flat .start-studio-stage { display: none; }
@@ -1707,17 +1714,17 @@ section { position: relative; }
 .start-next-step h3 { margin: 14px 0 10px; font-size: clamp(19px, 1.8vw, 23px); font-weight: 500; letter-spacing: -0.012em; color: var(--ink); }
 .start-next-step p { margin: 0; max-width: 30em; font-size: 16px; line-height: 1.6; color: var(--text); }
 
-/* The 48-hour sprint as a full-bleed lime panel. */
-.start-sprint-panel { padding: clamp(64px, 9vw, 120px) 0; background: var(--signal); color: var(--signal-dark); }
+/* The design service as a full-bleed paper panel. */
+.start-sprint-panel { padding: clamp(64px, 9vw, 120px) 0; background: var(--paper); color: var(--signal-dark); }
 .start-sprint-grid { display: grid; gap: 24px; align-items: end; }
 /* The figure column takes the figure's own width ("1–3 weeks" is wider than
    the old "48 hours"), so the unit never runs into the copy. */
 @media (min-width: 900px) { .start-sprint-grid { grid-template-columns: auto minmax(0, 1fr); column-gap: clamp(40px, 5vw, 88px); } }
-.start-sprint-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(15, 26, 0, 0.75); }
+.start-sprint-eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(18, 20, 23, 0.75); }
 .start-sprint-figure { display: flex; align-items: baseline; gap: 16px; margin: 10px 0 0; font-family: var(--font-headline); }
 .start-sprint-n { font-size: clamp(110px, 15vw, 230px); letter-spacing: -0.05em; color: var(--signal-dark); }
-.start-sprint-unit { font-size: clamp(28px, 4vw, 52px); color: rgba(15, 26, 0, 0.8); }
-.start-sprint-copy p { margin: 0 0 14px; max-width: 32em; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: rgba(15, 26, 0, 0.85); }
+.start-sprint-unit { font-size: clamp(28px, 4vw, 52px); color: rgba(18, 20, 23, 0.8); }
+.start-sprint-copy p { margin: 0 0 14px; max-width: 32em; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: rgba(18, 20, 23, 0.85); }
 .start-sprint-copy .start-sprint-price { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
 .start-sprint-price strong { font-weight: 500; color: var(--signal-dark); }
 
@@ -1726,7 +1733,7 @@ section { position: relative; }
 .start-reach-big {
   font-family: var(--font-headline); font-size: clamp(26px, 4.4vw, 60px); letter-spacing: -0.03em; line-height: 1.15;
   color: var(--ink);
-  background: linear-gradient(var(--signal), var(--signal)) 0 100% / 0 2px no-repeat;
+  background: linear-gradient(var(--ink), var(--ink)) 0 100% / 0 2px no-repeat;
   transition: background-size 600ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .start-reach-big:hover, .start-reach-big:focus-visible { background-size: 100% 2px; }
@@ -1750,7 +1757,7 @@ section { position: relative; }
   left: 0;
   right: 0;
   height: 50vh;
-  background: var(--signal);
+  background: var(--bg);
   will-change: transform;
 }
 .loading-half--top    { top: 0; }
@@ -1771,7 +1778,7 @@ section { position: relative; }
   height: auto;
   user-select: none;
   -webkit-user-drag: none;
-  filter: drop-shadow(0 12px 32px rgba(15, 26, 0, 0.18));
+  filter: brightness(0) invert(1);   /* white mark on the black halves */
 }
 
 /* =============================================================================
@@ -2026,7 +2033,7 @@ html { -webkit-tap-highlight-color: transparent; }
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--signal) !important;
+  outline: 2px solid var(--ink) !important;
   outline-offset: -2px;
 }
 
@@ -2105,7 +2112,7 @@ button:focus-visible,
 [role='button']:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -2132,12 +2139,16 @@ html, body { overflow-x: clip; }
 }
 .btn-white:hover { background: #fff; color: #000; }
 .topnav-cta-white {
-  background: #F7F8F8;
-  color: #0F1011;
+  /* The secondary nav action: an outline, so the solid one leads. */
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
   animation: none;
 }
-.topnav-cta-white:hover { background: #fff; color: #000; }
-.topnav-cta-white:active { background: #E6E8EA; color: #000; }
+.topnav-cta-white:hover { background: transparent; color: #fff; box-shadow: inset 0 0 0 1px #fff; }
+.topnav-cta-white:active { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.topnav-fixed[data-theme='light'] .topnav-cta-white { background: transparent; color: #111112; box-shadow: inset 0 0 0 1px rgba(17, 17, 18, 0.45); }
+.topnav-fixed[data-theme='light'] .topnav-cta-white:hover { background: transparent; color: #000; box-shadow: inset 0 0 0 1px #000; }
 
 /* --- Hero: one-line headline, ~2-line sub, left aligned ------------------ */
 .hero-title { font-size: clamp(32px, 5.2vw, 60px); line-height: 1.04; }
@@ -2271,7 +2282,7 @@ html, body { overflow-x: clip; }
   font-weight: 500;
   transition: background var(--t-base) var(--ease), color var(--t-base) var(--ease), border-color var(--t-base) var(--ease);
 }
-.product-explore:hover { background: var(--signal); color: var(--signal-dark); border-color: var(--signal); }
+.product-explore:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .product-explore .arrow { font-size: 13px; transition: transform var(--t-fast) var(--ease); }
 .product-explore:hover .arrow { transform: translate(2px, -2px); }
 .product-soon {
@@ -2338,7 +2349,7 @@ html, body { overflow-x: clip; }
 #services { background: var(--bg-2); }                     /* gray-black */
 #products {                                                /* the "green" section */
   background:
-    radial-gradient(120% 90% at 50% 0%, rgba(184, 255, 0, 0.07), transparent 58%),
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.04), transparent 58%),
     #0B0E06;
 }
 .about { background: var(--bg-2); }
@@ -2394,37 +2405,37 @@ html, body { overflow-x: clip; }
   box-shadow: 0 -1px 0 0 rgba(0, 0, 0, 0.6), 0 -28px 60px rgba(0, 0, 0, 0.5);
 }
 
-/* Alternating solid panels — black / electric lime / black / electric lime.
-   No gradients, no interpolation: each layer that covers the last is a flat
-   plane of the opposite colour, campaign-style. */
+/* Alternating solid panels — black / paper / black / paper. No gradients, no
+   interpolation: each layer that covers the last is a flat plane of the
+   opposite tone. Lime is never a surface; it marks the one action on screen. */
 .stacked > section { background: var(--bg); }
 .stacked > #services,
 .stacked > #about {
-  background: var(--signal);
-  border-top-color: rgba(15, 26, 0, 0.3);
+  background: var(--paper);
+  border-top-color: rgba(18, 20, 23, 0.3);
 }
 
-/* Ink flips on the lime panels — headings, labels, and prose go dark so they
-   read on the bright field. Cards inside stay dark surfaces (strong contrast). */
+/* Ink flips on the paper panels — headings, labels, and prose go dark. Cards
+   inside stay dark surfaces (strong contrast). */
 .stacked > #services h2,
 .stacked > #about h2 { color: var(--signal-dark); }
 .stacked > #services .section-head h2 em,
-.stacked > #about .section-head h2 em { color: rgba(15, 26, 0, 0.75); }
+.stacked > #about .section-head h2 em { color: rgba(18, 20, 23, 0.75); }
 .stacked > #services .eyebrow,
-.stacked > #about .eyebrow { color: rgba(15, 26, 0, 0.72); }
+.stacked > #about .eyebrow { color: rgba(18, 20, 23, 0.72); }
 .stacked > #services .sub-plain,
-.stacked > #about .sub-plain { color: rgba(15, 26, 0, 0.82); }
+.stacked > #about .sub-plain { color: rgba(18, 20, 23, 0.82); }
 .stacked > #services .text-link,
 .stacked > #about .text-link {
   color: var(--signal-dark);
-  text-decoration-color: rgba(15, 26, 0, 0.45);
+  text-decoration-color: rgba(18, 20, 23, 0.45);
 }
 .stacked > #services .text-link:hover,
 .stacked > #about .text-link:hover {
   color: #000;
   text-decoration-color: #000;
 }
-.stacked > #about .about-body { color: rgba(15, 26, 0, 0.85); }
+.stacked > #about .about-body { color: rgba(18, 20, 23, 0.85); }
 .stacked > #about .about-hi {
   color: var(--signal-dark);
   font-weight: 600;
@@ -2475,13 +2486,13 @@ html, body { overflow-x: clip; }
   width: 6px;
   height: 6px;
   margin: -3px 0 0 -3px;
-  background: var(--signal);
+  background: #F4F5F2;
 }
 .cursor-ring {
   width: 28px;
   height: 28px;
   margin: -14px 0 0 -14px;
-  border: 1px solid var(--signal);
+  border: 1px solid #F4F5F2;
 }
 /* "What a click does" label: dark ink with a lime hairline reads on both the
    black and the lime panels. */
@@ -2495,9 +2506,9 @@ html, body { overflow-x: clip; }
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--signal);
+  color: #F4F5F2;
   background: #0a0b0c;
-  box-shadow: inset 0 0 0 1px rgba(184, 255, 0, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.30);
 }
 
 /* =============================================================================
@@ -2526,7 +2537,7 @@ html, body { overflow-x: clip; }
   max-width: 980px;
 }
 .pd-title-line { display: block; }
-/* The one lime word — the hero's single focal accent (plus the CTA fill). */
+/* Was the one lime word; lime now marks only the CTA, so it reads in white. */
 .pd-signal { color: var(--signal-ink); }
 .pd-ctas {
   display: flex;
@@ -2536,14 +2547,14 @@ html, body { overflow-x: clip; }
 }
 .pd-meta { margin: clamp(24px, 4vw, 40px) 0 0; }
 
-/* Full-bleed lime panel — flat plane, ink flips dark, no gradient. */
+/* Full-bleed paper panel — flat plane, ink flips dark, no gradient. */
 .pd-lime {
-  background: var(--signal);
-  border-top: 1px solid rgba(15, 26, 0, 0.3);
-  border-bottom: 1px solid rgba(15, 26, 0, 0.3);
+  background: var(--paper);
+  border-top: 1px solid rgba(18, 20, 23, 0.3);
+  border-bottom: 1px solid rgba(18, 20, 23, 0.3);
   scroll-margin-top: 64px;
 }
-.pd-lime .eyebrow { color: rgba(15, 26, 0, 0.72); }
+.pd-lime .eyebrow { color: rgba(18, 20, 23, 0.72); }
 .pd-lime h2 { color: var(--signal-dark); }
 
 /* Hero: the claim beside the Strata object. */
@@ -2560,18 +2571,18 @@ html, body { overflow-x: clip; }
 .scene-strata .kit-label.is-on::before { width: 48px; height: 1px; }
 .scene-strata .kit-label > span { left: 56px; top: -5px; bottom: auto; }
 
-/* What you get — four outputs on the lime panel. */
+/* What you get — four outputs on the paper panel. */
 .pd-outputs-grid { display: grid; gap: clamp(24px, 3vw, 40px); }
 @media (min-width: 760px) { .pd-outputs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1100px) { .pd-outputs-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .pd-output {
   display: grid; align-content: start; gap: 12px;
   padding-top: clamp(16px, 2vw, 22px);
-  box-shadow: inset 0 1px 0 rgba(15, 26, 0, 0.35);
+  box-shadow: inset 0 1px 0 rgba(18, 20, 23, 0.35);
 }
 .pd-output-num { font-family: var(--font-headline); font-size: clamp(48px, 6vw, 84px); line-height: 0.9; letter-spacing: -0.04em; color: var(--signal-dark); }
 .pd-output h3 { color: var(--signal-dark); font-size: clamp(20px, 2vw, 24px); letter-spacing: -0.02em; }
-.pd-output p { color: rgba(15, 26, 0, 0.78); font-size: 15px; line-height: 1.55; letter-spacing: -0.011em; max-width: 40ch; }
+.pd-output p { color: rgba(18, 20, 23, 0.78); font-size: 15px; line-height: 1.55; letter-spacing: -0.011em; max-width: 40ch; }
 .pd-product .about-preview { display: block; }
 
 /* =============================================================================
@@ -2650,7 +2661,7 @@ html, body { overflow-x: clip; }
 }
 .studio-places { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .studio-places li { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--ink-2); }
-.studio-places i { width: 7px; height: 7px; background: var(--signal); flex: none; }
+.studio-places i { width: 7px; height: 7px; background: var(--ink); flex: none; }
 .studio-time { display: flex; align-items: baseline; gap: 2px; margin-top: 6px; line-height: 0.9; color: var(--ink); }
 .studio-hm {
   font-family: var(--font-headline);
@@ -2703,7 +2714,7 @@ html, body { overflow-x: clip; }
    footer mark loses the glow that the crop window cut into a box.
    ============================================================================= */
 .topnav-fixed.is-scrolled { background: var(--bg); }
-.topnav-fixed[data-theme='light'].is-scrolled { background: var(--signal); }
+.topnav-fixed[data-theme='light'].is-scrolled { background: var(--paper); }
 .stacked > #products { background: var(--bg); }
 
 /* Dither field — printed 1-bit dots under the lime panels' content. */
@@ -2818,7 +2829,7 @@ a.ft-link:hover { color: var(--ink); }
 }
 .ft-status-item { display: inline-flex; align-items: center; gap: 10px; }
 .ft-status .pst-clock { color: var(--ink-2); }
-.ft-live { width: 7px; height: 7px; background: var(--signal); box-shadow: 0 0 0 3px rgba(184, 255, 0, 0.18); }
+.ft-live { width: 7px; height: 7px; background: var(--ink); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.09); }
 .ft-top {
   margin-left: auto; padding: 0; background: none; cursor: pointer;
   font: inherit; color: var(--ink-2);
@@ -3189,7 +3200,7 @@ a.ft-link:hover { color: var(--ink); }
   position: absolute; right: 0; top: 50%; height: 1px;
   background: linear-gradient(90deg, var(--line-3) 50%, transparent 50%) 0 0 / 6px 1px;
 }
-.hr-fill { position: absolute; left: 0; right: 0; top: calc(50% - 1px); height: 2px; background: var(--signal); transform-origin: left; }
+.hr-fill { position: absolute; left: 0; right: 0; top: calc(50% - 1px); height: 2px; background: var(--ink); transform-origin: left; }
 .hr-rail i { position: absolute; top: calc(50% - 4px); width: 1px; height: 8px; background: var(--line-3); }
 .hr-rail i.is-major { top: calc(50% - 7px); height: 14px; background: var(--text-3); }
 .hr-rail b {
@@ -3198,7 +3209,7 @@ a.ft-link:hover { color: var(--ink); }
   transition: background 300ms var(--ease), box-shadow 300ms var(--ease), transform 400ms cubic-bezier(0.34, 1.56, 0.46, 1);
 }
 .hr-rail b:last-of-type { margin-left: -10px; }
-.hr-rail b.is-on { background: var(--signal); box-shadow: none; transform: scale(1.3); }
+.hr-rail b.is-on { background: var(--ink); box-shadow: none; transform: scale(1.3); }
 .hr-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .hr-steps li { display: flex; flex-direction: column; gap: 10px; font-size: 16px; line-height: 1.5; color: var(--text-3); transition: color 500ms var(--ease); }
 .hr-steps li.is-on { color: var(--ink-2); }
@@ -3474,7 +3485,8 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 }
 .dt-front { background: #fbfcfc; box-shadow: inset 0 0 0 1px var(--pw-line); color: var(--pw-mute); }
 .dt-back { transform: rotateX(180deg); background: #e6e9ec; color: var(--pw-mute); }
-.dt-back b { font: 400 clamp(26px, 4vw, 44px)/1 var(--font-sans); letter-spacing: -0.04em; color: var(--signal-ink); }
+.dt-back b { font: 400 clamp(26px, 4vw, 44px)/1 var(--font-sans); letter-spacing: -0.04em; color: var(--pw-ink); }
+.dt-days li.is-step .dt-back b { color: #fff; }
 .dt-back i { display: block; height: 3px; width: 40%; background: rgba(18, 20, 23, 0.12); }
 .dt-days li.is-step .dt-back { background: #121417; color: rgba(255, 255, 255, 0.6); }
 .dt-steps li { color: var(--pw-mute); transition: color 700ms var(--ease); }
@@ -3648,8 +3660,10 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   align-items: center;
   height: 22px;
   padding: 0 8px;
-  background: var(--signal);
-  color: var(--signal-dark);
+  /* An outline, not lime: an offer is neither the action nor a live state. */
+  background: transparent;
+  color: currentColor;
+  box-shadow: inset 0 0 0 1px currentColor;
   font-size: 10.5px;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -3749,7 +3763,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   position: absolute;
   inset: 0 -0.12em -0.06em;
   overflow: hidden;
-  background: var(--signal);
+  background: var(--ink);
   translate: -101% 0;
 }
 .ft-mark-in {
@@ -3758,7 +3772,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   padding: 0 0.12em 0.06em;
   line-height: inherit;
   white-space: nowrap;
-  color: var(--signal-dark);
+  color: var(--bg);
   translate: 101% 0;
 }
 .ft-mark.is-in .ft-mark-bar,
@@ -3851,8 +3865,8 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
     line-height: 1;
   }
   .topnav-mobile-link:hover,
-  .topnav-mobile-link:focus-visible { background: transparent; border-color: transparent; color: var(--signal); }
-  .topnav-mobile-link.active { background: transparent; color: var(--signal); }
+  .topnav-mobile-link:focus-visible { background: transparent; border-color: transparent; color: #fff; text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; }
+  .topnav-mobile-link.active { background: transparent; color: #fff; }
   .topnav-mobile-link .arrow { margin-left: auto; font-size: 18px; }
   .topnav-mobile-num { font-size: 11px; letter-spacing: 0.1em; color: var(--text-3); align-self: flex-start; padding-top: 4px; min-width: 20px; }
   .topnav-mobile-link.is-disabled { gap: 14px; }
@@ -3875,7 +3889,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   .topnav-mobile-panel.is-open .topnav-mobile-foot { clip-path: inset(0 0 0 0); transition-delay: 520ms; }
   .topnav-mobile-foot a { color: var(--ink); text-decoration: none; padding: 6px 0; }
   .topnav-mobile-foot span { display: inline-flex; align-items: center; gap: 8px; padding: 6px 0; }
-  .topnav-mobile-foot i { width: 7px; height: 7px; background: var(--signal); }
+  .topnav-mobile-foot i { width: 7px; height: 7px; background: var(--ink); }
 }
 @media (max-width: 720px) and (prefers-reduced-motion: reduce) {
   .topnav-mobile-panel, .topnav-mobile-panel.is-open, .topnav-mobile-foot { transition: none; }
@@ -3936,3 +3950,13 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 .svc-cross:hover .arrow { translate: 4px 0; }
 .svc-cross:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
 .stacked > #services .svc-cross { color: var(--signal-dark); }
+
+/* One lime per screen: on a page that closes with its own action (an offer,
+   Strata, the brief form), the footer's CTA steps back to white so the page's
+   action stays the one lime. The homepage footer keeps it. */
+main:not(.stacked) ~ .footer .ft-head-cta .btn-primary {
+  background: #F7F8F8;
+  color: #0F1011;
+  animation: none;
+}
+main:not(.stacked) ~ .footer .ft-head-cta .btn-primary:hover { background: #fff; color: #000; }

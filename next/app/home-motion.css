@@ -33,16 +33,16 @@
   padding: 0.02em 0.16em 0.04em;
   line-height: normal;
   white-space: nowrap;
-  color: var(--signal);
+  color: var(--paper);
 }
 .px-edge i { scale: 0; }
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     body:has(main.stacked) { timeline-scope: --p-services, --p-products, --p-about; }
-    .stacked > #services { view-timeline-name: --p-services; --tl: --p-services; --px-c: var(--signal); }
+    .stacked > #services { view-timeline-name: --p-services; --tl: --p-services; --px-c: var(--paper); }
     .stacked > #products { view-timeline-name: --p-products; --tl: --p-products; --px-c: var(--bg); }
-    .stacked > #about { view-timeline-name: --p-about; --tl: --p-about; --px-c: var(--signal); }
+    .stacked > #about { view-timeline-name: --p-about; --tl: --p-about; --px-c: var(--paper); }
 
     /* --- Pixel takeover at each rising panel's leading edge ------------------- */
     .px-edge {
@@ -95,7 +95,7 @@
       inset: 0;
       z-index: 2;
       pointer-events: none;
-      background: linear-gradient(to top, var(--signal) 0 2px, var(--bg-2) 2px);
+      background: linear-gradient(to top, var(--ink) 0 2px, var(--bg-2) 2px);
       transform-origin: 50% 0;
       animation: hm-shutter cubic-bezier(0.65, 0, 0.35, 1) both;
       animation-timeline: --p-products;

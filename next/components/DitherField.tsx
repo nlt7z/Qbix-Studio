@@ -5,9 +5,9 @@ import { watchCovered } from '@/components/three/covered';
 import { whenLinked } from '@/components/three/glLink';
 
 /**
- * 1-bit dither field for the lime panels — a slow-drifting noise field pushed
+ * 1-bit dither field for the paper panels — a slow-drifting noise field pushed
  * through an 8×8 Bayer matrix and printed as hard dark-ink dots, densest at the
- * panel's foot and thinning upward, so the flat lime reads as a printed plane
+ * panel's foot and thinning upward, so the flat paper reads as a printed plane
  * rather than an empty fill. The pointer gathers dots around it; as the panel
  * rides into view the field dithers in from the bottom (a threshold sweep, not
  * a fade). Hard-edged pixels only — no blur anywhere.
@@ -70,7 +70,7 @@ void main() {
   v += 0.62 * exp(-d * d / (2.0 * 150.0 * 150.0)) * (0.55 + 0.6 * n);
 
   if (v <= bayer8(cell) + 0.04) discard;
-  gl_FragColor = vec4(vec3(0.059, 0.102, 0.0) * 0.3, 0.3);   // --signal-dark, premultiplied
+  gl_FragColor = vec4(vec3(0.071, 0.078, 0.09) * 0.26, 0.26);   // neutral ink on paper, premultiplied
 }`;
 
 export default function DitherField() {
@@ -194,7 +194,7 @@ export default function DitherField() {
         { rootMargin: '-1px 0px' },
       );
       io.observe(host);
-      // The lime panels are sticky: stop drawing once the next panel covers them.
+      // The paper panels are sticky: stop drawing once the next panel covers them.
       const unwatch = watchCovered(host, (c) => {
         covered = c;
         kick();

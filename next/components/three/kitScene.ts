@@ -27,7 +27,6 @@ export type KitOptions = {
   onReady: () => void;
 };
 
-const LIME = new THREE.Color('#B8FF00');
 const BUILD_END = 2.7;   // seconds — the hero's load sequence
 
 /** Tangent-space normal map of fine vertical ribs — the satin-silver cladding. */
@@ -102,7 +101,7 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   }
 
   /* ------------------------------------------------------------ materials */
-  // The Qbix material set: white ceramic, satin silver, frosted glass, ink, one lime.
+  // The Qbix material set: white, ink, solid; no lime, no grey, no see-through.
   const ribs = ribsNormal();
   ribs.repeat.set(1, 1);
   const terrazzo = canvasTexture(1024, 732, (ctx, w, h) => drawTerrazzo(ctx, w, h));
@@ -127,7 +126,9 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
     white: new THREE.MeshStandardMaterial({ color: '#f4f6f7', roughness: 0.5 }),
     paper: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.8, emissive: '#ffffff', emissiveIntensity: 0.12 }),
     phone: new THREE.MeshPhysicalMaterial({ color: '#0f1113', metalness: 0.55, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.05 }),
-    lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
+    // Was the scene's lime; lime is kept for the page's one action, so the
+    // plinth's lit edge, the sign's frame and the video bar read white/ink.
+    hi: new THREE.MeshBasicMaterial({ color: '#f4f5f2' }),
     edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
   };
 
@@ -157,9 +158,9 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   plinth.position.y = 0.13;
   plinth.add(new THREE.LineSegments(new THREE.EdgesGeometry(plinth.geometry), M.edge));
   plinthG.add(plinth);
-  // A lit lime edge along the plinth's top — the pedestal's one line of light.
+  // A lit white edge along the plinth's top — the pedestal's one line of light.
   for (const [w, d, x, z] of [[4.6, 0.012, 0, 1.7], [0.012, 3.4, 2.3, 0]] as const) {
-    const strip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.012, 0.012, d + 0.012), M.lime);
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.012, 0.012, d + 0.012), M.hi);
     strip.position.set(x, 0.26, z);
     plinthG.add(strip);
   }
@@ -245,14 +246,14 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   });
   model.add(tree);
 
-  // The lime yard sign — the scene's one signal.
+  // The yard sign — ink board, white type.
   const signTex = canvasTexture(512, 272, (ctx, w, h) => drawSign(ctx, w, h, F));
   const signFace = new THREE.MeshBasicMaterial({ map: signTex, toneMapped: false });
   const sign = new THREE.Group();
   sign.position.set(-1.2, 0.04, 1.22);
   const post = box(0.03, 0.66, 0.03, M.chrome);
   post.position.y = 0.33;
-  const board = box(0.64, 0.34, 0.02, [M.lime, M.lime, M.lime, M.lime, signFace, M.lime]);
+  const board = box(0.64, 0.34, 0.02, [M.ink, M.ink, M.ink, M.ink, signFace, M.ink]);
   board.position.y = 0.56;
   sign.add(post, board);
   model.add(sign);
@@ -358,7 +359,7 @@ export async function mountKitScene(host: HTMLElement, opts: KitOptions) {
   track.position.set(0, -0.52, 0.038);
   const fillGeo = new THREE.PlaneGeometry(0.5, 0.016);
   fillGeo.translate(0.25, 0, 0);
-  const fill = new THREE.Mesh(fillGeo, M.lime);
+  const fill = new THREE.Mesh(fillGeo, M.hi);
   fill.position.set(-0.25, -0.52, 0.039);
   phone.add(track, fill);
   world.add(phone);

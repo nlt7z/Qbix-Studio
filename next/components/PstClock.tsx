@@ -103,9 +103,9 @@ export default function PstClock({ size = 18 }: { size?: number }) {
         transform={`rotate(${secDeg} 12 12)`}
       />
 
-      {/* Live core — fluorescent lime hub with a soft bloom */}
-      <circle cx="12" cy="12" r="2" fill="var(--signal)" opacity="0.22" />
-      <circle cx="12" cy="12" r="1.05" fill="var(--signal)" />
+      {/* Core hub (ink: lime is kept for actions and live states) */}
+      <circle cx="12" cy="12" r="2" fill="var(--ink)" opacity="0.22" />
+      <circle cx="12" cy="12" r="1.05" fill="var(--ink)" />
       <circle cx="12" cy="12" r="0.4" fill="var(--signal-dark)" />
     </svg>
   );

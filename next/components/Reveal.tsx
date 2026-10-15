@@ -239,14 +239,14 @@ type WipeProps<E extends ElementType = 'div'> = {
 
 /**
  * Wipe — highlight-bar text reveal. The block is clipped shut from the
- * right and opens left→right; a solid signal bar rides inside the same
+ * right and opens left→right; a solid ink bar rides inside the same
  * clip and collapses toward the right edge halfway through, so what reads
  * is a bar of color sweeping across and handing off to the content it
  * uncovers. Pure structural motion — no fade, no blur.
  */
 export function Wipe<E extends ElementType = 'div'>({
   as,
-  color = 'var(--signal)',
+  color = 'var(--ink)',
   delay = 0,
   index = 0,
   duration = 0.6,

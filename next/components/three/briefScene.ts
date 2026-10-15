@@ -6,9 +6,9 @@ import { createStage, canvasTexture, clamp01, lerp, inOut, outBack, seg } from '
  * /start — the brief, built as you write it. Each part of the form sets one
  * piece of a stack on a lit pedestal: your name a ceramic slab, your email a
  * ribbed silver one, the company an ink plate, the timeline frosted glass,
- * the budget a lime plate, the brief itself a sheet that thickens as you
+ * the budget a white plate, the brief itself a sheet that thickens as you
  * type, and every project type a small block on top. Sending makes the stack
- * hum; once it's received the stack lifts off and a lime cube is left behind.
+ * hum; once it's received the stack lifts off and a white cube is left behind.
  */
 
 export type BriefDraft = {
@@ -28,7 +28,6 @@ export type BriefOptions = {
   onReady: () => void;
 };
 
-const LIME = new THREE.Color('#B8FF00');
 const W = 2.3;   // slab width
 const D = 1.5;   // slab depth
 
@@ -89,7 +88,7 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
     ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = '#c9ced3';
     for (let i = 0; i < 9; i++) ctx.fillRect(w * 0.08, h * (0.14 + i * 0.085), w * (0.5 + ((i * 37) % 40) / 100), h * 0.022);
-    ctx.fillStyle = '#B8FF00';
+    ctx.fillStyle = '#121417';
     ctx.fillRect(w * 0.08, h * 0.06, w * 0.05, h * 0.03);
   });
   const M = {
@@ -102,12 +101,12 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
     }),
     ink: new THREE.MeshPhysicalMaterial({ color: '#16181b', roughness: 0.35, metalness: 0.3, clearcoat: 0.9, clearcoatRoughness: 0.08 }),
     frost: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.08 }),
-    limeSatin: new THREE.MeshPhysicalMaterial({ color: LIME, metalness: 0.3, roughness: 0.32, clearcoat: 0.4 }),
+    whiteSatin: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.3, clearcoat: 0.8 }),
     chrome: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.3, clearcoat: 0.8 }),   // was grey chrome
     paper: new THREE.MeshStandardMaterial({ color: '#f7f8f9', roughness: 0.8 }),
     paperTop: new THREE.MeshStandardMaterial({ map: lines, roughness: 0.8, emissive: '#ffffff', emissiveMap: lines, emissiveIntensity: 0.12 }),
-    lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-    ghost: new THREE.LineDashedMaterial({ color: LIME, transparent: true, opacity: 0.5, dashSize: 0.06, gapSize: 0.05, toneMapped: false }),
+    hi: new THREE.MeshBasicMaterial({ color: '#f4f5f2' }),
+    ghost: new THREE.LineDashedMaterial({ color: '#f4f5f2', transparent: true, opacity: 0.5, dashSize: 0.06, gapSize: 0.05 }),
     edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
   };
 
@@ -126,7 +125,7 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
   plinth.add(new THREE.LineSegments(new THREE.EdgesGeometry(plinth.geometry), M.edge));
   rig.add(plinth);
   for (const [w, d, x, z] of [[3.3, 0.012, 0, 1.2], [0.012, 2.4, 1.65, 0]] as const) {
-    const strip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.012, 0.012, d + 0.012), M.lime);
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.012, 0.012, d + 0.012), M.hi);
     strip.position.set(x, 0, z);
     rig.add(strip);
   }
@@ -156,7 +155,7 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
     { m: slab(0.16, M.silver, 0.06), h: 0.16, k: 0, on: (d) => d.email },
     { m: slab(0.1, M.ink, 0.12), h: 0.1, k: 0, on: (d) => d.company },
     { m: slab(0.14, M.frost), h: 0.14, k: 0, on: (d) => d.timeline >= 0 },
-    { m: slab(0.08, M.limeSatin, 0.2), h: 0.08, k: 0, on: (d) => d.budget >= 0, height: (d) => 0.06 + Math.max(0, d.budget) * 0.025 },
+    { m: slab(0.08, M.whiteSatin, 0.2), h: 0.08, k: 0, on: (d) => d.budget >= 0, height: (d) => 0.06 + Math.max(0, d.budget) * 0.025 },
     {
       m: slab(0.04, [M.paper, M.paper, M.paperTop, M.paper, M.paper, M.paper], 0.1),
       h: 0.04, k: 0, on: (d) => d.brief > 0,
@@ -166,21 +165,21 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
   layers.forEach((l) => stack.add(l.m));
 
   // Project-type blocks, one per chosen type, in a row on top.
-  const BLOCK_MATS = [M.limeSatin, M.chrome, M.frost, M.ceramic, M.ink, M.silver];
+  const BLOCK_MATS = [M.whiteSatin, M.chrome, M.frost, M.ceramic, M.ink, M.silver];
   const blocks = BLOCK_MATS.map((mat, i) => {
     const m = mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), mat);
     stack.add(m);
     return { m, k: 0, slot: i };
   });
 
-  // Received: a lime cube left on the pedestal once the brief has gone.
-  const done = mesh(new THREE.BoxGeometry(0.42, 0.42, 0.42), M.limeSatin);
+  // Received: a white cube left on the pedestal once the brief has gone.
+  const done = mesh(new THREE.BoxGeometry(0.42, 0.42, 0.42), M.whiteSatin);
   done.position.y = 0.21;
   done.visible = false;
   rig.add(done);
 
   // A scan plane that sweeps the stack while sending.
-  const scan = new THREE.Mesh(new THREE.BoxGeometry(W + 0.2, 0.008, D + 0.2), M.lime);
+  const scan = new THREE.Mesh(new THREE.BoxGeometry(W + 0.2, 0.008, D + 0.2), M.hi);
   scan.visible = false;
   rig.add(scan);
 
@@ -248,7 +247,7 @@ export async function mountBriefScene(host: HTMLElement, opts: BriefOptions) {
     });
     const filled = y + (d.types.length ? 0.3 : 0);
 
-    // ---- sending: hum and scan; sent: lift off, leave a lime cube ----
+    // ---- sending: hum and scan; sent: lift off, leave a white cube ----
     const sending = d.status === 'sending';
     stack.position.x = sending && !opts.reduced ? Math.sin(t * 60) * 0.004 : 0;
     scan.visible = sending;

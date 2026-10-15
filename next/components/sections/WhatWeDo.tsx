@@ -223,10 +223,11 @@ function ServicePattern({ slug }: { slug: string }) {
     strokeLinejoin: 'round' as const,
     strokeDasharray: '2 3',
   };
-  // Electric-lime accent plane — the lit face of each isometric illustration.
+  // Accent plane — the lit face of each isometric illustration (white: lime is
+  // kept for actions and live states).
   const accent = {
-    fill: 'var(--signal-dim)',
-    stroke: 'var(--signal)',
+    fill: 'rgba(255, 255, 255, 0.06)',
+    stroke: 'var(--ink)',
     strokeWidth: 1,
     strokeLinejoin: 'round' as const,
   };
@@ -250,7 +251,7 @@ function ServicePattern({ slug }: { slug: string }) {
           <circle cx="106" cy="116" r="2.2" fill="currentColor" />
           <circle cx="134" cy="116" r="2.2" fill="currentColor" />
           <circle cx="120" cy="82" r="2.2" fill="currentColor" />
-          <circle cx="120" cy="106" r="2.4" fill="var(--signal)" />
+          <circle cx="120" cy="106" r="2.4" fill="var(--ink)" />
           {/* Connections from surface nodes up to agent */}
           <line x1="92" y1="94" x2="120" y2="52" {...dim} />
           <line x1="148" y1="94" x2="120" y2="52" {...dim} />
@@ -262,8 +263,8 @@ function ServicePattern({ slug }: { slug: string }) {
           <path d="M136 26 L136 44 L120 52 L120 34 Z" {...iso} />
           <polygon points="120,18 136,26 120,34 104,26" {...accent} />
           {/* Pulse indicator on agent face */}
-          <line x1="112" y1="36" x2="128" y2="44" stroke="var(--signal)" strokeWidth="0.75" strokeLinecap="round" />
-          <circle cx="120" cy="40" r="1.1" fill="var(--signal)" />
+          <line x1="112" y1="36" x2="128" y2="44" stroke="var(--ink)" strokeWidth="0.75" strokeLinecap="round" />
+          <circle cx="120" cy="40" r="1.1" fill="var(--ink)" />
         </svg>
       );
     case 'ux-ui':
@@ -276,12 +277,12 @@ function ServicePattern({ slug }: { slug: string }) {
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="r-glass" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#B8FF00" stopOpacity="0.09" />
-              <stop offset="100%" stopColor="#B8FF00" stopOpacity="0.02" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.09" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.02" />
             </linearGradient>
             <radialGradient id="r-halo" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#B8FF00" stopOpacity="0.12" />
-              <stop offset="100%" stopColor="#B8FF00" stopOpacity="0" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
             </radialGradient>
           </defs>
 
@@ -305,23 +306,23 @@ function ServicePattern({ slug }: { slug: string }) {
           <line x1="110" y1="89.8" x2="75.4" y2="109.8" stroke="currentColor" strokeOpacity="0.25" strokeWidth="0.5" />
           <line x1="118" y1="94.4" x2="83.4" y2="114.4" stroke="currentColor" strokeOpacity="0.25" strokeWidth="0.5" />
           <ellipse cx="100" cy="104" rx="16" ry="9.2" fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="0.6" strokeDasharray="2 3" />
-          <circle cx="100" cy="104" r="1.2" fill="var(--signal)" opacity="0.8" />
+          <circle cx="100" cy="104" r="1.2" fill="var(--ink)" opacity="0.8" />
 
           {/* P2 · colour + type plate */}
           <polygon points="100,48 134.6,68 100,88 65.4,68" fill="rgba(255,255,255,0.04)" stroke="currentColor" strokeOpacity="0.6" strokeWidth="1" />
           <line x1="97" y1="53" x2="114.3" y2="63" stroke="currentColor" strokeOpacity="0.7" strokeWidth="1.6" strokeLinecap="round" />
           <line x1="92" y1="56" x2="106" y2="64.1" stroke="currentColor" strokeOpacity="0.4" strokeWidth="0.7" strokeLinecap="round" />
           <line x1="87.5" y1="58.6" x2="99" y2="65.2" stroke="currentColor" strokeOpacity="0.22" strokeWidth="0.5" strokeDasharray="1.5 2" />
-          <polygon points="84,60 91.8,64.5 86.6,67.5 78.8,63" fill="var(--signal)" opacity="0.85" />
-          <polygon points="94.4,66 102.2,70.5 97,73.5 89.2,69" fill="var(--signal-dim)" stroke="var(--signal)" strokeOpacity="0.5" strokeWidth="0.6" />
+          <polygon points="84,60 91.8,64.5 86.6,67.5 78.8,63" fill="var(--ink)" opacity="0.85" />
+          <polygon points="94.4,66 102.2,70.5 97,73.5 89.2,69" fill="rgba(255, 255, 255, 0.06)" stroke="var(--ink)" strokeOpacity="0.5" strokeWidth="0.6" />
           <polygon points="104.8,72 112.6,76.5 107.4,79.5 99.6,75" fill="rgba(255,255,255,0.22)" stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.5" />
 
           {/* P1 · new-mark plate (lime glass) */}
           <circle cx="100" cy="32" r="30" fill="url(#r-halo)" />
-          <polygon points="100,12 134.6,32 100,52 65.4,32" fill="url(#r-glass)" stroke="var(--signal)" strokeWidth="1" />
-          <ellipse cx="100" cy="32" rx="14" ry="8.1" fill="none" stroke="var(--signal)" strokeOpacity="0.5" strokeWidth="0.6" strokeDasharray="2 3" />
-          <ellipse cx="100" cy="32" rx="21" ry="12.1" fill="none" stroke="var(--signal)" strokeOpacity="0.18" strokeWidth="0.5" />
-          <path d="M100 26 L101.6 30.4 L106 32 L101.6 33.6 L100 38 L98.4 33.6 L94 32 L98.4 30.4 Z" fill="var(--signal)" />
+          <polygon points="100,12 134.6,32 100,52 65.4,32" fill="url(#r-glass)" stroke="var(--ink)" strokeWidth="1" />
+          <ellipse cx="100" cy="32" rx="14" ry="8.1" fill="none" stroke="var(--ink)" strokeOpacity="0.5" strokeWidth="0.6" strokeDasharray="2 3" />
+          <ellipse cx="100" cy="32" rx="21" ry="12.1" fill="none" stroke="var(--ink)" strokeOpacity="0.18" strokeWidth="0.5" />
+          <path d="M100 26 L101.6 30.4 L106 32 L101.6 33.6 L100 38 L98.4 33.6 L94 32 L98.4 30.4 Z" fill="var(--ink)" />
 
           {/* explode dimension, left */}
           <line x1="56" y1="32" x2="56" y2="68" stroke="currentColor" strokeOpacity="0.4" strokeWidth="0.5" />
@@ -337,13 +338,13 @@ function ServicePattern({ slug }: { slug: string }) {
           <circle cx="112.6" cy="76.5" r="1.2" fill="currentColor" opacity="0.6" />
           <polygon points="146,62 158.1,69 150.3,73.5 138.2,66.5" fill="rgba(255,255,255,0.05)" stroke="currentColor" strokeOpacity="0.5" strokeWidth="0.7" />
           <line x1="144.5" y1="65" x2="151.4" y2="69" stroke="currentColor" strokeOpacity="0.5" strokeWidth="0.6" />
-          <circle cx="153.5" cy="69.5" r="1" fill="var(--signal)" />
+          <circle cx="153.5" cy="69.5" r="1" fill="var(--ink)" />
 
           {/* corner brackets + sparkles */}
           <path d="M14 22 L14 14 L22 14" fill="none" stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.7" />
           <path d="M226 118 L226 126 L218 126" fill="none" stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.7" />
-          <path d="M146 16 L147.2 19.2 L150.4 20.4 L147.2 21.6 L146 24.8 L144.8 21.6 L141.6 20.4 L144.8 19.2 Z" fill="var(--signal)" opacity="0.8" />
-          <circle cx="46" cy="88" r="1" fill="var(--signal)" opacity="0.4" />
+          <path d="M146 16 L147.2 19.2 L150.4 20.4 L147.2 21.6 L146 24.8 L144.8 21.6 L141.6 20.4 L144.8 19.2 Z" fill="var(--ink)" opacity="0.8" />
+          <circle cx="46" cy="88" r="1" fill="var(--ink)" opacity="0.4" />
           <circle cx="170" cy="100" r="1.2" fill="currentColor" opacity="0.5" />
         </svg>
       );
@@ -413,8 +414,8 @@ function ServicePattern({ slug }: { slug: string }) {
         <svg viewBox="0 0 240 140" preserveAspectRatio="xMidYMid meet">
           <defs>
             <radialGradient id="w-halo" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#B8FF00" stopOpacity="0.10" />
-              <stop offset="100%" stopColor="#B8FF00" stopOpacity="0" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.10" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
             </radialGradient>
           </defs>
 
@@ -445,16 +446,16 @@ function ServicePattern({ slug }: { slug: string }) {
           <polygon points="106.1,60 123.4,70 112.1,76.5 94.8,66.5" fill="rgba(255,255,255,0.03)" stroke="currentColor" strokeOpacity="0.4" strokeWidth="0.7" />
           {/* lit component card + cursor node */}
           <circle cx="128" cy="80" r="26" fill="url(#w-halo)" />
-          <polygon points="125.1,72 142.4,82 131.1,88.5 113.8,78.5" fill="var(--signal-dim)" stroke="var(--signal)" strokeWidth="1" />
-          <circle cx="128" cy="80" r="4" fill="none" stroke="var(--signal)" strokeOpacity="0.35" strokeWidth="0.8" />
-          <circle cx="128" cy="80" r="1.6" fill="var(--signal)" />
+          <polygon points="125.1,72 142.4,82 131.1,88.5 113.8,78.5" fill="rgba(255, 255, 255, 0.06)" stroke="var(--ink)" strokeWidth="1" />
+          <circle cx="128" cy="80" r="4" fill="none" stroke="var(--ink)" strokeOpacity="0.35" strokeWidth="0.8" />
+          <circle cx="128" cy="80" r="1.6" fill="var(--ink)" />
 
           {/* floating chip above the lit card */}
           <path d="M146.9 46 L138.2 51 L138.2 55 L146.9 50 Z" fill="rgba(0,0,0,0.30)" stroke="currentColor" strokeOpacity="0.35" strokeWidth="0.6" />
           <path d="M138.2 51 L124.4 43 L124.4 47 L138.2 55 Z" fill="rgba(0,0,0,0.30)" stroke="currentColor" strokeOpacity="0.35" strokeWidth="0.6" />
           <polygon points="133,38 146.9,46 138.2,51 124.4,43" fill="rgba(255,255,255,0.06)" stroke="currentColor" strokeOpacity="0.6" strokeWidth="0.8" />
           <line x1="131" y1="42" x2="138.8" y2="46.5" stroke="currentColor" strokeOpacity="0.5" strokeWidth="0.7" />
-          <circle cx="140.5" cy="47.5" r="1" fill="var(--signal)" />
+          <circle cx="140.5" cy="47.5" r="1" fill="var(--ink)" />
           <line x1="135.6" y1="53" x2="128.6" y2="74" stroke="currentColor" strokeOpacity="0.35" strokeWidth="0.6" strokeDasharray="2 2.5" />
 
           {/* phone */}
@@ -465,8 +466,8 @@ function ServicePattern({ slug }: { slug: string }) {
           <line x1="193" y1="89" x2="198.2" y2="92" stroke="currentColor" strokeOpacity="0.7" strokeWidth="1.8" strokeLinecap="round" />
           <line x1="182" y1="96" x2="195.9" y2="104" stroke="currentColor" strokeOpacity="0.28" strokeWidth="0.6" strokeDasharray="2 3" />
           <line x1="177.7" y1="98.5" x2="191.6" y2="106.5" stroke="currentColor" strokeOpacity="0.28" strokeWidth="0.6" strokeDasharray="2 3" />
-          <circle cx="198" cy="97" r="4" fill="none" stroke="var(--signal)" strokeOpacity="0.3" strokeWidth="0.8" />
-          <circle cx="198" cy="97" r="1.6" fill="var(--signal)" />
+          <circle cx="198" cy="97" r="4" fill="none" stroke="var(--ink)" strokeOpacity="0.3" strokeWidth="0.8" />
+          <circle cx="198" cy="97" r="1.6" fill="var(--ink)" />
           {/* sync leader browser → phone */}
           <line x1="142.4" y1="82" x2="171" y2="98.5" stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.6" strokeDasharray="2 2.5" />
           <circle cx="142.4" cy="82" r="1.2" fill="currentColor" opacity="0.6" />
@@ -478,8 +479,8 @@ function ServicePattern({ slug }: { slug: string }) {
           <line x1="77" y1="92.5" x2="81" y2="96.5" stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.5" />
           <path d="M14 22 L14 14 L22 14" fill="none" stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.7" />
           <path d="M226 118 L226 126 L218 126" fill="none" stroke="currentColor" strokeOpacity="0.3" strokeWidth="0.7" />
-          <path d="M58 18 L59.6 22.4 L64 24 L59.6 25.6 L58 30 L56.4 25.6 L52 24 L56.4 22.4 Z" fill="var(--signal)" opacity="0.9" />
-          <circle cx="70" cy="32" r="1" fill="var(--signal)" opacity="0.5" />
+          <path d="M58 18 L59.6 22.4 L64 24 L59.6 25.6 L58 30 L56.4 25.6 L52 24 L56.4 22.4 Z" fill="var(--ink)" opacity="0.9" />
+          <circle cx="70" cy="32" r="1" fill="var(--ink)" opacity="0.5" />
           <circle cx="30" cy="96" r="1.2" fill="currentColor" opacity="0.5" />
         </svg>
       );
@@ -506,7 +507,7 @@ function ServicePattern({ slug }: { slug: string }) {
           <circle cx="148" cy="36" r="1.5" fill="currentColor" />
           <circle cx="110" cy="50" r="1.4" fill="currentColor" />
           <circle cx="130" cy="20" r="1.4" fill="currentColor" />
-          <circle cx="120" cy="58" r="2" fill="var(--signal)" />
+          <circle cx="120" cy="58" r="2" fill="var(--ink)" />
         </svg>
       );
     default:

@@ -7,7 +7,7 @@ import { createStage, siteFonts, canvasTexture, clamp01, seg, lerp, inOut, outQu
  * plate that is scanned and then separates into its strata — color, type,
  * spacing, components, code — which press back into one system.
  *
- *  · hero — on load the plate drops, a lime scan reads it, and the layers
+ *  · hero — on load the plate drops, a scan reads it, and the layers
  *    slide out beneath it into an exploded stack that slowly breathes.
  *  · tour — scroll walks the three verbs: read (scan), draft (the layers
  *    separate), ship (the stack presses shut and the code slides out).
@@ -25,7 +25,9 @@ export type StrataOptions = {
 
 export const STRATA_LAYERS = ['Image', 'Color', 'Type', 'Spacing', 'Components', 'Code'];
 
-const LIME = '#B8FF00';
+// Lime is kept for the page's one action, so the system this scene extracts
+// is ink and white: the orb, the rules and the code values read white.
+const HI = '#f4f5f2';
 const W = 2.6;
 const D = 1.8;
 const BUILD_END = 2.8;
@@ -48,13 +50,13 @@ function moodboard(ctx: CanvasRenderingContext2D, w: number, h: number, F: SiteF
     paint(x, y);
     ctx.restore();
   };
-  tile(0, 0, (x, y) => {   // a lime orb on ink
+  tile(0, 0, (x, y) => {   // a white orb on ink
     ctx.fillStyle = '#15181c';
     ctx.fillRect(x, y, cw, ch);
     const o = ctx.createRadialGradient(x + cw * 0.55, y + ch * 0.5, 2, x + cw * 0.55, y + ch * 0.5, ch * 0.48);
-    o.addColorStop(0, LIME);
-    o.addColorStop(0.55, 'rgba(184, 255, 0, 0.55)');
-    o.addColorStop(1, 'rgba(184, 255, 0, 0)');
+    o.addColorStop(0, HI);
+    o.addColorStop(0.55, 'rgba(244, 245, 242, 0.55)');
+    o.addColorStop(1, 'rgba(244, 245, 242, 0)');
     ctx.fillStyle = o;
     ctx.fillRect(x, y, cw, ch);
   });
@@ -99,10 +101,10 @@ function moodboard(ctx: CanvasRenderingContext2D, w: number, h: number, F: SiteF
     ctx.fillStyle = 'rgba(18,20,23,0.18)';
     ctx.fillRect(x + cw * 0.3, y + ch * 0.8, cw * 0.46, ch * 0.05);
   });
-  tile(2, 1, (x, y) => {   // ink with a lime rule and a word
+  tile(2, 1, (x, y) => {   // ink with a white rule and a word
     ctx.fillStyle = '#121417';
     ctx.fillRect(x, y, cw, ch);
-    ctx.fillStyle = LIME;
+    ctx.fillStyle = HI;
     ctx.fillRect(x + cw * 0.1, y + ch * 0.2, cw * 0.3, ch * 0.03);
     ctx.fillStyle = '#f4f6f7';
     ctx.font = `400 ${ch * 0.24}px ${F.head}`;
@@ -133,10 +135,10 @@ function componentsSheet(ctx: CanvasRenderingContext2D, w: number, h: number, F:
   const u = w / 100;
   ctx.fillStyle = '#f7f8f9';
   ctx.fillRect(0, 0, w, h);
-  // primary + secondary button
-  ctx.fillStyle = LIME;
+  // primary + secondary button (ink on the light sheet)
+  ctx.fillStyle = '#121417';
   ctx.fillRect(u * 6, u * 6, u * 26, u * 8);
-  ctx.fillStyle = '#0F1A00';
+  ctx.fillStyle = '#f7f8f9';
   ctx.font = `500 ${u * 2.8}px ${F.body}`;
   ctx.fillText('Get started ↗', u * 9, u * 11);
   ctx.strokeStyle = '#121417';
@@ -156,7 +158,7 @@ function componentsSheet(ctx: CanvasRenderingContext2D, w: number, h: number, F:
   // toggle
   ctx.fillStyle = '#121417';
   ctx.fillRect(u * 6, u * 36, u * 10, u * 5);
-  ctx.fillStyle = LIME;
+  ctx.fillStyle = '#f7f8f9';
   ctx.fillRect(u * 11.5, u * 36.8, u * 3.8, u * 3.4);
   // card
   ctx.fillStyle = '#ffffff';
@@ -180,7 +182,7 @@ function codeSheet(ctx: CanvasRenderingContext2D, w: number, h: number, F: SiteF
   ctx.fillRect(0, 0, w, h);
   const lines: [string, string][] = [
     [':root {', ''],
-    ['  --signal:', ' #B8FF00;'],
+    ['  --accent:', ' #FFFFFF;'],
     ['  --ink:', ' #121417;'],
     ['  --paper:', ' #F4F6F7;'],
     ['  --space-2:', ' 8px;'],
@@ -195,7 +197,7 @@ function codeSheet(ctx: CanvasRenderingContext2D, w: number, h: number, F: SiteF
     ctx.fillText(String(i + 1).padStart(2, ' '), w * 0.04, y);
     ctx.fillStyle = '#e6e9ec';
     ctx.fillText(k, w * 0.12, y);
-    ctx.fillStyle = LIME;
+    ctx.fillStyle = '#ffffff';
     ctx.fillText(v, w * 0.12 + ctx.measureText(k).width, y);
   });
 }
@@ -240,8 +242,8 @@ export async function mountStrataScene(host: HTMLElement, opts: StrataOptions) {
     ceramic: new THREE.MeshPhysicalMaterial({ color: '#f4f6f7', roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.15 }),
     // Solid white plate (no see-through white: the user's rule for all 3D).
     frost: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.08 }),
-    lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
-    limeSatin: new THREE.MeshPhysicalMaterial({ color: LIME, metalness: 0.3, roughness: 0.32, clearcoat: 0.4 }),
+    hi: new THREE.MeshBasicMaterial({ color: HI }),
+    whiteSatin: new THREE.MeshPhysicalMaterial({ color: '#f6f7f5', roughness: 0.3, clearcoat: 0.8 }),
     edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
   };
   const face = (draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void, emissive = 0.18) => {
@@ -266,7 +268,7 @@ export async function mountStrataScene(host: HTMLElement, opts: StrataOptions) {
   plinth.receiveShadow = true;
   plinthG.add(plinth);
   for (const [w, d, x, z] of [[3.4, 0.012, 0, 1.25], [0.012, 2.5, 1.7, 0]] as const) {
-    const strip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.012, 0.012, d + 0.012), M.lime);
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(w + 0.012, 0.012, d + 0.012), M.hi);
     strip.position.set(x, 0.3, z);
     plinthG.add(strip);
   }
@@ -286,12 +288,13 @@ export async function mountStrataScene(host: HTMLElement, opts: StrataOptions) {
 
   const colorG = new THREE.Group();
   colorG.add(plate(0.03, M.frost, M.frost));
-  const SW = ['#B8FF00', '#eef1f3', '#a9b3bb', '#6f8796', '#2b3138', '#121417'];
+  // The extracted palette, ink and white only (no greys in the 3D).
+  const SW = ['#f6f7f5', '#121417', '#f6f7f5', '#121417', '#f6f7f5', '#121417'];
   SW.forEach((c, i) => {
     const h = 0.12 + ((i * 37) % 5) * 0.05;
     const m = new THREE.Mesh(
       new THREE.BoxGeometry(0.32, h, 0.32),
-      i === 0 ? M.limeSatin : new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.3, clearcoat: 0.8, metalness: i === 2 ? 0.6 : 0.1 }),
+      new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.3, clearcoat: 0.8, metalness: 0.1 }),
     );
     m.position.set(-0.95 + i * 0.38, 0.015 + h / 2, 0);
     m.castShadow = true;
@@ -307,7 +310,7 @@ export async function mountStrataScene(host: HTMLElement, opts: StrataOptions) {
   spaceG.add(plate(0.05, M.ink, M.ink));
   [4, 8, 12, 16, 24, 32, 48].forEach((s, i) => {
     const len = 0.1 + s * 0.028;
-    const m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.04, 0.09), M.limeSatin);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.04, 0.09), M.whiteSatin);
     m.position.set(-1.1 + len / 2, 0.045, -0.6 + i * 0.2);
     m.castShadow = true;
     spaceG.add(m);
@@ -322,12 +325,12 @@ export async function mountStrataScene(host: HTMLElement, opts: StrataOptions) {
   codeG.add(plate(0.07, M.ink, face((c, w, h) => codeSheet(c, w, h, F), 0.2)));
   addLayer(codeG, 0.07);
 
-  // Lime scan line that reads the image.
-  const scan = new THREE.Mesh(new THREE.BoxGeometry(W + 0.12, 0.02, 0.02), M.lime);
+  // White scan line that reads the image (no glow plane: nothing see-through).
+  const scan = new THREE.Mesh(new THREE.BoxGeometry(W + 0.12, 0.02, 0.02), M.hi);
   rig.add(scan);
   const scanGlow = new THREE.Mesh(
     new THREE.PlaneGeometry(W + 0.12, 0.5),
-    new THREE.MeshBasicMaterial({ color: LIME, transparent: true, opacity: 0.16, toneMapped: false, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ color: HI, transparent: true, opacity: 0, depthWrite: false }),
   );
   scanGlow.rotation.x = -Math.PI / 2;
   rig.add(scanGlow);

@@ -27,7 +27,6 @@ const PAPER = '#f7f8f9';
 const INK = '#121417';
 const MUTE = '#5f656d';
 const RULE = '#e2e5e8';
-const LIME = '#B8FF00';
 
 function spaced(ctx: Ctx, text: string, x: number, y: number, spacing: number) {
   // letter-spacing without relying on ctx.letterSpacing support
@@ -50,7 +49,7 @@ export function drawFlyer(ctx: Ctx, w: number, h: number, F: SiteFonts, price = 
 
   let y = h * FLYER_PHOTO + u * 8;
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = LIME;
+  ctx.fillStyle = INK;
   ctx.fillRect(u * 7, y - u * 2.9, u * 2.9, u * 2.9);
   ctx.fillStyle = INK;
   ctx.font = `600 ${u * 3.1}px ${F.body}`;
@@ -121,7 +120,7 @@ function streetMap(ctx: Ctx, x: number, y: number, s: number) {
   ctx.fillRect(x + u * 56, y + u * 46, u * 24, u * 20);
   ctx.fillStyle = INK;
   ctx.fillRect(x + u * 36, y + u * 32, u * 11, u * 11);
-  ctx.fillStyle = LIME;
+  ctx.fillStyle = PAPER;
   ctx.fillRect(x + u * 39, y + u * 35, u * 5, u * 5);
   ctx.fillStyle = INK;
   ctx.fillRect(x + u * 40.8, y + u * 43, u * 1.4, u * 8);
@@ -168,9 +167,9 @@ export function drawPost(ctx: Ctx, w: number, h: number, F: SiteFonts, i: number
     ctx.restore();
   } else {
     const bw = u * 6.8 + label.length * u * 3.15;
-    ctx.fillStyle = i === 0 ? LIME : PAPER;
+    ctx.fillStyle = i === 0 ? INK : PAPER;
     ctx.fillRect(u * 5, iy + ih - u * 15, bw, u * 9.4);
-    ctx.fillStyle = INK;
+    ctx.fillStyle = i === 0 ? PAPER : INK;
     spaced(ctx, label, u * 8.4, iy + ih - u * 8.8, u * 0.7);
   }
 
@@ -202,11 +201,11 @@ export function drawPhoneOverlay(ctx: Ctx, w: number, h: number, F: SiteFonts, s
   ctx.shadowBlur = 0;
 }
 
-/** The lime yard sign. */
+/** The yard sign: white type on ink. */
 export function drawSign(ctx: Ctx, w: number, h: number, F: SiteFonts) {
-  ctx.fillStyle = LIME;
+  ctx.fillStyle = INK;
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = '#0F1A00';
+  ctx.fillStyle = PAPER;
   ctx.font = `500 ${h * 0.26}px ${F.mono}`;
   const label = 'JUST LISTED';
   const tw = ctx.measureText(label).width + label.length * h * 0.03;
@@ -219,9 +218,9 @@ export function drawSign(ctx: Ctx, w: number, h: number, F: SiteFonts) {
 
 /** "Final files" stamp that lands on the flyer after the one round of changes. */
 export function drawStamp(ctx: Ctx, w: number, h: number, F: SiteFonts) {
-  ctx.fillStyle = LIME;
+  ctx.fillStyle = INK;
   ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = '#0F1A00';
+  ctx.fillStyle = PAPER;
   ctx.font = `500 ${h * 0.38}px ${F.mono}`;
   const label = 'FINAL FILES';
   const tw = ctx.measureText(label).width + label.length * h * 0.05;
@@ -238,16 +237,17 @@ export function drawSky(ctx: Ctx, w: number, h: number) {
   ctx.fillRect(0, 0, w, h);
 }
 
-/** White terrazzo with lime and graphite chips — the plinth's top. */
+/** White terrazzo with ink chips — the plinth's top. */
 export function drawTerrazzo(ctx: Ctx, w: number, h: number) {
-  ctx.fillStyle = '#e1e5e8';
+  ctx.fillStyle = '#f2f3f1';
   ctx.fillRect(0, 0, w, h);
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const n = Math.round((w * h) / 520);
   for (let i = 0; i < n; i++) {
     const r = rnd();
-    ctx.fillStyle = r < 0.3 ? '#b8ff00' : r < 0.6 ? '#9aa1a8' : r < 0.82 ? '#3b4148' : '#d6dbe0';
+    if (r < 0.45) continue;   // sparser: ink chips only
+    ctx.fillStyle = r < 0.8 ? '#1a1d21' : '#2c3036';
     ctx.beginPath();
     const s = 1 + rnd() * rnd() * 5.5;
     ctx.ellipse(rnd() * w, rnd() * h, s, s * (0.5 + rnd() * 0.6), rnd() * Math.PI, 0, Math.PI * 2);
