@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { Reveal, Words } from '@/components/Reveal';
+import { Words } from '@/components/Reveal';
 import { PixelEdge } from '@/components/ScrollMotion';
 import DitherField from '@/components/DitherField';
 
@@ -30,25 +30,22 @@ export default function AboutUs() {
       <div className="container">
         <header className="section-head">
           <div>
-            <Reveal as="span" className="eyebrow" speed="fast">
-              About Qbix
-            </Reveal>
             <Words as="h2" text="Our story is simple." style={{ marginTop: 14 }} />
           </div>
         </header>
 
         {/* The story is the whole panel — set large, key phrases weighted. It
             arrives with the panel itself (no timed reveal), so a fast scroll
-            never outruns it; the bars on the key phrases are scroll-scrubbed. */}
+            never outruns it; the bar on the key phrase is scroll-scrubbed. */}
         <p className="about-body about-body--solo">
           AI has lowered the technical barrier, but the fact that anyone can
-          build does not mean anyone can <Hi k={0}>build well</Hi>.
-          We bring <Hi k={1}>unusually sharp instincts</Hi>, more
-          than 10 years of training toward the <Hi k={2}>best taste</Hi>{' '}
-          in the industry, real curiosity about new things (which means you get
-          the <Hi k={3}>newest tech</Hi>), and respect for every
-          idea that comes in. We put weight on early exploration and research,
-          because <Hi k={4}>no idea deserves to be wasted</Hi>.
+          build does not mean anyone can build well. We bring unusually sharp
+          instincts, more than 10 years of training toward the best taste in
+          the industry, real curiosity about new things (which means you get the
+          newest tech), and respect for every idea that comes in. We put weight
+          on early exploration and research, because{' '}
+          {/* One highlight: the line the whole story leads to. */}
+          <Hi k={0}>no idea deserves to be wasted</Hi>.
         </p>
       </div>
     </section>

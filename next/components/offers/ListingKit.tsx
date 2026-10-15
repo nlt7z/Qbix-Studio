@@ -119,11 +119,6 @@ export default function ListingKit() {
               </span>
               <CheckoutNote />
             </Reveal>
-            <div className="lk-meta mono" aria-hidden>
-              <span>Drafts · 48 h</span>
-              <span>1 flyer · 5 posts · 1 video</span>
-              <span>Files you own</span>
-            </div>
           </div>
         </div>
       </section>

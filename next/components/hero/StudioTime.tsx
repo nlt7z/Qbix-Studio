@@ -36,7 +36,6 @@ export default function StudioTime() {
   return (
     <div className="studio">
       <div className="studio-read">
-        <span className="studio-label mono">Studio</span>
         <ul className="studio-places">
           {PLACES.map((p) => (
             <li key={p}>
@@ -48,9 +47,8 @@ export default function StudioTime() {
         <span className="studio-time" role="timer" aria-label={time ? `Studio time ${time.hm} ${time.ampm} ${time.zone}` : 'Studio time'}>
           <span className="studio-hm">{time ? time.hm : '--:--'}</span>
           <span className="studio-s">{time ? `:${time.s}` : ''}</span>
-          <span className="studio-ampm mono">{time ? time.ampm : ''}</span>
+          <span className="studio-ampm mono">{time ? `${time.ampm} ${time.zone}` : ''}</span>
         </span>
-        <span className="studio-zone mono">Pacific time{time ? ` · ${time.zone}` : ''}</span>
       </div>
     </div>
   );

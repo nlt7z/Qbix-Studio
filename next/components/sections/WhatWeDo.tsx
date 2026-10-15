@@ -78,7 +78,7 @@ const HEAD: Record<Audience, { eyebrow: string; title: string; sub: string; cros
   },
 };
 
-function ServiceCard({ s, n }: { s: Card; n: number }) {
+function ServiceCard({ s }: { s: Card }) {
   const { open } = useContactModal();
   return (
     <Link
@@ -97,17 +97,11 @@ function ServiceCard({ s, n }: { s: Card; n: number }) {
       </div>
       <div className="svc-body">
         <div className="svc-meta">
-          <span className="svc-num">{String(n).padStart(2, '0')}</span>
+          <span className="svc-audience mono">{s.audience}</span>
           <span className="svc-arrow" aria-hidden>↗︎</span>
         </div>
-        <span className="svc-audience mono">{s.audience}</span>
         <h3 className="svc-title"><BrandText>{s.title}</BrandText></h3>
         <p className="svc-blurb"><BrandText>{s.blurb}</BrandText></p>
-        <div className="svc-tags">
-          {s.tags.map((t) => (
-            <span key={t} className="tag">{t}</span>
-          ))}
-        </div>
         <div className="svc-pricing">
           <span className="svc-price">
             {s.priceLead && <>{s.priceLead} </>}
@@ -132,7 +126,7 @@ function ServiceCard({ s, n }: { s: Card; n: number }) {
    columns when the section enters the viewport — the deck being dealt. Runs
    once, entrance-triggered (no scroll pin, so it coexists with the panel
    stacking). side -1 = left card, +1 = right card. */
-function DeckCard({ s, n, side }: { s: Card; n: number; side: -1 | 1 }) {
+function DeckCard({ s, side }: { s: Card; side: -1 | 1 }) {
   return (
     <motion.div
       className="svc-deck-side"
@@ -142,7 +136,7 @@ function DeckCard({ s, n, side }: { s: Card; n: number; side: -1 | 1 }) {
       viewport={{ once: true, amount: 0.45 }}
       transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.2, opacity: { duration: 0.35, delay: 0.2 } }}
     >
-      <ServiceCard s={s} n={n} />
+      <ServiceCard s={s} />
     </motion.div>
   );
 }
@@ -178,30 +172,30 @@ export default function WhatWeDo() {
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               {head.sub}
             </Reveal>
+            {/* The other line, one click away: switches the page in place. */}
+            <button type="button" className="svc-cross" onClick={() => setAudience(head.crossTo)}>
+              {head.cross}
+              <span className="arrow" aria-hidden>→</span>
+            </button>
           </div>
         </header>
 
         {deckSpread ? (
           <div className="svc-deck svc-deck--two svc-deck--grid" key={`deck-${audience}`}>
             {cards.map((c, i) => (
-              <DeckCard key={c.slug} s={c} n={i + 1} side={i % 2 === 0 ? -1 : 1} />
+              <DeckCard key={c.slug} s={c} side={i % 2 === 0 ? -1 : 1} />
             ))}
           </div>
         ) : (
           <Stagger className="services-wrap services-wrap--two" stagger={0.1} delayChildren={0.1} key={`wrap-${audience}`}>
-            {cards.map((c, i) => (
+            {cards.map((c) => (
               <RevealItem key={c.slug} speed="base">
-                <ServiceCard s={c} n={i + 1} />
+                <ServiceCard s={c} />
               </RevealItem>
             ))}
           </Stagger>
         )}
 
-        {/* The other line, one click away: switches the page in place. */}
-        <button type="button" className="svc-cross" onClick={() => setAudience(head.crossTo)}>
-          {head.cross}
-          <span className="arrow" aria-hidden>→</span>
-        </button>
       </div>
     </section>
   );

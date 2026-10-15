@@ -2717,7 +2717,7 @@ html, body { overflow-x: clip; }
 .topnav-fixed[data-theme='light'].is-scrolled { background: var(--paper); }
 .stacked > #products { background: var(--bg); }
 
-/* Dither field — printed 1-bit dots under the lime panels' content. */
+/* Dither field — printed 1-bit dots under the paper panels' content. */
 .dither-field {
   position: absolute;
   inset: 0;
@@ -3960,3 +3960,160 @@ main:not(.stacked) ~ .footer .ft-head-cta .btn-primary {
   animation: none;
 }
 main:not(.stacked) ~ .footer .ft-head-cta .btn-primary:hover { background: #fff; color: #000; }
+
+/* =============================================================================
+   GRID + TYPE — one container, one 12-column grid, everything on its left
+   edge. Section headings take the first four columns; on wide screens the
+   services and the story run beside them (columns 5–12). Body copy is a size
+   up; micro labels are fewer, 12px, and a step brighter.
+   ============================================================================= */
+:root {
+  --page-max: 1440px;
+  --gutter: clamp(16px, 4vw, 32px);
+  --col-gap: clamp(12px, 1.6vw, 24px);
+  /* n of 12 columns inside a container's content box */
+  --span-4: calc((100% - 11 * var(--col-gap)) / 12 * 4 + 3 * var(--col-gap));
+  --span-8: calc((100% - 11 * var(--col-gap)) / 12 * 8 + 7 * var(--col-gap));
+}
+
+/* One container everywhere; the nav's edges sit on the same lines. */
+.container { max-width: var(--page-max); padding: 0 var(--gutter); }
+.topnav-fixed {
+  padding-left: max(var(--gutter), calc((100% - var(--page-max)) / 2 + var(--gutter)));
+  padding-right: max(var(--gutter), calc((100% - var(--page-max)) / 2 + var(--gutter)));
+}
+
+/* Hero: copy on columns 1–7, the cube on 9–12; the band below puts the
+   studio on 1–4 and the marquee on 5–12 (the line the services start on). */
+.hero-stage.hero-stage--v2 {
+  max-width: var(--page-max);
+  padding: 0 var(--gutter);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas: none;
+  column-gap: var(--col-gap);
+}
+.hero-stage--v2 > .hero-copy { grid-column: 1 / span 7; grid-row: 1; }
+.hero-stage--v2 > .hero-visual { grid-column: 9 / -1; grid-row: 1; }
+.hero-stage--v2 > .hero-band {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 28px var(--col-gap);
+}
+.hero-band > .studio { grid-column: 1 / span 4; }
+.hero-band > .marquee-block { grid-column: 5 / -1; }
+@media (max-width: 900px) {
+  .hero-stage--v2 > .hero-copy,
+  .hero-stage--v2 > .hero-visual,
+  .hero-stage--v2 > .hero-band,
+  .hero-band > .studio,
+  .hero-band > .marquee-block { grid-column: 1 / -1; }
+  .hero-stage--v2 > .hero-visual { grid-row: 2; }
+  .hero-stage--v2 > .hero-band { grid-row: 3; }
+}
+
+/* Section headings: four columns, left; never right-aligned. (Phones use
+   the full width.) */
+.section-head { justify-content: flex-start; }
+@media (min-width: 901px) {
+  .section-head > div { max-width: var(--span-8); }
+}
+@media (min-width: 1200px) {
+  .section-head > div { max-width: var(--span-4); }
+}
+
+/* Services and the story: heading beside the content on wide screens. */
+.svc-deck--two { max-width: none; margin: 0; }
+@media (min-width: 1200px) {
+  .stacked > #services > .container,
+  .stacked > #about > .container {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--col-gap);
+    align-items: start;
+  }
+  .stacked > #services .section-head,
+  .stacked > #about .section-head { grid-column: 1 / span 4; margin-bottom: 0; }
+  .stacked > #services .section-head > div,
+  .stacked > #about .section-head > div { max-width: none; }
+  .stacked > #services .svc-deck,
+  .stacked > #services .services-wrap { grid-column: 5 / -1; margin-bottom: 0; }
+  .stacked > #about .about-body--solo { grid-column: 5 / -1; max-width: none; margin-top: 14px; }
+}
+
+/* Products: Strata over six columns, AI Bidding over three, and what's still
+   in the lab stacked small in the last three. */
+.product-row { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--col-gap); }
+.product-row > .product-cell--wide { grid-column: span 6; }
+.product-row > .product-cell,
+.product-row > .product-cell--soon { grid-column: span 3; }
+.product-soon-stack { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: var(--col-gap); width: 100%; }
+.product-card--compact .product-card-body { padding: clamp(16px, 1.8vw, 20px); }
+@media (max-width: 1024px) {
+  .product-row > .product-cell--wide { grid-column: 1 / -1; }
+  .product-row > .product-cell,
+  .product-row > .product-cell--soon { grid-column: span 6; }
+}
+@media (max-width: 640px) {
+  .product-row > .product-cell,
+  .product-row > .product-cell--soon { grid-column: 1 / -1; }
+}
+
+/* Footer on the grid: sign-off 1–8, the action 9–12, four sitemap columns. */
+.ft-head {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--col-gap);
+  align-items: end;
+}
+.ft-head > :first-child { grid-column: 1 / span 8; }
+.ft-head > .ft-head-cta { grid-column: 9 / -1; }
+.ft-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); }
+.ft-grid > .ft-col { grid-column: span 3; }
+@media (max-width: 860px) {
+  .ft-head > :first-child,
+  .ft-head > .ft-head-cta { grid-column: 1 / -1; }
+  .ft-grid > .ft-col { grid-column: span 6; }
+}
+
+/* Offer pages: the narrow reading column sits on the left eight columns
+   instead of floating centred. */
+.offer-narrow,
+.pw-narrow { max-width: var(--page-max); }
+@media (min-width: 901px) {
+  .offer-narrow > *,
+  .pw-narrow > * { max-width: var(--span-8); }
+}
+
+/* Body copy, a size up. */
+.hero--stage .hero-sub { font-size: clamp(16px, 1.35vw, 20px); }
+.sub-plain { font-size: clamp(17px, 1.5vw, 20px); }
+.svc-title { font-size: clamp(19px, 1.7vw, 22px); }
+.svc-blurb { font-size: clamp(15px, 1.15vw, 16px); }
+.product-title { font-size: clamp(19px, 1.6vw, 22px); }
+.product-blurb { font-size: clamp(15px, 1.15vw, 16px); }
+.studio-places li { font-size: 16px; }
+.ft-link { font-size: 16px; }
+.ft-mail { font-size: 16px; }
+.ft-status { font-size: 14px; }
+.svc-cross { font-size: 17px; }
+
+/* Micro labels: fewer of them, and the ones left are 12px and brighter. */
+.marquee-label,
+.svc-audience,
+.svc-typical,
+.ft-col-title,
+.hero-cube-label,
+.studio-ampm,
+.offer-eyebrow,
+.pw-eyebrow,
+.ft-legal { font-size: 12px; letter-spacing: 0.12em; }
+.svc-audience,
+.svc-typical,
+.ft-col-title,
+.hero-cube-label { color: var(--text-2); }
+.svc-audience { margin-top: 0; }
+.ft-soon,
+.offer-badge { font-size: 11px; }
+/* With the tags gone, the price line settles at the foot of the card. */
+.svc-pricing { margin-top: auto; }

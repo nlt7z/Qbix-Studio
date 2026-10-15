@@ -5,7 +5,6 @@ import { useEffect, useRef } from 'react';
 import { CONTACT_EMAIL, offers, services } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 import SplitText from '@/components/SplitText';
-import PstClock from '@/components/PstClock';
 import { useContactModal } from '@/components/ContactModalProvider';
 import FooterMark from '@/components/FooterMark';
 
@@ -116,7 +115,6 @@ export default function Colophon() {
         {/* Sign-off line + the one action. */}
         <Reveal className="ft-head" speed="base" margin="0px 0px 0px 0px">
           <div>
-            <span className="ft-eyebrow mono">Start a project</span>
             <p className="ft-tagline">
               Bring the idea.{' '}
               <br className="ft-br" />
@@ -149,12 +147,8 @@ export default function Colophon() {
           ))}
         </Reveal>
 
-        {/* Instrument line: studio time · availability · back to top. */}
+        {/* Instrument line: availability · back to top. */}
         <Reveal className="ft-status" speed="fast" delay={0.12} margin="0px 0px 0px 0px">
-          <span className="ft-status-item">
-            <PstClock size={18} />
-            Studio time
-          </span>
           <span className="ft-status-item">
             <span className="ft-live" aria-hidden />
             Taking new projects
@@ -169,12 +163,11 @@ export default function Colophon() {
         </Reveal>
       </div>
 
-      {/* Sign-off — the wordmark as a 3D monument rising out of the page edge. */}
+      {/* Sign-off — the wordmark in square pixels, then the legal line. */}
       <div className="ft-stage">
         <FooterMark />
         <div className="ft-legal mono">
           <span>© 2026 Qbix</span>
-          <span>qbix.space</span>
         </div>
       </div>
     </footer>

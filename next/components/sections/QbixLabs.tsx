@@ -129,15 +129,16 @@ export default function QbixLabs() {
   // the kits and the story, not the lab.
   const { audience } = useAudience();
   if (audience !== 'ai') return null;
+  // Shipped products lead (Strata wide, AI Bidding); what's still in the lab
+  // stacks small in the last three columns.
+  const shipped = products.filter((p) => p.url || p.live);
+  const soon = products.filter((p) => !p.url && !p.live);
   return (
     <section id="products" className="section-pad" data-nav-theme="dark">
       <PixelEdge />
       <div className="container">
-        <header className="section-head section-head--right">
+        <header className="section-head">
           <div>
-            <Reveal as="span" className="eyebrow" speed="fast">
-              No idea is too small
-            </Reveal>
             <Words as="h2" text="Things we’ve shipped." style={{ marginTop: 14 }} />
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               Qbix also builds products. Try the ones we have live.
@@ -146,8 +147,8 @@ export default function QbixLabs() {
         </header>
 
         <Stagger className="product-row" stagger={0.1} delayChildren={0.1}>
-          {products.map((p, i) => (
-            <RevealItem key={p.key} speed="base" className={p.wide ? 'product-cell--wide' : undefined}>
+          {shipped.map((p, i) => (
+            <RevealItem key={p.key} speed="base" className={p.wide ? 'product-cell--wide' : 'product-cell'}>
               <article
                 className={`product-card${p.wide ? ' product-card--wide' : ''}${p.url ? ' product-card--live' : p.live ? ' product-card--static' : ' product-card--soon'}`}
                 style={{ '--k': i } as CSSProperties}
@@ -172,6 +173,26 @@ export default function QbixLabs() {
               </article>
             </RevealItem>
           ))}
+          <RevealItem speed="base" className="product-cell--soon">
+            <div className="product-soon-stack">
+              {soon.map((p, j) => (
+                <article
+                  key={p.key}
+                  className="product-card product-card--soon product-card--compact"
+                  style={{ '--k': shipped.length + j } as CSSProperties}
+                  data-cursor="Not live yet"
+                >
+                  <div className="product-card-body">
+                    <h3 className="product-title">{p.title}</h3>
+                    <p className="product-blurb">{p.blurb}</p>
+                    <div className="product-card-foot">
+                      <span className="product-soon">Coming soon</span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </RevealItem>
         </Stagger>
       </div>
     </section>
