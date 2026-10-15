@@ -6,13 +6,12 @@ import { momentum } from '@/lib/momentum';
 /**
  * Scroll momentum for the homepage: the whole page answers how fast, and
  * which way, it is being scrolled, then springs back to rest when the scroll
- * stops. Section headings split along their strip bands, the cards trail
- * behind with a little lag, the pixel edges stretch, the logo strip speeds up
- * or runs backwards, and the hero cube and globe spin with it.
+ * stops. The cards trail behind with a little lag, the pixel edges stretch,
+ * the logo strip speeds up or runs backwards, and the hero cube spins with it.
  *
  * One spring runs only while there is momentum to show, and writes inline
  * transforms straight onto the few elements that move. No custom properties:
- * a variable inherits into every pixel and strip below it, and each of those
+ * a variable inherits into every pixel below it, and each of those
  * carries a scroll-driven animation, so a per-frame variable made the browser
  * re-resolve hundreds of animations a frame (30fps scrolling). `transform`
  * composes with the individual translate / scale the choreography animates.
@@ -22,7 +21,7 @@ const STIFF = 0.12;    // spring per 60fps frame
 const DAMP = 0.36;     // ≈0.5 damping ratio: a small overshoot as it settles
 const MARQUEE_GAIN = 7;
 
-type Target = { el: HTMLElement; kind: 'strip' | 'edge' | 'card'; k: number };
+type Target = { el: HTMLElement; kind: 'edge' | 'card'; k: number };
 
 const SVC_LAG = [0.45, 0.75, 1.05, 1.35];
 
@@ -56,10 +55,6 @@ export default function Momentum() {
         findMarquee();
         return;
       }
-      document.querySelectorAll<HTMLElement>('.strip-in').forEach((el) => {
-        const band = el.parentElement!;
-        targets.push({ el, kind: 'strip', k: Number(band.style.getPropertyValue('--dir')) || 1 });
-      });
       document.querySelectorAll<HTMLElement>('.px-edge').forEach((el) => targets.push({ el, kind: 'edge', k: 1 }));
       document.querySelectorAll<HTMLElement>('.svc').forEach((el) => {
         const cell = el.closest('.svc-deck > *, .services-wrap > *');
@@ -94,7 +89,6 @@ export default function Momentum() {
       for (const t of targets) {
         if (!rest && !seen.has(t.el)) continue;
         if (rest) t.el.style.transform = '';
-        else if (t.kind === 'strip') t.el.style.transform = `translateX(${(t.k * val * 0.28).toFixed(3)}em)`;
         else if (t.kind === 'edge') t.el.style.transform = `scaleY(${(1 + Math.abs(val) * 1.6).toFixed(3)})`;
         else t.el.style.transform = `translateY(${(val * t.k * 30).toFixed(1)}px)`;
       }

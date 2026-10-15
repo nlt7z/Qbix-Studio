@@ -939,7 +939,7 @@ section { position: relative; }
   aspect-ratio: 12 / 7;
   border-bottom: 1px solid var(--line);
   background:
-    radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 1px) 0 0 / 14px 14px,
+    conic-gradient(at 2px 2px, transparent 75%, var(--line) 0) 0 0 / 14px 14px,   /* square dots */
     var(--bg-2);
   color: var(--text-3);
   display: flex;
@@ -2214,7 +2214,7 @@ html, body { overflow-x: clip; }
   display: flex; align-items: center; justify-content: center;
   /* A product still in the lab: a quiet pixel field instead of an empty box. */
   background-color: var(--bg-2);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1.2px, transparent 1.6px);
+  background-image: conic-gradient(at 2px 2px, transparent 75%, rgba(255, 255, 255, 0.11) 0);   /* square dots */
   background-size: 9px 9px;
   background-position: 4px 4px;
 }
@@ -2576,7 +2576,7 @@ html, body { overflow-x: clip; }
 
 /* =============================================================================
    HERO STAGE — one-line headline, one-line lede, one row of CTAs, the cube on
-   the right; below it a wide band: the studio globe + local time, and the
+   the right; below it a wide band: where the studio is + local time, and the
    schools and companies marquee.
    ============================================================================= */
 .hero.hero--stage {
@@ -2639,17 +2639,8 @@ html, body { overflow-x: clip; }
   transform-origin: left center;
 }
 
-/* Studio: globe + where/when */
+/* Studio: where and when */
 .studio { display: flex; align-items: center; gap: clamp(16px, 2.4vw, 32px); min-width: 0; }
-.globe {
-  flex: none;
-  width: clamp(140px, min(15vw, 26vh), 240px);
-  aspect-ratio: 1 / 1;
-  cursor: grab;
-  touch-action: pan-y;
-}
-.globe:active { cursor: grabbing; }
-.globe-canvas { display: block; width: 100%; height: 100%; }
 .studio-read { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .studio-label, .studio-zone, .marquee-label {
   font-size: 11px;
@@ -2705,7 +2696,6 @@ html, body { overflow-x: clip; }
   .hero-title.hero-title--xl { font-size: clamp(36px, 13.5vw, 88px); line-height: 0.98; }
   .hero--stage .hero-ctas { flex-wrap: wrap; }
   .hero-band { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-  .globe { width: clamp(120px, 34vw, 180px); }
 }
 
 /* =============================================================================
@@ -2783,7 +2773,7 @@ html, body { overflow-x: clip; }
 
 /* =============================================================================
    FOOTER — sign-off + CTA, a four-column sitemap, an instrument line, then the
-   3D qbix wordmark rising out of the page edge (three/footerMark.ts).
+   qbix wordmark set in square pixels (FooterMark.tsx) and the legal line.
    ============================================================================= */
 .footer.ft { padding: clamp(72px, 10vw, 128px) 0 0; overflow: hidden; }
 .ft-head {
@@ -2836,28 +2826,20 @@ a.ft-link:hover { color: var(--ink); }
 .ft-top:hover { color: var(--ink); }
 @media (max-width: 640px) { .ft-top { margin-left: 0; } }
 
-/* The stage: full-bleed, the word behind a pane of reeded glass. */
+/* The stage: the wordmark in square pixels, on the page's left edge. */
 .ft-stage { position: relative; }
 .footer-stage {
   position: relative; width: 100%;
   height: clamp(170px, 26vw, 460px);
   margin-top: clamp(8px, 2vw, 24px);
-  touch-action: pan-y;
 }
-.footer-stage-gl { position: absolute; inset: 0; }
 .footer-mark-canvas { display: block; width: 100%; height: 100%; }
-.footer-stage-fallback {
-  position: absolute; inset: auto 0 -0.18em 0;
-  text-align: center;
-  font-family: var(--font-headline); font-size: clamp(120px, 28vw, 440px); line-height: 0.8;
-  color: var(--ink);
-}
+/* The legal line runs under the mark (never over its pixels). */
 .ft-legal {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
   display: flex; justify-content: space-between;
-  padding: 0 clamp(16px, 4vw, 32px) 14px;
+  padding: 12px clamp(16px, 4vw, 32px) calc(16px + env(safe-area-inset-bottom, 0px));
   font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: #ffffff; mix-blend-mode: difference; pointer-events: none;
+  color: var(--text-2);
 }
 
 /* =============================================================================
@@ -3059,7 +3041,7 @@ a.ft-link:hover { color: var(--ink); }
 }
 .kit-stage--hero::before {
   content: ''; position: absolute; inset: 22% 4% 6%;
-  background: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.09) 1px, transparent 1px) 0 0 / 16px 16px;
+  background: conic-gradient(at 2px 2px, transparent 75%, rgba(255, 255, 255, 0.1) 0) 0 0 / 16px 16px;   /* square dots */
   -webkit-mask-image: radial-gradient(closest-side, #000 35%, transparent);
           mask-image: radial-gradient(closest-side, #000 35%, transparent);
   pointer-events: none;
@@ -3792,15 +3774,6 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   .ft-grid { gap: 22px 18px; }
   .footer-stage { height: clamp(80px, 22vw, 110px); }
   .ft-status { gap: 8px 20px; }
-  /* On a phone the word fills the middle of the stage, so the legal line
-     would sit on its letters: run it under the stage instead. */
-  .ft-legal {
-    position: static;
-    mix-blend-mode: normal;
-    color: var(--text-3);
-    padding-top: 12px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  }
 }
 
 
@@ -3948,9 +3921,8 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 .svc-cross {
   all: unset;
   box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+  display: inline-block;
+  max-width: 100%;
   margin-top: clamp(20px, 3vh, 32px);
   padding: 6px 0;
   font-size: 16px;
@@ -3960,7 +3932,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   text-decoration-thickness: 1px;
   text-underline-offset: 5px;
 }
-.svc-cross .arrow { font-family: var(--font-mono); transition: translate 260ms var(--ease); }
+.svc-cross .arrow { display: inline-block; margin-left: 10px; font-family: var(--font-mono); transition: translate 260ms var(--ease); }
 .svc-cross:hover .arrow { translate: 4px 0; }
 .svc-cross:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
 .stacked > #services .svc-cross { color: var(--signal-dark); }

@@ -6,7 +6,7 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'fr
 import { useContactModal } from '@/components/ContactModalProvider';
 import BrandText from '@/components/BrandText';
 import SplitText from '@/components/SplitText';
-import StudioGlobe from '@/components/hero/StudioGlobe';
+import StudioTime from '@/components/hero/StudioTime';
 import LogoMarquee from '@/components/hero/LogoMarquee';
 import HeroCube from '@/components/HeroCube';
 import { useAudience, type Audience } from '@/components/Audience';
@@ -242,7 +242,7 @@ export default function Hero() {
             animate={{ scaleX: 1 }}
             transition={{ duration: 1.2, ease: EASE_OUT, delay: 0.7 }}
           />
-          <StudioGlobe />
+          <StudioTime />
           <LogoMarquee />
         </div>
       </div>

@@ -78,13 +78,13 @@ void main() {
   } else if (uKind < 4.5) {     // satin black: a dark sheen, no grey bloom
     vec3 col = vec3(0.07, 0.075, 0.085) * (0.7 + 0.7 * lam) + vec3(0.25) * pow(fres, 3.0) * 0.4;
     c = vec4(col, 1.0);
-  } else if (uKind < 5.5) {     // inverse halftone: ink dots on lime
+  } else if (uKind < 5.5) {     // inverse halftone: ink squares on lime
     vec2 g = fract(vUv * 8.0) - 0.5;
-    float d = step(length(g), 0.27);
+    float d = step(max(abs(g.x), abs(g.y)), 0.23);   // square dots: the pixel, not a circle
     c = vec4(mix(uTint * (0.78 + 0.22 * lam), ink, d), 1.0);
-  } else if (uKind < 6.5) {     // halftone: lime dots on ink
+  } else if (uKind < 6.5) {     // halftone: lime squares on ink
     vec2 g = fract(vUv * 8.0) - 0.5;
-    float d = step(length(g), 0.27);
+    float d = step(max(abs(g.x), abs(g.y)), 0.23);   // square dots: the pixel, not a circle
     c = vec4(mix(ink, uTint, d), 1.0);
   } else {                      // lime glass: the one see-through study, and it reads lime
     c = vec4(mix(uTint, uTint * 0.55, fres), 0.5 + 0.4 * fres);

@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { services, offers } from '@/lib/data';
 import BrandText from '@/components/BrandText';
-import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
 import Link from 'next/link';
 import DitherField from '@/components/DitherField';
 import ServiceScene from '@/components/ServiceScene';
-import { PixelEdge, StripTitle } from '@/components/ScrollMotion';
+import { PixelEdge } from '@/components/ScrollMotion';
 import { useContactModal } from '@/components/ContactModalProvider';
 import { useAudience, type Audience } from '@/components/Audience';
 
@@ -174,7 +174,7 @@ export default function WhatWeDo() {
             <Reveal as="span" className="eyebrow" speed="fast">
               {head.eyebrow}
             </Reveal>
-            <StripTitle text={head.title} style={{ marginTop: 14 }} />
+            <Words as="h2" text={head.title} style={{ marginTop: 14 }} />
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               {head.sub}
             </Reveal>

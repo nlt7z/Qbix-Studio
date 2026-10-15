@@ -13,7 +13,7 @@
    Browsers without scroll timelines, and reduced motion, get the page at rest.
    ============================================================================= */
 
-/* At rest (and the fallback): pixels hidden, strips assembled, shutters open,
+/* At rest (and the fallback): pixels hidden, shutters open,
    key phrases already set in lime on their dark bars. */
 .about-hi {
   position: relative;
@@ -36,17 +36,6 @@
   color: var(--signal);
 }
 .px-edge i { scale: 0; }
-.strip-stack { position: relative; display: inline-block; }
-.strip-base { visibility: hidden; }
-.strip {
-  position: absolute;
-  inset: 0;
-  /* One band of the heading; a half pixel of overlap hides the seams. */
-  clip-path: inset(
-    calc(var(--i) * 100% / var(--n) - 0.5px) -6% calc((var(--n) - 1 - var(--i)) * 100% / var(--n) - 0.5px) -6%
-  );
-}
-.strip-in { display: block; }
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
@@ -88,15 +77,6 @@
       box-shadow: 0 -28px 60px rgba(0, 0, 0, 0.45);
     }
 
-    /* --- Strip-sliced headings: bands lock together as the panel arrives ----- */
-    .strip {
-      /* Ease-out-cubic, not expo: an expo tail leaves the bands a pixel or two
-         apart for a long stretch, which reads as a smeared heading. Every band
-         is locked by 75% of the panel's rise. */
-      animation: hm-strip cubic-bezier(0.33, 1, 0.68, 1) both;
-      animation-timeline: var(--tl);
-      animation-range: entry calc(18% + var(--i) * 4%) entry calc(52% + var(--i) * 4.5%);
-    }
 
     /* --- Services: the cards trail the panel, then settle -------------------- */
     .stacked > #services .svc-deck > * {
@@ -196,7 +176,6 @@
 /* 1.02, so neighbouring pixels overlap and no hairline seams show. */
 @keyframes hm-px { from { scale: 0; } to { scale: 1.02; } }
 @keyframes hm-px-flash { 0%, 100% { scale: 0; } 45% { scale: 1; } }
-@keyframes hm-strip { from { translate: calc(var(--dir) * 62vw) 0; } to { translate: 0 0; } }
 @keyframes hm-lag { from { translate: 0 calc(14vh + var(--k, 0) * 9vh); } to { translate: 0 0; } }
 @keyframes hm-shutter { from { scale: 1 1; } to { scale: 1 0; } }
 @keyframes hm-bar { from { translate: -101% 0; } to { translate: 0 0; } }

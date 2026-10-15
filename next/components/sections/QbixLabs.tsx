@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Reveal, Stagger, RevealItem } from '@/components/Reveal';
+import { Reveal, Stagger, RevealItem, Words } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
-import { PixelEdge, StripTitle } from '@/components/ScrollMotion';
+import { PixelEdge } from '@/components/ScrollMotion';
 import { useQuietPlayback } from '@/components/useQuietPlayback';
 import { useAudience } from '@/components/Audience';
 
@@ -138,7 +138,7 @@ export default function QbixLabs() {
             <Reveal as="span" className="eyebrow" speed="fast">
               No idea is too small
             </Reveal>
-            <StripTitle text="Things we’ve shipped." style={{ marginTop: 14 }} />
+            <Words as="h2" text="Things we’ve shipped." style={{ marginTop: 14 }} />
             <Reveal as="p" className="sub-plain" speed="base" delay={0.3}>
               Qbix also builds products. Try the ones we have live.
             </Reveal>

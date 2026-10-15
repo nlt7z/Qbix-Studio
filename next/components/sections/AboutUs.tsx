@@ -1,8 +1,8 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { Reveal } from '@/components/Reveal';
-import { PixelEdge, StripTitle } from '@/components/ScrollMotion';
+import { Reveal, Words } from '@/components/Reveal';
+import { PixelEdge } from '@/components/ScrollMotion';
 import DitherField from '@/components/DitherField';
 
 /**
@@ -33,7 +33,7 @@ export default function AboutUs() {
             <Reveal as="span" className="eyebrow" speed="fast">
               About Qbix
             </Reveal>
-            <StripTitle text="Our story is simple." style={{ marginTop: 14 }} />
+            <Words as="h2" text="Our story is simple." style={{ marginTop: 14 }} />
           </div>
         </header>
 

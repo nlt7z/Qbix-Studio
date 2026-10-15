@@ -1,4 +1,4 @@
-import type { CSSProperties, ElementType } from 'react';
+import type { CSSProperties } from 'react';
 
 /**
  * Markup for the homepage scroll choreography. All the motion lives in
@@ -43,39 +43,5 @@ export function PixelEdge() {
     <div className="px-edge" aria-hidden>
       {cells}
     </div>
-  );
-}
-
-/**
- * StripTitle — a heading cut into horizontal bands that slide in from
- * alternating sides and lock together as the panel enters. Screen readers
- * get the text once; the bands are decoration.
- */
-export function StripTitle({
-  as: Tag = 'h2',
-  text,
-  bands = 6,
-  className,
-  style,
-}: {
-  as?: ElementType;
-  text: string;
-  bands?: number;
-  className?: string;
-  style?: CSSProperties;
-}) {
-  return (
-    <Tag className={className ? `strip-title ${className}` : 'strip-title'} style={style}>
-      <span className="sr-only">{text}</span>
-      <span className="strip-stack" aria-hidden style={{ '--n': bands } as CSSProperties}>
-        <span className="strip-base">{text}</span>
-        {Array.from({ length: bands }, (_, i) => (
-          <span key={i} className="strip" style={{ '--i': i, '--dir': i % 2 ? 1 : -1 } as CSSProperties}>
-            {/* Scroll momentum shifts this inner copy, never the animated band. */}
-            <span className="strip-in">{text}</span>
-          </span>
-        ))}
-      </span>
-    </Tag>
   );
 }
