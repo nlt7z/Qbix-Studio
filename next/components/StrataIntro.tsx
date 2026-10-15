@@ -6,6 +6,7 @@ import SitePreviewFrame from '@/components/SitePreviewFrame';
 import SplitText from '@/components/SplitText';
 import SceneStage from '@/components/offers/SceneStage';
 import KitTour from '@/components/offers/KitTour';
+import Marker from '@/components/Marker';
 
 const STRATA_URL = 'https://stratadesign.app';
 
@@ -124,7 +125,7 @@ export default function StrataIntro() {
       {/* 2 — how it works: the section pins and scroll reads, drafts, ships */}
       <KitTour id="how" items={tourSteps} scene="strata" title="Drop in an image. Ship a system." labels={LAYERS} />
 
-      {/* 3 — the campaign gesture: full-bleed lime, what comes out */}
+      {/* 3 — what comes out, on a full-bleed paper panel */}
       <section id="outputs" className="pd-lime section-pad" data-nav-theme="light">
         <div className="container">
           <header className="section-head">
@@ -132,8 +133,10 @@ export default function StrataIntro() {
               <Reveal as="span" className="eyebrow" speed="fast">
                 FIG 02 — What you get
               </Reveal>
+              {/* The panel's one lime: the marker lands once the wipe is done
+                  (on "system", clear of the wipe's clipped left edge). */}
               <Wipe as="h2" style={{ marginTop: 14 }} delay={0.1} color="var(--signal-dark)">
-                Everything a system needs.
+                Everything a <Marker delay={0.75}>system</Marker> needs.
               </Wipe>
             </div>
           </header>
@@ -172,6 +175,10 @@ export default function StrataIntro() {
               <span className="about-preview-bar" aria-hidden>
                 <span className="about-preview-dots">
                   <i /><i /><i />
+                </span>
+                {/* The screen's one lime: this window is the live product. */}
+                <span className="product-status mono pd-live">
+                  <i /> Live
                 </span>
                 <span className="about-preview-arrow">↗︎</span>
               </span>

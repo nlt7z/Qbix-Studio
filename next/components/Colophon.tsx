@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
 import { CONTACT_EMAIL, offers, services } from '@/lib/data';
 import { Reveal } from '@/components/Reveal';
 import SplitText from '@/components/SplitText';
 import { useContactModal } from '@/components/ContactModalProvider';
 import FooterMark from '@/components/FooterMark';
+import Marker from '@/components/Marker';
 
 const socials = [
   { label: 'Are.na',      href: 'https://www.are.na/q-bix/channels' },
@@ -73,39 +73,6 @@ function FooterLink({ item }: { item: Item }) {
   );
 }
 
-/**
- * "We'll build the thing." — a lime bar pulls across the line, left to right,
- * leaving it in dark ink (the bar is a clipped window holding a dark copy of
- * the words that counter-slides, so the type never moves). Time-based once
- * the line is on screen, so it always finishes, even at the very end of the
- * page where there's no scroll left to drive it.
- */
-function MarkedLine({ children }: { children: string }) {
-  const ref = useRef<HTMLSpanElement | null>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting) return;
-        el.classList.add('is-in');
-        io.disconnect();
-      },
-      { threshold: 0.6 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  return (
-    <span ref={ref} className="ft-mark">
-      {children}
-      <span className="ft-mark-bar" aria-hidden>
-        <span className="ft-mark-in">{children}</span>
-      </span>
-    </span>
-  );
-}
-
 export default function Colophon() {
   const { open: openContactModal } = useContactModal();
 
@@ -118,11 +85,12 @@ export default function Colophon() {
             <p className="ft-tagline">
               Bring the idea.{' '}
               <br className="ft-br" />
-              <MarkedLine>{'We\u2019ll build the thing.'}</MarkedLine>
+              <Marker>{'We\u2019ll build the thing.'}</Marker>
             </p>
           </div>
           <div className="ft-head-cta">
-            <button type="button" className="btn btn-primary btn-lg split-cta" onClick={openContactModal}>
+            {/* White, not lime: the marked line is this screen's one lime. */}
+            <button type="button" className="btn btn-white btn-lg split-cta" onClick={openContactModal}>
               <SplitText text="Tell us your idea" arrow />
             </button>
             <a href={`mailto:${CONTACT_EMAIL}`} className="ft-mail">
@@ -149,7 +117,9 @@ export default function Colophon() {
 
         {/* Instrument line: availability · back to top. */}
         <Reveal className="ft-status" speed="fast" delay={0.12} margin="0px 0px 0px 0px">
-          <span className="ft-status-item">
+          {/* On phones, where the footer runs past one screen, this is the
+              lower screen's lime: a live tag (see ONE LIME PER SCREEN). */}
+          <span className="ft-status-item ft-taking">
             <span className="ft-live" aria-hidden />
             Taking new projects
           </span>

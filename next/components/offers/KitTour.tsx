@@ -29,13 +29,20 @@ export default function KitTour({
 }) {
   const ref = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
+  // Under way once the section's top is past the middle of the screen.
+  const { scrollYProgress: approach } = useScroll({ target: ref, offset: ['start 0.5', 'start start'] });
   const [active, setActive] = useState(0);
+  // The current stop's lime chip shows once the tour is well on screen, not
+  // while its heading is still coming up under the section before (whose
+  // own lime is still in view).
+  const [started, setStarted] = useState(false);
   const reduced = useReducedMotionSafe();
   const n = items.length;
 
   useMotionValueEvent(scrollYProgress, 'change', (v) => {
     setActive(Math.min(n - 1, Math.max(0, Math.floor(v * n))));
   });
+  useMotionValueEvent(approach, 'change', (v) => setStarted(v > 0));
 
   const jump = (i: number) => {
     const el = ref.current;
@@ -72,7 +79,7 @@ export default function KitTour({
         <div className="container lk-tour-grid">
           <div className="lk-tour-copy">
             <Words as="h2" className="offer-h2" text={title} />
-            <ol className="lk-tour-list">
+            <ol className={`lk-tour-list${started ? ' is-live' : ''}`}>
               {items.map((g, i) => (
                 <li key={g.k} className={i === active ? 'is-on' : i < active ? 'is-past' : ''}>
                   <button type="button" onClick={() => jump(i)} aria-current={i === active ? 'step' : undefined}>

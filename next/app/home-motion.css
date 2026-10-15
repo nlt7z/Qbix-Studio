@@ -13,28 +13,7 @@
    Browsers without scroll timelines, and reduced motion, get the page at rest.
    ============================================================================= */
 
-/* At rest (and the fallback): pixels hidden, shutters open,
-   key phrases already set in lime on their dark bars. */
-.about-hi {
-  position: relative;
-  white-space: nowrap;
-  /* Hides the bar while it waits off to the left of its phrase. */
-  clip-path: inset(-0.06em -0.18em -0.08em);
-}
-.hi-bar {
-  position: absolute;
-  inset: -0.02em -0.16em -0.04em;
-  overflow: hidden;
-  background: var(--signal-dark);
-}
-.hi-bar-in {
-  position: absolute;
-  inset: 0;
-  padding: 0.02em 0.16em 0.04em;
-  line-height: normal;
-  white-space: nowrap;
-  color: var(--paper);
-}
+/* At rest (and the fallback): pixels hidden, shutters open. */
 .px-edge i { scale: 0; }
 
 @supports (animation-timeline: view()) {
@@ -111,20 +90,6 @@
       }
     }
 
-    /* --- About: a dark bar pulls across each key phrase, left to right,
-       uncovering it in lime. Starts as soon as the copy is on screen and is
-       done before the panel is fully up, so even a fast scroll sees all five. */
-    .stacked > #about .hi-bar {
-      animation: hm-bar cubic-bezier(0.65, 0, 0.35, 1) both;
-      animation-timeline: --p-about;
-      animation-range: entry calc(26% + var(--k, 0) * 8%) entry calc(44% + var(--k, 0) * 8%);
-    }
-    .stacked > #about .hi-bar-in {
-      animation: hm-bar-in cubic-bezier(0.65, 0, 0.35, 1) both;
-      animation-timeline: --p-about;
-      animation-range: entry calc(26% + var(--k, 0) * 8%) entry calc(44% + var(--k, 0) * 8%);
-    }
-
     /* --- The panel being covered sinks back under the one arriving ----------- */
     @media (min-width: 901px) {
       .stacked > .hero .hero-stage {
@@ -178,8 +143,6 @@
 @keyframes hm-px-flash { 0%, 100% { scale: 0; } 45% { scale: 1; } }
 @keyframes hm-lag { from { translate: 0 calc(14vh + var(--k, 0) * 9vh); } to { translate: 0 0; } }
 @keyframes hm-shutter { from { scale: 1 1; } to { scale: 1 0; } }
-@keyframes hm-bar { from { translate: -101% 0; } to { translate: 0 0; } }
-@keyframes hm-bar-in { from { translate: 101% 0; } to { translate: 0 0; } }
 @keyframes hm-recede { to { scale: 0.9; translate: 0 -4vh; } }
 @keyframes hm-part { to { translate: calc(var(--dir, -1) * 9vw) 0; } }
 @keyframes hm-veil { to { opacity: 0.62; } }

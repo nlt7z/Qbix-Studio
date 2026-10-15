@@ -18,6 +18,8 @@ export default function DayTiles({ steps, days = 7 }: { steps: Step[]; days?: nu
   useMotionValueEvent(scrollYProgress, 'change', setV);
   const turned = reduced ? days : Math.min(days, Math.floor(v * (days + 0.6)));
   const stepAt = new Map(steps.map((s, i) => [s.day, i + 1]));
+  // The latest step day the week has reached: its tile is lime ("now").
+  const now = Math.max(0, ...steps.map((s) => s.day).filter((d) => turned >= d));
 
   return (
     <div ref={ref} className="dt">
@@ -26,7 +28,7 @@ export default function DayTiles({ steps, days = 7 }: { steps: Step[]; days?: nu
           const day = i + 1;
           const step = stepAt.get(day);
           return (
-            <li key={day} className={`${turned >= day ? 'is-turned' : ''}${step ? ' is-step' : ''}`}>
+            <li key={day} className={`${turned >= day ? 'is-turned' : ''}${step ? ' is-step' : ''}${day === now ? ' is-now' : ''}`}>
               <span className="dt-tile">
                 <span className="dt-front mono">Day {day}</span>
                 <span className="dt-back">

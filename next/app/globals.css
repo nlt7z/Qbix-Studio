@@ -246,7 +246,8 @@ p, li, dd, figcaption, blockquote {
    ============================================================================= */
 @keyframes lime-load-wipe {
   from { clip-path: inset(0 100% 0 0); }
-  to   { clip-path: inset(0 0 0 0); }
+  /* Opens past the edges, so focus rings aren't clipped once it's done. */
+  to   { clip-path: inset(-8px); }
 }
 .btn-primary,
 .topnav-cta,
@@ -2294,14 +2295,19 @@ html, body { overflow-x: clip; }
   font-size: 13px;
   letter-spacing: 0.02em;
 }
-/* Shipped without a public link: a status, not a button. */
+/* Shipped without a public link: a status, not a button. A solid lime tag,
+   the products screen's one lime; its square blinks like an on-air light. */
 .product-status {
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 9px 2px;
+  display: inline-flex; align-items: center; gap: 8px;
+  align-self: flex-start;
+  height: 26px; padding: 0 10px;
   font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--ink-2);
+  background: var(--signal);
+  color: var(--signal-dark);
 }
-.product-status i { width: 7px; height: 7px; background: var(--signal); }
+.product-status i { width: 6px; height: 6px; background: var(--signal-dark); animation: on-air 1.6s steps(1) infinite; }
+@keyframes on-air { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .product-status i { animation: none; } }
 .product-card--static:hover { border-color: var(--line); box-shadow: var(--highlight), var(--shadow-card); }
 .product-card--static:hover .product-blurb { color: var(--text-2); }
 .ft-link.is-static { cursor: default; }
@@ -2328,14 +2334,8 @@ html, body { overflow-x: clip; }
 /* --- About: two stacked site previews (left), lit story (right) ---------- */
 .about-preview-bar { justify-content: space-between; }
 
-/* In-prose emphasis is weight/brightness, not colour — lime stays a signal. */
-.about-hi {
-  color: var(--ink);
-  transition: color 240ms var(--ease);
-}
-.about-body:hover .about-hi {
-  color: var(--ink);
-}
+/* About's key line: weighted, and marked in lime (see MARKER). */
+.about-hi { color: var(--ink); font-weight: 600; }
 
 /* --- Small-phone polish -------------------------------------------------- */
 @media (max-width: 480px) {
@@ -3739,8 +3739,8 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 .hero-cube-label.is-on { clip-path: inset(0 0 0 0); }
 
 /* =============================================================================
-   FOOTER, COMPACT — half the old height so the bottom is an easy reach, and
-   the marker highlight on "We'll build the thing."
+   FOOTER, COMPACT — half the old height so the bottom is an easy reach. Its
+   one lime is the marker on "We'll build the thing." (see MARKER).
    ============================================================================= */
 .footer.ft { padding-top: clamp(40px, 5vw, 64px); }
 .ft-head { padding-bottom: clamp(22px, 3vw, 36px); }
@@ -3752,36 +3752,42 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 .ft-status { padding: 14px 0; }
 .footer-stage { height: clamp(96px, 12vw, 190px); margin-top: clamp(4px, 1vw, 12px); }
 
-.ft-mark {
+/* MARKER (components/Marker.tsx) — the lime highlighter: a bar slides across
+   a key phrase as it comes into view, uncovering an ink copy of the words.
+   Used where a screen's one lime is a line, not a button: the footer's
+   "We'll build the thing.", About's last line, an offer's key promise. */
+.marker {
   position: relative;
   display: inline-block;
   white-space: nowrap;
-  /* Hides the bar while it waits off to the left of the line. */
-  clip-path: inset(-0.04em -0.14em -0.1em);
+  /* Hides the bar while it waits off to the left of the phrase. */
+  clip-path: inset(-0.06em -0.16em -0.1em);
 }
-.ft-mark-bar {
+.marker-bar {
   position: absolute;
-  inset: 0 -0.12em -0.06em;
+  inset: -0.02em -0.14em -0.06em;
   overflow: hidden;
-  background: var(--ink);
+  background: var(--signal);
   translate: -101% 0;
 }
-.ft-mark-in {
+.marker-in {
   position: absolute;
   inset: 0;
-  padding: 0 0.12em 0.06em;
+  padding: 0.02em 0.14em 0.06em;
   line-height: inherit;
   white-space: nowrap;
-  color: var(--bg);
+  color: var(--signal-dark);
   translate: 101% 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.ft-mark.is-in .ft-mark-bar,
-.ft-mark.is-in .ft-mark-in {
+.marker.is-in .marker-bar,
+.marker.is-in .marker-in {
   translate: 0 0;
-  transition: translate 1.1s cubic-bezier(0.65, 0, 0.35, 1) 0.15s;
+  transition: translate 1.1s cubic-bezier(0.65, 0, 0.35, 1) var(--marker-delay, 0.15s);
 }
 @media (prefers-reduced-motion: reduce) {
-  .ft-mark-bar, .ft-mark-in { translate: 0 0; }
+  .marker-bar, .marker-in { translate: 0 0; }
 }
 
 @media (max-width: 640px) {
@@ -3951,15 +3957,6 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 .svc-cross:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
 .stacked > #services .svc-cross { color: var(--signal-dark); }
 
-/* One lime per screen: on a page that closes with its own action (an offer,
-   Strata, the brief form), the footer's CTA steps back to white so the page's
-   action stays the one lime. The homepage footer keeps it. */
-main:not(.stacked) ~ .footer .ft-head-cta .btn-primary {
-  background: #F7F8F8;
-  color: #0F1011;
-  animation: none;
-}
-main:not(.stacked) ~ .footer .ft-head-cta .btn-primary:hover { background: #fff; color: #000; }
 
 /* =============================================================================
    GRID + TYPE — one container, one 12-column grid, everything on its left
@@ -4117,3 +4114,114 @@ main:not(.stacked) ~ .footer .ft-head-cta .btn-primary:hover { background: #fff;
 .offer-badge { font-size: 11px; }
 /* With the tags gone, the price line settles at the foot of the card. */
 .svc-pricing { margin-top: auto; }
+
+/* =============================================================================
+   ONE LIME PER SCREEN — every screen carries one lime accent, and where it can
+   be helped only one. The vocabulary:
+     · action — the screen's primary button (hero CTAs, Send brief, Open Strata)
+     · marker — a lime bar slides behind the line that matters (see MARKER)
+     · now    — the live or current state: Live tags, the stop a tour is on,
+                the day a practice site has reached
+     · offer  — the Exclusive offer tag beside a price, /start's service label
+   Every one of them moves as it arrives: blocks and tags wipe in when they
+   come into view (LimeIn.tsx), markers slide, the "now" accents wipe from one
+   item to the next. Chrome that rides along on every screen (the nav, the
+   phone buy bar) is never lime. Where a phone stacks what a desktop shows
+   side by side, the phone gets the extra accent its extra screen needs
+   (Strata's Explore, the hour rail, the practice rebuild rail, /start's first
+   step, the footer's status).
+   ============================================================================= */
+
+/* Wipe-in on view. Registered nodes start masked shut; .is-lit opens the mask
+   left to right (LimeIn takes both classes off when it's done). */
+.lime-wait {
+  animation: none;
+  -webkit-mask: linear-gradient(#000 0 0) no-repeat 0 0 / 0 100%;
+  mask: linear-gradient(#000 0 0) no-repeat 0 0 / 0 100%;
+}
+.lime-wait.is-lit {
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  transition: -webkit-mask-size 700ms cubic-bezier(0.65, 0, 0.35, 1) 0.1s, mask-size 700ms cubic-bezier(0.65, 0, 0.35, 1) 0.1s;
+}
+/* Played: the load wipe must not restart when the classes come off. */
+[data-lit] { animation: none; }
+
+/* now — the stop a pinned tour is on (Listing Kit, Strata): a lime block
+   wipes in under its number and wipes out as the next one takes over. */
+.lk-tour-num {
+  justify-self: start;
+  margin: -3px 0 -3px -6px;
+  padding: 3px 6px;
+  background: linear-gradient(var(--signal), var(--signal)) no-repeat 0 0 / 0 100%;
+  transition: color 300ms var(--ease), background-size 450ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.lk-tour-list.is-live li.is-on .lk-tour-num { color: var(--signal-dark); background-size: 100% 100%; }
+
+/* now — the practice tour's current item: a highlighter stroke wipes across
+   its lead words as it becomes current. */
+.pw-tour-list strong {
+  padding: 0 0.12em;
+  margin: 0 -0.12em;
+  background: linear-gradient(var(--signal), var(--signal)) no-repeat 0 62% / 0 86%;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size 600ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.pw-tour-list li.is-on strong { background-size: 100% 86%; }
+
+/* now — the step day the week has most recently reached is lime; the lime
+   moves on as the next one flips (day 1, then 3, then 7, the day it's live). */
+.dt-days li.is-now .dt-back { background: var(--signal); color: rgba(18, 20, 23, 0.7); transition: background 400ms var(--ease); }
+.dt-days li.is-now .dt-back b { color: var(--signal-dark); }
+
+/* offer — the tag beside each price, and the practice hero's (its button is
+   ink on that light page). The eyebrow's and the video line's stay outlines. */
+.offer-price .offer-badge,
+.pw-price .offer-badge,
+.pw-cta-note .offer-badge { background: var(--signal); color: var(--signal-dark); box-shadow: none; }
+
+/* offer — /start's design service panel is labelled in lime. */
+.start-sprint-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 11px;
+  font-size: 12px;
+  background: var(--signal);
+  color: var(--signal-dark);
+}
+
+/* now — Strata's preview window is the live product. */
+.pd-live { align-self: center; height: 22px; padding: 0 8px; margin-right: auto; font-size: 11px; }
+
+/* Phones: Strata's card sits on its own screen, so its Explore is lime. */
+@media (max-width: 900px) {
+  .product-card--live .product-explore { background: var(--signal); color: var(--signal-dark); border-color: var(--signal); }
+}
+/* Phones: the practice hero's rebuild pins below the copy, a screen of its
+   own, so its before/after rail fills lime. */
+@media (max-width: 959px) {
+  .pw-rail-line { height: 4px; }
+  .pw-rail-fill { background: var(--signal); }
+}
+@media (max-width: 760px) {
+  /* The footer runs past one screen: its lower screen's lime is the status. */
+  .ft-taking { height: 26px; padding: 0 10px; gap: 8px; background: var(--signal); color: var(--signal-dark); }
+  .ft-taking .ft-live { width: 6px; height: 6px; background: var(--signal-dark); box-shadow: none; animation: on-air 1.6s steps(1) infinite; }
+  /* The hour rail is a screen of its own here: it fills lime, and each stop
+     it reaches pops lime (on desktop it shares a screen with the price). */
+  .hr-fill,
+  .hr-rail b.is-on { background: var(--signal); }
+  /* /start: "What happens next" is a screen of its own: its first step is
+     the "now". */
+  .start-next-step:first-child .start-next-k {
+    display: inline-flex; align-items: center; height: 24px; padding: 0 8px;
+    background: var(--signal); color: var(--signal-dark);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lime-wait { -webkit-mask: none; mask: none; }
+  .lk-tour-num, .pw-tour-list strong { transition: none; }
+  .ft-taking .ft-live { animation: none; }
+}

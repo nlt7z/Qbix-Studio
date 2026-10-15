@@ -9,6 +9,7 @@ import DayTiles from './DayTiles';
 import PriceHalves from './PriceHalves';
 import Odometer from './Odometer';
 import AboutPhoto from './AboutPhoto';
+import Marker from '@/components/Marker';
 
 const PRICE = PRICES.practice;
 const CTA_LABEL = `Start my website, ${PRICE.deposit} deposit`;
@@ -41,7 +42,14 @@ const FAQ = [
   { q: 'What happens to my current text?', a: 'We reuse it and tighten it. You approve every word before launch.' },
   {
     q: 'Do you see client information?',
-    a: 'No. We never handle client messages or records. The site links to your own email, phone, or secure booking tool.',
+    // Open, with the promise marked: the Questions screen's one lime.
+    a: (
+      <>
+        No. We <Marker>never</Marker> handle client messages or records. The site links to your own email, phone, or
+        secure booking tool.
+      </>
+    ),
+    open: true,
   },
   { q: 'Will I lose my domain?', a: 'No. Your domain stays yours.' },
 ];
@@ -76,7 +84,7 @@ export default function PracticeWebsites() {
             learn anything about you.
           </Reveal>
           <Reveal as="p" className="pw-pull" speed="slow" delay={0.15}>
-            Your directory profile brings people in. Your website is what makes them reach out.
+            Your directory profile brings people in. Your website is what makes them <Marker delay={0.8}>reach out</Marker>.
           </Reveal>
         </div>
       </section>

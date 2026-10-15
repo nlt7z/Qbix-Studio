@@ -10,6 +10,7 @@ import KitTour from './KitTour';
 import HourRail from './HourRail';
 import Odometer from './Odometer';
 import AboutPhoto from './AboutPhoto';
+import Marker from '@/components/Marker';
 
 const KIT = PRICES.listingKit;
 const VIDEO = PRICES.listingVideo;
@@ -41,7 +42,14 @@ const FAQ = [
   { q: 'Who owns the files?', a: 'You do.' },
   {
     q: "What if I don't like the drafts?",
-    a: "Tell us what feels off and we will redo them. If they still don't work for you, we refund you in full.",
+    // Open, with the promise marked: the Questions screen's one lime.
+    a: (
+      <>
+        Tell us what feels off and we will redo them. If they still don&rsquo;t work for you,{' '}
+        <Marker>we refund you in full</Marker>.
+      </>
+    ),
+    open: true,
   },
 ];
 
@@ -133,7 +141,7 @@ export default function ListingKit() {
               something people remember. They also show your sellers that you are working hard for them.
             </Reveal>
             <Reveal as="p" className="offer-pull" speed="slow" delay={0.1}>
-              You already have the photos. Send us the listing link and we will do the rest.
+              You already have the photos. Send us the listing link and <Marker delay={0.7}>we will do the rest</Marker>.
             </Reveal>
           </div>
         </div>
@@ -188,8 +196,10 @@ export default function ListingKit() {
         </div>
       </section>
 
+      {/* White, like the nav: chrome that rides along on every screen isn't
+          lime, so each screen's own lime accent stays the one. */}
       <StickyCta>
-        <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-primary" />
+        <CheckoutButton href={CHECKOUT.listingKit} offer={OFFER} label={CTA_LABEL} className="btn-white" />
         <CheckoutNote className="checkout-note--bar" />
       </StickyCta>
     </main>

@@ -14,7 +14,8 @@ import { watchCovered } from './covered';
  *    mark turns and tightens, then the plates press back into one slab.
  *
  * Orthographic camera, satin-dark materials with hairline edges (the blueprint
- * language of the old SVGs), one lime signal per scene. Motion is a pure
+ * language of the old SVGs). Lime is the lead card's one accent: the design
+ * card's image square and its hero block going live, the listing card's photo. Motion is a pure
  * function of time, so reduced-motion simply renders one composed frame.
  */
 
@@ -41,7 +42,8 @@ function rand(i: number) {
 function materials() {
   // Solid objects only (user: no grey or white see-through 3D): white paper
   // bodies held by ink hairlines, ink for images, type and accents. Lime is
-  // kept for the one live moment (the design card's hero block going live).
+  // the services screen's one accent, so only the lead card of each audience
+  // carries it (the design card, the listing card).
   // Kept deliberately cheap — Lambert solids, unlit lime, no environment map
   // or shadows — so four scenes compile and draw without stalling the page.
   // Whites carry an emissive floor so their shaded sides stay white, not grey.
@@ -54,8 +56,10 @@ function materials() {
     ink: ink(),
     inkDark: ink(),
     // Accents are ink on the white objects (a page's button, a door, a tag)
-    // and white on ink (hi). Lime appears once: the design card going live.
+    // and white on ink (hi).
     accent: ink(),
+    // Unlit and not tone-mapped, so it lands as the exact brand #B8FF00.
+    lime: new THREE.MeshBasicMaterial({ color: LIME, toneMapped: false }),
     hi: new THREE.MeshBasicMaterial({ color: WHITE }),
     glass: ink(),                     // the top plate of the brand stack, solid
     edge: new THREE.LineBasicMaterial({ color: '#0b0c0d' }),
@@ -118,9 +122,10 @@ function buildDesign(scene: THREE.Group, M: Mats) {
     scene.add(t);
     return { t, home, away, rot, phase: rand(i + 13) * Math.PI * 2 };
   });
-  // Image hint on the media tile: a small lime square "sun".
-  const sun = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.02, 0.22), M.accent);
-  sun.position.set(0.3, 0.05, -0.2);
+  // Image hint on the media tile: a small lime square "sun", the card's lime
+  // pixel while the page is still a moodboard.
+  const sun = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.02, 0.36), M.lime);
+  sun.position.set(0.24, 0.05, -0.16);
   tiles[2].t.add(sun);
 
   // Interface detail riding on the tiles: headline bars + a button on the hero,
@@ -144,7 +149,7 @@ function buildDesign(scene: THREE.Group, M: Mats) {
   [0.6, 0.95, 1.3].forEach((x) => detail(tiles[0].t, 0.22, 0.04, x, 0));
 
   // Scan line (ink) that sweeps the slab as the build goes live; the hero
-  // block turning lime behind it is the one lime moment.
+  // block turns lime behind it.
   const scan = new THREE.Mesh(
     new THREE.BoxGeometry(4.24, 0.01, 0.02),
     new THREE.MeshBasicMaterial({ color: '#15171a' }),
@@ -240,7 +245,7 @@ function buildBrand(scene: THREE.Group, M: Mats) {
   });
   scene.add(mid);
 
-  // Plate 3 — lime glass carrying the mark: four chrome blocks around a lime cross.
+  // Plate 3 — a solid ink plate carrying the mark: four blocks around a white cross.
   const top = new THREE.Group();
   const glass = new THREE.Mesh(new THREE.BoxGeometry(S, H * 0.6, S), M.glass);
   top.add(glass);
@@ -281,8 +286,7 @@ function buildBrand(scene: THREE.Group, M: Mats) {
   scene.add(scan);
 
   // Swatch palettes: each round moves the plate one step, P[r] → P[r+1] —
-  // all ink → paper and ink → refined, and the last round lands the one lime
-  // signal. No greys.
+  // all ink → paper and ink → refined. No greys.
   const INK = new THREE.Color('#111316');
   const P = [
     [INK, INK, INK, INK],
@@ -367,7 +371,8 @@ function buildListing(scene: THREE.Group, M: Mats) {
   // Print flyer — 8.5 × 11 sheet with a photo panel, a little house, type.
   const flyer = new THREE.Group();
   flyer.add(slab(1.7, 0.03, 2.2, M.body, M.edge, 0.012));
-  const photo = slab(1.5, 0.02, 1.12, M.frost, M.edge, 0.01);
+  // The photo panel is the card's one lime: the house sits on it like a print.
+  const photo = slab(1.5, 0.02, 1.12, M.lime, M.edge, 0.01);
   photo.position.set(0, 0.025, -0.44);
   flyer.add(photo);
   const house = new THREE.Group();
@@ -420,7 +425,7 @@ function buildListing(scene: THREE.Group, M: Mats) {
   });
   const POST_START = new THREE.Vector3(-0.95, 0.08, -0.1);
 
-  // Vertical video on a phone, with a play mark and a lime progress bar.
+  // Vertical video on a phone, with a play mark and a progress bar.
   // Built lying flat (screen up), then stood upright facing the camera.
   const phone = new THREE.Group();
   const handset = new THREE.Group();
@@ -514,7 +519,7 @@ function buildPractice(scene: THREE.Group, M: Mats) {
   scene.add(dated);
   clutter.push({ t: dated, y: dated.position.y });
 
-  // After: one quiet column — a soft photo, a large headline, one lime button.
+  // After: one quiet column — a soft photo, a large headline, one button.
   const calm: { t: THREE.Object3D; y: number }[] = [];
   const add = (o: THREE.Object3D, x: number, y: number, z: number) => {
     o.position.set(x, y, z);

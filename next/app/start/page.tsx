@@ -5,6 +5,7 @@ import BrandText from '@/components/BrandText';
 import StartStudio from '@/components/StartStudio';
 import Odometer from '@/components/offers/Odometer';
 import { Reveal, Words } from '@/components/Reveal';
+import Marker from '@/components/Marker';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 
 const START_DESC =
@@ -66,10 +67,8 @@ export default function StartPage() {
             </Reveal>
             <Words as="h1" className="start-title" text="Tell us what you’re building." speed="slow" step={0.06} />
             <Reveal as="p" className="sp-lede" speed="base" delay={0.35}>
-              <BrandText>
-                A few more details than the quick form — project type, budget, timeline — so our first reply is already
-                useful. We read every brief and answer within 24 hours.
-              </BrandText>
+              A few more details than the quick form — project type, budget, timeline — so our first reply is already
+              useful. We read every brief and answer <Marker delay={1.1}>within 24 hours</Marker>.
             </Reveal>
           </div>
         </section>
