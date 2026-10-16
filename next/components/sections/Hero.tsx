@@ -1,14 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, type ReactNode } from 'react';
-import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
+import { motion } from 'framer-motion';
 import { useContactModal } from '@/components/ContactModalProvider';
 import BrandText from '@/components/BrandText';
 import SplitText from '@/components/SplitText';
 import StudioTime from '@/components/hero/StudioTime';
 import LogoMarquee from '@/components/hero/LogoMarquee';
-import HeroCube from '@/components/HeroCube';
 import { useAudience, type Audience } from '@/components/Audience';
 import { smoothScrollToId } from '@/components/TopNav';
 
@@ -86,7 +85,7 @@ const COPY: Record<Audience, { line1: string; line2: string; lede: [ReactNode, R
 };
 
 /** The audience switch: two segments, a solid block slides to the chosen one. */
-function AudienceSwitch() {
+export function AudienceSwitch() {
   const { audience, setAudience } = useAudience();
   const OPTIONS: [Audience, string][] = [['ai', 'For AI teams'], ['business', 'For local business']];
   return (
@@ -124,11 +123,15 @@ function AudienceSwitch() {
   );
 }
 
+/**
+ * The story's first chapter: the switch, the headline, the two actions, and
+ * the studio band. The object (the cube, assembling out of the page's pixels)
+ * is drawn behind it by the story's stage; this section only says where it
+ * stands (right, or low on a phone, where the words come first).
+ */
 export default function Hero() {
   const { open: openContactModal } = useContactModal();
   const { audience } = useAudience();
-  const heroRef = useRef<HTMLElement | null>(null);
-  const reduceMotion = useReducedMotion();
   // Entrance delays are for the first paint; a switch re-runs them quickly.
   const firstPaint = useRef(true);
   useEffect(() => {
@@ -141,33 +144,29 @@ export default function Hero() {
     else smoothScrollToId(action);
   };
 
-  // Scroll-driven centrepiece: as the hero scrolls past the viewport, the
-  // object gets a parallax lift + tilt + slight fade. Bound to the hero's own
-  // scroll progress so it works regardless of viewport height.
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  });
-  const objYRaw = useTransform(scrollYProgress, [0, 1], [0, -120]);
-  const objScaleRaw = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
-  const objOpacity = useTransform(scrollYProgress, [0, 0.7, 1], [1, 0.85, 0.45]);
-  const objY = useSpring(objYRaw, { stiffness: 80, damping: 22, mass: 0.6 });
-  const objScale = useSpring(objScaleRaw, { stiffness: 80, damping: 22, mass: 0.6 });
-
   return (
-    <section ref={heroRef} className="hero hero--stage" id="top" data-nav-theme="dark">
-      <div className="hero-stage hero-stage--v2">
-        <div className="hero-copy">
+    <section
+      id="top"
+      className="ch ch--hero"
+      data-chapter
+      data-form="cube"
+      data-side="right"
+      data-low="1"
+      data-tone="dark"
+      data-nav-theme="dark"
+      style={{ '--h': '150vh' } as CSSProperties}
+    >
+      <div className="ch-frame">
+        <div className="ch-copy hero-copy">
           <AudienceSwitch />
 
-          {/* Headline: two lines, the second set apart. Keyed by audience, so a
-              switch slides the new words up out of their masks. */}
+          {/* Headline: two lines. Keyed by audience, so a switch slides the
+              new words up out of their masks. */}
           <h1 key={`h-${audience}`} className="hero-title hero-title--xl">
             <WordReveal className="hero-line" text={copy.line1} baseDelay={d(0.18, 0.02)} step={0.06} />{' '}
             <span className="hero-line">
               <span style={WORD_MASK_STYLE}>
                 <motion.span
-                  className="signal-bg"
                   style={{ display: 'inline-block' }}
                   initial={{ y: '115%' }}
                   animate={{ y: '0%' }}
@@ -179,7 +178,6 @@ export default function Hero() {
             </span>
           </h1>
 
-          {/* Masked rise: the lines slide up out of an invisible sleeve. */}
           <span className="hero-sub-mask">
             <motion.p
               key={`l-${audience}`}
@@ -189,25 +187,25 @@ export default function Hero() {
               animate={{ y: '0%' }}
               transition={{ duration: 0.85, ease: EASE_OUT, delay: d(0.55, 0.2) }}
             >
-              {/* Two lines: the promise, then who we are / what we offer. */}
               {copy.lede[0]}
               <br />
               {copy.lede[1]}
             </motion.p>
           </span>
 
+          {/* Black and white: the story's one lime per screen lives on the object. */}
           <motion.div
             key={`c-${audience}`}
             className="hero-ctas"
-            initial={{ opacity: 0, y: 26, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ y: 26 }}
+            animate={{ y: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 24, mass: 0.7, delay: d(0.7, 0.26) }}
           >
             {copy.ctas.map(([label, action], i) => (
               <Link
                 key={label}
                 href={action === 'contact' ? '/start' : `#${action}`}
-                className={`btn ${i === 0 ? 'btn-primary' : 'btn-white'} btn-lg split-cta`}
+                className={`btn ${i === 0 ? 'btn-solid' : 'btn-line'} btn-lg split-cta`}
                 onClick={(e) => {
                   e.preventDefault();
                   run(action);
@@ -219,32 +217,12 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* The cube, uncovered by a clip wipe rising from the floor of its
-            frame; drifts up on scroll. */}
-        <motion.div
-          className="hero-visual"
-          initial={reduceMotion ? false : { clipPath: 'inset(100% -20% 0% -20%)' }}
-          animate={{ clipPath: 'inset(-20% -20% -20% -20%)' }}
-          transition={{ duration: 1.1, ease: EASE_OUT, delay: 0.35 }}
-        >
-          <motion.div style={{ y: objY, scale: objScale, opacity: objOpacity, willChange: 'transform, opacity' }}>
-            <HeroCube />
-          </motion.div>
-        </motion.div>
-
-        {/* The band: where and when the studio works, and where the team
-            studied and worked. The hairline draws itself left to right. */}
-        <div className="hero-band">
-          <motion.span
-            className="hero-meta-rule"
-            aria-hidden
-            initial={reduceMotion ? false : { scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 1.2, ease: EASE_OUT, delay: 0.7 }}
-          />
+        {/* Where and when the studio works, and where the team studied and worked. */}
+        <div className="ch-band hero-band">
           <StudioTime />
           <LogoMarquee />
         </div>
+        <div className="ch-window" aria-hidden />
       </div>
     </section>
   );

@@ -73,13 +73,16 @@ function FooterLink({ item }: { item: Item }) {
   );
 }
 
-export default function Colophon() {
+/** `bare` (the homepage): the story's last chapter is the sign-off and its
+ *  wordmark, so the footer is the sitemap, the status line and the legal line. */
+export default function Colophon({ bare = false }: { bare?: boolean }) {
   const { open: openContactModal } = useContactModal();
 
   return (
     <footer className="footer ft" data-nav-theme="dark" data-cta-zone>
       <div className="container">
         {/* Sign-off line + the one action. */}
+        {!bare && (
         <Reveal className="ft-head" speed="base" margin="0px 0px 0px 0px">
           <div>
             <p className="ft-tagline">
@@ -98,6 +101,7 @@ export default function Colophon() {
             </a>
           </div>
         </Reveal>
+        )}
 
         {/* Sitemap — every service, every product, the studio, elsewhere. */}
         <Reveal className="ft-grid" speed="base" delay={0.08} margin="0px 0px 0px 0px">
@@ -135,7 +139,7 @@ export default function Colophon() {
 
       {/* Sign-off — the wordmark in square pixels, then the legal line. */}
       <div className="ft-stage">
-        <FooterMark />
+        {!bare && <FooterMark />}
         <div className="ft-legal mono">
           <span>© 2026 Qbix</span>
         </div>

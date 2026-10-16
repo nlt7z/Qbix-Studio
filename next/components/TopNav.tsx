@@ -20,6 +20,8 @@ const sectionIds = navItems
  * screen and is scrolled to exactly; anything else clears the nav bar.
  */
 export function sectionTop(el: HTMLElement) {
+  // A story chapter: its top is where its object has just finished forming.
+  if (el.hasAttribute('data-chapter')) return el.getBoundingClientRect().top + window.scrollY;
   if (getComputedStyle(el).position !== 'sticky' || !el.parentElement) {
     return el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
   }
@@ -93,20 +95,17 @@ export default function TopNav() {
   // order (later panels cover earlier ones), so it's always the visible one.
   // The active link is resolved the same way, for the same reason.
   useEffect(() => {
-    const els = Array.from(
-      document.querySelectorAll<HTMLElement>('[data-nav-theme]'),
-    );
-    if (els.length === 0) return;
-
-    // Active link: the section under the nav bar. Later panels cover earlier
-    // stuck ones, so the last match in page order is the one on screen.
-    const sections = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => !!el);
-
     let raf = 0;
     const update = () => {
       raf = 0;
+      // Read fresh each time: the homepage story swaps its chapters when the
+      // audience switches, and stale nodes would leave the bar's skin stuck.
+      const els = Array.from(document.querySelectorAll<HTMLElement>('[data-nav-theme]'));
+      // Active link: the section under the nav bar. Later panels cover earlier
+      // stuck ones, so the last match in page order is the one on screen.
+      const sections = sectionIds
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => !!el);
       const line = HEADER_OFFSET; // just below the nav bar
       let current: string | null = null;
       for (const el of sections) {

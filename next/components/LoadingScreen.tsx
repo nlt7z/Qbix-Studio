@@ -22,14 +22,21 @@ export default function LoadingScreen() {
     } catch {
       /* private mode / disabled — fall through and play splash */
     }
+    const w = window as unknown as { __qbixSplashDone?: boolean };
     if (seen) {
+      w.__qbixSplashDone = true;
       setPhase('gone');
       return;
     }
+    // The homepage story waits for this before its pixels assemble.
+    w.__qbixSplashDone = false;
 
     document.body.style.overflow = 'hidden';
     const exitDur = reduced ? 300 : EXIT_MS;
-    const startExit = window.setTimeout(() => setPhase('out'), HOLD_MS);
+    const startExit = window.setTimeout(() => {
+      setPhase('out');
+      w.__qbixSplashDone = true;
+    }, HOLD_MS);
     const unmount = window.setTimeout(() => {
       setPhase('gone');
       document.body.style.overflow = '';
