@@ -93,33 +93,71 @@ function buildForms(): Record<FormName, Form> {
 
 const VS = /* glsl */ `
 attribute float aLime;
+attribute float aMask;
 varying vec3 vN;
+varying vec3 vNo;
+varying vec3 vPos;
 varying float vLime;
+varying float vMask;
 void main() {
   vN = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
+  vNo = normal;
+  vPos = position;
   vLime = aLime;
+  vMask = aMask;
   gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
 }
 `;
-// Three tones of light tell the faces apart; no outlines. The page's edge
-// (uEdge, in device pixels from the bottom) cuts the block: below it, the
-// block takes the next chapter's tone (0 = white blocks, 1 = ink blocks).
+// The material: solid white, ink or lime, with the things that make a block
+// read as a thing and not a flat fill. Three tones of light tell the faces
+// apart; a face is pillowed (its centre a touch brighter than its edges) and
+// has a tooth of paper grain; where a neighbouring block sits across a gap
+// the edge falls into contact shadow (aMask: a bit per side, +x -x +y -y +z
+// -z); a free edge catches a hairline of light. No outlines. The page's
+// edge (uEdge, in device pixels from the bottom) cuts the block: below it,
+// the block takes the next chapter's tone (0 = white blocks, 1 = ink blocks).
 const FS = /* glsl */ `
 uniform float uEdge;
 uniform float uHasEdge;
 uniform float uToneAbove;
 uniform float uToneBelow;
 varying vec3 vN;
+varying vec3 vNo;
+varying vec3 vPos;
 varying float vLime;
+varying float vMask;
+float bit(float m, float b) { return mod(floor(m / pow(2.0, b) + 0.5), 2.0); }
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 void main() {
   vec3 n = normalize(vN);
-  float f = 0.45 + 0.55 * max(dot(n, normalize(vec3(0.35, 0.9, 0.5))), 0.0);
+  vec3 no = normalize(vNo);
+  vec3 L = normalize(vec3(0.35, 0.9, 0.5));
+  float f = 0.45 + 0.55 * max(dot(n, L), 0.0);
+
+  // This face's two axes, and whether a block sits across each of its edges.
+  vec3 a = abs(no);
+  vec2 uv; float pu, mu, pv, mv;
+  if (a.x > 0.5) { uv = vPos.zy; pu = bit(vMask, 4.0); mu = bit(vMask, 5.0); pv = bit(vMask, 2.0); mv = bit(vMask, 3.0); }
+  else if (a.y > 0.5) { uv = vPos.xz; pu = bit(vMask, 0.0); mu = bit(vMask, 1.0); pv = bit(vMask, 4.0); mv = bit(vMask, 5.0); }
+  else { uv = vPos.xy; pu = bit(vMask, 0.0); mu = bit(vMask, 1.0); pv = bit(vMask, 2.0); mv = bit(vMask, 3.0); }
+  const float h = 0.45;
+  float ao = pu * (1.0 - smoothstep(0.0, 0.34, h - uv.x)) + mu * (1.0 - smoothstep(0.0, 0.34, h + uv.x))
+           + pv * (1.0 - smoothstep(0.0, 0.34, h - uv.y)) + mv * (1.0 - smoothstep(0.0, 0.34, h + uv.y));
+  ao = clamp(ao, 0.0, 1.0);
+  vec2 q = abs(uv) / h;
+  float edge = max(q.x, q.y);
+  float pillow = 1.0 - 0.06 * edge * edge;
+  float rim = smoothstep(0.86, 1.0, edge) * max(dot(n, L), 0.0) * (1.0 - ao);
+  // paper tooth: fine, and only just there
+  float grain = (hash(floor(uv * 72.0) + no.xy * 7.0 + no.z * 3.0) - 0.5) * 0.022;
+
   float tone = uHasEdge > 0.5 && gl_FragCoord.y < uEdge ? uToneBelow : uToneAbove;
-  vec3 white = vec3(0.957, 0.961, 0.949) * mix(0.78, 1.0, f);
-  vec3 ink = mix(vec3(0.04, 0.045, 0.055), vec3(0.24, 0.25, 0.27), f);
+  vec3 white = vec3(0.957, 0.961, 0.949) * mix(0.78, 1.0, f) * pillow * (1.0 - 0.16 * ao) + vec3(0.05) * rim;
+  vec3 ink = mix(vec3(0.04, 0.045, 0.055), vec3(0.24, 0.25, 0.27), f) * pillow * (1.0 - 0.55 * ao) + vec3(0.05) * rim;
   vec3 c = mix(white, ink, tone);
-  vec3 lime = vec3(0.722, 1.0, 0.0) * mix(0.68, 1.0, f);
-  gl_FragColor = vec4(mix(c, lime, vLime), 1.0);
+  vec3 lime = vec3(0.722, 1.0, 0.0) * mix(0.68, 1.0, f) * pillow * (1.0 - 0.3 * ao) + vec3(0.05) * rim;
+  c = mix(c, lime, vLime);
+  gl_FragColor = vec4(c * (1.0 + grain), 1.0);
 }
 `;
 
@@ -153,6 +191,28 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
   const lime = new Float32Array(N);
   lime[LIME] = 1;
   geo.setAttribute('aLime', new THREE.InstancedBufferAttribute(lime, 1));
+  // Which sides of each block have a neighbour across the gap (for the
+  // contact shadows), recomputed as the blocks move.
+  const mask = new Float32Array(N);
+  const maskAttr = new THREE.InstancedBufferAttribute(mask, 1);
+  maskAttr.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('aMask', maskAttr);
+  const pos = new Float32Array(N * 3);
+  const DIRS: Vec[] = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+  const neighbours = () => {
+    for (let k = 0; k < N; k++) {
+      let m = 0;
+      for (let d = 0; d < 6; d++) {
+        const tx = pos[k * 3] + DIRS[d][0], ty = pos[k * 3 + 1] + DIRS[d][1], tz = pos[k * 3 + 2] + DIRS[d][2];
+        for (let j = 0; j < N; j++) {
+          if (j === k) continue;
+          if (Math.abs(pos[j * 3] - tx) < 0.22 && Math.abs(pos[j * 3 + 1] - ty) < 0.22 && Math.abs(pos[j * 3 + 2] - tz) < 0.22) { m += 1 << d; break; }
+        }
+      }
+      mask[k] = m;
+    }
+    maskAttr.needsUpdate = true;
+  };
   const U = { uEdge: { value: 0 }, uHasEdge: { value: 0 }, uToneAbove: { value: 0 }, uToneBelow: { value: 0 } };
   const material = new THREE.ShaderMaterial({ uniforms: U, vertexShader: VS, fragmentShader: FS });
   const mesh = new THREE.InstancedMesh(geo, material, N);
@@ -315,6 +375,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
         x = lerp(x, c[0], eik); yy = lerp(yy, c[1], eik) + Math.sin(Math.PI * eik) * 0.6; z = lerp(z, c[2], eik);
       }
       p3.set(x, yy, z);
+      pos[k * 3] = x; pos[k * 3 + 1] = yy; pos[k * 3 + 2] = z;
       v3.copy(p3).applyQuaternion(q);
       minX = Math.min(minX, v3.x - 0.5); maxX = Math.max(maxX, v3.x + 0.5);
       minY = Math.min(minY, v3.y - 0.5); maxY = Math.max(maxY, v3.y + 0.5);
@@ -322,6 +383,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
       mesh.setMatrixAt(k, m4);
     }
     mesh.instanceMatrix.needsUpdate = true;
+    neighbours();
     group.quaternion.copy(q);
 
     // Sized to the words beside it: the same top and bottom lines.
