@@ -1,12 +1,16 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
+// The caps are drawn in CSS (globals.css, "the splash"): a dished top with its
+// legend, and the skirts on three sides, narrower at the top like a real cap.
 import { useEffect, useState, type CSSProperties } from 'react';
 
 /**
- * The splash: four keys, q b i x, pop in one after another and each is
- * pressed once, like typing the name; the third key is the lime. Then the
- * screen parts top and bottom to show the page. Plays once per session.
+ * The splash: four keycaps, q b i x, in a little keyboard plate. They rise
+ * out of their wells one after another, then each is pressed once, like
+ * typing the name: the cap sinks into the plate and springs back. The third
+ * key is the lime. Then the screen parts top and bottom to show the page.
+ * Plays once per session.
  */
 const HOLD_MS = 1650;
 const EXIT_MS = 900;
@@ -76,16 +80,15 @@ export default function LoadingScreen() {
       >
         <div className="loading-keys">
           {KEYS.map((ch, i) => (
-            <motion.span
+            <span
               key={ch}
-              className={`loading-key${i === 2 ? ' is-lime' : ''}${exiting || reduced ? '' : ' is-pressing'}`}
-              style={{ '--d': `${0.75 + i * 0.14}s` } as CSSProperties}
-              initial={reduced ? false : { scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 460, damping: 30, delay: 0.08 + i * 0.1 }}
+              className={`loading-key${i === 2 ? ' is-lime' : ''}${reduced ? '' : ' is-typing'}`}
+              style={{ '--r': `${0.06 + i * 0.09}s`, '--d': `${0.72 + i * 0.15}s` } as CSSProperties}
             >
-              {ch}
-            </motion.span>
+              <span className="loading-cap">
+                <span className="loading-cap-top">{ch}</span>
+              </span>
+            </span>
           ))}
         </div>
       </motion.div>

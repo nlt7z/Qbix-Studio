@@ -4321,28 +4321,73 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 input:not([type='checkbox']):not([type='radio']), textarea, select { background: var(--bg-2); border: 0; box-shadow: none; }
 input:not([type='checkbox']):not([type='radio']):focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--ink) !important; outline-offset: 0; }
 
-/* --- the splash: four keys, the third lime ----------------------------------- */
-.loading-keys { display: flex; gap: clamp(8px, 1.2vw, 14px); }
+/* --- the splash: four keycaps in a plate, the third lime -------------------------
+   Each key is a well in the plate (overflow hidden: the plate's top edge) and a
+   cap in it. The cap is drawn as a real one seen from the front and above: a
+   dished top carrying its legend at the top left, and skirts on three sides,
+   narrower at the top (left lit, front in half light, right in shade). The cap
+   rises out of its well, and a press sinks it so the plate hides the skirt. */
+.loading-keys {
+  --key: clamp(58px, 8.6vw, 98px);
+  display: flex;
+  gap: calc(var(--key) * 0.1);
+  padding: calc(var(--key) * 0.16);
+  background: #1a1c1f;
+  /* the plate: its top edge catches the light, its front edge is a solid face */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 calc(var(--key) * 0.1) 0 #0e0f11;
+}
 .loading-key {
-  --side: #c9ccc6;
-  display: grid;
-  place-items: center;
-  width: clamp(54px, 9vw, 92px);
-  aspect-ratio: 1;
-  background: #f4f5f2;
-  color: #0a0b0c;
-  font-family: var(--font-headline);
-  font-size: clamp(22px, 3.6vw, 38px);
+  position: relative;
+  width: var(--key);
+  height: calc(var(--key) * 1.1);
+  overflow: hidden;
+  background: #0b0c0e;   /* the well, seen past the cap's narrower top */
+}
+.loading-cap {
+  position: absolute;
+  inset: 0;
+  background: #c4c7c1;   /* the front skirt */
+  clip-path: polygon(9% 0, 91% 0, 100% 100%, 0 100%);
+}
+.loading-cap::before,
+.loading-cap::after { content: ''; position: absolute; inset: 0; }
+.loading-cap::before { background: #e2e4df; clip-path: polygon(9% 0, 9% 74%, 0 100%); }        /* left skirt, lit */
+.loading-cap::after { background: #a9aca6; clip-path: polygon(91% 0, 100% 100%, 91% 74%); }     /* right skirt, in shade */
+.loading-cap-top {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 0;
+  height: 74%;
+  z-index: 1;
+  padding: 13% 0 0 15%;
+  /* the dish: lighter where the light falls into it, darker at the rim */
+  background: radial-gradient(120% 95% at 50% 32%, #fbfbf9 0%, #eef0eb 62%, #e1e3de 100%);
+  box-shadow: inset 0 calc(var(--key) * -0.02) 0 rgba(0, 0, 0, 0.07);
+  color: #15171a;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: calc(var(--key) * 0.22);
   line-height: 1;
-  box-shadow: 0 6px 0 0 var(--side);   /* the key's side, a face, not a blur */
+  text-align: left;
 }
-.loading-key.is-lime { --side: #7fb300; background: var(--signal); color: #0a0b0c; }
-.loading-key.is-pressing { animation: key-press 0.42s cubic-bezier(0.65, 0, 0.35, 1) var(--d, 0.8s) both; }
-@keyframes key-press {
-  0%, 100% { translate: 0 0; box-shadow: 0 6px 0 0 var(--side); }
-  50% { translate: 0 5px; box-shadow: 0 1px 0 0 var(--side); }
+.loading-key.is-lime .loading-cap { background: #8ec300; }
+.loading-key.is-lime .loading-cap::before { background: #a9e600; }
+.loading-key.is-lime .loading-cap::after { background: #77a400; }
+.loading-key.is-lime .loading-cap-top { background: radial-gradient(120% 95% at 50% 32%, #cdff4a 0%, #b8ff00 62%, #a9ee00 100%); }
+/* Rise out of the well (translate), then one press (transform): separate properties, so they compose. */
+.loading-key.is-typing .loading-cap {
+  animation:
+    cap-rise 0.52s cubic-bezier(0.16, 1, 0.3, 1) var(--r, 0.1s) both,
+    cap-press 0.34s cubic-bezier(0.45, 0, 0.25, 1) var(--d, 0.8s) both;
 }
-@media (prefers-reduced-motion: reduce) { .loading-key.is-pressing { animation: none; } }
+@keyframes cap-rise { from { translate: 0 108%; } to { translate: 0 0; } }
+@keyframes cap-press {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(15%); }
+  72% { transform: translateY(-1.5%); }
+}
+@media (prefers-reduced-motion: reduce) { .loading-key.is-typing .loading-cap { animation: none; } }
 
 /* --- the blocks standing on a subpage ----------------------------------------- */
 .block-figure { display: block; width: 100%; aspect-ratio: 1; max-height: 64vh; }

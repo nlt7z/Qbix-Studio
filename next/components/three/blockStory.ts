@@ -3,14 +3,15 @@ import { createScroller, type Scroller } from '@/lib/smoothScroll';
 
 /**
  * The site's one object: 27 pieces. In the hero they are a 3 × 3 × 3 cube,
- * a patchwork of materials (dots, stripes, a grid, a 1-bit dither, plain
- * white, plain ink, one lime); in every other chapter the same pieces become
+ * a patchwork of four materials, no more (plain, dots, stripes, and one lime
+ * corner); in every other chapter the same pieces become
  * the thing the chapter is about, and play its steps on their own, on a loop:
  * a moodboard whose swatches fly into a website while its code is written
  * beside it, then the code folds into a phone and the address goes lime;
  * a brand built up plate by plate, the grid, colour and type, the mark,
  * pressed into one block; four products standing, two still in stripes;
  * every idea loose, then sorted by kind; a flyer, its five posts, its video.
+ * Pictures are drawn in plain shapes (a sun over a hill), never a texture.
  *
  * Each arrangement (a Form) names, for each piece, its place, size, turn and
  * material; a piece can also be put away (size 0). A move takes every piece
@@ -46,7 +47,10 @@ const N = 27;
 
 // Materials. FORE is the colour that stands out from the page (white on
 // black, ink on paper), BACK the page's own; the patterns mix the two.
-const K = { FORE: 0, DOT: 1, STRIPE: 2, GRID: 3, DITHER: 4, BACK: 5, DOTB: 6, GRIDB: 7, TEXT: 8, LIME: 9, PLAY: 10 } as const;
+// Four materials in all, lime and plain included: plain, dots, stripes, lime.
+// (FORE and BACK are the plain in either colour; DOTB the dots on the other;
+// PHOTO a picture drawn in plain shapes; PLAY the lime with a play mark.)
+const K = { FORE: 0, DOT: 1, STRIPE: 2, PHOTO: 4, BACK: 5, DOTB: 6, LIME: 9, PLAY: 10 } as const;
 const isLime = (k: number) => k === K.LIME || k === K.PLAY;
 
 type Vec = [number, number, number];
@@ -116,23 +120,17 @@ function makeForm(
 function buildForms(): Record<string, Form> {
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const { FORE, DOT, STRIPE, GRID, DITHER, BACK, DOTB, GRIDB, TEXT, LIME, PLAY } = K;
+  const { FORE, DOT, STRIPE, PHOTO, BACK, DOTB, LIME, PLAY } = K;
   const F: Record<string, Form> = {};
 
-  /* The cube: a patchwork, no two neighbours alike, its top front corner lime. */
-  const CUBE: Record<string, number> = {
-    '-1,1,-1': DOT, '0,1,-1': FORE, '1,1,-1': STRIPE,
-    '-1,1,0': GRIDB, '0,1,0': DITHER, '1,1,0': FORE,
-    '-1,1,1': FORE, '0,1,1': GRID, '1,1,1': LIME,
-    '-1,0,-1': BACK, '0,0,-1': FORE, '1,0,-1': GRID,
-    '-1,0,0': STRIPE, '0,0,0': FORE, '1,0,0': DOT,
-    '-1,0,1': DITHER, '0,0,1': DOTB, '1,0,1': FORE,
-    '-1,-1,-1': FORE, '0,-1,-1': DOT, '1,-1,-1': FORE,
-    '-1,-1,0': GRID, '0,-1,0': BACK, '1,-1,0': GRIDB,
-    '-1,-1,1': STRIPE, '0,-1,1': FORE, '1,-1,1': DOT,
-  };
+  /* The cube: plain, dots and stripes, no two neighbours alike ((x + y + 2z) mod 3 differs
+     along every axis), its top front corner lime. */
+  const THREE_K = [FORE, DOT, STRIPE];
   const cube: Piece[] = [];
-  for (const y of [-1, 0, 1]) for (const z of [-1, 0, 1]) for (const x of [-1, 0, 1]) cube.push(piece(x, y, z, 0.9, 0.9, 0.9, CUBE[`${x},${y},${z}`]));
+  for (const y of [-1, 0, 1]) for (const z of [-1, 0, 1]) for (const x of [-1, 0, 1]) {
+    const k = x === 1 && y === 1 && z === 1 ? LIME : THREE_K[(x + 1 + (y + 1) + 2 * (z + 1)) % 3];
+    cube.push(piece(x, y, z, 0.9, 0.9, 0.9, k));
+  }
   F.cube = makeForm(cube, { yaw: -0.62, pitch: 0.4 }, { order: 'bottom', lift: [0, 0.8, 0.2] });
   // The cube's own blocks, loose and turned every which way (where the hero's gathering starts).
   F.scatter = makeForm(
@@ -158,10 +156,10 @@ function buildForms(): Record<string, Form> {
     on(-2.05, -0.2, 3.1, 0.1, 0.05, BACK),       // 11-12 a line of text
     on(-2.3, -0.42, 2.6, 0.1, 0.05, BACK),
     on(-2.95, -0.98, 1.3, 0.42, 0.14, buttonK),  // 13 the button
-    on(1.95, 0.2, 3.3, 2.2, 0.12, DITHER),       // 14 the picture
+    on(1.95, 0.2, 3.3, 2.2, 0.12, PHOTO),        // 14 the picture
     on(-2.47, -1.95, 2.25, 0.9, 0.1, DOTB),      // 15-17 three cards
     on(0, -1.95, 2.25, 0.9, 0.1, STRIPE),
-    on(2.47, -1.95, 2.25, 0.9, 0.1, GRIDB),
+    on(2.47, -1.95, 2.25, 0.9, 0.1, BACK),
   ];
   const site = browser(BACK, LIME);
   site.push(piece(2.3, -0.75, 1.3, 3.6, 2.7, 0.2, BACK));   // 18 the code, in a window in front
@@ -176,7 +174,7 @@ function buildForms(): Record<string, Form> {
   live.push(
     piece(3.6, -0.85, 1.25, 2.1, 3.9, 0.22, BACK),   // 18 the phone
     ph(3.6, 0.85, 0.5, 0.09, 0.04, FORE),             // 19 its speaker
-    ph(3.6, 0.15, 1.75, 1.05, 0.06, DITHER),          // 20 the picture
+    ph(3.6, 0.15, 1.75, 1.05, 0.06, PHOTO),           // 20 the picture
     ph(3.4, -0.6, 1.35, 0.2, 0.06, FORE),             // 21-22 the headline
     ph(3.25, -0.88, 1.05, 0.2, 0.06, FORE),
     ph(3.4, -1.18, 1.35, 0.07, 0.04, FORE),           // 23-24 text
@@ -191,21 +189,31 @@ function buildForms(): Record<string, Form> {
   const swatch = (i: number, x: number, y: number, w: number, h: number, k: number, rz: number) => {
     mood[i] = piece(x, y + 0.2, 0.13 + 0.05 + i * 0.003, w, h, 0.08, k, rz);
   };
-  swatch(14, -2.45, 0.6, 2.6, 3.0, DITHER, -0.03);   // a photograph (it becomes the picture)
-  swatch(18, 0.25, 1.35, 2.2, 1.45, DOTB, 0.035);     // a texture (it becomes the code's window)
-  swatch(9, 2.85, 1.45, 1.9, 1.25, TEXT, -0.04);      // type specimens
-  swatch(10, 3.05, -0.25, 1.5, 1.1, TEXT, 0.04);
+  swatch(14, -2.45, 0.6, 2.6, 3.0, PHOTO, -0.03);    // a photograph (it becomes the picture)
+  swatch(18, 0.25, 1.35, 2.2, 1.45, PHOTO, 0.035);    // another (it becomes the code's window)
+  swatch(9, 2.85, 1.45, 1.9, 1.25, BACK, -0.04);      // a type specimen (lines on it below)
+  swatch(10, 3.05, -0.25, 1.5, 1.1, DOTB, 0.04);
   swatch(15, -0.25, -0.35, 1.5, 1.2, STRIPE, 0.05);
-  swatch(16, 1.35, -0.3, 1.25, 1.05, GRIDB, -0.06);
-  swatch(17, -3.3, -1.95, 0.95, 0.95, BACK, 0.06);
-  swatch(1, -2.35, -1.95, 0.62, 0.62, DOTB, -0.05);    // a row of chips
-  swatch(2, -1.61, -1.95, 0.62, 0.62, STRIPE, 0.03);
-  swatch(3, -0.87, -1.95, 0.62, 0.62, GRIDB, -0.02);
-  swatch(4, -0.13, -1.95, 0.62, 0.62, DITHER, 0.05);
+  swatch(16, 1.35, -0.3, 1.25, 1.05, BACK, -0.06);
+  swatch(17, -3.3, -1.95, 0.95, 0.95, DOTB, 0.06);
+  swatch(1, -2.35, -1.95, 0.62, 0.62, STRIPE, -0.05);  // a row of chips
+  swatch(2, -1.61, -1.95, 0.62, 0.62, BACK, 0.03);
+  swatch(3, -0.87, -1.95, 0.62, 0.62, DOTB, -0.02);
+  swatch(4, -0.13, -1.95, 0.62, 0.62, STRIPE, 0.05);
   swatch(13, 0.8, -1.85, 0.8, 0.8, LIME, 0.09);        // the one lime chip (it becomes the button)
-  swatch(11, 1.85, -1.8, 1.05, 0.8, TEXT, -0.05);
-  swatch(12, 3.1, -1.85, 1.35, 0.8, TEXT, 0.04);
-  for (const i of [5, 6, 7, 8, 19, 20, 21, 22, 23, 24, 25, 26]) mood[i] = hidden(site[i].p);
+  swatch(11, 1.85, -1.8, 1.05, 0.8, BACK, -0.05);      // notes
+  swatch(12, 3.1, -1.85, 1.35, 0.8, BACK, 0.04);
+  // Lines of type on the specimen and on a note: they become the lines of code.
+  const onTile = (i: number, tile: number, ox: number, oy: number, w: number, h: number) => {
+    const T = mood[tile], rz = new THREE.Euler().setFromQuaternion(T.q).z, c = Math.cos(rz), sn = Math.sin(rz);
+    mood[i] = piece(T.p[0] + ox * c - oy * sn, T.p[1] + ox * sn + oy * c, T.p[2] + T.s[2] / 2 + 0.03, w, h, 0.05, FORE, rz);
+  };
+  onTile(19, 9, -0.2, 0.3, 1.2, 0.2);
+  onTile(20, 9, -0.1, 0.0, 1.4, 0.07);
+  onTile(21, 9, -0.25, -0.18, 1.1, 0.07);
+  onTile(22, 12, -0.12, 0.12, 0.9, 0.07);
+  onTile(23, 12, -0.22, -0.06, 0.7, 0.07);
+  for (const i of [5, 6, 7, 8, 24, 25, 26]) mood[i] = hidden(site[i].p);
   F.moodboard = makeForm(mood, { yaw: -0.2, pitch: 0.14 }, { lift: [0, 0.3, 1.0], hold: 2.2, step: 0 });
 
   /* Brand: plate by plate, the grid, colour and type, the mark; then pressed into one block. */
@@ -215,30 +223,32 @@ function buildForms(): Record<string, Form> {
     for (const z of [-1, 0, 1]) for (const x of [-1, 0, 1]) out.push(piece(x, y, z, wide, thick, wide, kinds[i++]));
     return out;
   };
-  const gridK = new Array<number>(9).fill(GRID);
-  const typeK = [TEXT, DITHER, BACK, STRIPE, TEXT, DOTB, BACK, DOT, TEXT];
+  const gridK = new Array<number>(9).fill(FORE);
+  const typeK = [DOT, FORE, STRIPE, BACK, DOT, FORE, STRIPE, BACK, DOT];
   const markK = [FORE, FORE, FORE, FORE, LIME, FORE, FORE, FORE, FORE];
   const brandLift: Vec = [0, 1.0, 0];
-  F.grid = makeForm([...plate(-1.1, gridK), ...hideAll(plate(1.4, gridK)), ...hideAll(plate(2.8, gridK))], { yaw: -0.5, pitch: 0.62 }, { lift: brandLift, hold: 1.8, step: 0 });
-  F.colortype = makeForm([...plate(-1.1, gridK), ...plate(0, typeK), ...hideAll(plate(2.8, gridK))], { yaw: -0.55, pitch: 0.5 }, { lift: brandLift, hold: 1.9, step: 1 });
-  F.mark = makeForm([...plate(-1.1, gridK), ...plate(0, typeK), ...plate(1.1, markK)], { yaw: -0.6, pitch: 0.44 }, { lift: brandLift, hold: 1.6, step: 2 });
+  // The grid plate's tiles stand a little apart, so its seams read as the grid.
+  const gridPlate = () => plate(-1.1, gridK, 0.3, 0.84);
+  F.grid = makeForm([...gridPlate(), ...hideAll(plate(1.4, gridK)), ...hideAll(plate(2.8, gridK))], { yaw: -0.5, pitch: 0.62 }, { lift: brandLift, hold: 1.8, step: 0 });
+  F.colortype = makeForm([...gridPlate(), ...plate(0, typeK), ...hideAll(plate(2.8, gridK))], { yaw: -0.55, pitch: 0.5 }, { lift: brandLift, hold: 1.9, step: 1 });
+  F.mark = makeForm([...gridPlate(), ...plate(0, typeK), ...plate(1.1, markK)], { yaw: -0.6, pitch: 0.44 }, { lift: brandLift, hold: 1.6, step: 2 });
   F.pressed = makeForm([...plate(-1, gridK, 0.9, 0.9), ...plate(0, typeK, 0.9, 0.9), ...plate(1, markK, 0.9, 0.9)], { yaw: -0.62, pitch: 0.4 }, { lift: [0, 0.3, 0], hold: 2.6, step: 2 });
 
   /* Products: four towers, in the list's order; the two still on the way are in stripes. */
   const towers: Piece[] = [];
   const block = (x: number, y: number, z: number, k: number) => towers.push(piece(x, y - 1.5, z, 0.9, 0.9, 0.9, k));
-  const strataK = [FORE, DOT, GRID, FORE, DITHER, FORE, FORE, DOTB, GRID, FORE, FORE, LIME];
+  const strataK = [FORE, DOT, DOT, FORE, DOT, FORE, FORE, DOT, FORE, DOT, DOT, LIME];
   let n = 0;
   for (let y = 0; y < 3; y++) for (const z of [-0.5, 0.5]) for (const x of [-3.3, -2.3]) block(x, y, z, strataK[n++]);
-  const biddingK = [FORE, GRIDB, DOT, FORE, FORE, DITHER, GRID, FORE];
+  const biddingK = [DOT, FORE, FORE, DOT, DOT, FORE, FORE, DOT];
   n = 0;
   for (let y = 0; y < 4; y++) for (const x of [-0.95, 0.05]) block(x, y, 0, biddingK[n++]);
-  for (let y = 0; y < 4; y++) block(1.4, y, 0, y === 3 ? DITHER : STRIPE);
-  for (let y = 0; y < 3; y++) block(2.75, y, 0, y === 2 ? DITHER : STRIPE);
+  for (let y = 0; y < 4; y++) block(1.4, y, 0, STRIPE);
+  for (let y = 0; y < 3; y++) block(2.75, y, 0, STRIPE);
   F.towers = makeForm(towers, { yaw: -0.5, pitch: 0.3 }, { order: 'bottom', lift: [0, 1.0, 0] });
 
   /* About: every idea, loose; then every one of them kept, sorted by kind. */
-  const ideaK = [FORE, FORE, FORE, FORE, FORE, FORE, DOT, DOT, DOT, DOT, STRIPE, STRIPE, STRIPE, STRIPE, GRID, GRID, GRID, DITHER, DITHER, DITHER, BACK, BACK, DOTB, DOTB, GRIDB, GRIDB, LIME];
+  const ideaK = [...new Array<number>(9).fill(FORE), ...new Array<number>(9).fill(DOT), ...new Array<number>(8).fill(STRIPE), LIME];
   const sorted: Piece[] = [];
   n = 0;
   for (let x = -4; x <= 4; x++) for (const z of [-1, 0, 1]) sorted.push(piece(x, 0, z, 0.9, 0.9, 0.9, ideaK[n++]));
@@ -261,7 +271,7 @@ function buildForms(): Record<string, Form> {
   const fo = (dx: number, x: number, y: number, w: number, h: number, d: number, k: number) => piece(dx + x, y, FZ + d / 2 + 0.01, w, h, d, k);
   const flyer = (dx: number, tagK: number): Piece[] => [
     piece(dx, 0, 0, 3.2, 4.4, 0.16, FORE),       // the sheet
-    fo(dx, 0, 0.75, 2.8, 2.2, 0.06, DITHER),     // the photograph
+    fo(dx, 0, 0.75, 2.8, 2.2, 0.06, PHOTO),      // the photograph
     fo(dx, -0.82, 1.55, 1.0, 0.32, 0.1, tagK),   // Just Listed
     fo(dx, -0.35, -0.72, 2.1, 0.34, 0.06, BACK), // the address
     fo(dx, -0.85, -1.2, 1.1, 0.26, 0.06, BACK),  // the price
@@ -273,13 +283,13 @@ function buildForms(): Record<string, Form> {
   const posts = (): Piece[] =>
     POSTS.flatMap(([x, y]) => [
       piece(x, y, 0, 1.4, 1.4, 0.12, FORE),
-      piece(x, y + 0.17, 0.1, 1.2, 0.85, 0.06, DITHER),
+      piece(x, y + 0.17, 0.1, 1.2, 0.85, 0.06, PHOTO),
       piece(x - 0.2, y - 0.47, 0.09, 0.8, 0.09, 0.04, BACK),
     ]);
   const VIDEO: Vec = [1.6, 0.3, 0];
   const video = (): Piece[] => [
     piece(1.6, 0.2, 0, 4.4, 2.48, 0.14, FORE),          // the frame
-    piece(1.6, 0.3, 0.11, 4.1, 1.95, 0.06, DITHER),     // the film
+    piece(1.6, 0.3, 0.11, 4.1, 1.95, 0.06, PHOTO),      // the film
     piece(1.6, 0.3, 0.21, 0.66, 0.66, 0.12, PLAY),      // play
     piece(1.6, -0.82, 0.1, 4.1, 0.06, 0.04, BACK),      // its progress
   ];
@@ -319,12 +329,12 @@ function buildForms(): Record<string, Form> {
     on(-2.3, 0.15, 2.6, 0.46, 0.1, BACK),
     on(-2.05, -0.5, 3.1, 0.1, 0.05, BACK),
     on(-2.95, -1.25, 1.3, 0.42, 0.14, buttonK),
-    on(2.0, -0.25, 3.0, 3.0, 0.12, DITHER),
+    on(2.0, -0.25, 3.0, 3.0, 0.12, PHOTO),
   ];
   const ph2 = (x: number, y: number, w: number, h: number, d: number, k: number) => piece(x, y, PZ + d / 2 + 0.01, w, h, d, k);
   const phone = (): Piece[] => [
     piece(3.05, -0.8, 1.25, 1.7, 3.6, 0.22, BACK),
-    ph2(3.05, 0.25, 1.4, 0.95, 0.06, DITHER),
+    ph2(3.05, 0.25, 1.4, 0.95, 0.06, PHOTO),
     ph2(2.9, -0.48, 1.1, 0.18, 0.06, FORE),
     ph2(2.78, -0.72, 0.86, 0.18, 0.06, FORE),
     ph2(2.9, -1.0, 1.1, 0.06, 0.04, FORE),
@@ -394,11 +404,10 @@ void main() {
 }
 `;
 // Each piece is drawn in the page's two colours: FORE (white on a black
-// chapter, ink on a paper one) and BACK (the other). Its material is a
-// pattern of the two, measured in world units so a dot is the same size on a
-// small block and a large tile: square dots, diagonal stripes, a grid, an
-// ordered (Bayer) dither (a ramp on a block, a little picture on a large
-// face), lines of type. Light comes in three tones from above; a block that
+// chapter, ink on a paper one) and BACK (the other). Four materials in all,
+// lime and plain included: plain, square dots, diagonal stripes (measured in
+// world units, so a dot is the same size on a small block and a large tile),
+// and the lime. A picture is drawn in plain shapes, a sun over a hill. Light comes in three tones from above; a block that
 // sits beside another across a gap gets a contact shadow on that edge
 // (aMask: a bit per side); free edges catch a hairline of light. When a
 // piece changes material it dissolves from the one to the other in coarse
@@ -424,9 +433,9 @@ float cover(float d, float w) { return clamp(0.5 - d / max(w, 1e-5), 0.0, 1.0); 
 
 // 0: the face colour (FORE), 1: the second colour (BACK)
 float pattern(float k, vec2 w, vec2 fs, vec2 fw) {
-  if (k < 0.5) return 0.0;                                   // FORE
-  if (k > 4.5 && k < 5.5) return 1.0;                        // BACK
-  if (min(fs.x, fs.y) < 0.3) return k < 4.5 ? 0.0 : 1.0;      // a thin edge: plain
+  if (k < 0.5) return 0.0;                                   // FORE: plain
+  if (k > 4.5 && k < 5.5) return 1.0;                        // BACK: plain, in the other colour
+  if (min(fs.x, fs.y) < 0.3) return k < 3.5 ? 0.0 : 1.0;      // a thin edge: plain
   float px = max(fw.x, fw.y);
   if (k < 1.5 || (k > 5.5 && k < 6.5)) {                     // DOT, DOTB: square dots
     float f = 7.0;
@@ -439,38 +448,16 @@ float pattern(float k, vec2 w, vec2 fs, vec2 fw) {
     float s = fract((w.x + w.y) * f);
     return cover(abs(s - 0.5) - 0.25, (fw.x + fw.y) * f);
   }
-  if (k < 3.5 || (k > 6.5 && k < 7.5)) {                     // GRID, GRIDB
-    float f = 6.0;
-    vec2 g = abs(fract(w * f + 0.5) - 0.5);
-    float c = cover(0.43 - max(g.x, g.y), px * f);
-    return k < 3.5 ? c : 1.0 - c;
-  }
-  if (k < 4.5) {                                             // DITHER: in 1-bit
+  if (k > 3.5 && k < 4.5) {                                  // PHOTO: a picture in plain shapes, a sun over a hill
+    if (max(fs.x, fs.y) <= 1.0) return 1.0;
     vec2 uv = w / fs + 0.5;
-    float b;
-    if (max(fs.x, fs.y) > 1.0) {                             // a large face: a picture (sky, sun, hill)
-      float hill = 0.36 + 0.1 * sin(uv.x * 6.0 + 1.3) + 0.05 * sin(uv.x * 13.0 + 0.4);
-      b = uv.y < hill ? 0.08 + 0.14 * uv.y / hill : 0.3 + 0.42 * (uv.y - hill) / (1.0 - hill);
-      vec2 sd = (uv - vec2(0.74, 0.72)) * vec2(fs.x / fs.y, 1.0);
-      if (length(sd) < 0.12) b = 1.0;
-    } else {
-      b = 0.12 + 0.8 * (uv.x * 0.65 + uv.y * 0.35);          // a block: a ramp
-    }
-    return 1.0 - step(bayer4(floor(w * (max(fs.x, fs.y) > 1.0 ? 17.0 : 14.0))), b);
+    float pu = max(fw.x / fs.x, fw.y / fs.y) * 1.5;
+    float hill = max(0.3 + 0.13 * sin(uv.x * 4.0 + 0.6), 0.18 + 0.09 * sin(uv.x * 7.0 + 2.4));
+    float land = cover(uv.y - hill, pu);
+    float sun = cover(length((uv - vec2(0.72, 0.7)) * vec2(fs.x / fs.y, 1.0)) - 0.12, pu);
+    return 1.0 - max(land, sun);
   }
-  if (k < 8.5) {                                             // TEXT: lines of type on the second colour
-    vec2 tl = vec2(w.x + fs.x * 0.5, fs.y * 0.5 - w.y);
-    float m = 0.12, pitch = 0.17, th = 0.075;
-    float vv = tl.y - m;
-    float row = floor(vv / pitch);
-    float rows = floor((fs.y - 2.0 * m + (pitch - th)) / pitch);
-    float inRow = step(0.0, vv) * step(row, rows - 1.0) * (1.0 - step(th, vv - row * pitch));
-    float len = (fs.x - 2.0 * m) * (row > rows - 1.5 ? 0.45 : 0.68 + 0.32 * hash1(row + 3.0));
-    float uu = tl.x - m;
-    float inLen = step(0.0, uu) * (1.0 - step(len, uu));
-    return 1.0 - inRow * inLen;
-  }
-  return 0.0;
+  return k < 4.5 ? 0.0 : 1.0;
 }
 
 void main() {
