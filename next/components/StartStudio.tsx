@@ -1,81 +1,27 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import StartProjectForm from '@/components/StartProjectForm';
-import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
-import { whenIdle } from '@/components/whenIdle';
+import BlockFigure from '@/components/BlockFigure';
 import type { BriefDraft } from '@/components/three/briefScene';
 
-const EMPTY: BriefDraft = { name: false, email: false, company: false, types: [], budget: -1, timeline: -1, brief: 0, status: 'idle' };
 const PARTS = 7;
 const filled = (d: BriefDraft) =>
   [d.name, d.email, d.company, d.types.length > 0, d.budget >= 0, d.timeline >= 0, d.brief > 0].filter(Boolean).length;
 
 /**
- * The /start form beside a 3D brief that builds itself as the form is
- * filled in (components/three/briefScene.ts). Without WebGL the form simply
- * takes the full width.
+ * The /start form beside the site's blocks (the cube), with a meter that
+ * fills as the brief does.
  */
 export default function StartStudio() {
-  const draft = useRef<BriefDraft>(EMPTY);
-  const redraw = useRef<(() => void) | null>(null);
-  const hostRef = useRef<HTMLDivElement | null>(null);
   const [count, setCount] = useState(0);
-  const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const reduced = useReducedMotionSafe();
-
-  const onDraft = useCallback((d: BriefDraft) => {
-    draft.current = d;
-    setCount(filled(d));
-    redraw.current?.();
-  }, []);
-
-  useEffect(() => {
-    const host = hostRef.current;
-    if (!host) return;
-    let dispose: (() => void) | undefined;
-    let cancelled = false;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting || dispose) return;
-        io.disconnect();
-        whenIdle(mount);
-      },
-      { rootMargin: '300px 0px' },
-    );
-    const mount = async () => {
-      try {
-        const { mountBriefScene } = await import('@/components/three/briefScene');
-        if (cancelled) return;
-        const s = await mountBriefScene(host, {
-          reduced,
-          getDraft: () => draft.current,
-          onReady: () => !cancelled && setReady(true),
-        });
-        if (cancelled) s.dispose();
-        else {
-          dispose = s.dispose;
-          redraw.current = s.redraw;
-        }
-      } catch {
-        if (!cancelled) setFailed(true);
-      }
-    };
-    io.observe(host);
-    return () => {
-      cancelled = true;
-      io.disconnect();
-      redraw.current = null;
-      dispose?.();
-    };
-  }, [reduced]);
+  const onDraft = useCallback((d: BriefDraft) => setCount(filled(d)), []);
 
   return (
-    <div className={`container start-studio${failed ? ' is-flat' : ''}`}>
+    <div className="container start-studio">
       <div className="start-studio-stage">
         <div className="start-stage-pin">
-          <div ref={hostRef} className={`start-stage-host${ready ? ' is-ready' : ''}`} aria-hidden />
+          <BlockFigure form="cube" label="The Qbix cube: 27 blocks, one of them lime" />
           <div className="start-stage-hud mono" aria-hidden>
             <span>Your brief</span>
             <span className="start-stage-meter">

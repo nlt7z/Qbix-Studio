@@ -254,17 +254,11 @@ export default function TopNav() {
         })}
       </div>
 
+      {/* One quiet action, as text: the nav is on every screen and never the emphasis. */}
       <div className="topnav-ctas">
         <a
-          href={second.href}
-          className="topnav-cta topnav-cta-white split-cta"
-          onClick={(e) => onAnchorClick(e, second.href)}
-        >
-          <SplitText key={second.label} text={second.label} arrow />
-        </a>
-        <a
           href="#contact"
-          className="topnav-cta split-cta"
+          className="topnav-cta topnav-cta-text split-cta"
           onClick={(e) => {
             e.preventDefault();
             openContactModal();

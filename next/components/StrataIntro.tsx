@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Reveal, Stagger, RevealItem, Wipe, Words } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
 import SplitText from '@/components/SplitText';
-import SceneStage from '@/components/offers/SceneStage';
+import BlockFigure from '@/components/BlockFigure';
 import KitTour from '@/components/offers/KitTour';
 import Marker from '@/components/Marker';
 
@@ -99,7 +99,7 @@ export default function StrataIntro() {
             </Reveal>
           </header>
           <div className="pd-hero-visual">
-            <SceneStage scene="strata" mode="hero" labels={LAYERS} />
+            <BlockFigure form="slabs" inner="pressed" label="Three layers, the grid, colour and type, the mark, pressing into one block" />
           </div>
         </div>
         <div className="container">

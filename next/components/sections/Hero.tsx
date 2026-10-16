@@ -120,7 +120,6 @@ export function AudienceSwitch() {
           {audience === a && (
             <motion.span layoutId="aud-pill" className="aud-pill" transition={{ type: 'spring', stiffness: 420, damping: 36 }} />
           )}
-          <span className="aud-mark" aria-hidden />
           <span className="aud-label">{label}</span>
           <span className="aud-hint">{hint}</span>
         </button>
@@ -198,7 +197,7 @@ export default function Hero() {
             </motion.p>
           </span>
 
-          {/* Black and white: the story's one lime per screen lives on the object. */}
+          {/* Quiet, as text: the hero's emphasis is the switch and the cube's lime block. */}
           <motion.div
             key={`c-${audience}`}
             className="hero-ctas"
@@ -210,7 +209,7 @@ export default function Hero() {
               <Link
                 key={label}
                 href={action === 'contact' ? '/start' : `#${action}`}
-                className={`btn ${i === 0 ? 'btn-solid' : 'btn-line'} btn-lg split-cta`}
+                className="btn btn-text btn-lg split-cta"
                 onClick={(e) => {
                   e.preventDefault();
                   run(action);

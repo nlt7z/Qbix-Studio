@@ -4,8 +4,7 @@ import CheckoutButton, { CheckoutNote } from './CheckoutButton';
 import { OfferBadge, WasPrice } from './OfferPrice';
 import Faq from './Faq';
 import StickyCta from './StickyCta';
-import HouseIllustration from './HouseIllustration';
-import SceneStage from './SceneStage';
+import BlockFigure from '@/components/BlockFigure';
 import KitTour from './KitTour';
 import HourRail from './HourRail';
 import Odometer from './Odometer';
@@ -33,9 +32,6 @@ const STEPS: [string, string, string] = [
   'Ask for changes once, then get your final files.',
 ];
 
-// Blueprint labels the 3D hero pins to the flyer, the posts and the phone.
-const KIT_LABELS = ['01 · Print flyer · 8.5 × 11', '02 · Social posts × 5', '03 · Video · 0:30 vertical'];
-
 const FAQ = [
   { q: 'Do you need to visit the house?', a: 'No. Everything comes from your listing photos and details.' },
   { q: 'Can it match my brand?', a: 'Yes. Send your logo and colors, or we will match your brokerage style.' },
@@ -53,53 +49,6 @@ const FAQ = [
   },
 ];
 
-/** The flat sample — a print flyer with a social post over it. Shown when WebGL isn't available. */
-function SampleKit() {
-  return (
-    <figure className="lk-sample" aria-label="Sample listing kit: a print flyer and an Instagram post">
-      <span className="lk-sample-tag mono">Sample kit</span>
-      <div className="lk-flyer">
-        <div className="lk-flyer-photo">
-          <HouseIllustration />
-        </div>
-        <div className="lk-flyer-body">
-          <span className="lk-flyer-kicker">Just listed</span>
-          <span className="lk-flyer-address">1428 Alder Lane</span>
-          <span className="lk-flyer-city">Palo Alto, California</span>
-          <div className="lk-flyer-facts">
-            <span><strong>$2,195,000</strong></span>
-            <span>4 bd</span>
-            <span>3 ba</span>
-            <span>2,310 sq ft</span>
-          </div>
-          <span className="lk-flyer-open">Open house · Sat &amp; Sun, 1 to 4 pm</span>
-          <div className="lk-flyer-agent">
-            <span className="lk-flyer-logo">JL</span>
-            <span>
-              <strong>Jordan Lee</strong>
-              <span>Your Brokerage · DRE #01234567</span>
-            </span>
-          </div>
-        </div>
-      </div>
-      <div className="lk-post">
-        <div className="lk-post-bar">
-          <span className="lk-post-avatar">JL</span>
-          <span>jordanlee.homes</span>
-        </div>
-        <div className="lk-post-img">
-          <HouseIllustration />
-          <span className="lk-post-badge">Just listed</span>
-        </div>
-        <div className="lk-post-cap">
-          <strong>1428 Alder Lane</strong>
-          <span>$2,195,000 · Open Sat &amp; Sun</span>
-        </div>
-      </div>
-    </figure>
-  );
-}
-
 export default function ListingKit() {
   return (
     <main className="offer lk">
@@ -116,8 +65,7 @@ export default function ListingKit() {
             </Reveal>
           </div>
           <div className="lk-hero-visual">
-            <SceneStage scene="kit" mode="hero" labels={KIT_LABELS} fallback={<SampleKit />} />
-            <span className="lk-drag mono" aria-hidden>Drag to turn</span>
+            <BlockFigure form="flyer" label="A print flyer standing beside its five social posts, in blocks; the Just Listed tag is lime" />
           </div>
           <div className="lk-hero-act">
             <Reveal className="lk-hero-cta" speed="base" delay={0.45}>
