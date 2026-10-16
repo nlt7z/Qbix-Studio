@@ -131,9 +131,9 @@ export function AudienceSwitch() {
 
 /**
  * The story's first chapter: the switch, the headline, the two actions, and
- * the studio band. The object (the cube, assembling out of the page's pixels)
- * is drawn behind it by the story's stage; this section only says where it
- * stands (right, or low on a phone, where the words come first).
+ * the studio band. The object (the cube, gathering out of loose blocks) is
+ * drawn beside it by the story's stage, sized to these words; this section
+ * only says which side it stands on.
  */
 export default function Hero() {
   const { open: openContactModal } = useContactModal();
@@ -157,7 +157,6 @@ export default function Hero() {
       data-chapter
       data-form="cube"
       data-side="right"
-      data-low="1"
       data-tone="dark"
       data-nav-theme="dark"
       style={{ '--h': '150vh' } as CSSProperties}

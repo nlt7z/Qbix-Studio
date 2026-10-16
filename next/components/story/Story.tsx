@@ -3,38 +3,34 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import Hero from '@/components/sections/Hero';
-import VoxelStage from '@/components/story/VoxelStage';
+import BlockStage from '@/components/story/BlockStage';
 import Marker from '@/components/Marker';
 import SplitText from '@/components/SplitText';
-import { PixelEdge } from '@/components/ScrollMotion';
 import { useAudience } from '@/components/Audience';
 import { useContactModal } from '@/components/ContactModalProvider';
 import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
 
 /**
  * The homepage as one story. Each chapter is an ordinary section with its own
- * words; the one 3D object behind them (VoxelStage) becomes whatever the
- * chapter names in `form`, on the side it names in `side` (the words take the
- * other side). Tones alternate black / paper. A chapter with `steps` has its
- * current step set on it by the stage, as `data-step`, while you read.
+ * words; the one object behind them (BlockStage, 27 blocks) takes the
+ * arrangement the chapter names in `form`, on the side it names in `side`
+ * (the words take the other side), sized to the words. Tones alternate black
+ * and paper. A chapter with `steps` has its current step set on it by the
+ * stage, as `data-step`, while you read.
  */
-type Side = 'left' | 'right' | 'center';
 type ChapterProps = {
   id?: string;
   form: string;
   inner?: string;
   tone: 'dark' | 'paper';
-  side: Side;
-  live?: boolean;
-  film?: string;
+  side: 'left' | 'right';
   steps?: number;
-  push?: boolean;
   h?: string;
   className?: string;
   children: ReactNode;
 };
 
-function Chapter({ id, form, inner, tone, side, live, film, steps, push, h = '190vh', className = '', children }: ChapterProps) {
+function Chapter({ id, form, inner, tone, side, steps, h = '200vh', className = '', children }: ChapterProps) {
   return (
     <section
       id={id}
@@ -45,13 +41,9 @@ function Chapter({ id, form, inner, tone, side, live, film, steps, push, h = '19
       data-tone={tone}
       data-nav-theme={tone === 'paper' ? 'light' : 'dark'}
       data-side={side}
-      data-live={live ? '1' : undefined}
-      data-film={film}
       data-steps={steps}
-      data-push={push ? '1' : undefined}
       style={{ '--h': h } as CSSProperties}
     >
-      <PixelEdge />
       <div className="ch-frame">
         {/* On a phone the object shows through this window, the words follow. */}
         <div className="ch-window" aria-hidden />
@@ -92,12 +84,19 @@ function Act({ children, onClick, href }: { children: string; onClick?: () => vo
 const [design, brand] = services;
 const [kit, practice] = offers;
 
+const PRODUCTS = [
+  { title: 'Strata', status: 'Live', href: '/products/strata', blurb: 'A moodboard in, a working design system out: tokens, components, and code.' },
+  { title: 'AI Bidding', status: 'Live', blurb: 'Blind auctions as a game. Bid, bluff, or go all in, while the model reads your hand.' },
+  { title: 'TTS Editor', status: 'Soon', blurb: 'Shape pitch, pauses, and emotion, and edit the script until the voice is right.' },
+  { title: 'Interview Assistant', status: 'Soon', blurb: 'Live hints, follow-up questions, and clean notes, so you stay in the conversation.' },
+];
+
 function StudioChapters() {
   const { open } = useContactModal();
   return (
     <>
-      {/* The cube comes apart and lays itself out as a website; the hero block lights lime: live. */}
-      <Chapter id="services" form="site" tone="paper" side="left" live steps={3}>
+      {/* The cube unstacks into one wall: a page. The lime block is the part that's live. */}
+      <Chapter id="services" form="wall" tone="paper" side="right" steps={3}>
         <p className="ch-kicker mono">{design.title} · {design.audience}</p>
         <h2 className="ch-title">From moodboard to a live domain.</h2>
         <p className="ch-lede">{design.blurb}</p>
@@ -109,8 +108,8 @@ function StudioChapters() {
         <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
       </Chapter>
 
-      {/* The brand stack: grid, colour and type, the mark (lime); it presses into one slab. */}
-      <Chapter form="brand" inner="press" tone="dark" side="right" steps={3}>
+      {/* Three slabs, lifted apart: the grid, colour and type, the mark; they press into one. */}
+      <Chapter form="slabs" inner="pressed" tone="dark" side="left" steps={3}>
         <p className="ch-kicker mono">{brand.title} · {brand.audience}</p>
         <h2 className="ch-title">From usable to worth sharing.</h2>
         <p className="ch-lede">{brand.blurb}</p>
@@ -122,32 +121,23 @@ function StudioChapters() {
         <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
       </Chapter>
 
-      {/* The blocks turn into a pixel screen and play the product. */}
-      <Chapter id="products" form="led" film="strata" tone="paper" side="left" h="180vh">
-        <p className="ch-kicker mono">Qbix Labs · Things we’ve shipped</p>
-        <h2 className="ch-title">Strata</h2>
-        <p className="ch-lede">
-          Turn a moodboard into a working design system: tokens, components, and code, ready to hand off to AI or
-          your library.
-        </p>
-        <p className="ch-meta"><span>Live at <b>stratadesign.app</b></span></p>
-        <div className="ch-acts"><Act href="/products/strata">Explore Strata</Act></div>
-      </Chapter>
-
-      <Chapter form="led" film="bidding" tone="dark" side="right" h="180vh">
-        <p className="ch-kicker mono">Qbix Labs · Live</p>
-        <h2 className="ch-title">AI Bidding</h2>
-        <p className="ch-lede">Blind auctions as a game. Bid, bluff, or go all in, while the model on the other side reads your hand.</p>
-        <ul className="ch-soon">
-          <li>
-            <b>TTS Editor</b> <span className="ch-soon-tag mono">Soon</span>
-            <span>Shape pitch, pauses, and emotion, and edit the script until the voice is right.</span>
-          </li>
-          <li>
-            <b>Interview Assistant</b> <span className="ch-soon-tag mono">Soon</span>
-            <span>Live hints, follow-up questions, and clean notes, so you stay in the conversation.</span>
-          </li>
+      {/* A skyline: what's been built. */}
+      <Chapter id="products" form="skyline" tone="paper" side="right">
+        <p className="ch-kicker mono">Qbix Labs</p>
+        <h2 className="ch-title">Things we’ve shipped.</h2>
+        <p className="ch-lede">Qbix also builds products. Two are live, two are on the way.</p>
+        <ul className="ch-list">
+          {PRODUCTS.map((p) => (
+            <li key={p.title}>
+              <span className="ch-list-head">
+                {p.href ? <Link href={p.href} className="ch-list-link">{p.title}</Link> : <b>{p.title}</b>}
+                <span className={`ch-tag mono${p.status === 'Live' ? ' is-live' : ''}`}>{p.status}</span>
+              </span>
+              <span>{p.blurb}</span>
+            </li>
+          ))}
         </ul>
+        <div className="ch-acts"><Act href="/products/strata">Explore Strata</Act></div>
       </Chapter>
     </>
   );
@@ -156,8 +146,8 @@ function StudioChapters() {
 function OfferChapters() {
   return (
     <>
-      {/* The listing kit: a flyer (its Just Listed tag is the lime), five posts, a phone. */}
-      <Chapter id="services" form="listing" tone="paper" side="left" steps={3}>
+      {/* A flyer, standing, with its posts laid out beside it; the lime block is the Just Listed tag. */}
+      <Chapter id="services" form="flyer" tone="paper" side="right" steps={3}>
         <p className="ch-kicker mono">{kit.title} · {kit.audience}</p>
         <h2 className="ch-title">Your listing, ready to share in 48 hours.</h2>
         <p className="ch-lede">{kit.blurb} Made by a designer, delivered as files you own.</p>
@@ -169,8 +159,8 @@ function OfferChapters() {
         <div className="ch-acts"><Act href={kit.href}>See the kit</Act></div>
       </Chapter>
 
-      {/* A calm practice website; its Book a consultation button is the lime. */}
-      <Chapter form="practice" tone="dark" side="right" steps={3}>
+      {/* A calm page with its phone; the lime block is the one button. */}
+      <Chapter form="practice" tone="dark" side="left" steps={3}>
         <p className="ch-kicker mono">{practice.title} · {practice.audience}</p>
         <h2 className="ch-title">A website that feels as calm as your office.</h2>
         <p className="ch-lede">{practice.blurb}</p>
@@ -188,14 +178,15 @@ function OfferChapters() {
 export default function Story() {
   const { audience } = useAudience();
   const { open } = useContactModal();
+  const ai = audience === 'ai';
   return (
     <main className="story" data-audience={audience}>
-      <VoxelStage />
+      <BlockStage />
       <Hero />
-      {audience === 'ai' ? <StudioChapters /> : <OfferChapters />}
+      {ai ? <StudioChapters /> : <OfferChapters />}
 
-      {/* Every idea scattered, then gathered into one block: none of them wasted. */}
-      <Chapter id="about" form="cloud" inner="seed" tone="paper" side="left">
+      {/* Every idea, loose; then every one of them kept and sorted. */}
+      <Chapter id="about" form="field" inner="sorted" tone={ai ? 'dark' : 'paper'} side={ai ? 'left' : 'right'}>
         <p className="ch-kicker mono">About us</p>
         <h2 className="ch-title">Our story is simple.</h2>
         <p className="ch-lede ch-story">
@@ -207,10 +198,10 @@ export default function Story() {
         </p>
       </Chapter>
 
-      {/* The blocks spell qbix across the screen; the i's dot is the lime. */}
-      <Chapter id="contact" form="word" tone="dark" side="center" push h="150vh" className="ch--contact">
+      {/* The blocks stack back into the cube, bottom row first: the thing, built. */}
+      <Chapter id="contact" form="cube" tone={ai ? 'paper' : 'dark'} side={ai ? 'right' : 'left'} h="170vh" className="ch--contact">
         <h2 className="ch-title ch-sign">
-          Bring the idea. <Marker className="marker--white">{'We’ll build the thing.'}</Marker>
+          Bring the idea. <Marker className={ai ? 'marker--ink' : 'marker--white'}>{'We’ll build the thing.'}</Marker>
         </h2>
         <div className="ch-acts">
           <button type="button" className="btn btn-solid btn-lg split-cta" onClick={open}>

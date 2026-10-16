@@ -2,15 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 import { useAudience } from '@/components/Audience';
-import type { StoryHandle } from '@/components/three/voxelStory';
+import type { StoryHandle } from '@/components/three/blockStory';
 
 /**
- * The story's one 3D object: a fixed, transparent canvas between the
- * chapters' backgrounds and their words (see components/three/voxelStory.ts).
- * Mounted once; an audience switch only re-reads the chapters. Without
- * WebGL2 the page is the same, minus the object.
+ * The story's one object, 27 blocks on a fixed, transparent canvas between
+ * the chapters' backgrounds and their words (components/three/blockStory.ts).
+ * Mounted once; an audience switch only re-reads the chapters. Without WebGL
+ * the page is the same, minus the object.
  */
-export default function VoxelStage() {
+export default function BlockStage() {
   const ref = useRef<HTMLCanvasElement | null>(null);
   const handle = useRef<StoryHandle | null>(null);
   const { audience } = useAudience();
@@ -22,9 +22,9 @@ export default function VoxelStage() {
     let cancelled = false;
     (async () => {
       try {
-        const { mountVoxelStory } = await import('@/components/three/voxelStory');
+        const { mountBlockStory } = await import('@/components/three/blockStory');
         if (cancelled) return;
-        handle.current = mountVoxelStory({
+        handle.current = mountBlockStory({
           canvas,
           root,
           reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,

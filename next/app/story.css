@@ -1,6 +1,6 @@
 /* =============================================================================
    THE STORY (homepage) — one 3D object, the page's chapters as sections.
-   The object is drawn on a fixed, transparent canvas (VoxelStage) that sits
+   The object is drawn on a fixed, transparent canvas (BlockStage) that sits
    above the chapters' backgrounds and below their words: each section paints
    its own black or paper (so without WebGL only the object is missing), the
    canvas paints the blocks, the frame paints the words. On a wide screen a
@@ -104,16 +104,13 @@
 .ch .btn-line:hover { box-shadow: inset 0 0 0 1px var(--ch-fg); }
 .ch-mail { color: var(--ch-fg); font-size: 16px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
 
-.ch-soon { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 0; width: min(100%, 30em); }
-.ch-soon li { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 4px 12px; padding: 12px 0; box-shadow: inset 0 1px 0 var(--ch-line); }
-.ch-soon b { font-weight: 500; font-size: 16px; color: var(--ch-fg); }
-.ch-soon-tag { justify-self: start; padding: 2px 6px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ch-dim); box-shadow: inset 0 0 0 1px var(--ch-line); }
-.ch-soon li > span:last-child { grid-column: 1 / -1; font-size: 15px; line-height: 1.55; color: var(--ch-dim); }
 
-/* The sign-off's marker is white here: the lime is the i's dot. */
+/* The sign-off's marker is the page's own ink or paper: the lime is the cube's corner. */
 .marker--white .marker-bar { background: #f4f5f2; }
 .marker--white .marker-in { color: #121417; }
-.ch-sign { font-size: clamp(34px, 4.4vw, 72px); }
+.marker--ink .marker-bar { background: #121417; }
+.marker--ink .marker-in { color: #f4f5f2; }
+.ch-sign { font-size: clamp(34px, 3.8vw, 60px); }
 
 /* --- the hero chapter ------------------------------------------------------ */
 .ch--hero .hero-title.hero-title--xl { font-size: clamp(40px, min(7vw, 11vh), 116px); }
@@ -124,34 +121,15 @@
 .ch-band > .studio { grid-column: 1 / span 4; }
 .ch-band > .marquee-block { grid-column: 5 / -1; }
 
-/* --- the pixel edge at each chapter's top: its own tone, building up ------- */
-.ch > .px-edge { display: none; }
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .ch { view-timeline: --ch block; }
-    .ch > .px-edge {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 100%;
-      display: grid;
-      grid-template-columns: repeat(24, minmax(0, 1fr));
-      pointer-events: none;
-    }
-    .ch > .px-edge i {
-      display: block;
-      aspect-ratio: 1;
-      background: var(--ch-bg);
-      scale: 0;
-      animation: st-px cubic-bezier(0.16, 1, 0.3, 1) both;
-      animation-timeline: --ch;
-      animation-range: entry calc(var(--a) * 0.6%) entry calc(var(--a) * 0.6% + 14%);
-    }
-    .ch > .px-edge i.px-flash { animation-name: st-px-flash; }
-  }
-}
-@keyframes st-px { from { scale: 0; } to { scale: 1.02; } }
-@keyframes st-px-flash { 0%, 100% { scale: 0; } 45% { scale: 1; } }
+/* --- the products list, and the one tag that's lime ---------------------- */
+.ch-list { list-style: none; margin: 26px 0 0; padding: 0; width: min(100%, 30em); display: grid; }
+.ch-list li { display: grid; gap: 4px; padding: 12px 0; box-shadow: inset 0 1px 0 var(--ch-line); }
+.ch-list li:last-child { box-shadow: inset 0 1px 0 var(--ch-line), inset 0 -1px 0 var(--ch-line); }
+.ch-list-head { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 500; color: var(--ch-fg); }
+.ch-list-link { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.ch-list li > span:last-child { font-size: 15px; line-height: 1.55; color: var(--ch-dim); }
+.ch-tag { padding: 3px 7px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ch-dim); box-shadow: inset 0 0 0 1px var(--ch-line); }
+.ch-tag.is-live { color: var(--ch-fg); box-shadow: inset 0 0 0 1px var(--ch-fg); }
 
 /* --- wide screens: the words pinned beside the object ---------------------- */
 @media (min-width: 900px) and (min-aspect-ratio: 1/1) {
@@ -162,7 +140,6 @@
   /* the object stands on data-side; the words take the other side */
   .ch[data-side='right'] .ch-copy { left: var(--edge); }
   .ch[data-side='left'] .ch-copy { right: var(--edge); }
-  .ch[data-side='center'] .ch-copy { left: var(--edge); top: 15%; translate: none; width: min(74%, 1000px); }
   .ch--hero .ch-copy { width: min(52%, 760px); translate: 0 -55%; }
   .ch--hero .ch-band { position: absolute; left: var(--edge); right: var(--edge); bottom: clamp(20px, 4vh, 40px); }
   .ch--contact .ch-acts { margin-top: 26px; }
@@ -181,7 +158,6 @@
   .ch--hero .ch-band { order: 3; padding: 8px var(--gutter) 56px; background: var(--ch-bg); }
   .ch-band { grid-template-columns: minmax(0, 1fr); }
   .ch-band > .studio, .ch-band > .marquee-block { grid-column: 1 / -1; }
-  .ch--contact .ch-window { height: 46svh; }
 }
 
 /* The footer that follows covers the canvas. */
