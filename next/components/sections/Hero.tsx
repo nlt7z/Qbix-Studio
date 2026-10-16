@@ -84,13 +84,17 @@ const COPY: Record<Audience, { line1: string; line2: string; lede: [ReactNode, R
   },
 };
 
-/** The audience switch: two segments, a solid block slides to the chosen one. */
+/** The audience switch: two large options, each naming who it's for and what
+ *  they'll find; a solid block slides to the chosen one, and a square marks it. */
+const OPTIONS: [Audience, string, string][] = [
+  ['ai', 'For AI teams', 'Design, brand and our products'],
+  ['business', 'For local business', 'Fixed-price kits, ready in days'],
+];
 export function AudienceSwitch() {
   const { audience, setAudience } = useAudience();
-  const OPTIONS: [Audience, string][] = [['ai', 'For AI teams'], ['business', 'For local business']];
   return (
     <motion.div
-      className="aud-switch mono"
+      className="aud-switch"
       role="radiogroup"
       aria-label="Who this page is for"
       initial={{ clipPath: 'inset(0 100% 0 0)' }}
@@ -103,7 +107,7 @@ export function AudienceSwitch() {
         }
       }}
     >
-      {OPTIONS.map(([a, label]) => (
+      {OPTIONS.map(([a, label, hint]) => (
         <button
           key={a}
           type="button"
@@ -116,7 +120,9 @@ export function AudienceSwitch() {
           {audience === a && (
             <motion.span layoutId="aud-pill" className="aud-pill" transition={{ type: 'spring', stiffness: 420, damping: 36 }} />
           )}
+          <span className="aud-mark" aria-hidden />
           <span className="aud-label">{label}</span>
+          <span className="aud-hint">{hint}</span>
         </button>
       ))}
     </motion.div>

@@ -3908,32 +3908,48 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
    ============================================================================= */
 .aud-switch {
   position: relative;
-  display: inline-flex;
-  padding: 3px;
-  margin-bottom: clamp(18px, 3.2vh, 32px);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, auto));
+  padding: 4px;
+  margin-bottom: clamp(22px, 3.6vh, 36px);
+  box-shadow: inset 0 0 0 1px rgba(244, 245, 242, 0.45);
 }
+/* Each option: a square that fills when chosen, who it's for, what's inside. */
 .aud-opt {
   all: unset;
   box-sizing: border-box;
   position: relative;
-  display: inline-block;
-  padding: 10px 16px 9px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-2);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 3px;
+  min-width: 236px;
+  padding: 14px 24px 14px 18px;
+  color: #f4f5f2;
   cursor: pointer;
-  transition: color 220ms var(--ease);
 }
-.aud-opt:hover { color: var(--ink); }
 .aud-opt.is-on { color: #0a0b0c; cursor: default; }
-.aud-opt:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
-.aud-pill { position: absolute; inset: 0; z-index: 0; background: var(--ink); }
-.aud-label { position: relative; z-index: 1; }
-@media (max-width: 420px) {
-  .aud-opt { padding: 9px 11px 8px; font-size: 11px; letter-spacing: 0.08em; }
+.aud-opt:focus-visible { outline: 2px solid #f4f5f2; outline-offset: 3px; }
+.aud-pill { position: absolute; inset: 0; z-index: 0; background: #f4f5f2; }
+.aud-mark {
+  position: relative;
+  z-index: 1;
+  grid-row: 1 / span 2;
+  width: 10px;
+  height: 10px;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  transition: background-color 220ms var(--ease);
+}
+.aud-opt.is-on .aud-mark { background: currentColor; }
+.aud-label { position: relative; z-index: 1; grid-column: 2; font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+.aud-hint { position: relative; z-index: 1; grid-column: 2; font-size: 13px; line-height: 1.3; opacity: 0.62; }
+.aud-opt:not(.is-on):hover .aud-label { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+@media (max-width: 560px) {
+  .aud-switch { display: grid; width: 100%; }
+  .aud-opt { min-width: 0; padding: 12px 12px 12px 12px; column-gap: 10px; }
+  .aud-label { font-size: 15px; }
+  .aud-hint { font-size: 12px; }
 }
 
 /* The line to the other audience, under the service cards. */

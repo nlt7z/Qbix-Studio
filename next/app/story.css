@@ -163,7 +163,7 @@
   .ch[data-side='right'] .ch-copy { left: var(--edge); }
   .ch[data-side='left'] .ch-copy { right: var(--edge); }
   .ch[data-side='center'] .ch-copy { left: var(--edge); top: 15%; translate: none; width: min(74%, 1000px); }
-  .ch--hero .ch-copy { width: min(52%, 760px); translate: 0 -60%; }
+  .ch--hero .ch-copy { width: min(52%, 760px); translate: 0 -55%; }
   .ch--hero .ch-band { position: absolute; left: var(--edge); right: var(--edge); bottom: clamp(20px, 4vh, 40px); }
   .ch--contact .ch-acts { margin-top: 26px; }
 }
