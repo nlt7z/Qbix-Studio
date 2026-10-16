@@ -7,6 +7,7 @@ import SplitText from '@/components/SplitText';
 import { useContactModal } from '@/components/ContactModalProvider';
 import FooterMark from '@/components/FooterMark';
 import Marker from '@/components/Marker';
+import { smoothScrollTo } from '@/lib/smoothScroll';
 
 const socials = [
   { label: 'Are.na',      href: 'https://www.are.na/q-bix/channels' },
@@ -130,7 +131,7 @@ export default function Colophon({ bare = false }: { bare?: boolean }) {
           <button
             type="button"
             className="ft-top"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={() => smoothScrollTo(0)}
           >
             Back to top <span aria-hidden>↑</span>
           </button>

@@ -65,7 +65,7 @@ export default function ListingKit() {
             </Reveal>
           </div>
           <div className="lk-hero-visual">
-            <BlockFigure form="flyer" label="A print flyer standing beside its five social posts, in blocks; the Just Listed tag is lime" />
+            <BlockFigure form="flyer,posts,video" label="A print flyer, then its five social posts, then its video, in blocks" />
           </div>
           <div className="lk-hero-act">
             <Reveal className="lk-hero-cta" speed="base" delay={0.45}>

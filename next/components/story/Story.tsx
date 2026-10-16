@@ -12,16 +12,15 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
 
 /**
  * The homepage as one story. Each chapter is an ordinary section with its own
- * words; the one object behind them (BlockStage, 27 blocks) takes the
- * arrangement the chapter names in `form`, on the side it names in `side`
- * (the words take the other side), sized to the words. Tones alternate black
- * and paper. A chapter with `steps` has its current step set on it by the
- * stage, as `data-step`, while you read.
+ * words; the one object behind them (BlockStage, 27 pieces) plays the scenes
+ * the chapter names in `forms` (comma separated: one after another, on a
+ * loop), on the side it names in `side` (the words take the other side),
+ * sized to the words. Tones alternate black and paper. A chapter with `steps`
+ * has the step its scene is showing set on it by the stage, as `data-step`.
  */
 type ChapterProps = {
   id?: string;
-  form: string;
-  inner?: string;
+  forms: string;
   tone: 'dark' | 'paper';
   side: 'left' | 'right';
   steps?: number;
@@ -30,14 +29,13 @@ type ChapterProps = {
   children: ReactNode;
 };
 
-function Chapter({ id, form, inner, tone, side, steps, h = '200vh', className = '', children }: ChapterProps) {
+function Chapter({ id, forms, tone, side, steps, h = '170vh', className = '', children }: ChapterProps) {
   return (
     <section
       id={id}
       className={`ch ${className}`}
       data-chapter
-      data-form={form}
-      data-inner={inner}
+      data-forms={forms}
       data-tone={tone}
       data-nav-theme={tone === 'paper' ? 'light' : 'dark'}
       data-side={side}
@@ -95,8 +93,9 @@ function StudioChapters() {
   const { open } = useContactModal();
   return (
     <>
-      {/* The cube unstacks into one wall: a page. The lime block is the part that's live. */}
-      <Chapter id="services" form="wall" tone="paper" side="right" steps={3}>
+      {/* A moodboard; its swatches fly into a website while the code is written beside it; the code
+          folds into a phone and the address goes lime. */}
+      <Chapter id="services" forms="moodboard,site,live" tone="paper" side="right" steps={3}>
         <p className="ch-kicker mono">{design.title} · {design.audience}</p>
         <h2 className="ch-title">From moodboard to a live domain.</h2>
         <p className="ch-lede">{design.blurb}</p>
@@ -108,8 +107,8 @@ function StudioChapters() {
         <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
       </Chapter>
 
-      {/* Three slabs, lifted apart: the grid, colour and type, the mark; they press into one. */}
-      <Chapter form="slabs" inner="pressed" tone="dark" side="left" steps={3}>
+      {/* Plate by plate: the grid, colour and type, the mark; then pressed into one block. */}
+      <Chapter forms="grid,colortype,mark,pressed" tone="dark" side="left" steps={3}>
         <p className="ch-kicker mono">{brand.title} · {brand.audience}</p>
         <h2 className="ch-title">From usable to worth sharing.</h2>
         <p className="ch-lede">{brand.blurb}</p>
@@ -121,8 +120,8 @@ function StudioChapters() {
         <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
       </Chapter>
 
-      {/* A skyline: what's been built. */}
-      <Chapter id="products" form="skyline" tone="paper" side="right">
+      {/* Four towers in the list's order: two built, two still in stripes. */}
+      <Chapter id="products" forms="towers" tone="paper" side="right">
         <p className="ch-kicker mono">Qbix Labs</p>
         <h2 className="ch-title">Things we’ve shipped.</h2>
         <p className="ch-lede">Qbix also builds products. Two are live, two are on the way.</p>
@@ -146,8 +145,8 @@ function StudioChapters() {
 function OfferChapters() {
   return (
     <>
-      {/* A flyer, standing, with its posts laid out beside it; the lime block is the Just Listed tag. */}
-      <Chapter id="services" form="flyer" tone="paper" side="right" steps={3}>
+      {/* The flyer, then its five posts beside it, then its video. */}
+      <Chapter id="services" forms="flyer,posts,video" tone="paper" side="right" steps={3}>
         <p className="ch-kicker mono">{kit.title} · {kit.audience}</p>
         <h2 className="ch-title">Your listing, ready to share in 48 hours.</h2>
         <p className="ch-lede">{kit.blurb} Made by a designer, delivered as files you own.</p>
@@ -159,8 +158,8 @@ function OfferChapters() {
         <div className="ch-acts"><Act href={kit.href}>See the kit</Act></div>
       </Chapter>
 
-      {/* A calm page with its phone; the lime block is the one button. */}
-      <Chapter form="practice" tone="dark" side="left" steps={3}>
+      {/* The questionnaire becomes the calm homepage, which goes live with its phone. */}
+      <Chapter forms="questionnaire,homepage,golive" tone="dark" side="left" steps={3}>
         <p className="ch-kicker mono">{practice.title} · {practice.audience}</p>
         <h2 className="ch-title">A website that feels as calm as your office.</h2>
         <p className="ch-lede">{practice.blurb}</p>
@@ -185,8 +184,8 @@ export default function Story() {
       <Hero />
       {ai ? <StudioChapters /> : <OfferChapters />}
 
-      {/* Every idea, loose; then every one of them kept and sorted. */}
-      <Chapter id="about" form="field" inner="sorted" tone={ai ? 'dark' : 'paper'} side={ai ? 'left' : 'right'}>
+      {/* Every idea, loose; then every one of them kept, sorted by kind. */}
+      <Chapter id="about" forms="field,sorted" tone={ai ? 'dark' : 'paper'} side={ai ? 'left' : 'right'}>
         <p className="ch-kicker mono">About us</p>
         <h2 className="ch-title">Our story is simple.</h2>
         <p className="ch-lede ch-story">
@@ -198,8 +197,8 @@ export default function Story() {
         </p>
       </Chapter>
 
-      {/* The blocks stack back into the cube, bottom row first: the thing, built. */}
-      <Chapter id="contact" form="cube" tone={ai ? 'paper' : 'dark'} side={ai ? 'right' : 'left'} h="170vh" className="ch--contact">
+      {/* The pieces stack back into the cube, bottom row first: the thing, built. */}
+      <Chapter id="contact" forms="cube" tone={ai ? 'paper' : 'dark'} side={ai ? 'right' : 'left'} h="160vh" className="ch--contact">
         <h2 className="ch-title ch-sign">
           Bring the idea. <Marker className={ai ? 'marker--ink' : 'marker--white'}>{'We’ll build the thing.'}</Marker>
         </h2>

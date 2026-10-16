@@ -115,9 +115,22 @@
 .ch--hero .hero-sub-mask { margin: clamp(16px, 2.6vh, 26px) 0 clamp(20px, 3.4vh, 32px); }
 .ch--hero .hero-sub { font-size: clamp(16px, 1.35vw, 20px); color: var(--ch-dim); }
 .ch--hero .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
-.ch-band { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px var(--col-gap); align-items: end; }
+/* The band: two columns built the same way, a small label over one 40px
+   line (the time; the marks), on shared lines, so neither side outweighs
+   the other. */
+.ch-band { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 24px var(--col-gap); align-items: start; }
 .ch-band > .studio { grid-column: 1 / span 4; }
 .ch-band > .marquee-block { grid-column: 5 / -1; }
+.ch-band .studio,
+.ch-band .marquee-block { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; min-width: 0; }
+.ch-band .marquee-block { align-items: stretch; }
+.ch-band .studio-label,
+.ch-band .marquee-label { font-size: 12px; line-height: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ch-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.ch-band .studio-time { height: 40px; margin: 0; display: flex; align-items: center; gap: 2px; line-height: 1; color: var(--ch-fg); }
+.ch-band .studio-hm { font-size: 30px; letter-spacing: -0.02em; }
+.ch-band .studio-s { font-size: 30px; color: var(--ch-dim); }
+.ch-band .studio-ampm { margin-left: 10px; font-size: 12px; letter-spacing: 0.12em; color: var(--ch-dim); }
+.ch-band .marquee-item { color: var(--ch-fg); opacity: 0.86; }
 
 /* --- the products list, and the one tag that's lime ---------------------- */
 .ch-list { list-style: none; margin: 26px 0 0; padding: 0; width: min(100%, 30em); display: grid; }

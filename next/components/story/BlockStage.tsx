@@ -5,7 +5,7 @@ import { useAudience } from '@/components/Audience';
 import type { StoryHandle } from '@/components/three/blockStory';
 
 /**
- * The story's one object, 27 blocks on a fixed, transparent canvas between
+ * The story's one object, 27 pieces on a fixed, transparent canvas between
  * the chapters' backgrounds and their words (components/three/blockStory.ts).
  * Mounted once; an audience switch only re-reads the chapters. Without WebGL
  * the page is the same, minus the object.

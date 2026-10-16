@@ -1,15 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { useContactModal } from '@/components/ContactModalProvider';
 import BrandText from '@/components/BrandText';
-import SplitText from '@/components/SplitText';
 import StudioTime from '@/components/hero/StudioTime';
 import LogoMarquee from '@/components/hero/LogoMarquee';
 import { useAudience, type Audience } from '@/components/Audience';
-import { smoothScrollToId } from '@/components/TopNav';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -65,27 +61,24 @@ function WordReveal({
   );
 }
 
-type Action = 'contact' | 'products' | 'services';
-
 /** What the hero says to each audience. Business copy follows the offer-page
- *  rules: no dashes, plain words. */
-const COPY: Record<Audience, { line1: string; line2: string; lede: [ReactNode, ReactNode]; ctas: [string, Action][] }> = {
+ *  rules: no dashes, plain words. The hero has no buttons of its own: its
+ *  emphasis is the switch and the cube; the action is the nav's. */
+const COPY: Record<Audience, { line1: string; line2: string; lede: [ReactNode, ReactNode] }> = {
   ai: {
     line1: 'We build the',
     line2: 'coolest things.',
     lede: [<BrandText key="a">Qbix never writes off a small idea.</BrandText>, 'We’re a sharp team that moves fast, from sketch to shipped product.'],
-    ctas: [['Tell us your idea', 'contact'], ['Use our products', 'products']],
   },
   business: {
     line1: 'Look as good',
     line2: 'as your work.',
     lede: ['Fixed-price design for local businesses, ready in days.', 'A listing kit for real estate agents and a calm website for solo practices.'],
-    ctas: [['See the offers', 'services'], ['Tell us what you need', 'contact']],
   },
 };
 
 /** The audience switch: two large options, each naming who it's for and what
- *  they'll find; a solid block slides to the chosen one, and a square marks it. */
+ *  they'll find; a solid block slides to the chosen one (eased, no bounce). */
 const OPTIONS: [Audience, string, string][] = [
   ['ai', 'For AI teams', 'Design, brand and our products'],
   ['business', 'For local business', 'Fixed-price kits, ready in days'],
@@ -118,7 +111,7 @@ export function AudienceSwitch() {
           onClick={() => setAudience(a)}
         >
           {audience === a && (
-            <motion.span layoutId="aud-pill" className="aud-pill" transition={{ type: 'spring', stiffness: 420, damping: 36 }} />
+            <motion.span layoutId="aud-pill" className="aud-pill" transition={{ duration: 0.42, ease: EASE_OUT }} />
           )}
           <span className="aud-label">{label}</span>
           <span className="aud-hint">{hint}</span>
@@ -129,13 +122,12 @@ export function AudienceSwitch() {
 }
 
 /**
- * The story's first chapter: the switch, the headline, the two actions, and
- * the studio band. The object (the cube, gathering out of loose blocks) is
- * drawn beside it by the story's stage, sized to these words; this section
- * only says which side it stands on.
+ * The story's first chapter: the switch, the headline, the lede, and the
+ * studio band. The object (the cube, gathering out of loose blocks) is drawn
+ * beside it by the story's stage, sized to these words; this section only
+ * says which side it stands on.
  */
 export default function Hero() {
-  const { open: openContactModal } = useContactModal();
   const { audience } = useAudience();
   // Entrance delays are for the first paint; a switch re-runs them quickly.
   const firstPaint = useRef(true);
@@ -144,17 +136,13 @@ export default function Hero() {
   }, []);
   const d = (load: number, swap: number) => (firstPaint.current ? load : swap);
   const copy = COPY[audience];
-  const run = (action: Action) => {
-    if (action === 'contact') openContactModal();
-    else smoothScrollToId(action);
-  };
 
   return (
     <section
       id="top"
       className="ch ch--hero"
       data-chapter
-      data-form="cube"
+      data-forms="cube"
       data-side="right"
       data-tone="dark"
       data-nav-theme="dark"
@@ -196,32 +184,9 @@ export default function Hero() {
               {copy.lede[1]}
             </motion.p>
           </span>
-
-          {/* Quiet, as text: the hero's emphasis is the switch and the cube's lime block. */}
-          <motion.div
-            key={`c-${audience}`}
-            className="hero-ctas"
-            initial={{ y: 26 }}
-            animate={{ y: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 24, mass: 0.7, delay: d(0.7, 0.26) }}
-          >
-            {copy.ctas.map(([label, action], i) => (
-              <Link
-                key={label}
-                href={action === 'contact' ? '/start' : `#${action}`}
-                className="btn btn-text btn-lg split-cta"
-                onClick={(e) => {
-                  e.preventDefault();
-                  run(action);
-                }}
-              >
-                <SplitText text={label} arrow />
-              </Link>
-            ))}
-          </motion.div>
         </div>
 
-        {/* Where and when the studio works, and where the team studied and worked. */}
+        {/* Where and when the studio works, and where the team studied and worked: two columns, each a label over one line. */}
         <div className="ch-band hero-band">
           <StudioTime />
           <LogoMarquee />

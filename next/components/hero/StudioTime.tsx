@@ -31,25 +31,17 @@ function useStudioTime() {
   return { hm: `${get('hour')}:${get('minute')}`, s: get('second'), ampm: get('dayPeriod'), zone: get('timeZoneName') };
 }
 
+/** Laid out like the marquee beside it: a small label over one line of the same height. */
 export default function StudioTime() {
   const time = useStudioTime();
   return (
     <div className="studio">
-      <div className="studio-read">
-        <ul className="studio-places">
-          {PLACES.map((p) => (
-            <li key={p}>
-              <i aria-hidden />
-              {p}
-            </li>
-          ))}
-        </ul>
-        <span className="studio-time" role="timer" aria-label={time ? `Studio time ${time.hm} ${time.ampm} ${time.zone}` : 'Studio time'}>
-          <span className="studio-hm">{time ? time.hm : '--:--'}</span>
-          <span className="studio-s">{time ? `:${time.s}` : ''}</span>
-          <span className="studio-ampm mono">{time ? `${time.ampm} ${time.zone}` : ''}</span>
-        </span>
-      </div>
+      <span className="studio-label mono">{PLACES.join(' · ')}</span>
+      <span className="studio-time" role="timer" aria-label={time ? `Studio time ${time.hm} ${time.ampm} ${time.zone}` : 'Studio time'}>
+        <span className="studio-hm">{time ? time.hm : '--:--'}</span>
+        <span className="studio-s">{time ? `:${time.s}` : ''}</span>
+        <span className="studio-ampm mono">{time ? `${time.ampm} ${time.zone}` : ''}</span>
+      </span>
     </div>
   );
 }

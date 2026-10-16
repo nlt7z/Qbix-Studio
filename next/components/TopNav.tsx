@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { navItems, CONTACT_EMAIL } from '@/lib/data';
 import { useContactModal } from '@/components/ContactModalProvider';
 import SplitText from '@/components/SplitText';
+import { smoothScrollTo } from '@/lib/smoothScroll';
 
 const HEADER_OFFSET = 64;            // 56px nav + 8px breathing room
 const sectionIds = navItems
@@ -39,7 +40,7 @@ export function smoothScrollToId(id: string) {
     window.location.assign(`/#${id}`);
     return;
   }
-  window.scrollTo({ top: sectionTop(el), behavior: 'smooth' });
+  smoothScrollTo(sectionTop(el));
   if (window.location.hash !== `#${id}`) {
     history.replaceState(null, '', `#${id}`);
   }
@@ -236,7 +237,7 @@ export default function TopNav() {
                 <motion.span
                   layoutId="topnav-hover"
                   className="topnav-link-bg"
-                  transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.6 }}
+                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                 />
               )}
               <span className="topnav-link-label">
@@ -246,7 +247,7 @@ export default function TopNav() {
                 <motion.span
                   layoutId="topnav-active"
                   className="topnav-link-underline"
-                  transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.7 }}
+                  transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
                 />
               )}
             </a>

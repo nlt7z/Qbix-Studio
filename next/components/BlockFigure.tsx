@@ -3,20 +3,19 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * The site's blocks standing still on a subpage: one arrangement, gathered
- * out of loose blocks when it first shows, swaying a little and tilting with
- * the pointer (components/three/blockStory.ts, mountBlockFigure). `inner`
- * makes it alternate between two arrangements while it's on screen.
+ * The site's pieces on a subpage (components/three/blockStory.ts,
+ * mountBlockFigure): gathered out of loose blocks into a form when they first
+ * show; `form` may name several, comma separated, which then play in turn on
+ * a loop (the flyer, its posts, its video). Sways a little and tilts with the
+ * pointer.
  */
 export default function BlockFigure({
   form,
-  inner,
   tone = 'dark',
   label,
   className = '',
 }: {
   form: string;
-  inner?: string;
   tone?: 'dark' | 'paper';
   label: string;
   className?: string;
@@ -31,7 +30,7 @@ export default function BlockFigure({
       try {
         const { mountBlockFigure } = await import('@/components/three/blockStory');
         if (cancelled) return;
-        dispose = mountBlockFigure(canvas, { form, inner, tone, reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+        dispose = mountBlockFigure(canvas, { form, tone, reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches });
         canvas.classList.add('is-ready');
       } catch (err) {
         console.warn('[figure] 3D unavailable:', err);
@@ -41,6 +40,6 @@ export default function BlockFigure({
       cancelled = true;
       dispose?.();
     };
-  }, [form, inner, tone]);
+  }, [form, tone]);
   return <canvas ref={ref} className={`block-figure ${className}`} role="img" aria-label={label} />;
 }
