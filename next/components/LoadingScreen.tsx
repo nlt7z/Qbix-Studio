@@ -1,22 +1,40 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-// The caps are drawn in CSS (globals.css, "the splash"): a dished top with its
-// legend, and the skirts on three sides, narrower at the top like a real cap.
 import { useEffect, useState, type CSSProperties } from 'react';
 
 /**
  * The splash: four keycaps, q b i x, in a little keyboard plate. They rise
  * out of their wells one after another, then each is pressed once, like
- * typing the name: the cap sinks into the plate and springs back. The third
- * key is the lime. Then the screen parts top and bottom to show the page.
- * Plays once per session.
+ * typing the name; the third key is the lime. Then the screen opens: the
+ * two halves, with the keyboard cut along its middle, draw in a little and
+ * part, top and bottom, onto the page. Plays once per session.
  */
-const HOLD_MS = 1650;
-const EXIT_MS = 900;
-const SPLIT_EASE = [0.85, 0, 0.15, 1] as const;
+const HOLD_MS = 1700;
+const EXIT_MS = 1000;
 const SEEN_KEY = 'qbix.splashSeen';
 const KEYS = ['q', 'b', 'i', 'x'];
+
+// The caps are drawn in CSS (globals.css, "the splash"): a dished top with its
+// legend, and skirts on three sides, narrower at the top like a real cap. Each
+// half of the screen carries its half of the keyboard.
+function Keyboard({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="loading-keys">
+      {KEYS.map((ch, i) => (
+        <span
+          key={ch}
+          className={`loading-key${i === 2 ? ' is-lime' : ''}${reduced ? '' : ' is-typing'}`}
+          style={{ '--r': `${0.06 + i * 0.09}s`, '--d': `${0.72 + i * 0.15}s` } as CSSProperties}
+        >
+          <span className="loading-cap">
+            <span className="loading-cap-top">{ch}</span>
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export default function LoadingScreen() {
   // SSR + first render must match: assume not-seen, then check in effect.
@@ -65,31 +83,23 @@ export default function LoadingScreen() {
   if (phase === 'gone') return null;
 
   const exiting = phase === 'out';
-  const half = (dir: 1 | -1) => (exiting ? (reduced ? { opacity: 0 } : { y: `${dir * 100}%` }) : { y: 0 });
-  const halfTransition = reduced ? { duration: 0.3 } : { duration: EXIT_MS / 1000, ease: SPLIT_EASE };
+  // Opening: a small draw-in toward the seam, then the halves part (no fade).
+  const half = (dir: 1 | -1) =>
+    exiting ? (reduced ? { opacity: 0 } : { y: ['0%', `${-dir * 1.6}%`, `${dir * 100}%`] }) : { y: '0%' };
+  const halfTransition = reduced
+    ? { duration: 0.3 }
+    : { duration: EXIT_MS / 1000, times: [0, 0.16, 1], ease: [[0.3, 0, 0.6, 1], [0.7, 0, 0.12, 1]] as [number, number, number, number][] };
 
   return (
     <div className="loading-root" aria-hidden style={{ pointerEvents: exiting ? 'none' : 'auto' }}>
-      <motion.div className="loading-half loading-half--top" initial={{ y: 0 }} animate={half(-1)} transition={halfTransition} />
-      <motion.div className="loading-half loading-half--bottom" initial={{ y: 0 }} animate={half(1)} transition={halfTransition} />
-
-      <motion.div
-        className="loading-center"
-        animate={exiting ? { scale: 0.92 } : { scale: 1 }}
-        transition={{ duration: 0.5, ease: SPLIT_EASE }}
-      >
-        <div className="loading-keys">
-          {KEYS.map((ch, i) => (
-            <span
-              key={ch}
-              className={`loading-key${i === 2 ? ' is-lime' : ''}${reduced ? '' : ' is-typing'}`}
-              style={{ '--r': `${0.06 + i * 0.09}s`, '--d': `${0.72 + i * 0.15}s` } as CSSProperties}
-            >
-              <span className="loading-cap">
-                <span className="loading-cap-top">{ch}</span>
-              </span>
-            </span>
-          ))}
+      <motion.div className="loading-half loading-half--top" initial={{ y: '0%' }} animate={half(-1)} transition={halfTransition}>
+        <div className="loading-seam loading-seam--top">
+          <Keyboard reduced={!!reduced} />
+        </div>
+      </motion.div>
+      <motion.div className="loading-half loading-half--bottom" initial={{ y: '0%' }} animate={half(1)} transition={halfTransition}>
+        <div className="loading-seam loading-seam--bottom">
+          <Keyboard reduced={!!reduced} />
         </div>
       </motion.div>
     </div>
