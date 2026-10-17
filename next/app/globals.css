@@ -4321,77 +4321,31 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 input:not([type='checkbox']):not([type='radio']), textarea, select { background: var(--bg-2); border: 0; box-shadow: none; }
 input:not([type='checkbox']):not([type='radio']):focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--ink) !important; outline-offset: 0; }
 
-/* --- the splash: four keycaps in a plate, the third lime -------------------------
-   Each half of the screen carries its half of the keyboard (the seam runs
-   through the middle of the keys), so when the halves part the keyboard opens
-   with them. Each key is a well in the plate (overflow hidden: the plate's top
-   edge) and a cap in it, drawn as a real cap seen from the front and above: a
-   dished top with its legend at the top left, and skirts on three sides,
-   narrower at the top (left lit, front in half light, right in shade). The cap
-   rises out of its well; a press sinks it, so the plate hides its skirt. */
+/* --- the splash: the brand's keyboard, Q B I X ----------------------------------
+   The keys are the brand render (public/qbix-keyboard.png) cut into four
+   (public/splash). Each half of the screen carries its half of the keyboard
+   (the seam runs through the middle of the keys), so when the halves part the
+   keyboard opens with them. Each key sits in a slot (overflow hidden): it
+   rises out of it, and a press sinks it a little back in. */
 .loading-half { overflow: hidden; }
 .loading-seam { position: absolute; left: 0; right: 0; display: flex; justify-content: center; }
 .loading-seam--top { top: 100%; transform: translateY(-50%); }
 .loading-seam--bottom { top: 0; transform: translateY(-50%); }
-.loading-keys {
-  --key: clamp(56px, 7.6vw, 88px);
-  display: flex;
-  gap: calc(var(--key) * 0.09);
-  padding: calc(var(--key) * 0.14);
-  background: #18191c;
-  /* the plate: its top edge catches the light, its front edge is a solid face */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 calc(var(--key) * 0.08) 0 #0d0e10;
-}
-.loading-key {
-  position: relative;
-  width: var(--key);
-  height: calc(var(--key) * 1.06);
-  overflow: hidden;
-  background: #0a0b0d;   /* the well, seen past the cap's narrower top */
-}
-.loading-cap {
-  position: absolute;
-  inset: 0;
-  background: #d3d6d0;   /* the front skirt */
-  clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
-}
-.loading-cap::before,
-.loading-cap::after { content: ''; position: absolute; inset: 0; }
-.loading-cap::before { background: #e6e8e3; clip-path: polygon(7% 0, 7% 80%, 0 100%); }        /* left skirt, lit */
-.loading-cap::after { background: #c2c5bf; clip-path: polygon(93% 0, 100% 100%, 93% 80%); }     /* right skirt, in shade */
-.loading-cap-top {
-  position: absolute;
-  left: 7%;
-  right: 7%;
-  top: 0;
-  height: 80%;
-  z-index: 1;
-  padding: 12% 0 0 14%;
-  /* the dish: a touch lighter where the light falls into it */
-  background: radial-gradient(130% 100% at 46% 30%, #fbfbf9 0%, #f1f2ee 70%, #e9eae6 100%);
-  color: #2a2d31;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: calc(var(--key) * 0.2);
-  line-height: 1;
-  text-align: left;
-}
-.loading-key.is-lime .loading-cap { background: #9fd600; }
-.loading-key.is-lime .loading-cap::before { background: #b2f000; }
-.loading-key.is-lime .loading-cap::after { background: #8fc000; }
-.loading-key.is-lime .loading-cap-top { background: radial-gradient(130% 100% at 46% 30%, #c8ff33 0%, #b8ff00 70%, #b0f500 100%); color: #15171a; }
-/* Rise out of the well (translate), then one press (transform): separate properties, so they compose. */
-.loading-key.is-typing .loading-cap {
+.loading-keys { --kh: clamp(84px, 11vw, 136px); display: flex; gap: calc(var(--kh) * 0.05); }
+.loading-key { position: relative; overflow: hidden; height: var(--kh); width: calc(var(--kh) * var(--w) / 262); }
+.loading-keycap { display: block; width: 100%; height: 100%; translate: 0 110%; user-select: none; -webkit-user-drag: none; }
+/* Rise (translate), then one press (transform): separate properties, so they compose. */
+.loading-key.is-typing .loading-keycap {
   animation:
-    cap-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) var(--r, 0.1s) both,
-    cap-press 0.32s cubic-bezier(0.45, 0, 0.25, 1) var(--d, 0.8s) both;
+    key-rise 0.56s cubic-bezier(0.16, 1, 0.3, 1) var(--r, 0s) both,
+    key-press 0.3s cubic-bezier(0.45, 0, 0.25, 1) var(--d, 0.7s) both;
 }
-@keyframes cap-rise { from { translate: 0 108%; } to { translate: 0 0; } }
-@keyframes cap-press {
-  0%, 100% { transform: translateY(0); }
-  42% { transform: translateY(14%); }
+.loading-key.is-still .loading-keycap { translate: 0 0; }
+@keyframes key-rise { from { translate: 0 110%; } to { translate: 0 0; } }
+@keyframes key-press {
+  0%, 100% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(5%) scale(0.985); }
 }
-@media (prefers-reduced-motion: reduce) { .loading-key.is-typing .loading-cap { animation: none; } }
 
 /* --- the blocks standing on a subpage ----------------------------------------- */
 .block-figure { display: block; width: 100%; aspect-ratio: 1; max-height: 64vh; }

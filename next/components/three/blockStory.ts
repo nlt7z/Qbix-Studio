@@ -50,8 +50,8 @@ const N = 64;   // the cube is 4 × 4 × 4; the scenes use as many as they need 
 // Three materials: plain, dots, lime. (FORE and BACK are the plain in either
 // colour; DOTB the dots on the other; PHOTO a picture drawn in plain shapes;
 // PLAY the lime with a play mark.)
-const K = { FORE: 0, DOT: 1, PHOTO: 4, BACK: 5, DOTB: 6, LIME: 9, PLAY: 10 } as const;
-const isLime = (k: number) => k === K.LIME || k === K.PLAY;
+const K = { FORE: 0, DOT: 1, PHOTO: 4, BACK: 5, DOTB: 6, LIME: 9, PLAY: 10, JELLY: 11 } as const;
+const isLime = (k: number) => k === K.LIME || k === K.PLAY || k === K.JELLY;
 
 type Vec = [number, number, number];
 type View = { yaw: number; pitch: number };
@@ -123,14 +123,14 @@ function makeForm(
 function buildForms(): Record<string, Form> {
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const { FORE, DOT, PHOTO, BACK, DOTB, LIME, PLAY } = K;
+  const { FORE, DOT, PHOTO, BACK, DOTB, LIME, PLAY, JELLY } = K;
   const F: Record<string, Form> = {};
 
   /* The cube: 4 × 4 × 4 white blocks, a few of them dotted (one in five, never two side by
      side: (x + 2y + 3z) mod 5 changes along every axis), its top front corner lime. */
   const cube: Piece[] = [];
   for (let y = 0; y < 4; y++) for (let z = 0; z < 4; z++) for (let x = 0; x < 4; x++) {
-    const k = x === 3 && y === 3 && z === 3 ? LIME : (x + 2 * y + 3 * z) % 5 === 0 ? DOT : FORE;
+    const k = x === 3 && y === 3 && z === 3 ? JELLY : (x + 2 * y + 3 * z) % 5 === 0 ? DOT : FORE;
     cube.push(piece(x - 1.5, y - 1.5, z - 1.5, 0.9, 0.9, 0.9, k));
   }
   F.cube = makeForm(cube, { yaw: -0.62, pitch: 0.4 }, { order: 'bottom', lift: [0, 0.8, 0.2] });
@@ -393,9 +393,16 @@ varying vec3 vNo;
 varying vec3 vPos;
 varying vec3 vScale;
 varying vec3 vKind;
+varying vec3 vTx;
+varying vec3 vTy;
+varying vec3 vTz;
 void main() {
   vScale = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
-  vN = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
+  mat3 m = mat3(modelMatrix) * mat3(instanceMatrix);
+  vN = normalize(m * normal);
+  vTx = normalize(m * vec3(1.0, 0.0, 0.0));
+  vTy = normalize(m * vec3(0.0, 1.0, 0.0));
+  vTz = normalize(m * vec3(0.0, 0.0, 1.0));
   vNo = normal;
   vPos = position;
   vKind = aKind;
@@ -403,10 +410,12 @@ void main() {
 }
 `;
 // Each piece is drawn in the page's two colours: FORE (white on a black
-// chapter, ink on a paper one) and BACK (the other). Clean, like a printed
-// thing: three tones of light (the top brightest, then the left, then the
-// right), no shadows smudged into the seams, no rims, no grain. The dots are
-// round, in whole rows that fit the face, the same size on every piece. A
+// chapter, ink on a paper one) and BACK (the other), as moulded plastic in a
+// studio, after the brand's own renders (public/qbix-keyboard.png): soft
+// light from above, a gloss whose reflections show two soft boxes, and edges
+// rounded in the shading so they catch the light; no shadows smudged into
+// the seams, no grain. The dots are printed, round, in whole rows that fit
+// the face; the cube's lime corner is lime jelly, lit from within. A
 // picture is drawn in plain shapes, a sun over a hill. When a piece changes
 // material it dissolves into the next in coarse pixels (aKind: from, to, how
 // far). The page's edge (uEdge, device pixels from the bottom) cuts the
@@ -421,6 +430,9 @@ varying vec3 vNo;
 varying vec3 vPos;
 varying vec3 vScale;
 varying vec3 vKind;
+varying vec3 vTx;
+varying vec3 vTy;
+varying vec3 vTz;
 float bayer2(vec2 a) { a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
 float bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }
 // how much of the pixel lies where d < 0, over a footprint w
@@ -451,36 +463,60 @@ float pattern(float k, vec2 w, vec2 fs, vec2 fw) {
 }
 
 void main() {
-  vec3 n = normalize(vN);
   vec3 no = normalize(vNo);
-  // light from above, a little from the front left: the top brightest, then the left face, then the right
-  vec3 L = normalize(vec3(-0.25, 0.85, 0.6));
-  float t3 = clamp((max(dot(n, L), 0.0) - 0.0) / 0.95, 0.0, 1.0);
-
   vec3 a = abs(no);
   vec2 loc, fs;
-  if (a.x > 0.5) { loc = vPos.zy; fs = vScale.zy; }
-  else if (a.y > 0.5) { loc = vPos.xz; fs = vScale.xz; }
-  else { loc = vPos.xy; fs = vScale.xy; }
+  vec3 Tu, Tv;
+  if (a.x > 0.5) { loc = vPos.zy; fs = vScale.zy; Tu = vTz; Tv = vTy; }
+  else if (a.y > 0.5) { loc = vPos.xz; fs = vScale.xz; Tu = vTx; Tv = vTz; }
+  else { loc = vPos.xy; fs = vScale.xy; Tu = vTx; Tv = vTy; }
   vec2 w = loc * fs;
   vec2 fw = fwidth(w);
+
+  // A small rounded edge, in the shading only: near an edge the normal turns
+  // toward the next face, so the edge catches the light like a moulded part.
+  vec2 dE = fs * 0.5 - abs(w);
+  float r = min(0.07, 0.35 * min(fs.x, fs.y));
+  vec2 bev = 1.0 - smoothstep(vec2(0.0), vec2(r), dE);
+  vec3 n = normalize(normalize(vN) + (sign(w.x) * bev.x * Tu + sign(w.y) * bev.y * Tv) * 0.85);
 
   // the material: the last one dissolving into the next, in coarse pixels
   float th = bayer4(floor(w * 5.0) + floor(no.xy * 3.0 + no.z * 5.0));
   float k = vKind.z > th ? vKind.y : vKind.x;
-
   float tone = uHasEdge > 0.5 && gl_FragCoord.y < uEdge ? uToneBelow : uToneAbove;
-  vec3 white = vec3(0.957, 0.961, 0.949) * mix(0.83, 1.0, t3);
-  vec3 ink = mix(vec3(0.055, 0.06, 0.068), vec3(0.17, 0.18, 0.2), t3);
-  vec3 fore = mix(white, ink, tone);
-  vec3 back = mix(ink, white, tone);
-  vec3 c = k > 8.5 ? vec3(0.722, 1.0, 0.0) * mix(0.82, 1.0, t3) : mix(fore, back, pattern(k, w, fs, fw));
-  if (k > 9.5 && min(fs.x, fs.y) > 0.3) {
+
+  // A studio: a big soft light above and to the front left, the sky, and two
+  // soft boxes that show in the reflections. Moulded plastic, gloss on top.
+  vec3 V = vec3(0.0, 0.0, 1.0);
+  float diff = max(dot(n, normalize(vec3(-0.4, 0.85, 0.55))), 0.0);
+  float wrap = 0.55 * diff + 0.45 * (0.5 + 0.5 * n.y);
+  vec3 R = reflect(-V, n);
+  float box1 = smoothstep(0.82, 0.95, dot(R, normalize(vec3(-0.45, 0.8, 0.4))));
+  float box2 = smoothstep(0.9, 0.985, dot(R, normalize(vec3(0.85, 0.3, 0.42))));
+  float env = 0.06 + 0.22 * clamp(R.y, 0.0, 1.0) + 0.95 * box1 + 0.45 * box2;
+  float nv = clamp(dot(n, V), 0.0, 1.0);
+  float fres = 0.045 + 0.955 * pow(1.0 - nv, 5.0);
+
+  vec3 whiteLit = vec3(0.955, 0.958, 0.948) * (0.72 + 0.3 * wrap);
+  vec3 inkLit = vec3(0.05, 0.055, 0.062) + vec3(0.135) * wrap;
+  vec3 fore = mix(whiteLit, inkLit, tone);
+  vec3 back = mix(inkLit, whiteLit, tone);
+  vec3 lime = vec3(0.722, 1.0, 0.0);
+  vec3 c = k > 8.5 ? lime * (0.74 + 0.3 * wrap) : mix(fore, back, pattern(k, w, fs, fw));
+  if (k > 10.5) {
+    // lime jelly: lit from within, an inner square brighter, the rim deeper; a stronger sheen
+    vec2 q = abs(w) / (fs * 0.5);
+    float inner = 1.0 - smoothstep(0.36, 0.74, max(q.x, q.y));
+    c = lime * (0.5 + 0.34 * wrap + 0.34 * inner);
+    fres = 0.06 + 0.94 * pow(1.0 - nv, 3.0);
+  }
+  if (k > 9.5 && k < 10.5 && min(fs.x, fs.y) > 0.3) {
     // the play button: an ink triangle on the lime, pointing right
     vec2 t = w / (0.5 * min(fs.x, fs.y));
     float inside = max(-0.32 - t.x, abs(t.y) * 1.25 + t.x * 0.62 - 0.36);
     c = mix(c, vec3(0.06, 0.065, 0.075), cover(inside, max(fw.x, fw.y) * 2.0 / min(fs.x, fs.y)));
   }
+  c += vec3(fres * env);
   gl_FragColor = vec4(c, 1.0);
 }
 `;
