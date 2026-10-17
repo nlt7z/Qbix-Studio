@@ -585,6 +585,14 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
         cost.push(row);
       }
       perm = Int32Array.from(hungarian(cost));
+      // Between chapters, a block that is put away grows in at its new place (it doesn't fly in from wherever it was put away).
+      for (let k = 0; k < N; k++) {
+        if (cs[k * 3] > 0.01 && cs[k * 3 + 1] > 0.01) continue;
+        const P = to.pieces[perm[k]];
+        if (P.spare) continue;
+        cp[k * 3] = P.p[0]; cp[k * 3 + 1] = P.p[1]; cp[k * 3 + 2] = P.p[2];
+        cq[k].copy(P.q);
+      }
     }
     const spread = o.spread ?? 0.65, dur = o.dur ?? 0.9;
     const delay = new Float32Array(N), arc = new Float32Array(N);
@@ -829,21 +837,12 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
   };
   const mixBox = (a: Box, b: Box, k: number): Box => ({ x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), w: lerp(a.w, b.w, k), h: lerp(a.h, b.h, k) });
 
-  // Which chapter is on: on a desktop, the one past the middle of the screen;
-  // on a phone, the one whose window is nearest the middle.
+  // Which chapter is on: the last one whose top has passed a little below the
+  // middle of the screen. On a phone that is also when the last chapter's
+  // pinned window is still whole under the nav, so the object never goes
+  // under the nav on its way from one window to the next.
   const pick = () => {
-    const vh = window.innerHeight;
-    if (tall()) {
-      let best = 0, bestD = Infinity;
-      chapters.forEach((c, k) => {
-        const r = c.win?.getBoundingClientRect();
-        if (!r) return;
-        const d = Math.abs(r.top + r.height / 2 - vh / 2);
-        if (d < bestD) { bestD = d; best = k; }
-      });
-      return best;
-    }
-    const y = window.scrollY;
+    const vh = window.innerHeight, y = window.scrollY;
     let k = 0;
     for (let j = 0; j < chapters.length; j++) if (chapters[j].top <= y + vh * 0.55) k = j;
     return k;
@@ -887,7 +886,13 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     if (!chapters.length) return;
     measure();
     const vw = window.innerWidth, vh = window.innerHeight;
-    rig.resize(vw, vh);
+    // Draw at the canvas's own size: on a phone the fixed canvas is the large
+    // viewport tall (100lvh) while innerHeight is the small one when the
+    // toolbars show; drawing at innerHeight would stretch the picture and
+    // push the object off its window. The canvas's top is the viewport's, so
+    // the words' rects are in its coordinates either way.
+    const cw = canvas.clientWidth || vw, chh = canvas.clientHeight || vh;
+    rig.resize(cw, chh);
 
     // The chapter that's on, and its scenes: one after another, on a loop.
     if (splashDone()) {
@@ -925,10 +930,12 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     // Sized to the words beside it, gliding there when the chapter changes.
     if (ci >= 0) {
       const live = boxFor(chapters[ci]);
-      const kb = easeInOut(clamp01((t - tEnter) / Math.max(0.001, enterEnds - tEnter)));
+      // A desktop glides the object to the next chapter's side; a phone puts it straight into the next window
+      // (the last one is already scrolling away), and the move plays there.
+      const kb = tall() ? 1 : easeInOut(clamp01((t - tEnter) / Math.max(0.001, enterEnds - tEnter)));
       const box = boxFrom && live ? mixBox(boxFrom, live, kb) : live ?? boxFrom;
       if (box && box.w > 40 && box.h > 40) {
-        rig.fit(ext, box, vw, vh, 1 - Math.exp(-dt * 14));
+        rig.fit(ext, box, cw, chh, 1 - Math.exp(-dt * 14));
         lastBox = box;
       }
     }
@@ -941,7 +948,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
       if (r.top <= 0 && r.bottom > 0) above = below = chapters[k].tone;
     }
     U.uHasEdge.value = edgeCss >= 0 ? 1 : 0;
-    U.uEdge.value = (vh - edgeCss) * renderer.getPixelRatio();
+    U.uEdge.value = (chh - edgeCss) * renderer.getPixelRatio();
     U.uToneAbove.value = above;
     U.uToneBelow.value = below;
 
