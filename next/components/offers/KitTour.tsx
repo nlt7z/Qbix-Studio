@@ -4,28 +4,30 @@ import { useRef, useState } from 'react';
 import { useMotionValueEvent, useScroll } from 'framer-motion';
 import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
 import { Words } from '@/components/Reveal';
-import SceneStage, { type SceneName } from './SceneStage';
+import StageBox, { STAGE_TAIL } from '@/components/story/StageBox';
+import { smoothScrollTo } from '@/lib/smoothScroll';
 
 type Item = { k: string; v: string };
 
 /**
- * A pinned scroll tour: the section pins, a 3D scene sits beside the list,
- * and scrolling walks the scene from stop to stop. Each row is a button that
- * jumps to its stop. With reduced motion it's a plain list.
+ * A pinned scroll tour: the section pins, the page's object (BlockStage) sits
+ * beside the list playing `forms`, one per row, and scrolling walks it from
+ * one to the next; the row it shows is lit. Each row is a button that jumps
+ * to its stop. With reduced motion it's a plain list.
  */
 export default function KitTour({
   items,
-  scene = 'kit',
+  forms,
+  label,
   title = 'What you get',
   id,
-  labels,
 }: {
   items: Item[];
-  scene?: SceneName;
+  /** The forms the object plays, one per row (components/three/blockForms.ts). */
+  forms: string;
+  label: string;
   title?: string;
   id?: string;
-  /** Blueprint labels pinned to the scene's pieces (a stable, module-level array). */
-  labels?: string[];
 }) {
   const ref = useRef<HTMLElement | null>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
@@ -39,8 +41,12 @@ export default function KitTour({
   const reduced = useReducedMotionSafe();
   const n = items.length;
 
+  // The row whose form the object is nearest (it holds on each form, moving between them, and
+  // gets to the last a little before the section scrolls on).
   useMotionValueEvent(scrollYProgress, 'change', (v) => {
-    setActive(Math.min(n - 1, Math.max(0, Math.floor(v * n))));
+    const run = (ref.current?.offsetHeight ?? 0) - window.innerHeight;
+    const p = Math.min(1, (v * run) / Math.max(1, run - window.innerHeight * STAGE_TAIL));
+    setActive(Math.min(n - 1, Math.max(0, Math.round(p * (n - 1)))));
   });
   useMotionValueEvent(approach, 'change', (v) => setStarted(v > 0));
 
@@ -49,7 +55,7 @@ export default function KitTour({
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
     const travel = el.offsetHeight - window.innerHeight;
-    window.scrollTo({ top: top + travel * ((i + 0.55) / n), behavior: 'smooth' });
+    smoothScrollTo(top + (travel - window.innerHeight * STAGE_TAIL) * (i / Math.max(1, n - 1)));
   };
 
   if (reduced) {
@@ -74,7 +80,7 @@ export default function KitTour({
   }
 
   return (
-    <section ref={ref} id={id} className="lk-tour" data-nav-theme="dark" style={{ ['--stops' as string]: n }}>
+    <section ref={ref} id={id} className="lk-tour" data-nav-theme="dark" data-chapter data-forms={forms} data-tone="dark" style={{ ['--stops' as string]: n }}>
       <div className="lk-tour-pin">
         <div className="container lk-tour-grid">
           <div className="lk-tour-copy">
@@ -98,7 +104,7 @@ export default function KitTour({
               <span style={{ transform: `scaleX(${(active + 1) / n})` }} />
             </div>
           </div>
-          <SceneStage scene={scene} mode="tour" progress={scrollYProgress} labels={labels} className="lk-tour-stage" />
+          <StageBox label={label} className="lk-tour-stage" />
         </div>
       </div>
     </section>

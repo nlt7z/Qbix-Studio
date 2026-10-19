@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createScroller, type Scroller } from '@/lib/smoothScroll';
+import { STAGE_TAIL } from '@/components/story/StageBox';
 import { N, ROUND, buildForms, clamp01, easeInOut, isLime, lerp, mixView, shown, smooth, type Form, type View } from './blockForms';
 import { KIND, LIGHTS, makeLook, pieceGeometry, pieceMaterials, type Lighting, type LookUniforms } from './blockLook';
 import { printAtlas, type Rect } from './blockPrints';
@@ -561,18 +562,23 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
     camera.updateProjectionMatrix();
   };
   // Place the extents inside a box (CSS pixels of a canvas w × h), 0.9 of it.
-  const fitted = { x: 0, y: 0, s: 1, r: 0, ok: false };
-  const fit = (ext: Ext, box: Box, w: number, h: number, k: number) => {
+  const fitted = { x: 0, y: 0, s: 1, r: 0, ok: false, bx: 0, by: 0, ox: 0, oy: 0 };
+  /** Fit the object to a box on the page, eased by k; with `exact` the box's place is followed at once (a box that scrolls with the page). */
+  const fit = (ext: Ext, box: Box, w: number, h: number, k: number, exact = false) => {
     const visH = 2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360), visW = visH * camera.aspect;
     const pxToWorld = visH / h;
     const extW = ext.maxX - ext.minX || 1, extH = ext.maxY - ext.minY || 1;
     const s = Math.min((box.w * pxToWorld) / extW, (box.h * pxToWorld) / extH) * 0.9;
     const cx = (box.x + box.w / 2) / w - 0.5, cy = 0.5 - (box.y + box.h / 2) / h;
     const ox = ((ext.minX + ext.maxX) / 2) * s, oy = ((ext.minY + ext.maxY) / 2) * s;
-    const kk = fitted.ok ? k : 1;
-    fitted.x = lerp(fitted.x, cx * visW - ox, kk);
-    fitted.y = lerp(fitted.y, cy * visH - oy, kk);
+    const kk = fitted.ok ? k : 1, kb = exact ? 1 : kk;
+    fitted.bx = lerp(fitted.bx, cx * visW, kb);
+    fitted.by = lerp(fitted.by, cy * visH, kb);
+    fitted.ox = lerp(fitted.ox, -ox, kk);
+    fitted.oy = lerp(fitted.oy, -oy, kk);
     fitted.s = lerp(fitted.s, s, kk);
+    fitted.x = fitted.bx + fitted.ox;
+    fitted.y = fitted.by + fitted.oy;
     fitted.ok = true;
     group.position.set(fitted.x, fitted.y, 0);
     group.scale.setScalar(fitted.s);
@@ -600,6 +606,12 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
     renderer.clear();
     renderer.setClearColor(U.uToneAbove.value > 0.5 ? bgPaper : bgDark, 1);
     renderer.render(scene, camera);
+  };
+  /** Nothing on screen: the canvas cleared to nothing. */
+  const clearCanvas = () => {
+    renderer.setRenderTarget(null);
+    renderer.setClearColor(0x000000, 0);
+    renderer.clear();
   };
   // If frames start to be missed (the GPU can't keep up at this resolution), draw at a lower one:
   // a step down whenever a sixth of the last 96 frames came late, and back up a step after six
@@ -646,7 +658,7 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
     place, go, scrub, turnLayer, update, viewAt, endsAt, usePrints, showFilms,
     busy: (t: number) => scrubT === null && t < endsAt(),
     still: () => !move && scrubT === null && !twist,
-    resize, fit, light, draw, pace, dispose,
+    resize, fit, light, draw, clearCanvas, pace, dispose,
   };
 }
 
@@ -663,6 +675,7 @@ type Chapter = {
   el: HTMLElement;
   copy: HTMLElement | null;
   win: HTMLElement | null;
+  box: HTMLElement | null;   // where the page wants the object, if it says (a sub-page's sections)
   forms: Form[];
   tone: number;        // 0: a black chapter, 1: a paper one
   steps: number;
@@ -685,6 +698,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
         el,
         copy: el.querySelector<HTMLElement>('.ch-copy'),
         win: el.querySelector<HTMLElement>('.ch-window'),
+        box: el.querySelector<HTMLElement>('[data-stage-box]'),
         forms: list.length ? list : [forms.cube],
         tone: el.dataset.tone === 'paper' ? 1 : 0,
         steps: Number(el.dataset.steps || 0),
@@ -720,6 +734,10 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
   const tall = () => window.innerWidth < 900 || window.innerWidth / window.innerHeight < 0.95;
   const boxFor = (c: Chapter): Box | null => {
     const vw = window.innerWidth, vh = window.innerHeight;
+    if (c.box) {
+      const r = c.box.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : null;
+    }
     if (tall()) {
       const r = c.win?.getBoundingClientRect();
       if (!r || r.height <= 0) return null;
@@ -752,7 +770,8 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     const n = c.forms.length;
     if (n < 2) return 0;
     const vh = window.innerHeight;
-    const run = tall() ? c.h - vh * 0.75 : c.h - vh;
+    // (a sub-page's tour gets to its last form a little before its section scrolls on, and holds it)
+    const run = tall() && !c.box ? c.h - vh * 0.75 : c.h - vh - (c.box ? vh * STAGE_TAIL : 0);
     const p = clamp01((window.scrollY - c.top) / Math.max(1, run));
     const u = p * (n - 1), i = Math.min(n - 2, Math.floor(u));
     return i + smooth(0.2, 0.8, u - i);
@@ -764,6 +783,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
   let scene = 0;   // where the chapter's object is shown, following the scroll's place
   let boxFrom: Box | null = null, lastBox: Box | null = null;
   let mxS = 0, myS = 0;
+  let offScreen = false, drawn = true;
   let seed = 11;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const splashDone = () => (window as unknown as { __qbixSplashDone?: boolean }).__qbixSplashDone !== false;
@@ -786,7 +806,9 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     tEnter = t;
     enterEnds = rig.endsAt();
     nextTurn = enterEnds + 1.2;
-    boxFrom = lastBox;
+    // glide from where the object was, unless that has scrolled away (a sub-page, between sections)
+    const vh = window.innerHeight;
+    boxFrom = lastBox && lastBox.y + lastBox.h > 0 && lastBox.y < vh ? lastBox : null;
     setStep(c, shownAt);
   };
 
@@ -849,9 +871,11 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
       const kb = tall() ? 1 : easeInOut(clamp01((t - tEnter) / Math.max(0.001, enterEnds - tEnter)));
       const box = boxFrom && live ? mixBox(boxFrom, live, kb) : live ?? boxFrom;
       if (box && box.w > 40 && box.h > 40) {
-        rig.fit(ext, box, cw, chh, 1 - Math.exp(-dt * 14));
+        rig.fit(ext, box, cw, chh, 1 - Math.exp(-dt * 14), !!chapters[ci].box && (!boxFrom || kb >= 1));
         lastBox = box;
       }
+      // a sub-page's sections come between its chapters: nothing to draw while the object's box is off screen
+      offScreen = !box || box.y + box.h < 0 || box.y > chh;
     }
 
     // The page's colours: the edge of the chapter scrolling up cuts the object.
@@ -871,7 +895,12 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
       const c = chapters[ci], set = LIGHTS[c.tone ? 'paper' : 'dark'];
       rig.light(dt, t, set[ci % set.length], { x: mxS * sway, y: myS * sway });
     }
-    rig.draw();
+    if (offScreen) {
+      if (drawn) { rig.clearCanvas(); drawn = false; rig.showFilms(false); }
+    } else {
+      if (!drawn) { drawn = true; rig.showFilms(running && !reduced); }
+      rig.draw();
+    }
     if (!ready) { ready = true; onReady?.(); }
   };
 

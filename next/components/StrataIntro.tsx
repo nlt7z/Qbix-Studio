@@ -4,14 +4,12 @@ import Link from 'next/link';
 import { Reveal, Stagger, RevealItem, Wipe, Words } from '@/components/Reveal';
 import SitePreviewFrame from '@/components/SitePreviewFrame';
 import SplitText from '@/components/SplitText';
-import BlockFigure from '@/components/BlockFigure';
+import BlockStage from '@/components/story/BlockStage';
+import StageBox from '@/components/story/StageBox';
 import KitTour from '@/components/offers/KitTour';
 import Marker from '@/components/Marker';
 
 const STRATA_URL = 'https://stratadesign.app';
-
-// The strata the 3D image separates into, top to bottom.
-const LAYERS = ['Image', 'Color', 'Type', 'Spacing', 'Components', 'Code'];
 
 // FIG 01 — the pipeline, three verbs.
 const steps = [
@@ -60,9 +58,11 @@ const outputs = [
 
 export default function StrataIntro() {
   return (
-    <main className="pd">
-      {/* 1 — hero: the claim beside the object — an image that separates into a system */}
-      <section className="pd-hero" data-nav-theme="dark">
+    <main className="pd story">
+      {/* The page's one 3D object, drawn where its two sections ask (components/story/BlockStage). */}
+      <BlockStage />
+      {/* 1 — hero: the claim beside the object — Strata itself, its film on a laptop */}
+      <section className="pd-hero" data-nav-theme="dark" data-chapter data-forms="strata" data-tone="dark">
         <div className="container pd-hero-grid">
           <header className="pd-head">
             <Link href="/#products" className="detail-crumb">
@@ -99,7 +99,7 @@ export default function StrataIntro() {
             </Reveal>
           </header>
           <div className="pd-hero-visual">
-            <BlockFigure form="strataImage,strataTokens,strataSystem" label="One image in; its colours and type taken out of it; then the system made of them: parts and code" />
+            <StageBox label="Strata on a laptop, playing: a wall of inspiration becoming a system" />
           </div>
         </div>
         <div className="container">
@@ -123,7 +123,13 @@ export default function StrataIntro() {
       </section>
 
       {/* 2 — how it works: the section pins and scroll reads, drafts, ships */}
-      <KitTour id="how" items={tourSteps} scene="strata" title="Drop in an image. Ship a system." labels={LAYERS} />
+      <KitTour
+        id="how"
+        items={tourSteps}
+        forms="strataImage,strataTokens,strataSystem"
+        title="Drop in an image. Ship a system."
+        label="One image in; its colours and type taken out of it; then the system made of them: parts and code"
+      />
 
       {/* 3 — what comes out, on a full-bleed paper panel */}
       <section id="outputs" className="pd-lime section-pad" data-nav-theme="light">

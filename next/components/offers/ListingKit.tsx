@@ -4,7 +4,8 @@ import CheckoutButton, { CheckoutNote } from './CheckoutButton';
 import { OfferBadge, WasPrice } from './OfferPrice';
 import Faq from './Faq';
 import StickyCta from './StickyCta';
-import BlockFigure from '@/components/BlockFigure';
+import BlockStage from '@/components/story/BlockStage';
+import StageBox from '@/components/story/StageBox';
 import KitTour from './KitTour';
 import HourRail from './HourRail';
 import Odometer from './Odometer';
@@ -51,8 +52,10 @@ const FAQ = [
 
 export default function ListingKit() {
   return (
-    <main className="offer lk">
-      <section className="lk-hero" data-nav-theme="dark">
+    <main className="offer lk story">
+      {/* The page's one 3D object, drawn where its two sections ask (components/story/BlockStage). */}
+      <BlockStage />
+      <section className="lk-hero" data-nav-theme="dark" data-chapter data-forms="kit" data-tone="dark">
         <div className="container lk-hero-grid">
           <div className="lk-hero-copy">
             <Reveal as="span" className="offer-eyebrow mono" speed="fast">
@@ -65,7 +68,7 @@ export default function ListingKit() {
             </Reveal>
           </div>
           <div className="lk-hero-visual">
-            <BlockFigure form="flyer,posts,video" label="A print flyer, then its five social posts, then its video, in blocks" />
+            <StageBox label="The kit: a print flyer, social posts around it, and the video on a phone" />
           </div>
           <div className="lk-hero-act">
             <Reveal className="lk-hero-cta" speed="base" delay={0.45}>
@@ -95,7 +98,11 @@ export default function ListingKit() {
         </div>
       </section>
 
-      <KitTour items={GET} />
+      <KitTour
+        items={GET}
+        forms="kitFlyer,kitPosts,kitReel,kitEdit,kitChanges"
+        label="The flyer, then its five posts, then the reel on a phone, then the flyer open to edit, then a change asked for and done"
+      />
 
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">

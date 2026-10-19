@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+// The canvas's place (fixed, between the sections' backgrounds and their words) comes with it, on any page.
+import '@/app/story.css';
 import { useAudience } from '@/components/Audience';
 import type { StoryHandle } from '@/components/three/blockStory';
 

@@ -3072,7 +3072,7 @@ a.ft-link:hover { color: var(--ink); }
 
 /* "What you get" tour — the section pins and scroll walks the 3D camera
    through the kit, one stop per item. */
-.lk-tour { position: relative; height: calc(var(--stops) * 75vh + 100vh); box-shadow: inset 0 1px 0 var(--line); }
+.lk-tour { position: relative; height: calc(var(--stops) * 75vh + 130vh); box-shadow: inset 0 1px 0 var(--line); }
 .lk-tour-pin { position: sticky; top: 0; height: 100vh; height: 100svh; display: flex; align-items: center; overflow: hidden; }
 .lk-tour-grid { display: grid; gap: 24px; width: 100%; }
 .lk-tour-stage { height: 100vh; height: 100svh; }
@@ -3107,29 +3107,15 @@ a.ft-link:hover { color: var(--ink); }
 }
 @media (min-width: 960px) {
   .lk-tour-grid { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: center; gap: 40px; }
-  /* The stage fills the pinned viewport behind the list (the scene centres its
-     subject on the right); a fade keeps the list readable over it. */
-  .lk-tour-stage { position: absolute; inset: 0; width: auto; height: auto; }
-  .lk-tour-pin::after {
-    content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-    background: linear-gradient(90deg, var(--bg) 0%, rgba(8, 9, 10, 0.94) 36%, rgba(8, 9, 10, 0) 56%);
-  }
-  .lk-tour-copy { position: relative; z-index: 2; }
-  /* The stage swings parts of the kit across the whole pin, so the list gets
-     its own backing: solid ink behind the column, fading out past its right
-     edge. Anchored to the copy (not the viewport) so it lines up at any
-     width. */
-  .lk-tour-copy::before {
-    content: ''; position: absolute; z-index: -1; pointer-events: none;
-    top: -100vh; bottom: -100vh; left: -100vw; right: -160px;
-    background: linear-gradient(90deg, var(--bg) calc(100% - 160px), rgba(10, 11, 12, 0));
-  }
+  /* The stage is the right-hand column: the page's object plays there, beside the list. */
+  .lk-tour-stage { height: min(78vh, 760px); }
 }
 @media (max-width: 959px) {
-  .lk-tour { height: calc(var(--stops) * 70svh + 100svh); }
+  .lk-tour { height: calc(var(--stops) * 70svh + 130svh); }
   .lk-tour-pin { align-items: stretch; }
-  .lk-tour-grid { grid-template-rows: auto 1fr; align-content: start; gap: 8px; padding-top: 64px; }
-  .lk-tour-stage { order: -1; height: 40svh; }
+  .lk-tour-grid { grid-template-rows: auto 1fr; align-content: start; gap: 8px; }
+  .lk-tour-pin .lk-tour-grid { padding-top: 80px; }   /* under the nav (over .container's padding) */
+  .lk-tour-stage { order: -1; height: 34svh; }
   .lk-tour-copy .offer-h2 { margin-bottom: 6px; font-size: 24px; }
   .lk-tour-list button { padding: 11px 0; font-size: 16px; grid-template-columns: 36px 1fr; }
   .lk-tour-list li.is-on button { padding-left: 0; }
@@ -3140,8 +3126,9 @@ a.ft-link:hover { color: var(--ink); }
 /* Short phones (iPhone SE and the like): a smaller stage so all five stops
    fit under it. */
 @media (max-width: 959px) and (max-height: 700px) {
-  .lk-tour-stage { height: 30svh; }
-  .lk-tour-grid { padding-top: 58px; gap: 4px; }
+  .lk-tour-stage { height: 26svh; }
+  .lk-tour-grid { gap: 4px; }
+  .lk-tour-pin .lk-tour-grid { padding-top: 74px; }
   .lk-tour-copy .offer-h2 { font-size: 21px; margin-bottom: 2px; }
   .lk-tour-list button { padding: 8px 0; font-size: 15px; }
   .lk-tour-v > p { font-size: 13.5px; line-height: 1.5; }
@@ -3309,7 +3296,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 }
 
 /* --- Practice: "What you get" on a seven-sided paper prism --------------- */
-.pw-tour { position: relative; height: calc(var(--stops) * 60vh + 100vh); box-shadow: inset 0 1px 0 var(--pw-line); }
+.pw-tour { position: relative; height: calc(var(--stops) * 60vh + 130vh); box-shadow: inset 0 1px 0 var(--pw-line); }
 .pw-tour-pin { position: sticky; top: 0; height: 100vh; height: 100svh; display: flex; align-items: center; overflow: hidden; }
 .pw-tour-grid { display: grid; gap: 24px; width: 100%; }
 .pw-tour-list { list-style: none; margin: 0; padding: 0; }
@@ -3323,52 +3310,26 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 .pw-tour-list strong { font-weight: 500; }
 .pw-tour-list li.is-on button { color: var(--pw-text); padding-left: 16px; }
 .pw-tour-list li.is-on strong { color: var(--pw-ink); }
-.pw-prism-wrap {
-  --face-w: 400px; --face-h: 300px; --r: 415px;
-  position: relative; height: 70vh; perspective: 1700px; perspective-origin: 50% 40%;
-  /* The neighbouring faces trail off at the column's edges instead of
-     running under the list. */
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
-          mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
-}
-.pw-prism {
-  position: absolute; left: 50%; top: 50%; width: var(--face-w); height: var(--face-h);
-  margin: calc(var(--face-h) / -2) 0 0 calc(var(--face-w) / -2);
-  transform-style: preserve-3d;
-  transition: transform 1300ms cubic-bezier(0.65, 0, 0.35, 1);
-}
-.pw-face {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;   /* centres the vignette even when it's larger than a phone-sized face */
-  background: #fbfcfc;
-  box-shadow: inset 0 0 0 1px var(--pw-line), 0 30px 60px rgba(18, 20, 23, 0.08);
-  backface-visibility: hidden;
-}
-.pw-face::after {   /* faces turned away read darker, like paper out of the light */
-  content: ''; position: absolute; inset: 0; background: #e3e6e9; opacity: 0.55;
-  transition: opacity 1300ms cubic-bezier(0.65, 0, 0.35, 1); pointer-events: none;
-}
-.pw-face.is-on::after { opacity: 0; }
+/* The stage: the page's object plays each item here, beside the list. */
+.pw-tour-stage { height: min(74vh, 720px); }
 @media (min-width: 960px) {
   .pw-tour-grid { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: center; gap: 32px; }
 }
 @media (max-width: 959px) {
-  .pw-tour { height: calc(var(--stops) * 55svh + 100svh); }
+  .pw-tour { height: calc(var(--stops) * 55svh + 130svh); }
   .pw-tour-pin { align-items: stretch; }
-  .pw-tour-grid { align-content: start; gap: 4px; padding-top: 64px; }
-  .pw-prism-wrap { order: -1; height: 36svh; --face-w: 270px; --face-h: 200px; --r: 281px; }
-  .pw-prism .pv { transform: scale(0.62); }
+  .pw-tour-grid { align-content: start; gap: 4px; }
+  .pw-tour-pin .pw-tour-grid { padding-top: 80px; }   /* under the nav (over .container's padding) */
+  .pw-tour-stage { order: -1; height: 36svh; }
   .pw-tour-copy .pw-h2 { margin-bottom: 4px; font-size: 26px; }
   .pw-tour-list button { padding: 8px 0; font-size: 14.5px; }
   .pw-tour-list li:not(.is-on) span { display: none; }
   .pw-tour-list li.is-on button { padding-left: 0; }
 }
-/* Short phones: a shorter prism so the last stop still fits the screen. */
+/* Short phones: a shorter stage so the last stop still fits the screen. */
 @media (max-width: 959px) and (max-height: 700px) {
-  .pw-prism-wrap { height: 29svh; }
-  .pw-prism .pv { transform: scale(0.52); }
-  .pw-tour-grid { padding-top: 58px; }
+  .pw-tour-stage { height: 29svh; }
+  .pw-tour-pin .pw-tour-grid { padding-top: 74px; }
   .pw-tour-copy .pw-h2 { font-size: 22px; }
   .pw-tour-list button { padding: 6px 0; }
 }

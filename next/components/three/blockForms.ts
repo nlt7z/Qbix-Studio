@@ -708,16 +708,19 @@ export function buildForms(): Record<string, Form> {
      video. On the paper chapter the flyer is ink, its words white, its pictures paper. */
   const fz = (dx: number, z0: number) => (x: number, y: number, w: number, h: number, d: number, k: number) => piece(dx + x, y, z0 + d / 2 + 0.01, w, h, d, k);
   const FLY: TextOpts = { size: 0.13, weight: 500 };
-  const flyer = (dx: number, tagK: number): Piece[] => {
+  // `price` LIME: the price picked out to be edited; `sun`: the open house moved, after a round of changes
+  const flyer = (dx: number, tagK: number, o: { price?: number; sun?: boolean } = {}): Piece[] => {
     const fo = fz(dx, 0.08), onPhoto = fz(dx, 0.15);
     return [
       rd(piece(dx, 0, 0, 3.2, 4.4, 0.16, FORE), 0.08, 0.05),                                                              // 0 the sheet
       pr(rd(fo(0, 0.75, 2.8, 2.2, 0.06, PIC), 0.05, 0.02), 'lk.house', (g) => street(g)),                                  // 1 the house
       pr(pill(onPhoto(-0.75, 1.6, 1.15, 0.32, 0.1, tagK)), 'lk.tag', label('JUST LISTED', { size: 0.1, weight: 600, track: 0.1 })),   // 2 Just Listed
       pr(fo(-0.2, -0.66, 2.4, 0.34, 0.02, FORE), 'lk.addr', words('1428 Alder Street', { size: 0.25, font: 'head' }, 0.02)),     // 3 the address
-      pr(fo(-0.8, -1.06, 1.2, 0.3, 0.02, FORE), 'lk.price', words('$849,000', { size: 0.22, font: 'head' }, 0.02)),            // 4 the price
+      pr(fo(-0.8, -1.06, 1.2, 0.3, 0.02, o.price ?? FORE), 'lk.price', words('$849,000', { size: 0.22, font: 'head' }, 0.02)),   // 4 the price
       pr(fo(-0.4, -1.42, 2.0, 0.18, 0.02, FORE), 'lk.facts', words('3 bd   2 ba   1,850 sq ft', FLY, 0.02)),                   // 5-6 details
-      pr(fo(-0.4, -1.66, 2.0, 0.18, 0.02, FORE), 'lk.open', words('Open house Sat, 1 to 4', { ...FLY, a: 0.62 }, 0.02)),
+      o.sun
+        ? pr(fo(-0.4, -1.66, 2.0, 0.18, 0.02, FORE), 'lk.open.sun', words('Open house Sun, 1 to 4', { ...FLY, a: 0.62 }, 0.02))
+        : pr(fo(-0.4, -1.66, 2.0, 0.18, 0.02, FORE), 'lk.open', words('Open house Sat, 1 to 4', { ...FLY, a: 0.62 }, 0.02)),
       pr(rd(fo(1.0, -1.5, 0.62, 0.62, 0.06, BACK), 0.06, 0.03), 'lk.qr', (g) => qr(g, 0.06, 0.06, g.w - 0.12, 11)),          // 7 the code to scan
       pr(fo(-0.5, -1.98, 1.8, 0.16, 0.02, FORE), 'lk.agent', words('Dana Lee, Realtor', { size: 0.1, weight: 500, a: 0.62 }, 0.02)),   // 8 the agent
     ];
@@ -750,6 +753,97 @@ export function buildForms(): Record<string, Form> {
   F.flyer = makeForm([...flyer(0, LIME), ...hideAll(posts()), ...hideAll(video(), VIDEO)], { yaw: -0.24, pitch: 0.14 }, { lift: kitLift, hold: 2.2, step: 0 });
   F.posts = makeForm([...flyer(-2.6, LIME), ...posts(), ...hideAll(video(), VIDEO)], { yaw: -0.22, pitch: 0.14 }, { lift: kitLift, hold: 2.4, step: 1 });
   F.video = makeForm([...flyer(-2.6, BACK), ...hideAll(posts(), VIDEO), ...video()], { yaw: -0.26, pitch: 0.14 }, { lift: kitLift, hold: 2.6, step: 2 });
+
+  /* The listing kit's own page. Its top: the kit whole, floating: the flyer, posts around it, the
+     reel on a phone. Then what you get, one at a time as you scroll: the flyer; its five posts;
+     the reel; the flyer open to edit (the price picked out in lime, its field in the editor);
+     one round of changes (asked, done, and the open house moved to Sunday on the flyer). */
+  const YA = new THREE.Vector3(0, 1, 0);
+  /** Pieces moved by d and turned about the y axis by ang, through where their first piece lands. */
+  const place = (ps: Piece[], d: Vec, ang = 0): Piece[] => {
+    const qa = new THREE.Quaternion().setFromAxisAngle(YA, ang);
+    const cx = ps[0].p[0] + d[0], cz = ps[0].p[2] + d[2];
+    return ps.map((p) => {
+      HV.set(p.p[0] + d[0] - cx, p.p[1] + d[1], p.p[2] + d[2] - cz).applyQuaternion(qa);
+      return { ...p, p: [HV.x + cx, HV.y, HV.z + cz] as Vec, q: qa.clone().multiply(p.q) };
+    });
+  };
+  // The reel: vertical, on a phone, playing.
+  const reel = (x: number, y: number, z: number): Piece[] => {
+    const ph = phoneParts({ x, y, z, w: 2.3, h: 4.6, frame: METAL, screen: PIC });
+    const on = at(ph.front);
+    pr(ph.screen, 'lk.reel', (g) => {
+      street(g, { s: g.w * 0.55, gy: g.h * 0.6 });
+      g.text('1428 Alder Street', 0.16, g.h - 0.62, { size: 0.17, font: 'head', mid: true });
+      g.text('3 bd, 2 ba, open Sat', 0.16, g.h - 0.38, { size: 0.1, weight: 500, mid: true, a: 0.62 });
+    });
+    return [
+      ph.body,                                                                                                   // the phone
+      ph.screen,                                                                                                 // the reel on it
+      rd(on(x, y + 0.25, 0.8, 0.8, 0.2, PLAY), 0.4, 0.1),                                                         // play
+      pr(pill(on(x - 0.45, y + 1.78, 0.95, 0.26, 0.06, FORE)), 'lk.reel.tag', label('REEL  0:30', { size: 0.08, weight: 600, track: 0.08 })),   // its length
+      pr(pill(on(x, y - 2.0, 1.8, 0.07, 0.03, BACK)), 'lk.reel.bar', (g) => g.box(0, 0, g.w * 0.42, g.h, 'lime', 1, g.h / 2)),   // how far it's played
+      pill(on(x, y + 2.08, 0.5, 0.07, 0.02, BACK)),                                                              // its speaker
+    ];
+  };
+  // The editor beside the flyer: its two fields you'd change yourself.
+  const input = (s: string, caret = false): Draw => (g) => {
+    g.frame(0, 0, g.w, g.h, 0.014, 'ink', 1, 0.08);
+    const w = g.text(s, 0.14, g.h / 2, { size: 0.15, mid: true });
+    if (caret) g.box(0.14 + w + 0.03, g.h * 0.22, 0.02, g.h * 0.56, 'ink', 1);
+  };
+  const tools: Draw = (g) => {
+    g.text('T', 0.04, g.h / 2, { size: 0.2, font: 'head', mid: true });
+    g.frame(0.34, 0.05, g.h - 0.1, g.h - 0.1, 0.014, 'ink', 1, 0.03);
+    g.dot(0.86, g.h / 2, 0.08, 'ink');
+    g.dot(1.08, g.h / 2, 0.08, 'lime');
+    g.ring(1.3, g.h / 2, 0.075, 0.014, 'ink');
+  };
+  const editPanel = (x: number, y: number): Piece[] => {
+    const on = at(0.13), ED: TextOpts = { size: 0.11, weight: 500, a: 0.55 };
+    return [
+      rd(piece(x, y, 0, 2.7, 3.7, 0.24, FORE), 0.2, 0.09),                                                        // the panel
+      pr(on(x - 0.2, y + 1.45, 2.1, 0.32, 0.02, FORE), 'lk.ed.title', words('Edit your flyer', { size: 0.2, font: 'head' }, 0.02)),
+      pr(on(x - 0.55, y + 0.88, 1.4, 0.16, 0.02, FORE), 'lk.ed.l1', words('Price', ED, 0.02)),                    // the price, being typed
+      pr(rd(on(x, y + 0.52, 2.3, 0.44, 0.04, FORE), 0.1, 0.02), 'lk.ed.v1', input('$849,000', true)),
+      pr(on(x - 0.55, y - 0.06, 1.4, 0.16, 0.02, FORE), 'lk.ed.l2', words('Open house', ED, 0.02)),               // the open house
+      pr(rd(on(x, y - 0.42, 2.3, 0.44, 0.04, FORE), 0.1, 0.02), 'lk.ed.v2', input('Sat, 1 to 4')),
+      pr(on(x, y - 1.0, 2.3, 0.3, 0.02, FORE), 'lk.ed.tools', tools),                                             // type, a picture, colours
+      pr(pill(on(x + 0.55, y - 1.52, 1.0, 0.36, 0.12, BACK)), 'lk.ed.save', label('Save', { size: 0.13, weight: 600 })),
+    ];
+  };
+  // One round of changes: asked, and done.
+  const chat = (x: number, y: number): Piece[] => [
+    ...grp(bubble({ x, y: y + 0.85, z: 0.3, w: 3.0, h: 1.0, k: FORE, name: 'lk.ask', text: ['Can the open house', 'say Sunday instead?'], tail: 'left', turn: 0.04 }), 10),
+    ...grp(bubble({ x: x + 0.4, y: y - 0.6, z: 0.7, w: 2.6, h: 0.95, k: LIME, name: 'lk.done', text: ['Done. New files', 'are in your inbox.'], tail: 'right', turn: -0.04 }), 11),
+  ];
+  const kitPosts = () => {
+    const ps = posts();
+    for (let i = 0; i < POSTS.length; i++) grp(ps.slice(i * 3, i * 3 + 3), 2 + i);
+    return ps;
+  };
+  const tour = (st: 0 | 1 | 2 | 3 | 4): Piece[] => {
+    const fx = st === 0 ? 0 : st === 1 ? -2.6 : st === 2 ? -2.0 : -1.7;
+    const fl = grp(flyer(fx, st < 2 ? LIME : BACK, { price: st === 3 ? LIME : FORE, sun: st === 4 }), 1);
+    const ps = kitPosts(), rv = grp(reel(1.6, 0, 0.3), 8), ed = grp(editPanel(1.9, 0), 9), ch = chat(1.9, 0.2);
+    return [...fl, ...(st === 1 ? ps : hideAll(ps)), ...(st === 2 ? rv : hideAll(rv)), ...(st === 3 ? ed : hideAll(ed)), ...(st === 4 ? ch : hideAll(ch))];
+  };
+  F.kitFlyer = makeForm(tour(0), { yaw: -0.24, pitch: 0.14 }, { lift: kitLift, step: 0, float: 0.04 });
+  F.kitPosts = makeForm(tour(1), { yaw: -0.22, pitch: 0.14 }, { lift: kitLift, step: 1, float: 0.04 });
+  F.kitReel = makeForm(tour(2), { yaw: -0.3, pitch: 0.14 }, { lift: kitLift, step: 2, float: 0.04 });
+  F.kitEdit = makeForm(tour(3), { yaw: -0.26, pitch: 0.16 }, { lift: kitLift, step: 3, float: 0.04 });
+  F.kitChanges = makeForm(tour(4), { yaw: -0.24, pitch: 0.14 }, { lift: kitLift, step: 4, float: 0.05 });
+  const kit = (): Piece[] => {
+    const ps = kitPosts(), post = (i: number, to: Vec, ang: number) => place(ps.slice(i * 3, i * 3 + 3), [to[0] - POSTS[i][0], to[1] - POSTS[i][1], to[2]], ang);
+    return [
+      ...place(grp(flyer(0, BACK), 1), [-1.2, 0.2, 0], 0.22),
+      ...place(grp(reel(0, 0, 0), 8), [2.1, -0.35, 1.1], -0.28),
+      ...post(0, [-3.8, 1.75, -1.1], 0.3),
+      ...post(2, [2.7, 2.55, -1.2], -0.2),
+      ...post(4, [-3.4, -2.0, 0.9], 0.35),
+    ];
+  };
+  F.kit = makeForm(kit(), { yaw: -0.18, pitch: 0.12 }, { lift: kitLift, float: 0.1 });
 
   /* A practice website, for Willow Counseling: the questionnaire, then the calm homepage made
      from it, then live, with its phone. */
@@ -813,6 +907,129 @@ export function buildForms(): Record<string, Form> {
   F.questionnaire = makeForm([...questionnaire, ...hideAll(phone())], { yaw: -0.24, pitch: 0.16 }, { lift: kitLift, hold: 2.2, step: 0 });
   F.homepage = makeForm([...calm(false), ...hideAll(phone())], { yaw: -0.28, pitch: 0.2 }, { lift: kitLift, hold: 2.6, step: 1 });
   F.golive = makeForm([...calm(true), ...phone()], { yaw: -0.42, pitch: 0.22 }, { lift: [0.5, 0.2, 1.0], hold: 2.8, step: 2 });
+
+  /* The practice website's own page. Its top: the site live, with its phone, floating. Then what
+     you get, one at a time as you scroll: its pages, stacked behind the homepage; the phone; the
+     one next step, lifted out in lime; found on Google; yours (the owner's card, and a key); the
+     how-to video on a laptop; thirty days after launch, the days with a fix popping out. */
+  // (phone() hands back the same body and screen each time: copies, so each form groups its own)
+  const phoneCopy = () => phone().map((p) => ({ ...p }));
+  F.pwHero = makeForm([...grp(calm(true), 1), ...grp(phoneCopy(), 2)], { yaw: -0.4, pitch: 0.2 }, { lift: kitLift, float: 0.06 });
+  // the homepage, its address and its button in whichever material the scene wants (one lime a scene)
+  const pwSite = (o: { addr: number; cta: number; lift?: boolean }): Piece[] => {
+    const w = calm(true);
+    w[1] = { ...w[1], k: o.addr };
+    w[11] = o.lift
+      ? place([pr(pill(onWin(-2.3, -1.3, 2.9, 0.72, 0.22, o.cta)), 'pw.cta.big', label('Book a free consultation', { size: 0.16, weight: 600 }))], [0.2, 0.1, 1.1], -0.18)[0]
+      : { ...w[11], k: o.cta };
+    return grp(w, 1);
+  };
+  const PAGES = ['About', 'Specialties', 'Fees and insurance', 'Contact'];
+  const sheets = (): Piece[] => PAGES.flatMap((t, i) => {
+    const x = -0.5 * (i + 1), y = 0.5 * (i + 1), z = -0.45 * (i + 1);
+    return grp([
+      rd(piece(x, y, z, 8, 5.4, 0.12, FORE), 0.28, 0.05),
+      pr(piece(x - 2.6, y + 2.45, z + 0.08, 2.4, 0.3, 0.02, FORE), `pw.pg${i}`, words(t, { size: 0.17, weight: 600 }, 0.02)),
+    ], 2 + i);
+  });
+  const https = (k: number) => grp([pr(pill(piece(3.2, 1.25, 1.6, 1.6, 0.46, 0.14, k)), 'pw.https', (g) => {
+    lock(g, 0.24, g.h / 2 - 0.085, 0.17);
+    g.text('https', 0.52, g.h / 2, { size: 0.16, weight: 600, mid: true });
+  })], 7);
+  const google = (): Piece[] => {
+    const on = at(0.12);
+    return grp([
+      pr(pill(piece(0, 1.75, 0, 6.4, 0.72, 0.2, BACK)), 'pw.g.q', (g) => {
+        g.ring(0.42, g.h / 2 - 0.02, 0.13, 0.03);
+        g.line([0.51, g.h / 2 + 0.08, 0.62, g.h / 2 + 0.19], 0.035);
+        g.text('therapist portland anxiety', 0.82, g.h / 2, { size: 0.2, mid: true });
+      }),                                                                                                            // the search
+      rd(piece(0, -0.35, 0, 6.4, 3.0, 0.2, BACK), 0.2, 0.08),                                                         // the result
+      pr(on(-1.25, 0.72, 3.6, 0.2, 0.02, BACK), 'pw.g.url', words('willowcounseling.com', { size: 0.13, a: 0.62 }, 0.02)),
+      pr(on(-0.1, 0.28, 5.9, 0.42, 0.02, BACK), 'pw.g.title', words('Willow Counseling · Therapy in Portland', { size: 0.26, font: 'head' }, 0.02)),
+      pr(on(-0.2, -0.45, 5.7, 0.62, 0.02, BACK), 'pw.g.text', lines(['Individual and couples therapy, in person and online.', 'Book a free consultation.'], { size: 0.14, a: 0.7 }, 0.02, 0.17, 0.28)),
+      pr(pill(on(-1.95, -1.3, 2.1, 0.4, 0.1, LIME)), 'pw.g.open', label('Open today · Portland', { size: 0.12, weight: 600 })),
+    ], 8);
+  };
+  const owner = (): Piece[] => {
+    const on = at(0.12);
+    return [
+      ...grp([
+        rd(piece(-0.4, 0.2, 0, 4.6, 2.9, 0.2, BACK), 0.22, 0.08),                                                     // the owner's card
+        pr(on(-1.6, 1.15, 1.6, 0.2, 0.02, BACK), 'pw.o.l', words('OWNER', { size: 0.11, weight: 600, track: 0.14, a: 0.55 }, 0.02)),
+        pr(on(-1.35, 0.68, 2.1, 0.46, 0.02, BACK), 'pw.o.you', words('You', { size: 0.36, font: 'head' }, 0.02)),
+        pr(on(-0.4, -0.05, 4.0, 0.24, 0.02, BACK), 'pw.o.dom', words('willowcounseling.com', { size: 0.16, weight: 500 }, 0.02)),
+        pr(on(-0.4, -0.45, 4.0, 0.2, 0.02, BACK), 'pw.o.bill', words('Hosting billed to you, in your name', { size: 0.12, a: 0.62 }, 0.02)),
+      ], 9),
+      ...grp([
+        rd(piece(1.4, -1.35, 0.6, 0.95, 0.95, 0.16, LIME), 0.47, 0.08),                                               // a key: its bow
+        rd(piece(2.55, -1.35, 0.6, 1.7, 0.2, 0.12, METAL), 0.1, 0.06),                                                // its blade
+      ], 10),
+    ];
+  };
+  const howto = (): Piece[] => {
+    const lap = laptop({ name: 'pw.how', w: 5.6, h: 3.4, y: 0.3, depth: 2.4 });
+    pr(lap.screen, 'pw.how.screen', (g) => {
+      g.text('Willow', 0.4, 0.42, { size: 0.2, font: 'serif', mid: true });
+      g.frame(0.3, 0.8, 3.2, 1.1, 0.02, 'lime', 1, 0.06);                                                             // the headline, selected to edit
+      g.text('A calm place', 0.42, 1.2, { size: 0.34, font: 'serif', mid: true });
+      g.text('to begin.', 0.42, 1.62, { size: 0.34, font: 'serif', mid: true });
+      g.box(0.42 + g.measure('to begin.', { size: 0.34, font: 'serif' }) + 0.04, 1.45, 0.025, 0.34, 'ink', 1);       // the cursor
+      room(g.sub(g.w - 2.1, 0.55, 1.8, 1.7));
+      g.text('Editing your homepage', 0.4, g.h - 0.28, { size: 0.15, weight: 600, mid: true });
+      g.text('2:40', g.w - 0.3, g.h - 0.28, { size: 0.12, align: 'right', mid: true, a: 0.6 });
+    });
+    const on = at(lap.front);
+    return grp([
+      lap.lid, lap.screen, lap.deck,
+      ...lap.lean([rd(on(0, 0.4, 0.86, 0.86, 0.2, PLAY), 0.43, 0.1)]),                                                 // play
+      ...lap.lean([pr(pill(on(0, -1.15, 4.8, 0.07, 0.03, BACK)), 'pw.how.bar', (g) => g.box(0, 0, g.w * 0.3, g.h, 'lime', 1, g.h / 2))]),
+    ], 11);
+  };
+  const FIXES = [3, 8, 12, 19, 26];   // the days with a fix (the middle one today's, in lime)
+  const calendar = (): Piece[] => {
+    const on = at(0.12);
+    const cell = (d: number): [number, number] => [-2.1 + (d % 7) * 0.7, 0.95 - Math.floor(d / 7) * 0.62];
+    return [
+      ...grp([
+        rd(piece(0, 0, 0, 5.4, 4.4, 0.22, FORE), 0.24, 0.09),                                                        // the month
+        pr(on(0, 1.72, 5.0, 0.4, 0.02, FORE), 'pw.cal.t', words('30 days after launch', { size: 0.24, font: 'head' }, 0.05)),
+        pr(on(0, -0.35, 5.0, 3.3, 0.02, FORE), 'pw.cal.grid', (g) => {
+          for (let d = 0; d < 30; d++) {
+            const u = 0.4 + (d % 7) * 0.7, v = 0.35 + Math.floor(d / 7) * 0.62;
+            g.frame(u - 0.3, v - 0.26, 0.6, 0.52, 0.012, 'ink', 0.4, 0.06);
+            g.text(String(d + 1), u - 0.22, v - 0.11, { size: 0.1, mid: true, a: 0.6 });
+          }
+        }),
+      ], 12),
+      ...FIXES.map((d, i) => {
+        const [x, y] = cell(d);
+        return grp([pr(rd(piece(x, y, 0.42, 0.56, 0.5, 0.14, i === 2 ? LIME : BACK), 0.08, 0.05), 'pw.cal.fix', (g) => tick(g, g.w / 2 - 0.13, g.h / 2 - 0.13, 0.26))], 13 + i)[0];
+      }),
+    ];
+  };
+  // the scenes share their slots: the site, its pages, the phone, https, Google, the owner, the video, the month
+  const pwTour = (st: number): Piece[] => {
+    const parts: Piece[][] = [
+      st === 2 ? pwSite({ addr: BACK, cta: LIME, lift: true }) : st === 1 ? place(pwSite({ addr: BACK, cta: BACK }), [-1.6, 0.4, -1.8], 0.1) : pwSite({ addr: LIME, cta: BACK }),
+      sheets(),
+      place(grp(phoneCopy(), 6), [-1.7, 0.5, 0.5], -0.12),
+      https(LIME),
+      google(),
+      owner(),
+      howto(),
+      calendar(),
+    ];
+    const showing = [[0, 1], [0, 2, 3], [0], [4], [5], [6], [7]][st];
+    return parts.flatMap((ps, i) => (showing.includes(i) ? ps : hideAll(ps)));
+  };
+  F.pwPages = makeForm(pwTour(0), { yaw: -0.3, pitch: 0.18 }, { lift: kitLift, step: 0, float: 0.04 });
+  F.pwPhone = makeForm(pwTour(1), { yaw: -0.36, pitch: 0.16 }, { lift: kitLift, step: 1, float: 0.04 });
+  F.pwStep = makeForm(pwTour(2), { yaw: -0.24, pitch: 0.14 }, { lift: kitLift, step: 2, float: 0.04 });
+  F.pwGoogle = makeForm(pwTour(3), { yaw: -0.2, pitch: 0.16 }, { lift: kitLift, step: 3, float: 0.04 });
+  F.pwOwn = makeForm(pwTour(4), { yaw: -0.26, pitch: 0.18 }, { lift: kitLift, step: 4, float: 0.05 });
+  F.pwHow = makeForm(pwTour(5), { yaw: -0.3, pitch: 0.2 }, { lift: kitLift, step: 5, float: 0.03 });
+  F.pwFixes = makeForm(pwTour(6), { yaw: -0.22, pitch: 0.2 }, { lift: kitLift, step: 6, float: 0.04 });
 
   for (const [id, f] of Object.entries(F)) f.id = id;
   return F;
