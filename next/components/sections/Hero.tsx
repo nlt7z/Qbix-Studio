@@ -77,53 +77,47 @@ const COPY: Record<Audience, { line1: string; line2: string; lede: [ReactNode, R
   },
 };
 
-/** The audience switch: two large options, each naming who it's for and what
- *  they'll find; a solid block slides to the chosen one (eased, no bounce). */
-const OPTIONS: [Audience, string, string][] = [
-  ['ai', 'For AI teams', 'Design, brand and our products'],
-  ['business', 'For local business', 'Fixed-price kits, ready in days'],
-];
-export function AudienceSwitch() {
+/** The audience switch, under the words: who it's for on either side of a
+ *  track whose square knob slides to the chosen side (eased, no bounce).
+ *  Either name, or the track, switches; arrow keys too. */
+export function AudienceSwitch({ delay = 0 }: { delay?: number }) {
   const { audience, setAudience } = useAudience();
+  const ai = audience === 'ai';
+  const flip = () => setAudience(ai ? 'business' : 'ai');
   return (
-    <motion.div
-      className="aud-switch"
-      role="radiogroup"
-      aria-label="Who this page is for"
-      initial={{ clipPath: 'inset(0 100% 0 0)' }}
-      animate={{ clipPath: 'inset(0 0% 0 0)' }}
-      transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.1 }}
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-          e.preventDefault();
-          setAudience(audience === 'ai' ? 'business' : 'ai');
-        }
-      }}
-    >
-      {OPTIONS.map(([a, label, hint]) => (
-        <button
-          key={a}
-          type="button"
-          role="radio"
-          aria-checked={audience === a}
-          tabIndex={audience === a ? 0 : -1}
-          className={`aud-opt${audience === a ? ' is-on' : ''}`}
-          onClick={() => setAudience(a)}
-        >
-          {audience === a && (
-            <motion.span layoutId="aud-pill" className="aud-pill" transition={{ duration: 0.42, ease: EASE_OUT }} />
-          )}
-          <span className="aud-label">{label}</span>
-          <span className="aud-hint">{hint}</span>
+    <span className="aud-mask">
+      <motion.span
+        className="aud-switch"
+        role="radiogroup"
+        aria-label="Who this page is for"
+        data-on={audience}
+        initial={{ y: '110%' }}
+        animate={{ y: '0%' }}
+        transition={{ duration: 0.85, ease: EASE_OUT, delay }}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            flip();
+          }
+        }}
+      >
+        <button type="button" role="radio" aria-checked={ai} tabIndex={ai ? 0 : -1} className={`aud-name${ai ? ' is-on' : ''}`} onClick={() => setAudience('ai')}>
+          For AI teams
         </button>
-      ))}
-    </motion.div>
+        <span className="aud-track" aria-hidden onClick={flip}>
+          <span className="aud-knob" />
+        </span>
+        <button type="button" role="radio" aria-checked={!ai} tabIndex={ai ? -1 : 0} className={`aud-name${ai ? '' : ' is-on'}`} onClick={() => setAudience('business')}>
+          For local business
+        </button>
+      </motion.span>
+    </span>
   );
 }
 
 /**
- * The story's first chapter: the switch, the headline, the lede, and the
- * studio band. The object (the cube, gathering out of loose blocks) is drawn
+ * The story's first chapter: the headline, the lede, the switch between the
+ * two audiences, and the studio band. The object (the cube, gathering out of loose blocks) is drawn
  * beside it by the story's stage, sized to these words; this section only
  * says which side it stands on.
  */
@@ -150,8 +144,6 @@ export default function Hero() {
     >
       <div className="ch-frame">
         <div className="ch-copy hero-copy">
-          <AudienceSwitch />
-
           {/* Headline: two lines. Keyed by audience, so a switch slides the
               new words up out of their masks. */}
           <h1 key={`h-${audience}`} className="hero-title hero-title--xl">
@@ -184,6 +176,8 @@ export default function Hero() {
               {copy.lede[1]}
             </motion.p>
           </span>
+
+          <AudienceSwitch delay={d(0.7, 0)} />
         </div>
 
         {/* Where and when the studio works, and where the team studied and worked: two columns, each a label over one line. */}

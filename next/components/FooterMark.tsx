@@ -3,12 +3,12 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Footer sign-off — the qbix wordmark set in square pixels, the same module
- * as the pixel edges: the mark is rasterised onto a square grid, cells inside
- * the letters print full, cells on an edge print smaller by how much of them
- * the letter covers (a square halftone edge). It sits on the page's left
- * edge. As it scrolls in, the squares pop in left to right once; then the
- * canvas is still (Canvas 2D, no loop, no WebGL).
+ * Footer sign-off — the qbix wordmark set in square pixels: the mark is
+ * rasterised onto a grid of the page's large pixel (4px; the small one, the
+ * cursor's, is 2px), and every cell the letters mostly cover is one whole
+ * pixel, so its edges step like a bitmap font. It sits on the page's left
+ * edge. As it scrolls in, the pixels come on left to right, each at once,
+ * in a scattered order; then the canvas is still (Canvas 2D, no loop).
  */
 
 // The nav logotype (public/qbix-wordmark.svg), so the sign-off is the same mark.
@@ -17,7 +17,9 @@ const VB_W = 918;
 const VB_H = 342;
 const INK = '#f4f5f2';
 
-type Cell = { x: number; y: number; s: number; t: number };
+const PIXEL = 4;   // the page's large pixel, in CSS px
+
+type Cell = { x: number; y: number; t: number };
 
 export default function FooterMark() {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -50,11 +52,12 @@ export default function FooterMark() {
         const cs = getComputedStyle(col);
         x0 = col.getBoundingClientRect().left + parseFloat(cs.paddingLeft) - r.left;
       }
+      x0 = Math.round(x0);
       const markH = r.height * 0.84;
       const scale = markH / VB_H;
       const markW = VB_W * scale;
-      const cell = Math.max(4, Math.round(markH / 22));
-      const y0 = (r.height - markH) / 2;
+      const cell = PIXEL;
+      const y0 = Math.round((r.height - markH) / 2);
 
       // Rasterise at 4x4 samples per cell and read back the coverage.
       const SS = 4;
@@ -76,29 +79,19 @@ export default function FooterMark() {
           for (let sy = 0; sy < SS; sy++) {
             for (let sx = 0; sx < SS; sx++) a += px[((cy * SS + sy) * off.width + cx * SS + sx) * 4 + 3];
           }
-          const cover = a / (255 * SS * SS);
-          if (cover < 0.12) continue;
-          // Full cells print at 86% of the pitch (the gap keeps them pixels);
-          // edge cells shrink with their coverage.
-          const s = cell * 0.86 * (cover > 0.92 ? 1 : 0.35 + 0.65 * Math.sqrt(cover));
+          if (a / (255 * SS * SS) < 0.5) continue;
           const jitter = Math.sin(cx * 12.9898 + cy * 78.233) * 43758.5453;
-          cells.push({ x: x0 + cx * cell + (cell - s) / 2, y: y0 + cy * cell + (cell - s) / 2, s, t: (cx / cols) * 0.62 + (jitter - Math.floor(jitter)) * 0.18 });
+          cells.push({ x: x0 + cx * cell, y: y0 + cy * cell, t: (cx / cols) * 0.7 + (jitter - Math.floor(jitter)) * 0.25 });
         }
       }
     };
 
-    // p: 0 → 1 over the reveal; each square pops in on its own beat.
+    // p: 0 → 1 over the reveal; each pixel comes on, whole, on its own beat.
     const draw = (p: number) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = INK;
-      for (const c of cells) {
-        const k = Math.min(1, Math.max(0, (p - c.t) / 0.2));
-        if (k <= 0) continue;
-        const e = 1 - Math.pow(1 - k, 3);
-        const s = c.s * e;
-        ctx.fillRect(c.x + (c.s - s) / 2, c.y + (c.s - s) / 2, s, s);
-      }
+      for (const c of cells) if (p >= c.t) ctx.fillRect(c.x, c.y, PIXEL, PIXEL);
     };
 
     let raf = 0;

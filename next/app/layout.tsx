@@ -4,7 +4,6 @@ import './globals.css';
 
 import TopNav from '@/components/TopNav';
 import LoadingScreen from '@/components/LoadingScreen';
-import SiteCursor from '@/components/SiteCursor';
 import LimeIn from '@/components/LimeIn';
 import FastScroll from '@/components/FastScroll';
 import { ContactModalProvider } from '@/components/ContactModalProvider';
@@ -179,7 +178,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ContactModalProvider>
         {/* Campaign texture: film grain over everything, lime cursor accent. */}
         <div className="site-grain" aria-hidden />
-        <SiteCursor />
         <LimeIn />
         <FastScroll />
         <script

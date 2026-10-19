@@ -16,7 +16,8 @@ import { printAtlas, type Rect } from './blockPrints';
  * material and print; a piece can also be put away (size 0). A move takes
  * every piece from where it is to its place in the next form, each on its
  * own beat (the lime one first, then in the form's reading order), with a
- * small arc, its new material and print wiping across it as it goes. Moves
+ * small arc, its new material and print coming on across it in pixels as it
+ * goes (the page's 4px pixel, on screen, so it matches the rest). Moves
  * are timed, not scrubbed by the scroll, so they always play out whole.
  *
  * The object belongs to the page: its colours are the page's (white on a
@@ -115,9 +116,10 @@ void main() {
 // in whole rows that fit the face; the cube's lime corner is lime jelly, lit
 // from within. What's printed on a piece's front face comes from the atlas
 // (uPrints: red the ink that stands out from the piece, green the lime),
-// under the gloss. When a piece changes material or print the next one wipes
-// across each face, a hard edge from left to right (aKind: from, to, how
-// far; aPrintA, aPrintB: where each print is in the atlas). The page's edge (uEdge, device pixels
+// under the gloss. When a piece changes material or print the next one comes
+// on across each face from left to right in a dithered band of the page's
+// large pixel, 4px on screen (aKind: from, to, how far; aPrintA, aPrintB:
+// where each print is in the atlas). The page's edge (uEdge, device pixels
 // from the bottom) cuts the object: below it, the next chapter's colours.
 const FS = /* glsl */ `
 uniform float uEdge;
@@ -125,6 +127,7 @@ uniform float uHasEdge;
 uniform float uToneAbove;
 uniform float uToneBelow;
 uniform sampler2D uPrints;
+uniform float uPixel;
 varying vec3 vN;
 varying vec3 vNo;
 varying vec3 vPos;
@@ -135,6 +138,8 @@ varying vec3 vTy;
 varying vec3 vTz;
 varying vec4 vPrintA;
 varying vec4 vPrintB;
+float bayer2(vec2 a) { a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
+float bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }
 // how much of the pixel lies where d < 0, over a footprint w
 float cover(float d, float w) { return clamp(0.5 - d / max(w, 1e-5), 0.0, 1.0); }
 
@@ -175,9 +180,10 @@ void main() {
   vec2 bev = 1.0 - smoothstep(vec2(0.0), vec2(max(r, 1e-4)), dE);
   vec3 n = normalize(normalize(vN) + (sign(w.x) * bev.x * Tu + sign(w.y) * bev.y * Tv) * 0.85);
 
-  // the material and print: the next ones wiping across the face over the last, a hard edge
-  // moving left to right
-  bool toB = vKind.z > loc.x + 0.5;
+  // the material and print: the next ones coming on across the face, left to right, in the
+  // page's large pixel (4px on screen, whatever the piece's size): a dithered edge sweeping over
+  float th = (loc.x + 0.5) * 0.6 + bayer4(floor(gl_FragCoord.xy / uPixel)) * 0.4;
+  bool toB = vKind.z > th;
   float k = toB ? vKind.y : vKind.x;
   vec4 pr = toB ? vPrintB : vPrintA;
   float tone = uHasEdge > 0.5 && gl_FragCoord.y < uEdge ? uToneBelow : uToneAbove;
@@ -273,7 +279,7 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
   geo.setAttribute('aPrintB', printBAttr);
   const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
   blank.needsUpdate = true;
-  const U = { uEdge: { value: 0 }, uHasEdge: { value: 0 }, uToneAbove: { value: 0 }, uToneBelow: { value: 0 }, uPrints: { value: blank as THREE.Texture } };
+  const U = { uEdge: { value: 0 }, uHasEdge: { value: 0 }, uToneAbove: { value: 0 }, uToneBelow: { value: 0 }, uPrints: { value: blank as THREE.Texture }, uPixel: { value: 4 * renderer.getPixelRatio() } };
   const material = new THREE.ShaderMaterial({ uniforms: U, vertexShader: VS, fragmentShader: FS });
   const mesh = new THREE.InstancedMesh(geo, material, N);
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
