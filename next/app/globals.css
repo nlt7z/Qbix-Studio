@@ -277,7 +277,7 @@ p, li, dd, figcaption, blockquote {
   letter-spacing: -0.011em;
   border-radius: var(--r-pill);
   border: 1px solid transparent;
-  cursor: var(--cur-hand);
+  cursor: pointer;
   user-select: none;
   transition: background var(--t-fast) var(--ease),
               color var(--t-fast) var(--ease),
@@ -392,7 +392,7 @@ p, li, dd, figcaption, blockquote {
   border: 1px solid var(--line-2);
   border-radius: var(--r-tag);
   transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
-  cursor: var(--cur-hand);
+  cursor: pointer;
 }
 .tag:hover {
   background: rgba(255, 255, 255, 0.04);
@@ -516,7 +516,7 @@ section { position: relative; }
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 0;
-    cursor: var(--cur-hand);
+    cursor: pointer;
     transition: border-color 200ms var(--ease), background 200ms var(--ease);
   }
   .topnav-burger:hover { border-color: var(--line-2); }
@@ -659,7 +659,7 @@ section { position: relative; }
   color: var(--text);
   border-radius: var(--r-tag);
   transition: color var(--t-fast) var(--ease);
-  cursor: var(--cur-hand);
+  cursor: pointer;
   isolation: isolate;
 }
 .topnav-link:hover, .topnav-link:focus-visible { color: var(--ink); outline: none; }
@@ -887,7 +887,7 @@ section { position: relative; }
   border-radius: var(--r-card);
   overflow: hidden;
   box-shadow: var(--highlight);
-  cursor: var(--cur-hand);
+  cursor: pointer;
   text-decoration: none;
   color: inherit;
   transition: border-color var(--t-base) var(--ease);
@@ -1017,7 +1017,7 @@ section { position: relative; }
   margin-top: auto;
   padding-top: clamp(8px, 1.2vw, 12px);
 }
-.svc-tags .tag { cursor: var(--cur-arrow); }
+.svc-tags .tag { cursor: default; }
 .svc-pricing {
   display: flex;
   align-items: baseline;
@@ -1454,7 +1454,7 @@ section { position: relative; }
   font-size: 20px;
   line-height: 1;
   border-radius: 6px;
-  cursor: var(--cur-hand);
+  cursor: pointer;
   transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 .contact-modal-close:hover {
@@ -1604,7 +1604,7 @@ section { position: relative; }
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
   padding: 8px 14px;
-  cursor: var(--cur-hand);
+  cursor: pointer;
   transition: color var(--t-fast) var(--ease),
     border-color var(--t-fast) var(--ease),
     background var(--t-fast) var(--ease);
@@ -1628,7 +1628,7 @@ section { position: relative; }
   border: 1px solid var(--line);
   border-radius: var(--r-card-sm);
   padding: 10px 34px 10px 12px;
-  cursor: var(--cur-hand);
+  cursor: pointer;
   outline: none;
   transition: border-color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
@@ -2240,7 +2240,7 @@ html, body { overflow-x: clip; }
    over it); products in the lab don't pretend to be clickable. */
 .product-card { position: relative; }
 .product-card--live .product-explore::after { content: ''; position: absolute; inset: 0; z-index: 3; }
-.product-card--live { cursor: var(--cur-hand); }
+.product-card--live { cursor: pointer; }
 .product-card--soon:hover { border-color: var(--line); box-shadow: var(--highlight), var(--shadow-card); }
 .product-card--soon:hover .product-blurb { color: var(--text-2); }
 .product-media-soon {
@@ -2309,7 +2309,7 @@ html, body { overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) { .product-status i { animation: none; } }
 .product-card--static:hover { border-color: var(--line); box-shadow: var(--highlight), var(--shadow-card); }
 .product-card--static:hover .product-blurb { color: var(--text-2); }
-.ft-link.is-static { cursor: var(--cur-arrow); }
+.ft-link.is-static { cursor: default; }
 @media (max-width: 1024px) {
   .product-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   /* Wide card takes the full row on the 2-col layout. */
@@ -2359,12 +2359,12 @@ html, body { overflow-x: clip; }
   align-items: center;
   gap: 7px;
   color: var(--text-3);
-  cursor: var(--cur-arrow);
+  cursor: default;
   pointer-events: none;
 }
 .topnav-mobile-link.is-disabled {
   color: var(--text-3);
-  cursor: var(--cur-arrow);
+  cursor: default;
   pointer-events: none;
   justify-content: flex-start;
   gap: 10px;
@@ -2468,19 +2468,11 @@ html, body { overflow-x: clip; }
 }
 
 /* =============================================================================
-   CURSOR — a pixel arrow, and over anything you can click a pixel hand, both
-   white with an ink outline, so they read on black and on paper. Drawn in 2px
-   pixels, the page's small pixel (the large one is 4px). The browser draws
-   them, so they sit exactly where the pointer is, with no lag.
+   CURSOR — the system's own: the arrow, and over anything you can click, the
+   pointing hand.
    ============================================================================= */
-:root {
-  --cur-arrow: image-set(url('/cursor/arrow.png') 1x, url('/cursor/arrow@2x.png') 2x) 1 1, auto;
-  --cur-hand: image-set(url('/cursor/hand.png') 1x, url('/cursor/hand@2x.png') 2x) 12 1, pointer;
-}
-html { cursor: var(--cur-arrow); }
 a[href], button:not(:disabled), summary, label[for], select,
-[role='button'], [role='radio'], [role='tab'], [role='switch'], [role='link'] { cursor: var(--cur-hand); }
-input:not([type]), input[type='text'], input[type='email'], input[type='tel'], input[type='url'], input[type='search'], textarea { cursor: text; }
+[role='button'], [role='radio'], [role='tab'], [role='switch'], [role='link'] { cursor: pointer; }
 
 /* =============================================================================
    PRODUCT INTRO — /products/strata (Labs product deep-dive)
@@ -2802,7 +2794,7 @@ a.ft-link:hover { color: var(--ink); }
 .ft-status .pst-clock { color: var(--ink-2); }
 .ft-live { width: 7px; height: 7px; background: var(--ink); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.09); }
 .ft-top {
-  margin-left: auto; padding: 0; background: none; cursor: var(--cur-hand);
+  margin-left: auto; padding: 0; background: none; cursor: pointer;
   font: inherit; color: var(--ink-2);
 }
 .ft-top:hover { color: var(--ink); }
@@ -2966,7 +2958,7 @@ a.ft-link:hover { color: var(--ink); }
 .offer-faq-item summary {
   display: flex; justify-content: space-between; gap: 16px;
   padding: 20px 0;
-  list-style: none; cursor: var(--cur-hand);
+  list-style: none; cursor: pointer;
   font-size: 18px; color: var(--ink);
 }
 .offer-faq-item summary::-webkit-details-marker { display: none; }
@@ -3090,7 +3082,7 @@ a.ft-link:hover { color: var(--ink); }
   all: unset; box-sizing: border-box;
   display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: baseline;
   width: 100%; padding: 16px 0;
-  cursor: var(--cur-hand); font-size: 18px; color: var(--text-2);
+  cursor: pointer; font-size: 18px; color: var(--text-2);
   transition: color 300ms var(--ease), padding 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .lk-tour-list button:hover { color: var(--ink-2); }
@@ -3324,7 +3316,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 .pw-tour-list li { box-shadow: inset 0 -1px 0 var(--pw-line); }
 .pw-tour-list button {
   all: unset; box-sizing: border-box; display: block; width: 100%; padding: 14px 0;
-  cursor: var(--cur-hand); font-size: clamp(16px, 1.5vw, 19px); line-height: 1.5; color: var(--pw-mute);
+  cursor: pointer; font-size: clamp(16px, 1.5vw, 19px); line-height: 1.5; color: var(--pw-mute);
   transition: color 500ms var(--ease), padding 700ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 .pw-tour-list button:focus-visible { outline: 1px solid var(--pw-ink); outline-offset: 2px; }
@@ -3882,10 +3874,10 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   font-weight: 500;
   line-height: 1.2;
   color: rgba(244, 245, 242, 0.5);
-  cursor: var(--cur-hand);
+  cursor: pointer;
   transition: color 360ms var(--ease);
 }
-.aud-name.is-on { color: #f4f5f2; cursor: var(--cur-arrow); }
+.aud-name.is-on { color: #f4f5f2; cursor: default; }
 .aud-name:not(.is-on):hover { color: rgba(244, 245, 242, 0.82); }
 .aud-name:focus-visible { outline: 2px solid #f4f5f2; outline-offset: 4px; }
 .aud-track {
@@ -3894,7 +3886,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   width: 56px;
   height: 28px;
   box-shadow: inset 0 0 0 2px rgba(244, 245, 242, 0.55);
-  cursor: var(--cur-hand);
+  cursor: pointer;
 }
 .aud-knob {
   position: absolute;
@@ -3924,7 +3916,7 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   padding: 6px 0;
   font-size: 16px;
   color: inherit;
-  cursor: var(--cur-hand);
+  cursor: pointer;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 5px;

@@ -140,7 +140,7 @@ vec4 pr = toB ? vPrintB : vPrintA;
   if (kk > 11.5) discard;
 #endif
 float tone = (uHasEdge > 0.5 && gl_FragCoord.y < uEdge) ? uToneBelow : uToneAbove;
-const vec3 WHITE = vec3(0.9, 0.905, 0.89);
+const vec3 WHITE = vec3(0.93, 0.935, 0.925);
 const vec3 INK = vec3(0.0105, 0.0115, 0.0135);
 const vec3 LIMEC = vec3(0.479, 1.0, 0.0);
 vec3 foreC = mix(WHITE, INK, tone), backC = mix(INK, WHITE, tone);
@@ -282,11 +282,12 @@ if (kk > 11.5 || min(min(vSize.x, vSize.y), vSize.z) < 0.001) discard;`);
 export type Lighting = { az: number; el: number; key: number; env: number; rim: number; spin: number };
 
 export const LIGHTS: Record<'dark' | 'paper', Lighting[]> = {
-  // black chapters: a stronger key from one side, a bright rim, less fill (the gloss reads on black)
+  // black chapters: a key from above and to one side, so the top, the lit side and the side away
+  // read as three whites; little fill, a bright rim (the gloss reads on black)
   dark: [
-    { az: -0.75, el: 0.75, key: 3.2, env: 1.0, rim: 2.4, spin: 0 },
-    { az: 0.85, el: 0.6, key: 3.0, env: 0.95, rim: 2.8, spin: 1.2 },
-    { az: -0.35, el: 1.0, key: 3.0, env: 1.0, rim: 2.0, spin: -0.8 },
+    { az: -0.6, el: 1.0, key: 3.6, env: 0.72, rim: 2.6, spin: 0 },
+    { az: 0.7, el: 0.7, key: 3.4, env: 0.8, rim: 2.8, spin: 1.2 },      // lower: an upright screen faces it
+    { az: -0.45, el: 0.72, key: 3.4, env: 0.8, rim: 2.2, spin: -0.8 },
   ],
   // paper chapters: soft and high, a gentle rim
   paper: [
@@ -306,7 +307,7 @@ function studio(): THREE.Scene {
     new THREE.ShaderMaterial({
       side: THREE.BackSide,
       vertexShader: 'varying vec3 vP; void main() { vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: 'varying vec3 vP; void main() { float y = vP.y; vec3 c = mix(vec3(0.3, 0.31, 0.32), vec3(0.9, 0.91, 0.92), smoothstep(-0.6, 0.9, y)); gl_FragColor = vec4(c, 1.0); }',
+      fragmentShader: 'varying vec3 vP; void main() { float y = vP.y; vec3 c = mix(vec3(0.05, 0.052, 0.056), vec3(0.82, 0.83, 0.84), smoothstep(-0.55, 0.85, y)); gl_FragColor = vec4(c, 1.0); }',
     }),
   );
   s.add(sweep);
@@ -317,13 +318,13 @@ function studio(): THREE.Scene {
     m.lookAt(0, 0, 0);
     s.add(m);
   };
-  panel(0, 4, 42, 44, 26, 0.5, 1.7);      // a big soft light behind the camera: the faces turned to us are white
+  panel(0, 4, 42, 44, 26, 0.5, 0.75);     // a soft light behind the camera, low: the faces turned to us stay white, not blown
   panel(-14, 22, 18, 22, 14, 0.5, 8, 1);  // the key box, above, in front, to the left
   panel(-26, 4, 2, 3, 30, 0.5, 7);        // a strip at the left
-  panel(26, 6, -4, 3, 30, 0.5, 5);        // a strip at the right
+  panel(26, 6, -4, 3, 30, 0.5, 2.2);      // a strip at the right, dimmer: the side away falls into shade
   panel(0, 34, -6, 26, 0.5, 18, 4);       // the top panel
   panel(8, -6, -30, 30, 6, 0.5, 2.2);     // a low rim behind
-  panel(4, -24, 14, 30, 0.5, 10, 1.1);    // a floor bounce
+  panel(4, -24, 14, 30, 0.5, 10, 0.35);   // a faint floor bounce
   return s;
 }
 
@@ -350,11 +351,11 @@ export function makeLook(renderer: THREE.WebGLRenderer, scene: THREE.Scene, fine
   pm.dispose();
   scene.environment = env;
 
-  const key = new THREE.DirectionalLight(0xfff6ec, 2.4);
+  const key = new THREE.DirectionalLight(0xfffbf6, 2.4);
   key.castShadow = true;
   key.shadow.mapSize.set(fine ? 2048 : 1024, fine ? 2048 : 1024);
   key.shadow.bias = -0.0004;
-  key.shadow.intensity = 0.55;   // soft, not black
+  key.shadow.intensity = 0.8;    // deep enough that the seams between pieces read
   scene.add(key, key.target);
   const rim = new THREE.DirectionalLight(0xe9f1ff, 1.6);
   scene.add(rim, rim.target);

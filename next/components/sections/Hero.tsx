@@ -4,7 +4,6 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import BrandText from '@/components/BrandText';
 import StudioTime from '@/components/hero/StudioTime';
-import LogoMarquee from '@/components/hero/LogoMarquee';
 import { useAudience, type Audience } from '@/components/Audience';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -180,10 +179,9 @@ export default function Hero() {
           <AudienceSwitch delay={d(0.7, 0)} />
         </div>
 
-        {/* Where and when the studio works, and where the team studied and worked: two columns, each a label over one line. */}
+        {/* Where and when the studio works: a label over one line. */}
         <div className="ch-band hero-band">
           <StudioTime />
-          <LogoMarquee />
         </div>
         <div className="ch-window" aria-hidden />
       </div>
