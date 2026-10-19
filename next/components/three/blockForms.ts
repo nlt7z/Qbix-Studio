@@ -6,20 +6,26 @@ import { bedroom, caller, cardFace, headphones, kitchen, landscape, living, open
 /**
  * What the pieces make (components/three/blockStory.ts draws and moves
  * them): the cube, and in every other chapter the thing the chapter is
- * about, built of pieces with what's on them printed (blockPrints.ts):
+ * about, built of soft, rounded pieces with what's on them printed
+ * (blockPrints.ts), and on some screens a real film:
  *
- * - a launch site for "hush", a pair of headphones: its moodboard; the site,
- *   its code written beside it; live on its domain, with its phone;
- * - "kova", a money app that already works: on a grid in grey; then colour
- *   and type; then its mark, on the app and as its icon;
- * - the four Labs products, one after another;
- * - every idea that came in, loose, then all kept on a board;
+ * - a launch site for "hush", a pair of headphones: its moodboard; the site
+ *   on a laptop, its code written beside it; live on its domain, with its
+ *   phone;
+ * - "kova", a money app that already works, on a phone: its layers lifted
+ *   off the screen in grey on a grid; then in colour and type, the tokens
+ *   floating by; then pressed back into the screen, its mark popping out as
+ *   the app's icon;
+ * - the four Labs products, one after another (Strata's own film on a
+ *   laptop);
+ * - ideas as chat bubbles, floating; then the real thing one became, on a
+ *   laptop playing its film;
  * - a listing's flyer, its five posts, its video;
  * - a therapist's questionnaire, the calm homepage made from it, live with
  *   its phone.
  */
 
-export const N = 64;   // the cube is 4 × 4 × 4; the scenes use as many as they need and put the rest away
+export const N = 64;   // the scenes use as many as they need and put the rest away
 
 // Materials (blockLook.ts draws them). FORE is glossy plastic in the colour
 // that stands out from the page (white on black, ink on paper), BACK in the
@@ -32,8 +38,22 @@ export const isLime = (k: number) => k === K.LIME || k === K.PLAY || k === K.COR
 
 export type Vec = [number, number, number];
 export type View = { yaw: number; pitch: number };
-export type Piece = { p: Vec; s: Vec; q: THREE.Quaternion; k: number; pr?: string; spare?: boolean };
+export type Piece = {
+  p: Vec;
+  s: Vec;
+  q: THREE.Quaternion;
+  k: number;
+  r?: [number, number];   // its rounding: corners (x, y), edges (z); a sharp box to a sphere
+  pr?: string;            // what's printed on its front
+  media?: string;         // or the film on it (a video's address)
+  g?: number;             // its group, when the form floats (a group bobs as one)
+  spare?: boolean;
+};
+/** A piece's rounding unless it says. */
+export const ROUND: [number, number] = [0.07, 0.07];
 export type Form = {
+  id: string;
+  float: number;      // how far its parts bob, if they do
   pieces: Piece[];
   view: View;
   lift: Vec;          // the arc a piece takes on its way in
@@ -77,7 +97,7 @@ const pr = (p: Piece, name: string, draw: Draw, ppu?: number): Piece => {
 function makeForm(
   pieces: Piece[],
   view: View,
-  o: { lift?: Vec; hold?: number; step?: number | null; order?: 'role' | 'bottom' } = {},
+  o: { lift?: Vec; hold?: number; step?: number | null; order?: 'role' | 'bottom'; float?: number } = {},
 ): Form {
   if (pieces.length > N) {
     console.error(`[blocks] a form has ${pieces.length} pieces, more than ${N}`);
@@ -93,6 +113,8 @@ function makeForm(
     for (let i = 0; i < N; i++) rank[i] = i / (N - 1);
   }
   return {
+    id: '',
+    float: o.float ?? 0,
     pieces,
     view,
     lift: o.lift ?? [0, 0.8, 0.3],
@@ -135,6 +157,93 @@ const address = (s: string, live: boolean): Draw => (g) => {
 /** Rough width of words in units, before the fonts are in: for sizing the piece they're printed on. */
 const wide = (s: string, size: number, em = 0.6) => s.length * size * em;
 
+/* ---------------------------------------------------------------- shapes */
+
+/** Round a piece: its corners (rxy) and edges (rz). */
+const rd = (p: Piece, rxy: number, rz = rxy): Piece => {
+  p.r = [rxy, rz];
+  return p;
+};
+/** A pill: as round as its shortest side allows. */
+const pill = (p: Piece): Piece => rd(p, Math.min(p.s[0], p.s[1]) / 2, p.s[2] / 2);
+/** A ball. */
+const ball = (x: number, y: number, z: number, d: number, k: number): Piece => rd(piece(x, y, z, d, d, d, k), d / 2, d / 2);
+/** Show a film on a piece's front. */
+const film = (p: Piece, url: string): Piece => {
+  p.media = url;
+  return p;
+};
+/** Put pieces in one floating group (g < 0: they don't float). */
+const grp = (ps: Piece[], g: number): Piece[] => {
+  for (const p of ps) p.g = g;
+  return ps;
+};
+const AX = new THREE.Vector3(1, 0, 0), HV = new THREE.Vector3();
+/** Turn pieces about a line along x at (y0, z0), like a laptop's lid on its hinge (ang < 0 leans back). */
+const hinge = (ps: Piece[], y0: number, z0: number, ang: number): Piece[] => {
+  const qa = new THREE.Quaternion().setFromAxisAngle(AX, ang);
+  for (const p of ps) {
+    HV.set(p.p[0], p.p[1] - y0, p.p[2] - z0).applyQuaternion(qa);
+    p.p = [HV.x, HV.y + y0, HV.z + z0];
+    p.q = qa.clone().multiply(p.q);
+  }
+  return ps;
+};
+
+export const FILMS = { strata: '/previews/strata-960.mp4', bidding: '/bidking-present.mp4' };   // the small cuts: a 3D screen is a few hundred pixels wide
+
+// A laptop's keys and trackpad, printed on its deck (the deck's back edge at the top).
+const keyboard = (rows = 5, cols = 13): Draw => (g) => {
+  const kx = 0.32, ky = 0.18, kw = (g.w - kx * 2) / cols, kh = (g.h * 0.58 - ky) / rows;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    if (r === rows - 1 && c > 3 && c < cols - 4) continue;
+    g.frame(kx + c * kw + 0.025, ky + r * kh + 0.025, kw - 0.05, kh - 0.05, 0.014, 'ink', 0.55, 0.04);
+  }
+  g.frame(kx + 4 * kw + 0.025, ky + (rows - 1) * kh + 0.025, (cols - 8) * kw - 0.05, kh - 0.05, 0.014, 'ink', 0.55, 0.04);
+  g.frame(g.w / 2 - g.w * 0.17, g.h * 0.66, g.w * 0.34, g.h * 0.27, 0.016, 'ink', 0.55, 0.08);
+};
+
+/**
+ * A laptop: an aluminium lid on its hinge leaning back, a screen in it (a film, or what's put
+ * on it), the deck in front with its keys. Content for the screen is laid out upright at z
+ * `front` and then leaned with the lid by `lean`.
+ */
+function laptop(o: { name: string; w: number; h: number; x?: number; y?: number; tilt?: number; depth?: number; screen?: number; film?: string }) {
+  const { METAL, BACK } = K;
+  const x = o.x ?? 0, y = o.y ?? 0, tilt = o.tilt ?? -0.17;
+  const hingeY = y - (o.h + 0.5) / 2, D = o.depth ?? o.h * 0.72;
+  const lid = rd(piece(x, y, 0, o.w + 0.5, o.h + 0.5, 0.24, METAL), 0.32, 0.1);
+  const screen = rd(piece(x, y, 0.13, o.w, o.h, 0.02, o.screen ?? BACK), 0.1, 0.01);
+  if (o.film) screen.media = o.film;
+  const deck = pr(rd(piece(x, hingeY - 0.11, D / 2 + 0.05, o.w + 0.9, D, 0.22, METAL, 0, -Math.PI / 2), 0.3, 0.1), `${o.name}.keys`, keyboard());
+  hinge([lid, screen], hingeY, 0, tilt);
+  return { lid, screen, deck, front: 0.14, lean: (ps: Piece[]) => hinge(ps, hingeY, 0, tilt), hingeY, depth: D };
+}
+
+/** A phone: a frame, its screen; content goes on the screen at z `front`. */
+function phoneParts(o: { x: number; y: number; z: number; w: number; h: number; frame?: number; screen?: number }) {
+  const { METAL, FORE } = K;
+  const body = rd(piece(o.x, o.y, o.z, o.w, o.h, 0.3, o.frame ?? METAL), Math.min(o.w, o.h) * 0.17, 0.13);
+  const screen = rd(piece(o.x, o.y, o.z + 0.16, o.w - 0.18, o.h - 0.18, 0.02, o.screen ?? FORE), Math.min(o.w, o.h) * 0.14, 0.01);
+  return { body, screen, front: o.z + 0.17 };
+}
+
+/** A chat bubble: a soft cushion with words on it, and a little round tail at one corner. */
+function bubble(o: { x: number; y: number; z: number; w: number; h: number; k: number; name: string; text: string[]; size?: number; tail?: 'left' | 'right'; turn?: number }): Piece[] {
+  const d = Math.min(0.46, o.h * 0.5);
+  const body = rd(piece(o.x, o.y, o.z, o.w, o.h, d, o.k, o.turn ?? 0), Math.min(o.h / 2, 0.46), d / 2);
+  const size = o.size ?? 0.17;
+  pr(body, o.name, (g) => {
+    const lh = size * 1.25, y0 = g.h / 2 - ((o.text.length - 1) * lh) / 2;
+    o.text.forEach((s, i) => g.text(s, g.w / 2, y0 + i * lh, { ...fit(g, s, { size, weight: 500 }, g.w - 0.5), align: 'center', mid: true }));
+  });
+  const side = o.tail === 'right' ? 1 : -1;
+  const c = Math.cos(o.turn ?? 0), sn = Math.sin(o.turn ?? 0);
+  const tx = side * (o.w / 2 - 0.34), ty = -o.h / 2 - 0.06;
+  const tail = ball(o.x + tx * c - ty * sn, o.y + tx * sn + ty * c, o.z - 0.02, 0.26, o.k);
+  return [body, tail];
+}
+
 /* ------------------------------------------------------------------ forms */
 
 export function buildForms(): Record<string, Form> {
@@ -143,25 +252,27 @@ export function buildForms(): Record<string, Form> {
   const { FORE, BACK, PIC, METAL, GLASS, LIME, PLAY, CORE } = K;
   const F: Record<string, Form> = {};
 
-  /* The cube: 3 × 3 × 3. At its heart a lime core, glowing. Its corners are brushed aluminium,
-     its edges glossy plastic (white on black, ink on paper), and the middle of each face is
-     frosted glass, a window onto the core. */
+  /* The cube: 3 × 3 × 3, rounded like a puzzle cube's pieces. At its heart a lime core, glowing.
+     Its corners are brushed aluminium, its edges glossy plastic (white on black, ink on paper),
+     and the middle of each face frosted glass, a window onto the core. It turns its layers. */
   const cube: Piece[] = [];
   for (let y = 0; y < 3; y++) for (let z = 0; z < 3; z++) for (let x = 0; x < 3; x++) {
     const middles = (x === 1 ? 1 : 0) + (y === 1 ? 1 : 0) + (z === 1 ? 1 : 0);   // 0 a corner, 1 an edge, 2 a face, 3 the core
     const k = [METAL, FORE, GLASS, CORE][middles];
-    cube.push(piece(x - 1, y - 1, z - 1, 0.9, 0.9, 0.9, k));
+    cube.push(rd(piece(x - 1, y - 1, z - 1, 0.93, 0.93, 0.93, k), 0.15));
   }
   F.cube = makeForm(cube, { yaw: -0.62, pitch: 0.4 }, { order: 'bottom', lift: [0, 0.8, 0.2] });
   // The cube's own blocks, loose and turned every which way (where the hero's gathering starts).
   F.scatter = makeForm(
-    cube.map((c) => piece((rnd() - 0.5) * 11, (rnd() - 0.5) * 7, (rnd() - 0.5) * 7, 0.9, 0.9, 0.9, c.k, (rnd() - 0.5) * 2, (rnd() - 0.5) * 2, (rnd() - 0.5) * 2)),
+    cube.map((c) => rd(piece((rnd() - 0.5) * 11, (rnd() - 0.5) * 7, (rnd() - 0.5) * 7, 0.93, 0.93, 0.93, c.k, (rnd() - 0.5) * 2, (rnd() - 0.5) * 2, (rnd() - 0.5) * 2), 0.15)),
     { yaw: -0.62, pitch: 0.4 },
   );
 
-  /* Design service: a launch site for hush, a pair of headphones. On the paper chapter the
-     site is ink, its words white on it, its picture and cards paper. */
-  const onW = at(0.15);   // on the window
+  /* Design service: a launch site for hush, a pair of headphones: its moodboard; the site on a
+     laptop, its code written in a window in front; live on its domain, with its phone standing
+     on the laptop's deck. On the paper chapter the site is dark, its words white. */
+  const LT = 0.17;        // the laptop screen's face (laid out upright, then leaned with the lid)
+  const onW = at(LT);
   const NAV: TextOpts = { size: 0.14, weight: 500 };
   const H1: TextOpts = { size: 0.44, font: 'head', track: -0.01 };
   const P: TextOpts = { size: 0.11, a: 0.62 };
@@ -177,29 +288,39 @@ export function buildForms(): Record<string, Form> {
     g.text(name, cx + r + 0.16 * s, cy - 0.09 * s, { size: 0.15 * s, weight: 600, mid: true });
     g.text('$249', cx + r + 0.16 * s, cy + 0.15 * s, { size: 0.12 * s, mid: true, a: 0.55 });
   };
-  const site = (live: boolean): Piece[] => [
-    piece(0, 0, 0, 8, 5.4, 0.3, FORE),                                                                          // 0 the window
-    live ? pr(onW(0.55, 2.28, 4.8, 0.38, 0.08, LIME), 'hush.url.live', address('hush.audio', true))
-      : pr(onW(0.55, 2.28, 4.8, 0.38, 0.08, BACK), 'hush.url.dev', address('localhost:3000', false)),        // 1 the address
-    onW(-3.55, 2.28, 0.2, 0.2, 0.08, BACK),                                                                    // 2-4 the window's buttons
-    onW(-3.19, 2.28, 0.2, 0.2, 0.08, BACK),
-    onW(-2.83, 2.28, 0.2, 0.2, 0.08, BACK),
-    pr(onW(-3.12, 1.55, 0.96, 0.36, 0.02, FORE), 'hush.logo', hushLogo),                                       // 5 the logo
-    pr(onW(1.66, 1.55, 0.74, 0.26, 0.02, FORE), 'hush.nav1', label('Sound', NAV)),                             // 6-8 the menu
-    pr(onW(2.45, 1.55, 0.74, 0.26, 0.02, FORE), 'hush.nav2', label('Design', NAV)),
-    pr(onW(3.24, 1.55, 0.74, 0.26, 0.02, FORE), 'hush.nav3', label('Support', NAV)),
-    pr(onW(-2.35, 0.86, 2.5, 0.54, 0.02, FORE), 'hush.h1a', words('Silence,', H1, 0.02)),                      // 9-10 the headline
-    pr(onW(-1.8, 0.28, 3.6, 0.54, 0.02, FORE), 'hush.h1b', words('tuned to you.', H1, 0.02)),
-    pr(onW(-1.9, -0.26, 3.4, 0.17, 0.02, FORE), 'hush.p1', words('Noise cancelling that learns the room you are in.', P, 0.02)),   // 11-12 text
-    pr(onW(-1.9, -0.48, 3.4, 0.17, 0.02, FORE), 'hush.p2', words('Forty hours a charge. Ships in May.', P, 0.02)),
-    pr(onW(-2.95, -1.04, 1.3, 0.44, 0.12, live ? BACK : LIME), 'hush.cta', label('Pre-order', BTN)),           // 13 the button
-    pr(onW(1.95, 0.2, 3.3, 2.2, 0.12, PIC), 'hush.hero', (g) => headphones(g)),                               // 14 the picture
-    pr(onW(-2.47, -1.95, 2.25, 0.9, 0.1, BACK), 'hush.card1', colorway('Ink', 'ink')),                          // 15-17 the colours it comes in
-    pr(onW(0, -1.95, 2.25, 0.9, 0.1, BACK), 'hush.card2', colorway('Chalk', 'ring')),
-    pr(onW(2.47, -1.95, 2.25, 0.9, 0.1, BACK), 'hush.card3', colorway('Lime', 'lime')),
-  ];
+  const site = (live: boolean): Piece[] => {
+    const lap = laptop({ name: 'hush', w: 8, h: 5.4, screen: FORE });
+    const onScreen = [
+      live ? pr(rd(onW(0.55, 2.28, 4.8, 0.38, 0.06, LIME), 0.19, 0.03), 'hush.url.live', address('hush.audio', true))
+        : pr(rd(onW(0.55, 2.28, 4.8, 0.38, 0.06, BACK), 0.19, 0.03), 'hush.url.dev', address('localhost:3000', false)),   // 1 the address
+      rd(onW(-3.55, 2.28, 0.2, 0.2, 0.06, BACK), 0.1, 0.03),                                                     // 2-4 the window's buttons
+      rd(onW(-3.19, 2.28, 0.2, 0.2, 0.06, BACK), 0.1, 0.03),
+      rd(onW(-2.83, 2.28, 0.2, 0.2, 0.06, BACK), 0.1, 0.03),
+      pr(onW(-3.12, 1.55, 0.96, 0.36, 0.02, FORE), 'hush.logo', hushLogo),                                       // 5 the logo
+      pr(onW(1.66, 1.55, 0.74, 0.26, 0.02, FORE), 'hush.nav1', label('Sound', NAV)),                             // 6-8 the menu
+      pr(onW(2.45, 1.55, 0.74, 0.26, 0.02, FORE), 'hush.nav2', label('Design', NAV)),
+      pr(onW(3.24, 1.55, 0.74, 0.26, 0.02, FORE), 'hush.nav3', label('Support', NAV)),
+      pr(onW(-2.35, 0.86, 2.5, 0.54, 0.02, FORE), 'hush.h1a', words('Silence,', H1, 0.02)),                      // 9-10 the headline
+      pr(onW(-1.8, 0.28, 3.6, 0.54, 0.02, FORE), 'hush.h1b', words('tuned to you.', H1, 0.02)),
+      pr(onW(-1.9, -0.26, 3.4, 0.17, 0.02, FORE), 'hush.p1', words('Noise cancelling that learns the room you are in.', P, 0.02)),   // 11-12 text
+      pr(onW(-1.9, -0.48, 3.4, 0.17, 0.02, FORE), 'hush.p2', words('Forty hours a charge. Ships in May.', P, 0.02)),
+      pr(pill(onW(-2.95, -1.04, 1.3, 0.44, 0.14, live ? BACK : LIME)), 'hush.cta', label('Pre-order', BTN)),     // 13 the button
+      pr(rd(onW(1.95, 0.2, 3.3, 2.2, 0.1, PIC), 0.14, 0.04), 'hush.hero', (g) => headphones(g)),                // 14 the picture
+      pr(rd(onW(-2.47, -1.95, 2.25, 0.9, 0.1, BACK), 0.16, 0.05), 'hush.card1', colorway('Ink', 'ink')),          // 15-17 the colours it comes in
+      pr(rd(onW(0, -1.95, 2.25, 0.9, 0.1, BACK), 0.16, 0.05), 'hush.card2', colorway('Chalk', 'ring')),
+      pr(rd(onW(2.47, -1.95, 2.25, 0.9, 0.1, BACK), 0.16, 0.05), 'hush.card3', colorway('Lime', 'lime')),
+    ];
+    lap.lean(onScreen);
+    return [lap.lid, ...onScreen];   // 0 the laptop's lid, 1-17 the site on its screen
+  };
+  const tail = (lapScreen: Piece, lapDeck: Piece, out: Piece[]) => {
+    while (out.length < 27) out.push(spare());
+    out[27] = lapScreen;   // 27 the screen
+    out[28] = lapDeck;     // 28 the deck
+    return out;
+  };
 
-  // The code, in an editor in front: ink for the words, grey for what's quoted and the punctuation.
+  // The code, in an editor floating in front: ink for the words, grey for what's quoted and the punctuation.
   const CODE: [number, string][] = [
     [0, 'export default function Page() {'],
     [1, 'return ('],
@@ -212,9 +333,9 @@ export function buildForms(): Record<string, Form> {
   ];
   const CS = 0.1;
   const editor: Draw = (g) => {
-    g.text('app/page.tsx', 0.16, 0.16, { size: 0.085, font: 'mono', mid: true, a: 0.5 });
+    g.text('app/page.tsx', 0.2, 0.16, { size: 0.085, font: 'mono', mid: true, a: 0.5 });
     g.box(0, 0.31, g.w, 0.008, 'ink', 1);
-    CODE.forEach((_, i) => g.text(String(i + 1), 0.3, 0.46 + i * 0.27, { size: 0.085, font: 'mono', mid: true, a: 0.3, align: 'right' }));
+    CODE.forEach((_, i) => g.text(String(i + 1), 0.34, 0.46 + i * 0.27, { size: 0.085, font: 'mono', mid: true, a: 0.3, align: 'right' }));
   };
   const codeLine = (s: string): Draw => (g) => {
     let x = 0.03;
@@ -223,33 +344,40 @@ export function buildForms(): Record<string, Form> {
       x += g.text(t, x, g.h / 2, { size: CS, font: 'mono', mid: true, a });
     }
   };
+  const devLap = laptop({ name: 'hush', w: 8, h: 5.4, screen: FORE });
   const dev = site(false);
-  dev.push(pr(piece(2.3, -0.75, 1.3, 3.6, 2.7, 0.2, BACK), 'hush.editor', editor));   // 18 the editor
-  const onE = at(1.4);
+  dev.push(pr(rd(piece(2.4, -0.5, 1.6, 3.6, 2.7, 0.2, BACK), 0.18, 0.08), 'hush.editor', editor));   // 18 the editor
+  const onE = at(1.7);
   CODE.forEach(([ind, s], i) => {
     const w = s.length * CS * 0.6 + 0.08, x = 0.92 + ind * 0.24;
-    dev.push(pr(onE(x + w / 2, 0.14 - i * 0.27, w, 0.17, 0.02, BACK), `hush.code${i}`, codeLine(s)));   // 19-26 its lines
+    dev.push(pr(onE(x + w / 2 + 0.1, 0.39 - i * 0.27, w, 0.17, 0.02, BACK), `hush.code${i}`, codeLine(s)));   // 19-26 its lines
   });
-  F.site = makeForm(dev, { yaw: -0.28, pitch: 0.18 }, { lift: [0, 0.25, 1.2], hold: 2.6, step: 1 });
+  tail(devLap.screen, devLap.deck, dev);
+  F.site = makeForm(dev, { yaw: -0.3, pitch: 0.22 }, { lift: [0, 0.25, 1.2], hold: 2.6, step: 1 });
 
-  // Live: the address goes lime, behind a lock, and the code folds into the phone.
+  // Live: the address goes lime, behind a lock, and the code folds into the phone on the deck.
+  const liveLap = laptop({ name: 'hush', w: 8, h: 5.4, screen: FORE });
   const live = site(true);
-  const onP = at(1.36), onS = at(1.39);   // on the phone; on its screen
+  const ph = phoneParts({ x: 3.75, y: -1.15, z: 2.2, w: 2.1, h: 3.9, frame: METAL, screen: BACK });
+  const onS = at(ph.front);
   const MH1: TextOpts = { size: 0.18, font: 'head', track: -0.01 };
-  live.push(
-    piece(3.6, -0.85, 1.25, 2.1, 3.9, 0.22, BACK),                                                       // 18 the phone
-    onP(3.6, 0.88, 0.5, 0.08, 0.02, FORE),                                                               // 19 its speaker
-    pr(onS(3.6, 0.1, 1.66, 1.0, 0.05, PIC), 'hush.m.hero', (g) => headphones(g, 1.1)),                  // 20 the picture
-    pr(onS(3.27, -0.55, 1.0, 0.24, 0.02, FORE), 'hush.m.h1a', words('Silence,', MH1, 0.01)),            // 21-22 the headline
-    pr(onS(3.6, -0.8, 1.66, 0.24, 0.02, FORE), 'hush.m.h1b', words('tuned to you.', MH1, 0.01)),
-    pr(onS(3.6, -1.05, 1.66, 0.12, 0.02, FORE), 'hush.m.p', words('Noise cancelling that learns the room.', { size: 0.07, a: 0.62 }, 0.01)),   // 23 text
-    pr(onS(3.22, -1.45, 0.9, 0.3, 0.06, BACK), 'hush.m.cta', label('Pre-order', { size: 0.1, weight: 600 })),   // 24 the button
-    pr(onS(3.6, -2.15, 1.66, 0.6, 0.05, BACK), 'hush.m.card', colorway('Lime', 'lime', 0.66)),          // 25 a colour
-    piece(3.6, -0.97, 1.38, 1.86, 3.36, 0.02, FORE),                                                     // 26 its screen
-  );
-  F.live = makeForm(live, { yaw: -0.4, pitch: 0.2 }, { lift: [0.5, 0.2, 1.0], hold: 2.8, step: 2 });
+  const phoneBits = [
+    ph.body,                                                                                                         // 18 the phone
+    pill(at(ph.front)(3.75, 0.62, 0.46, 0.1, 0.02, FORE)),                                                        // 19 its speaker
+    pr(rd(onS(3.75, -0.12, 1.62, 0.98, 0.05, PIC), 0.1, 0.02), 'hush.m.hero', (g) => headphones(g, 1.1)),           // 20 the picture
+    pr(onS(3.42, -0.78, 1.0, 0.24, 0.02, BACK), 'hush.m.h1a', words('Silence,', MH1, 0.01)),                      // 21-22 the headline
+    pr(onS(3.75, -1.03, 1.62, 0.24, 0.02, BACK), 'hush.m.h1b', words('tuned to you.', MH1, 0.01)),
+    pr(onS(3.75, -1.28, 1.62, 0.12, 0.02, BACK), 'hush.m.p', words('Noise cancelling that learns the room.', { size: 0.07, a: 0.62 }, 0.01)),   // 23 text
+    pr(pill(onS(3.37, -1.68, 0.9, 0.3, 0.06, FORE)), 'hush.m.cta', label('Pre-order', { size: 0.1, weight: 600 })),   // 24 the button
+    pr(rd(onS(3.75, -2.38, 1.62, 0.6, 0.05, FORE), 0.12, 0.02), 'hush.m.card', colorway('Lime', 'lime', 0.66)),       // 25 a colour
+    ph.screen,                                                                                                         // 26 its screen
+  ];
+  hinge(phoneBits, ph.body.p[1] - 1.95, ph.body.p[2], -0.08);
+  live.push(...phoneBits);
+  tail(liveLap.screen, liveLap.deck, live);
+  F.live = makeForm(live, { yaw: -0.42, pitch: 0.24 }, { lift: [0.5, 0.2, 1.0], hold: 2.8, step: 2 });
 
-  // The moodboard: pictures, the type, the colours and the words for it, taped to a board.
+  // The moodboard: pictures, the type, the colours and materials, the words for it, pinned to a board.
   const specimen: Draw = (g) => {
     g.text('Aa', 0.12, 0.88, { size: 0.68, font: 'head' });
     g.text('Eurostile', 1.1, 0.36, { size: 0.12, weight: 500, mid: true });
@@ -268,223 +396,183 @@ export function buildForms(): Record<string, Form> {
     if (ink > 0) g.box(0, 0, g.w, g.h * 0.64, 'ink', ink);
     g.text(hex, 0.06, g.h - 0.1, { size: 0.072, font: 'mono', mid: true, a: 0.75 });
   };
-  const mood: Piece[] = new Array(27);   // the moodboard's 27 (the rest are spare)
-  mood[0] = piece(0, 0, 0, 8.4, 5.6, 0.26, FORE);   // the board (it becomes the window)
-  const pin = (i: number, x: number, y: number, w: number, h: number, k: number, rz: number, name?: string, draw?: Draw) => {
-    const p = piece(x, y + 0.2, 0.13 + 0.05 + i * 0.003, w, h, 0.08, k, rz);
+  const mood: Piece[] = new Array(29);
+  mood[0] = rd(piece(0, 0, 0, 8.4, 5.6, 0.26, FORE), 0.22, 0.1);   // the board (it becomes the laptop)
+  const pin = (i: number, x: number, y: number, w: number, h: number, k: number, rz: number, name?: string, draw?: Draw, r = 0.06) => {
+    const p = rd(piece(x, y + 0.2, 0.13 + 0.05 + i * 0.003, w, h, 0.08, k, rz), r, 0.03);
     mood[i] = name && draw ? pr(p, name, draw) : p;
   };
   pin(14, -2.45, 0.6, 2.6, 3.0, PIC, -0.03, 'hush.mood.photo', (g) => headphones(g));   // a photograph (it becomes the picture)
   pin(18, 0.25, 1.35, 2.2, 1.45, PIC, 0.035, 'hush.mood.waves', waves);                 // another (it becomes the editor)
   pin(9, 2.85, 1.45, 1.9, 1.25, BACK, -0.04, 'hush.mood.type', specimen);                // the type (it becomes the headline)
-  pin(10, 3.05, -0.25, 1.5, 1.1, METAL, 0.04);                                            // the materials: aluminium
+  pin(10, 3.05, -0.25, 1.5, 1.1, METAL, 0.04, undefined, undefined, 0.16);               // the materials: aluminium
   pin(15, -0.25, -0.35, 1.5, 1.2, BACK, 0.05, 'hush.mood.ui', uiSample);                 // a button and a switch
   pin(16, 1.35, -0.3, 1.25, 1.05, BACK, -0.06, 'hush.mood.words', lines(['quiet,', 'warm,', 'a little bold.'], { size: 0.15, font: 'serif', italic: true }, 0.12, 0.3, 0.24));
-  pin(17, -3.3, -1.95, 0.95, 0.95, GLASS, 0.06);                                          // and frosted glass
-  pin(1, -2.35, -1.95, 0.62, 0.62, BACK, -0.05, 'hush.chip.paper', chip('#F7F8F8'));      // the colours
-  pin(2, -1.61, -1.95, 0.62, 0.62, GLASS, 0.03);
-  pin(3, -0.87, -1.95, 0.62, 0.62, METAL, -0.02);
-  pin(4, -0.13, -1.95, 0.62, 0.62, BACK, 0.05, 'hush.chip.ink', chip('#121417', 1));
-  pin(13, 0.8, -1.85, 0.8, 0.8, LIME, 0.09, 'hush.chip.lime', chip('#B8FF00'));          // the one lime chip (it becomes the button)
+  pin(17, -3.3, -1.95, 0.95, 0.95, GLASS, 0.06, undefined, undefined, 0.2);              // and frosted glass
+  pin(1, -2.35, -1.95, 0.62, 0.62, BACK, -0.05, 'hush.chip.paper', chip('#F7F8F8'), 0.1);   // the colours
+  pin(2, -1.61, -1.95, 0.62, 0.62, GLASS, 0.03, undefined, undefined, 0.16);
+  pin(3, -0.87, -1.95, 0.62, 0.62, METAL, -0.02, undefined, undefined, 0.16);
+  pin(4, -0.13, -1.95, 0.62, 0.62, BACK, 0.05, 'hush.chip.ink', chip('#121417', 1), 0.1);
+  pin(13, 0.8, -1.85, 0.8, 0.8, LIME, 0.09, 'hush.chip.lime', chip('#B8FF00'), 0.14);   // the one lime chip (it becomes the button)
   pin(11, 1.85, -1.8, 1.05, 0.8, BACK, -0.05, 'hush.note1', lines(['no stock', 'photos'], { size: 0.13, weight: 500 }, 0.1, 0.27));
   pin(12, 3.1, -1.85, 1.35, 0.8, BACK, 0.04, 'hush.note2', lines(['launch in', 'May'], { size: 0.13, weight: 500 }, 0.1, 0.27));
-  // Tape on the corners (it becomes the lines of code).
-  const tape = (i: number, x: number, y: number, rz: number) => {
-    mood[i] = piece(x, y, 0.36, 0.66, 0.2, 0.02, BACK, rz);
+  // Push pins, round and lime-headed one of them (they become the lines of code).
+  const pushpin = (i: number, x: number, y: number) => {
+    mood[i] = ball(x, y, 0.36, 0.22, i === 21 ? FORE : BACK);
   };
-  tape(19, -3.62, 2.25, 0.62);
-  tape(20, -1.28, 2.25, -0.55);
-  tape(21, 0.25, 2.24, 0.05);
-  tape(22, 2.85, 2.22, -0.08);
-  tape(23, 1.35, 0.4, 0.1);
+  pushpin(19, -3.55, 2.15);
+  pushpin(20, -1.32, 2.15);
+  pushpin(21, 0.25, 2.12);
+  pushpin(22, 2.85, 2.12);
+  pushpin(23, 1.35, 0.32);
   for (const i of [5, 6, 7, 8, 24, 25, 26]) mood[i] = hidden(dev[i].p);
+  mood[27] = hidden(dev[27].p);
+  mood[28] = hidden(dev[28].p);
   F.moodboard = makeForm(mood, { yaw: -0.2, pitch: 0.14 }, { lift: [0, 0.3, 1.0], hold: 2.2, step: 0 });
 
-  /* Brand upgrade: kova, a money app that already works. First its parts in grey, on a grid;
-     then colour and type, the tokens beside it; then its mark, on the app and as its icon.
-     On the black chapter the app is white. */
-  const onK = at(0.15), onB = at(0.2);   // on the app; on its sidebar
-  const KX = [-1.083, 0.85, 2.783];
-  const NAVK = ['Overview', 'Payments', 'Cards', 'Reports'];
-  const kpi = (lab: string, val: string, foot: 'up' | 'month' | 'bar'): Draw => (g) => {
-    g.text(lab, 0.16, 0.26, { size: 0.1, weight: 500, mid: true, a: 0.55 });
-    g.text(val, 0.16, 0.6, { size: 0.34, font: 'head', mid: true });
-    if (foot === 'up') {
-      g.box(0.16, 0.84, 0.56, 0.17, 'lime', 1, 0.085);
-      g.text('+4.2%', 0.44, 0.925, { size: 0.09, weight: 600, align: 'center', mid: true });
-    } else if (foot === 'month') g.text('this month', 0.16, 0.925, { size: 0.09, mid: true, a: 0.5 });
-    else {
-      g.frame(0.16, 0.9, g.w - 0.32, 0.07, 0.012, 'ink', 1);
-      g.box(0.16, 0.9, (g.w - 0.32) * 0.62, 0.07, 'ink', 1);
-    }
-  };
+  /* Brand upgrade: kova, a money app that already works, on a phone. Its layers lifted off the
+     screen and spread out in front of it, in outline on a grid; then in colour and type, closer
+     in, the type and three colours floating by; then pressed back into the screen, the colours
+     going into its mark, which pops out as the app's lime icon. */
+  const KF = phoneParts({ x: 0, y: 0, z: 0, w: 2.6, h: 5.2 }).front;   // the phone screen's face
+  const LAYERS: { y: number; h: number; d: number }[] = [
+    { y: 1.86, h: 0.78, d: 0.07 },    // the greeting
+    { y: 0.82, h: 1.06, d: 0.09 },    // the balance
+    { y: -0.46, h: 1.36, d: 0.09 },   // the chart
+    { y: -1.82, h: 1.06, d: 0.09 },   // the list
+  ];
   const BARS = [0.42, 0.55, 0.48, 0.66, 0.58, 0.72, 0.6, 0.5, 0.64, 0.78, 0.7, 0.92];
-  const chart: Draw = (g) => {
-    g.text('Spending', 0.2, 0.3, { size: 0.13, weight: 600, mid: true });
-    g.text('Last 12 months', 0.2, 0.5, { size: 0.09, mid: true, a: 0.5 });
-    BARS.forEach((v, i) => {
-      const x = 0.28 + i * 0.262, bh = v * 1.3;
-      g.box(x, 2.12 - bh, 0.15, bh, i === BARS.length - 1 ? 'lime' : 'ink', 1, 0.02);
-      g.text('JFMAMJJASOND'[i], x + 0.075, 2.3, { size: 0.075, align: 'center', mid: true, a: 0.45 });
-    });
-  };
-  const ROWS = [['Groceries', 'Food', '−$84'], ['Studio rent', 'Home', '−$1,200'], ['Cloud', 'Work', '−$212'], ['Coffee', 'Food', '−$6']];
-  const list: Draw = (g) => {
-    g.text('Recent', 0.16, 0.3, { size: 0.13, weight: 600, mid: true });
-    ROWS.forEach(([name, sub, amt], i) => {
-      const y = 0.74 + i * 0.44;
-      g.dot(0.28, y, 0.12, 'ink', 1);
-      g.text(name[0], 0.28, y, { size: 0.1, weight: 600, align: 'center', mid: true, ink: 'base' });
-      g.text(name, 0.5, y - 0.07, { size: 0.1, weight: 500, mid: true });
-      g.text(sub, 0.5, y + 0.09, { size: 0.075, mid: true, a: 0.5 });
-      g.text(amt, g.w - 0.14, y - 0.07, { size: 0.1, weight: 500, align: 'right', mid: true });
-    });
-  };
-  // The grid: twelve columns over the app's main area, laid over everything like a design
-  // tool's, so each part in grey carries its share of the columns (left: its left edge, from the app's).
-  const GX = 1.85, GW = 5.6, GUT = 0.2, CW = (GW - GUT * 11) / 12;
-  const columns = (g: Pen, left: number, top = 0, bottom = g.h) => {
-    for (let i = 0; i < 12; i++) {
-      const x = GX + i * (CW + GUT) - left;
-      if (x + CW > 0 && x < g.w) g.box(Math.max(0, x), top, Math.min(CW, CW + x, g.w - x), bottom - top, 'lime', 0.22);
+  const kovaHead = (mark: boolean): Draw => (g) => {
+    let x = 0.16;
+    if (mark) {
+      g.box(x, 0.16, 0.28, 0.28, 'lime', 1, 0.07);
+      g.text('k', x + 0.14, 0.3, { size: 0.24, weight: 600, align: 'center', mid: true });
+      x += 0.38;
     }
+    g.text('kova', x, 0.3, { size: 0.2, weight: 600, track: -0.02, mid: true });
+    g.dot(g.w - 0.3, 0.3, 0.14, 'ink');
+    g.text('A', g.w - 0.3, 0.3, { size: 0.13, weight: 600, align: 'center', mid: true, ink: 'base' });
+    g.text('Good morning, Ana', 0.16, 0.6, { size: 0.19, font: 'head', mid: true });
   };
-  const kovaGrid: Draw = (g) => columns(g, 0, 0.15, g.h - 0.15);
-  // a part in grey, on the grid: x and w its place and width on the app
-  const wired = (x: number, w: number, inner: Draw, outline = true): Draw => (g) => {
-    columns(g, x - w / 2 + 3.8);
-    if (outline) g.frame(0, 0, g.w, g.h, 0.02, 'ink', 1);
-    inner(g);
+  const kovaBalance: Draw = (g) => {
+    g.text('Balance', 0.18, 0.24, { size: 0.1, weight: 500, mid: true, a: 0.55 });
+    g.text('$48,210', 0.18, 0.56, { size: 0.36, font: 'head', mid: true });
+    g.box(0.18, 0.8, 0.56, 0.17, 'lime', 1, 0.085);
+    g.text('+4.2%', 0.46, 0.885, { size: 0.09, weight: 600, align: 'center', mid: true });
   };
-  const kova = (st: 0 | 1 | 2): Piece[] => {
-    const wire = st === 0, k = wire ? FORE : BACK;
-    const out: Piece[] = [];
-    const win = piece(0, 0, 0, 7.6, 4.9, 0.3, FORE);
-    out.push(wire ? pr(win, 'kova.grid', kovaGrid, 40) : win);                                                      // 0 the app
-    const side = onK(-2.9, 0, 1.5, 4.6, 0.04, k);
-    out.push(side);                                                    // 1 its sidebar
-    const logo = onB(-2.9, 1.95, 1.2, 0.36, 0.02, k);
-    out.push(
-      wire ? pr(logo, 'kova.w.logo', (g) => g.frame(0.04, g.h / 2 - 0.08, 0.6, 0.16, 0.02, 'ink', 1))
-        : st === 1 ? pr(logo, 'kova.logo', words('kova', { size: 0.24, weight: 600, track: -0.02 }, 0.04))
-          : pr(logo, 'kova.logo.mark', (g) => {
-            g.box(0.04, g.h / 2 - 0.15, 0.3, 0.3, 'lime');
-            g.text('k', 0.19, g.h / 2 - 0.01, { size: 0.26, weight: 600, align: 'center', mid: true, ink: 'base' });
-            g.text('kova', 0.44, g.h / 2, { size: 0.24, weight: 600, track: -0.02, mid: true });
-          }),
-    );                                                                                                               // 2 its logo
-    NAVK.forEach((s, i) => {
-      const p = onB(-2.9, 1.3 - i * 0.36, 1.2, 0.28, 0.02, k);
-      out.push(wire ? pr(p, `kova.w.nav${i}`, (g) => g.box(0.06, g.h / 2 - 0.012, 0.8 - i * 0.08, 0.024, 'ink', 1))
-        : pr(p, `kova.nav${i}`, (g) => {
-          if (i === 0) g.box(0.06, g.h / 2 - 0.035, 0.07, 0.07, 'lime');
-          g.text(s, 0.22, g.h / 2, { size: 0.13, weight: 500, mid: true, a: i === 0 ? 1 : 0.6 });
-        }));
-    });                                                                                                              // 3-6 its menu
-    const head = onK(-0.2, 1.95, 3.5, 0.44, 0.02, FORE);
-    out.push(wire ? pr(head, 'kova.w.head', wired(-0.2, 3.5, (g) => g.frame(0.02, g.h / 2 - 0.1, 2.4, 0.2, 0.02, 'ink', 1), false))
-      : pr(head, 'kova.head', words('Good morning, Ana', { size: 0.3, font: 'head' }, 0.02)));                      // 7 the greeting
-    const av = onK(3.43, 1.95, 0.42, 0.42, 0.04, FORE);
-    out.push(wire ? pr(av, 'kova.w.avatar', wired(3.43, 0.42, (g) => g.ring(g.w / 2, g.h / 2, 0.18, 0.02, 'ink', 1), false))
-      : pr(av, 'kova.avatar', (g) => {
-        g.dot(g.w / 2, g.h / 2, 0.19, 'ink');
-        g.text('A', g.w / 2, g.h / 2, { size: 0.18, weight: 600, align: 'center', mid: true, ink: 'base' });
-      }));                                                                                                           // 8 who's in
-    const KPIS: [string, string, 'up' | 'month' | 'bar'][] = [['Balance', '$48,210', 'up'], ['Spent', '$3,120', 'month'], ['Saved', '18%', 'bar']];
-    KPIS.forEach(([l, v, f], i) => {
-      const p = onK(KX[i], 1.0, 1.733, 1.1, 0.08, FORE);
-      out.push(wire ? pr(p, `kova.w.kpi${i}`, wired(KX[i], 1.733, (g) => { g.box(0.16, 0.24, 0.6, 0.024, 'ink', 1); g.frame(0.16, 0.46, 1.1, 0.24, 0.02, 'ink', 1); }))
-        : pr(p, `kova.kpi${i}`, kpi(l, v, f)));
-    });                                                                                                              // 9-11 the numbers
-    const ch = onK(-0.15, -1.05, 3.6, 2.5, 0.08, FORE);
-    out.push(wire ? pr(ch, 'kova.w.chart', wired(-0.15, 3.6, (g) => {
-      g.box(0.2, 0.27, 0.9, 0.024, 'ink', 1);
-      g.frame(0.2, 0.9, g.w - 0.4, 1.22, 0.02, 'ink', 1);
-    })) : pr(ch, 'kova.chart', chart));                                                                             // 12 the chart
-    const ls = onK(2.75, -1.05, 1.8, 2.5, 0.08, FORE);
-    out.push(wire ? pr(ls, 'kova.w.list', wired(2.75, 1.8, (g) => {
-      g.box(0.16, 0.27, 0.6, 0.024, 'ink', 1);
-      for (let i = 0; i < 4; i++) { g.ring(0.28, 0.74 + i * 0.44, 0.11, 0.02, 'ink', 1); g.box(0.5, 0.73 + i * 0.44, 0.9, 0.024, 'ink', 1); }
-    })) : pr(ls, 'kova.list', list));                                                                               // 13 the list
-    // the tokens, in front of the sidebar: the type, and the colours (the lime one becomes the icon)
-    const type = pr(piece(-2.9, -0.95, 0.85, 1.3, 1.0, 0.14, FORE), 'kova.type', (g) => {
-      g.text('Aa', 0.12, 0.62, { size: 0.5, font: 'head' });
-      g.text('Eurostile', 0.12, 0.84, { size: 0.09, weight: 500, mid: true, a: 0.6 });
+  const kovaChart: Draw = (g) => {
+    g.text('Spending', 0.18, 0.24, { size: 0.11, weight: 600, mid: true });
+    BARS.forEach((v, i) => {
+      const x = 0.2 + i * 0.145, bh = v * 0.8;
+      g.box(x, 1.18 - bh, 0.09, bh, i === BARS.length - 1 ? 'lime' : 'ink', 1, 0.02);
     });
-    const chips = [piece(-3.35, -1.95, 0.85, 0.38, 0.38, 0.28, FORE), piece(-2.9, -1.95, 0.85, 0.38, 0.38, 0.28, BACK), piece(-2.45, -1.95, 0.85, 0.38, 0.38, 0.28, LIME)];
-    if (st === 1) out.push(type, ...chips);
-    else out.push(hidden(type.p), hidden(chips[0].p), hidden(chips[1].p));
-    if (st === 2) out.push(pr(piece(-2.9, -1.35, 0.95, 1.3, 1.3, 0.42, LIME), 'kova.icon', label('k', { size: 0.92, weight: 600 })));
-    else if (st === 0) out.push(hidden(chips[2].p));                                                                // 14-17 type, colours; the icon
+  };
+  const kovaList: Draw = (g) => {
+    [['Groceries', '−$84'], ['Studio rent', '−$1,200']].forEach(([n, a], i) => {
+      const y = 0.3 + i * 0.44;
+      g.dot(0.3, y, 0.12, 'ink', 1);
+      g.text(n[0], 0.3, y, { size: 0.1, weight: 600, align: 'center', mid: true, ink: 'base' });
+      g.text(n, 0.52, y, { size: 0.11, weight: 500, mid: true });
+      g.text(a, g.w - 0.16, y, { size: 0.11, weight: 500, align: 'right', mid: true });
+    });
+  };
+  const kovaWire = (i: number): Draw => (g) => {
+    g.frame(0, 0, g.w, g.h, 0.018, 'ink', 1, 0.14);
+    g.box(0.18, 0.22, 0.7 - i * 0.08, 0.026, 'ink', 1);
+    g.frame(0.18, 0.4, g.w - 0.36, g.h - 0.6, 0.016, 'ink', 1, 0.06);
+  };
+  const kovaGrid: Draw = (g) => {
+    const cols = 4, gut = 0.12, m = 0.16, cw = (g.w - m * 2 - gut * (cols - 1)) / cols;
+    for (let i = 0; i < cols; i++) g.box(m + i * (cw + gut), 0.3, cw, g.h - 0.5, 'lime', 0.24, 0.04);
+  };
+  const DRAWS = [kovaHead, () => kovaBalance, () => kovaChart, () => kovaList];
+  const kova = (st: 0 | 1 | 2): Piece[] => {
+    const out: Piece[] = [];
+    const ps = phoneParts({ x: 0, y: 0, z: 0, w: 2.6, h: 5.2, frame: METAL, screen: FORE });
+    out.push(grp([ps.body], 1)[0]);                                                                       // 0 the phone
+    out.push(grp([st === 0 ? pr(ps.screen, 'kova.grid', kovaGrid, 60) : pr(ps.screen, 'kova.screen', (g) => {
+      g.text('9:41', 0.3, 0.18, { size: 0.09, weight: 600, mid: true });
+      g.box(g.w - 0.5, 0.15, 0.24, 0.07, 'ink', 1, 0.03);
+    })], 1)[0]);                                                                                          // 1 its screen
+    const lift = st === 0 ? [1.6, 1.2, 0.8, 0.4] : st === 1 ? [0.9, 0.68, 0.45, 0.22] : [0, 0, 0, 0];
+    LAYERS.forEach((L, i) => {
+      const z = KF + L.d / 2 + 0.01 + lift[i];
+      const card = rd(piece(0, L.y, z, 2.22, L.h, L.d, FORE, 0, st === 2 ? 0 : -0.06 * (i + 1), 0), 0.16, L.d / 2);
+      const name = st === 0 ? `kova.w${i}` : i === 0 ? `kova.head${st === 2 ? '.mark' : ''}` : `kova.l${i}`;
+      const draw = st === 0 ? kovaWire(i) : i === 0 ? kovaHead(st === 2) : DRAWS[i](false);
+      out.push(grp([pr(card, name, draw)], st === 2 ? 1 : 2 + i)[0]);
+    });                                                                                                   // 2-5 its layers
+    // the tokens: the type, and three colours
+    const type = pr(rd(piece(-2.25, 1.15, 1.1, 1.05, 1.05, 0.34, FORE, 0.12, 0.1, 0.32), 0.26, 0.14), 'kova.type', (g) => {
+      g.text('Aa', g.w / 2, g.h * 0.5, { size: 0.5, font: 'head', align: 'center', mid: true });
+    });
+    const dots = [ball(2.05, 1.55, 1.0, 0.62, FORE), ball(2.4, 0.55, 0.45, 0.5, BACK), ball(1.95, -0.4, 1.3, 0.56, LIME)];
+    const icon = pr(rd(piece(-1.85, 2.2, 1.6, 1.3, 1.3, 0.44, LIME, 0.16, -0.18, 0.42), 0.36, 0.17), 'kova.icon', label('k', { size: 0.92, weight: 600 }));
+    if (st === 0) out.push(hidden(type.p), ...dots.map((d) => hidden(d.p)));
+    else if (st === 1) out.push(...grp([type], 7), ...dots.map((d, i) => grp([d], 8 + i)[0]));
+    else out.push(hidden([-0.3, 1.9, KF + 0.1]), hidden(icon.p), hidden(icon.p), grp([icon], 12)[0]);   // 6-9 type, colours (the lime one becomes the icon)
     return out;
   };
-  const brandLift: Vec = [0, 0.3, 1.0];
-  F.grid = makeForm(kova(0), { yaw: 0.26, pitch: 0.16 }, { lift: brandLift, hold: 2.2, step: 0 });
-  F.colortype = makeForm(kova(1), { yaw: 0.3, pitch: 0.18 }, { lift: brandLift, hold: 2.6, step: 1 });
-  F.mark = makeForm(kova(2), { yaw: 0.32, pitch: 0.2 }, { lift: brandLift, hold: 2.8, step: 2 });
+  const brandLift: Vec = [0, 0.4, 0.8];
+  F.grid = makeForm(kova(0), { yaw: 0.66, pitch: 0.3 }, { lift: brandLift, hold: 2.2, step: 0, float: 0.06 });
+  F.colortype = makeForm(kova(1), { yaw: 0.4, pitch: 0.22 }, { lift: brandLift, hold: 2.6, step: 1, float: 0.06 });
+  F.mark = makeForm(kova(2), { yaw: 0.18, pitch: 0.14 }, { lift: brandLift, hold: 2.8, step: 2, float: 0.05 });
 
-  /* Labs: the four products, one after another, as the list names them. The two that are live
-     are made in the colour that stands out; the two on the way are in the page's own colour,
-     like parts not yet painted, with a tag that says so. */
+  /* Labs: the four products, one after another, as the list names them. Strata is its own film,
+     playing on a laptop, its parts floating out of the screen; AI Bidding a card table; the two
+     on the way are drawn in the page's own colour, like parts not yet painted, tagged SOON. */
   const onL = at(0.15);
   const TTL: TextOpts = { size: 0.24, weight: 600, track: -0.02 };
-  const labWin = (k: number) => piece(0, 0, 0, 7.6, 4.6, 0.3, k);
+  const labWin = (k: number) => rd(piece(0, 0, 0, 7.6, 4.6, 0.3, k), 0.3, 0.12);
   const titleW = (s: string) => wide(s, 0.24, 0.58) + 0.1;
   const title = (s: string, k: number = FORE) => pr(onL(-3.6 + titleW(s) / 2, 1.95, titleW(s), 0.36, 0.02, k), `lab.title.${s}`, words(s, TTL, 0.04));
-  // the tag after a title
-  const soon = (s: string) => pr(onL(-3.6 + titleW(s) + 0.12 + 0.37, 1.95, 0.74, 0.3, 0.05, FORE), 'lab.soon', label('SOON', { size: 0.1, weight: 600, track: 0.14 }));
+  const soon = (s: string) => pr(pill(onL(-3.6 + titleW(s) + 0.12 + 0.37, 1.95, 0.74, 0.3, 0.08, FORE)), 'lab.soon', label('SOON', { size: 0.1, weight: 600, track: 0.14 }));
 
-  // Strata: an image in; the colours and the type taken from it, the parts made of them, the code.
-  const STRATA_CHIPS = [LIME, BACK, FORE, METAL, GLASS];   // its palette: lime, the two plastics, aluminium, glass
-  const strata = (): Piece[] => [
-    labWin(FORE),                                                                                                   // 0
-    title('Strata'),                                                                                                // 1
-    pr(onL(3.05, 1.95, 1.1, 0.38, 0.06, BACK), 'lab.export', label('Export', { size: 0.13, weight: 600 })),         // 2
-    pr(onL(-2.175, -0.235, 2.85, 3.53, 0.1, PIC), 'lab.image', landscape),                                         // 3 the image in
-    ...STRATA_CHIPS.map((k, i) => onL(-0.12 + i * 0.84, 1.2, 0.66, 0.66, 0.16, k)),                                   // 4-8 its colours
-    pr(onL(0.45, 0.1, 1.8, 1.05, 0.08, BACK), 'lab.type', (g) => {
-      g.text('Aa', 0.14, 0.7, { size: 0.56, font: 'head' });
-      g.text('Display', 1.06, 0.36, { size: 0.1, weight: 500, mid: true });
-      g.text('48 / 1.0', 1.06, 0.54, { size: 0.085, mid: true, a: 0.5 });
-      g.text('Body 16', 1.06, 0.8, { size: 0.085, mid: true, a: 0.5 });
-    }),                                                                                                             // 9 its type
-    pr(onL(2.6, 0.33, 2.0, 0.44, 0.12, LIME), 'lab.cta', label('Get started', { size: 0.14, weight: 600 })),         // 10-11 parts
-    pr(onL(2.6, -0.2, 2.0, 0.44, 0.06, BACK), 'lab.input', (g) => {
-      g.text('you@studio.com', 0.16, g.h / 2, { size: 0.12, mid: true, a: 0.45 });
-      g.box(1.32, g.h / 2 - 0.1, 0.014, 0.2, 'ink', 1);
-    }),
-    pr(onL(1.575, -1.4, 4.05, 1.2, 0.06, BACK), 'lab.code', (g) => {
-      [['--accent', '#B8FF00'], ['--ink', '#121417'], ['--space', '8px']].forEach(([k2, v], i) => {
-        const y = 0.3 + i * 0.3;
-        const w = g.text(`${k2}: `, 0.18, y, { size: 0.12, font: 'mono', mid: true, a: 0.5 });
-        g.text(`${v};`, 0.18 + w, y, { size: 0.12, font: 'mono', mid: true });
-      });
-    }),                                                                                                             // 12 the code
-  ];
-  F.strata = makeForm(strata(), { yaw: -0.3, pitch: 0.16 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 0 });
+  // Strata: the laptop with Strata's film; out of the screen float its colours, its type, a part, a token.
+  const strataParts = (): Piece[] => {
+    const lap = laptop({ name: 'strata', w: 7.0, h: 3.4, y: 0.5, film: FILMS.strata, depth: 2.7 });
+    return [
+      grp([lap.lid], -1)[0],                                                                                 // 0 the laptop
+      grp([lap.screen], -1)[0],                                                                              // 1 its screen, the film
+      grp([lap.deck], -1)[0],                                                                                // 2 its deck
+      grp([ball(-3.35, 2.35, 1.5, 0.62, LIME)], 3)[0],                                                       // 3-5 colours
+      grp([ball(-2.55, 2.85, 0.9, 0.46, FORE)], 4)[0],
+      grp([ball(3.45, 2.45, 1.3, 0.54, BACK)], 5)[0],
+      grp([pr(rd(piece(3.4, 1.05, 1.9, 1.0, 1.0, 0.32, FORE, -0.14, 0.1, -0.35), 0.25, 0.14), 'lab.aa', (g) => {
+        g.text('Aa', g.w / 2, g.h / 2, { size: 0.46, font: 'head', align: 'center', mid: true });
+      })], 6)[0],                                                                                            // 6 the type
+      grp([pr(pill(piece(2.9, -0.55, 2.3, 1.8, 0.48, 0.2, LIME, 0.06, 0, -0.25)), 'lab.cta', label('Get started', { size: 0.15, weight: 600 }))], 7)[0],   // 7 a part
+      grp([pr(rd(piece(-2.85, -0.35, 2.1, 2.3, 0.62, 0.12, FORE, -0.05, 0, 0.25), 0.14, 0.06), 'lab.token', (g) => {
+        const w = g.text('--accent: ', 0.18, g.h / 2, { size: 0.13, font: 'mono', mid: true, a: 0.5 });
+        g.text('#B8FF00;', 0.18 + w, g.h / 2, { size: 0.13, font: 'mono', mid: true });
+      })], 8)[0],                                                                                            // 8 a token
+    ];
+  };
+  F.strata = makeForm(strataParts(), { yaw: -0.3, pitch: 0.2 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 0, float: 0.09 });
 
   // AI Bidding: a table; your aces; the model reading the bluff; fold, bid, or all in.
   const cardBack: Draw = (g) => {
-    g.box(0.07, 0.07, g.w - 0.14, g.h - 0.14, 'ink');
-    g.frame(0.13, 0.13, g.w - 0.26, g.h - 0.26, 0.02, 'base');
-    g.box(g.w / 2 - 0.09, g.h / 2 - 0.09, 0.18, 0.18, 'lime');
+    g.box(0.07, 0.07, g.w - 0.14, g.h - 0.14, 'ink', 1, 0.06);
+    g.frame(0.13, 0.13, g.w - 0.26, g.h - 0.26, 0.02, 'base', 1, 0.04);
+    g.box(g.w / 2 - 0.09, g.h / 2 - 0.09, 0.18, 0.18, 'lime', 1, 0.03);
   };
   const card = (x: number, y: number, rz: number, k: number, name?: string, draw?: Draw) => {
-    const p = piece(x, y, 0.15 + 0.03 + 0.01, 0.82, 1.15, 0.06, k, rz);
+    const p = rd(piece(x, y, 0.15 + 0.03 + 0.01, 0.82, 1.15, 0.06, k, rz), 0.09, 0.03);
     return name && draw ? pr(p, name, draw) : p;
   };
+  const coin = (x: number, y: number, z: number) => rd(piece(x, y, z, 0.56, 0.56, 0.1, BACK), 0.28, 0.05);
   const bidding = (): Piece[] => [
-    pr(labWin(FORE), 'lab.table', (g) => {
+    pr(rd(piece(0, 0, 0, 7.6, 4.6, 0.3, FORE), 0.6, 0.14), 'lab.table', (g) => {
       g.shape((c) => c.ellipse(g.w / 2 + 0.55, g.h / 2 - 0.05, 2.25, 1.95, 0, 0, Math.PI * 2), 'ink', 1, 0.02);
     }, 40),                                                                                                          // 0 the table
     title('AI Bidding'),                                                                                             // 1
-    pr(onL(3.05, 1.95, 1.1, 0.38, 0.06, BACK), 'lab.pot', label('Pot $120', { size: 0.13, weight: 600 })),           // 2 the pot
-    pr(onL(-2.55, -0.35, 1.9, 2.1, 0.06, BACK), 'lab.model', (g) => {
+    pr(pill(onL(3.05, 1.95, 1.15, 0.4, 0.08, BACK)), 'lab.pot', label('Pot $120', { size: 0.13, weight: 600 })),     // 2 the pot
+    pr(rd(onL(-2.55, -0.35, 1.9, 2.1, 0.08, BACK), 0.18, 0.04), 'lab.model', (g) => {
       g.text('The model reads', 0.16, 0.26, { size: 0.1, weight: 500, mid: true, a: 0.55 });
       g.text('Bluff', 0.16, 0.6, { size: 0.26, font: 'head', mid: true });
       g.text('72%', 0.16, 1.08, { size: 0.5, font: 'head', mid: true });
-      g.frame(0.16, 1.45, g.w - 0.32, 0.08, 0.014, 'ink', 1);
-      g.box(0.16, 1.45, (g.w - 0.32) * 0.72, 0.08, 'ink', 1);
+      g.frame(0.16, 1.45, g.w - 0.32, 0.08, 0.014, 'ink', 1, 0.04);
+      g.box(0.16, 1.45, (g.w - 0.32) * 0.72, 0.08, 'ink', 1, 0.04);
       g.text('Your hand looks strong.', 0.16, 1.78, { size: 0.085, mid: true, a: 0.6 });
     }),                                                                                                              // 3 the model
     card(0.3, 1.15, 0.05, BACK, 'lab.cardBack', cardBack),                                                           // 4-5 their cards, face down
@@ -494,21 +582,21 @@ export function buildForms(): Record<string, Form> {
     card(1.81, -0.2, 0, BACK, 'lab.card7', (g) => cardFace(g, '7', 'club')),
     card(0.42, -1.6, 0.07, BACK, 'lab.cardA1', (g) => cardFace(g, 'A', 'spade')),                                   // 9-10 your hand
     card(1.3, -1.6, -0.05, BACK, 'lab.cardA2', (g) => cardFace(g, 'A', 'diamond')),
-    pr(onL(3.02, -0.72, 1.1, 0.4, 0.08, BACK), 'lab.fold', label('Fold', { size: 0.13, weight: 600 })),             // 11-13 what you do
-    pr(onL(3.02, -1.24, 1.1, 0.4, 0.08, BACK), 'lab.bid', label('Bid $40', { size: 0.13, weight: 600 })),
-    pr(onL(3.02, -1.76, 1.1, 0.4, 0.12, LIME), 'lab.allin', label('All in', { size: 0.13, weight: 600 })),
-    piece(-1.0, -1.62, 0.41, 0.5, 0.1, 0.5, BACK),                                                                    // 14-16 chips
-    piece(-0.97, -1.51, 0.41, 0.5, 0.1, 0.5, BACK),
-    piece(-1.01, -1.4, 0.41, 0.5, 0.1, 0.5, BACK),
+    pr(pill(onL(3.02, -0.72, 1.15, 0.42, 0.1, BACK)), 'lab.fold', label('Fold', { size: 0.13, weight: 600 })),      // 11-13 what you do
+    pr(pill(onL(3.02, -1.24, 1.15, 0.42, 0.1, BACK)), 'lab.bid', label('Bid $40', { size: 0.13, weight: 600 })),
+    pr(pill(onL(3.02, -1.76, 1.15, 0.42, 0.16, LIME)), 'lab.allin', label('All in', { size: 0.13, weight: 600 })),
+    coin(-1.0, -1.5, 0.22),                                                                                         // 14-16 chips, a stack of them
+    coin(-0.97, -1.44, 0.33),
+    coin(-1.02, -1.38, 0.44),
   ];
-  F.bidding = makeForm(bidding(), { yaw: -0.3, pitch: 0.2 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 1 });
+  F.bidding = makeForm(bidding(), { yaw: -0.3, pitch: 0.22 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 1 });
 
   // TTS Editor: a voice, its script with the pauses and the pitch marked, three dials.
   const SCRIPT: [string, string][] = [['Welcome back.', 'pause 0.6s'], ['Today we take it slow,', 'pitch +2'], ['and say it like we mean it.', 'warm']];
   const SLIDERS: [string, number][] = [['Pitch', 0.35], ['Pace', 0.6], ['Warmth', 0.8]];
   const tts = (): Piece[] => {
-    const out: Piece[] = [labWin(BACK), title('TTS Editor', BACK), soon('TTS Editor')];                                           // 0-2
-    out.push(pr(onL(0, 0.95, 7.0, 0.95, 0.04, BACK), 'lab.wave', (g) => {
+    const out: Piece[] = [labWin(BACK), title('TTS Editor', BACK), soon('TTS Editor')];                              // 0-2
+    out.push(pr(rd(onL(0, 0.95, 7.0, 0.95, 0.06, BACK), 0.16, 0.03), 'lab.wave', (g) => {
       waveform(g, 0.2, 0.1, g.w - 0.4, g.h - 0.32, 0.42);
       g.box(0.2 + (g.w - 0.4) * 0.42, 0.04, 0.02, g.h - 0.2, 'ink', 1);
       ['0:00', '0:04', '0:08', '0:12'].forEach((t, i) => g.text(t, 0.2 + i * (g.w - 0.4) / 3, g.h - 0.08, { size: 0.07, mid: true, a: 0.45, align: i === 3 ? 'right' : 'left' }));
@@ -519,92 +607,102 @@ export function buildForms(): Record<string, Form> {
     });                                                                                                              // 4-6 the script
     SCRIPT.forEach(([s, mark], i) => {
       const x = -3.4 + wide(s, 0.2, 0.52) + 0.3, w = wide(mark, 0.11, 0.56) + 0.3;
-      out.push(pr(onL(x + w / 2, 0.02 - i * 0.44, w, 0.3, 0.05, FORE), `lab.mark${i}`, label(mark, { size: 0.11, weight: 500 })));
+      out.push(pr(pill(onL(x + w / 2, 0.02 - i * 0.44, w, 0.3, 0.08, FORE)), `lab.mark${i}`, label(mark, { size: 0.11, weight: 500 })));
     });                                                                                                              // 7-9 what's marked
     SLIDERS.forEach(([s], i) => {
-      out.push(pr(onL(-2.45 + i * 2.45, -1.72, 2.2, 0.66, 0.02, BACK), `lab.slider${i}`, (g) => {
+      out.push(pr(rd(onL(-2.45 + i * 2.45, -1.72, 2.2, 0.66, 0.03, BACK), 0.12, 0.015), `lab.slider${i}`, (g) => {
         g.text(s, 0.1, 0.18, { size: 0.1, weight: 500, mid: true, a: 0.6 });
         g.box(0.1, 0.45, g.w - 0.2, 0.016, 'ink', 1);
       }));
     });                                                                                                              // 10-12 three dials
-    SLIDERS.forEach(([, v], i) => out.push(onL(-2.45 + i * 2.45 - 1.0 + v * 2.0, -1.86, 0.18, 0.18, 0.12, FORE)));   // 13-15 their knobs
+    SLIDERS.forEach(([, v], i) => out.push(ball(-2.45 + i * 2.45 - 1.0 + v * 2.0, -1.86, 0.15 + 0.16, 0.26, FORE)));   // 13-15 their knobs
     return out;
   };
-  F.tts = makeForm(tts(), { yaw: -0.3, pitch: 0.16 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 2 });
+  F.tts = makeForm(tts(), { yaw: -0.3, pitch: 0.18 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 2 });
 
   // Interview Assistant: the call, the words as they're said, and hints for what to ask next.
   const HINTS: [string, string][] = [['ASK', 'What did you measure?'], ['FOLLOW UP', 'How big was the team?'], ['NOTE', 'Led the rebuild.']];
   const interview = (): Piece[] => {
     const tileFront = 0.15 + 0.06 + 0.01;
     const onT = at(tileFront);
-    const out: Piece[] = [labWin(BACK), title('Interview Assistant', BACK), soon('Interview Assistant')];                                  // 0-2
-    out.push(pr(onL(-1.35, 0, 4.5, 2.9, 0.06, FORE), 'lab.call', (g) => caller(g, g.w * 0.46)));                     // 3 the call
-    out.push(pr(onT(0.25, -0.95, 1.0, 0.72, 0.05, BACK), 'lab.you', (g) => {
+    const out: Piece[] = [labWin(BACK), title('Interview Assistant', BACK), soon('Interview Assistant')];          // 0-2
+    out.push(pr(rd(onL(-1.35, 0, 4.5, 2.9, 0.06, FORE), 0.2, 0.03), 'lab.call', (g) => caller(g, g.w * 0.46)));     // 3 the call
+    out.push(pr(rd(onT(0.25, -0.95, 1.0, 0.72, 0.06, BACK), 0.12, 0.03), 'lab.you', (g) => {
       caller(g, g.w * 0.5);
       g.text('You', 0.08, g.h - 0.1, { size: 0.08, weight: 600, mid: true, ink: 'base' });
     }));                                                                                                             // 4 you
-    out.push(pr(onT(-2.85, -1.18, 1.3, 0.3, 0.02, FORE), 'lab.name', words('Sam, candidate', { size: 0.11, weight: 500 }, 0.06)));   // 5 their name
-    out.push(pr(onL(-1.35, -1.86, 4.5, 0.42, 0.02, BACK), 'lab.caption', words('“…so we rebuilt onboarding in two weeks.”', { size: 0.13, a: 0.8 }, 0.06)));   // 6 what they said
-    out.push(pr(onL(3.1, 1.95, 1.0, 0.32, 0.02, BACK), 'lab.rec', (g) => {
-      g.dot(0.2, g.h / 2, 0.06, 'ink');
-      g.text('12:48', 0.34, g.h / 2, { size: 0.12, weight: 500, mid: true });
+    out.push(pr(pill(onT(-2.85, -1.18, 1.3, 0.3, 0.04, FORE)), 'lab.name', label('Sam, candidate', { size: 0.11, weight: 500 })));   // 5 their name
+    out.push(pr(rd(onL(-1.35, -1.86, 4.5, 0.42, 0.03, BACK), 0.16, 0.015), 'lab.caption', words('“…so we rebuilt onboarding in two weeks.”', { size: 0.13, a: 0.8 }, 0.1)));   // 6 what they said
+    out.push(pr(pill(onL(3.1, 1.95, 1.0, 0.34, 0.06, BACK)), 'lab.rec', (g) => {
+      g.dot(0.22, g.h / 2, 0.06, 'ink');
+      g.text('12:48', 0.36, g.h / 2, { size: 0.12, weight: 500, mid: true });
     }));                                                                                                             // 7 the clock
     HINTS.forEach(([lab, s], i) => {
-      out.push(pr(onL(2.4, 0.85 - i * 0.9, 2.4, 0.76, 0.04, BACK), `lab.hint${i}`, (g) => {
-        g.text(lab, 0.16, 0.24, { size: 0.075, weight: 600, mid: true, a: 0.5, track: 0.1 });
-        g.text(s, 0.16, 0.5, { size: 0.13, weight: 500, mid: true });
+      out.push(pr(rd(onL(2.4, 0.85 - i * 0.9, 2.4, 0.76, 0.08, BACK), 0.2, 0.04), `lab.hint${i}`, (g) => {
+        g.text(lab, 0.18, 0.24, { size: 0.075, weight: 600, mid: true, a: 0.5, track: 0.1 });
+        g.text(s, 0.18, 0.5, { size: 0.13, weight: 500, mid: true });
       }));
     });                                                                                                              // 8-10 hints
     return out;
   };
-  F.interview = makeForm(interview(), { yaw: -0.3, pitch: 0.16 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 3 });
+  F.interview = makeForm(interview(), { yaw: -0.3, pitch: 0.18 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 3 });
 
-  // The Strata page: one image in; the colours and type taken out of it; the system.
-  const sAll = strata();
-  F.strataImage = makeForm([...hideAll(sAll.slice(0, 3)), pr(piece(0, 0, 0.2, 3.4, 4.2, 0.12, PIC), 'lab.image.big', landscape), ...hideAll(sAll.slice(4))], { yaw: -0.24, pitch: 0.12 }, { lift: [0, 0.3, 1.0], hold: 1.8 });
-  F.strataTokens = makeForm([sAll[0], sAll[1], hidden(sAll[2].p), ...sAll.slice(3, 10), ...hideAll(sAll.slice(10))], { yaw: -0.28, pitch: 0.14 }, { lift: [0, 0.3, 1.0], hold: 2.0 });
-  F.strataSystem = makeForm(strata(), { yaw: -0.3, pitch: 0.16 }, { lift: [0, 0.3, 1.0], hold: 2.8 });
+  // The Strata page: one image in; the colours and type taken out of it; the system, on a laptop.
+  const sys = strataParts();
+  const IMG = pr(rd(piece(0, 0, 0.3, 3.4, 4.2, 0.12, PIC), 0.16, 0.06), 'lab.image.big', landscape);
+  const imgSmall = pr(rd(piece(-2.7, 0.3, 0.4, 2.3, 2.85, 0.12, PIC), 0.14, 0.06), 'lab.image.small', landscape);
+  F.strataImage = makeForm([...hideAll(sys), IMG], { yaw: -0.24, pitch: 0.12 }, { lift: [0, 0.3, 1.0], hold: 1.8, float: 0.03 });
+  F.strataTokens = makeForm([...hideAll(sys.slice(0, 3)), ...sys.slice(3), imgSmall], { yaw: -0.28, pitch: 0.14 }, { lift: [0, 0.3, 1.0], hold: 2.0, float: 0.09 });
+  F.strataSystem = makeForm([...strataParts(), hidden([0, 0.5, 0.2])], { yaw: -0.3, pitch: 0.2 }, { lift: [0, 0.3, 1.0], hold: 2.8, float: 0.09 });
 
-  /* About: every idea that came in, loose; then all of them kept, on a board, from a first idea
-     to shipped. The lime one is yours. */
-  const COLS: [string, [string, string][]][] = [
-    ['Ideas', [['your idea', ''], ['a menu that', 'talks back'], ['plant care', 'by text'], ['a map of', 'quiet cafés']]],
-    ['Research', [['voices with', 'feeling'], ['how teams', 'write briefs'], ['what agents', 'print'], ['fonts for', 'kids']]],
-    ['Prototype', [['TTS Editor', ''], ['interview', 'hints'], ['the 3-day', 'homepage'], ['calmer clinic', 'sites']]],
-    ['Shipped', [['Strata', ''], ['AI Bidding', ''], ['Listing Kit', ''], ['this site', '']]],
-  ];
-  const notes: Piece[] = [], heads: Piece[] = [];
-  COLS.forEach(([col, ideas], c) => {
-    const x = -2.25 + c * 1.5;
-    heads.push(pr(piece(x, 1.72, 0, 1.3, 0.3, 0.02, BACK), `idea.col${c}`, (g) => {
-      g.text(col, 0.04, g.h / 2, { size: 0.15, weight: 600, mid: true });
-      g.text(String(ideas.length), g.w - 0.04, g.h / 2, { size: 0.12, mid: true, a: 0.45, align: 'right' });
-    }));
-    ideas.forEach(([a, b], r) => {
-      const yours = c === 0 && r === 0, shipped = c === 3;
-      notes.push(pr(piece(x, 0.95 - r * 1.05, 0, 1.3, 0.92, 0.08, yours ? LIME : FORE), `idea.${c}.${r}`, (g) => {
-        g.text(a, 0.12, 0.3, { size: yours ? 0.17 : 0.15, weight: yours || shipped ? 600 : 500, mid: true });
-        if (b) g.text(b, 0.12, 0.52, { size: 0.15, weight: 500, mid: true });
-        if (shipped) tick(g, g.w - 0.36, g.h - 0.36, 0.24, 'ink', 1);
-        if (yours) g.text('+', g.w - 0.2, g.h - 0.2, { size: 0.24, weight: 500, align: 'center', mid: true });
-      }));
+  /* About: ideas as chat bubbles, floating, a thought cloud among them, one of them still being
+     typed; then pulled back to the ground: the real thing the lime one became, on a laptop
+     playing its film, the bubble pinned beside it. */
+  const about = (biz: boolean) => {
+    const T = biz
+      ? { lime: ['a site as calm', 'as my office?'], ideas: [['flyers ready', 'in 48 hours'], ['my listing,', 'on Instagram'], ['a site that', 'books for me'], ['a menu that', 'talks back'], ['a calmer', 'waiting room']] }
+      : { lime: ['what if poker had', 'an AI that bluffs?'], ideas: [['a voice you', 'can edit'], ['moodboard in,', 'system out'], ['hints during', 'an interview'], ['flyers in', '48 hours'], ['a calmer', 'clinic site']] };
+    const tag = biz ? 'about.biz' : 'about';
+    const lap = laptop({ name: 'about', w: 6.4, h: 3.5, y: 0.2, depth: 2.6, film: biz ? undefined : FILMS.bidding });
+    if (biz) pr(lap.screen, 'about.biz.screen', (g) => {
+      // the calm practice homepage, as it went live
+      g.box(0, 0, g.w, g.h, 'ink', 1);
+      g.shape((c) => c.ellipse(0.3, 0.32, 0.05, 0.11, 0.6, 0, Math.PI * 2), 'lime');
+      g.text('Willow', 0.44, 0.32, { size: 0.2, font: 'serif', mid: true, ink: 'base' });
+      g.text('A calm place', 0.3, 1.2, { size: 0.4, font: 'serif', mid: true, ink: 'base' });
+      g.text('to begin.', 0.3, 1.7, { size: 0.4, font: 'serif', mid: true, ink: 'base' });
+      g.box(0.3, 2.3, 1.5, 0.4, 'lime', 1, 0.2);
+      g.text('Book a consult', 1.05, 2.5, { size: 0.13, weight: 600, align: 'center', mid: true });
+      g.box(g.w - 2.9, 0.7, 2.5, 2.4, 'base', 1, 0.12);
+      room(g.sub(g.w - 2.75, 0.85, 2.2, 2.1));   // its picture: the room you'd sit in
     });
-  });
-  // loose: a jittered lattice, shuffled, so no two ideas overlap; turned a little, still facing out
-  const cells: Vec[] = [];
-  for (let x = 0; x < 5; x++) for (let y = 0; y < 4; y++) cells.push([(x - 2) * 1.55, (y - 1.5) * 1.15, (rnd() - 0.5) * 1.6]);
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [cells[i], cells[j]] = [cells[j], cells[i]];
-  }
-  const loose = notes.map((nt, i) => {
-    const c = cells[i];
-    const p = piece(c[0] + (rnd() - 0.5) * 0.4, c[1] + (rnd() - 0.5) * 0.3, c[2], 1.3, 0.92, 0.08, nt.k, (rnd() - 0.5) * 0.7, (rnd() - 0.5) * 0.5, (rnd() - 0.5) * 0.7);
-    p.pr = nt.pr;
-    return p;
-  });
-  F.field = makeForm([...loose, ...hideAll(heads)], { yaw: -0.25, pitch: 0.2 }, { lift: [0, 0.6, 0.6], hold: 2.2 });
-  F.sorted = makeForm([...notes, ...heads], { yaw: -0.2, pitch: 0.12 }, { lift: [0, 0.6, 0.6], hold: 3.0 });
+    const real = [grp([lap.lid], -1)[0], grp([lap.screen], -1)[0], grp([lap.deck], -1)[0]];
+    // the bubbles, floating
+    const spots: [number, number, number, number, number][] = [
+      [-2.6, 1.7, 0.6, 2.3, 0.0], [2.5, 2.0, -0.4, 2.1, 0.06], [-3.0, -0.6, 0.2, 2.2, -0.05],
+      [2.7, -0.2, 0.8, 2.1, 0.04], [0.2, -1.9, 0.4, 1.9, -0.03],
+    ];
+    const ideas = T.ideas.map(([a, b], i) => {
+      const [x, y, z, w, turn] = spots[i];
+      return grp(bubble({ x, y, z, w, h: 0.95, k: i === 2 ? BACK : FORE, name: `${tag}.idea${i}`, text: [a, b], tail: i % 2 ? 'right' : 'left', turn }), 10 + i);
+    });
+    const yours = grp(bubble({ x: -0.1, y: 0.35, z: 1.4, w: 2.8, h: 1.05, k: LIME, name: `${tag}.yours`, text: T.lime, size: 0.19, turn: 0.04 }), 20);
+    // still being typed: a bubble with three dots
+    const typing = grp([pill(piece(1.2, 1.15, 1.9, 1.05, 0.5, 0.3, FORE)), ball(0.92, 1.15, 2.07, 0.13, BACK), ball(1.2, 1.15, 2.07, 0.13, BACK), ball(1.48, 1.15, 2.07, 0.13, BACK)], 21);
+    // a thought cloud
+    const cloud = grp([ball(-1.2, 2.6, -0.8, 0.7, FORE), ball(-0.65, 2.75, -0.7, 0.55, FORE), ball(-1.7, 2.45, -0.75, 0.5, FORE), ball(-0.6, 2.25, -0.4, 0.2, FORE), ball(-0.3, 2.0, -0.2, 0.12, FORE)], 22);
+    const dream = [...hideAll(real), ...yours, ...ideas.flat(), ...typing, ...cloud];
+    // pulled back to the ground: the laptop; the lime bubble pinned at its corner; the rest gone into the screen
+    const into: Vec = [0, 0.2, 0.3];
+    const pinned = grp(bubble({ x: -3.2, y: 3.0, z: 1.2, w: 2.8, h: 1.05, k: LIME, name: `${tag}.yours`, text: T.lime, size: 0.19, tail: 'right', turn: -0.05 }), 20);
+    const realForm = [...real, ...pinned, ...hideAll(ideas.flat(), into), ...hideAll(typing, into), ...hideAll(cloud, into)];
+    return { dream, real: realForm };
+  };
+  const ab = about(false), abBiz = about(true);
+  F.dream = makeForm(ab.dream, { yaw: -0.28, pitch: 0.12 }, { lift: [0, 0.6, 0.6], hold: 2.4, float: 0.16 });
+  F.real = makeForm(ab.real, { yaw: -0.36, pitch: 0.22 }, { lift: [0, 0.6, 0.6], hold: 3.0, float: 0.05 });
+  F.dreamBiz = makeForm(abBiz.dream, { yaw: -0.28, pitch: 0.12 }, { lift: [0, 0.6, 0.6], hold: 2.4, float: 0.16 });
+  F.realBiz = makeForm(abBiz.real, { yaw: -0.36, pitch: 0.22 }, { lift: [0, 0.6, 0.6], hold: 3.0, float: 0.05 });
 
   /* Listing kit: the print flyer for 1428 Alder Street, then its five posts beside it, then its
      video. On the paper chapter the flyer is ink, its words white, its pictures paper. */
@@ -613,14 +711,14 @@ export function buildForms(): Record<string, Form> {
   const flyer = (dx: number, tagK: number): Piece[] => {
     const fo = fz(dx, 0.08), onPhoto = fz(dx, 0.15);
     return [
-      piece(dx, 0, 0, 3.2, 4.4, 0.16, FORE),                                                                                // 0 the sheet
-      pr(fo(0, 0.75, 2.8, 2.2, 0.06, PIC), 'lk.house', (g) => street(g)),                                                   // 1 the house
-      pr(onPhoto(-0.75, 1.6, 1.15, 0.32, 0.08, tagK), 'lk.tag', label('JUST LISTED', { size: 0.1, weight: 600, track: 0.1 })),   // 2 Just Listed
+      rd(piece(dx, 0, 0, 3.2, 4.4, 0.16, FORE), 0.08, 0.05),                                                              // 0 the sheet
+      pr(rd(fo(0, 0.75, 2.8, 2.2, 0.06, PIC), 0.05, 0.02), 'lk.house', (g) => street(g)),                                  // 1 the house
+      pr(pill(onPhoto(-0.75, 1.6, 1.15, 0.32, 0.1, tagK)), 'lk.tag', label('JUST LISTED', { size: 0.1, weight: 600, track: 0.1 })),   // 2 Just Listed
       pr(fo(-0.2, -0.66, 2.4, 0.34, 0.02, FORE), 'lk.addr', words('1428 Alder Street', { size: 0.25, font: 'head' }, 0.02)),     // 3 the address
       pr(fo(-0.8, -1.06, 1.2, 0.3, 0.02, FORE), 'lk.price', words('$849,000', { size: 0.22, font: 'head' }, 0.02)),            // 4 the price
       pr(fo(-0.4, -1.42, 2.0, 0.18, 0.02, FORE), 'lk.facts', words('3 bd   2 ba   1,850 sq ft', FLY, 0.02)),                   // 5-6 details
       pr(fo(-0.4, -1.66, 2.0, 0.18, 0.02, FORE), 'lk.open', words('Open house Sat, 1 to 4', { ...FLY, a: 0.62 }, 0.02)),
-      pr(fo(1.0, -1.5, 0.62, 0.62, 0.05, BACK), 'lk.qr', (g) => qr(g, 0.06, 0.06, g.w - 0.12, 11)),                         // 7 the code to scan
+      pr(rd(fo(1.0, -1.5, 0.62, 0.62, 0.06, BACK), 0.06, 0.03), 'lk.qr', (g) => qr(g, 0.06, 0.06, g.w - 0.12, 11)),          // 7 the code to scan
       pr(fo(-0.5, -1.98, 1.8, 0.16, 0.02, FORE), 'lk.agent', words('Dana Lee, Realtor', { size: 0.1, weight: 500, a: 0.62 }, 0.02)),   // 8 the agent
     ];
   };
@@ -633,87 +731,89 @@ export function buildForms(): Record<string, Form> {
   ];
   const posts = (): Piece[] =>
     POSTS.flatMap(([x, y, cap, draw], i) => [
-      piece(x, y, 0, 1.4, 1.4, 0.12, FORE),
-      pr(piece(x, y + 0.14, 0.1, 1.24, 0.9, 0.06, PIC), `lk.post${i}`, draw),
+      rd(piece(x, y, 0, 1.4, 1.4, 0.12, FORE), 0.14, 0.05),
+      pr(rd(piece(x, y + 0.14, 0.1, 1.24, 0.9, 0.06, PIC), 0.07, 0.02), `lk.post${i}`, draw),
       pr(piece(x, y - 0.5, 0.075, 1.24, 0.22, 0.02, FORE), `lk.cap${i}`, words(cap, { size: 0.1, weight: 500 }, 0.02)),
     ]);
   const VIDEO: Vec = [1.6, 0.3, 0];
   const video = (): Piece[] => [
-    piece(1.6, 0.2, 0, 4.4, 2.48, 0.14, FORE),                                                                // the frame
-    pr(piece(1.6, 0.3, 0.11, 4.1, 1.95, 0.06, PIC), 'lk.film', (g) => {
+    rd(piece(1.6, 0.2, 0, 4.4, 2.48, 0.14, FORE), 0.18, 0.06),                                                 // the frame
+    pr(rd(piece(1.6, 0.3, 0.11, 4.1, 1.95, 0.06, PIC), 0.08, 0.02), 'lk.film', (g) => {
       street(g, { s: g.h * 0.95, gy: g.h * 0.82 });
       g.text('1428 Alder Street', 0.18, g.h - 0.16, { size: 0.15, font: 'head', mid: true, ink: 'base' });
       g.text('0:30', g.w - 0.16, 0.18, { size: 0.1, weight: 600, align: 'right', mid: true });
     }),                                                                                                       // the film
-    piece(1.6, 0.3, 0.21, 0.66, 0.66, 0.12, PLAY),                                                            // play
-    pr(piece(1.6, -0.82, 0.1, 4.1, 0.08, 0.04, BACK), 'lk.progress', (g) => g.box(0, 0, g.w * 0.36, g.h, 'lime')),   // how far it's played
+    rd(piece(1.6, 0.3, 0.24, 0.72, 0.72, 0.18, PLAY), 0.36, 0.09),                                            // play, a round button
+    pr(pill(piece(1.6, -0.82, 0.1, 4.1, 0.08, 0.04, BACK)), 'lk.progress', (g) => g.box(0, 0, g.w * 0.36, g.h, 'lime', 1, g.h / 2)),   // how far it's played
   ];
   const kitLift: Vec = [0, 0.3, 1.0];
-  F.flyer = makeForm([...flyer(0, LIME), ...hideAll(posts()), ...hideAll(video(), VIDEO)], { yaw: -0.24, pitch: 0.12 }, { lift: kitLift, hold: 2.2, step: 0 });
-  F.posts = makeForm([...flyer(-2.6, LIME), ...posts(), ...hideAll(video(), VIDEO)], { yaw: -0.22, pitch: 0.12 }, { lift: kitLift, hold: 2.4, step: 1 });
-  F.video = makeForm([...flyer(-2.6, BACK), ...hideAll(posts(), VIDEO), ...video()], { yaw: -0.24, pitch: 0.12 }, { lift: kitLift, hold: 2.6, step: 2 });
+  F.flyer = makeForm([...flyer(0, LIME), ...hideAll(posts()), ...hideAll(video(), VIDEO)], { yaw: -0.24, pitch: 0.14 }, { lift: kitLift, hold: 2.2, step: 0 });
+  F.posts = makeForm([...flyer(-2.6, LIME), ...posts(), ...hideAll(video(), VIDEO)], { yaw: -0.22, pitch: 0.14 }, { lift: kitLift, hold: 2.4, step: 1 });
+  F.video = makeForm([...flyer(-2.6, BACK), ...hideAll(posts(), VIDEO), ...video()], { yaw: -0.26, pitch: 0.14 }, { lift: kitLift, hold: 2.6, step: 2 });
 
   /* A practice website, for Willow Counseling: the questionnaire, then the calm homepage made
      from it, then live, with its phone. */
   const fq = at(0.1);
   const QL: TextOpts = { size: 0.1, weight: 500, a: 0.55 };
   const field = (s: string): Draw => (g) => {
-    g.frame(0, 0, g.w, g.h, 0.014, 'ink', 1);
+    g.frame(0, 0, g.w, g.h, 0.014, 'ink', 1, 0.08);
     g.text(s, 0.14, g.h / 2, { size: 0.14, mid: true });
   };
   const questionnaire: Piece[] = [
-    piece(0, 0, 0, 3.4, 4.6, 0.2, FORE),                                                                          // 0 the form (it becomes the window)
+    rd(piece(0, 0, 0, 3.4, 4.6, 0.2, FORE), 0.22, 0.09),                                                         // 0 the form (it becomes the window)
     pr(fq(-0.1, 1.85, 2.8, 0.36, 0.02, FORE), 'pw.q.title', words('About your practice', { size: 0.24, font: 'head' }, 0.02)),   // 1 its title
-    pr(fq(-1.3, -0.72, 0.26, 0.26, 0.06, BACK), 'pw.q.tick', (g) => tick(g, 0, 0, g.w)),                         // 2-4 three choices
-    fq(-1.3, -1.08, 0.26, 0.26, 0.06, BACK),
-    pr(fq(-1.3, -1.44, 0.26, 0.26, 0.06, BACK), 'pw.q.tick', (g) => tick(g, 0, 0, g.w)),
+    pr(rd(fq(-1.3, -0.72, 0.26, 0.26, 0.06, BACK), 0.06, 0.03), 'pw.q.tick', (g) => tick(g, 0, 0, g.w)),         // 2-4 three choices
+    rd(fq(-1.3, -1.08, 0.26, 0.26, 0.06, BACK), 0.06, 0.03),
+    pr(rd(fq(-1.3, -1.44, 0.26, 0.26, 0.06, BACK), 0.06, 0.03), 'pw.q.tick', (g) => tick(g, 0, 0, g.w)),
     pr(fq(-0.65, 1.36, 1.6, 0.16, 0.02, FORE), 'pw.q.l1', words('Practice name', QL, 0.02)),                     // 5-6 questions
     pr(fq(-0.5, 0.46, 1.9, 0.16, 0.02, FORE), 'pw.q.l2', words('How should it feel?', QL, 0.02)),
-    pr(fq(0, 0.08, 2.9, 0.44, 0.04, FORE), 'pw.q.a2', field('Calm, warm, no jargon')),                          // 7-8 answers
-    pr(fq(0, 0.98, 2.9, 0.44, 0.04, FORE), 'pw.q.a1', field('Willow Counseling')),
+    pr(rd(fq(0, 0.08, 2.9, 0.44, 0.04, FORE), 0.1, 0.02), 'pw.q.a2', field('Calm, warm, no jargon')),            // 7-8 answers
+    pr(rd(fq(0, 0.98, 2.9, 0.44, 0.04, FORE), 0.1, 0.02), 'pw.q.a1', field('Willow Counseling')),
     pr(fq(-0.4, -0.72, 1.3, 0.18, 0.02, FORE), 'pw.q.c1', words('In person', { size: 0.13 }, 0.02)),            // 9-10 the choices' words
     pr(fq(-0.4, -1.08, 1.3, 0.18, 0.02, FORE), 'pw.q.c2', words('Evenings', { size: 0.13 }, 0.02)),
-    pr(fq(-0.85, -1.92, 1.2, 0.42, 0.12, LIME), 'pw.q.send', label('Send', { size: 0.14, weight: 600 })),        // 11 send
+    pr(pill(fq(-0.85, -1.92, 1.2, 0.42, 0.14, LIME)), 'pw.q.send', label('Send', { size: 0.14, weight: 600 })),   // 11 send
     pr(fq(-0.4, -1.44, 1.3, 0.18, 0.02, FORE), 'pw.q.c3', words('Online', { size: 0.13 }, 0.02)),               // 12 the last choice's words
     pr(fq(-0.8, -0.36, 1.3, 0.16, 0.02, FORE), 'pw.q.l3', words('Sessions', QL, 0.02)),                         // 13 a question
   ];
+  const onWin = at(0.15);
   const WH1: TextOpts = { size: 0.46, font: 'serif' };
   const willowLogo: Draw = (g) => {
     g.shape((c) => c.ellipse(0.14, g.h / 2, 0.06, 0.13, 0.6, 0, Math.PI * 2), 'lime');
     g.text('Willow', 0.3, g.h / 2, { size: 0.24, font: 'serif', mid: true });
   };
   const calm = (live: boolean): Piece[] => [
-    piece(0, 0, 0, 8, 5.4, 0.3, FORE),                                                                                  // 0 the window
-    live ? pr(onW(0.55, 2.28, 4.8, 0.38, 0.08, LIME), 'pw.url.live', address('willowcounseling.com', true))
-      : pr(onW(0.55, 2.28, 4.8, 0.38, 0.08, BACK), 'pw.url.preview', address('willowcounseling.com/preview', false)),   // 1 the address
-    onW(-3.55, 2.28, 0.2, 0.2, 0.08, BACK),                                                                            // 2-4 the window's buttons
-    onW(-3.19, 2.28, 0.2, 0.2, 0.08, BACK),
-    onW(-2.83, 2.28, 0.2, 0.2, 0.08, BACK),
-    pr(onW(-2.95, 1.55, 1.3, 0.36, 0.02, FORE), 'pw.logo', willowLogo),                                                // 5 the logo
-    pr(onW(2.38, 1.55, 0.9, 0.26, 0.02, FORE), 'pw.nav1', label('Services', NAV)),                                     // 6-7 the menu
-    pr(onW(3.25, 1.55, 0.7, 0.26, 0.02, FORE), 'pw.nav2', label('Contact', NAV)),
-    pr(onW(-1.75, 0.72, 3.7, 0.56, 0.02, FORE), 'pw.h1a', words('A calm place', WH1, 0.02)),                           // 8-9 the headline
-    pr(onW(-2.35, 0.12, 2.5, 0.56, 0.02, FORE), 'pw.h1b', words('to begin.', WH1, 0.02)),
-    pr(onW(-1.95, -0.44, 3.3, 0.17, 0.02, FORE), 'pw.p1', words('Individual and couples therapy,', { size: 0.13, a: 0.62 }, 0.02)),   // 10 text
-    pr(onW(-2.8, -1.3, 1.6, 0.44, 0.14, live ? BACK : LIME), 'pw.cta', label('Book a consult', BTN)),                  // 11 the button
-    pr(onW(2.0, -0.3, 3.0, 3.0, 0.12, PIC), 'pw.room', room),                                                          // 12 the room
-    pr(onW(-1.95, -0.66, 3.3, 0.17, 0.02, FORE), 'pw.p2', words('in Portland and online.', { size: 0.13, a: 0.62 }, 0.02)),   // 13 text
+    rd(piece(0, 0, 0, 8, 5.4, 0.3, FORE), 0.28, 0.12),                                                                 // 0 the window
+    live ? pr(rd(onWin(0.55, 2.28, 4.8, 0.38, 0.06, LIME), 0.19, 0.03), 'pw.url.live', address('willowcounseling.com', true))
+      : pr(rd(onWin(0.55, 2.28, 4.8, 0.38, 0.06, BACK), 0.19, 0.03), 'pw.url.preview', address('willowcounseling.com/preview', false)),   // 1 the address
+    rd(onWin(-3.55, 2.28, 0.2, 0.2, 0.06, BACK), 0.1, 0.03),                                                          // 2-4 the window's buttons
+    rd(onWin(-3.19, 2.28, 0.2, 0.2, 0.06, BACK), 0.1, 0.03),
+    rd(onWin(-2.83, 2.28, 0.2, 0.2, 0.06, BACK), 0.1, 0.03),
+    pr(onWin(-2.95, 1.55, 1.3, 0.36, 0.02, FORE), 'pw.logo', willowLogo),                                              // 5 the logo
+    pr(onWin(2.38, 1.55, 0.9, 0.26, 0.02, FORE), 'pw.nav1', label('Services', NAV)),                                   // 6-7 the menu
+    pr(onWin(3.25, 1.55, 0.7, 0.26, 0.02, FORE), 'pw.nav2', label('Contact', NAV)),
+    pr(onWin(-1.75, 0.72, 3.7, 0.56, 0.02, FORE), 'pw.h1a', words('A calm place', WH1, 0.02)),                         // 8-9 the headline
+    pr(onWin(-2.35, 0.12, 2.5, 0.56, 0.02, FORE), 'pw.h1b', words('to begin.', WH1, 0.02)),
+    pr(onWin(-1.95, -0.44, 3.3, 0.17, 0.02, FORE), 'pw.p1', words('Individual and couples therapy,', { size: 0.13, a: 0.62 }, 0.02)),   // 10 text
+    pr(pill(onWin(-2.8, -1.3, 1.6, 0.44, 0.14, live ? BACK : LIME)), 'pw.cta', label('Book a consult', BTN)),          // 11 the button
+    pr(rd(onWin(2.0, -0.3, 3.0, 3.0, 0.1, PIC), 0.16, 0.04), 'pw.room', room),                                         // 12 the room
+    pr(onWin(-1.95, -0.66, 3.3, 0.17, 0.02, FORE), 'pw.p2', words('in Portland and online.', { size: 0.13, a: 0.62 }, 0.02)),   // 13 text
   ];
-  const onPh = at(1.36), onScr = at(1.39);
+  const pwPhone = phoneParts({ x: 3.05, y: -0.8, z: 1.25, w: 1.7, h: 3.6, frame: METAL, screen: BACK });
+  const onScr = at(pwPhone.front);
   const phone = (): Piece[] => [
-    piece(3.05, -0.8, 1.25, 1.7, 3.6, 0.22, BACK),                                                                     // the phone
-    piece(3.05, -0.9, 1.38, 1.5, 3.1, 0.02, FORE),                                                                     // its screen
-    pr(onScr(3.05, 0.0, 1.32, 0.9, 0.05, PIC), 'pw.m.room', room),
-    pr(onScr(2.95, -0.66, 1.1, 0.22, 0.02, FORE), 'pw.m.h1a', words('A calm place', { size: 0.17, font: 'serif' }, 0.01)),
-    pr(onScr(2.82, -0.9, 0.85, 0.22, 0.02, FORE), 'pw.m.h1b', words('to begin.', { size: 0.17, font: 'serif' }, 0.01)),
-    pr(onScr(2.95, -1.14, 1.1, 0.12, 0.02, FORE), 'pw.m.p', words('Therapy in Portland and online.', { size: 0.065, a: 0.62 }, 0.01)),
-    pr(onScr(2.83, -1.58, 0.86, 0.28, 0.06, BACK), 'pw.m.cta', label('Book a consult', { size: 0.08, weight: 600 })),
-    onPh(3.05, 0.84, 0.36, 0.06, 0.02, FORE),                                                                          // its speaker
+    pwPhone.body,                                                                                                      // the phone
+    pwPhone.screen,                                                                                                    // its screen
+    pr(rd(onScr(3.05, 0.0, 1.32, 0.9, 0.05, PIC), 0.08, 0.02), 'pw.m.room', room),
+    pr(onScr(2.95, -0.66, 1.1, 0.22, 0.02, BACK), 'pw.m.h1a', words('A calm place', { size: 0.17, font: 'serif' }, 0.01)),
+    pr(onScr(2.82, -0.9, 0.85, 0.22, 0.02, BACK), 'pw.m.h1b', words('to begin.', { size: 0.17, font: 'serif' }, 0.01)),
+    pr(onScr(2.95, -1.14, 1.1, 0.12, 0.02, BACK), 'pw.m.p', words('Therapy in Portland and online.', { size: 0.065, a: 0.62 }, 0.01)),
+    pr(pill(onScr(2.83, -1.58, 0.86, 0.28, 0.06, FORE)), 'pw.m.cta', label('Book a consult', { size: 0.08, weight: 600 })),
+    pill(at(pwPhone.front)(3.05, 0.84, 0.36, 0.06, 0.02, FORE)),                                                       // its speaker
   ];
-  F.questionnaire = makeForm([...questionnaire, ...hideAll(phone())], { yaw: -0.24, pitch: 0.14 }, { lift: kitLift, hold: 2.2, step: 0 });
-  F.homepage = makeForm([...calm(false), ...hideAll(phone())], { yaw: -0.28, pitch: 0.18 }, { lift: kitLift, hold: 2.6, step: 1 });
-  F.golive = makeForm([...calm(true), ...phone()], { yaw: -0.4, pitch: 0.2 }, { lift: [0.5, 0.2, 1.0], hold: 2.8, step: 2 });
+  F.questionnaire = makeForm([...questionnaire, ...hideAll(phone())], { yaw: -0.24, pitch: 0.16 }, { lift: kitLift, hold: 2.2, step: 0 });
+  F.homepage = makeForm([...calm(false), ...hideAll(phone())], { yaw: -0.28, pitch: 0.2 }, { lift: kitLift, hold: 2.6, step: 1 });
+  F.golive = makeForm([...calm(true), ...phone()], { yaw: -0.42, pitch: 0.22 }, { lift: [0.5, 0.2, 1.0], hold: 2.8, step: 2 });
 
+  for (const [id, f] of Object.entries(F)) f.id = id;
   return F;
 }
-

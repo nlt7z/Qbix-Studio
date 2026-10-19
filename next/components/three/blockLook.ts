@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /**
  * How the pieces look (components/three/blockStory.ts moves them): real
@@ -30,7 +31,12 @@ const R0 = 0.12;   // the unit geometry's corner radius
 
 /** The geometry every piece shares: a unit box with round edges, stretched per piece in the vertex shader. */
 export function pieceGeometry() {
-  return new RoundedBoxGeometry(1, 1, 1, 3, R0);
+  // indexed (the box comes with every corner repeated), so each vertex is shaded once
+  const g = new RoundedBoxGeometry(1, 1, 1, 5, R0);
+  g.deleteAttribute('uv');
+  const merged = mergeVertices(g, 1e-4);
+  g.dispose();
+  return merged;
 }
 
 export type LookUniforms = {
@@ -40,15 +46,19 @@ export type LookUniforms = {
   uToneBelow: { value: number };
   uPrints: { value: THREE.Texture };
   uPixel: { value: number };
-  uRound: { value: number };
+  uVideo1: { value: THREE.Texture };
+  uVideo2: { value: THREE.Texture };
+  uCore: { value: number };
 };
 
 const VERT_PARS = /* glsl */ `
 attribute vec3 aSize;
+attribute vec2 aRound;
 attribute vec3 aKind;
 attribute vec4 aPrintA;
 attribute vec4 aPrintB;
-uniform float uRound;
+attribute vec2 aMedia;
+varying vec2 vMedia;
 varying vec3 vKind;
 varying vec4 vPrintA;
 varying vec4 vPrintB;
@@ -56,17 +66,27 @@ varying vec3 vLocal;
 varying vec3 vNormalLocal;
 varying vec3 vSize;
 `;
-// The piece's size, with its corners kept round: the unit box's flat parts stretch, its rounding only moves.
+// The rounding of a piece, per axis: its corners in plan (x, y) and its edges' depth (z),
+// so a piece can be a sharp box, a soft pill, a cushion, a sphere.
+const ROUNDING = /* glsl */ `
+vec3 roundOf(vec3 size, vec2 r) {
+  float rxy = min(r.x, 0.49 * min(size.x, size.y));
+  float rz = min(r.y, 0.49 * size.z);
+  return max(vec3(rxy, rxy, rz), vec3(1e-5));
+}
+`;
+// The piece's size, with its rounding kept true: the unit box's flat parts stretch, its rounding is scaled to it.
 const VERT_SHAPE = /* glsl */ `
 #include <begin_vertex>
 {
   vec3 h0 = vec3(0.5 - ${R0.toFixed(3)});
   vec3 inner = clamp(position, -h0, h0);
   vec3 o = position - inner;
-  float r = min(uRound, 0.45 * min(min(aSize.x, aSize.y), aSize.z));
-  transformed = inner / h0 * max(aSize * 0.5 - r, vec3(0.0)) + o * (r / ${R0.toFixed(3)});
+  vec3 rs = roundOf(aSize, aRound);
+  transformed = inner / h0 * max(aSize * 0.5 - rs, vec3(0.0)) + o * (rs / ${R0.toFixed(3)});
   vLocal = transformed / max(aSize, vec3(1e-5));
 }
+vMedia = aMedia;
 vKind = aKind;
 vPrintA = aPrintA;
 vPrintB = aPrintB;
@@ -81,6 +101,10 @@ uniform float uToneAbove;
 uniform float uToneBelow;
 uniform sampler2D uPrints;
 uniform float uPixel;
+uniform sampler2D uVideo1;
+uniform sampler2D uVideo2;
+uniform float uCore;
+varying vec2 vMedia;
 varying vec3 vKind;
 varying vec4 vPrintA;
 varying vec4 vPrintB;
@@ -135,7 +159,15 @@ if (kk > 9.5 && kk < 10.5 && min(vSize.x, vSize.y) > 0.3) {
   base = mix(base, INK, cover(inside, 0.02) * step(0.5, vNormalLocal.z));
 }
 float printed = 0.0;
-if (pr.z > 0.0 && vNormalLocal.z > 0.5) {
+// a screen playing a film (a video, cropped to the face by pr)
+float slot = toB ? vMedia.y : vMedia.x;
+vec3 film = vec3(0.0);
+bool isScreen = slot > 0.5 && vNormalLocal.z > 0.5;
+if (isScreen) {
+  vec2 q = pr.xy + clamp(fuv, 0.0, 1.0) * pr.zw;
+  film = slot < 1.5 ? texture(uVideo1, q).rgb : texture(uVideo2, q).rgb;
+  base = vec3(0.012);
+} else if (pr.z > 0.0 && vNormalLocal.z > 0.5) {
   vec2 q = clamp(fuv, 0.0, 1.0);
   vec3 p = textureGrad(uPrints, pr.xy + q * pr.zw, fdx * pr.zw, fdy * pr.zw).rgb;
   vec3 ink = (isLime || isPic || isMetal || isGlass) ? INK : isBack ? foreC : backC;
@@ -148,6 +180,7 @@ const FRAG_ROUGH = /* glsl */ `
 #include <roughnessmap_fragment>
 roughnessFactor = isMetal ? 0.3 : isPic ? 0.55 : isCore ? 0.2 : isGlass ? 0.2 : isLime ? 0.3 : light > 0.5 ? 0.3 : 0.36;
 roughnessFactor = mix(roughnessFactor, 0.62, printed * 0.7);   // ink is matte
+if (isScreen) roughnessFactor = 0.12;
 `;
 const FRAG_METAL = /* glsl */ `
 #include <metalnessmap_fragment>
@@ -172,12 +205,13 @@ const FRAG_NORMAL = /* glsl */ `
 `;
 const FRAG_EMISSIVE = /* glsl */ `
 #include <emissivemap_fragment>
-if (isCore) totalEmissiveRadiance = LIMEC * 1.25;
+if (isCore) totalEmissiveRadiance = LIMEC * 1.25 * uCore;
+if (isScreen) totalEmissiveRadiance = film;
 `;
 const FRAG_COAT = /* glsl */ `
 #include <lights_physical_fragment>
 #ifdef USE_CLEARCOAT
-  material.clearcoat = (isMetal || isGlass ? 0.0 : isPic ? 0.3 : isCore ? 1.0 : 0.75) * (1.0 - 0.6 * printed);
+  material.clearcoat = isScreen ? 1.0 : (isMetal || isGlass ? 0.0 : isPic ? 0.3 : isCore ? 1.0 : 0.75) * (1.0 - 0.6 * printed);
   material.clearcoatRoughness = min(max(isCore ? 0.04 : 0.09, 0.0525) + geometryRoughness, 1.0);
 #endif
 `;
@@ -185,7 +219,10 @@ const FRAG_COAT = /* glsl */ `
 function inject(shader: THREE.WebGLProgramParametersWithUniforms, U: LookUniforms) {
   Object.assign(shader.uniforms, U);
   shader.vertexShader = shader.vertexShader
-    .replace('void main() {', `${VERT_PARS}\nvarying vec3 vTx;\nvarying vec3 vTy;\nvarying vec3 vTz;\nvoid main() {`)
+    .replace('void main() {', `${VERT_PARS}${ROUNDING}\nvarying vec3 vTx;\nvarying vec3 vTy;\nvarying vec3 vTz;\nvoid main() {`)
+    // the rounding's surface turns with its scale: the normal goes by the inverse
+    .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
+objectNormal = normalize(objectNormal / roundOf(aSize, aRound));`)
     .replace('#include <begin_vertex>', `${VERT_SHAPE}
 mat3 pieceView = mat3(modelViewMatrix) * mat3(instanceMatrix);
 vTx = normalize(pieceView * vec3(1.0, 0.0, 0.0));
@@ -227,7 +264,7 @@ export function pieceMaterials(U: LookUniforms) {
   depth.onBeforeCompile = (s) => {
     Object.assign(s.uniforms, U);
     s.vertexShader = s.vertexShader
-      .replace('void main() {', `${VERT_PARS}\nvoid main() {`)
+      .replace('void main() {', `${VERT_PARS}${ROUNDING}\nvoid main() {`)
       .replace('#include <begin_vertex>', VERT_SHAPE);
     s.fragmentShader = s.fragmentShader
       .replace('void main() {', `uniform float uPixel;\nvarying vec3 vKind;\nvarying vec3 vLocal;\nvarying vec3 vSize;\nfloat bayer2(vec2 a) { a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }\nfloat bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }\nvoid main() {`)

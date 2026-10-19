@@ -13,11 +13,12 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
 /**
  * The homepage as one story. Each chapter is an ordinary section with its own
  * words; the one object behind them (BlockStage) plays the scenes the
- * chapter names in `forms` (comma separated: one after another, on a loop;
- * components/three/blockForms.ts), on the side it names in `side` (the
- * words take the other side), sized to the words. Tones alternate black and
- * paper. A chapter with `steps` has the step its scene is showing set on it
- * by the stage, as `data-step`, which lights that step (or that product).
+ * chapter names in `forms` (comma separated: one after another as you scroll
+ * through the chapter; components/three/blockForms.ts), on the side it names
+ * in `side` (the words take the other side), sized to the words. Tones
+ * alternate black and paper. A chapter with `steps` has the step its scene is
+ * showing set on it by the stage, as `data-step`, which lights that step (or
+ * that product).
  */
 type ChapterProps = {
   id?: string;
@@ -30,7 +31,11 @@ type ChapterProps = {
   children: ReactNode;
 };
 
-function Chapter({ id, forms, tone, side, steps, h = '170vh', className = '', children }: ChapterProps) {
+function Chapter({ id, forms, tone, side, steps, h, className = '', children }: ChapterProps) {
+  // A chapter with several forms is played by the scroll: it's as long as its moves need
+  // (80vh of scroll each), and on a phone its words run on that much further under the window.
+  const moves = forms.split(',').length - 1;
+  const height = h ?? (moves ? `${110 + 80 * moves}vh` : '170vh');
   return (
     <section
       id={id}
@@ -41,7 +46,7 @@ function Chapter({ id, forms, tone, side, steps, h = '170vh', className = '', ch
       data-nav-theme={tone === 'paper' ? 'light' : 'dark'}
       data-side={side}
       data-steps={steps}
-      style={{ '--h': h } as CSSProperties}
+      style={{ '--h': height, '--run': `${moves * 40}vh` } as CSSProperties}
     >
       <div className="ch-frame">
         {/* On a phone the object shows through this window, the words follow. */}
@@ -94,8 +99,8 @@ function StudioChapters() {
   const { open } = useContactModal();
   return (
     <>
-      {/* The moodboard for hush, a pair of headphones; its picture and type fly into the launch site
-          while the code is written beside it; the code folds into a phone and the address goes live. */}
+      {/* The moodboard for hush, a pair of headphones; its picture and type fly into the launch site on a
+          laptop while the code is written beside it; the code folds into a phone and the address goes live. */}
       <Chapter id="services" forms="moodboard,site,live" tone="paper" side="right" steps={3}>
         <p className="ch-kicker mono">{design.title} · {design.audience}</p>
         <h2 className="ch-title">From moodboard to a live domain.</h2>
@@ -108,7 +113,8 @@ function StudioChapters() {
         <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
       </Chapter>
 
-      {/* kova, a money app that works: its parts in grey on a grid; then colour and type; then its mark. */}
+      {/* kova, a money app that works, on a phone: its layers lifted off in outline on a grid; then colour
+          and type; then pressed back in, its mark popping out as the app's icon. */}
       <Chapter forms="grid,colortype,mark" tone="dark" side="left" steps={3}>
         <p className="ch-kicker mono">{brand.title} · {brand.audience}</p>
         <h2 className="ch-title">From usable to worth sharing.</h2>
@@ -121,7 +127,8 @@ function StudioChapters() {
         <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
       </Chapter>
 
-      {/* The four products, one after another, in the list's order; the one showing is marked. */}
+      {/* The four products, one after another, in the list's order (Strata's own film on a laptop); the one
+          showing stays lit in the list. */}
       <Chapter id="products" forms="strata,bidding,tts,interview" tone="paper" side="right" steps={4}>
         <p className="ch-kicker mono">Qbix Labs</p>
         <h2 className="ch-title">Things we’ve shipped.</h2>
@@ -185,8 +192,9 @@ export default function Story() {
       <Hero />
       {ai ? <StudioChapters /> : <OfferChapters />}
 
-      {/* Every idea that came in, loose; then all of them kept, on a board from idea to shipped. */}
-      <Chapter id="about" forms="field,sorted" tone={ai ? 'dark' : 'paper'} side={ai ? 'left' : 'right'}>
+      {/* Ideas as chat bubbles, floating; then pulled back to the ground: the real thing the lime one
+          became, on a laptop (for AI teams, AI Bidding's own film). */}
+      <Chapter id="about" forms={ai ? 'dream,real' : 'dreamBiz,realBiz'} tone={ai ? 'dark' : 'paper'} side={ai ? 'left' : 'right'}>
         <p className="ch-kicker mono">About us</p>
         <h2 className="ch-title">Our story is simple.</h2>
         <p className="ch-lede ch-story">

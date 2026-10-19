@@ -90,6 +90,10 @@ export class Pen {
   fill(ink: Ink = 'ink', a = 1) {
     this.box(0, 0, this.w, this.h, ink, a);
   }
+  /** A pen for a box on this face, so a drawing made for a whole face can sit in part of one. */
+  sub(x: number, y: number, w: number, h: number) {
+    return new Pen(this.c, this.ox + x * this.u, this.oy + y * this.u, this.u, w, h, this.fonts);
+  }
   /** The face (or a box on it) in ink fading along a line; stops are [where, 0..1; strength]. */
   fade(x0: number, y0: number, x1: number, y1: number, stops: [number, number][], ink: Ink = 'ink', box?: [number, number, number, number]) {
     const c = this.c;

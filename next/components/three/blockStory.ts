@@ -1,36 +1,39 @@
 import * as THREE from 'three';
 import { createScroller, type Scroller } from '@/lib/smoothScroll';
-import { N, buildForms, clamp01, easeInOut, isLime, lerp, mixView, shown, smooth, type Form, type View } from './blockForms';
+import { N, ROUND, buildForms, clamp01, easeInOut, isLime, lerp, mixView, shown, smooth, type Form, type View } from './blockForms';
 import { KIND, LIGHTS, makeLook, pieceGeometry, pieceMaterials, type Lighting, type LookUniforms } from './blockLook';
 import { printAtlas, type Rect } from './blockPrints';
 
 /**
  * The site's one object: 64 pieces. In the hero they are a 3 × 3 × 3 cube
  * around a glowing lime core (brushed aluminium corners, glossy edges, frosted
- * glass windows onto the core); in every other chapter they become the thing
- * the chapter is about (components/three/blockForms.ts), with what's on them
- * printed, the way a keycap carries its letter (blockPrints.ts): a launch
- * site's words and picture, a money app's numbers, a hand of cards, a house
- * on a flyer. Each chapter plays its steps on its own, on a loop. How the
- * pieces look, their materials and the studio light, is blockLook.ts.
+ * glass windows onto the core) that every few seconds turns one of its layers,
+ * like a puzzle cube, while the core breathes; in every other chapter they
+ * become the thing the chapter is about (components/three/blockForms.ts):
+ * soft, rounded things (a laptop, a phone and its app's layers, chat
+ * bubbles, a card table), with what's on them printed (blockPrints.ts) and,
+ * on a screen, a real film playing. How the pieces look, their materials and
+ * the studio light, is blockLook.ts.
  *
- * Each arrangement (a Form) names, for each piece, its place, size, turn,
- * material and print; a piece can also be put away (size 0). A move takes
- * every piece from where it is to its place in the next form, each on its
- * own beat (the lime one first, then in the form's reading order), with a
- * small arc, its new material and print coming on across it in pixels as it
- * goes (the page's 4px pixel, on screen, so it matches the rest). Moves
- * are timed, not scrubbed by the scroll, so they always play out whole.
+ * Each arrangement (a Form) names, for each piece, its place, size, rounding,
+ * turn, material, print or film; a piece can also be put away (size 0). A move
+ * takes every piece from where it is to its place in the next form, each on
+ * its own beat (the lime one first, then in the form's reading order), with a
+ * small arc (a small piece going far turns over on its way), its new
+ * material and print coming on across it in pixels (the page's 4px pixel, on
+ * screen). Some forms float: their parts bob, each group on its own beat.
+ *
+ * A chapter with several forms is played by the scroll: its words stay put
+ * while the page scrolls through the chapter, and the object goes from one
+ * form to the next in step with it (back again if you scroll back), so it
+ * never waits for you or makes you wait. Arriving at a chapter, the object
+ * moves into the form the scroll is at, in its own time.
  *
  * The object belongs to the page: its plastic is the page's colours (white on
  * a black chapter, ink on a paper one; prints too, with lime), it is sized to
  * the words beside it, and when the next chapter's edge scrolls up through it
  * the edge cuts it, each part matching the page behind it. Each chapter is lit
  * its own way.
- *
- * On a desktop the page's scroll is eased (lib/smoothScroll.ts), and when you
- * arrive at a chapter while its object is still moving, the page eases to a
- * stop until the move has played.
  *
  * On a subpage (mountBlockFigure) the same pieces gather out of loose blocks
  * into one form, or play a sequence of forms on a loop.
@@ -86,17 +89,24 @@ type Move = {
   t0: number;
   spread: number;
   dur: number;
+  from: Form | null;    // the form it leaves, when it leaves one (else wherever the blocks were)
   to: Form;
   perm: Int32Array;     // block → the piece it becomes
   delay: Float32Array;
   arc: Float32Array;    // how high each block lifts on its way (0: it stays put)
+  spin: Float32Array;   // how far a small block that goes far turns over on its way
   fp: Float32Array;     // where each block started
   fs: Float32Array;
+  fr: Float32Array;     // its rounding
   fq: THREE.Quaternion[];
   fk: Float32Array;     // its material when it started
-  fpr: (string | undefined)[];   // and its print
+  fpr: (string | undefined)[];   // its print
+  fm: (string | undefined)[];    // its film
   viewFrom: View;
 };
+type Twist = { axis: 0 | 1 | 2; dir: number; t0: number; dur: number; members: number[]; p0: Float32Array; q0: THREE.Quaternion[] };
+
+const AXES = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)];
 
 /** Everything the pieces need to be drawn and moved, shared by the story and the figures. */
 function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
@@ -121,11 +131,13 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
     return a;
   };
   const sizeAttr = attr(3, 'aSize');        // each block's size (its shape is drawn from it)
+  const roundAttr = attr(2, 'aRound');      // and its rounding: corners, edges
   const kindAttr = attr(3, 'aKind');        // its material: the last one, the next one, how far
-  const printAAttr = attr(4, 'aPrintA');    // where its prints are in the atlas, the last and the next
+  const printAAttr = attr(4, 'aPrintA');    // where its prints are in the atlas (or its film is cropped), the last and the next
   const printBAttr = attr(4, 'aPrintB');
-  const sizes = sizeAttr.array as Float32Array, kinds = kindAttr.array as Float32Array;
-  const printsA = printAAttr.array as Float32Array, printsB = printBAttr.array as Float32Array;
+  const mediaAttr = attr(2, 'aMedia');      // which film it shows, if any: the last and the next
+  const sizes = sizeAttr.array as Float32Array, rounds = roundAttr.array as Float32Array, kinds = kindAttr.array as Float32Array;
+  const printsA = printAAttr.array as Float32Array, printsB = printBAttr.array as Float32Array, medias = mediaAttr.array as Float32Array;
   const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
   blank.needsUpdate = true;
   const U: LookUniforms = {
@@ -135,7 +147,9 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
     uToneBelow: { value: 0 },
     uPrints: { value: blank },
     uPixel: { value: 4 * renderer.getPixelRatio() },   // the page's large pixel, on screen
-    uRound: { value: 0.07 },                             // the pieces' corner radius
+    uVideo1: { value: blank },
+    uVideo2: { value: blank },
+    uCore: { value: 1 },
   };
   const mats = pieceMaterials(U);
   const mesh = new THREE.InstancedMesh(geo, mats.opaque, N);
@@ -155,15 +169,17 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
   scene.add(group);
 
   // The blocks as they are now.
-  const cp = new Float32Array(N * 3), cs = new Float32Array(N * 3);
+  const cp = new Float32Array(N * 3), cs = new Float32Array(N * 3), cr = new Float32Array(N * 2);
   const cq = Array.from({ length: N }, () => new THREE.Quaternion());
   const kA = new Float32Array(N), kB = new Float32Array(N), km = new Float32Array(N);
   const pA: (string | undefined)[] = new Array(N).fill(undefined), pB: (string | undefined)[] = new Array(N).fill(undefined);
+  const mA: (string | undefined)[] = new Array(N).fill(undefined), mB: (string | undefined)[] = new Array(N).fill(undefined);
   let perm = Int32Array.from({ length: N }, (_, i) => i);
   let move: Move | null = null;
+  let scrubT: number | null = null;   // a move held at a point of its own (the scroll's), not the clock's
+  let twist: Twist | null = null;
   let target: Form = forms.scatter;
-  let lastEnd = -Infinity;   // when the last move ends (or ended)
-  let dirty = true;
+  let lastEnd = -Infinity;   // when the last timed move ends (or ended)
   let disposed = false;
 
   // The prints: an atlas of the ones these forms use, drawn once the fonts are in. Until it's
@@ -173,6 +189,7 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
   let printKey = '';
   let printsReady: Promise<void> = Promise.resolve();
   const usePrints = (fs: Form[]): Promise<void> => {
+    useFilms(fs);
     const names = new Set<string>();
     for (const f of fs) for (const P of f.pieces) if (P.pr) names.add(P.pr);
     const key = Array.from(names).sort().join('|');
@@ -189,40 +206,84 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
       tex = t;
       U.uPrints.value = t;
       rects = atlas.rects;
-      dirty = true;
     });
     return printsReady;
   };
 
-  /** Put the blocks in a form at once. */
-  const place = (f: Form) => {
+  // The films: up to two, each a muted video on a loop, playing only while a block shows it.
+  type Film = { url: string; video: HTMLVideoElement; texture: THREE.VideoTexture; slot: number; aspect: number };
+  const films: Film[] = [];
+  const filmOf = (url: string | undefined) => (url ? films.find((f) => f.url === url) : undefined);
+  function useFilms(fs: Form[]) {
+    for (const f of fs) for (const P of f.pieces) {
+      if (!P.media || filmOf(P.media) || films.length >= 2) continue;
+      const video = document.createElement('video');
+      video.src = P.media;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.setAttribute('muted', '');
+      video.setAttribute('playsinline', '');
+      const texture = new THREE.VideoTexture(video);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.generateMipmaps = false;
+      texture.minFilter = THREE.LinearFilter;
+      const film: Film = { url: P.media, video, texture, slot: films.length + 1, aspect: 16 / 9 };
+      video.addEventListener('loadedmetadata', () => {
+        if (video.videoWidth && video.videoHeight) film.aspect = video.videoWidth / video.videoHeight;
+      });
+      (film.slot === 1 ? U.uVideo1 : U.uVideo2).value = texture;
+      films.push(film);
+    }
+  }
+  let filmsOn = true;
+  const filmsShown = new Set<Film>();   // this frame's, so a film off screen doesn't decode
+  const showFilms = (on: boolean) => (filmsOn = on);
+  // a film covering a face of aspect fa: the middle of it, cropped
+  const crop = (film: Film, fa: number, out: Float32Array, i: number) => {
+    const va = film.aspect;
+    if (va > fa) { const w = fa / va; out[i] = (1 - w) / 2; out[i + 1] = 0; out[i + 2] = w; out[i + 3] = 1; }
+    else { const h = va / fa; out[i] = 0; out[i + 1] = (1 - h) / 2; out[i + 2] = 1; out[i + 3] = h; }
+  };
+
+  /** Put the blocks in a form at once (each block becomes the piece it is already matched to). */
+  const snap = (f: Form) => {
     for (let k = 0; k < N; k++) {
-      const P = f.pieces[k];
-      for (let a = 0; a < 3; a++) { cp[k * 3 + a] = P.p[a]; cs[k * 3 + a] = P.s[a]; }
+      const P = f.pieces[perm[k]];
+      for (let a = 0; a < 3; a++) { cp[k * 3 + a] = P.p[a]; cs[k * 3 + a] = P.spare ? 0 : P.s[a]; }
+      cr[k * 2] = (P.r ?? ROUND)[0]; cr[k * 2 + 1] = (P.r ?? ROUND)[1];
       cq[k].copy(P.q);
       kA[k] = kB[k] = P.k;
       pA[k] = pB[k] = P.pr;
+      mA[k] = mB[k] = P.media;
       km[k] = 1;
     }
-    perm = Int32Array.from({ length: N }, (_, i) => i);
     move = null;
+    scrubT = null;
+    twist = null;
     target = f;
-    lastEnd = -Infinity;
-    dirty = true;
   };
-  place(forms.scatter);
+  const place = (f: Form) => {
+    perm = Int32Array.from({ length: N }, (_, i) => i);
+    plans.clear();
+    snap(f);
+    lastEnd = -Infinity;
+  };
 
   const total = (m: Move) => m.spread + m.dur;
-  const viewAt = (t: number): View => (move ? mixView(move.viewFrom, move.to.view, easeInOut(clamp01((t - move.t0) / total(move)))) : target.view);
+  const clock = (t: number) => (scrubT ?? t);
+  const viewAt = (t: number): View => (move ? mixView(move.viewFrom, move.to.view, easeInOut(clamp01((clock(t) - move.t0) / total(move)))) : target.view);
   const endsAt = () => lastEnd;
 
-  /** Start a move from wherever the blocks are now to a form. `match` finds the least travel; else each block keeps its piece. */
-  const go = (to: Form, t: number, o: { match: boolean; spread?: number; dur?: number }) => {
-    const viewFrom = viewAt(t);
-    const fk = new Float32Array(N), fpr: (string | undefined)[] = new Array(N);
+  /** Work out a move to a form from the blocks as they are now. `match` finds the least travel; else each block keeps its piece. */
+  const plan = (to: Form, t: number, o: { match: boolean; spread?: number; dur?: number; from?: Form | null }): Move => {
+    const viewFrom = o.from ? o.from.view : viewAt(t);
+    const fk = new Float32Array(N), fpr: (string | undefined)[] = new Array(N), fm: (string | undefined)[] = new Array(N);
     for (let k = 0; k < N; k++) {
       fk[k] = km[k] >= 0.5 ? kB[k] : kA[k];
       fpr[k] = km[k] >= 0.5 ? pB[k] : pA[k];
+      fm[k] = km[k] >= 0.5 ? mB[k] : mA[k];
     }
     if (o.match) {
       let lime = -1;
@@ -242,28 +303,33 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
         cost.push(row);
       }
       perm = Int32Array.from(hungarian(cost));
+      plans.clear();
     }
+    const fp = cp.slice(), fsz = cs.slice(), fr = cr.slice(), fq = cq.map((q) => q.clone());
     // A block that is put away grows in at its new place (it doesn't fly in from wherever it was
     // put away), already what it will be.
     for (let k = 0; k < N; k++) {
-      if (cs[k * 3] > 0.01 && cs[k * 3 + 1] > 0.01) continue;
+      if (fsz[k * 3] > 0.01 && fsz[k * 3 + 1] > 0.01) continue;
       const P = to.pieces[perm[k]];
       if (P.spare || !shown(P)) continue;
-      cp[k * 3] = P.p[0]; cp[k * 3 + 1] = P.p[1]; cp[k * 3 + 2] = P.p[2];
-      cq[k].copy(P.q);
+      fp[k * 3] = P.p[0]; fp[k * 3 + 1] = P.p[1]; fp[k * 3 + 2] = P.p[2];
+      fq[k].copy(P.q);
+      fr[k * 2] = (P.r ?? ROUND)[0]; fr[k * 2 + 1] = (P.r ?? ROUND)[1];
       fk[k] = P.k;
       fpr[k] = P.pr;
+      fm[k] = P.media;
     }
     const spread = o.spread ?? 0.65, dur = o.dur ?? 0.9;
-    const delay = new Float32Array(N), arc = new Float32Array(N);
+    const delay = new Float32Array(N), arc = new Float32Array(N), spin = new Float32Array(N);
     // How far each block travels; blocks that travel the same way (a sheet and
     // everything on it) are one group: they leave together and lift alike.
     const dx = new Float32Array(N), dy = new Float32Array(N), dz = new Float32Array(N), lead = new Int32Array(N).fill(-1);
     for (let k = 0; k < N; k++) {
-      const T = to.pieces[perm[k]], P = T.spare ? [cp[k * 3], cp[k * 3 + 1], cp[k * 3 + 2]] : T.p;
-      dx[k] = P[0] - cp[k * 3]; dy[k] = P[1] - cp[k * 3 + 1]; dz[k] = P[2] - cp[k * 3 + 2];
+      const T = to.pieces[perm[k]], P = T.spare ? [fp[k * 3], fp[k * 3 + 1], fp[k * 3 + 2]] : T.p;
+      dx[k] = P[0] - fp[k * 3]; dy[k] = P[1] - fp[k * 3 + 1]; dz[k] = P[2] - fp[k * 3 + 2];
       delay[k] = perm[k] === to.lime ? 0 : spread * (0.08 + 0.92 * to.rank[perm[k]]);
     }
+    const members = new Int32Array(N);
     for (let k = 0; k < N; k++) {
       if (lead[k] >= 0) continue;
       lead[k] = k;
@@ -274,18 +340,61 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
         if (lead[j] < 0 && Math.abs(dx[j] - dx[k]) < 0.05 && Math.abs(dy[j] - dy[k]) < 0.05 && Math.abs(dz[j] - dz[k]) < 0.05) lead[j] = k;
       }
     }
+    for (let k = 0; k < N; k++) members[lead[k]]++;
     for (let k = 0; k < N; k++) {
       const g = lead[k];
       if (g !== k) {
         arc[k] = arc[g];
         delay[g] = Math.min(delay[g], delay[k]);
       }
+      // a small block on its own, going far, turns over once on its way
+      const T = to.pieces[perm[k]], big = Math.max(T.s[0], T.s[1], fsz[k * 3], fsz[k * 3 + 1]);
+      if (g === k && members[k] === 1 && Math.hypot(dx[k], dy[k], dz[k]) > 2.5 && big < 1.6 && !T.spare) spin[k] = (k % 2 ? 1 : -1) * Math.PI * 2;
     }
     for (let k = 0; k < N; k++) if (lead[k] !== k) delay[k] = delay[lead[k]];
-    move = { t0: t, spread, dur, to, perm: perm.slice(), delay, arc, fp: cp.slice(), fs: cs.slice(), fq: cq.map((q) => q.clone()), fk, fpr, viewFrom };
-    target = to;
-    lastEnd = t + spread + dur;
+    return { t0: t, spread, dur, from: o.from ?? null, to, perm: perm.slice(), delay, arc, spin, fp, fs: fsz, fr, fq, fk, fpr, fm, viewFrom };
   };
+
+  /** Start a move, on the clock, from wherever the blocks are now to a form. */
+  const go = (to: Form, t: number, o: { match: boolean; spread?: number; dur?: number }) => {
+    move = plan(to, t, o);
+    scrubT = null;
+    twist = null;
+    target = to;
+    lastEnd = t + move.spread + move.dur;
+  };
+
+  // The moves between a chapter's forms, worked out once from the forms themselves (the blocks
+  // stay matched to the same pieces within a chapter), and held wherever the scroll is.
+  const plans = new Map<string, Move>();
+  /** The blocks f of the way from form A to form B (0 at A, 1 at B). */
+  const scrub = (A: Form, B: Form, f: number) => {
+    if (f <= 0.001) { if (move || scrubT !== null || target !== A) snap(A); return; }
+    if (f >= 0.999) { if (move || scrubT !== null || target !== B) snap(B); return; }
+    const key = `${A.id}>${B.id}`;
+    let m = plans.get(key);
+    if (!m) {
+      snap(A);
+      m = plan(B, 0, { match: false, from: A });
+      plans.set(key, m);
+    }
+    move = m;
+    twist = null;
+    target = B;
+    scrubT = f * total(m);
+  };
+
+  /** Turn one layer of the cube a quarter, on the clock (like a puzzle cube). Only when nothing else moves. */
+  const turnLayer = (t: number, rnd: () => number) => {
+    if (move || scrubT !== null || twist) return;
+    const axis = Math.floor(rnd() * 3) as 0 | 1 | 2;
+    const layer = Math.floor(rnd() * 3) - 1;
+    const members: number[] = [];
+    for (let k = 0; k < N; k++) if (cs[k * 3] > 0.01 && Math.abs(cp[k * 3 + axis] - layer) < 0.3) members.push(k);
+    if (members.length < 2) return;
+    twist = { axis, dir: rnd() < 0.5 ? 1 : -1, t0: t, dur: 1.0, members, p0: cp.slice(), q0: cq.map((q) => q.clone()) };
+  };
+  const twistQ = new THREE.Quaternion(), twistV = new THREE.Vector3();
 
   // Extents of a set of pieces as seen through a view: their boxes' corners, turned.
   const v3 = new THREE.Vector3(), c3 = new THREE.Vector3();
@@ -307,23 +416,26 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
   };
   const snapView = { p: [0, 0, 0] as number[], s: [0, 0, 0] as number[], q: new THREE.Quaternion() };
 
-  const m4 = new THREE.Matrix4(), p3 = new THREE.Vector3(), s3 = new THREE.Vector3(1, 1, 1);
+  const m4 = new THREE.Matrix4(), p3 = new THREE.Vector3(), s3 = new THREE.Vector3(1, 1, 1), qf = new THREE.Quaternion(), ef = new THREE.Euler();
+  const spinQ = new THREE.Quaternion();
   /** Lay the blocks out for time t; returns the extents to fit (eased from the last form's to the next's). */
   const update = (t: number, q: THREE.Quaternion): Ext => {
-    const m = move;
+    const m = move, tm = clock(t);
     if (m) {
       for (let k = 0; k < N; k++) {
         const P = m.to.pieces[m.perm[k]];
-        const e = m.dur > 0 ? clamp01((t - m.t0 - m.delay[k]) / m.dur) : 1;
+        const e = m.dur > 0 ? clamp01((tm - m.t0 - m.delay[k]) / m.dur) : 1;
         const ek = easeInOut(e);
         if (P.spare) {
           // Put away where it is, and at once: it only shrinks, all of them together, in the move's first moments,
           // so they're gone before the others arrive.
-          const gone = m.dur > 0 ? smooth(0, 0.42, (t - m.t0) / m.dur) : 1;
+          const gone = m.dur > 0 ? smooth(0, 0.42, (tm - m.t0) / m.dur) : 1;
           for (let a = 0; a < 3; a++) { cp[k * 3 + a] = m.fp[k * 3 + a]; cs[k * 3 + a] = m.fs[k * 3 + a] * (1 - gone); }
+          cr[k * 2] = m.fr[k * 2]; cr[k * 2 + 1] = m.fr[k * 2 + 1];
           cq[k].copy(m.fq[k]);
           kA[k] = kB[k] = m.fk[k];
           pA[k] = pB[k] = m.fpr[k];
+          mA[k] = mB[k] = m.fm[k];
           km[k] = 1;
           continue;
         }
@@ -332,58 +444,107 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
           cp[k * 3 + a] = lerp(m.fp[k * 3 + a], P.p[a], ek) + m.to.lift[a] * arc;
           cs[k * 3 + a] = lerp(m.fs[k * 3 + a], P.s[a], ek);
         }
+        const r = P.r ?? ROUND;
+        cr[k * 2] = lerp(m.fr[k * 2], r[0], ek);
+        cr[k * 2 + 1] = lerp(m.fr[k * 2 + 1], r[1], ek);
         cq[k].copy(m.fq[k]).slerp(P.q, ek);
+        if (m.spin[k]) cq[k].premultiply(spinQ.setFromAxisAngle(AXES[1], m.spin[k] * ek));
         // a block on its way out keeps what it is while it shrinks
-        const toK = shown(P) ? P.k : m.fk[k], toPr = shown(P) ? P.pr : m.fpr[k];
+        const live = shown(P);
+        const toK = live ? P.k : m.fk[k], toPr = live ? P.pr : m.fpr[k], toM = live ? P.media : m.fm[k];
         kA[k] = m.fk[k];
         kB[k] = toK;
         pA[k] = m.fpr[k];
         pB[k] = toPr;
-        km[k] = m.fk[k] === toK && m.fpr[k] === toPr ? 1 : smooth(0.2, 0.8, ek);
+        mA[k] = m.fm[k];
+        mB[k] = toM;
+        km[k] = m.fk[k] === toK && m.fpr[k] === toPr && m.fm[k] === toM ? 1 : smooth(0.2, 0.8, ek);
       }
-      dirty = true;
-      if (t >= m.t0 + total(m)) {
+      if (scrubT === null && t >= m.t0 + total(m)) {
         move = null;
-        for (let k = 0; k < N; k++) { kA[k] = kB[k]; pA[k] = pB[k]; km[k] = 1; }
+        for (let k = 0; k < N; k++) { kA[k] = kB[k]; pA[k] = pB[k]; mA[k] = mB[k]; km[k] = 1; }
       }
     }
-    if (dirty) {
-      let glass = false;
-      for (let k = 0; k < N; k++) {
-        p3.set(cp[k * 3], cp[k * 3 + 1], cp[k * 3 + 2]);
-        m4.compose(p3, cq[k], s3);
-        mesh.setMatrixAt(k, m4);
-        for (let a = 0; a < 3; a++) sizes[k * 3 + a] = cs[k * 3 + a];
-        if ((kA[k] === KIND.GLASS || kB[k] === KIND.GLASS) && cs[k * 3] > 0.01) glass = true;
-        kinds[k * 3] = kA[k];
-        kinds[k * 3 + 1] = kB[k];
-        kinds[k * 3 + 2] = km[k];
-        const ra = pA[k] ? rects?.get(pA[k]!) : undefined, rb = pB[k] ? rects?.get(pB[k]!) : undefined;
-        for (let a = 0; a < 4; a++) {
-          printsA[k * 4 + a] = ra ? ra[a] : 0;
-          printsB[k * 4 + a] = rb ? rb[a] : 0;
-        }
+    // a layer of the cube turning
+    const tw = twist;
+    if (tw && !m) {
+      const e = clamp01((t - tw.t0) / tw.dur), ang = tw.dir * (Math.PI / 2) * easeInOut(e);
+      twistQ.setFromAxisAngle(AXES[tw.axis], ang);
+      for (const k of tw.members) {
+        twistV.set(tw.p0[k * 3], tw.p0[k * 3 + 1], tw.p0[k * 3 + 2]).applyQuaternion(twistQ);
+        cp[k * 3] = twistV.x; cp[k * 3 + 1] = twistV.y; cp[k * 3 + 2] = twistV.z;
+        cq[k].copy(tw.q0[k]).premultiply(twistQ);
       }
-      mesh.instanceMatrix.needsUpdate = true;
-      sizeAttr.needsUpdate = true;
-      kindAttr.needsUpdate = true;
-      printAAttr.needsUpdate = true;
-      printBAttr.needsUpdate = true;
-      glassMesh.visible = glass;
-      dirty = false;
+      if (e >= 1) {
+        for (const k of tw.members) for (let a = 0; a < 3; a++) cp[k * 3 + a] = Math.round(cp[k * 3 + a] * 2) / 2;
+        twist = null;
+      }
+    }
+
+    // Floating: a form's parts bob, each group on its own beat (blended between forms on a move).
+    const fromFloat = m ? (m.from?.float ?? 0) : 0, toFloat = target.float ?? 0;
+    const kf = m ? easeInOut(clamp01((tm - m.t0) / total(m))) : 1;
+    const amp = lerp(fromFloat, toFloat, kf);
+    let glass = false;
+    filmsShown.clear();
+    for (let k = 0; k < N; k++) {
+      p3.set(cp[k * 3], cp[k * 3 + 1], cp[k * 3 + 2]);
+      qf.copy(cq[k]);
+      if (amp > 0) {
+        const g = (m ? m.to : target).pieces[perm[k]].g ?? k, ph = g * 1.7;
+        p3.y += amp * Math.sin(t * 1.1 + ph);
+        p3.z += amp * 0.5 * Math.sin(t * 0.8 + ph * 1.3);
+        qf.premultiply(spinQ.setFromEuler(ef.set(amp * 0.25 * Math.sin(t * 0.9 + ph), amp * 0.35 * Math.sin(t * 0.7 + ph * 0.6), 0)));
+      }
+      m4.compose(p3, qf, s3);
+      mesh.setMatrixAt(k, m4);
+      for (let a = 0; a < 3; a++) sizes[k * 3 + a] = cs[k * 3 + a];
+      rounds[k * 2] = cr[k * 2];
+      rounds[k * 2 + 1] = cr[k * 2 + 1];
+      const vis = cs[k * 3] > 0.01;
+      if ((kA[k] === KIND.GLASS || kB[k] === KIND.GLASS) && vis) glass = true;
+      kinds[k * 3] = kA[k];
+      kinds[k * 3 + 1] = kB[k];
+      kinds[k * 3 + 2] = km[k];
+      // a print from the atlas, or a film cropped to the face
+      const fa = cs[k * 3] / Math.max(1e-4, cs[k * 3 + 1]);
+      const filmA = filmOf(mA[k]), filmB = filmOf(mB[k]);
+      medias[k * 2] = filmA ? filmA.slot : 0;
+      medias[k * 2 + 1] = filmB ? filmB.slot : 0;
+      if (filmA && vis) filmsShown.add(filmA);
+      if (filmB && vis) filmsShown.add(filmB);
+      if (filmA) crop(filmA, fa, printsA, k * 4);
+      else { const ra = pA[k] ? rects?.get(pA[k]!) : undefined; for (let a = 0; a < 4; a++) printsA[k * 4 + a] = ra ? ra[a] : 0; }
+      if (filmB) crop(filmB, fa, printsB, k * 4);
+      else { const rb = pB[k] ? rects?.get(pB[k]!) : undefined; for (let a = 0; a < 4; a++) printsB[k * 4 + a] = rb ? rb[a] : 0; }
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    sizeAttr.needsUpdate = true;
+    roundAttr.needsUpdate = true;
+    kindAttr.needsUpdate = true;
+    printAAttr.needsUpdate = true;
+    printBAttr.needsUpdate = true;
+    mediaAttr.needsUpdate = true;
+    glassMesh.visible = glass;
+    for (const f of films) {
+      const want = filmsOn && filmsShown.has(f);
+      if (want && f.video.paused) f.video.play().catch(() => undefined);
+      else if (!want && !f.video.paused) f.video.pause();
     }
     group.quaternion.copy(q);
 
     const extTo = extentsOf((r) => target.pieces[r], q);
     let ext = extTo;
     if (m && move) {
-      const extFrom = extentsOf((k) => {
-        snapView.p[0] = m.fp[k * 3]; snapView.p[1] = m.fp[k * 3 + 1]; snapView.p[2] = m.fp[k * 3 + 2];
-        snapView.s[0] = m.fs[k * 3]; snapView.s[1] = m.fs[k * 3 + 1]; snapView.s[2] = m.fs[k * 3 + 2];
-        snapView.q.copy(m.fq[k]);
-        return snapView;
-      }, q);
-      const K2 = easeInOut(clamp01((t - m.t0) / total(m)));
+      const extFrom = m.from
+        ? extentsOf((r) => m.from!.pieces[r], q)
+        : extentsOf((k) => {
+          snapView.p[0] = m.fp[k * 3]; snapView.p[1] = m.fp[k * 3 + 1]; snapView.p[2] = m.fp[k * 3 + 2];
+          snapView.s[0] = m.fs[k * 3]; snapView.s[1] = m.fs[k * 3 + 1]; snapView.s[2] = m.fs[k * 3 + 2];
+          snapView.q.copy(m.fq[k]);
+          return snapView;
+        }, q);
+      const K2 = easeInOut(clamp01((tm - m.t0) / total(m)));
       if (extFrom && extTo) ext = { minX: lerp(extFrom.minX, extTo.minX, K2), maxX: lerp(extFrom.maxX, extTo.maxX, K2), minY: lerp(extFrom.minY, extTo.minY, K2), maxY: lerp(extFrom.maxY, extTo.maxY, K2) };
       else ext = extTo ?? extFrom;
     }
@@ -417,11 +578,12 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
     group.scale.setScalar(fitted.s);
     fitted.r = 0.5 * Math.hypot(extW, extH) * fitted.s;
   };
-  // Light the object where it is now.
+  // Light the object where it is now; the cube's core breathes.
   const centre = new THREE.Vector3();
   const light = (dt: number, t: number, want: Lighting, pointer: { x: number; y: number }) => {
     centre.set(fitted.x, fitted.y, 0);
     look.update(dt, t, want, pointer, centre, fitted.r || 10);
+    U.uCore.value = 1 + 0.22 * Math.sin(t * 1.7);
   };
   // The canvas is see-through, so it's cleared to nothing; but what glass sees behind it is the
   // page's own colour (three.js would otherwise see a half-white there). What's behind glass is
@@ -440,21 +602,27 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
     renderer.render(scene, camera);
   };
   // If frames start to be missed (the GPU can't keep up at this resolution), draw at a lower one:
-  // a step down whenever a sixth of the last 48 frames came late; never back up.
+  // a step down whenever a sixth of the last 96 frames came late, and back up a step after six
+  // seconds without one. Not in the first seconds (shaders compiling, films and fonts loading).
+  const startPr = renderer.getPixelRatio(), born = performance.now();
   const lates: boolean[] = [];
-  let lastFrame = 0;
+  let lastFrame = 0, lastLate = born;
+  const setPr = (pr: number) => {
+    renderer.setPixelRatio(pr);
+    U.uPixel.value = 4 * renderer.getPixelRatio();
+    lates.length = 0;
+  };
   const pace = (now: number) => {
     const gap = now - lastFrame;
     lastFrame = now;
-    if (gap <= 0 || gap > 250) return;   // a pause (a hidden tab, a long task), not the GPU
-    lates.push(gap > 21);
-    if (lates.length > 48) lates.shift();
+    if (gap <= 0 || gap > 250 || now - born < 5000) return;   // a pause (a hidden tab, a long task), or still starting
+    const late = gap > 21;
+    if (late) lastLate = now;
+    lates.push(late);
+    if (lates.length > 96) lates.shift();
     const pr = renderer.getPixelRatio();
-    if (lates.length === 48 && lates.filter(Boolean).length > 8 && pr > 1) {
-      renderer.setPixelRatio(Math.max(1, pr - 0.25));
-      U.uPixel.value = 4 * renderer.getPixelRatio();
-      lates.length = 0;
-    }
+    if (lates.length === 96 && lates.filter(Boolean).length > 16 && pr > 1) setPr(Math.max(1, pr - 0.25));
+    else if (pr < startPr && now - lastLate > 6000) { setPr(Math.min(startPr, pr + 0.25)); lastLate = now; }
   };
   const dispose = () => {
     disposed = true;
@@ -464,13 +632,20 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
     mats.depth.dispose();
     tex?.dispose();
     blank.dispose();
+    for (const f of films) {
+      f.video.pause();
+      f.video.removeAttribute('src');
+      f.video.load();
+      f.texture.dispose();
+    }
     look.dispose();
     renderer.dispose();
   };
   return {
     renderer, U, forms,
-    place, go, update, viewAt, endsAt, usePrints,
-    busy: (t: number) => t < endsAt(),
+    place, go, scrub, turnLayer, update, viewAt, endsAt, usePrints, showFilms,
+    busy: (t: number) => scrubT === null && t < endsAt(),
+    still: () => !move && scrubT === null && !twist,
     resize, fit, light, draw, pace, dispose,
   };
 }
@@ -499,6 +674,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
   const rig = createRig(canvas, fine ? 1.75 : 1.5, fine);
   const { renderer, U, forms } = rig;
   const scroller: Scroller | null = fine && !reduced ? createScroller() : null;
+  if (reduced) rig.showFilms(false);
 
   /* chapters, from the DOM */
   let chapters: Chapter[] = [];
@@ -554,7 +730,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     if (!r) return null;
     const edge = Math.max(Math.min(vw * 0.04, 32), (vw - 1440) / 2 + Math.min(vw * 0.04, 32));
     const gap = Math.min(vw * 0.04, 56);
-    const minH = vh * 0.5, h = Math.max(r.height, minH), y = r.top + r.height / 2 - h / 2;
+    const minH = vh * 0.62, h = Math.max(r.height, minH), y = r.top + r.height / 2 - h / 2;
     const left = r.left + r.width / 2 < vw / 2;   // the words on the left: the object on the right
     return left ? { x: r.right + gap, y, w: vw - edge - (r.right + gap), h } : { x: edge, y, w: r.left - gap - edge, h };
   };
@@ -570,12 +746,26 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     for (let j = 0; j < chapters.length; j++) if (chapters[j].top <= y + vh * 0.55) k = j;
     return k;
   };
+  // Where a chapter's scroll has its forms (0 the first form .. n-1 the last): while its words
+  // are pinned the scroll goes through them, each move between holds at either end.
+  const sceneOf = (c: Chapter) => {
+    const n = c.forms.length;
+    if (n < 2) return 0;
+    const vh = window.innerHeight;
+    const run = tall() ? c.h - vh * 0.75 : c.h - vh;
+    const p = clamp01((window.scrollY - c.top) / Math.max(1, run));
+    const u = p * (n - 1), i = Math.min(n - 2, Math.floor(u));
+    return i + smooth(0.2, 0.8, u - i);
+  };
 
   /* the loop */
   let raf = 0, running = false, visible = true, ready = false, last = performance.now();
-  let ci = -1, si = 0, tEnter = 0, enterEnds = 0, first = true;
+  let ci = -1, tEnter = 0, enterEnds = 0, first = true, shownAt = 0, nextTurn = 0;
+  let scene = 0;   // where the chapter's object is shown, following the scroll's place
   let boxFrom: Box | null = null, lastBox: Box | null = null;
   let mxS = 0, myS = 0;
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const splashDone = () => (window as unknown as { __qbixSplashDone?: boolean }).__qbixSplashDone !== false;
   const setStep = (c: Chapter, s: number) => {
     if (!c.steps) return;
@@ -585,16 +775,19 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
   const enter = (k: number, t: number) => {
     const c = chapters[k];
     ci = k;
-    si = reduced ? c.forms.length - 1 : 0;
-    const f = c.forms[si];
+    // into the form the scroll is at in this chapter (its first coming down, its last going back up)
+    shownAt = Math.round(sceneOf(c));
+    scene = shownAt;
+    const f = c.forms[shownAt];
     if (reduced) rig.go(f, t, { match: true, spread: 0, dur: 0 });
     else if (first) rig.go(f, t, { match: f !== forms.cube, spread: 0.8, dur: 1.1 });   // the hero's gathering
     else rig.go(f, t, { match: true });
     first = false;
     tEnter = t;
     enterEnds = rig.endsAt();
+    nextTurn = enterEnds + 1.2;
     boxFrom = lastBox;
-    setStep(c, si);
+    setStep(c, shownAt);
   };
 
   const q = new THREE.Quaternion(), rot = new THREE.Euler();
@@ -618,28 +811,25 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     const cw = canvas.clientWidth || vw, chh = canvas.clientHeight || vh;
     rig.resize(cw, chh);
 
-    // The chapter that's on, and its scenes: one after another, on a loop.
+    // The chapter that's on, and where its scroll has its forms.
     if (splashDone()) {
       const k = pick();
       if (k !== ci) enter(k, t);
-      else if (!reduced) {
-        const c = chapters[ci];
-        if (c.forms.length > 1 && !rig.busy(t) && t - rig.endsAt() >= c.forms[si].hold) {
-          si = (si + 1) % c.forms.length;
-          rig.go(c.forms[si], t, { match: false });
-          setStep(c, si);
-        }
+      const c = chapters[ci];
+      if (c.forms.length > 1 && !rig.busy(t)) {
+        // the object follows the scroll's place, a little behind it so a wheel's steps read as one motion
+        const want = sceneOf(c);
+        scene = reduced ? Math.round(want) : scene + (want - scene) * (1 - Math.exp(-dt * 7));
+        if (Math.abs(want - scene) < 0.002) scene = want;
+        const i = Math.min(c.forms.length - 2, Math.floor(scene));
+        rig.scrub(c.forms[i], c.forms[i + 1], scene - i);
+        const s = Math.round(scene);
+        if (s !== shownAt) { shownAt = s; setStep(c, s); }
+      } else if (c.forms.length === 1 && c.forms[0] === forms.cube && !reduced && t > nextTurn && rig.still()) {
+        // the cube is alive: a layer turns every few seconds
+        rig.turnLayer(t, rnd);
+        nextTurn = t + 2.4 + rnd() * 1.6;
       }
-    }
-
-    // Arriving at a chapter whose object is still on its way: the page eases to a stop at the chapter's top until it's there.
-    if (scroller) {
-      let hold: number | null = null;
-      if (ci > 0 && !tall() && t < enterEnds + 0.5) {
-        const top = chapters[ci].top;
-        if (window.scrollY <= top + 2) hold = top;
-      }
-      scroller.holdY = hold;
     }
 
     // The view: the form's, with a slow sway, leaning toward the pointer.
@@ -691,7 +881,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     running = want;
     if (running) { last = performance.now(); raf = requestAnimationFrame(frame); }
     else if (raf) { cancelAnimationFrame(raf); raf = 0; }
-    if (!running && scroller) scroller.holdY = null;
+    rig.showFilms(running && !reduced);
   };
   const io = new IntersectionObserver(([en]) => { visible = en.isIntersecting; setRunning(); });
   io.observe(root);
@@ -755,7 +945,8 @@ export function mountBlockFigure(
   window.addEventListener('pointermove', onMove, { passive: true });
   document.documentElement.addEventListener('mouseleave', onLeave);
 
-  let raf = 0, running = false, visible = false, started = reduced, si = 0, last = performance.now(), mxS = 0, myS = 0;
+  let raf = 0, running = false, visible = false, started = reduced, si = 0, last = performance.now(), mxS = 0, myS = 0, nextTurn = 0, seed = 5;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const q = new THREE.Quaternion(), rot = new THREE.Euler();
   const frame = (now: number) => {
     raf = 0;
@@ -774,6 +965,9 @@ export function mountBlockFigure(
     } else if (!reduced && seq.length > 1 && !rig.busy(t) && t - rig.endsAt() >= seq[si].hold) {
       si = (si + 1) % seq.length;
       rig.go(seq[si], t, { match: false });
+    } else if (!reduced && seq.length === 1 && seq[0] === rig.forms.cube && rig.still() && t > nextTurn) {
+      rig.turnLayer(t, rnd);
+      nextTurn = t + 2.4 + rnd() * 1.6;
     }
     const view = rig.viewAt(t);
     const px = pointerIn ? Math.max(-1, Math.min(1, ndc.x)) : 0, py = pointerIn ? Math.max(-1, Math.min(1, ndc.y)) : 0;
@@ -792,6 +986,7 @@ export function mountBlockFigure(
     running = want;
     if (running) { last = performance.now(); raf = requestAnimationFrame(frame); }
     else if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    rig.showFilms(running && !reduced);
   };
   const io = new IntersectionObserver(([en]) => { visible = en.isIntersecting; setRunning(); }, { rootMargin: '120px 0px' });
   io.observe(canvas);

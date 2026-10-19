@@ -174,7 +174,7 @@
   .ch { height: auto; }
   .ch-frame { display: flex; flex-direction: column; }
   .ch-window { position: sticky; top: var(--nav-h); z-index: 1; height: 46svh; min-height: 260px; background: var(--ch-bg); }
-  .ch-copy { position: relative; z-index: 0; padding: 26px var(--gutter) 72px; background: var(--ch-bg); }
+  .ch-copy { position: relative; z-index: 0; padding: 26px var(--gutter) calc(72px + var(--run, 0vh)); background: var(--ch-bg); }
   .ch-title { font-size: clamp(30px, 8.4vw, 44px); }
   .ch--hero .ch-frame { padding-top: calc(64px + 4vh); }
   .ch--hero .ch-copy { order: 1; padding-bottom: 0; background: transparent; }
