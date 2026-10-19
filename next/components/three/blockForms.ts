@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { KIND } from './blockLook';
 import { definePrint, lock, qr, tick, type Draw, type Pen, type TextOpts } from './blockPrints';
 import { bedroom, caller, cardFace, headphones, kitchen, landscape, living, openSign, room, street, waveform, waves } from './blockArt';
 
@@ -20,14 +21,14 @@ import { bedroom, caller, cardFace, headphones, kitchen, landscape, living, open
 
 export const N = 64;   // the cube is 4 × 4 × 4; the scenes use as many as they need and put the rest away
 
-// Materials. FORE is the colour that stands out from the page (white on
-// black, ink on paper), BACK the page's own; DOT and DOTB are dots of the one
-// on the other; LIME the lime (PLAY with a play mark; JELLY the cube's lime
-// corner); PIC a picture, white with its print in ink on any page (a photo
-// stays daylight). What's printed on a piece is in the colour that stands out
-// from it.
-export const K = { FORE: 0, DOT: 1, BACK: 5, DOTB: 6, PIC: 7, LIME: 9, PLAY: 10, JELLY: 11 } as const;
-export const isLime = (k: number) => k === K.LIME || k === K.PLAY || k === K.JELLY;
+// Materials (blockLook.ts draws them). FORE is glossy plastic in the colour
+// that stands out from the page (white on black, ink on paper), BACK in the
+// page's own; LIME lime plastic (PLAY with a play mark); PIC a picture, photo
+// paper printed in ink on any page (a photo stays daylight); METAL brushed
+// aluminium; GLASS frosted glass; CORE the cube's lime core, glowing. What's
+// printed on a piece is in the colour that stands out from it.
+export const K = KIND;
+export const isLime = (k: number) => k === K.LIME || k === K.PLAY || k === K.CORE;
 
 export type Vec = [number, number, number];
 export type View = { yaw: number; pitch: number };
@@ -130,7 +131,6 @@ const address = (s: string, live: boolean): Draw => (g) => {
   }
   g.text(s, x, g.h / 2, { size: 0.15, weight: 500, mid: true, a: live ? 1 : 0.55 });
 };
-const fill = (a: number): Draw => (g) => g.fill('ink', a);
 
 /** Rough width of words in units, before the fonts are in: for sizing the piece they're printed on. */
 const wide = (s: string, size: number, em = 0.6) => s.length * size * em;
@@ -140,15 +140,17 @@ const wide = (s: string, size: number, em = 0.6) => s.length * size * em;
 export function buildForms(): Record<string, Form> {
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const { FORE, DOT, BACK, DOTB, PIC, LIME, PLAY, JELLY } = K;
+  const { FORE, BACK, PIC, METAL, GLASS, LIME, PLAY, CORE } = K;
   const F: Record<string, Form> = {};
 
-  /* The cube: 4 × 4 × 4 white blocks, a few of them dotted (one in five, never two side by
-     side: (x + 2y + 3z) mod 5 changes along every axis), its top front corner lime. */
+  /* The cube: 3 × 3 × 3. At its heart a lime core, glowing. Its corners are brushed aluminium,
+     its edges glossy plastic (white on black, ink on paper), and the middle of each face is
+     frosted glass, a window onto the core. */
   const cube: Piece[] = [];
-  for (let y = 0; y < 4; y++) for (let z = 0; z < 4; z++) for (let x = 0; x < 4; x++) {
-    const k = x === 3 && y === 3 && z === 3 ? JELLY : (x + 2 * y + 3 * z) % 5 === 0 ? DOT : FORE;
-    cube.push(piece(x - 1.5, y - 1.5, z - 1.5, 0.9, 0.9, 0.9, k));
+  for (let y = 0; y < 3; y++) for (let z = 0; z < 3; z++) for (let x = 0; x < 3; x++) {
+    const middles = (x === 1 ? 1 : 0) + (y === 1 ? 1 : 0) + (z === 1 ? 1 : 0);   // 0 a corner, 1 an edge, 2 a face, 3 the core
+    const k = [METAL, FORE, GLASS, CORE][middles];
+    cube.push(piece(x - 1, y - 1, z - 1, 0.9, 0.9, 0.9, k));
   }
   F.cube = makeForm(cube, { yaw: -0.62, pitch: 0.4 }, { order: 'bottom', lift: [0, 0.8, 0.2] });
   // The cube's own blocks, loose and turned every which way (where the hero's gathering starts).
@@ -170,7 +172,7 @@ export function buildForms(): Record<string, Form> {
   };
   const colorway = (name: string, sw: 'ink' | 'ring' | 'lime', s = 1): Draw => (g) => {
     const r = 0.2 * s, cx = 0.18 * s + r, cy = g.h / 2;
-    if (sw === 'ring') g.ring(cx, cy, r - 0.018 * s, 0.035 * s, 'ink', 0.85);
+    if (sw === 'ring') g.ring(cx, cy, r - 0.018 * s, 0.035 * s, 'ink', 1);
     else g.dot(cx, cy, r, sw);
     g.text(name, cx + r + 0.16 * s, cy - 0.09 * s, { size: 0.15 * s, weight: 600, mid: true });
     g.text('$249', cx + r + 0.16 * s, cy + 0.15 * s, { size: 0.12 * s, mid: true, a: 0.55 });
@@ -211,7 +213,7 @@ export function buildForms(): Record<string, Form> {
   const CS = 0.1;
   const editor: Draw = (g) => {
     g.text('app/page.tsx', 0.16, 0.16, { size: 0.085, font: 'mono', mid: true, a: 0.5 });
-    g.box(0, 0.31, g.w, 0.012, 'ink', 0.1);
+    g.box(0, 0.31, g.w, 0.008, 'ink', 1);
     CODE.forEach((_, i) => g.text(String(i + 1), 0.3, 0.46 + i * 0.27, { size: 0.085, font: 'mono', mid: true, a: 0.3, align: 'right' }));
   };
   const codeLine = (s: string): Draw => (g) => {
@@ -275,20 +277,20 @@ export function buildForms(): Record<string, Form> {
   pin(14, -2.45, 0.6, 2.6, 3.0, PIC, -0.03, 'hush.mood.photo', (g) => headphones(g));   // a photograph (it becomes the picture)
   pin(18, 0.25, 1.35, 2.2, 1.45, PIC, 0.035, 'hush.mood.waves', waves);                 // another (it becomes the editor)
   pin(9, 2.85, 1.45, 1.9, 1.25, BACK, -0.04, 'hush.mood.type', specimen);                // the type (it becomes the headline)
-  pin(10, 3.05, -0.25, 1.5, 1.1, DOTB, 0.04);                                             // a fabric
+  pin(10, 3.05, -0.25, 1.5, 1.1, METAL, 0.04);                                            // the materials: aluminium
   pin(15, -0.25, -0.35, 1.5, 1.2, BACK, 0.05, 'hush.mood.ui', uiSample);                 // a button and a switch
   pin(16, 1.35, -0.3, 1.25, 1.05, BACK, -0.06, 'hush.mood.words', lines(['quiet,', 'warm,', 'a little bold.'], { size: 0.15, font: 'serif', italic: true }, 0.12, 0.3, 0.24));
-  pin(17, -3.3, -1.95, 0.95, 0.95, DOTB, 0.06);
+  pin(17, -3.3, -1.95, 0.95, 0.95, GLASS, 0.06);                                          // and frosted glass
   pin(1, -2.35, -1.95, 0.62, 0.62, BACK, -0.05, 'hush.chip.paper', chip('#F7F8F8'));      // the colours
-  pin(2, -1.61, -1.95, 0.62, 0.62, BACK, 0.03, 'hush.chip.grey', chip('#8E949A', 0.5));
-  pin(3, -0.87, -1.95, 0.62, 0.62, DOTB, -0.02);
+  pin(2, -1.61, -1.95, 0.62, 0.62, GLASS, 0.03);
+  pin(3, -0.87, -1.95, 0.62, 0.62, METAL, -0.02);
   pin(4, -0.13, -1.95, 0.62, 0.62, BACK, 0.05, 'hush.chip.ink', chip('#121417', 1));
   pin(13, 0.8, -1.85, 0.8, 0.8, LIME, 0.09, 'hush.chip.lime', chip('#B8FF00'));          // the one lime chip (it becomes the button)
   pin(11, 1.85, -1.8, 1.05, 0.8, BACK, -0.05, 'hush.note1', lines(['no stock', 'photos'], { size: 0.13, weight: 500 }, 0.1, 0.27));
   pin(12, 3.1, -1.85, 1.35, 0.8, BACK, 0.04, 'hush.note2', lines(['launch in', 'May'], { size: 0.13, weight: 500 }, 0.1, 0.27));
   // Tape on the corners (it becomes the lines of code).
   const tape = (i: number, x: number, y: number, rz: number) => {
-    mood[i] = pr(piece(x, y, 0.36, 0.66, 0.2, 0.02, BACK, rz), 'tape', fill(0.1));
+    mood[i] = piece(x, y, 0.36, 0.66, 0.2, 0.02, BACK, rz);
   };
   tape(19, -3.62, 2.25, 0.62);
   tape(20, -1.28, 2.25, -0.55);
@@ -312,18 +314,17 @@ export function buildForms(): Record<string, Form> {
       g.text('+4.2%', 0.44, 0.925, { size: 0.09, weight: 600, align: 'center', mid: true });
     } else if (foot === 'month') g.text('this month', 0.16, 0.925, { size: 0.09, mid: true, a: 0.5 });
     else {
-      g.box(0.16, 0.9, g.w - 0.32, 0.06, 'ink', 0.12, 0.03);
-      g.box(0.16, 0.9, (g.w - 0.32) * 0.62, 0.06, 'ink', 0.85, 0.03);
+      g.frame(0.16, 0.9, g.w - 0.32, 0.07, 0.012, 'ink', 1);
+      g.box(0.16, 0.9, (g.w - 0.32) * 0.62, 0.07, 'ink', 1);
     }
   };
   const BARS = [0.42, 0.55, 0.48, 0.66, 0.58, 0.72, 0.6, 0.5, 0.64, 0.78, 0.7, 0.92];
   const chart: Draw = (g) => {
     g.text('Spending', 0.2, 0.3, { size: 0.13, weight: 600, mid: true });
     g.text('Last 12 months', 0.2, 0.5, { size: 0.09, mid: true, a: 0.5 });
-    for (const y of [0.9, 1.35, 1.8]) g.box(0.2, y, g.w - 0.4, 0.01, 'ink', 0.08);
     BARS.forEach((v, i) => {
       const x = 0.28 + i * 0.262, bh = v * 1.3;
-      g.box(x, 2.12 - bh, 0.15, bh, i === BARS.length - 1 ? 'lime' : 'ink', i === BARS.length - 1 ? 1 : 0.82, 0.02);
+      g.box(x, 2.12 - bh, 0.15, bh, i === BARS.length - 1 ? 'lime' : 'ink', 1, 0.02);
       g.text('JFMAMJJASOND'[i], x + 0.075, 2.3, { size: 0.075, align: 'center', mid: true, a: 0.45 });
     });
   };
@@ -332,7 +333,7 @@ export function buildForms(): Record<string, Form> {
     g.text('Recent', 0.16, 0.3, { size: 0.13, weight: 600, mid: true });
     ROWS.forEach(([name, sub, amt], i) => {
       const y = 0.74 + i * 0.44;
-      g.dot(0.28, y, 0.12, 'ink', 0.85);
+      g.dot(0.28, y, 0.12, 'ink', 1);
       g.text(name[0], 0.28, y, { size: 0.1, weight: 600, align: 'center', mid: true, ink: 'base' });
       g.text(name, 0.5, y - 0.07, { size: 0.1, weight: 500, mid: true });
       g.text(sub, 0.5, y + 0.09, { size: 0.075, mid: true, a: 0.5 });
@@ -352,7 +353,7 @@ export function buildForms(): Record<string, Form> {
   // a part in grey, on the grid: x and w its place and width on the app
   const wired = (x: number, w: number, inner: Draw, outline = true): Draw => (g) => {
     columns(g, x - w / 2 + 3.8);
-    if (outline) g.frame(0, 0, g.w, g.h, 0.025, 'ink', 0.14);
+    if (outline) g.frame(0, 0, g.w, g.h, 0.02, 'ink', 1);
     inner(g);
   };
   const kova = (st: 0 | 1 | 2): Piece[] => {
@@ -361,10 +362,10 @@ export function buildForms(): Record<string, Form> {
     const win = piece(0, 0, 0, 7.6, 4.9, 0.3, FORE);
     out.push(wire ? pr(win, 'kova.grid', kovaGrid, 40) : win);                                                      // 0 the app
     const side = onK(-2.9, 0, 1.5, 4.6, 0.04, k);
-    out.push(wire ? pr(side, 'kova.w.side', fill(0.04)) : side);                                                    // 1 its sidebar
+    out.push(side);                                                    // 1 its sidebar
     const logo = onB(-2.9, 1.95, 1.2, 0.36, 0.02, k);
     out.push(
-      wire ? pr(logo, 'kova.w.logo', (g) => g.box(0.04, g.h / 2 - 0.08, 0.6, 0.16, 'ink', 0.16))
+      wire ? pr(logo, 'kova.w.logo', (g) => g.frame(0.04, g.h / 2 - 0.08, 0.6, 0.16, 0.02, 'ink', 1))
         : st === 1 ? pr(logo, 'kova.logo', words('kova', { size: 0.24, weight: 600, track: -0.02 }, 0.04))
           : pr(logo, 'kova.logo.mark', (g) => {
             g.box(0.04, g.h / 2 - 0.15, 0.3, 0.3, 'lime');
@@ -374,17 +375,17 @@ export function buildForms(): Record<string, Form> {
     );                                                                                                               // 2 its logo
     NAVK.forEach((s, i) => {
       const p = onB(-2.9, 1.3 - i * 0.36, 1.2, 0.28, 0.02, k);
-      out.push(wire ? pr(p, `kova.w.nav${i}`, (g) => g.box(0.06, g.h / 2 - 0.045, 0.8 - i * 0.08, 0.09, 'ink', 0.14, 0.045))
+      out.push(wire ? pr(p, `kova.w.nav${i}`, (g) => g.box(0.06, g.h / 2 - 0.012, 0.8 - i * 0.08, 0.024, 'ink', 1))
         : pr(p, `kova.nav${i}`, (g) => {
           if (i === 0) g.box(0.06, g.h / 2 - 0.035, 0.07, 0.07, 'lime');
           g.text(s, 0.22, g.h / 2, { size: 0.13, weight: 500, mid: true, a: i === 0 ? 1 : 0.6 });
         }));
     });                                                                                                              // 3-6 its menu
     const head = onK(-0.2, 1.95, 3.5, 0.44, 0.02, FORE);
-    out.push(wire ? pr(head, 'kova.w.head', wired(-0.2, 3.5, (g) => g.box(0.02, g.h / 2 - 0.1, 2.4, 0.2, 'ink', 0.16, 0.03), false))
+    out.push(wire ? pr(head, 'kova.w.head', wired(-0.2, 3.5, (g) => g.frame(0.02, g.h / 2 - 0.1, 2.4, 0.2, 0.02, 'ink', 1), false))
       : pr(head, 'kova.head', words('Good morning, Ana', { size: 0.3, font: 'head' }, 0.02)));                      // 7 the greeting
     const av = onK(3.43, 1.95, 0.42, 0.42, 0.04, FORE);
-    out.push(wire ? pr(av, 'kova.w.avatar', wired(3.43, 0.42, (g) => g.dot(g.w / 2, g.h / 2, 0.19, 'ink', 0.18), false))
+    out.push(wire ? pr(av, 'kova.w.avatar', wired(3.43, 0.42, (g) => g.ring(g.w / 2, g.h / 2, 0.18, 0.02, 'ink', 1), false))
       : pr(av, 'kova.avatar', (g) => {
         g.dot(g.w / 2, g.h / 2, 0.19, 'ink');
         g.text('A', g.w / 2, g.h / 2, { size: 0.18, weight: 600, align: 'center', mid: true, ink: 'base' });
@@ -392,25 +393,25 @@ export function buildForms(): Record<string, Form> {
     const KPIS: [string, string, 'up' | 'month' | 'bar'][] = [['Balance', '$48,210', 'up'], ['Spent', '$3,120', 'month'], ['Saved', '18%', 'bar']];
     KPIS.forEach(([l, v, f], i) => {
       const p = onK(KX[i], 1.0, 1.733, 1.1, 0.08, FORE);
-      out.push(wire ? pr(p, `kova.w.kpi${i}`, wired(KX[i], 1.733, (g) => { g.box(0.16, 0.2, 0.6, 0.09, 'ink', 0.16); g.box(0.16, 0.46, 1.1, 0.24, 'ink', 0.14); }))
+      out.push(wire ? pr(p, `kova.w.kpi${i}`, wired(KX[i], 1.733, (g) => { g.box(0.16, 0.24, 0.6, 0.024, 'ink', 1); g.frame(0.16, 0.46, 1.1, 0.24, 0.02, 'ink', 1); }))
         : pr(p, `kova.kpi${i}`, kpi(l, v, f)));
     });                                                                                                              // 9-11 the numbers
     const ch = onK(-0.15, -1.05, 3.6, 2.5, 0.08, FORE);
     out.push(wire ? pr(ch, 'kova.w.chart', wired(-0.15, 3.6, (g) => {
-      g.box(0.2, 0.22, 0.9, 0.12, 'ink', 0.16);
-      g.box(0.2, 0.9, g.w - 0.4, 1.22, 'ink', 0.1);
+      g.box(0.2, 0.27, 0.9, 0.024, 'ink', 1);
+      g.frame(0.2, 0.9, g.w - 0.4, 1.22, 0.02, 'ink', 1);
     })) : pr(ch, 'kova.chart', chart));                                                                             // 12 the chart
     const ls = onK(2.75, -1.05, 1.8, 2.5, 0.08, FORE);
     out.push(wire ? pr(ls, 'kova.w.list', wired(2.75, 1.8, (g) => {
-      g.box(0.16, 0.22, 0.6, 0.12, 'ink', 0.16);
-      for (let i = 0; i < 4; i++) { g.dot(0.28, 0.74 + i * 0.44, 0.12, 'ink', 0.14); g.box(0.5, 0.69 + i * 0.44, 0.9, 0.1, 'ink', 0.14); }
+      g.box(0.16, 0.27, 0.6, 0.024, 'ink', 1);
+      for (let i = 0; i < 4; i++) { g.ring(0.28, 0.74 + i * 0.44, 0.11, 0.02, 'ink', 1); g.box(0.5, 0.73 + i * 0.44, 0.9, 0.024, 'ink', 1); }
     })) : pr(ls, 'kova.list', list));                                                                               // 13 the list
     // the tokens, in front of the sidebar: the type, and the colours (the lime one becomes the icon)
     const type = pr(piece(-2.9, -0.95, 0.85, 1.3, 1.0, 0.14, FORE), 'kova.type', (g) => {
       g.text('Aa', 0.12, 0.62, { size: 0.5, font: 'head' });
       g.text('Eurostile', 0.12, 0.84, { size: 0.09, weight: 500, mid: true, a: 0.6 });
     });
-    const chips = [piece(-3.35, -1.95, 0.85, 0.38, 0.38, 0.28, FORE), pr(piece(-2.9, -1.95, 0.85, 0.38, 0.38, 0.28, FORE), 'kova.chip.grey', fill(0.5)), piece(-2.45, -1.95, 0.85, 0.38, 0.38, 0.28, LIME)];
+    const chips = [piece(-3.35, -1.95, 0.85, 0.38, 0.38, 0.28, FORE), piece(-2.9, -1.95, 0.85, 0.38, 0.38, 0.28, BACK), piece(-2.45, -1.95, 0.85, 0.38, 0.38, 0.28, LIME)];
     if (st === 1) out.push(type, ...chips);
     else out.push(hidden(type.p), hidden(chips[0].p), hidden(chips[1].p));
     if (st === 2) out.push(pr(piece(-2.9, -1.35, 0.95, 1.3, 1.3, 0.42, LIME), 'kova.icon', label('k', { size: 0.92, weight: 600 })));
@@ -434,16 +435,13 @@ export function buildForms(): Record<string, Form> {
   const soon = (s: string) => pr(onL(-3.6 + titleW(s) + 0.12 + 0.37, 1.95, 0.74, 0.3, 0.05, FORE), 'lab.soon', label('SOON', { size: 0.1, weight: 600, track: 0.14 }));
 
   // Strata: an image in; the colours and the type taken from it, the parts made of them, the code.
-  const STRATA_CHIPS: [number, string | null, number][] = [[LIME, null, 0], [BACK, null, 0], [BACK, 'lab.chip.mid', 0.42], [BACK, 'lab.chip.light', 0.14], [DOTB, null, 0]];
+  const STRATA_CHIPS = [LIME, BACK, FORE, METAL, GLASS];   // its palette: lime, the two plastics, aluminium, glass
   const strata = (): Piece[] => [
     labWin(FORE),                                                                                                   // 0
     title('Strata'),                                                                                                // 1
     pr(onL(3.05, 1.95, 1.1, 0.38, 0.06, BACK), 'lab.export', label('Export', { size: 0.13, weight: 600 })),         // 2
     pr(onL(-2.175, -0.235, 2.85, 3.53, 0.1, PIC), 'lab.image', landscape),                                         // 3 the image in
-    ...STRATA_CHIPS.map(([k, name, a], i) => {
-      const p = onL(-0.12 + i * 0.84, 1.2, 0.66, 0.66, 0.16, k);
-      return name ? pr(p, name, fill(a)) : p;
-    }),                                                                                                             // 4-8 its colours
+    ...STRATA_CHIPS.map((k, i) => onL(-0.12 + i * 0.84, 1.2, 0.66, 0.66, 0.16, k)),                                   // 4-8 its colours
     pr(onL(0.45, 0.1, 1.8, 1.05, 0.08, BACK), 'lab.type', (g) => {
       g.text('Aa', 0.14, 0.7, { size: 0.56, font: 'head' });
       g.text('Display', 1.06, 0.36, { size: 0.1, weight: 500, mid: true });
@@ -453,7 +451,7 @@ export function buildForms(): Record<string, Form> {
     pr(onL(2.6, 0.33, 2.0, 0.44, 0.12, LIME), 'lab.cta', label('Get started', { size: 0.14, weight: 600 })),         // 10-11 parts
     pr(onL(2.6, -0.2, 2.0, 0.44, 0.06, BACK), 'lab.input', (g) => {
       g.text('you@studio.com', 0.16, g.h / 2, { size: 0.12, mid: true, a: 0.45 });
-      g.box(1.32, g.h / 2 - 0.1, 0.014, 0.2, 'ink', 0.9);
+      g.box(1.32, g.h / 2 - 0.1, 0.014, 0.2, 'ink', 1);
     }),
     pr(onL(1.575, -1.4, 4.05, 1.2, 0.06, BACK), 'lab.code', (g) => {
       [['--accent', '#B8FF00'], ['--ink', '#121417'], ['--space', '8px']].forEach(([k2, v], i) => {
@@ -466,13 +464,18 @@ export function buildForms(): Record<string, Form> {
   F.strata = makeForm(strata(), { yaw: -0.3, pitch: 0.16 }, { lift: [0, 0.3, 1.0], hold: 2.6, step: 0 });
 
   // AI Bidding: a table; your aces; the model reading the bluff; fold, bid, or all in.
+  const cardBack: Draw = (g) => {
+    g.box(0.07, 0.07, g.w - 0.14, g.h - 0.14, 'ink');
+    g.frame(0.13, 0.13, g.w - 0.26, g.h - 0.26, 0.02, 'base');
+    g.box(g.w / 2 - 0.09, g.h / 2 - 0.09, 0.18, 0.18, 'lime');
+  };
   const card = (x: number, y: number, rz: number, k: number, name?: string, draw?: Draw) => {
     const p = piece(x, y, 0.15 + 0.03 + 0.01, 0.82, 1.15, 0.06, k, rz);
     return name && draw ? pr(p, name, draw) : p;
   };
   const bidding = (): Piece[] => [
     pr(labWin(FORE), 'lab.table', (g) => {
-      g.shape((c) => c.ellipse(g.w / 2 + 0.55, g.h / 2 - 0.05, 2.25, 1.95, 0, 0, Math.PI * 2), 'ink', 0.14, 0.04);
+      g.shape((c) => c.ellipse(g.w / 2 + 0.55, g.h / 2 - 0.05, 2.25, 1.95, 0, 0, Math.PI * 2), 'ink', 1, 0.02);
     }, 40),                                                                                                          // 0 the table
     title('AI Bidding'),                                                                                             // 1
     pr(onL(3.05, 1.95, 1.1, 0.38, 0.06, BACK), 'lab.pot', label('Pot $120', { size: 0.13, weight: 600 })),           // 2 the pot
@@ -480,12 +483,12 @@ export function buildForms(): Record<string, Form> {
       g.text('The model reads', 0.16, 0.26, { size: 0.1, weight: 500, mid: true, a: 0.55 });
       g.text('Bluff', 0.16, 0.6, { size: 0.26, font: 'head', mid: true });
       g.text('72%', 0.16, 1.08, { size: 0.5, font: 'head', mid: true });
-      g.box(0.16, 1.45, g.w - 0.32, 0.07, 'ink', 0.12, 0.035);
-      g.box(0.16, 1.45, (g.w - 0.32) * 0.72, 0.07, 'ink', 0.85, 0.035);
+      g.frame(0.16, 1.45, g.w - 0.32, 0.08, 0.014, 'ink', 1);
+      g.box(0.16, 1.45, (g.w - 0.32) * 0.72, 0.08, 'ink', 1);
       g.text('Your hand looks strong.', 0.16, 1.78, { size: 0.085, mid: true, a: 0.6 });
     }),                                                                                                              // 3 the model
-    card(0.3, 1.15, 0.05, DOTB),                                                                                     // 4-5 their cards, face down
-    card(1.18, 1.15, -0.04, DOTB),
+    card(0.3, 1.15, 0.05, BACK, 'lab.cardBack', cardBack),                                                           // 4-5 their cards, face down
+    card(1.18, 1.15, -0.04, BACK, 'lab.cardBack', cardBack),
     card(-0.05, -0.2, 0, BACK, 'lab.cardQ', (g) => cardFace(g, 'Q', 'heart')),                                       // 6-8 on the table
     card(0.88, -0.2, 0, BACK, 'lab.card10', (g) => cardFace(g, '10', 'diamond')),
     card(1.81, -0.2, 0, BACK, 'lab.card7', (g) => cardFace(g, '7', 'club')),
@@ -521,7 +524,7 @@ export function buildForms(): Record<string, Form> {
     SLIDERS.forEach(([s], i) => {
       out.push(pr(onL(-2.45 + i * 2.45, -1.72, 2.2, 0.66, 0.02, BACK), `lab.slider${i}`, (g) => {
         g.text(s, 0.1, 0.18, { size: 0.1, weight: 500, mid: true, a: 0.6 });
-        g.box(0.1, 0.44, g.w - 0.2, 0.04, 'ink', 0.22, 0.02);
+        g.box(0.1, 0.45, g.w - 0.2, 0.016, 'ink', 1);
       }));
     });                                                                                                              // 10-12 three dials
     SLIDERS.forEach(([, v], i) => out.push(onL(-2.45 + i * 2.45 - 1.0 + v * 2.0, -1.86, 0.18, 0.18, 0.12, FORE)));   // 13-15 their knobs
@@ -537,7 +540,7 @@ export function buildForms(): Record<string, Form> {
     const out: Piece[] = [labWin(BACK), title('Interview Assistant', BACK), soon('Interview Assistant')];                                  // 0-2
     out.push(pr(onL(-1.35, 0, 4.5, 2.9, 0.06, FORE), 'lab.call', (g) => caller(g, g.w * 0.46)));                     // 3 the call
     out.push(pr(onT(0.25, -0.95, 1.0, 0.72, 0.05, BACK), 'lab.you', (g) => {
-      caller(g, g.w * 0.5, 0.7);
+      caller(g, g.w * 0.5);
       g.text('You', 0.08, g.h - 0.1, { size: 0.08, weight: 600, mid: true, ink: 'base' });
     }));                                                                                                             // 4 you
     out.push(pr(onT(-2.85, -1.18, 1.3, 0.3, 0.02, FORE), 'lab.name', words('Sam, candidate', { size: 0.11, weight: 500 }, 0.06)));   // 5 their name
@@ -582,7 +585,7 @@ export function buildForms(): Record<string, Form> {
       notes.push(pr(piece(x, 0.95 - r * 1.05, 0, 1.3, 0.92, 0.08, yours ? LIME : FORE), `idea.${c}.${r}`, (g) => {
         g.text(a, 0.12, 0.3, { size: yours ? 0.17 : 0.15, weight: yours || shipped ? 600 : 500, mid: true });
         if (b) g.text(b, 0.12, 0.52, { size: 0.15, weight: 500, mid: true });
-        if (shipped) tick(g, g.w - 0.36, g.h - 0.36, 0.24, 'ink', 0.85);
+        if (shipped) tick(g, g.w - 0.36, g.h - 0.36, 0.24, 'ink', 1);
         if (yours) g.text('+', g.w - 0.2, g.h - 0.2, { size: 0.24, weight: 500, align: 'center', mid: true });
       }));
     });
@@ -655,7 +658,7 @@ export function buildForms(): Record<string, Form> {
   const fq = at(0.1);
   const QL: TextOpts = { size: 0.1, weight: 500, a: 0.55 };
   const field = (s: string): Draw => (g) => {
-    g.frame(0, 0, g.w, g.h, 0.02, 'ink', 0.3);
+    g.frame(0, 0, g.w, g.h, 0.014, 'ink', 1);
     g.text(s, 0.14, g.h / 2, { size: 0.14, mid: true });
   };
   const questionnaire: Piece[] = [

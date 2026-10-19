@@ -1,16 +1,18 @@
 import * as THREE from 'three';
 import { createScroller, type Scroller } from '@/lib/smoothScroll';
 import { N, buildForms, clamp01, easeInOut, isLime, lerp, mixView, shown, smooth, type Form, type View } from './blockForms';
+import { KIND, LIGHTS, makeLook, pieceGeometry, pieceMaterials, type Lighting, type LookUniforms } from './blockLook';
 import { printAtlas, type Rect } from './blockPrints';
 
 /**
- * The site's one object: 64 pieces. In the hero they are a 4 × 4 × 4 cube of
- * clean white blocks, a few of them dotted and one lime corner; in every
- * other chapter they become the thing the chapter is about
- * (components/three/blockForms.ts), with what's on them printed, the way a
- * keycap carries its letter (blockPrints.ts): a launch site's words and
- * picture, a money app's numbers, a hand of cards, a house on a flyer. Each
- * chapter plays its steps on its own, on a loop.
+ * The site's one object: 64 pieces. In the hero they are a 3 × 3 × 3 cube
+ * around a glowing lime core (brushed aluminium corners, glossy edges, frosted
+ * glass windows onto the core); in every other chapter they become the thing
+ * the chapter is about (components/three/blockForms.ts), with what's on them
+ * printed, the way a keycap carries its letter (blockPrints.ts): a launch
+ * site's words and picture, a money app's numbers, a hand of cards, a house
+ * on a flyer. Each chapter plays its steps on its own, on a loop. How the
+ * pieces look, their materials and the studio light, is blockLook.ts.
  *
  * Each arrangement (a Form) names, for each piece, its place, size, turn,
  * material and print; a piece can also be put away (size 0). A move takes
@@ -20,11 +22,11 @@ import { printAtlas, type Rect } from './blockPrints';
  * goes (the page's 4px pixel, on screen, so it matches the rest). Moves
  * are timed, not scrubbed by the scroll, so they always play out whole.
  *
- * The object belongs to the page: its colours are the page's (white on a
- * black chapter, ink on a paper one; everything, prints too, is drawn in
- * those two colours and lime), it is sized to the words beside it, and when
- * the next chapter's edge scrolls up through it the edge cuts it, each part
- * matching the page behind it.
+ * The object belongs to the page: its plastic is the page's colours (white on
+ * a black chapter, ink on a paper one; prints too, with lime), it is sized to
+ * the words beside it, and when the next chapter's edge scrolls up through it
+ * the edge cuts it, each part matching the page behind it. Each chapter is lit
+ * its own way.
  *
  * On a desktop the page's scroll is eased (lib/smoothScroll.ts), and when you
  * arrive at a chapter while its object is still moving, the page eases to a
@@ -76,162 +78,6 @@ function hungarian(a: number[][]): number[] {
   return ans;
 }
 
-/* ---------------------------------------------------------------- shaders */
-
-const VS = /* glsl */ `
-attribute vec3 aKind;
-attribute vec4 aPrintA;
-attribute vec4 aPrintB;
-varying vec3 vN;
-varying vec3 vNo;
-varying vec3 vPos;
-varying vec3 vScale;
-varying vec3 vKind;
-varying vec3 vTx;
-varying vec3 vTy;
-varying vec3 vTz;
-varying vec4 vPrintA;
-varying vec4 vPrintB;
-void main() {
-  vScale = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
-  mat3 m = mat3(modelMatrix) * mat3(instanceMatrix);
-  vN = normalize(m * normal);
-  vTx = normalize(m * vec3(1.0, 0.0, 0.0));
-  vTy = normalize(m * vec3(0.0, 1.0, 0.0));
-  vTz = normalize(m * vec3(0.0, 0.0, 1.0));
-  vNo = normal;
-  vPos = position;
-  vKind = aKind;
-  vPrintA = aPrintA;
-  vPrintB = aPrintB;
-  gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
-}
-`;
-// Each piece is drawn in the page's two colours: FORE (white on a black
-// chapter, ink on a paper one) and BACK (the other), as moulded plastic in a
-// studio, after the brand's own renders (public/qbix-keyboard.png): soft
-// light from above, a gloss whose reflections show two soft boxes, and edges
-// rounded in the shading so they catch the light (less so on a thin piece);
-// no shadows smudged into the seams, no grain. The dots are printed, round,
-// in whole rows that fit the face; the cube's lime corner is lime jelly, lit
-// from within. What's printed on a piece's front face comes from the atlas
-// (uPrints: red the ink that stands out from the piece, green the lime),
-// under the gloss. When a piece changes material or print the next one comes
-// on across each face from left to right in a dithered band of the page's
-// large pixel, 4px on screen (aKind: from, to, how far; aPrintA, aPrintB:
-// where each print is in the atlas). The page's edge (uEdge, device pixels
-// from the bottom) cuts the object: below it, the next chapter's colours.
-const FS = /* glsl */ `
-uniform float uEdge;
-uniform float uHasEdge;
-uniform float uToneAbove;
-uniform float uToneBelow;
-uniform sampler2D uPrints;
-uniform float uPixel;
-varying vec3 vN;
-varying vec3 vNo;
-varying vec3 vPos;
-varying vec3 vScale;
-varying vec3 vKind;
-varying vec3 vTx;
-varying vec3 vTy;
-varying vec3 vTz;
-varying vec4 vPrintA;
-varying vec4 vPrintB;
-float bayer2(vec2 a) { a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
-float bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }
-// how much of the pixel lies where d < 0, over a footprint w
-float cover(float d, float w) { return clamp(0.5 - d / max(w, 1e-5), 0.0, 1.0); }
-
-// 0: the face colour (FORE), 1: the second colour (BACK)
-float pattern(float k, vec2 w, vec2 fs, vec2 fw) {
-  if (k < 0.5) return 0.0;                                   // FORE: plain
-  if (k > 4.5 && k < 5.5) return 1.0;                        // BACK: plain, in the other colour
-  if (min(fs.x, fs.y) < 0.3) return k < 3.5 ? 0.0 : 1.0;      // a thin edge: plain
-  if (k < 1.5 || (k > 5.5 && k < 6.5)) {                     // DOT, DOTB: round dots in whole rows
-    vec2 n = max(vec2(1.0), floor(fs / 0.225 + 0.5));
-    vec2 cell = fs / n;
-    vec2 g = (fract((w + fs * 0.5) / cell) - 0.5) * cell;
-    float c = cover(length(g) - 0.3 * min(cell.x, cell.y), max(fw.x, fw.y) * 1.2);
-    return k < 1.5 ? c : 1.0 - c;
-  }
-  return k < 4.5 ? 0.0 : 1.0;
-}
-
-void main() {
-  vec3 no = normalize(vNo);
-  vec3 a = abs(no);
-  vec2 loc, fs;
-  vec3 Tu, Tv;
-  float dep;
-  if (a.x > 0.5) { loc = vPos.zy; fs = vScale.zy; Tu = vTz; Tv = vTy; dep = vScale.x; }
-  else if (a.y > 0.5) { loc = vPos.xz; fs = vScale.xz; Tu = vTx; Tv = vTz; dep = vScale.y; }
-  else { loc = vPos.xy; fs = vScale.xy; Tu = vTx; Tv = vTy; dep = vScale.z; }
-  vec2 w = loc * fs;
-  vec2 fw = fwidth(w);
-  // the front face's place in its print, and how fast that changes across the screen (for the atlas's filtering)
-  vec2 fuv = vPos.xy + 0.5;
-  vec2 gx = dFdx(fuv), gy = dFdy(fuv);
-
-  // A small rounded edge, in the shading only: near an edge the normal turns
-  // toward the next face, so the edge catches the light like a moulded part.
-  vec2 dE = fs * 0.5 - abs(w);
-  float r = min(min(0.07, 0.35 * min(fs.x, fs.y)), 0.5 * dep);
-  vec2 bev = 1.0 - smoothstep(vec2(0.0), vec2(max(r, 1e-4)), dE);
-  vec3 n = normalize(normalize(vN) + (sign(w.x) * bev.x * Tu + sign(w.y) * bev.y * Tv) * 0.85);
-
-  // the material and print: the next ones coming on across the face, left to right, in the
-  // page's large pixel (4px on screen, whatever the piece's size): a dithered edge sweeping over
-  float th = (loc.x + 0.5) * 0.6 + bayer4(floor(gl_FragCoord.xy / uPixel)) * 0.4;
-  bool toB = vKind.z > th;
-  float k = toB ? vKind.y : vKind.x;
-  vec4 pr = toB ? vPrintB : vPrintA;
-  float tone = uHasEdge > 0.5 && gl_FragCoord.y < uEdge ? uToneBelow : uToneAbove;
-
-  // A studio: a big soft light above and to the front left, the sky, and two
-  // soft boxes that show in the reflections. Moulded plastic, gloss on top.
-  vec3 V = vec3(0.0, 0.0, 1.0);
-  float diff = max(dot(n, normalize(vec3(-0.4, 0.85, 0.55))), 0.0);
-  float wrap = 0.55 * diff + 0.45 * (0.5 + 0.5 * n.y);
-  vec3 R = reflect(-V, n);
-  float box1 = smoothstep(0.82, 0.95, dot(R, normalize(vec3(-0.45, 0.8, 0.4))));
-  float box2 = smoothstep(0.9, 0.985, dot(R, normalize(vec3(0.85, 0.3, 0.42))));
-  float env = 0.06 + 0.22 * clamp(R.y, 0.0, 1.0) + 0.95 * box1 + 0.45 * box2;
-  float nv = clamp(dot(n, V), 0.0, 1.0);
-  float fres = 0.045 + 0.955 * pow(1.0 - nv, 5.0);
-
-  vec3 whiteLit = vec3(0.955, 0.958, 0.948) * (0.72 + 0.3 * wrap);
-  vec3 inkLit = vec3(0.05, 0.055, 0.062) + vec3(0.135) * wrap;
-  vec3 fore = mix(whiteLit, inkLit, tone);
-  vec3 back = mix(inkLit, whiteLit, tone);
-  vec3 lime = vec3(0.722, 1.0, 0.0);
-  vec3 limeLit = lime * (0.74 + 0.3 * wrap);
-  bool pic = k > 6.5 && k < 7.5;   // a picture: white on any page, its print in ink
-  vec3 c = k > 8.5 ? limeLit : pic ? whiteLit : mix(fore, back, pattern(k, w, fs, fw));
-  if (k > 10.5) {
-    // lime jelly: lit from within, an inner square brighter, the rim deeper; a stronger sheen
-    vec2 q = abs(w) / (fs * 0.5);
-    float inner = 1.0 - smoothstep(0.36, 0.74, max(q.x, q.y));
-    c = lime * (0.5 + 0.34 * wrap + 0.34 * inner);
-    fres = 0.06 + 0.94 * pow(1.0 - nv, 3.0);
-  }
-  if (k > 9.5 && k < 10.5 && min(fs.x, fs.y) > 0.3) {
-    // the play button: an ink triangle on the lime, pointing right
-    vec2 t = w / (0.5 * min(fs.x, fs.y));
-    float inside = max(-0.32 - t.x, abs(t.y) * 1.25 + t.x * 0.62 - 0.36);
-    c = mix(c, vec3(0.06, 0.065, 0.075), cover(inside, max(fw.x, fw.y) * 2.0 / min(fs.x, fs.y)));
-  }
-  if (pr.z > 0.0 && no.z > 0.5) {
-    // the print: in the colour that stands out from the piece (ink on lime), and lime
-    vec3 p = textureGrad(uPrints, pr.xy + clamp(fuv, 0.0, 1.0) * pr.zw, gx * pr.zw, gy * pr.zw).rgb;
-    vec3 ink = k > 8.5 || pic ? inkLit : k > 4.5 ? fore : back;
-    c = c * max(0.0, 1.0 - p.r - p.g) + ink * p.r + limeLit * p.g;
-  }
-  c += vec3(fres * env);
-  gl_FragColor = vec4(c, 1.0);
-}
-`;
-
 /* -------------------------------------------------------------------- rig */
 
 type Box = { x: number; y: number; w: number; h: number };
@@ -253,39 +99,59 @@ type Move = {
 };
 
 /** Everything the pieces need to be drawn and moved, shared by the story and the figures. */
-function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
+function createRig(canvas: HTMLCanvasElement, maxDpr: number, fine: boolean) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.debug.checkShaderErrors = false;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
+  renderer.autoClear = false;   // draw() clears: see there
   const scene = new THREE.Scene();
   // A long lens: the pieces stay square, like things on a page, not in a photo.
   const camera = new THREE.PerspectiveCamera(18, 1.6, 1, 400);
   camera.position.set(0, 0, 120);
   const forms = buildForms();
+  const look = makeLook(renderer, scene, fine);
 
-  const geo = new THREE.BoxGeometry(1, 1, 1);
-  const kinds = new Float32Array(N * 3);
-  const kindAttr = new THREE.InstancedBufferAttribute(kinds, 3);
-  kindAttr.setUsage(THREE.DynamicDrawUsage);
-  geo.setAttribute('aKind', kindAttr);
-  // where each block's print is in the atlas, the last one's and the next one's
-  const printsA = new Float32Array(N * 4), printsB = new Float32Array(N * 4);
-  const printAAttr = new THREE.InstancedBufferAttribute(printsA, 4), printBAttr = new THREE.InstancedBufferAttribute(printsB, 4);
-  printAAttr.setUsage(THREE.DynamicDrawUsage);
-  printBAttr.setUsage(THREE.DynamicDrawUsage);
-  geo.setAttribute('aPrintA', printAAttr);
-  geo.setAttribute('aPrintB', printBAttr);
+  const geo = pieceGeometry();
+  const attr = (n: number, name: string) => {
+    const a = new THREE.InstancedBufferAttribute(new Float32Array(N * n), n);
+    a.setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute(name, a);
+    return a;
+  };
+  const sizeAttr = attr(3, 'aSize');        // each block's size (its shape is drawn from it)
+  const kindAttr = attr(3, 'aKind');        // its material: the last one, the next one, how far
+  const printAAttr = attr(4, 'aPrintA');    // where its prints are in the atlas, the last and the next
+  const printBAttr = attr(4, 'aPrintB');
+  const sizes = sizeAttr.array as Float32Array, kinds = kindAttr.array as Float32Array;
+  const printsA = printAAttr.array as Float32Array, printsB = printBAttr.array as Float32Array;
   const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
   blank.needsUpdate = true;
-  const U = { uEdge: { value: 0 }, uHasEdge: { value: 0 }, uToneAbove: { value: 0 }, uToneBelow: { value: 0 }, uPrints: { value: blank as THREE.Texture }, uPixel: { value: 4 * renderer.getPixelRatio() } };
-  const material = new THREE.ShaderMaterial({ uniforms: U, vertexShader: VS, fragmentShader: FS });
-  const mesh = new THREE.InstancedMesh(geo, material, N);
+  const U: LookUniforms = {
+    uEdge: { value: 0 },
+    uHasEdge: { value: 0 },
+    uToneAbove: { value: 0 },
+    uToneBelow: { value: 0 },
+    uPrints: { value: blank },
+    uPixel: { value: 4 * renderer.getPixelRatio() },   // the page's large pixel, on screen
+    uRound: { value: 0.07 },                             // the pieces' corner radius
+  };
+  const mats = pieceMaterials(U);
+  const mesh = new THREE.InstancedMesh(geo, mats.opaque, N);
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   mesh.frustumCulled = false;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.customDepthMaterial = mats.depth;
+  // the same blocks again, for the parts of them that are glass
+  const glassMesh = new THREE.InstancedMesh(geo, mats.glass, N);
+  glassMesh.instanceMatrix = mesh.instanceMatrix;
+  glassMesh.frustumCulled = false;
+  glassMesh.receiveShadow = false;   // frosted, a shadow on it wouldn't show
+  glassMesh.visible = false;
   const group = new THREE.Group();
-  group.add(mesh);
+  group.add(mesh, glassMesh);
   scene.add(group);
 
   // The blocks as they are now.
@@ -441,7 +307,7 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
   };
   const snapView = { p: [0, 0, 0] as number[], s: [0, 0, 0] as number[], q: new THREE.Quaternion() };
 
-  const m4 = new THREE.Matrix4(), p3 = new THREE.Vector3(), s3 = new THREE.Vector3();
+  const m4 = new THREE.Matrix4(), p3 = new THREE.Vector3(), s3 = new THREE.Vector3(1, 1, 1);
   /** Lay the blocks out for time t; returns the extents to fit (eased from the last form's to the next's). */
   const update = (t: number, q: THREE.Quaternion): Ext => {
     const m = move;
@@ -482,11 +348,13 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
       }
     }
     if (dirty) {
+      let glass = false;
       for (let k = 0; k < N; k++) {
         p3.set(cp[k * 3], cp[k * 3 + 1], cp[k * 3 + 2]);
-        s3.set(Math.max(1e-4, cs[k * 3]), Math.max(1e-4, cs[k * 3 + 1]), Math.max(1e-4, cs[k * 3 + 2]));
         m4.compose(p3, cq[k], s3);
         mesh.setMatrixAt(k, m4);
+        for (let a = 0; a < 3; a++) sizes[k * 3 + a] = cs[k * 3 + a];
+        if ((kA[k] === KIND.GLASS || kB[k] === KIND.GLASS) && cs[k * 3] > 0.01) glass = true;
         kinds[k * 3] = kA[k];
         kinds[k * 3 + 1] = kB[k];
         kinds[k * 3 + 2] = km[k];
@@ -497,9 +365,11 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
         }
       }
       mesh.instanceMatrix.needsUpdate = true;
+      sizeAttr.needsUpdate = true;
       kindAttr.needsUpdate = true;
       printAAttr.needsUpdate = true;
       printBAttr.needsUpdate = true;
+      glassMesh.visible = glass;
       dirty = false;
     }
     group.quaternion.copy(q);
@@ -530,7 +400,7 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
     camera.updateProjectionMatrix();
   };
   // Place the extents inside a box (CSS pixels of a canvas w × h), 0.9 of it.
-  const fitted = { x: 0, y: 0, s: 1, ok: false };
+  const fitted = { x: 0, y: 0, s: 1, r: 0, ok: false };
   const fit = (ext: Ext, box: Box, w: number, h: number, k: number) => {
     const visH = 2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360), visW = visH * camera.aspect;
     const pxToWorld = visH / h;
@@ -545,20 +415,63 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
     fitted.ok = true;
     group.position.set(fitted.x, fitted.y, 0);
     group.scale.setScalar(fitted.s);
+    fitted.r = 0.5 * Math.hypot(extW, extH) * fitted.s;
+  };
+  // Light the object where it is now.
+  const centre = new THREE.Vector3();
+  const light = (dt: number, t: number, want: Lighting, pointer: { x: number; y: number }) => {
+    centre.set(fitted.x, fitted.y, 0);
+    look.update(dt, t, want, pointer, centre, fitted.r || 10);
+  };
+  // The canvas is see-through, so it's cleared to nothing; but what glass sees behind it is the
+  // page's own colour (three.js would otherwise see a half-white there). What's behind glass is
+  // drawn at half the resolution (frosted, it's blurred anyway): three.js sizes that pass by the
+  // camera's viewport, which it uses for nothing else on an ordinary camera.
+  const bgDark = new THREE.Color('#08090a'), bgPaper = new THREE.Color('#f3f4f5');
+  const behindGlass = new THREE.Vector4();
+  (camera as unknown as { viewport?: THREE.Vector4 }).viewport = behindGlass;
+  const draw = () => {
+    const pr = renderer.getPixelRatio();
+    behindGlass.set(0, 0, Math.max(1, Math.round(cw * pr * 0.5)), Math.max(1, Math.round(chh * pr * 0.5)));
+    renderer.setRenderTarget(null);
+    renderer.setClearColor(0x000000, 0);
+    renderer.clear();
+    renderer.setClearColor(U.uToneAbove.value > 0.5 ? bgPaper : bgDark, 1);
+    renderer.render(scene, camera);
+  };
+  // If frames start to be missed (the GPU can't keep up at this resolution), draw at a lower one:
+  // a step down whenever a sixth of the last 48 frames came late; never back up.
+  const lates: boolean[] = [];
+  let lastFrame = 0;
+  const pace = (now: number) => {
+    const gap = now - lastFrame;
+    lastFrame = now;
+    if (gap <= 0 || gap > 250) return;   // a pause (a hidden tab, a long task), not the GPU
+    lates.push(gap > 21);
+    if (lates.length > 48) lates.shift();
+    const pr = renderer.getPixelRatio();
+    if (lates.length === 48 && lates.filter(Boolean).length > 8 && pr > 1) {
+      renderer.setPixelRatio(Math.max(1, pr - 0.25));
+      U.uPixel.value = 4 * renderer.getPixelRatio();
+      lates.length = 0;
+    }
   };
   const dispose = () => {
     disposed = true;
     geo.dispose();
-    material.dispose();
+    mats.opaque.dispose();
+    mats.glass.dispose();
+    mats.depth.dispose();
     tex?.dispose();
     blank.dispose();
+    look.dispose();
     renderer.dispose();
   };
   return {
-    renderer, scene, camera, U, forms,
+    renderer, U, forms,
     place, go, update, viewAt, endsAt, usePrints,
     busy: (t: number) => t < endsAt(),
-    resize, fit, dispose,
+    resize, fit, light, draw, pace, dispose,
   };
 }
 
@@ -583,8 +496,8 @@ type Chapter = {
 };
 
 export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts): StoryHandle {
-  const rig = createRig(canvas, fine ? 2 : 1.5);
-  const { renderer, scene, camera, U, forms } = rig;
+  const rig = createRig(canvas, fine ? 1.75 : 1.5, fine);
+  const { renderer, U, forms } = rig;
   const scroller: Scroller | null = fine && !reduced ? createScroller() : null;
 
   /* chapters, from the DOM */
@@ -689,6 +602,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     raf = 0;
     if (!running) return;
     raf = requestAnimationFrame(frame);
+    rig.pace(now);
     scroller?.step(now);   // the page first, so the object is placed against where the words are this frame
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
@@ -762,7 +676,12 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     U.uToneAbove.value = above;
     U.uToneBelow.value = below;
 
-    renderer.render(scene, camera);
+    // Each chapter is lit its own way (by its colour, then its place in the page); the light drifts and follows the pointer.
+    if (ci >= 0) {
+      const c = chapters[ci], set = LIGHTS[c.tone ? 'paper' : 'dark'];
+      rig.light(dt, t, set[ci % set.length], { x: mxS * sway, y: myS * sway });
+    }
+    rig.draw();
     if (!ready) { ready = true; onReady?.(); }
   };
 
@@ -812,8 +731,8 @@ export function mountBlockFigure(
   canvas: HTMLCanvasElement,
   { form, tone, reduced }: { form: string; tone: 'dark' | 'paper'; reduced: boolean },
 ): () => void {
-  const rig = createRig(canvas, 2);
-  const { renderer, scene, camera, U } = rig;
+  const rig = createRig(canvas, 1.75, true);
+  const { U } = rig;
   const seq = formList(rig, form);
   if (!seq.length) seq.push(rig.forms.cube);
   // gather once the prints are in (or soon anyway)
@@ -842,6 +761,7 @@ export function mountBlockFigure(
     raf = 0;
     if (!running) return;
     raf = requestAnimationFrame(frame);
+    rig.pace(now);
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     const t = now / 1000;
@@ -863,7 +783,8 @@ export function mountBlockFigure(
     q.setFromEuler(rot);
     const ext = rig.update(t, q);
     rig.fit(ext, { x: 0, y: 0, w, h }, w, h, 1 - Math.exp(-dt * 14));
-    renderer.render(scene, camera);
+    rig.light(dt, t, LIGHTS[tone][0], { x: mxS, y: myS });
+    rig.draw();
   };
   const setRunning = () => {
     const want = visible && !document.hidden;
