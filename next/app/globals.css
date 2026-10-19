@@ -2468,14 +2468,14 @@ html, body { overflow-x: clip; }
 }
 
 /* =============================================================================
-   CURSOR — a pixel arrow, and over anything you can click a lime pixel hand
-   (lime is the site's colour for an action). Drawn in 2px pixels, the page's
-   small pixel (the large one is 4px). The browser draws them, so they sit
-   exactly where the pointer is, with no lag.
+   CURSOR — a pixel arrow, and over anything you can click a pixel hand, both
+   white with an ink outline, so they read on black and on paper. Drawn in 2px
+   pixels, the page's small pixel (the large one is 4px). The browser draws
+   them, so they sit exactly where the pointer is, with no lag.
    ============================================================================= */
 :root {
   --cur-arrow: image-set(url('/cursor/arrow.png') 1x, url('/cursor/arrow@2x.png') 2x) 1 1, auto;
-  --cur-hand: image-set(url('/cursor/hand.png') 1x, url('/cursor/hand@2x.png') 2x) 10 1, pointer;
+  --cur-hand: image-set(url('/cursor/hand.png') 1x, url('/cursor/hand@2x.png') 2x) 12 1, pointer;
 }
 html { cursor: var(--cur-arrow); }
 a[href], button:not(:disabled), summary, label[for], select,
@@ -3734,12 +3734,13 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   /* Hides the bar while it waits off to the left of the phrase. */
   clip-path: inset(-0.06em -0.16em -0.1em);
 }
+/* --mark (0..1, set from the scroll by Marker.tsx): how far the bar has come. */
 .marker-bar {
   position: absolute;
   inset: -0.02em -0.14em -0.06em;
   overflow: hidden;
   background: var(--signal);
-  translate: -101% 0;
+  translate: calc((var(--mark, 1) - 1) * 101%) 0;
 }
 .marker-in {
   position: absolute;
@@ -3748,17 +3749,9 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
   line-height: inherit;
   white-space: nowrap;
   color: var(--signal-dark);
-  translate: 101% 0;
+  translate: calc((1 - var(--mark, 1)) * 101%) 0;
   user-select: none;
   -webkit-user-select: none;
-}
-.marker.is-in .marker-bar,
-.marker.is-in .marker-in {
-  translate: 0 0;
-  transition: translate 1.1s cubic-bezier(0.65, 0, 0.35, 1) var(--marker-delay, 0.15s);
-}
-@media (prefers-reduced-motion: reduce) {
-  .marker-bar, .marker-in { translate: 0 0; }
 }
 
 @media (max-width: 640px) {

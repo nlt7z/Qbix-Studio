@@ -108,7 +108,7 @@ export function AudienceSwitch({ delay = 0 }: { delay?: number }) {
           <span className="aud-knob" />
         </span>
         <button type="button" role="radio" aria-checked={!ai} tabIndex={ai ? -1 : 0} className={`aud-name${ai ? '' : ' is-on'}`} onClick={() => setAudience('business')}>
-          For local business
+          For business
         </button>
       </motion.span>
     </span>
