@@ -1,30 +1,29 @@
 import * as THREE from 'three';
 import { createScroller, type Scroller } from '@/lib/smoothScroll';
+import { N, buildForms, clamp01, easeInOut, isLime, lerp, mixView, shown, smooth, type Form, type View } from './blockForms';
+import { printAtlas, type Rect } from './blockPrints';
 
 /**
  * The site's one object: 64 pieces. In the hero they are a 4 × 4 × 4 cube of
- * clean white blocks, a few of them dotted and one lime corner (three
- * materials in all: plain, dots, lime); in every other chapter the pieces become
- * the thing the chapter is about, and play its steps on their own, on a loop:
- * a moodboard whose swatches fly into a website while its code is written
- * beside it, then the code folds into a phone and the address goes lime;
- * a brand built up plate by plate, the grid, colour and type, the mark,
- * pressed into one block; four products standing, two still in stripes;
- * every idea loose, then sorted by kind; a flyer, its five posts, its video.
- * Pictures are drawn in plain shapes (a sun over a hill), never a texture.
+ * clean white blocks, a few of them dotted and one lime corner; in every
+ * other chapter they become the thing the chapter is about
+ * (components/three/blockForms.ts), with what's on them printed, the way a
+ * keycap carries its letter (blockPrints.ts): a launch site's words and
+ * picture, a money app's numbers, a hand of cards, a house on a flyer. Each
+ * chapter plays its steps on its own, on a loop.
  *
- * Each arrangement (a Form) names, for each piece, its place, size, turn and
- * material; a piece can also be put away (size 0). A move takes every piece
- * from where it is to its place in the next form, each on its own beat (the
- * lime one first, then in the form's reading order), with a small arc, and
- * dissolves its material into the new one in coarse pixels as it goes. Moves
+ * Each arrangement (a Form) names, for each piece, its place, size, turn,
+ * material and print; a piece can also be put away (size 0). A move takes
+ * every piece from where it is to its place in the next form, each on its
+ * own beat (the lime one first, then in the form's reading order), with a
+ * small arc, its new material and print wiping across it as it goes. Moves
  * are timed, not scrubbed by the scroll, so they always play out whole.
  *
  * The object belongs to the page: its colours are the page's (white on a
- * black chapter, ink on a paper one; every material is drawn in those two
- * colours), it is sized to the words beside it, and when the next chapter's
- * edge scrolls up through it the edge cuts it, each part matching the page
- * behind it.
+ * black chapter, ink on a paper one; everything, prints too, is drawn in
+ * those two colours and lime), it is sized to the words beside it, and when
+ * the next chapter's edge scrolls up through it the edge cuts it, each part
+ * matching the page behind it.
  *
  * On a desktop the page's scroll is eased (lib/smoothScroll.ts), and when you
  * arrive at a chapter while its object is still moving, the page eases to a
@@ -42,314 +41,6 @@ type Opts = {
   fine: boolean;
   onReady?: () => void;
 };
-
-const N = 64;   // the cube is 4 × 4 × 4; the scenes use as many as they need and put the rest away
-
-// Materials. FORE is the colour that stands out from the page (white on
-// black, ink on paper), BACK the page's own; the patterns mix the two.
-// Three materials: plain, dots, lime. (FORE and BACK are the plain in either
-// colour; DOTB the dots on the other; PHOTO a picture drawn in plain shapes;
-// PLAY the lime with a play mark.)
-const K = { FORE: 0, DOT: 1, PHOTO: 4, BACK: 5, DOTB: 6, LIME: 9, PLAY: 10, JELLY: 11 } as const;
-const isLime = (k: number) => k === K.LIME || k === K.PLAY || k === K.JELLY;
-
-type Vec = [number, number, number];
-type View = { yaw: number; pitch: number };
-type Piece = { p: Vec; s: Vec; q: THREE.Quaternion; k: number; spare?: boolean };
-type Form = {
-  pieces: Piece[];
-  view: View;
-  lift: Vec;          // the arc a piece takes on its way in
-  hold: number;       // seconds it stays before a chapter's next form
-  step: number | null;
-  rank: Float32Array; // each piece's place in the move's order, 0..1
-  lime: number;       // the lime piece, or -1
-};
-
-const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
-const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
-const smooth = (a: number, b: number, x: number) => {
-  const t = clamp01((x - a) / (b - a));
-  return t * t * (3 - 2 * t);
-};
-const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
-const mixView = (a: View, b: View, k: number): View => ({ yaw: lerp(a.yaw, b.yaw, k), pitch: lerp(a.pitch, b.pitch, k) });
-
-/* ------------------------------------------------------------------ forms */
-
-const euler = new THREE.Euler();
-const piece = (x: number, y: number, z: number, w = 0.9, h = 0.9, d = 0.9, k: number = K.FORE, rz = 0, rx = 0, ry = 0): Piece => ({
-  p: [x, y, z],
-  s: [w, h, d],
-  q: new THREE.Quaternion().setFromEuler(euler.set(rx, ry, rz)),
-  k,
-});
-/** A piece put away: nothing to see, at the place it will grow from. */
-const hidden = (p: Vec): Piece => ({ p: [p[0], p[1], p[2]], s: [0, 0, 0], q: new THREE.Quaternion(), k: K.FORE });
-const hideAll = (ps: Piece[], at?: Vec) => ps.map((p) => hidden(at ?? p.p));
-const shown = (p: Piece) => p.s[0] > 0.01 && p.s[1] > 0.01 && p.s[2] > 0.01;
-/** A piece a form doesn't use: whichever block lands here is put away where it is. */
-const spare = (): Piece => ({ p: [0, 0, 0], s: [0, 0, 0], q: new THREE.Quaternion(), k: K.FORE, spare: true });
-
-function makeForm(
-  pieces: Piece[],
-  view: View,
-  o: { lift?: Vec; hold?: number; step?: number | null; order?: 'role' | 'bottom' } = {},
-): Form {
-  if (pieces.length > N) {
-    console.error(`[blocks] a form has ${pieces.length} pieces, more than ${N}`);
-    pieces.length = N;
-  }
-  while (pieces.length < N) pieces.push(spare());
-  for (let i = 0; i < N; i++) if (!pieces[i]) pieces[i] = spare();
-  const rank = new Float32Array(N);
-  if (o.order === 'bottom') {
-    const idx = pieces.map((_, i) => i).sort((a, b) => pieces[a].p[1] - pieces[b].p[1] || pieces[a].p[2] - pieces[b].p[2] || pieces[a].p[0] - pieces[b].p[0]);
-    idx.forEach((r, i) => (rank[r] = i / (N - 1)));
-  } else {
-    for (let i = 0; i < N; i++) rank[i] = i / (N - 1);
-  }
-  return {
-    pieces,
-    view,
-    lift: o.lift ?? [0, 0.8, 0.3],
-    hold: o.hold ?? Infinity,
-    step: o.step ?? null,
-    rank,
-    lime: pieces.findIndex((p) => isLime(p.k) && shown(p)),
-  };
-}
-
-function buildForms(): Record<string, Form> {
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const { FORE, DOT, PHOTO, BACK, DOTB, LIME, PLAY, JELLY } = K;
-  const F: Record<string, Form> = {};
-
-  /* The cube: 4 × 4 × 4 white blocks, a few of them dotted (one in five, never two side by
-     side: (x + 2y + 3z) mod 5 changes along every axis), its top front corner lime. */
-  const cube: Piece[] = [];
-  for (let y = 0; y < 4; y++) for (let z = 0; z < 4; z++) for (let x = 0; x < 4; x++) {
-    const k = x === 3 && y === 3 && z === 3 ? JELLY : (x + 2 * y + 3 * z) % 5 === 0 ? DOT : FORE;
-    cube.push(piece(x - 1.5, y - 1.5, z - 1.5, 0.9, 0.9, 0.9, k));
-  }
-  F.cube = makeForm(cube, { yaw: -0.62, pitch: 0.4 }, { order: 'bottom', lift: [0, 0.8, 0.2] });
-  // The cube's own blocks, loose and turned every which way (where the hero's gathering starts).
-  F.scatter = makeForm(
-    cube.map((c) => piece((rnd() - 0.5) * 11, (rnd() - 0.5) * 7, (rnd() - 0.5) * 7, 0.9, 0.9, 0.9, c.k, (rnd() - 0.5) * 2, (rnd() - 0.5) * 2, (rnd() - 0.5) * 2)),
-    { yaw: -0.62, pitch: 0.4 },
-  );
-
-  /* Design: a moodboard, then the site (and its code), then the site live on its domain, with its phone. */
-  const FRONT = 0.15;   // the window's front face
-  const on = (x: number, y: number, w: number, h: number, d: number, k: number) => piece(x, y, FRONT + d / 2 + 0.01, w, h, d, k);
-  const browser = (urlK: number, buttonK: number): Piece[] => [
-    piece(0, 0, 0, 8, 5.4, 0.3, FORE),            // 0 the window
-    on(0.55, 2.28, 4.8, 0.38, 0.08, urlK),       // 1 the address
-    on(-3.55, 2.28, 0.2, 0.2, 0.08, BACK),       // 2-4 the window's buttons
-    on(-3.19, 2.28, 0.2, 0.2, 0.08, BACK),
-    on(-2.83, 2.28, 0.2, 0.2, 0.08, BACK),
-    on(-3.4, 1.55, 0.4, 0.4, 0.1, BACK),         // 5 the logo
-    on(1.7, 1.55, 0.62, 0.12, 0.06, BACK),       // 6-8 the menu
-    on(2.6, 1.55, 0.62, 0.12, 0.06, BACK),
-    on(3.5, 1.55, 0.62, 0.12, 0.06, BACK),
-    on(-1.95, 0.92, 3.3, 0.42, 0.1, BACK),       // 9-10 the headline
-    on(-2.45, 0.36, 2.3, 0.42, 0.1, BACK),
-    on(-2.05, -0.2, 3.1, 0.1, 0.05, BACK),       // 11-12 a line of text
-    on(-2.3, -0.42, 2.6, 0.1, 0.05, BACK),
-    on(-2.95, -0.98, 1.3, 0.42, 0.14, buttonK),  // 13 the button
-    on(1.95, 0.2, 3.3, 2.2, 0.12, PHOTO),        // 14 the picture
-    on(-2.47, -1.95, 2.25, 0.9, 0.1, DOTB),      // 15-17 three cards
-    on(0, -1.95, 2.25, 0.9, 0.1, BACK),
-    on(2.47, -1.95, 2.25, 0.9, 0.1, DOTB),
-  ];
-  const site = browser(BACK, LIME);
-  site.push(piece(2.3, -0.75, 1.3, 3.6, 2.7, 0.2, BACK));   // 18 the code, in a window in front
-  const LEN = [1.5, 2.1, 1.7, 1.0, 2.3, 1.3, 1.8, 0.8];
-  const IND = [0, 0.3, 0.6, 0.6, 0.3, 0.6, 0.3, 0];
-  LEN.forEach((l, i) => site.push(piece(0.8 + IND[i] + l / 2, 0.22 - i * 0.27, 1.44, l, 0.11, 0.06, FORE)));   // 19-26 its lines
-  F.site = makeForm(site, { yaw: -0.28, pitch: 0.18 }, { lift: [0, 0.25, 1.2], hold: 2.6, step: 1 });
-
-  const live = browser(LIME, BACK);
-  const PZ = 1.36;   // the phone's face
-  const ph = (x: number, y: number, w: number, h: number, d: number, k: number) => piece(x, y, PZ + d / 2 + 0.01, w, h, d, k);
-  live.push(
-    piece(3.6, -0.85, 1.25, 2.1, 3.9, 0.22, BACK),   // 18 the phone
-    ph(3.6, 0.85, 0.5, 0.09, 0.04, FORE),             // 19 its speaker
-    ph(3.6, 0.15, 1.75, 1.05, 0.06, PHOTO),           // 20 the picture
-    ph(3.4, -0.6, 1.35, 0.2, 0.06, FORE),             // 21-22 the headline
-    ph(3.25, -0.88, 1.05, 0.2, 0.06, FORE),
-    ph(3.4, -1.18, 1.35, 0.07, 0.04, FORE),           // 23-24 text
-    ph(3.3, -1.33, 1.15, 0.07, 0.04, FORE),
-    ph(3.12, -1.72, 0.8, 0.26, 0.08, FORE),           // 25 the button
-    ph(3.6, -2.35, 1.75, 0.55, 0.06, DOT),            // 26 a card
-  );
-  F.live = makeForm(live, { yaw: -0.4, pitch: 0.2 }, { lift: [0.5, 0.2, 1.0], hold: 2.8, step: 2 });
-
-  const mood: Piece[] = new Array(27);   // the moodboard's 27 (the rest are spare)
-  mood[0] = piece(0, 0, 0, 8.4, 5.6, 0.26, FORE);   // the board (it becomes the window)
-  const swatch = (i: number, x: number, y: number, w: number, h: number, k: number, rz: number) => {
-    mood[i] = piece(x, y + 0.2, 0.13 + 0.05 + i * 0.003, w, h, 0.08, k, rz);
-  };
-  swatch(14, -2.45, 0.6, 2.6, 3.0, PHOTO, -0.03);    // a photograph (it becomes the picture)
-  swatch(18, 0.25, 1.35, 2.2, 1.45, PHOTO, 0.035);    // another (it becomes the code's window)
-  swatch(9, 2.85, 1.45, 1.9, 1.25, BACK, -0.04);      // a type specimen (lines on it below)
-  swatch(10, 3.05, -0.25, 1.5, 1.1, DOTB, 0.04);
-  swatch(15, -0.25, -0.35, 1.5, 1.2, BACK, 0.05);
-  swatch(16, 1.35, -0.3, 1.25, 1.05, BACK, -0.06);
-  swatch(17, -3.3, -1.95, 0.95, 0.95, DOTB, 0.06);
-  swatch(1, -2.35, -1.95, 0.62, 0.62, DOTB, -0.05);    // a row of chips
-  swatch(2, -1.61, -1.95, 0.62, 0.62, BACK, 0.03);
-  swatch(3, -0.87, -1.95, 0.62, 0.62, DOTB, -0.02);
-  swatch(4, -0.13, -1.95, 0.62, 0.62, BACK, 0.05);
-  swatch(13, 0.8, -1.85, 0.8, 0.8, LIME, 0.09);        // the one lime chip (it becomes the button)
-  swatch(11, 1.85, -1.8, 1.05, 0.8, BACK, -0.05);      // notes
-  swatch(12, 3.1, -1.85, 1.35, 0.8, BACK, 0.04);
-  // Lines of type on the specimen and on a note: they become the lines of code.
-  const onTile = (i: number, tile: number, ox: number, oy: number, w: number, h: number) => {
-    const T = mood[tile], rz = new THREE.Euler().setFromQuaternion(T.q).z, c = Math.cos(rz), sn = Math.sin(rz);
-    mood[i] = piece(T.p[0] + ox * c - oy * sn, T.p[1] + ox * sn + oy * c, T.p[2] + T.s[2] / 2 + 0.03, w, h, 0.05, FORE, rz);
-  };
-  onTile(19, 9, -0.2, 0.3, 1.2, 0.2);
-  onTile(20, 9, -0.1, 0.0, 1.4, 0.07);
-  onTile(21, 9, -0.25, -0.18, 1.1, 0.07);
-  onTile(22, 12, -0.12, 0.12, 0.9, 0.07);
-  onTile(23, 12, -0.22, -0.06, 0.7, 0.07);
-  for (const i of [5, 6, 7, 8, 24, 25, 26]) mood[i] = hidden(site[i].p);
-  F.moodboard = makeForm(mood, { yaw: -0.2, pitch: 0.14 }, { lift: [0, 0.3, 1.0], hold: 2.2, step: 0 });
-
-  /* Brand: plate by plate, the grid, colour and type, the mark; then pressed into one block. */
-  const plate = (y: number, kinds: number[], thick = 0.3, wide = 0.94): Piece[] => {
-    const out: Piece[] = [];
-    let i = 0;
-    for (const z of [-1, 0, 1]) for (const x of [-1, 0, 1]) out.push(piece(x, y, z, wide, thick, wide, kinds[i++]));
-    return out;
-  };
-  const gridK = new Array<number>(9).fill(FORE);
-  const typeK = [DOT, FORE, BACK, FORE, DOT, FORE, BACK, FORE, DOT];
-  const markK = [FORE, FORE, FORE, FORE, LIME, FORE, FORE, FORE, FORE];
-  const brandLift: Vec = [0, 1.0, 0];
-  // The grid plate's tiles stand a little apart, so its seams read as the grid.
-  const gridPlate = () => plate(-1.1, gridK, 0.3, 0.84);
-  F.grid = makeForm([...gridPlate(), ...hideAll(plate(1.4, gridK)), ...hideAll(plate(2.8, gridK))], { yaw: -0.5, pitch: 0.62 }, { lift: brandLift, hold: 1.8, step: 0 });
-  F.colortype = makeForm([...gridPlate(), ...plate(0, typeK), ...hideAll(plate(2.8, gridK))], { yaw: -0.55, pitch: 0.5 }, { lift: brandLift, hold: 1.9, step: 1 });
-  F.mark = makeForm([...gridPlate(), ...plate(0, typeK), ...plate(1.1, markK)], { yaw: -0.6, pitch: 0.44 }, { lift: brandLift, hold: 1.6, step: 2 });
-  F.pressed = makeForm([...plate(-1, gridK, 0.9, 0.9), ...plate(0, typeK, 0.9, 0.9), ...plate(1, markK, 0.9, 0.9)], { yaw: -0.62, pitch: 0.4 }, { lift: [0, 0.3, 0], hold: 2.6, step: 2 });
-
-  /* Products: four towers, in the list's order; the two still on the way are in the page's own colour. */
-  const towers: Piece[] = [];
-  const block = (x: number, y: number, z: number, k: number) => towers.push(piece(x, y - 1.5, z, 0.9, 0.9, 0.9, k));
-  const strataK = [FORE, DOT, DOT, FORE, DOT, FORE, FORE, DOT, FORE, DOT, DOT, LIME];
-  let n = 0;
-  for (let y = 0; y < 3; y++) for (const z of [-0.5, 0.5]) for (const x of [-3.3, -2.3]) block(x, y, z, strataK[n++]);
-  const biddingK = [DOT, FORE, FORE, DOT, DOT, FORE, FORE, DOT];
-  n = 0;
-  for (let y = 0; y < 4; y++) for (const x of [-0.95, 0.05]) block(x, y, 0, biddingK[n++]);
-  for (let y = 0; y < 4; y++) block(1.4, y, 0, BACK);
-  for (let y = 0; y < 3; y++) block(2.75, y, 0, BACK);
-  F.towers = makeForm(towers, { yaw: -0.5, pitch: 0.3 }, { order: 'bottom', lift: [0, 1.0, 0] });
-
-  /* About: every idea, loose; then every one of them kept, sorted by kind (plain, dotted, the lime). */
-  const ideaK = [...new Array<number>(16).fill(FORE), ...new Array<number>(10).fill(DOT), LIME];
-  const sorted: Piece[] = [];
-  n = 0;
-  for (let x = -4; x <= 4; x++) for (const z of [-1, 0, 1]) sorted.push(piece(x, 0, z, 0.9, 0.9, 0.9, ideaK[n++]));
-  // loose: a jittered lattice, shuffled, so no two ideas overlap
-  const cells: Vec[] = [];
-  for (let x = 0; x < 6; x++) for (let y = 0; y < 3; y++) for (let z = 0; z < 2; z++) cells.push([(x - 2.5) * 1.45, (y - 1) * 1.45, (z - 0.5) * 1.6]);
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [cells[i], cells[j]] = [cells[j], cells[i]];
-  }
-  const field = ideaK.map((k, i) => {
-    const c = cells[i];
-    return piece(c[0] + (rnd() - 0.5) * 0.4, c[1] + (rnd() - 0.5) * 0.4, c[2] + (rnd() - 0.5) * 0.4, 0.9, 0.9, 0.9, k, (rnd() - 0.5) * 1.1, (rnd() - 0.5) * 1.1, (rnd() - 0.5) * 1.1);
-  });
-  F.field = makeForm(field, { yaw: -0.35, pitch: 0.5 }, { lift: [0, 0.8, 0], hold: 2.2 });
-  F.sorted = makeForm(sorted, { yaw: -0.35, pitch: 0.85 }, { lift: [0, 1.2, 0], hold: 3.0 });
-
-  /* Listing kit: the print flyer, then its five posts beside it, then its video. */
-  const FZ = 0.08;
-  const fo = (dx: number, x: number, y: number, w: number, h: number, d: number, k: number) => piece(dx + x, y, FZ + d / 2 + 0.01, w, h, d, k);
-  const flyer = (dx: number, tagK: number): Piece[] => [
-    piece(dx, 0, 0, 3.2, 4.4, 0.16, FORE),       // the sheet
-    fo(dx, 0, 0.75, 2.8, 2.2, 0.06, PHOTO),      // the photograph
-    fo(dx, -0.82, 1.55, 1.0, 0.32, 0.1, tagK),   // Just Listed
-    fo(dx, -0.35, -0.72, 2.1, 0.34, 0.06, BACK), // the address
-    fo(dx, -0.85, -1.2, 1.1, 0.26, 0.06, BACK),  // the price
-    fo(dx, -0.3, -1.6, 2.2, 0.08, 0.04, BACK),   // details
-    fo(dx, -0.45, -1.8, 1.9, 0.08, 0.04, BACK),
-    fo(dx, 1.15, -1.7, 0.5, 0.5, 0.06, DOTB),    // the agent's mark
-  ];
-  const POSTS: [number, number][] = [[0.35, 0.95], [1.9, 0.95], [3.45, 0.95], [1.1, -0.65], [2.65, -0.65]];
-  const posts = (): Piece[] =>
-    POSTS.flatMap(([x, y]) => [
-      piece(x, y, 0, 1.4, 1.4, 0.12, FORE),
-      piece(x, y + 0.17, 0.1, 1.2, 0.85, 0.06, PHOTO),
-      piece(x - 0.2, y - 0.47, 0.09, 0.8, 0.09, 0.04, BACK),
-    ]);
-  const VIDEO: Vec = [1.6, 0.3, 0];
-  const video = (): Piece[] => [
-    piece(1.6, 0.2, 0, 4.4, 2.48, 0.14, FORE),          // the frame
-    piece(1.6, 0.3, 0.11, 4.1, 1.95, 0.06, PHOTO),      // the film
-    piece(1.6, 0.3, 0.21, 0.66, 0.66, 0.12, PLAY),      // play
-    piece(1.6, -0.82, 0.1, 4.1, 0.06, 0.04, BACK),      // its progress
-  ];
-  const kitLift: Vec = [0, 0.3, 1.0];
-  F.flyer = makeForm([...flyer(0, LIME), ...hideAll(posts()), ...hideAll(video(), VIDEO)], { yaw: -0.24, pitch: 0.12 }, { lift: kitLift, hold: 2.2, step: 0 });
-  F.posts = makeForm([...flyer(-2.6, LIME), ...posts(), ...hideAll(video(), VIDEO)], { yaw: -0.22, pitch: 0.12 }, { lift: kitLift, hold: 2.4, step: 1 });
-  F.video = makeForm([...flyer(-2.6, BACK), ...hideAll(posts(), VIDEO), ...video()], { yaw: -0.24, pitch: 0.12 }, { lift: kitLift, hold: 2.6, step: 2 });
-
-  /* A practice website: the questionnaire, then the calm homepage, then live, with its phone. */
-  const QZ = 0.1;
-  const fq = (x: number, y: number, w: number, h: number, d: number, k: number) => piece(x, y, QZ + d / 2 + 0.01, w, h, d, k);
-  const questionnaire: Piece[] = [
-    piece(0, 0, 0, 3.4, 4.6, 0.2, FORE),         // 0 the form (it becomes the window)
-    fq(-0.6, 1.8, 1.8, 0.28, 0.06, BACK),        // 1 its title
-    fq(-1.3, -0.45, 0.24, 0.24, 0.06, BACK),     // 2-4 three choices
-    fq(-1.3, -0.85, 0.24, 0.24, 0.06, BACK),
-    fq(-1.3, -1.25, 0.24, 0.24, 0.06, BACK),
-    fq(-0.95, 1.2, 1.1, 0.09, 0.04, BACK),       // 5 a question
-    fq(-1.05, 0.38, 0.9, 0.09, 0.04, BACK),      // 6 a question
-    fq(0, 0.02, 2.9, 0.06, 0.04, BACK),          // 7 an answer line
-    fq(0, 0.84, 2.9, 0.06, 0.04, BACK),          // 8 an answer line
-    fq(-0.35, -0.45, 1.6, 0.08, 0.04, BACK),     // 9-10 the choices' words
-    fq(-0.45, -0.85, 1.4, 0.08, 0.04, BACK),
-    fq(-0.75, -1.85, 1.5, 0.44, 0.12, LIME),     // 11 send
-    fq(-0.5, -1.25, 1.3, 0.08, 0.04, BACK),      // 12 the last choice's words
-  ];
-  const calm = (urlK: number, buttonK: number): Piece[] => [
-    piece(0, 0, 0, 8, 5.4, 0.3, FORE),
-    on(0.55, 2.28, 4.8, 0.38, 0.08, urlK),
-    on(-3.55, 2.28, 0.2, 0.2, 0.08, BACK),
-    on(-3.19, 2.28, 0.2, 0.2, 0.08, BACK),
-    on(-2.83, 2.28, 0.2, 0.2, 0.08, BACK),
-    on(-3.4, 1.55, 0.4, 0.4, 0.1, BACK),
-    on(2.6, 1.55, 0.62, 0.12, 0.06, BACK),
-    on(3.5, 1.55, 0.62, 0.12, 0.06, BACK),
-    on(-1.85, 0.75, 3.5, 0.46, 0.1, BACK),
-    on(-2.3, 0.15, 2.6, 0.46, 0.1, BACK),
-    on(-2.05, -0.5, 3.1, 0.1, 0.05, BACK),
-    on(-2.95, -1.25, 1.3, 0.42, 0.14, buttonK),
-    on(2.0, -0.25, 3.0, 3.0, 0.12, PHOTO),
-  ];
-  const ph2 = (x: number, y: number, w: number, h: number, d: number, k: number) => piece(x, y, PZ + d / 2 + 0.01, w, h, d, k);
-  const phone = (): Piece[] => [
-    piece(3.05, -0.8, 1.25, 1.7, 3.6, 0.22, BACK),
-    ph2(3.05, 0.25, 1.4, 0.95, 0.06, PHOTO),
-    ph2(2.9, -0.48, 1.1, 0.18, 0.06, FORE),
-    ph2(2.78, -0.72, 0.86, 0.18, 0.06, FORE),
-    ph2(2.9, -1.0, 1.1, 0.06, 0.04, FORE),
-    ph2(2.68, -1.45, 0.66, 0.24, 0.08, FORE),
-    ph2(3.05, 0.78, 0.4, 0.07, 0.04, FORE),
-  ];
-  const spare = (at: Vec) => Array.from({ length: 7 }, () => hidden(at));
-  F.questionnaire = makeForm([...questionnaire, ...hideAll(phone()), ...spare([0, 0, 0])], { yaw: -0.24, pitch: 0.14 }, { lift: kitLift, hold: 2.2, step: 0 });
-  F.homepage = makeForm([...calm(BACK, LIME), ...hideAll(phone()), ...spare([0, 0, 0])], { yaw: -0.28, pitch: 0.18 }, { lift: kitLift, hold: 2.6, step: 1 });
-  F.golive = makeForm([...calm(LIME, BACK), ...phone(), ...spare([3.05, -0.8, 0])], { yaw: -0.4, pitch: 0.2 }, { lift: [0.5, 0.2, 1.0], hold: 2.8, step: 2 });
-
-  return F;
-}
 
 /** The least travel from the pieces as they are to a form's places (the Hungarian method). */
 function hungarian(a: number[][]): number[] {
@@ -388,6 +79,8 @@ function hungarian(a: number[][]): number[] {
 
 const VS = /* glsl */ `
 attribute vec3 aKind;
+attribute vec4 aPrintA;
+attribute vec4 aPrintB;
 varying vec3 vN;
 varying vec3 vNo;
 varying vec3 vPos;
@@ -396,6 +89,8 @@ varying vec3 vKind;
 varying vec3 vTx;
 varying vec3 vTy;
 varying vec3 vTz;
+varying vec4 vPrintA;
+varying vec4 vPrintB;
 void main() {
   vScale = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
   mat3 m = mat3(modelMatrix) * mat3(instanceMatrix);
@@ -406,6 +101,8 @@ void main() {
   vNo = normal;
   vPos = position;
   vKind = aKind;
+  vPrintA = aPrintA;
+  vPrintB = aPrintB;
   gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
 }
 `;
@@ -413,18 +110,21 @@ void main() {
 // chapter, ink on a paper one) and BACK (the other), as moulded plastic in a
 // studio, after the brand's own renders (public/qbix-keyboard.png): soft
 // light from above, a gloss whose reflections show two soft boxes, and edges
-// rounded in the shading so they catch the light; no shadows smudged into
-// the seams, no grain. The dots are printed, round, in whole rows that fit
-// the face; the cube's lime corner is lime jelly, lit from within. A
-// picture is drawn in plain shapes, a sun over a hill. When a piece changes
-// material it dissolves into the next in coarse pixels (aKind: from, to, how
-// far). The page's edge (uEdge, device pixels from the bottom) cuts the
-// object: below it, the next chapter's colours.
+// rounded in the shading so they catch the light (less so on a thin piece);
+// no shadows smudged into the seams, no grain. The dots are printed, round,
+// in whole rows that fit the face; the cube's lime corner is lime jelly, lit
+// from within. What's printed on a piece's front face comes from the atlas
+// (uPrints: red the ink that stands out from the piece, green the lime),
+// under the gloss. When a piece changes material or print the next one wipes
+// across each face, a hard edge from left to right (aKind: from, to, how
+// far; aPrintA, aPrintB: where each print is in the atlas). The page's edge (uEdge, device pixels
+// from the bottom) cuts the object: below it, the next chapter's colours.
 const FS = /* glsl */ `
 uniform float uEdge;
 uniform float uHasEdge;
 uniform float uToneAbove;
 uniform float uToneBelow;
+uniform sampler2D uPrints;
 varying vec3 vN;
 varying vec3 vNo;
 varying vec3 vPos;
@@ -433,8 +133,8 @@ varying vec3 vKind;
 varying vec3 vTx;
 varying vec3 vTy;
 varying vec3 vTz;
-float bayer2(vec2 a) { a = floor(a); return fract(a.x / 2.0 + a.y * a.y * 0.75); }
-float bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }
+varying vec4 vPrintA;
+varying vec4 vPrintB;
 // how much of the pixel lies where d < 0, over a footprint w
 float cover(float d, float w) { return clamp(0.5 - d / max(w, 1e-5), 0.0, 1.0); }
 
@@ -450,15 +150,6 @@ float pattern(float k, vec2 w, vec2 fs, vec2 fw) {
     float c = cover(length(g) - 0.3 * min(cell.x, cell.y), max(fw.x, fw.y) * 1.2);
     return k < 1.5 ? c : 1.0 - c;
   }
-  if (k > 3.5 && k < 4.5) {                                  // PHOTO: a picture in plain shapes, a sun over a hill
-    if (max(fs.x, fs.y) <= 1.0) return 1.0;
-    vec2 uv = w / fs + 0.5;
-    float pu = max(fw.x / fs.x, fw.y / fs.y) * 1.5;
-    float hill = max(0.3 + 0.13 * sin(uv.x * 4.0 + 0.6), 0.18 + 0.09 * sin(uv.x * 7.0 + 2.4));
-    float land = cover(uv.y - hill, pu);
-    float sun = cover(length((uv - vec2(0.72, 0.7)) * vec2(fs.x / fs.y, 1.0)) - 0.12, pu);
-    return 1.0 - max(land, sun);
-  }
   return k < 4.5 ? 0.0 : 1.0;
 }
 
@@ -467,22 +158,28 @@ void main() {
   vec3 a = abs(no);
   vec2 loc, fs;
   vec3 Tu, Tv;
-  if (a.x > 0.5) { loc = vPos.zy; fs = vScale.zy; Tu = vTz; Tv = vTy; }
-  else if (a.y > 0.5) { loc = vPos.xz; fs = vScale.xz; Tu = vTx; Tv = vTz; }
-  else { loc = vPos.xy; fs = vScale.xy; Tu = vTx; Tv = vTy; }
+  float dep;
+  if (a.x > 0.5) { loc = vPos.zy; fs = vScale.zy; Tu = vTz; Tv = vTy; dep = vScale.x; }
+  else if (a.y > 0.5) { loc = vPos.xz; fs = vScale.xz; Tu = vTx; Tv = vTz; dep = vScale.y; }
+  else { loc = vPos.xy; fs = vScale.xy; Tu = vTx; Tv = vTy; dep = vScale.z; }
   vec2 w = loc * fs;
   vec2 fw = fwidth(w);
+  // the front face's place in its print, and how fast that changes across the screen (for the atlas's filtering)
+  vec2 fuv = vPos.xy + 0.5;
+  vec2 gx = dFdx(fuv), gy = dFdy(fuv);
 
   // A small rounded edge, in the shading only: near an edge the normal turns
   // toward the next face, so the edge catches the light like a moulded part.
   vec2 dE = fs * 0.5 - abs(w);
-  float r = min(0.07, 0.35 * min(fs.x, fs.y));
-  vec2 bev = 1.0 - smoothstep(vec2(0.0), vec2(r), dE);
+  float r = min(min(0.07, 0.35 * min(fs.x, fs.y)), 0.5 * dep);
+  vec2 bev = 1.0 - smoothstep(vec2(0.0), vec2(max(r, 1e-4)), dE);
   vec3 n = normalize(normalize(vN) + (sign(w.x) * bev.x * Tu + sign(w.y) * bev.y * Tv) * 0.85);
 
-  // the material: the last one dissolving into the next, in coarse pixels
-  float th = bayer4(floor(w * 5.0) + floor(no.xy * 3.0 + no.z * 5.0));
-  float k = vKind.z > th ? vKind.y : vKind.x;
+  // the material and print: the next ones wiping across the face over the last, a hard edge
+  // moving left to right
+  bool toB = vKind.z > loc.x + 0.5;
+  float k = toB ? vKind.y : vKind.x;
+  vec4 pr = toB ? vPrintB : vPrintA;
   float tone = uHasEdge > 0.5 && gl_FragCoord.y < uEdge ? uToneBelow : uToneAbove;
 
   // A studio: a big soft light above and to the front left, the sky, and two
@@ -502,7 +199,9 @@ void main() {
   vec3 fore = mix(whiteLit, inkLit, tone);
   vec3 back = mix(inkLit, whiteLit, tone);
   vec3 lime = vec3(0.722, 1.0, 0.0);
-  vec3 c = k > 8.5 ? lime * (0.74 + 0.3 * wrap) : mix(fore, back, pattern(k, w, fs, fw));
+  vec3 limeLit = lime * (0.74 + 0.3 * wrap);
+  bool pic = k > 6.5 && k < 7.5;   // a picture: white on any page, its print in ink
+  vec3 c = k > 8.5 ? limeLit : pic ? whiteLit : mix(fore, back, pattern(k, w, fs, fw));
   if (k > 10.5) {
     // lime jelly: lit from within, an inner square brighter, the rim deeper; a stronger sheen
     vec2 q = abs(w) / (fs * 0.5);
@@ -515,6 +214,12 @@ void main() {
     vec2 t = w / (0.5 * min(fs.x, fs.y));
     float inside = max(-0.32 - t.x, abs(t.y) * 1.25 + t.x * 0.62 - 0.36);
     c = mix(c, vec3(0.06, 0.065, 0.075), cover(inside, max(fw.x, fw.y) * 2.0 / min(fs.x, fs.y)));
+  }
+  if (pr.z > 0.0 && no.z > 0.5) {
+    // the print: in the colour that stands out from the piece (ink on lime), and lime
+    vec3 p = textureGrad(uPrints, pr.xy + clamp(fuv, 0.0, 1.0) * pr.zw, gx * pr.zw, gy * pr.zw).rgb;
+    vec3 ink = k > 8.5 || pic ? inkLit : k > 4.5 ? fore : back;
+    c = c * max(0.0, 1.0 - p.r - p.g) + ink * p.r + limeLit * p.g;
   }
   c += vec3(fres * env);
   gl_FragColor = vec4(c, 1.0);
@@ -537,6 +242,7 @@ type Move = {
   fs: Float32Array;
   fq: THREE.Quaternion[];
   fk: Float32Array;     // its material when it started
+  fpr: (string | undefined)[];   // and its print
   viewFrom: View;
 };
 
@@ -558,7 +264,16 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
   const kindAttr = new THREE.InstancedBufferAttribute(kinds, 3);
   kindAttr.setUsage(THREE.DynamicDrawUsage);
   geo.setAttribute('aKind', kindAttr);
-  const U = { uEdge: { value: 0 }, uHasEdge: { value: 0 }, uToneAbove: { value: 0 }, uToneBelow: { value: 0 } };
+  // where each block's print is in the atlas, the last one's and the next one's
+  const printsA = new Float32Array(N * 4), printsB = new Float32Array(N * 4);
+  const printAAttr = new THREE.InstancedBufferAttribute(printsA, 4), printBAttr = new THREE.InstancedBufferAttribute(printsB, 4);
+  printAAttr.setUsage(THREE.DynamicDrawUsage);
+  printBAttr.setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('aPrintA', printAAttr);
+  geo.setAttribute('aPrintB', printBAttr);
+  const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
+  blank.needsUpdate = true;
+  const U = { uEdge: { value: 0 }, uHasEdge: { value: 0 }, uToneAbove: { value: 0 }, uToneBelow: { value: 0 }, uPrints: { value: blank as THREE.Texture } };
   const material = new THREE.ShaderMaterial({ uniforms: U, vertexShader: VS, fragmentShader: FS });
   const mesh = new THREE.InstancedMesh(geo, material, N);
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -571,11 +286,41 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
   const cp = new Float32Array(N * 3), cs = new Float32Array(N * 3);
   const cq = Array.from({ length: N }, () => new THREE.Quaternion());
   const kA = new Float32Array(N), kB = new Float32Array(N), km = new Float32Array(N);
+  const pA: (string | undefined)[] = new Array(N).fill(undefined), pB: (string | undefined)[] = new Array(N).fill(undefined);
   let perm = Int32Array.from({ length: N }, (_, i) => i);
   let move: Move | null = null;
   let target: Form = forms.scatter;
   let lastEnd = -Infinity;   // when the last move ends (or ended)
   let dirty = true;
+  let disposed = false;
+
+  // The prints: an atlas of the ones these forms use, drawn once the fonts are in. Until it's
+  // there, or for a print it doesn't have, a piece goes without.
+  let rects: Map<string, Rect> | null = null;
+  let tex: THREE.CanvasTexture | null = null;
+  let printKey = '';
+  let printsReady: Promise<void> = Promise.resolve();
+  const usePrints = (fs: Form[]): Promise<void> => {
+    const names = new Set<string>();
+    for (const f of fs) for (const P of f.pieces) if (P.pr) names.add(P.pr);
+    const key = Array.from(names).sort().join('|');
+    if (key === printKey) return printsReady;
+    printKey = key;
+    printsReady = printAtlas(names).then((atlas) => {
+      if (disposed || key !== printKey) return;
+      const t = new THREE.CanvasTexture(atlas.canvas);
+      t.colorSpace = THREE.NoColorSpace;
+      t.minFilter = THREE.LinearMipmapLinearFilter;
+      t.magFilter = THREE.LinearFilter;
+      t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      tex?.dispose();
+      tex = t;
+      U.uPrints.value = t;
+      rects = atlas.rects;
+      dirty = true;
+    });
+    return printsReady;
+  };
 
   /** Put the blocks in a form at once. */
   const place = (f: Form) => {
@@ -584,6 +329,7 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
       for (let a = 0; a < 3; a++) { cp[k * 3 + a] = P.p[a]; cs[k * 3 + a] = P.s[a]; }
       cq[k].copy(P.q);
       kA[k] = kB[k] = P.k;
+      pA[k] = pB[k] = P.pr;
       km[k] = 1;
     }
     perm = Int32Array.from({ length: N }, (_, i) => i);
@@ -601,8 +347,11 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
   /** Start a move from wherever the blocks are now to a form. `match` finds the least travel; else each block keeps its piece. */
   const go = (to: Form, t: number, o: { match: boolean; spread?: number; dur?: number }) => {
     const viewFrom = viewAt(t);
-    const fk = new Float32Array(N);
-    for (let k = 0; k < N; k++) fk[k] = km[k] >= 0.5 ? kB[k] : kA[k];
+    const fk = new Float32Array(N), fpr: (string | undefined)[] = new Array(N);
+    for (let k = 0; k < N; k++) {
+      fk[k] = km[k] >= 0.5 ? kB[k] : kA[k];
+      fpr[k] = km[k] >= 0.5 ? pB[k] : pA[k];
+    }
     if (o.match) {
       let lime = -1;
       for (let k = 0; k < N; k++) if (isLime(fk[k]) && cs[k * 3] > 0.01) { lime = k; break; }
@@ -621,14 +370,17 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
         cost.push(row);
       }
       perm = Int32Array.from(hungarian(cost));
-      // Between chapters, a block that is put away grows in at its new place (it doesn't fly in from wherever it was put away).
-      for (let k = 0; k < N; k++) {
-        if (cs[k * 3] > 0.01 && cs[k * 3 + 1] > 0.01) continue;
-        const P = to.pieces[perm[k]];
-        if (P.spare) continue;
-        cp[k * 3] = P.p[0]; cp[k * 3 + 1] = P.p[1]; cp[k * 3 + 2] = P.p[2];
-        cq[k].copy(P.q);
-      }
+    }
+    // A block that is put away grows in at its new place (it doesn't fly in from wherever it was
+    // put away), already what it will be.
+    for (let k = 0; k < N; k++) {
+      if (cs[k * 3] > 0.01 && cs[k * 3 + 1] > 0.01) continue;
+      const P = to.pieces[perm[k]];
+      if (P.spare || !shown(P)) continue;
+      cp[k * 3] = P.p[0]; cp[k * 3 + 1] = P.p[1]; cp[k * 3 + 2] = P.p[2];
+      cq[k].copy(P.q);
+      fk[k] = P.k;
+      fpr[k] = P.pr;
     }
     const spread = o.spread ?? 0.65, dur = o.dur ?? 0.9;
     const delay = new Float32Array(N), arc = new Float32Array(N);
@@ -658,7 +410,7 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
       }
     }
     for (let k = 0; k < N; k++) if (lead[k] !== k) delay[k] = delay[lead[k]];
-    move = { t0: t, spread, dur, to, perm: perm.slice(), delay, arc, fp: cp.slice(), fs: cs.slice(), fq: cq.map((q) => q.clone()), fk, viewFrom };
+    move = { t0: t, spread, dur, to, perm: perm.slice(), delay, arc, fp: cp.slice(), fs: cs.slice(), fq: cq.map((q) => q.clone()), fk, fpr, viewFrom };
     target = to;
     lastEnd = t + spread + dur;
   };
@@ -699,6 +451,7 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
           for (let a = 0; a < 3; a++) { cp[k * 3 + a] = m.fp[k * 3 + a]; cs[k * 3 + a] = m.fs[k * 3 + a] * (1 - gone); }
           cq[k].copy(m.fq[k]);
           kA[k] = kB[k] = m.fk[k];
+          pA[k] = pB[k] = m.fpr[k];
           km[k] = 1;
           continue;
         }
@@ -708,14 +461,18 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
           cs[k * 3 + a] = lerp(m.fs[k * 3 + a], P.s[a], ek);
         }
         cq[k].copy(m.fq[k]).slerp(P.q, ek);
+        // a block on its way out keeps what it is while it shrinks
+        const toK = shown(P) ? P.k : m.fk[k], toPr = shown(P) ? P.pr : m.fpr[k];
         kA[k] = m.fk[k];
-        kB[k] = P.k;
-        km[k] = m.fk[k] === P.k ? 1 : smooth(0.2, 0.8, ek);
+        kB[k] = toK;
+        pA[k] = m.fpr[k];
+        pB[k] = toPr;
+        km[k] = m.fk[k] === toK && m.fpr[k] === toPr ? 1 : smooth(0.2, 0.8, ek);
       }
       dirty = true;
       if (t >= m.t0 + total(m)) {
         move = null;
-        for (let k = 0; k < N; k++) { kA[k] = kB[k]; km[k] = 1; }
+        for (let k = 0; k < N; k++) { kA[k] = kB[k]; pA[k] = pB[k]; km[k] = 1; }
       }
     }
     if (dirty) {
@@ -727,9 +484,16 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
         kinds[k * 3] = kA[k];
         kinds[k * 3 + 1] = kB[k];
         kinds[k * 3 + 2] = km[k];
+        const ra = pA[k] ? rects?.get(pA[k]!) : undefined, rb = pB[k] ? rects?.get(pB[k]!) : undefined;
+        for (let a = 0; a < 4; a++) {
+          printsA[k * 4 + a] = ra ? ra[a] : 0;
+          printsB[k * 4 + a] = rb ? rb[a] : 0;
+        }
       }
       mesh.instanceMatrix.needsUpdate = true;
       kindAttr.needsUpdate = true;
+      printAAttr.needsUpdate = true;
+      printBAttr.needsUpdate = true;
       dirty = false;
     }
     group.quaternion.copy(q);
@@ -777,13 +541,16 @@ function createRig(canvas: HTMLCanvasElement, maxDpr: number) {
     group.scale.setScalar(fitted.s);
   };
   const dispose = () => {
+    disposed = true;
     geo.dispose();
     material.dispose();
+    tex?.dispose();
+    blank.dispose();
     renderer.dispose();
   };
   return {
     renderer, scene, camera, U, forms,
-    place, go, update, viewAt, endsAt,
+    place, go, update, viewAt, endsAt, usePrints,
     busy: (t: number) => t < endsAt(),
     resize, fit, dispose,
   };
@@ -832,6 +599,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
     });
   };
   readChapters();
+  rig.usePrints(chapters.flatMap((c) => c.forms));
   const measure = () => {
     for (const c of chapters) {
       const r = c.el.getBoundingClientRect();
@@ -1009,6 +777,7 @@ export function mountBlockStory({ canvas, root, reduced, fine, onReady }: Opts):
   return {
     refresh() {
       readChapters();
+      rig.usePrints(chapters.flatMap((c) => c.forms));
       measure();
       ci = -1;   // the chapters may be new: take whichever is on now
     },
@@ -1041,6 +810,10 @@ export function mountBlockFigure(
   const { renderer, scene, camera, U } = rig;
   const seq = formList(rig, form);
   if (!seq.length) seq.push(rig.forms.cube);
+  // gather once the prints are in (or soon anyway)
+  let printsIn = false;
+  rig.usePrints(seq).then(() => (printsIn = true));
+  const printsLate = window.setTimeout(() => (printsIn = true), 1500);
   U.uToneAbove.value = tone === 'paper' ? 1 : 0;
   U.uToneBelow.value = U.uToneAbove.value;
   if (reduced) rig.place(seq[seq.length - 1]);
@@ -1069,7 +842,7 @@ export function mountBlockFigure(
     const w = canvas.clientWidth, h = canvas.clientHeight;
     if (!w || !h) return;
     rig.resize(w, h);
-    if (!started) {
+    if (!started && printsIn) {
       started = true;
       rig.go(seq[0], t + 0.1, { match: seq[0] !== rig.forms.cube, spread: 0.8, dur: 1.1 });
     } else if (!reduced && seq.length > 1 && !rig.busy(t) && t - rig.endsAt() >= seq[si].hold) {
@@ -1101,6 +874,7 @@ export function mountBlockFigure(
   return () => {
     running = false;
     if (raf) cancelAnimationFrame(raf);
+    window.clearTimeout(printsLate);
     io.disconnect();
     document.removeEventListener('visibilitychange', onVis);
     window.removeEventListener('pointermove', onMove);

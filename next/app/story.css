@@ -140,6 +140,20 @@
 .ch-list-link { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .ch-list li > span:last-child { font-size: 15px; line-height: 1.55; color: var(--ch-dim); }
 .ch-tag { letter-spacing: 0.1em; text-transform: uppercase; color: var(--ch-dim); }
+/* The product the object is showing: the same square as a lit step. */
+.ch-list-head::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  background: currentColor;
+  scale: 0;
+  transition: scale 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ch[data-step='0'] .ch-list li:nth-child(1) .ch-list-head::after,
+.ch[data-step='1'] .ch-list li:nth-child(2) .ch-list-head::after,
+.ch[data-step='2'] .ch-list li:nth-child(3) .ch-list-head::after,
+.ch[data-step='3'] .ch-list li:nth-child(4) .ch-list-head::after { scale: 1; }
 .ch-tag.is-live { background: var(--ch-fg); color: var(--ch-bg); box-shadow: none !important; }
 
 /* --- wide screens: the words pinned beside the object ---------------------- */

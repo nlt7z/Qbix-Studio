@@ -99,7 +99,7 @@ export default function StrataIntro() {
             </Reveal>
           </header>
           <div className="pd-hero-visual">
-            <BlockFigure form="grid,colortype,mark,pressed" label="A brand built plate by plate, the grid, colour and type, the mark, then pressed into one block" />
+            <BlockFigure form="strataImage,strataTokens,strataSystem" label="One image in; its colours and type taken out of it; then the system made of them: parts and code" />
           </div>
         </div>
         <div className="container">

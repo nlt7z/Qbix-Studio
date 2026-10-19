@@ -12,11 +12,12 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
 
 /**
  * The homepage as one story. Each chapter is an ordinary section with its own
- * words; the one object behind them (BlockStage, 27 pieces) plays the scenes
- * the chapter names in `forms` (comma separated: one after another, on a
- * loop), on the side it names in `side` (the words take the other side),
- * sized to the words. Tones alternate black and paper. A chapter with `steps`
- * has the step its scene is showing set on it by the stage, as `data-step`.
+ * words; the one object behind them (BlockStage) plays the scenes the
+ * chapter names in `forms` (comma separated: one after another, on a loop;
+ * components/three/blockForms.ts), on the side it names in `side` (the
+ * words take the other side), sized to the words. Tones alternate black and
+ * paper. A chapter with `steps` has the step its scene is showing set on it
+ * by the stage, as `data-step`, which lights that step (or that product).
  */
 type ChapterProps = {
   id?: string;
@@ -93,8 +94,8 @@ function StudioChapters() {
   const { open } = useContactModal();
   return (
     <>
-      {/* A moodboard; its swatches fly into a website while the code is written beside it; the code
-          folds into a phone and the address goes lime. */}
+      {/* The moodboard for hush, a pair of headphones; its picture and type fly into the launch site
+          while the code is written beside it; the code folds into a phone and the address goes live. */}
       <Chapter id="services" forms="moodboard,site,live" tone="paper" side="right" steps={3}>
         <p className="ch-kicker mono">{design.title} · {design.audience}</p>
         <h2 className="ch-title">From moodboard to a live domain.</h2>
@@ -107,8 +108,8 @@ function StudioChapters() {
         <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
       </Chapter>
 
-      {/* Plate by plate: the grid, colour and type, the mark; then pressed into one block. */}
-      <Chapter forms="grid,colortype,mark,pressed" tone="dark" side="left" steps={3}>
+      {/* kova, a money app that works: its parts in grey on a grid; then colour and type; then its mark. */}
+      <Chapter forms="grid,colortype,mark" tone="dark" side="left" steps={3}>
         <p className="ch-kicker mono">{brand.title} · {brand.audience}</p>
         <h2 className="ch-title">From usable to worth sharing.</h2>
         <p className="ch-lede">{brand.blurb}</p>
@@ -120,8 +121,8 @@ function StudioChapters() {
         <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
       </Chapter>
 
-      {/* Four towers in the list's order: two built, two still in stripes. */}
-      <Chapter id="products" forms="towers" tone="paper" side="right">
+      {/* The four products, one after another, in the list's order; the one showing is marked. */}
+      <Chapter id="products" forms="strata,bidding,tts,interview" tone="paper" side="right" steps={4}>
         <p className="ch-kicker mono">Qbix Labs</p>
         <h2 className="ch-title">Things we’ve shipped.</h2>
         <p className="ch-lede">Qbix also builds products. Two are live, two are on the way.</p>
@@ -145,7 +146,7 @@ function StudioChapters() {
 function OfferChapters() {
   return (
     <>
-      {/* The flyer, then its five posts beside it, then its video. */}
+      {/* The flyer for 1428 Alder Street, then its five posts beside it, then its video. */}
       <Chapter id="services" forms="flyer,posts,video" tone="paper" side="right" steps={3}>
         <p className="ch-kicker mono">{kit.title} · {kit.audience}</p>
         <h2 className="ch-title">Your listing, ready to share in 48 hours.</h2>
@@ -158,7 +159,7 @@ function OfferChapters() {
         <div className="ch-acts"><Act href={kit.href}>See the kit</Act></div>
       </Chapter>
 
-      {/* The questionnaire becomes the calm homepage, which goes live with its phone. */}
+      {/* A therapist's questionnaire becomes the calm homepage, which goes live with its phone. */}
       <Chapter forms="questionnaire,homepage,golive" tone="dark" side="left" steps={3}>
         <p className="ch-kicker mono">{practice.title} · {practice.audience}</p>
         <h2 className="ch-title">A website that feels as calm as your office.</h2>
@@ -184,7 +185,7 @@ export default function Story() {
       <Hero />
       {ai ? <StudioChapters /> : <OfferChapters />}
 
-      {/* Every idea, loose; then every one of them kept, sorted by kind. */}
+      {/* Every idea that came in, loose; then all of them kept, on a board from idea to shipped. */}
       <Chapter id="about" forms="field,sorted" tone={ai ? 'dark' : 'paper'} side={ai ? 'left' : 'right'}>
         <p className="ch-kicker mono">About us</p>
         <h2 className="ch-title">Our story is simple.</h2>
