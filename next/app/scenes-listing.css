@@ -1,0 +1,146 @@
+/* =============================================================================
+   LISTING — the Listing Launch Kit's scenes (components/scenes/Listing.tsx):
+   a flyer for 1428 Alder Street, its five posts, its 30-second video, the
+   editable copy, a round of changes. What is printed or posted is paper and
+   ink in either tone; one lime per state (the tag, the post's tag, the
+   video's time, the field being edited, the reply).
+   ============================================================================= */
+
+.scn .lst-line { white-space: pre; line-height: 1.2; }
+
+/* --- the drawings: ink on paper ------------------------------------------ */
+.scn .lst-art { display: block; }
+.scn .lst-art .s { fill: rgba(18, 20, 23, 0.05); }
+.scn .lst-art .g { fill: rgba(18, 20, 23, 0.1); }
+.scn .lst-art .b { fill: rgba(18, 20, 23, 0.11); }
+.scn .lst-art .p { fill: rgba(18, 20, 23, 0.2); }
+.scn .lst-art .t { fill: rgba(18, 20, 23, 0.26); }
+.scn .lst-art .w { fill: #ffffff; }
+.scn .lst-art .k { fill: #121417; }
+.scn .lst-art .l { fill: none; stroke: rgba(18, 20, 23, 0.16); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.scn .lst-art .ol { fill: none; stroke: rgba(18, 20, 23, 0.34); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.scn .lst-art .m { fill: none; stroke: #ffffff; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.scn .lst-art .lst-num { font-family: var(--font-headline); font-size: 10.5px; letter-spacing: 0.02em; }
+.scn .lst-art .cord { fill: none; stroke: #121417; stroke-width: 1; vector-effect: non-scaling-stroke; }
+/* the same house, drawn in chalk lines on ink (In Escrow) */
+.scn .lst-art--line .s, .scn .lst-art--line .g { fill: #121417; }
+.scn .lst-art--line .w, .scn .lst-art--line .k, .scn .lst-art--line .t { fill: #121417; stroke: #f4f5f2; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.scn .lst-art--line .l { stroke: rgba(244, 245, 242, 0.2); }
+.scn .lst-art--line .m { stroke: rgba(244, 245, 242, 0.7); }
+.scn .lst-art--line .gl { stroke: rgba(244, 245, 242, 0.5); }
+
+/* --- the flyer: a sheet of paper, 8.5 x 11 -------------------------------- */
+.scn .lst-sheet { background: #ffffff; color: #121417; overflow: hidden; }
+.scn .lst-sheet::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(18, 20, 23, 0.09); pointer-events: none; z-index: 5; }
+[data-tone='dark'] .scn .lst-sheet { background: #f4f5f2; }
+[data-tone='dark'] .scn .lst-sheet::after { box-shadow: none; }
+.scn .lst-photo { overflow: hidden; }
+.scn .lst-tag {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 7px 0 8px; --r: 3px;
+  background: var(--lime); color: var(--on-lime);
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap;
+}
+.scn .lst-addr { font-size: 25px; }
+.scn .lst-price { font-size: 25px; letter-spacing: -0.01em; }
+.scn .lst-facts { font-size: 12.5px; color: rgba(18, 20, 23, 0.62); }
+.scn .lst-oh { font-size: 14px; font-weight: 500; }
+.scn .lst-oh-k { color: rgba(18, 20, 23, 0.5); }
+/* a word or a number that rolls over to its new value, in its own mask */
+.scn .lst-roll { position: relative; display: inline-block; overflow: hidden; vertical-align: top; }
+.scn .lst-roll--end { padding-right: 6px; padding-bottom: 3px; margin-bottom: -3px; }
+.scn .lst-roll-new { position: absolute; left: 0; top: 0; translate: 0 115%; }
+/* what just changed, underlined in ink */
+.scn .lst-mark { background: #121417; transform-origin: 0 0; }
+/* the tag reprinted in ink, once the lime has moved on */
+.scn .lst-tag--ink { background: #121417; color: #f4f5f2; }
+
+/* the agent, in an ink band across the foot */
+.scn .lst-band { background: #121417; color: #f4f5f2; }
+.scn .lst-band-name { position: absolute; left: 18px; top: 16px; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.scn .lst-band-org { position: absolute; left: 18px; top: 38px; font-size: 10.5px; color: rgba(244, 245, 242, 0.62); white-space: nowrap; }
+.scn .lst-qr { right: 12px; top: 12px; width: 46px; height: 46px; padding: 2px; background: #f4f5f2; }
+.scn .lst-qr path { fill: #121417; }
+
+/* the back */
+.scn .lst-kicker { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(18, 20, 23, 0.46); white-space: nowrap; }
+.scn .lst-facts3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.scn .lst-fact b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: 30px; line-height: 1; letter-spacing: -0.02em; }
+.scn .lst-fact span { display: block; margin-top: 7px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(18, 20, 23, 0.46); }
+.scn .lst-rule { background: rgba(18, 20, 23, 0.12); transform-origin: left center; }
+.scn .lst-back-oh { display: grid; gap: 6px; }
+.scn .lst-back-oh b { font-size: 20px; line-height: 1; }
+.scn .lst-pcap { font-size: 10.5px; color: rgba(18, 20, 23, 0.55); }
+
+/* captions under the drawings */
+.scn .lst-cap-row { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: var(--fg2); white-space: nowrap; }
+.scn .lst-cap-row b { font-weight: 500; color: var(--fg); }
+
+/* --- the posts ------------------------------------------------------------- */
+.scn .lst-post { background: #ffffff; color: #121417; overflow: hidden; transform-origin: 0 0; --r: 3px; }
+.scn .lst-post::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px rgba(18, 20, 23, 0.1); pointer-events: none; z-index: 6; }
+[data-tone='dark'] .scn .lst-post::after { box-shadow: inset 0 0 0 1px var(--line); }
+/* on the dark page the paper is chalk: a post lifted off the flyer is the same paper */
+[data-tone='dark'] .scn .lst-post, [data-tone='dark'] .scn .lst-pband, [data-tone='dark'] .scn .lst-label { background: #f4f5f2; }
+[data-tone='dark'] .scn .lst-post--ink, [data-tone='dark'] .scn .lst-post--ink .lst-label { background: #121417; }
+.scn .lst-pband { background: #ffffff; padding: 10px 12px 0; }
+.scn .lst-pband-addr { display: block; font-size: 17px; line-height: 1.1; white-space: nowrap; }
+.scn .lst-pband-sub { display: block; margin-top: 4px; font-size: 11.5px; font-weight: 500; color: rgba(18, 20, 23, 0.6); white-space: nowrap; }
+.scn .lst-label { display: flex; align-items: center; padding: 0 9px; background: #ffffff; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.scn .lst-post--ink { background: #121417; }
+.scn .lst-post--ink .lst-label { background: #121417; color: #f4f5f2; box-shadow: inset 0 1px 0 rgba(244, 245, 242, 0.14); }
+/* a story: an ink block over the picture, the story's bars along its top */
+.scn .lst-story-top { background: #121417; color: #f4f5f2; }
+.scn .lst-sbars { position: absolute; left: 8px; right: 8px; top: 8px; display: flex; gap: 3px; }
+.scn .lst-sbars i { flex: 1; height: 2px; --r: 1px; background: rgba(244, 245, 242, 0.3); }
+.scn .lst-sbars i.is-on { background: #f4f5f2; }
+.scn .lst-story-h { position: absolute; left: 10px; top: 30px; font-size: 17px; line-height: 1.1; white-space: nowrap; }
+.scn .lst-story-d { position: absolute; left: 10px; top: 54px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.scn .lst-story-a { position: absolute; left: 10px; top: 73px; font-size: 10.5px; color: rgba(244, 245, 242, 0.6); white-space: nowrap; }
+/* the crop on the photo: a hairline and its corners */
+.scn .lst-crop { z-index: 7; pointer-events: none; }
+.scn .lst-crop rect { fill: none; stroke: #121417; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 1 1; }
+.scn .lst-crop path { fill: none; stroke: #121417; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+
+/* --- the reel, on a phone -------------------------------------------------- */
+.scn .phone-screen.lst-reel { background: #ffffff; color: #121417; }
+.scn .lst-frame { overflow: hidden; background: #ffffff; }
+.scn .lst-frame svg { transform-origin: 50% 58%; }
+.scn .lst-reel-status { position: absolute; left: 0; right: 0; top: 0; z-index: 8; color: #121417; }
+.scn .lst-reel-status .phone-island { background: #0b0c0e; }
+.scn .lst-bars { position: absolute; left: 12px; right: 12px; top: 36px; z-index: 8; display: flex; gap: 4px; }
+.scn .lst-bars i { position: relative; flex: 1; height: 2px; overflow: hidden; --r: 1px; background: rgba(18, 20, 23, 0.16); }
+.scn .lst-bars b { position: absolute; inset: 0; background: #121417; transform-origin: left center; }
+.scn .lst-reel-who { left: 12px; top: 48px; z-index: 8; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.scn .lst-tc {
+  right: 12px; top: 45px; z-index: 8; height: 20px; padding: 0 7px; --r: 3px; display: inline-flex; align-items: center;
+  background: #121417; color: #f4f5f2; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.04em; font-variant-numeric: tabular-nums;
+}
+.scn .lst-tc--lime { background: var(--lime); color: var(--on-lime); }
+.scn .lst-cap { z-index: 9; padding: 6px 8px 7px; --r: 4px; background: #121417; color: #f4f5f2; font-size: 18px; font-weight: 600; line-height: 1.05; letter-spacing: -0.01em; }
+
+/* --- the editable copy ----------------------------------------------------- */
+.scn .lst-ed { background: var(--win); box-shadow: var(--lift), inset 0 0 0 1px var(--line2); overflow: hidden; z-index: 10; }
+.scn .lst-ed-head { position: absolute; left: 0; right: 0; top: 0; height: 46px; display: flex; align-items: center; gap: 10px; padding: 0 16px 0 20px; box-shadow: inset 0 -1px 0 var(--line); }
+.scn .lst-ed-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.scn .lst-ed-link { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; --r: 12px; background: var(--fill); color: var(--fg2); font-size: 11.5px; white-space: nowrap; }
+.scn .lst-ed-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); white-space: nowrap; }
+.scn .lst-field { display: flex; align-items: center; padding: 0 14px; background: var(--sunk); box-shadow: inset 0 0 0 1px var(--line); font-size: 19px; font-weight: 500; white-space: pre; font-variant-numeric: tabular-nums; }
+.scn .lst-dig { position: relative; display: inline-block; }
+.scn .lst-dig-new { position: absolute; left: 0; top: 0; }
+.scn .lst-sel { position: absolute; left: -1px; right: 0; top: -1px; bottom: -1px; background: var(--fg4); transform-origin: left center; }
+.scn .lst-sel + span { position: relative; }
+.scn .lst-field .caret { top: 1px; color: var(--fg); }
+.scn .lst-ring { box-shadow: 0 0 0 2px var(--lime); pointer-events: none; }
+.scn .lst-ed-foot { position: absolute; left: 20px; right: 20px; bottom: 18px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fg2); white-space: nowrap; }
+.scn .lst-ed-foot .pill { margin-left: auto; height: 32px; padding: 0 14px; font-size: 12px; }
+
+/* --- the round of changes -------------------------------------------------- */
+.scn .lst-msg { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+.scn .lst-msg--us { align-items: flex-end; }
+.scn .lst-who { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); white-space: nowrap; }
+.scn .lst-bub { max-width: 340px; text-wrap: balance; padding: 12px 16px 13px; font-size: 19px; line-height: 1.28; letter-spacing: -0.01em; }
+.scn .lst-bub--them { background: var(--sunk); color: var(--fg); --r: 16px; }
+.scn .lst-bub--us { background: var(--lime); color: var(--on-lime); --r: 16px; }
+.scn .lst-files { display: flex; justify-content: flex-end; gap: 8px; }
+.scn .lst-file { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; --r: 8px; box-shadow: inset 0 0 0 1px var(--line2); color: var(--fg2); font-size: 12.5px; white-space: nowrap; }
+.scn .lst-file .ico { color: var(--fg3); vertical-align: 0; }

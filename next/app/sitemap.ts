@@ -11,11 +11,11 @@ export const revalidate = false;
 // Real content-update dates (bump when the underlying content actually
 // changes) rather than `new Date()`, which would make every route look
 // "updated today" on each deploy and erode crawl trust.
-const HOME_UPDATED = new Date('2026-05-24');     // homepage + selected work refresh
+const HOME_UPDATED = new Date('2026-10-19');     // homepage: flat scenes
 const CONTENT_UPDATED = new Date('2026-05-20');  // studio / services / work / labs copy
-const STRATA_UPDATED = new Date('2026-08-25');   // Strata product intro page
-const OFFERS_UPDATED = new Date('2026-10-09');   // fixed-price offer pages
-const BUSINESS_UPDATED = new Date('2026-10-15'); // homepage in its local-business mode
+const STRATA_UPDATED = new Date('2026-10-19');   // Strata product intro page
+const OFFERS_UPDATED = new Date('2026-10-19');   // fixed-price offer pages
+const BUSINESS_UPDATED = new Date('2026-10-19'); // homepage in its local-business mode
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [

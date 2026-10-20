@@ -1,0 +1,104 @@
+/* =============================================================================
+   STRATA (components/scenes/Strata.tsx): the hero (its film in a window, two
+   tokens sliding out of it) and the tour (an image read, made a system,
+   shipped as code). Inside the drawings the client's picture and components
+   use ink, paper and the one lime; the panel uses the chapter's tone.
+   ============================================================================= */
+
+/* Hairlines here are inset shadows (they sit inside a box, like the kit's). */
+
+/* --- hero: the window, the film ------------------------------------------- */
+.scn .str-url { gap: 6px; }
+.scn .str-lock { display: inline-flex; color: var(--fg2); }
+/* live, but not lime: the page's button beside the hero is the lime */
+.scn .live.str-live { position: absolute; right: 12px; top: 8px; background: var(--fg); color: var(--win); }
+.scn .str-film-box { overflow: hidden; background: #3a3b3d; }
+.scn .str-film { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; max-width: none; }
+
+/* --- hero: the tokens ------------------------------------------------------- */
+.scn .str-tok { background: var(--win); box-shadow: inset 0 0 0 1px var(--line2), var(--lift); }
+.scn .str-tok > * { position: absolute; white-space: nowrap; }
+.scn .str-tok-name { left: 16px; top: 14px; color: var(--fg2); }
+.scn .str-tok-meta { right: 16px; top: 14px; font-size: 12px; color: var(--fg3); }
+.scn .str-tok-aa { left: 15px; bottom: 12px; font-size: 34px; line-height: 1; }
+.scn .str-tok-val { right: 16px; bottom: 13px; font-size: 24px; line-height: 1; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.scn .str-tok-dims { left: 16px; bottom: 19px; color: var(--fg); }
+
+/* --- tour: where the image goes --------------------------------------------- */
+.scn .str-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--fg2); }
+.scn .str-drop-edge { position: absolute; left: 0; top: 0; color: var(--line2); }
+.scn .str-drop-up { color: var(--fg2); margin-bottom: 4px; }
+.scn .str-drop-t { font-size: 15px; font-weight: 500; color: var(--fg); }
+.scn .str-drop-s { font-size: 12px; color: var(--fg3); }
+
+/* --- tour: the picture (paper, ink, one lime); it becomes the card ---------- */
+.scn .str-img { background: #f4f5f2; color: #121417; overflow: hidden; z-index: 2; }
+.scn .str-p-mast { font-family: var(--font-mono); font-size: 10.5px; line-height: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.62); white-space: nowrap; }
+.scn .t.str-p-title { font-size: 64px; line-height: 68px; color: #121417; transform-origin: 0 0; }
+.scn .t.str-p-sub { font-size: 15px; line-height: 20px; color: rgba(18, 20, 23, 0.62); }
+.scn .t.str-p-no { font-family: var(--font-mono); font-size: 10.5px; line-height: 20px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(18, 20, 23, 0.5); }
+.scn .t.str-p-link { font-size: 15px; line-height: 20px; font-weight: 500; color: #121417; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+/* the sun, and the outline it keeps once its colour is a token */
+.scn .str-sun { background: var(--lime); }
+.scn .str-sun-out { position: absolute; inset: 0; --r: 50%; background: #f4f5f2; box-shadow: inset 0 0 0 1.5px #121417; }
+.scn .str-scan { height: 1px; background: #121417; box-shadow: 0 1px 0 #f4f5f2; z-index: 3; }
+.scn .str-pin { box-shadow: inset 0 0 0 2px #f4f5f2, 0 0 0 1px rgba(18, 20, 23, 0.5); z-index: 3; }
+.scn .str-tbox { color: #121417; }
+.scn .str-rl { color: #121417; }
+.scn .t.str-rl-t { font-family: var(--font-mono); font-size: 10.5px; line-height: 12px; color: #121417; }
+/* a measurement's tag: ink, chalk type */
+.scn .str-tag { height: 20px; padding: 0 7px; --r: 4px; display: inline-flex; align-items: center; gap: 6px; background: #121417; color: #f4f5f2; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.02em; white-space: nowrap; z-index: 4; }
+
+/* --- tour: the form, from the same tokens ------------------------------------ */
+.scn .str-form { background: #f4f5f2; color: #121417; }
+.scn .t.str-f-h { font-size: 22px; line-height: 26px; color: #121417; }
+.scn .t.str-f-p { font-size: 13px; line-height: 18px; color: rgba(18, 20, 23, 0.62); }
+.scn .str-f-in { display: flex; align-items: center; padding: 0 14px; box-shadow: inset 0 0 0 1px #959696; background: #f4f5f2; font-size: 14px; color: rgba(18, 20, 23, 0.45); }
+.scn .str-f-btn { display: flex; align-items: center; justify-content: center; background: var(--lime); color: var(--on-lime); font-size: 14px; font-weight: 600; }
+.scn .str-f-btn-ink { position: absolute; inset: 0; --r: 22px; display: flex; align-items: center; justify-content: center; background: #121417; color: #f4f5f2; font-style: normal; }
+
+/* --- tour: the panel ---------------------------------------------------------- */
+.scn .str-pan { background: var(--win); box-shadow: inset 0 0 0 1px var(--line2), var(--lift); }
+.scn .str-hr { position: absolute; left: 0; right: 0; top: 44px; height: 1px; background: var(--line); }
+.scn .t.str-h { font-size: 13.5px; font-weight: 500; color: var(--fg); }
+.scn .t.str-hm { font-size: 11px; color: var(--fg3); }
+.scn .str-tabs { display: flex; gap: 2px; font-size: 12.5px; color: var(--fg3); white-space: nowrap; }
+.scn .str-tabs span { padding: 5px 10px; --r: 6px; }
+.scn .str-tabs span.is-on { background: var(--fill); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line); }
+.scn .t.str-v { font-size: 12px; line-height: 14px; color: var(--fg); }
+.scn .t.str-v.faint { color: var(--fg3); }
+.scn .t.str-nm { font-size: 13px; line-height: 16px; color: var(--fg); }
+.scn .t.str-nm.dim { color: var(--fg2); }
+/* a type style's specimen, at its place in the scale */
+.scn .str-aa { left: 16px; top: 0; line-height: 28px; white-space: nowrap; color: var(--fg); }
+.scn .str-aa--d { font-size: 19px; }
+.scn .str-aa--t { font-size: 15px; }
+.scn .str-aa--b { font-size: 13px; }
+/* a step of the spacing scale: its length, drawn, and its value */
+.scn .str-sp { display: flex; align-items: center; gap: 5px; white-space: nowrap; color: var(--fg); }
+.scn .str-sp svg { color: var(--fg2); }
+.scn .str-sp .f-mono { font-size: 12px; line-height: 14px; }
+.scn .str-sw { box-shadow: inset 0 0 0 1px var(--line2); z-index: 2; }
+/* the accent, outlined until it's written into the code (then it fills) */
+.scn .str-sw--out { box-shadow: none; }
+.scn .str-sw-ring { position: absolute; inset: 0; --r: 4px; box-shadow: inset 0 0 0 1.5px var(--fg); }
+.scn .str-sw-fill { position: absolute; inset: 0; --r: 4px; background: var(--lime); }
+.scn .str-rad-i { display: inline-flex; align-items: center; gap: 9px; }
+.scn .str-rad-i .t, .scn .str-rad-i .str-v { position: static; font-size: 12px; line-height: 14px; }
+.scn .str-corner { color: var(--fg2); }
+
+/* the code */
+.scn .str-lns span { position: absolute; right: 8px; font-size: 11px; line-height: 14px; color: var(--fg4); }
+.scn .t.str-code { font-size: 12px; line-height: 14px; color: var(--fg); }
+.scn .str-c-prop { color: var(--fg2); }
+.scn .str-c-punc { color: var(--fg3); }
+.scn .str-c-sel { color: var(--fg2); }
+.scn .str-ph { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
+
+/* the buttons, and what comes of them */
+.scn .str-btn { padding: 0; }
+.scn .str-btn-l { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+.scn .str-copy { padding: 0; box-shadow: inset 0 0 0 1px var(--line2); }
+.scn .str-toast { display: flex; align-items: center; gap: 10px; padding: 0 12px; background: #f4f5f2; color: #121417; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.scn .str-toast i { margin-left: auto; font-style: normal; font-weight: 400; font-size: 11.5px; color: rgba(18, 20, 23, 0.55); }
+.scn .str-toast-ok { display: grid; place-items: center; width: 18px; height: 18px; --r: 9px; background: #121417; color: #f4f5f2; }

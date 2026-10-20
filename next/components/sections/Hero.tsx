@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import BrandText from '@/components/BrandText';
 import StudioTime from '@/components/hero/StudioTime';
 import { useAudience, type Audience } from '@/components/Audience';
+import IsoCube from '@/components/scene/IsoCube';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -135,7 +136,6 @@ export default function Hero() {
       id="top"
       className="ch ch--hero"
       data-chapter
-      data-forms="cube"
       data-side="right"
       data-tone="dark"
       data-nav-theme="dark"
@@ -183,7 +183,9 @@ export default function Hero() {
         <div className="ch-band hero-band">
           <StudioTime />
         </div>
-        <div className="ch-window" aria-hidden />
+        <div className="ch-stage">
+          <IsoCube />
+        </div>
       </div>
     </section>
   );

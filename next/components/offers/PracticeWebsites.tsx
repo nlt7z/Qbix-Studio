@@ -10,7 +10,6 @@ import PriceHalves from './PriceHalves';
 import Odometer from './Odometer';
 import AboutPhoto from './AboutPhoto';
 import Marker from '@/components/Marker';
-import BlockStage from '@/components/story/BlockStage';
 
 const PRICE = PRICES.practice;
 const CTA_LABEL = `Start my website, ${PRICE.deposit} deposit`;
@@ -57,9 +56,7 @@ const FAQ = [
 
 export default function PracticeWebsites() {
   return (
-    <main className="offer pw story">
-      {/* The page's one 3D object, drawn where its two sections ask (components/story/BlockStage). */}
-      <BlockStage />
+    <main className="offer pw">
       <RebuildHero>
         <Reveal as="span" className="pw-eyebrow mono" speed="fast">
           Practice Website Refresh

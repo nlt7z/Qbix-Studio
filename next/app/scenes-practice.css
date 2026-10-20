@@ -1,0 +1,173 @@
+/* --- practice (Practice Website Refresh): Willow Counseling ------------------
+   One calm site, drawn once and used by three scenes (the business homepage's
+   chapter, the practice page's tour and its hero). The client's site is light
+   (ink on white, its one lime the booking button) whatever the chapter's tone;
+   the scenes around it take the chapter's tone. */
+
+/* the client's things: always ink on white */
+.scn .prc-light {
+  --fg: #121417;
+  --fg2: rgba(18, 20, 23, 0.6);
+  --fg3: rgba(18, 20, 23, 0.4);
+  --fg4: rgba(18, 20, 23, 0.14);
+  --fill: rgba(18, 20, 23, 0.045);
+  --win: #ffffff;
+  --sunk: #eceef0;
+  --line: rgba(18, 20, 23, 0.1);
+  --line2: rgba(18, 20, 23, 0.16);
+  color: var(--fg);
+}
+.scn .prc-o { transform-origin: 0 0; }
+.scn .prc-serif { font-family: ui-serif, 'New York', 'Iowan Old Style', Georgia, serif; font-weight: 400; }
+
+/* a zoomed copy of a drawing (the same site, smaller): its own px inside */
+.scn .prc-zoom { position: absolute; left: 0; top: 0; }
+
+/* the frame: the questionnaire's card, then the site's window */
+.scn .prc-frame { background: var(--win); border: 1px solid var(--line2); --r: 12px; box-shadow: var(--lift); }
+.scn .prc-barline { height: 1px; background: var(--line); }
+.scn .prc-dots { display: flex; gap: 6px; align-items: center; }
+.scn .prc-dots i { width: 10px; height: 10px; --r: 5px; background: var(--fg4); }
+.scn .prc-url { display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--fill); font-size: max(11.5px, calc(10.5px * var(--up, 1))); color: var(--fg2); }
+.scn .prc-url-sel { position: absolute; left: 50%; top: 4px; height: 14px; --r: 2px; background: rgba(18, 20, 23, 0.14); transform-origin: left center; }
+.scn .prc-url-old { position: absolute; white-space: pre; }
+.scn .prc-url-new { display: inline-flex; align-items: center; gap: 6px; color: var(--fg); white-space: pre; }
+.scn .prc-lock { display: inline-flex; color: var(--fg2); }
+.scn .prc-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; --r: 4px; box-shadow: inset 0 0 0 1px var(--line2); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); white-space: nowrap; }
+
+/* the site */
+.scn .prc-logo { font-size: 15.5px; font-weight: 500; letter-spacing: -0.012em; }
+.scn .prc-nav { display: flex; gap: 18px; font-size: max(11.5px, calc(10.5px * var(--up, 1))); color: var(--fg2); white-space: nowrap; }
+.scn .prc-nav span:first-child { color: var(--fg); }
+.scn .prc-eye { font-size: calc(10.5px * var(--up, 1)); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg3); }
+.scn .prc-h1 { font-size: 40px; line-height: 44px; letter-spacing: -0.012em; }
+.scn .prc-sub { font-size: 13.5px; color: var(--fg2); }
+.scn .prc-btn { display: flex; align-items: center; justify-content: center; background: var(--fg); color: var(--win); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.scn .prc-pic { overflow: hidden; background: var(--sunk); }
+.scn .prc-pic svg, .scn .prc-room { display: block; width: 100%; height: 100%; }
+.scn .prc-rule { height: 1px; background: var(--line); transform-origin: left center; }
+.scn .prc-k { font-size: calc(10.5px * var(--up, 1)); font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg3); }
+.scn .prc-v { font-size: 14px; font-weight: 500; letter-spacing: -0.005em; }
+
+/* the questionnaire */
+.scn .prc-fhead { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+.scn .prc-fhead b { font-size: 13px; font-weight: 600; }
+.scn .prc-fhead span { font-size: 11.5px; color: var(--fg3); }
+.scn .prc-fl { font-size: 12px; color: var(--fg2); }
+.scn .prc-ans { font-size: 19px; font-weight: 500; letter-spacing: -0.012em; }
+.scn .prc-u { height: 1px; background: var(--line2); transform-origin: left center; }
+.scn .prc-cap { font-size: 12px; color: var(--fg3); }
+.scn .prc-send { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--lime); color: var(--on-lime); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.scn .prc-caret { color: var(--fg); }
+
+/* the phone's site */
+.scn .prc-m { display: flex; flex-direction: column; }
+.scn .prc-m > * { flex: none; }
+.scn .prc-m-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 13px 0; height: 20px; }
+.scn .prc-m-logo { font-size: 11.5px; font-weight: 500; letter-spacing: -0.01em; }
+.scn .prc-m-menu { display: grid; gap: 4px; width: 14px; }
+.scn .prc-m-menu i { height: 1.5px; background: var(--fg); }
+.scn .prc-m-eye { margin: 16px 13px 0; font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg3); white-space: nowrap; }
+.scn .prc-m-h1 { margin: 7px 13px 0; font-size: 25px; line-height: 28px; letter-spacing: -0.012em; }
+.scn .prc-m-sub { margin: 8px 13px 0; font-size: 10.5px; line-height: 1.45; color: var(--fg2); }
+.scn .prc-m-btn { margin: 12px 13px 0; height: 34px; --r: 17px; display: flex; align-items: center; justify-content: center; background: var(--fg); color: var(--win); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.scn .prc-m-pic { margin: 12px 13px 0; height: 92px; --r: 8px; overflow: hidden; background: var(--sunk); }
+.scn .prc-m-addr { position: relative; isolation: isolate; margin: auto 10px 10px; height: 28px; --r: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--fill); font-size: 10.5px; color: var(--fg); }
+.scn .prc-m-addr .ico { color: var(--fg2); }
+.scn .t.prc-h1 { line-height: 44px; }
+
+/* a card that comes out beside the site (the tour) */
+.scn .prc-card { background: var(--win); border: 1px solid var(--line2); box-shadow: var(--lift); }
+.scn .prc-pg { padding: 13px 14px 0 36px; display: flex; flex-direction: column; }
+.scn .prc-pg-path { font-size: 10.5px; color: var(--fg3); white-space: nowrap; }
+.scn .prc-pg-t { margin-top: 5px; font-size: 20px; line-height: 24px; letter-spacing: -0.01em; white-space: nowrap; }
+.scn .prc-pg-d { margin-top: 4px; font-size: 11.5px; color: var(--fg2); white-space: nowrap; }
+
+/* the tour: the button's ring, the ways to book */
+.scn .prc-ring { position: absolute; color: var(--fg); }
+.scn .prc-pop { padding: 16px 18px 6px; display: flex; flex-direction: column; }
+.scn .prc-pop-t { margin-bottom: 10px; font-size: 16px; font-weight: 600; letter-spacing: -0.012em; }
+.scn .prc-pop-row { display: flex; align-items: center; gap: 10px; height: 44px; box-shadow: inset 0 1px 0 var(--line); font-size: 13px; }
+.scn .prc-pop-row .ico { flex: none; color: var(--fg2); }
+.scn .prc-pop-row b { font-weight: 500; }
+.scn .prc-pop-row em { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-style: normal; font-size: 12.5px; color: var(--fg2); white-space: nowrap; }
+
+/* the search result */
+.scn .prc-gg { padding: 20px 22px; display: flex; flex-direction: column; }
+.scn .prc-gg-bar { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 16px; --r: 21px; box-shadow: inset 0 0 0 1px var(--line2); color: var(--fg2); }
+.scn .prc-gg-bar > .ico { flex: none; }
+.scn .prc-gg-qwrap { position: relative; display: inline-flex; }
+.scn .prc-gg-q { display: inline-block; font-size: 15px; color: var(--fg); white-space: pre; }
+.scn .prc-gg-caret { position: absolute; left: 0; top: 0; height: 18px; color: var(--fg); }
+.scn .prc-gg-src { display: flex; align-items: center; gap: 10px; margin-top: 26px; }
+.scn .prc-gg-src > i { width: 28px; height: 28px; --r: 14px; display: grid; place-items: center; background: var(--fg); color: #fff; font-style: normal; font-size: 15px; }
+.scn .prc-gg-src > span { display: grid; gap: 1px; }
+.scn .prc-gg-src b { font-size: 12.5px; font-weight: 500; }
+.scn .prc-gg-src em { font-style: normal; font-size: 11.5px; color: var(--fg3); }
+.scn .prc-gg-t { margin: 10px 0 4px; font-size: 20px; font-weight: 500; letter-spacing: -0.014em; white-space: nowrap; }
+.scn .prc-gg-d { font-size: 12.5px; line-height: 20px; color: var(--fg2); white-space: pre; }
+.scn .prc-mk { position: relative; color: var(--fg); }
+.scn .prc-mk i { position: absolute; left: -2px; right: -2px; top: 1px; bottom: 1px; --r: 2px; background: var(--lime); z-index: -1; transform-origin: left center; }
+.scn .prc-gg-links { display: flex; gap: 20px; margin-top: auto; padding-top: 14px; box-shadow: inset 0 1px 0 var(--line); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+
+/* the owner */
+.scn .prc-own { padding: 18px 20px 4px; display: flex; flex-direction: column; }
+.scn .prc-own-t { margin-bottom: 10px; font-size: 16px; font-weight: 600; letter-spacing: -0.012em; }
+.scn .prc-own-row { display: flex; align-items: center; justify-content: space-between; height: 50px; box-shadow: inset 0 1px 0 var(--line); font-size: 13px; color: var(--fg2); white-space: nowrap; }
+.scn .prc-own-row em { display: inline-flex; align-items: center; gap: 7px; font-style: normal; font-size: 14px; color: var(--fg); }
+.scn .prc-own-row em .ico { color: var(--fg2); }
+.scn .prc-own-you { display: inline-flex; align-items: center; height: 32px; padding: 0 16px; --r: 16px; background: var(--lime); color: var(--on-lime); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.scn .prc-own-note { justify-content: flex-start; gap: 9px; font-size: 13.5px; color: var(--fg); }
+
+/* the how-to video: the site's editor, filmed */
+.scn .prc-vid { background: #121417; color: #f4f5f2; box-shadow: var(--lift); overflow: hidden; display: flex; flex-direction: column; }
+.scn .prc-vid-top { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 16px; font-size: 15px; }
+.scn .prc-vid-top b { font-weight: 600; }
+.scn .prc-vid-top span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; color: rgba(244, 245, 242, 0.5); }
+.scn .prc-vid-screen { position: relative; display: block; height: 244px; margin: 0 8px; --r: 6px; background: #fff; overflow: hidden; }
+.scn .prc-ed-bar { position: absolute; left: 0; right: 0; top: 0; height: 32px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-shadow: inset 0 -1px 0 var(--line); font-size: 11px; color: var(--fg2); }
+.scn .prc-ed-bar b { height: 20px; padding: 0 10px; --r: 10px; display: inline-flex; align-items: center; background: var(--fg); color: #fff; font-size: 10.5px; font-weight: 600; }
+.scn .prc-ed-h1 { position: absolute; left: 22px; top: 52px; font-size: 24px; line-height: 28px; white-space: nowrap; }
+.scn .prc-ed-block { position: absolute; left: 14px; top: 96px; padding: 7px 8px; --r: 4px; box-shadow: inset 0 0 0 1px var(--fg); }
+.scn .prc-ed-line { display: block; font-size: 15px; line-height: 20px; white-space: pre; }
+.scn .prc-ed-word { position: relative; display: inline-block; }
+.scn .prc-ed-sel { position: absolute; left: -1px; right: -1px; top: 0; bottom: 0; background: rgba(18, 20, 23, 0.16); z-index: -1; }
+.scn .prc-ed-new { position: absolute; left: 0; top: 0; display: block; white-space: pre; }
+.scn .prc-ed-new > span:first-child { display: inline-block; }
+.scn .prc-ed-caret { position: absolute; left: 0; top: 1px; height: 18px; color: var(--fg); }
+.scn .prc-ed-pic { position: absolute; right: 16px; top: 48px; width: 128px; height: 110px; --r: 6px; overflow: hidden; }
+.scn .prc-vid-ctl { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 16px; font-size: 11px; }
+.scn .prc-vid-track { position: relative; flex: 1; height: 3px; --r: 2px; background: rgba(244, 245, 242, 0.2); }
+.scn .prc-vid-track i { position: absolute; left: 0; top: 0; width: 100%; height: 100%; --r: 2px; background: var(--lime); transform-origin: left center; }
+.scn .prc-vid-time { font-variant-numeric: tabular-nums; color: rgba(244, 245, 242, 0.6); white-space: nowrap; }
+
+/* thirty days of small fixes */
+.scn .prc-cal { padding: 18px 24px 16px; display: flex; flex-direction: column; }
+.scn .prc-cal-k { font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg3); }
+.scn .prc-cal-t { margin: 4px 0 12px; font-size: 19px; font-weight: 600; letter-spacing: -0.015em; }
+.scn .prc-cal-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 4px; }
+.scn .prc-cal-dow span { font-size: 10.5px; color: var(--fg3); padding-left: 6px; }
+.scn .prc-day { position: relative; height: 34px; --r: 6px; background: var(--fill); }
+.scn .prc-day b { position: absolute; left: 6px; top: 4px; font-size: 10.5px; font-weight: 500; color: var(--fg2); }
+.scn .prc-day.is-none { background: none; }
+.scn .prc-day.is-later { background: none; box-shadow: inset 0 0 0 1px var(--line); }
+.scn .prc-day.is-later b { color: var(--fg3); }
+.scn .prc-day.is-fix { background: var(--fg); }
+.scn .prc-day.is-fix b { color: rgba(255, 255, 255, 0.55); }
+.scn .prc-day .ico { position: absolute; right: 5px; bottom: 5px; color: #fff; }
+.scn .prc-cal-foot { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 12.5px; color: var(--fg2); }
+.scn .prc-cal-foot .ico { color: var(--fg); }
+
+.scn .prc-ed-sub { position: absolute; left: 22px; top: 150px; width: 250px; font-size: 12px; line-height: 1.5; color: var(--fg2); }
+
+/* lime, one thing at a time: a layer laid under a word or a row, drawn in from its left by the scene
+   (hidden wherever a scene doesn't draw it) */
+.scn .prc-lime { position: absolute; z-index: -1; background: var(--lime); transform-origin: left center; scale: 0 1; pointer-events: none; }
+.scn .prc-on { position: relative; isolation: isolate; }
+.scn .prc-on.prc-on--ink { color: var(--on-lime); }
+.scn .prc-nav-on .prc-lime { left: -7px; right: -7px; top: -3px; bottom: -3px; --r: 5px; }
+.scn .prc-word .prc-lime { left: -3px; right: -3px; top: 46%; bottom: 4%; --r: 2px; }
+.scn .prc-m-addr .prc-lime { inset: 0; --r: 10px; }
+.scn .prc-pop-row .prc-lime { left: -10px; right: -10px; top: 4px; bottom: 4px; --r: 8px; }
+.scn .prc-pop-row { position: relative; isolation: isolate; }
+.scn .prc-h1, .scn .prc-nav, .scn .prc-gg-d { isolation: isolate; }

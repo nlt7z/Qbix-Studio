@@ -1,0 +1,52 @@
+/* --- dream (about): ideas as chat bubbles, then the real thing one became ---
+   The bubbles' outlines (tail and all) are drawn as one path, sized to their
+   words when the scene is built. Colours are the chapter's tone; the one lime
+   is the idea that was built. */
+
+/* an idea: a flat bubble, its tail on one side (it grows out of that corner) */
+.scn .dream-bub { --r: 0px; }
+.scn .dream-bub--l { transform-origin: 0% 100%; }
+.scn .dream-bub--r { transform-origin: 100% 100%; }
+.scn .dream-bub-svg { position: absolute; left: 0; top: 0; }
+.scn .dream-bub-svg path { fill: var(--dream-bub); stroke: var(--dream-bub-line); stroke-width: 1; stroke-linejoin: round; }
+[data-tone='dark'] .scn .dream-bub { --dream-bub: #1d1f22; --dream-bub-line: transparent; }
+[data-tone='paper'] .scn .dream-bub { --dream-bub: #ffffff; --dream-bub-line: rgba(18, 20, 23, 0.13); }
+.scn .dream-bub-txt { position: relative; display: block; padding: 11px 18px; font-size: 20px; line-height: 26px; letter-spacing: -0.012em; white-space: nowrap; }
+
+/* the one still being typed */
+.scn .dream-dots { position: relative; display: flex; gap: 6px; padding: 19px 19px 20px; }
+.scn .dream-dots i { width: 9px; height: 9px; --r: 4.5px; background: var(--fg); opacity: 0.3; animation: dream-dot 1.4s ease-in-out infinite; }
+.scn .dream-dots i:nth-child(2) { animation-delay: 0.2s; }
+.scn .dream-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dream-dot { 0%, 60%, 100% { opacity: 0.3; } 28% { opacity: 0.9; } }
+
+/* the lime one: a thought (its trail of circles), then a comment pinned to the thing it became */
+.scn .dream-lime { --r: 0px; z-index: 3; }
+.scn .dream-lime-body { position: relative; display: block; background: var(--lime); color: var(--on-lime); --r: 26px; transform-origin: 0% 100%; }
+.scn .dream-lime-txt { display: block; padding: 18px 24px; font-size: 28px; line-height: 34px; font-weight: 500; letter-spacing: -0.02em; white-space: nowrap; }
+.scn .dream-corner { position: absolute; left: 0; bottom: 0; width: 26px; height: 26px; --r: 0px; background: var(--lime); transform-origin: 0% 100%; }
+.scn .dream-trail { position: absolute; --r: 50%; background: var(--lime); }
+
+/* the window */
+.scn .dream-win { z-index: 2; }
+.scn .dream-title { position: absolute; left: 50%; top: 0; height: 36px; translate: -50% 0; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg2); white-space: nowrap; }
+.scn .dream-film-body { --r: 0px; background: #000; overflow: hidden; }
+.scn .dream-film { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.scn .dream-url { gap: 6px; }
+.scn .dream-url .ico { color: var(--fg2); }
+
+/* the practice's homepage, drawn */
+.scn .dream-serif { font-family: ui-serif, 'New York', 'Iowan Old Style', Georgia, serif; font-weight: 400; }
+.scn .dream-logo { font-size: 15.5px; font-weight: 500; letter-spacing: -0.012em; }
+.scn .dream-nav { display: flex; gap: 18px; font-size: 11.5px; color: var(--fg2); white-space: nowrap; }
+.scn .dream-nav span:first-child { color: var(--fg); }
+.scn .dream-eye { font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg3); }
+.scn .dream-h1 { font-size: 40px; letter-spacing: -0.012em; }
+.scn .dream-sub { font-size: 13.5px; color: var(--fg2); }
+.scn .dream-book { height: 40px; padding: 0 20px; --r: 20px; font-size: 13px; }
+.scn .dream-room { overflow: hidden; }
+.scn .dream-room svg { position: absolute; left: 0; top: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scn .dream-dots i { animation: none; }
+}

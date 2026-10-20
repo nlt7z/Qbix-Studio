@@ -3,7 +3,18 @@
 import { useEffect, useState } from 'react';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 import SplitText from '@/components/SplitText';
-import type { BriefDraft } from '@/components/three/briefScene';
+
+/** How far the brief has got (for the meter beside the form). */
+export type BriefDraft = {
+  name: boolean;
+  email: boolean;
+  company: boolean;
+  types: string[];
+  budget: number;     // -1 = not chosen
+  timeline: number;   // -1 = not chosen
+  brief: number;      // characters typed
+  status: 'idle' | 'sending' | 'sent' | 'error';
+};
 
 const PROJECT_TYPES = [
   'AI product',

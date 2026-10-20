@@ -1,36 +1,35 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMotionValueEvent, useScroll } from 'framer-motion';
 import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
 import { Words } from '@/components/Reveal';
-import StageBox, { STAGE_TAIL } from '@/components/story/StageBox';
 import { smoothScrollTo } from '@/lib/smoothScroll';
+
+/** How long (in screens) a pinned tour holds its last state before the section scrolls on. */
+export const TOUR_TAIL = 0.3;
 
 type Item = { k: string; v: string };
 
 /**
- * A pinned scroll tour: the section pins, the page's object (BlockStage) sits
- * beside the list playing `forms`, one per row, and scrolling walks it from
- * one to the next; the row it shows is lit. Each row is a button that jumps
- * to its stop. With reduced motion it's a plain list.
+ * A pinned scroll tour: the section pins, its scene sits beside the list with
+ * one state per row, and scrolling walks it from one to the next; the row it
+ * shows is lit. Each row is a button that jumps to its stop. With reduced
+ * motion it's a plain list.
  */
 export default function KitTour({
   items,
-  forms,
-  label,
+  scene,
   title = 'What you get',
   id,
 }: {
   items: Item[];
-  /** The forms the object plays, one per row (components/three/blockForms.ts). */
-  forms: string;
-  label: string;
+  /** The scene, one state per row (components/scenes). */
+  scene: ReactNode;
   title?: string;
   id?: string;
 }) {
   const ref = useRef<HTMLElement | null>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
   // Under way once the section's top is past the middle of the screen.
   const { scrollYProgress: approach } = useScroll({ target: ref, offset: ['start 0.5', 'start start'] });
   const [active, setActive] = useState(0);
@@ -41,13 +40,14 @@ export default function KitTour({
   const reduced = useReducedMotionSafe();
   const n = items.length;
 
-  // The row whose form the object is nearest (it holds on each form, moving between them, and
-  // gets to the last a little before the section scrolls on).
-  useMotionValueEvent(scrollYProgress, 'change', (v) => {
-    const run = (ref.current?.offsetHeight ?? 0) - window.innerHeight;
-    const p = Math.min(1, (v * run) / Math.max(1, run - window.innerHeight * STAGE_TAIL));
-    setActive(Math.min(n - 1, Math.max(0, Math.round(p * (n - 1)))));
-  });
+  // The row the scene is showing (lib/scene/driver.ts tells the section).
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const on = (e: Event) => setActive((e as CustomEvent<number>).detail);
+    el.addEventListener('scene:step', on);
+    return () => el.removeEventListener('scene:step', on);
+  }, []);
   useMotionValueEvent(approach, 'change', (v) => setStarted(v > 0));
 
   const jump = (i: number) => {
@@ -55,7 +55,7 @@ export default function KitTour({
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
     const travel = el.offsetHeight - window.innerHeight;
-    smoothScrollTo(top + (travel - window.innerHeight * STAGE_TAIL) * (i / Math.max(1, n - 1)));
+    smoothScrollTo(top + (travel - window.innerHeight * TOUR_TAIL) * (i / Math.max(1, n - 1)));
   };
 
   if (reduced) {
@@ -80,7 +80,7 @@ export default function KitTour({
   }
 
   return (
-    <section ref={ref} id={id} className="lk-tour" data-nav-theme="dark" data-chapter data-forms={forms} data-tone="dark" style={{ ['--stops' as string]: n }}>
+    <section ref={ref} id={id} className="lk-tour" data-nav-theme="dark" data-chapter data-tail={TOUR_TAIL} data-tone="dark" style={{ ['--stops' as string]: n }}>
       <div className="lk-tour-pin">
         <div className="container lk-tour-grid">
           <div className="lk-tour-copy">
@@ -104,7 +104,7 @@ export default function KitTour({
               <span style={{ transform: `scaleX(${(active + 1) / n})` }} />
             </div>
           </div>
-          <StageBox label={label} className="lk-tour-stage" />
+          <div className="lk-tour-stage">{scene}</div>
         </div>
       </div>
     </section>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, type RefObject } from 'react';
-import { watchCovered } from '@/components/three/covered';
+import { watchCovered } from '@/components/covered';
 
 /**
  * Drives the muted, looping preview videos. A video may play only while it is

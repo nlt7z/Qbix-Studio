@@ -89,7 +89,8 @@ export default function Colophon({ bare = false }: { bare?: boolean }) {
             <p className="ft-tagline">
               Bring the idea.{' '}
               <br className="ft-br" />
-              <Marker>{'We\u2019ll build the thing.'}</Marker>
+              {/* white: the screen's one lime is the page's own button just above */}
+              <Marker className="marker--white">{'We\u2019ll build the thing.'}</Marker>
             </p>
           </div>
           <div className="ft-head-cta">

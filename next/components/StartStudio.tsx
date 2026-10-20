@@ -2,16 +2,16 @@
 
 import { useCallback, useState } from 'react';
 import StartProjectForm from '@/components/StartProjectForm';
-import BlockFigure from '@/components/BlockFigure';
-import type { BriefDraft } from '@/components/three/briefScene';
+import IsoCube from '@/components/scene/IsoCube';
+import type { BriefDraft } from '@/components/StartProjectForm';
 
 const PARTS = 7;
 const filled = (d: BriefDraft) =>
   [d.name, d.email, d.company, d.types.length > 0, d.budget >= 0, d.timeline >= 0, d.brief > 0].filter(Boolean).length;
 
 /**
- * The /start form beside the site's blocks (the cube), with a meter that
- * fills as the brief does.
+ * The /start form beside the qbix cube, with a meter that fills as the
+ * brief does.
  */
 export default function StartStudio() {
   const [count, setCount] = useState(0);
@@ -21,7 +21,10 @@ export default function StartStudio() {
     <div className="container start-studio">
       <div className="start-studio-stage">
         <div className="start-stage-pin">
-          <BlockFigure form="cube" label="The Qbix cube: 27 blocks, one of them lime" />
+          <div className="start-cube" data-tone="dark">
+            {/* the screen's one lime is the form's Send button */}
+            <IsoCube lime={false} label="The qbix cube: 27 pieces, a layer turning now and then" />
+          </div>
           <div className="start-stage-hud mono" aria-hidden>
             <span>Your brief</span>
             <span className="start-stage-meter">

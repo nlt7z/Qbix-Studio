@@ -4,9 +4,8 @@ import CheckoutButton, { CheckoutNote } from './CheckoutButton';
 import { OfferBadge, WasPrice } from './OfferPrice';
 import Faq from './Faq';
 import StickyCta from './StickyCta';
-import BlockStage from '@/components/story/BlockStage';
-import StageBox from '@/components/story/StageBox';
 import KitTour from './KitTour';
+import { ListingHero, ListingTour } from '@/components/scenes/Listing';
 import HourRail from './HourRail';
 import Odometer from './Odometer';
 import AboutPhoto from './AboutPhoto';
@@ -52,10 +51,8 @@ const FAQ = [
 
 export default function ListingKit() {
   return (
-    <main className="offer lk story">
-      {/* The page's one 3D object, drawn where its two sections ask (components/story/BlockStage). */}
-      <BlockStage />
-      <section className="lk-hero" data-nav-theme="dark" data-chapter data-forms="kit" data-tone="dark">
+    <main className="offer lk">
+      <section className="lk-hero" data-nav-theme="dark" data-chapter data-tone="dark">
         <div className="container lk-hero-grid">
           <div className="lk-hero-copy">
             <Reveal as="span" className="offer-eyebrow mono" speed="fast">
@@ -68,7 +65,9 @@ export default function ListingKit() {
             </Reveal>
           </div>
           <div className="lk-hero-visual">
-            <StageBox label="The kit: a print flyer, social posts around it, and the video on a phone" />
+            <div className="block-figure">
+              <ListingHero />
+            </div>
           </div>
           <div className="lk-hero-act">
             <Reveal className="lk-hero-cta" speed="base" delay={0.45}>
@@ -98,11 +97,7 @@ export default function ListingKit() {
         </div>
       </section>
 
-      <KitTour
-        items={GET}
-        forms="kitFlyer,kitPosts,kitReel,kitEdit,kitChanges"
-        label="The flyer, then its five posts, then the reel on a phone, then the flyer open to edit, then a change asked for and done"
-      />
+      <KitTour items={GET} scene={<ListingTour />} />
 
       <section className="offer-section" data-nav-theme="dark">
         <div className="container offer-narrow">
