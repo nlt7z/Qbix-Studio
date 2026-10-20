@@ -119,17 +119,17 @@
 .ch[data-prev='dark'] { --ch-around: var(--bg); }
 .ch[data-prev='paper'] { --ch-around: var(--paper); }
 .story > .ch[data-tone='lime'] { background: linear-gradient(var(--ch-around) 50%, var(--bg) 50%) !important; }
-.ch[data-tone='lime']::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--signal);
-  clip-path: polygon(
+.ch[data-tone='lime'] {
+  --ch-shape: polygon(
     0 var(--tab-h), calc(var(--tab-l) - var(--tab-h)) var(--tab-h), var(--tab-l) 0, calc(var(--tab-x) + var(--tab-w)) 0,
     calc(var(--tab-x) + var(--tab-w) + var(--tab-h)) var(--tab-h), 100% var(--tab-h),
     100% calc(100% - var(--corner)), calc(100% - var(--corner)) 100%, 0 100%
   );
 }
+.ch[data-tone='lime']::before { content: ''; position: absolute; inset: 0; background: var(--signal); clip-path: var(--ch-shape); }
+/* what's drawn on the chapter (generative currents): cut to its shape, under the words */
+.ch-ground { position: absolute; inset: 0; z-index: 0; clip-path: var(--ch-shape); pointer-events: none; }
+.ch-ground .flow { display: block; width: 100%; height: 100%; }
 .ch-tab { position: absolute; top: 0; left: var(--tab-x); z-index: 3; height: var(--tab-h); display: flex; align-items: center; }
 .ch-tab .ch-kicker { margin: 0; color: var(--ch-fg); }
 .ch[data-tone='lime'] .marker--ink .marker-in { color: var(--signal); }

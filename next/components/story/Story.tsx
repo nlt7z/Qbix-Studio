@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import Hero from '@/components/sections/Hero';
-import Hush from '@/components/scenes/Hush';
+import Forma from '@/components/scenes/Forma';
 import Kova from '@/components/scenes/Kova';
 import Labs from '@/components/scenes/Labs';
 import Dream from '@/components/scenes/Dream';
 import { ListingStory } from '@/components/scenes/Listing';
 import { PracticeStory } from '@/components/scenes/Practice';
 import GlassCube from '@/components/scene/GlassCube';
+import Flow from '@/components/scene/Flow';
 import Marker from '@/components/Marker';
 import SplitText from '@/components/SplitText';
 import { useAudience } from '@/components/Audience';
@@ -23,7 +24,7 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
  * through the chapter, on the side it names in `side` (the words take the
  * other side). Tones alternate black and paper; the sign-off is lime, its
  * top edge cut like a folder's, a tab rising out of it over the words (`tab`;
- * `prev` is the tone round the tab). A chapter with `steps` has
+ * `prev` is the tone round the tab; `ground`, what's drawn on it). A chapter with `steps` has
  * the state its scene is showing set on it, as `data-step`, which lights that
  * step (or that product).
  *
@@ -40,6 +41,7 @@ type ChapterProps = {
   tone: 'dark' | 'paper' | 'lime';
   prev?: 'dark' | 'paper';
   tab?: ReactNode;
+  ground?: ReactNode;
   side: 'left' | 'right';
   steps?: number;
   caps?: Cap[];
@@ -50,7 +52,7 @@ type ChapterProps = {
   foot?: ReactNode;
 };
 
-function Chapter({ id, scene, states, tone, prev, tab, side, steps, caps, h, className = '', head, body, foot }: ChapterProps) {
+function Chapter({ id, scene, states, tone, prev, tab, ground, side, steps, caps, h, className = '', head, body, foot }: ChapterProps) {
   // A chapter with several states is played by the scroll: it's as long as its moves need (80vh of
   // scroll each); on a phone its scene's runway is (see .ch-run in story.css).
   const moves = Math.max(0, states - 1);
@@ -69,6 +71,7 @@ function Chapter({ id, scene, states, tone, prev, tab, side, steps, caps, h, cla
       data-steps={steps}
       style={{ '--h': height, '--moves': moves } as CSSProperties}
     >
+      {ground && <div className="ch-ground">{ground}</div>}
       {tab && <div className="ch-tab">{tab}</div>}
       <div className="ch-frame">
         {/* Beside the words; on a phone, pinned while the scroll plays it. */}
@@ -159,11 +162,11 @@ function StudioChapters() {
   const { open } = useContactModal();
   return (
     <>
-      {/* The moodboard for hush, a pair of headphones; its picture and type fly into the launch site on a
-          laptop while the code is written beside it; the code folds into a phone and the address goes live. */}
+      {/* The moodboard for Forma, a studio of ceramic objects; its pieces travel into the launch site, which
+          goes live at forma.studio, on a phone too. */}
       <Chapter
         id="services"
-        scene={<Hush />}
+        scene={<Forma />}
         states={3}
         tone="paper"
         side="right"
@@ -351,7 +354,7 @@ export default function Story() {
         }
       />
 
-      {/* The sign-off, on lime: the glass cube, its core in ink. */}
+      {/* The sign-off, on lime, ink currents drawn over it: the glass cube, its core white. */}
       <Chapter
         id="contact"
         scene={<GlassCube />}
@@ -359,6 +362,7 @@ export default function Story() {
         tone="lime"
         prev={ai ? 'dark' : 'paper'}
         tab={<span className="ch-kicker mono">Contact</span>}
+        ground={<Flow count={760} seed={3} ground="184, 255, 0" ink="12, 19, 0" alpha={0.14} scale={2.4} speed={0.6} density={1} />}
         side={ai ? 'right' : 'left'}
         h="160vh"
         className="ch--contact"

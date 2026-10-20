@@ -3982,6 +3982,24 @@ body:has(.pw) .topnav-fixed[data-theme='light'].is-scrolled { background: #f3f4f
 .topnav-fixed[data-theme='light'] .topnav-cta.topnav-cta-text,
 .topnav-fixed[data-theme='light'] .topnav-cta.topnav-cta-text:hover { background: transparent; color: #111112; box-shadow: none; }
 .topnav-mobile-link.is-cta { background: transparent !important; color: var(--ink) !important; border-color: transparent !important; }
+/* A text action's underline is a line under the whole label, drawn left to right
+   on hover: on the letters it would ride up with them as they roll over. */
+.btn.btn-text:hover, .topnav-cta.topnav-cta-text:hover { text-decoration: none; }
+.btn.btn-text, .topnav-cta.topnav-cta-text { position: relative; }
+.btn.btn-text::after, .topnav-cta.topnav-cta-text::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn.btn-text:hover::after, .btn.btn-text:focus-visible::after,
+.topnav-cta.topnav-cta-text:hover::after, .topnav-cta.topnav-cta-text:focus-visible::after { transform: scaleX(1); }
 
 /* --- tags, markers, frames ---------------------------------------------------- */
 .ft-soon, .ch-tag, .offer-badge, .tag {

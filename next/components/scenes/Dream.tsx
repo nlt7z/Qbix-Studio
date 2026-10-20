@@ -1,9 +1,9 @@
 'use client';
 
 import '@/app/scenes-dream.css';
-import { useEffect, useRef } from 'react';
 import Scene from '@/components/scene/Scene';
 import { A, T, Lock } from '@/components/scene/kit';
+import { BidTable } from '@/components/scenes/BidKing';
 import { E } from '@/lib/scene/timeline';
 
 /**
@@ -16,9 +16,9 @@ import { E } from '@/lib/scene/timeline';
  *     pulled down into it, frosted as they pass behind its glass bar; the
  *     thought's trail goes in, and it travels up out of the window and then
  *     tucks its edge under the bar's corner: pinned, the lime glowing through
- *     the glass. Pinned, the thing comes alive: AI Bidding's own film plays
- *     (for AI teams), or the lamp in the practice's calm room is turned on
- *     (for business).
+ *     the glass. The thing it became: Bid King's table, drawn (for AI teams),
+ *     or the practice's calm homepage, whose lamp is turned on once it's
+ *     pinned (for business).
  * The ideas float inside the window's span, so each falls straight into it;
  * the lime one moves only once they are gone, so nothing crosses its way.
  */
@@ -32,7 +32,7 @@ type Side = 'l' | 'r';
 type Idea = { s: string; side: Side; x: number; y: number; fall: number };
 type Copy = { lime: [string, string]; at: { x: number; y: number }; ideas: Idea[] };
 
-// the window, in state 2: its body (646 × 353, under a 36px glass bar) is the film's shape, 960 × 524
+// the window, in state 2: its body is 646 × 353, under a 36px glass bar
 const WIN = { x: 36, y: 132, w: 648, h: 391 };
 // the lime one, pinned: at PINNED of its size, sticking out TUCK_X left of the window, its edge TUCK_Y under the bar
 const PINNED = 0.8;
@@ -143,42 +143,6 @@ function Room() {
 
 export default function Dream({ biz = false }: { biz?: boolean }) {
   const C = biz ? BIZ : AI;
-  const film = useRef<HTMLVideoElement | null>(null);
-  // the film plays only while state 2 is showing and the scene is on screen
-  const play = useRef({ t: 0, seen: false, started: false, sync: () => {} });
-
-  useEffect(() => {
-    const v = film.current;
-    if (!v) return;
-    v.muted = true;
-    const p = play.current;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-    p.sync = () => {
-      const want = p.t >= 1.78 && p.seen && !document.hidden && !reduced.matches;
-      if (want && v.paused) {
-        // from the frame the poster shows
-        if (!p.started) {
-          p.started = true;
-          try {
-            v.currentTime = 1;
-          } catch {}
-        }
-        v.play().catch(() => {});
-      } else if (!want && !v.paused) v.pause();
-    };
-    const io = new IntersectionObserver(([e]) => {
-      p.seen = e.isIntersecting;
-      p.sync();
-    }, { threshold: 0.25 });
-    io.observe(v);
-    const onVis = () => p.sync();
-    document.addEventListener('visibilitychange', onVis);
-    return () => {
-      io.disconnect();
-      document.removeEventListener('visibilitychange', onVis);
-      v.pause();
-    };
-  }, []);
 
   return (
     <Scene
@@ -188,7 +152,7 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
       label={
         biz
           ? 'Ideas as chat bubbles, one of them lime: a site as calm as my office? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over the calm counseling homepage it became'
-          : 'Ideas as chat bubbles, one of them lime: what if poker had an AI that bluffs? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over the film of AI Bidding, the game it became'
+          : 'Ideas as chat bubbles, one of them lime: what if poker had an AI that bluffs? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over Bid King, the blind auction game it became'
       }
       build={(q, tl) => {
         /* the bubbles' edges, sized to their words */
@@ -242,15 +206,8 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
           if (lime.style.zIndex !== z) lime.style.zIndex = z;
         });
 
-        /* pinned: the thing it became comes alive (the film plays; the lamp in the room is turned on) */
-        if (!biz) {
-          tl.on((t) => {
-            play.current.t = t;
-            play.current.sync();
-          });
-        } else {
-          tl.from(q('pg.light'), { clip: [0, 0, 100, 0] }).to(q('pg.light'), { clip: [0, 0, 0, 0] }, 1.79, 0.12, E.out);
-        }
+        /* pinned: the lamp in the practice's room is turned on */
+        if (biz) tl.from(q('pg.light'), { clip: [0, 0, 100, 0] }).to(q('pg.light'), { clip: [0, 0, 0, 0] }, 1.79, 0.12, E.out);
       }}
     >
       {/* --- the ideas (under the window: they're pulled down into it) --- */}
@@ -318,8 +275,11 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
               </A>
             </div>
           ) : (
-            <div className="win-body dream-film-body">
-              <video ref={film} className="dream-film" src="/bidking-present.mp4" poster="/scenes/dream-bid.jpg" muted loop playsInline preload="metadata" />
+            <div className="win-body dream-bid-body">
+              {/* the screen's lime is the idea pinned over it: the table's bid is chalk */}
+              <div className="dream-bid">
+                <BidTable k="dream.bid" lime={false} />
+              </div>
             </div>
           )}
         </A>

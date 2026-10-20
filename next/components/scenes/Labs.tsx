@@ -2,14 +2,18 @@
 
 import '@/app/scenes-labs.css';
 import Scene from '@/components/scene/Scene';
-import { A, Lock, Play, Check, notch } from '@/components/scene/kit';
+import { A, Lock, Play, Check, cut, notch } from '@/components/scene/kit';
+import { BidTable } from '@/components/scenes/BidKing';
 import { E } from '@/lib/scene/timeline';
 
 /**
  * Qbix Labs: four products in one window, one after another, as the list
  * beside it names them.
- * 1 · Strata, live: its own film, at stratadesign.app, a frosted caption over it;
- * 2 · AI Bidding, live: Bid King's film, a phone in a hand, on a dark screen;
+ * 1 · Strata, live, at stratadesign.app: a wall of inspiration (photographs,
+ *     public/art), its colours pinned on it in glass, and the system it makes
+ *     beside it: colours, type, components, tokens;
+ * 2 · AI Bidding, live: Bid King, drawn (BidKing.tsx): a sealed lot on the
+ *     room's currents, the table, your bid;
  * 3 · TTS Editor, on the way: a voice's waveform, its pitch drawn over it, and
  *     a frosted sheet over its lower half with the script (the playhead lights
  *     it word by word) and three dials;
@@ -17,8 +21,8 @@ import { E } from '@/lib/scene/timeline';
  *     captions and the assistant, whose hints arrive while the candidate talks.
  * Each move: the window's address is selected and the next one typed; then
  * the next product pushes up into the window, and its name (its tag with it)
- * into the title above. The films play only while their state is showing.
- * Square, like the site; the only lime is the one thing that's live or now.
+ * into the title above. Each product's own parts come in as it settles.
+ * Square, like the site; the lime is the product's own (its accent, its bid).
  */
 
 const TOP = 20; // the names
@@ -32,6 +36,28 @@ const PRODUCTS = [
   { name: 'AI Bidding', live: true, url: 'Bid King' },
   { name: 'TTS Editor', live: false, url: 'Voiceover, take 3' },
   { name: 'Interview Assistant', live: false, url: 'Interview with Sam' },
+];
+
+/* --- Strata: the wall of inspiration, and the system it makes ------------------ */
+const WALL = { x: 16, y: 40, w: 100, h: 166, gap: 8 };
+const WALL_PICS: [string, string?][][] = [
+  [['ribbon', '58% 50%'], ['wall', '50% 70%'], ['slices']],
+  [['curves'], ['block', '40% 50%'], ['ring', '62% 50%']],
+];
+const cell = (c: number, r: number) => ({ x: WALL.x + c * (WALL.w + WALL.gap), y: WALL.y + r * (WALL.h + WALL.gap) });
+// a colour read off a picture: the point, and the glass tag pinned beside it
+const PINS: { c: number; r: number; px: number; py: number; hex: string }[] = [
+  { c: 2, r: 0, px: 52, py: 96, hex: '#B8FF00' },
+  { c: 1, r: 1, px: 44, py: 118, hex: '#6E8F1A' },
+  { c: 0, r: 0, px: 22, py: 26, hex: '#121417' },
+  { c: 0, r: 1, px: 70, py: 52, hex: '#E6E9E3' },
+];
+const SYS = { x: 356 };
+const SWATCHES: [string, string, string][] = [
+  ['Lime', '#B8FF00', 'var(--lime)'],
+  ['Moss', '#6E8F1A', '#6e8f1a'],
+  ['Ink', '#121417', '#121417'],
+  ['Mist', '#E6E9E3', '#e6e9e3'],
 ];
 
 /* --- the TTS Editor: a voice, 4.2 s of it ---------------------------------- */
@@ -122,7 +148,7 @@ export default function Labs() {
       n={4}
       w={720}
       h={560}
-      label="Qbix Labs, four products in one window: Strata and AI Bidding playing their own films, then the TTS Editor and the Interview Assistant, on the way"
+      label="Qbix Labs, four products in one window: Strata turning a wall of pictures into a design system, Bid King's blind auction table, then the TTS Editor and the Interview Assistant, on the way"
       build={(q, tl) => {
         const win = q('win');
         const panels = q('panels');
@@ -152,43 +178,28 @@ export default function Labs() {
           tl.to(name(k), { y: 0 }, at + 0.4, 0.2, E.out);
         });
 
-        /* the films play while they're showing (and the window is on the screen) */
-        const films = ([['film.strata', 1], ['film.bid', 2]] as const).map(([k, at]) => ({ v: q(k) as HTMLVideoElement | null, at }));
-        films.forEach(({ v }) => {
-          if (v) {
-            v.muted = true;
-            v.defaultMuted = true;
-          }
+        /* Strata, settling: its colours are read off the pictures and pinned; the system is set beside them */
+        PINS.forEach((_, i) => {
+          tl.from(q(`st.pt.${i}`), { s: 0 }).to(q(`st.pt.${i}`), { s: 1 }, 0.72 + i * 0.03, 0.05, E.out);
+          tl.from(q(`st.tag.${i}`), { clip: notch(10, [0, 100, 0, 0]) }).to(q(`st.tag.${i}`), { clip: notch(10) }, 0.74 + i * 0.03, 0.07, E.out);
+          tl.from(q(`st.sw.${i}`), { clip: [100, 0, 0, 0] }).to(q(`st.sw.${i}`), { clip: [0, 0, 0, 0] }, 0.78 + i * 0.025, 0.08, E.out);
         });
-        const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        let now = 0;
-        let seen = false;
-        let io: IntersectionObserver | null = null;
-        const sync = () => {
-          if (win && !win.isConnected) {
-            io?.disconnect();
-            document.removeEventListener('visibilitychange', sync);
-            return;
-          }
-          for (const { v, at } of films) {
-            if (!v) continue;
-            const want = seen && !calm && !document.hidden && Math.abs(now - at) < 0.5;
-            if (want && v.paused) v.play().catch(() => {});
-            else if (!want && !v.paused) v.pause();
-          }
-        };
-        tl.on((t) => {
-          now = t;
-          sync();
+        tl.from(q('st.type'), { clip: [0, 100, 0, 0] }).to(q('st.type'), { clip: [0, 0, 0, 0] }, 0.86, 0.08, E.out);
+        q.all('st.ui.').forEach((el, i) => {
+          const t = 0.88 + i * 0.02;
+          // the button keeps its cut corner as it opens
+          if (i === 0) tl.from(el, { clip: cut(10, 100) }).to(el, { clip: cut(10) }, t, 0.07, E.out);
+          else tl.from(el, { clip: [0, 100, 0, 0] }).to(el, { clip: [0, 0, 0, 0] }, t, 0.07, E.out);
         });
-        if (win) {
-          io = new IntersectionObserver(([e]) => {
-            seen = e.isIntersecting;
-            sync();
-          });
-          io.observe(win);
-          document.addEventListener('visibilitychange', sync);
-        }
+        tl.type(q('st.code.0'), 0.92, 0.04).type(q('st.code.1'), 0.95, 0.03);
+
+        /* Bid King, settling: the table fills, the read comes in, the bid is up */
+        [0, 1, 2, 3].forEach((i) => {
+          tl.from(q(`bid.p${i}`), { clip: [0, 100, 0, 0] }).to(q(`bid.p${i}`), { clip: [0, 0, 0, 0] }, 1.6 + i * 0.03, 0.08, E.out);
+        });
+        tl.from(q('bid.read'), { clip: [100, 0, 0, 0] }).to(q('bid.read'), { clip: [0, 0, 0, 0] }, 1.72, 0.08, E.out);
+        tl.from(q('bid.meter'), { sx: 0 }).to(q('bid.meter'), { sx: 1 }, 1.76, 0.12, E.soft);
+        tl.from(q('bid.bar'), { y: 20, clip: notch(16, [100, 0, 0, 0]) }).to(q('bid.bar'), { y: 0, clip: notch(16) }, 1.8, 0.1, E.out);
 
         /* 2 → 3, then: the pitch is drawn over the voice, and the playhead reads it out */
         const draw = (el: HTMLElement | null, pts: [number, number][], at: number, dur: number) => {
@@ -300,39 +311,91 @@ export default function Labs() {
         </div>
         <div className="win-body labs-body">
           <div data-k="panels" className="labs-panels" style={{ height: 4 * CH }}>
-            {/* 1 · Strata, its own film, a frosted caption over it */}
+            {/* 1 · Strata: the wall of inspiration, its colours pinned in glass; the system beside it */}
             <div className="labs-panel" style={{ top: 0, height: CH }}>
-              <video
-                data-k="film.strata"
-                className="labs-film labs-film--fill"
-                src="/previews/strata.mp4#t=2.43"
-                poster="/previews/strata.jpg"
-                muted
-                loop
-                playsInline
-                preload="metadata"
-              />
-              <A x={16} y={16} h={44} c="glass labs-cap notch">
-                A moodboard in, a working design system out.
+              <A x={WALL.x} y={14} c="labs-k">
+                Inspiration · 6
+              </A>
+              {WALL_PICS.map((row, r) =>
+                row.map(([src, pos], c) => (
+                  <A key={src} x={cell(c, r).x} y={cell(c, r).y} w={WALL.w} h={WALL.h} c="labs-pic">
+                    <img src={`/art/${src}.webp`} alt="" draggable={false} decoding="async" style={pos ? { objectPosition: pos } : undefined} />
+                  </A>
+                )),
+              )}
+              {PINS.map((p, i) => {
+                const o = cell(p.c, p.r);
+                const right = p.c < 2;
+                return (
+                  <div key={p.hex}>
+                    <i data-k={`st.pt.${i}`} className="a round labs-pt-ring" style={{ left: o.x + p.px - 6, top: o.y + p.py - 6 }} />
+                    <A
+                      k={`st.tag.${i}`}
+                      x={right ? o.x + p.px + 10 : o.x + p.px - 10 - 92}
+                      y={o.y + p.py - 13}
+                      w={92}
+                      h={26}
+                      c="glass labs-tag notch"
+                    >
+                      <i style={{ background: p.hex }} />
+                      {p.hex}
+                    </A>
+                  </div>
+                );
+              })}
+              <A x={SYS.x} y={14} w={346} c="labs-k labs-k--row">
+                <span>System</span>
+                <span className="faint">v1.0</span>
+              </A>
+              {SWATCHES.map(([name, hex, bg], i) => (
+                <A key={name} k={`st.sw.${i}`} x={SYS.x + i * 88} y={40} w={80} h={92} c="labs-sw">
+                  <i style={{ background: bg }} />
+                  <span>{name}</span>
+                  <em>{hex}</em>
+                </A>
+              ))}
+              <A k="st.type" x={SYS.x} y={148} w={346} h={62} c="labs-type">
+                <span className="f-head labs-aa">Aa</span>
+                <span className="labs-scale">
+                  <span>
+                    Display <i>48 / 52</i>
+                  </span>
+                  <span>
+                    Title <i>28 / 32</i>
+                  </span>
+                  <span>
+                    Body <i>15 / 24</i>
+                  </span>
+                </span>
+              </A>
+              <A k="st.ui.0" x={SYS.x} y={226} w={130} h={38} c="labs-ui-btn">
+                Get started
+              </A>
+              <A k="st.ui.1" x={SYS.x + 140} y={226} w={92} h={38} c="labs-ui-line">
+                Docs
+              </A>
+              <A k="st.ui.2" x={SYS.x + 242} y={233} h={24} c="labs-ui-tag">
+                New
+              </A>
+              <A k="st.ui.3" x={SYS.x} y={274} w={232} h={38} c="labs-ui-field">
+                you@studio.com
+              </A>
+              <A k="st.ui.4" x={SYS.x + 242} y={282} w={40} h={22} c="labs-ui-toggle">
+                <i />
+              </A>
+              <A x={SYS.x} y={324} w={346} h={56} c="labs-code f-mono">
+                <span data-k="st.code.0" className="t">
+                  --color-accent: <b>#B8FF00</b>;
+                </span>
+                <span data-k="st.code.1" className="t">
+                  --space-4: 16px;
+                </span>
               </A>
             </div>
 
-            {/* 2 · AI Bidding: Bid King, a phone in a hand, on black */}
+            {/* 2 · AI Bidding: Bid King, drawn */}
             <div className="labs-panel labs-dark" style={{ top: CH, height: CH }}>
-              <video
-                data-k="film.bid"
-                className="labs-film"
-                src="/bidking-present.mp4#t=1"
-                poster="/scenes/labs-bidking.jpg"
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                style={{ left: -65, top: CH - 440, width: 806, height: 440 }}
-              />
-              <A k="bid.cap" x={0} y={CH - 16 - 44} h={44} c="glass labs-dark-glass labs-cap notch" style={{ left: 'auto', right: 16 }}>
-                Bid, bluff, or go all in.
-              </A>
+              <BidTable />
             </div>
 
             {/* 3 · TTS Editor: the voice on its stage, the script and the dials frosted over it */}

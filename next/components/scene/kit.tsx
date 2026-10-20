@@ -51,6 +51,16 @@ export function notch(cut: number, [t, r, b, l]: [number, number, number, number
   return `polygon(evenodd, ${x0} ${y0}, ${x1} ${y0}, ${x1} ${y1}, ${x0} ${y1}, ${x0} ${y0}, ${xr(c - k)} ${yt(k)}, ${xr(k)} ${yt(k)}, ${xr(k)} ${yt(c - k)}, ${xr(c - k)} ${yt(k)}, ${x0} ${y0})`;
 }
 
+/**
+ * A clip for a box with its top right corner cut off (.cut in globals.css), shown up to `right` % short
+ * of its right edge: a wipe from 100 to 0 opens it left to right, the cut riding its edge.
+ */
+export function cut(size: number, right = 0): string {
+  const k = right >= 100 ? 0 : 1;
+  const r = `${100 - right}%`;
+  return `polygon(0 0, calc(${r} - ${size * k}px) 0, ${r} ${size * k}px, ${r} 100%, 0 100%)`;
+}
+
 /** One line of text at (x, y): its box is the line (for typing it out, or wiping it in). */
 export function T({ k, x = 0, y = 0, c = '', style, children }: { k?: string; x?: number; y?: number; c?: string; style?: CSSProperties; children: string }) {
   return (
@@ -159,18 +169,3 @@ export const Play = ({ size = 10 }: { size?: number }) => (
     <path d="M2.5 1.5 L8.5 5 L2.5 8.5 Z" fill="currentColor" />
   </svg>
 );
-
-/** Headphones, flat: a band, two cups (the lime is a dot on the right cup's edge, if `dot`). */
-export function Headphones({ size = 160, dot = false }: { size?: number; dot?: boolean }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 160 160" aria-hidden>
-      <path d="M30 98 V78 a50 50 0 0 1 100 0 V98" fill="none" stroke="currentColor" strokeWidth="9" strokeLinecap="round" />
-      <path d="M38 78 a42 42 0 0 1 84 0" fill="none" stroke="currentColor" strokeOpacity=".22" strokeWidth="3" />
-      <rect x="18" y="86" width="30" height="52" rx="12" fill="currentColor" />
-      <rect x="112" y="86" width="30" height="52" rx="12" fill="currentColor" />
-      <rect x="44" y="96" width="8" height="32" rx="3" fill="currentColor" />
-      <rect x="108" y="96" width="8" height="32" rx="3" fill="currentColor" />
-      {dot && <circle cx="127" cy="128" r="4.5" fill="var(--lime)" />}
-    </svg>
-  );
-}

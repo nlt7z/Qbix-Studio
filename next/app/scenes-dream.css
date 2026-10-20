@@ -43,8 +43,8 @@
 [data-tone='dark'] .scn .dream-win > .dream-bar.glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); }
 [data-tone='paper'] .scn .dream-win > .dream-bar.glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9); }
 .scn .dream-title { position: absolute; left: 50%; top: 0; height: 36px; translate: -50% 0; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg2); white-space: nowrap; }
-.scn .dream-film-body { background: #000; overflow: hidden; }
-.scn .dream-film { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.scn .dream-bid-body { background: #0b0c0e; overflow: hidden; }
+.scn .dream-bid { position: absolute; left: 0; top: 0; width: 718px; height: 392px; transform: scale(0.9); transform-origin: 0 0; }
 .scn .dream-page { background: var(--win); }
 .scn .dream-url { gap: 6px; }
 .scn .dream-url .ico { color: var(--fg2); }

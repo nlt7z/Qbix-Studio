@@ -1,0 +1,69 @@
+/* --- forma (the design service): a moodboard that becomes a launch site ------
+   The board's pieces are photographs (public/art) and drawn cards; those that
+   carry on travel into the site's window, scaled from their top left corner.
+   Square throughout; the glass caption and the lime are notched. */
+.scn .t { display: inline-block; }
+.scn .fm-lbl { display: flex; align-items: center; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg2); white-space: nowrap; }
+.scn .fm-lbl--n { justify-content: flex-end; color: var(--fg3); }
+
+/* the pieces */
+.scn .fm-tile { overflow: hidden; background: var(--sunk); transform-origin: 0 0; z-index: 3; }
+.scn .fm-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
+.scn .fm-card { background: var(--win); box-shadow: inset 0 0 0 1px var(--line); z-index: 3; }
+.scn .fm-card-k { position: absolute; left: 14px; top: 12px; }
+.scn .fm-chips { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; gap: 14px; font-size: 11.5px; color: var(--fg2); }
+.scn .fm-chip { display: inline-flex; align-items: center; gap: 6px; }
+.scn .fm-chip i { width: 12px; height: 12px; box-shadow: inset 0 0 0 1px var(--line2); }
+.scn .fm-lime { background: var(--lime); transform-origin: 0 0; z-index: 4; }
+.scn .fm-type { display: flex; align-items: center; gap: 18px; padding: 0 16px; }
+.scn .fm-aa { font-size: 58px; line-height: 1; letter-spacing: -0.03em; }
+.scn .fm-type-k { font-size: 11.5px; line-height: 1.55; color: var(--fg3); }
+.scn .fm-type-k b { font-weight: 500; color: var(--fg); }
+
+/* the motion study: generative, on ink; a dark glass caption over it */
+.scn .fm-flow { background: #0b0c0e; }
+.scn .flow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.scn .fm-flow-cap {
+  --cut: 12px;
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #f4f5f2;
+  background: rgba(30, 32, 36, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: none !important;
+}
+
+/* the site, in its window */
+.scn .fm-win { z-index: 1; }
+.scn .fm-url { display: grid; place-items: center; }
+.scn .fm-url-item { grid-area: 1 / 1; position: relative; display: inline-flex; align-items: center; gap: 5px; padding: 0 4px; height: 16px; white-space: pre; color: var(--fg); }
+.scn .fm-url-item > span { position: relative; }
+.scn .fm-url-sel { position: absolute; inset: 0; background: rgba(18, 20, 23, 0.14); transform-origin: left center; }
+.scn .fm-lock { display: inline-flex; color: var(--fg2); }
+.scn .fm-live { position: absolute; right: 12px; top: 8px; height: 20px; display: inline-flex; align-items: center; padding: 0 8px; background: var(--fg); color: var(--win); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.scn .fm-logo { z-index: 2; font-size: 18px; line-height: 1; }
+.scn .fm-nav { z-index: 2; display: flex; gap: 22px; font-size: 12px; color: var(--fg2); white-space: nowrap; }
+.scn .fm-cart { justify-content: flex-end; color: var(--fg); }
+.scn .fm-h1 { z-index: 2; font-size: 36px; line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
+.scn .fm-sub { z-index: 2; font-size: 13px; line-height: 1.5; color: var(--fg2); white-space: nowrap; }
+.scn .fm-btn { z-index: 5; display: flex; align-items: center; padding: 0 16px; font-size: 13px; font-weight: 600; color: var(--on-lime); white-space: nowrap; pointer-events: none; }
+.scn .fm-cap { z-index: 2; display: flex; justify-content: space-between; font-size: 12.5px; white-space: nowrap; }
+
+/* the layout grid: lime columns, faint, over the site */
+.scn .fm-col { z-index: 6; background: rgba(184, 255, 0, 0.09); box-shadow: inset 1px 0 0 rgba(110, 160, 0, 0.32), inset -1px 0 0 rgba(110, 160, 0, 0.32); }
+
+/* the phone and its site */
+.scn .fm-phone { z-index: 7; }
+.scn .fm-m { display: flex; flex-direction: column; padding: 0 8px; }
+.scn .fm-m-bar { display: flex; align-items: center; justify-content: space-between; height: 28px; font-size: 14px; }
+.scn .fm-m-bar i { width: 14px; height: 8px; box-shadow: inset 0 1.5px 0 var(--fg), inset 0 -1.5px 0 var(--fg); }
+.scn .fm-m-pic { position: relative; height: 108px; margin-top: 4px; overflow: hidden; }
+.scn .fm-m-h1 { margin-top: 14px; font-size: 22px; line-height: 1; letter-spacing: -0.03em; }
+.scn .fm-m-btn { --cut: 10px; margin-top: 16px; height: 34px; display: flex; align-items: center; justify-content: center; background: var(--lime); color: var(--on-lime); font-size: 12px; font-weight: 600; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
