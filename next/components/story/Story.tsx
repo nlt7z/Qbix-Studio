@@ -24,7 +24,13 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
  * other side). Tones alternate black and paper. A chapter with `steps` has
  * the state its scene is showing set on it, as `data-step`, which lights that
  * step (or that product).
+ *
+ * On a phone the words come in three parts round the scene: the head (what
+ * it is), then the scene, pinned in the middle of the screen while the scroll
+ * plays it, with `caps` under it saying what each state shows (in place of
+ * the list beside it on a wide screen), then the rest.
  */
+type Cap = { k: string; v?: string; tag?: string };
 type ChapterProps = {
   id?: string;
   scene?: ReactNode;
@@ -32,31 +38,69 @@ type ChapterProps = {
   tone: 'dark' | 'paper';
   side: 'left' | 'right';
   steps?: number;
+  caps?: Cap[];
   h?: string;
   className?: string;
-  children: ReactNode;
+  head: ReactNode;
+  body?: ReactNode;
+  foot?: ReactNode;
 };
 
-function Chapter({ id, scene, states, tone, side, steps, h, className = '', children }: ChapterProps) {
-  // A chapter with several states is played by the scroll: it's as long as its moves need
-  // (80vh of scroll each), and on a phone its words run on that much further under the scene.
+function Chapter({ id, scene, states, tone, side, steps, caps, h, className = '', head, body, foot }: ChapterProps) {
+  // A chapter with several states is played by the scroll: it's as long as its moves need (80vh of
+  // scroll each); on a phone its scene's runway is (see .ch-run in story.css).
   const moves = Math.max(0, states - 1);
   const height = h ?? (moves ? `${110 + 80 * moves}vh` : '170vh');
+  const n = caps?.length ?? 0;
+  const sub = caps?.some((c) => c.v);
   return (
     <section
       id={id}
-      className={`ch ${className}`}
+      className={`ch${sub ? ' ch--subcaps' : ''} ${className}`}
       data-chapter
       data-tone={tone}
       data-nav-theme={tone === 'paper' ? 'light' : 'dark'}
       data-side={side}
       data-steps={steps}
-      style={{ '--h': height, '--run': `${moves * 40}vh` } as CSSProperties}
+      style={{ '--h': height, '--moves': moves } as CSSProperties}
     >
       <div className="ch-frame">
-        {/* Beside the words; on a phone, a window the words scroll on under. */}
-        <div className="ch-stage">{scene}</div>
-        <div className="ch-copy">{children}</div>
+        {/* Beside the words; on a phone, pinned while the scroll plays it. */}
+        <div className="ch-run" data-run={moves ? '' : undefined}>
+          <div className="ch-stage">
+            <div className="ch-scene">{scene}</div>
+            {n > 0 && (
+              <div className={`ch-caps${sub ? ' ch-caps--sub' : ''}`} aria-hidden>
+                <span className="ch-caps-roll">
+                  <span className="ch-caps-list">
+                    {caps!.map((c, i) => (
+                      <span key={c.k} className="ch-cap">
+                        <span className="ch-cap-n mono">
+                          {String(i + 1).padStart(2, '0')} / {String(n).padStart(2, '0')}
+                        </span>
+                        <span className="ch-cap-k">
+                          {c.k}
+                          {c.tag && <span className={`ch-tag mono${c.tag === 'Live' ? ' is-live' : ''}`}>{c.tag}</span>}
+                        </span>
+                        {c.v && <span className="ch-cap-v">{c.v}</span>}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+                <span className="ch-caps-bar">
+                  {caps!.map((c) => (
+                    <i key={c.k} />
+                  ))}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="ch-copy">
+          <div className="ch-head">{head}</div>
+          {body && <div className="ch-body">{body}</div>}
+          {foot && <div className="ch-foot">{foot}</div>}
+        </div>
       </div>
     </section>
   );
@@ -91,6 +135,11 @@ function Act({ children, onClick, href }: { children: string; onClick?: () => vo
 }
 
 const [design, brand] = services;
+const DESIGN_STEPS = ['Moodboard', 'Design and code', 'Live on your domain'];
+const BRAND_STEPS = ['The grid', 'Color and type', 'The mark'];
+const KIT_STEPS = ['Print flyer', 'Five social posts', 'A 30-second video'];
+const PRACTICE_STEPS = ['A short questionnaire', 'Your new homepage in 3 days', 'Live in 7 days'];
+const capsOf = (items: string[]): Cap[] => items.map((k) => ({ k }));
 const [kit, practice] = offers;
 
 const PRODUCTS = [
@@ -106,51 +155,94 @@ function StudioChapters() {
     <>
       {/* The moodboard for hush, a pair of headphones; its picture and type fly into the launch site on a
           laptop while the code is written beside it; the code folds into a phone and the address goes live. */}
-      <Chapter id="services" scene={<Hush />} states={3} tone="paper" side="right" steps={3}>
-        <p className="ch-kicker mono">{design.title} · {design.audience}</p>
-        <h2 className="ch-title">From moodboard to a live domain.</h2>
-        <p className="ch-lede">{design.blurb}</p>
-        <Steps items={['Moodboard', 'Design and code', 'Live on your domain']} />
-        <p className="ch-meta">
-          <span>From <b>{design.priceFrom}</b></span>
-          <span>{design.typical}</span>
-        </p>
-        <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
-      </Chapter>
+      <Chapter
+        id="services"
+        scene={<Hush />}
+        states={3}
+        tone="paper"
+        side="right"
+        steps={3}
+        caps={capsOf(DESIGN_STEPS)}
+        head={
+          <>
+            <p className="ch-kicker mono">{design.title} · {design.audience}</p>
+            <h2 className="ch-title">From moodboard to a live domain.</h2>
+            <p className="ch-lede">{design.blurb}</p>
+          </>
+        }
+        body={<Steps items={DESIGN_STEPS} />}
+        foot={
+          <>
+            <p className="ch-meta">
+              <span>From <b>{design.priceFrom}</b></span>
+              <span>{design.typical}</span>
+            </p>
+            <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
+          </>
+        }
+      />
 
       {/* kova, a money app that works, on a phone: its layers lifted off in outline on a grid; then colour
           and type; then pressed back in, its mark popping out as the app's icon. */}
-      <Chapter id="brand" scene={<Kova />} states={3} tone="dark" side="left" steps={3}>
-        <p className="ch-kicker mono">{brand.title} · {brand.audience}</p>
-        <h2 className="ch-title">From usable to worth sharing.</h2>
-        <p className="ch-lede">{brand.blurb}</p>
-        <Steps items={['The grid', 'Color and type', 'The mark']} />
-        <p className="ch-meta">
-          <span>From <b>{brand.priceFrom}</b></span>
-          <span>{brand.typical}</span>
-        </p>
-        <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
-      </Chapter>
+      <Chapter
+        id="brand"
+        scene={<Kova />}
+        states={3}
+        tone="dark"
+        side="left"
+        steps={3}
+        caps={capsOf(BRAND_STEPS)}
+        head={
+          <>
+            <p className="ch-kicker mono">{brand.title} · {brand.audience}</p>
+            <h2 className="ch-title">From usable to worth sharing.</h2>
+            <p className="ch-lede">{brand.blurb}</p>
+          </>
+        }
+        body={<Steps items={BRAND_STEPS} />}
+        foot={
+          <>
+            <p className="ch-meta">
+              <span>From <b>{brand.priceFrom}</b></span>
+              <span>{brand.typical}</span>
+            </p>
+            <div className="ch-acts"><Act onClick={open}>Start a brief</Act></div>
+          </>
+        }
+      />
 
       {/* The four products, one after another, in the list's order (Strata's own film on a laptop); the one
           showing stays lit in the list. */}
-      <Chapter id="products" scene={<Labs />} states={4} tone="paper" side="right" steps={4}>
-        <p className="ch-kicker mono">Qbix Labs</p>
-        <h2 className="ch-title">Things we’ve shipped.</h2>
-        <p className="ch-lede">Qbix also builds products. Two are live, two are on the way.</p>
-        <ul className="ch-list">
-          {PRODUCTS.map((p) => (
-            <li key={p.title}>
-              <span className="ch-list-head">
-                {p.href ? <Link href={p.href} className="ch-list-link">{p.title}</Link> : <b>{p.title}</b>}
-                <span className={`ch-tag mono${p.status === 'Live' ? ' is-live' : ''}`}>{p.status}</span>
-              </span>
-              <span>{p.blurb}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="ch-acts"><Act href="/products/strata">Explore Strata</Act></div>
-      </Chapter>
+      <Chapter
+        id="products"
+        scene={<Labs />}
+        states={4}
+        tone="paper"
+        side="right"
+        steps={4}
+        caps={PRODUCTS.map((p) => ({ k: p.title, tag: p.status, v: p.blurb }))}
+        head={
+          <>
+            <p className="ch-kicker mono">Qbix Labs</p>
+            <h2 className="ch-title">Things we’ve shipped.</h2>
+            <p className="ch-lede">Qbix also builds products. Two are live, two are on the way.</p>
+          </>
+        }
+        body={
+          <ul className="ch-list">
+            {PRODUCTS.map((p) => (
+              <li key={p.title}>
+                <span className="ch-list-head">
+                  {p.href ? <Link href={p.href} className="ch-list-link">{p.title}</Link> : <b>{p.title}</b>}
+                  <span className={`ch-tag mono${p.status === 'Live' ? ' is-live' : ''}`}>{p.status}</span>
+                </span>
+                <span>{p.blurb}</span>
+              </li>
+            ))}
+          </ul>
+        }
+        foot={<div className="ch-acts"><Act href="/products/strata">Explore Strata</Act></div>}
+      />
     </>
   );
 }
@@ -159,30 +251,60 @@ function OfferChapters() {
   return (
     <>
       {/* The flyer for 1428 Alder Street, then its five posts beside it, then its video. */}
-      <Chapter id="services" scene={<ListingStory />} states={3} tone="paper" side="right" steps={3}>
-        <p className="ch-kicker mono">{kit.title} · {kit.audience}</p>
-        <h2 className="ch-title">Your listing, ready to share in 48 hours.</h2>
-        <p className="ch-lede">{kit.blurb} Made by a designer, delivered as files you own.</p>
-        <Steps items={['Print flyer', 'Five social posts', 'A 30-second video']} />
-        <p className="ch-meta">
-          <span><b>{PRICES.listingKit.now}</b> <del>{PRICES.listingKit.was}</del> per listing</span>
-          <span>{kit.typical}</span>
-        </p>
-        <div className="ch-acts"><Act href={kit.href}>See the kit</Act></div>
-      </Chapter>
+      <Chapter
+        id="services"
+        scene={<ListingStory />}
+        states={3}
+        tone="paper"
+        side="right"
+        steps={3}
+        caps={capsOf(KIT_STEPS)}
+        head={
+          <>
+            <p className="ch-kicker mono">{kit.title} · {kit.audience}</p>
+            <h2 className="ch-title">Your listing, ready to share in 48 hours.</h2>
+            <p className="ch-lede">{kit.blurb} Made by a designer, delivered as files you own.</p>
+          </>
+        }
+        body={<Steps items={KIT_STEPS} />}
+        foot={
+          <>
+            <p className="ch-meta">
+              <span><b>{PRICES.listingKit.now}</b> <del>{PRICES.listingKit.was}</del> per listing</span>
+              <span>{kit.typical}</span>
+            </p>
+            <div className="ch-acts"><Act href={kit.href}>See the kit</Act></div>
+          </>
+        }
+      />
 
       {/* A therapist's questionnaire becomes the calm homepage, which goes live with its phone. */}
-      <Chapter id="practice" scene={<PracticeStory />} states={3} tone="dark" side="left" steps={3}>
-        <p className="ch-kicker mono">{practice.title} · {practice.audience}</p>
-        <h2 className="ch-title">A website that feels as calm as your office.</h2>
-        <p className="ch-lede">{practice.blurb}</p>
-        <Steps items={['A short questionnaire', 'Your new homepage in 3 days', 'Live in 7 days']} />
-        <p className="ch-meta">
-          <span><b>{PRICES.practice.now}</b> <del>{PRICES.practice.was}</del> flat</span>
-          <span>{practice.typical}</span>
-        </p>
-        <div className="ch-acts"><Act href={practice.href}>See the refresh</Act></div>
-      </Chapter>
+      <Chapter
+        id="practice"
+        scene={<PracticeStory />}
+        states={3}
+        tone="dark"
+        side="left"
+        steps={3}
+        caps={capsOf(PRACTICE_STEPS)}
+        head={
+          <>
+            <p className="ch-kicker mono">{practice.title} · {practice.audience}</p>
+            <h2 className="ch-title">A website that feels as calm as your office.</h2>
+            <p className="ch-lede">{practice.blurb}</p>
+          </>
+        }
+        body={<Steps items={PRACTICE_STEPS} />}
+        foot={
+          <>
+            <p className="ch-meta">
+              <span><b>{PRICES.practice.now}</b> <del>{PRICES.practice.was}</del> flat</span>
+              <span>{practice.typical}</span>
+            </p>
+            <div className="ch-acts"><Act href={practice.href}>See the refresh</Act></div>
+          </>
+        }
+      />
     </>
   );
 }
@@ -198,31 +320,54 @@ export default function Story() {
 
       {/* Ideas as chat bubbles, floating; then pulled back to the ground: the real thing the lime one
           became, on a laptop (for AI teams, AI Bidding's own film). */}
-      <Chapter id="about" scene={<Dream key={audience} biz={!ai} />} states={2} tone={ai ? 'dark' : 'paper'} side={ai ? 'left' : 'right'}>
-        <p className="ch-kicker mono">About us</p>
-        <h2 className="ch-title">Our story is simple.</h2>
-        <p className="ch-lede ch-story">
-          AI has lowered the technical barrier, but the fact that anyone can build does not mean anyone can build
-          well. We bring unusually sharp instincts, more than 10 years of training toward the best taste in the
-          industry, real curiosity about new things (which means you get the newest tech), and respect for every
-          idea that comes in. We put weight on early exploration and research, because{' '}
-          {/* the screen's one lime is the idea in its scene: the highlighter is the page's own ink or paper */}
-          <Marker className={`about-hi ${ai ? 'marker--white' : 'marker--ink'}`}>no idea deserves to be wasted</Marker>.
-        </p>
-      </Chapter>
+      <Chapter
+        id="about"
+        scene={<Dream key={audience} biz={!ai} />}
+        states={2}
+        tone={ai ? 'dark' : 'paper'}
+        side={ai ? 'left' : 'right'}
+        caps={[{ k: 'The ideas people bring us' }, { k: ai ? 'One of them, built: AI Bidding' : 'One of them, built: a calm site' }]}
+        head={
+          <>
+            <p className="ch-kicker mono">About us</p>
+            <h2 className="ch-title">Our story is simple.</h2>
+          </>
+        }
+        body={
+          <p className="ch-lede ch-story">
+            AI has lowered the technical barrier, but the fact that anyone can build does not mean anyone can build
+            well. We bring unusually sharp instincts, more than 10 years of training toward the best taste in the
+            industry, real curiosity about new things (which means you get the newest tech), and respect for every
+            idea that comes in. We put weight on early exploration and research, because{' '}
+            {/* the screen's one lime is the idea in its scene: the highlighter is the page's own ink or paper */}
+            <Marker className={`about-hi ${ai ? 'marker--white' : 'marker--ink'}`}>no idea deserves to be wasted</Marker>.
+          </p>
+        }
+      />
 
       {/* The pieces stack back into the cube, bottom row first: the thing, built. */}
-      <Chapter id="contact" scene={<GlassCube />} states={1} tone={ai ? 'paper' : 'dark'} side={ai ? 'right' : 'left'} h="160vh" className="ch--contact">
-        <h2 className="ch-title ch-sign">
-          Bring the idea. <Marker className={ai ? 'marker--ink' : 'marker--white'}>{'We’ll build the thing.'}</Marker>
-        </h2>
-        <div className="ch-acts">
-          <button type="button" className="btn btn-solid btn-lg split-cta" onClick={open}>
-            <SplitText text="Tell us your idea" arrow />
-          </button>
-          <a className="ch-mail" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-        </div>
-      </Chapter>
+      <Chapter
+        id="contact"
+        scene={<GlassCube />}
+        states={1}
+        tone={ai ? 'paper' : 'dark'}
+        side={ai ? 'right' : 'left'}
+        h="160vh"
+        className="ch--contact"
+        head={
+          <h2 className="ch-title ch-sign">
+            Bring the idea. <Marker className={ai ? 'marker--ink' : 'marker--white'}>{'We’ll build the thing.'}</Marker>
+          </h2>
+        }
+        foot={
+          <div className="ch-acts">
+            <button type="button" className="btn btn-solid btn-lg split-cta" onClick={open}>
+              <SplitText text="Tell us your idea" arrow />
+            </button>
+            <a className="ch-mail" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          </div>
+        }
+      />
     </main>
   );
 }

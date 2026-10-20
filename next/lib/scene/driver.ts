@@ -26,6 +26,9 @@ type Entry = {
   seen: boolean;
   /** held at a time (for checking a scene frame by frame), or null */
   pinned: number | null;
+  /** on a phone, the runway the chapter's scene pins on (app/story.css .ch-run), and where it pins */
+  run: HTMLElement | null;
+  pinTop: number | null;
 };
 
 const entries = new Set<Entry>();
@@ -54,6 +57,12 @@ function target(e: Entry, now: number): number {
   const vh = window.innerHeight;
   const r = e.section.getBoundingClientRect();
   const tail = Number(e.section.dataset.tail ?? 0) * vh;
+  const tall = tallLayout();
+  // on a phone a chapter's scene is played by its own runway: from where it comes up the screen
+  // to where it pins, its first state draws; while it's pinned, the rest
+  const run = tall && e.run && e.run.offsetHeight > 0 ? e.run : null;
+  const stage = run?.firstElementChild as HTMLElement | null | undefined;
+  const sr = stage?.getBoundingClientRect();
   let intro: number;
   if (e.intro === 'load') {
     if (e.loadAt === null) {
@@ -61,15 +70,23 @@ function target(e: Entry, now: number): number {
       e.loadAt = now;
     }
     intro = clamp01((now - e.loadAt) / 1700);
+  } else if (run && stage && sr) {
+    if (e.pinTop === null) e.pinTop = parseFloat(getComputedStyle(stage).top) || 80;
+    intro = clamp01((vh * 0.92 - sr.top) / Math.max(1, vh * 0.92 - e.pinTop));
   } else {
     // drawn while the chapter's top comes from 85% down the screen to the top (to under the nav on a phone)
-    const top = tallLayout() ? 80 : 0;
+    const top = tall ? 80 : 0;
     intro = clamp01((vh * 0.85 - r.top) / (vh * 0.85 - top));
   }
   if (e.n < 2 || intro < 1) return intro;
-  const tall = tallLayout();
-  const run = tall ? r.height - vh * 0.75 : r.height - vh - tail;
-  const p = clamp01((tall ? 80 - r.top : -r.top) / Math.max(1, run));
+  let p: number;
+  if (run && sr) {
+    const rr = run.getBoundingClientRect();
+    p = clamp01((sr.top - rr.top) / Math.max(1, rr.height - sr.height));
+  } else {
+    const len = tall ? r.height - vh * 0.75 : r.height - vh - tail;
+    p = clamp01((tall ? 80 - r.top : -r.top) / Math.max(1, len));
+  }
   const u = p * (e.n - 1);
   const i = Math.min(e.n - 2, Math.floor(u));
   return 1 + i + smooth(0.18, 0.82, u - i);
@@ -109,10 +126,26 @@ function kick() {
   if (!raf) raf = requestAnimationFrame(frame);
 }
 const onScroll = () => kick();
+const onResize = () => {
+  entries.forEach((e) => (e.pinTop = null));
+  kick();
+};
 
 /** Add a scene to the page's loop; returns its removal. */
 export function playScene(o: { section: HTMLElement; tl: Timeline; n: number; intro?: 'scroll' | 'load' }) {
-  const e: Entry = { section: o.section, tl: o.tl, n: o.n, intro: o.intro ?? 'scroll', shown: 0, loadAt: null, step: -1, seen: false, pinned: null };
+  const e: Entry = {
+    section: o.section,
+    tl: o.tl,
+    n: o.n,
+    intro: o.intro ?? 'scroll',
+    shown: 0,
+    loadAt: null,
+    step: -1,
+    seen: false,
+    pinned: null,
+    run: o.section.querySelector<HTMLElement>('.ch-run[data-run]'),
+    pinTop: null,
+  };
   // ?scenes in the address: window.__scene(section, t) holds a scene at a time, to check it frame by frame
   if (/[?&]scenes\b/.test(location.search)) {
     (window as unknown as { __scene?: (s: Element, t: number | null) => void }).__scene = (s, t) => {
@@ -140,7 +173,7 @@ export function playScene(o: { section: HTMLElement; tl: Timeline; n: number; in
       { rootMargin: '25% 0px 25% 0px' },
     );
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', onResize);
   }
   entries.add(e);
   io.observe(e.section);
@@ -159,7 +192,7 @@ export function playScene(o: { section: HTMLElement; tl: Timeline; n: number; in
       io?.disconnect();
       io = null;
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('resize', onResize);
     }
   };
 }

@@ -2,8 +2,10 @@
    THE STORY (homepage) — the page's chapters as sections, each with its words
    and its scene: a flat drawing that plays with the scroll (components/scene).
    On a wide screen a chapter's words and scene are pinned side by side while
-   the scroll plays the scene through its states; on a phone the scene is a
-   window pinned under the nav, the words scrolling on under it.
+   the scroll plays the scene through its states. On a phone a chapter reads
+   top to bottom: what it is, then the scene, pinned in the middle of the
+   screen on its own runway while the scroll plays it, a caption under it
+   saying what each state shows, then the price and the action.
    ============================================================================= */
 .story {
   position: relative;
@@ -34,7 +36,11 @@
 /* The frame holds the words and the scene. */
 .ch-frame { position: relative; z-index: 2; }
 .ch-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.ch-head, .ch-body, .ch-foot { display: flex; flex-direction: column; align-items: flex-start; width: 100%; min-width: 0; }
 .ch-stage { min-width: 0; min-height: 0; pointer-events: none; }
+.ch-scene { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+/* the scene's caption: a phone's (the words beside it say it on a wide screen) */
+.ch-caps { display: none; }
 
 /* --- the words ----------------------------------------------------------- */
 .ch-kicker { margin: 0 0 18px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ch-dim); }
@@ -137,6 +143,7 @@
 /* --- wide screens: the words pinned beside the object ---------------------- */
 @media (min-width: 900px) and (min-aspect-ratio: 1/1) {
   .ch { height: var(--h, 190vh); }
+  .ch-run { display: contents; }
   .ch-frame { position: sticky; top: 0; height: 100vh; height: 100svh; }
   .ch-copy { position: absolute; top: 50%; translate: 0 -46%; width: var(--copy-w); }
   /* the scene stands on data-side; the words take the other side */
@@ -151,25 +158,81 @@
   .ch--contact .ch-acts { margin-top: 26px; }
 }
 
-/* --- phones and tall windows: the scene in a window, then the words -----
-   The window pins under the nav while its chapter's words scroll up beneath
-   it, so the scene is whole and in place the whole time you read, and never
-   under the nav. */
+/* --- phones and tall windows: what it is, the scene, then the rest ---------
+   The scene pins in the middle of the screen on its own runway (as long as
+   its moves need) while the scroll plays it; its caption rolls to the state
+   it's showing. Nothing scrolls under it. */
 @media (max-width: 899px), (max-aspect-ratio: 1/1) {
-  .story { --nav-h: clamp(68px, 6vw, 84px); }
-  .ch { height: auto; }
+  .story {
+    --nav-h: clamp(68px, 6vw, 84px);
+    --cap-h: 64px;
+    --scene-h: min(calc((100vw - 2 * var(--gutter)) * 0.84), calc(100svh - var(--nav-h) - var(--cap-h) - 72px));
+  }
+  .ch { --stage-h: calc(var(--scene-h) + var(--cap-h)); height: auto; }
+  .ch--subcaps { --cap-h: 112px; }
   .ch-frame { display: flex; flex-direction: column; }
-  .ch-stage { position: sticky; top: var(--nav-h); z-index: 1; height: 46svh; min-height: 260px; padding: 12px var(--gutter); background: var(--ch-bg); }
-  .ch-stage:empty { display: none; }
-  .ch-copy { position: relative; z-index: 0; padding: 26px var(--gutter) calc(72px + var(--run, 0vh)); background: var(--ch-bg); }
   .ch-title { font-size: clamp(30px, 8.4vw, 44px); }
+
+  .ch:not(.ch--hero) .ch-copy { display: contents; }
+  .ch-head { order: 1; padding: clamp(64px, 10vh, 104px) var(--gutter) clamp(28px, 4vh, 40px); }
+  .ch-run { order: 2; position: relative; }
+  .ch-body { order: 3; padding: 0 var(--gutter); }
+  .ch-foot { order: 4; padding: 4px var(--gutter) clamp(72px, 11vh, 120px); }
+  /* the steps and the products list: the caption says them, one at a time */
+  .ch[data-steps] .ch-body { display: none; }
+  .ch-body .ch-story { margin: 36px 0 clamp(72px, 11vh, 120px); }
+
+  /* the runway, and the scene pinned on it */
+  .ch-run[data-run] { height: calc(var(--stage-h) + var(--moves) * 64svh); }
+  .ch-run > .ch-stage {
+    position: sticky;
+    top: max(var(--nav-h), calc((100svh - var(--stage-h) + var(--nav-h)) / 2));
+    height: var(--stage-h);
+    padding: 0 var(--gutter);
+    display: flex;
+    flex-direction: column;
+  }
+  .ch-run > .ch-stage > .ch-scene { flex: none; height: var(--scene-h); }
+  .ch-run:not([data-run]) > .ch-stage { position: relative; top: 0; height: min(78vw, 52svh); }
+  .ch-run:not([data-run]) > .ch-stage > .ch-scene { height: 100%; }
+
+  /* the caption: how far along (a bar per state, filling as each is reached), then what it shows */
+  .ch-caps { display: flex; flex-direction: column; gap: 14px; height: var(--cap-h); padding-top: 18px; }
+  .ch-caps-bar { display: flex; gap: 4px; order: -1; }
+  .ch-caps-bar i { position: relative; flex: 1; height: 2px; background: color-mix(in srgb, var(--ch-fg) 16%, transparent); }
+  .ch-caps-bar i::after { content: ''; position: absolute; inset: 0; background: var(--ch-fg); transform-origin: left center; scale: 0 1; transition: scale 520ms cubic-bezier(0.65, 0, 0.35, 1); }
+  .ch-caps-roll { display: block; height: var(--cap-item-h); overflow: hidden; }
+  .ch-caps { --cap-item-h: 24px; }
+  .ch-caps--sub { --cap-item-h: 74px; }
+  .ch-caps-list { display: flex; flex-direction: column; translate: 0 calc(var(--i, 0) * -1 * var(--cap-item-h)); transition: translate 620ms cubic-bezier(0.65, 0, 0.35, 1); }
+  .ch-cap { height: var(--cap-item-h); flex: none; display: grid; grid-template-columns: 4.2em minmax(0, 1fr); column-gap: 10px; align-content: start; }
+  .ch-cap-n { font-size: 12px; line-height: 24px; letter-spacing: 0.08em; color: var(--ch-dim); white-space: nowrap; }
+  .ch-cap-k { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 17px; line-height: 24px; font-weight: 500; color: var(--ch-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ch-cap-k .ch-tag { font-size: 10.5px; line-height: 1; padding: 4px 6px; }
+  .ch-cap-v { grid-column: 2; margin-top: 4px; font-size: 14px; line-height: 1.45; color: var(--ch-dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* the hero: the words, the cube, the studio band */
   .ch--hero .ch-frame { padding-top: calc(64px + 4vh); }
-  .ch--hero .ch-copy { order: 1; padding-bottom: 0; background: transparent; }
-  .ch--hero .ch-stage { order: 2; height: 44svh; }
+  .ch--hero .ch-copy { order: 1; padding: 26px var(--gutter) 0; }
+  .ch--hero .ch-stage { order: 2; height: 44svh; padding: 12px var(--gutter); }
   .ch--hero .ch-band { order: 3; padding: 8px var(--gutter) 56px; background: var(--ch-bg); }
   .ch-band { grid-template-columns: minmax(0, 1fr); }
   .ch-band > .studio, .ch-band > .marquee-block { grid-column: 1 / -1; }
 }
+/* the caption at the state the scene is showing */
+.ch[data-step='1'] .ch-caps-list { --i: 1; }
+.ch[data-step='2'] .ch-caps-list { --i: 2; }
+.ch[data-step='3'] .ch-caps-list { --i: 3; }
+.ch[data-step='4'] .ch-caps-list { --i: 4; }
+.ch[data-step='5'] .ch-caps-list { --i: 5; }
+.ch[data-step='6'] .ch-caps-list { --i: 6; }
+.ch[data-step] .ch-caps-bar i:nth-child(1)::after,
+.ch[data-step='1'] .ch-caps-bar i:nth-child(-n + 2)::after,
+.ch[data-step='2'] .ch-caps-bar i:nth-child(-n + 3)::after,
+.ch[data-step='3'] .ch-caps-bar i:nth-child(-n + 4)::after,
+.ch[data-step='4'] .ch-caps-bar i:nth-child(-n + 5)::after,
+.ch[data-step='5'] .ch-caps-bar i:nth-child(-n + 6)::after,
+.ch[data-step='6'] .ch-caps-bar i:nth-child(-n + 7)::after { scale: 1 1; }
 
 /* The footer that follows. */
 .story ~ .footer { position: relative; z-index: 4; }

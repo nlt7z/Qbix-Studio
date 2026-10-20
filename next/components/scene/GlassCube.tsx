@@ -5,12 +5,14 @@ import '@/app/scenes.css';
 
 /**
  * The qbix cube: 2 × 2 × 2 pieces of frosted glass round a lime core, seen
- * in true perspective. Each piece is a rounded box; the glass reflects a soft
- * studio light along its edges and lets the core's light through, diffused,
- * so it glows from inside and leaks out along the seams. It gathers from a
- * loose spread after the splash, then half of it turns every few seconds,
- * and it leans a little toward the pointer. Ray-marched in one WebGL2
- * fragment shader, drawn only while something moves.
+ * in true perspective. Each piece has frosted faces and polished, rounded
+ * edges that mirror a soft studio; light bends into the glass (most at the
+ * edges), the core shows through it blurred, its light fills the glass near it
+ * and leaks out between the pieces. It gathers from a loose spread after the
+ * splash, then half of it turns every few seconds, and it leans a little
+ * toward the pointer. Traced per pixel in one WebGL2 fragment shader (the
+ * pieces are rounded boxes, intersected exactly), drawn only while something
+ * moves.
  */
 
 type V3 = [number, number, number];
@@ -45,30 +47,89 @@ out vec4 frag;
 uniform vec2 uRes;
 uniform mat3 uView;      // cube space -> world
 uniform vec3 uC[8];      // piece centres (cube space)
-uniform mat3 uRi[8];     // piece inverse rotations
+uniform mat3 uRi[8];     // piece inverse rotations (cube space -> piece space)
 uniform float uH;        // half size of a piece
+uniform float uR;        // the radius its polished edges are rounded to
 uniform float uTone;     // 0 black page, 1 paper
 uniform vec3 uCore;      // the core's colour
 uniform float uGlow;     // how strongly it shines
 uniform float uDist;     // camera distance
 uniform float uTanF;     // tan(fov / 2)
+uniform int uAA;         // rays a pixel (1, 2 or 4)
 
-const float CORE = 0.2;  // the core's half size (a small cube)
+const float CORE = 0.17; // the core's half size (a small cube)
+const vec3 KEY = vec3(-0.55, 0.75, 0.38);   // the studio's big softbox, up and to the left, in front
+
 float sdBox(vec3 p, vec3 b) { vec3 q = abs(p) - b; return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0); }
 
-// a soft studio, in world space: a large key above and to the left, a strip to the right
-vec3 env(vec3 r) {
-  float key = exp(-pow(length(r.xy - vec2(-0.42, 0.78)) / 0.42, 2.0)) * step(0.0, r.z + 0.6);
-  float strip = exp(-pow((r.x - 0.9) / 0.07, 2.0)) * smoothstep(-0.3, 0.5, r.y);
-  float l = 0.02 + 1.3 * key + 0.6 * strip + smoothstep(0.2, 1.0, r.y) * 0.2;
-  return mix(vec3(l), vec3(0.9) + vec3(0.25) * key - vec3(0.4) * strip, uTone);
+// A rounded box (half size size + rad, edges rounded to rad), entered by a ray: its t, or -1.
+// After Inigo Quilez, https://iquilezles.org/articles/intersectors
+float rbox(vec3 ro, vec3 rd, vec3 size, float rad) {
+  vec3 m = 1.0 / rd;
+  vec3 n = m * ro;
+  vec3 k = abs(m) * (size + rad);
+  vec3 t1 = -n - k, t2 = -n + k;
+  float tN = max(max(t1.x, t1.y), t1.z);
+  float tF = min(min(t2.x, t2.y), t2.z);
+  if (tN > tF || tF < 0.0) return -1.0;
+  float t = tN;
+  vec3 pos = ro + t * rd;
+  vec3 s = sign(pos);
+  ro *= s; rd *= s; pos *= s;
+  pos -= size;
+  pos = max(pos.xyz, pos.yzx);
+  if (min(min(pos.x, pos.y), pos.z) < 0.0) return t;
+  vec3 oc = ro - size;
+  vec3 dd = rd * rd, oo = oc * oc, od = oc * rd;
+  float ra2 = rad * rad;
+  t = 1e20;
+  { float b = od.x + od.y + od.z; float c = oo.x + oo.y + oo.z - ra2; float h = b * b - c; if (h > 0.0) t = -b - sqrt(h); }
+  { float a = dd.y + dd.z; float b = od.y + od.z; float c = oo.y + oo.z - ra2; float h = b * b - a * c;
+    if (h > 0.0) { h = (-b - sqrt(h)) / a; if (h > 0.0 && h < t && abs(ro.x + rd.x * h) < size.x) t = h; } }
+  { float a = dd.z + dd.x; float b = od.z + od.x; float c = oo.z + oo.x - ra2; float h = b * b - a * c;
+    if (h > 0.0) { h = (-b - sqrt(h)) / a; if (h > 0.0 && h < t && abs(ro.y + rd.y * h) < size.y) t = h; } }
+  { float a = dd.x + dd.y; float b = od.x + od.y; float c = oo.x + oo.y - ra2; float h = b * b - a * c;
+    if (h > 0.0) { h = (-b - sqrt(h)) / a; if (h > 0.0 && h < t && abs(ro.z + rd.z * h) < size.z) t = h; } }
+  return t > 1e19 ? -1.0 : t;
 }
-// how far a point on a piece's face is from that face's nearest edge
+vec3 rboxN(vec3 p, vec3 size) { return sign(p) * normalize(max(abs(p) - size, 1e-6)); }
+// where a ray is inside a sharp box of half size h
+vec2 slab(vec3 o, vec3 d, float h) {
+  vec3 inv = 1.0 / d;
+  vec3 t1 = (-h - o) * inv, t2 = (h - o) * inv;
+  vec3 mn = min(t1, t2), mx = max(t1, t2);
+  return vec2(max(max(mn.x, mn.y), mn.z), min(min(mx.x, mx.y), mx.z));
+}
+// how far a point on a piece is from the nearest edge of the face it's on
 float edgeDist(vec3 q) {
   vec3 a = abs(q);
   float m = max(max(a.x, a.y), a.z);
   float across = m == a.x ? max(a.y, a.z) : (m == a.y ? max(a.x, a.z) : max(a.x, a.y));
   return uH - across;
+}
+
+// The studio, as the polished edges mirror it: on the black page a big softbox and a tall strip in the
+// dark; on paper a white room with dark flags at the sides and below, so the glass keeps its outline.
+float envSharp(vec3 r) {
+  float key = smoothstep(0.8, 0.93, dot(r, normalize(KEY)));
+  vec2 h = normalize(r.xz + vec2(1e-4));
+  float strip = smoothstep(0.94, 0.99, dot(h, normalize(vec2(0.95, -0.32)))) * smoothstep(-0.45, 0.1, r.y) * (1.0 - smoothstep(0.55, 0.85, r.y));
+  // a dimmer strip on the left and a low bounce from below, so the shaded side keeps its outline
+  float fillL = smoothstep(0.95, 0.99, dot(h, normalize(vec2(-0.96, 0.28)))) * smoothstep(-0.6, -0.1, r.y) * (1.0 - smoothstep(0.3, 0.7, r.y));
+  float bounce = smoothstep(-0.25, -0.75, r.y) * smoothstep(-0.2, 0.6, r.z);
+  // (bright like real lights: a polished edge mirrors 4% straight on, nearly all at a glance)
+  float dark = 0.01 + 14.0 * key + 7.0 * strip + 3.0 * fillL + 1.2 * bounce + 0.5 * smoothstep(0.35, 1.0, r.y);
+  // a dark band all round, just under eye level, as dark cards round a white set: the edges that mirror it read dark
+  float band = 1.0 - smoothstep(0.06, 0.3, abs(r.y + 0.04));
+  float paper = 0.96 - 0.82 * band - 0.3 * smoothstep(-0.4, -0.9, r.y) + 0.3 * key;
+  return mix(dark, paper, uTone);
+}
+// ... and as the frosted faces see it: only its broad light
+float envSoft(vec3 r) {
+  float k = max(dot(r, normalize(KEY)), 0.0);
+  float dark = 0.02 + 0.9 * k * k * k + 0.08 * smoothstep(-0.2, 1.0, r.y);
+  float paper = 0.9 + 0.1 * k - 0.15 * smoothstep(0.0, -0.8, r.y);
+  return mix(dark, paper, uTone);
 }
 
 vec4 shade(vec2 fc) {
@@ -77,107 +138,110 @@ vec4 shade(vec2 fc) {
   vec3 rd = normalize(vec3(uv * uTanF, -1.0));
   mat3 vt = transpose(uView);
   vec3 roc = vt * ro, rdc = vt * rd;
-  float px = 2.0 * uTanF * uDist / uRes.y;
-  // every piece the ray passes through: in and out
-  float tFirst = 1e9, glass = 0.0;
-  int first = -1;
-  vec3 qFirst = vec3(0.0), nFirst = vec3(0.0);
-  float tin[8], tout[8];
+
+  // the nearest piece, its rounded surface
+  float tHit = 1e9;
+  int hit = -1;
   for (int i = 0; i < 8; i++) {
     vec3 o = uRi[i] * (roc - uC[i]);
     vec3 d = uRi[i] * rdc;
     d += vec3(equal(d, vec3(0.0))) * 1e-6;
-    vec3 t1 = (-uH - o) / d, t2 = (uH - o) / d;
-    vec3 mn = min(t1, t2), mx = max(t1, t2);
-    float a = max(max(mn.x, mn.y), mn.z), b = min(min(mx.x, mx.y), mx.z);
-    tin[i] = a;
-    tout[i] = b;
-    if (b > max(a, 0.0)) {
-      glass += b - a;
-      if (a < tFirst) {
-        tFirst = a;
-        first = i;
-        qFirst = o + d * a;
-        vec3 ax = vec3(equal(mn, vec3(a)));
-        nFirst = -sign(d) * ax;
-      }
-    }
+    float t = rbox(o, d, vec3(uH - uR), uR);
+    if (t > 0.0 && t < tHit) { tHit = t; hit = i; }
   }
-  // the core, seen through the glass in front of it, blurred by it
-  float tc = dot(-roc, rdc);
-  float before = 0.0;
+  if (hit < 0) return vec4(0.0);
+
+  vec3 P = roc + rdc * tHit;
+  vec3 q = uRi[hit] * (P - uC[hit]);
+  vec3 nq = rboxN(q, vec3(uH - uR));
+  vec3 N = transpose(uRi[hit]) * nq;
+  vec3 Nw = uView * N;
+  float ndv = clamp(dot(Nw, -rd), 0.0, 1.0);
+  float F = 0.04 + 0.96 * pow(1.0 - ndv, 5.0);
+  // the frosted faces (1) and the polished, rounded edges (0)
+  float frostFace = smoothstep(0.992, 0.9995, max(max(abs(nq.x), abs(nq.y)), abs(nq.z)));
+  vec3 Rw = reflect(rd, Nw);
+  float refl = mix(envSharp(Rw), envSoft(Rw), frostFace);
+
+  // into the glass: bent at the surface (most at the edges), then through the rest of the cube
+  // (bent gently, so the core reads as one cube inside, a little shifted at the edges)
+  vec3 Ti = refract(rdc, N, 1.0 / 1.2);
+  vec3 P0 = P + Ti * 0.002;
+  float thick = 0.0, inner = 0.0;
   for (int i = 0; i < 8; i++) {
-    if (tout[i] > max(tin[i], 0.0)) before += max(0.0, min(tout[i], tc) - tin[i]);
+    vec3 o = uRi[i] * (P0 - uC[i]);
+    vec3 d = uRi[i] * Ti;
+    d += vec3(equal(d, vec3(0.0))) * 1e-6;
+    vec2 s = slab(o, d, uH);
+    float a = max(s.x, 0.0), b = s.y;
+    if (b <= a) continue;
+    thick += b - a;
+    // the edges of the pieces behind, through the frost: faint, and softer the deeper they sit
+    if (i != hit && s.x > 0.0) inner += (1.0 - smoothstep(0.0, 0.02 + 0.09 * a, edgeDist(o + d * a))) * exp(-2.0 * a);
+    inner += (1.0 - smoothstep(0.0, 0.02 + 0.09 * b, edgeDist(o + d * b))) * exp(-2.0 * b) * 0.6;
   }
-  float blur = 0.03 + 0.14 * before;
-  float near = 1e9;
-  for (int i = 0; i < 9; i++) {
-    float tt = tc + (float(i) / 8.0 - 0.5) * 0.8;
-    near = min(near, sdBox(roc + rdc * tt, vec3(CORE)));
-  }
-  float core = (1.0 - smoothstep(-blur * 0.3, blur, near)) * mix(0.55, 1.0, exp(-1.6 * before));
-  float halo = exp(-max(near, 0.0) * max(near, 0.0) / (0.02 + 0.06 * before)) * 0.4;
-  if (first < 0) {
-    // no glass on this ray: only the core's light, if it reaches past the cube
-    return vec4(0.0);
-  }
-  // the near face
-  vec3 n = transpose(uRi[first]) * nFirst;
-  vec3 nw = uView * n;
-  float cosT = clamp(dot(-rd, nw), 0.0, 1.0);
-  float F = 0.04 + 0.96 * pow(1.0 - cosT, 5.0);
-  vec3 L = normalize(vec3(-0.45, 0.85, 0.3));
-  float key = clamp(0.5 + 0.5 * dot(nw, L), 0.0, 1.0);
-  // the frost: the more glass the ray passes through, the milkier
-  float T = exp(-1.45 * glass);
-  float milkA = 1.0 - T;
-  vec3 milk = mix(vec3(0.86, 0.885, 0.9), vec3(0.985), uTone) * (0.42 + 0.5 * key);
-  // the edges inside, seen through the frost: soft, softer the deeper they sit
-  float inner = 0.0;
+  // the core, along the straight view (so it reads as one cube inside), blurred by the glass in front of it
+  float tc0 = dot(-roc, rdc);
+  float beforeS = 0.0;
   for (int i = 0; i < 8; i++) {
-    if (!(tout[i] > max(tin[i], 0.0))) continue;
     vec3 o = uRi[i] * (roc - uC[i]);
     vec3 d = uRi[i] * rdc;
-    if (i != first) {
-      float dep = tin[i] - tFirst;
-      float w = 0.015 + 0.07 * dep;
-      inner += (1.0 - smoothstep(0.0, w, edgeDist(o + d * tin[i]))) * exp(-1.2 * dep);
-    }
-    float dep2 = tout[i] - tFirst;
-    float w2 = 0.015 + 0.07 * dep2;
-    inner += (1.0 - smoothstep(0.0, w2, edgeDist(o + d * tout[i]))) * exp(-1.2 * dep2);
+    d += vec3(equal(d, vec3(0.0))) * 1e-6;
+    vec2 sl = slab(o, d, uH);
+    if (sl.y > sl.x) beforeS += max(0.0, min(sl.y, tc0) - max(sl.x, 0.0));
   }
-  // the near face's own edges: a crisp line of light
-  float rim = 1.0 - smoothstep(0.0, px * 1.4 + 0.006, edgeDist(qFirst));
-  vec3 edgeCol = mix(vec3(1.0), vec3(0.12, 0.13, 0.14), uTone);
-  vec3 col = milk * milkA;
-  float alpha = milkA * mix(0.86, 0.62, uTone);
-  col += edgeCol * inner * 0.32 * mix(1.0, 0.55, uTone);
-  alpha += inner * mix(0.22, 0.3, uTone);
+  // its nearest distance to the line of sight: a golden-section search (along a line the distance is convex)
+  float ga = tc0 - 0.6, gb = tc0 + 0.6;
+  for (int k = 0; k < 14; k++) {
+    float m1 = gb - (gb - ga) * 0.618, m2 = ga + (gb - ga) * 0.618;
+    if (sdBox(roc + rdc * m1, vec3(CORE)) < sdBox(roc + rdc * m2, vec3(CORE))) gb = m2; else ga = m1;
+  }
+  float nearC = sdBox(roc + rdc * (0.5 * (ga + gb)), vec3(CORE));
+  float blur = 0.04 + 0.07 * beforeS;
+  float coreSeen = (1.0 - smoothstep(-blur * 0.5, blur, nearC)) * exp(-0.55 * beforeS);
+  // its light, carried through the frost: a soft cloud round it, and a glow in the glass nearest it
+  float cloud = exp(-max(nearC, 0.0) * 7.0) * min(1.0, 0.25 + beforeS);
+  // ... and leaking out between the pieces: the seams on the faces toward the core
+  vec3 toCore = uRi[hit] * (-uC[hit]);
+  vec3 sq = uH - q * sign(toCore + vec3(1e-5));
+  float seamD = min(min(sq.x, sq.y), sq.z);
+  float seam = exp(-seamD / 0.014) * exp(-max(length(P) - 0.6, 0.0) * 3.0);
+  // a face that looks at the core (seen through a gap) is lit by it directly
+  float facing = max(dot(N, normalize(-P)), 0.0) * exp(-max(length(P) - 0.25, 0.0) * 1.8);
+
   vec3 lime = uCore * uGlow;
-  col = mix(col, lime, clamp(core * 0.9, 0.0, 1.0));
-  alpha = mix(alpha, 1.0, core * 0.9 * uGlow);
-  col += lime * halo * (1.0 - core);
-  alpha += halo * uGlow * 0.35 * (1.0 - core);
-  // the room in the near face, and its edge catching the light
-  vec3 refl = env(reflect(rd, nw));
-  col += refl * F;
-  alpha += F * 0.6;
-  // (on paper the edge reads as a fine dark line instead)
-  col += mix(vec3(1.0), vec3(0.18, 0.19, 0.2), uTone) * rim * mix(0.75, 0.6, uTone);
-  alpha += rim * mix(0.75, 0.6, uTone);
-  alpha = clamp(alpha, 0.0, 1.0);
-  return vec4(min(col, vec3(1.0)), alpha);
+  float key = max(dot(Nw, normalize(KEY)), 0.0);
+  // the black page: dark glass, lit from within, its edges catching the studio
+  vec3 milkD = vec3(0.82, 0.86, 0.9) * (1.0 - exp(-1.1 * thick)) * (0.13 + 0.34 * key * key);
+  // the lime, seen through milky glass: a little paler at its blurred edge
+  vec3 limeSeen = mix(lime, lime * 0.6 + vec3(0.35), 1.0 - coreSeen) ;
+  vec3 colD = milkD
+    + limeSeen * 0.9 * coreSeen + lime * (0.45 * cloud + 1.0 * seam + 1.2 * facing)
+    + vec3(0.85, 0.9, 1.0) * inner * 0.2
+    + vec3(refl) * F;
+  float aD = clamp((1.0 - exp(-1.4 * thick)) * 0.6 + F * 0.9 + 0.3 * coreSeen, 0.0, 1.0);
+  // paper: clear, cool glass that darkens the page a touch, with the lime as a colour, not a light
+  vec3 tint = vec3(0.8, 0.84, 0.87);
+  float bodyP = (1.0 - exp(-1.0 * thick)) * 0.36;
+  float limeP = 0.8 * coreSeen + 0.35 * cloud + 0.6 * seam + 0.5 * facing;
+  float aP = clamp(bodyP + F * 0.9 + limeP + inner * 0.14, 0.0, 1.0);
+  vec3 colP = tint * bodyP
+    + uCore * limeP * mix(0.55, 1.0, uGlow)
+    + vec3(0.2, 0.22, 0.24) * inner * 0.14
+    + vec3(refl) * F * 0.9;
+  vec3 col = mix(colD, colP, uTone);
+  float alpha = mix(aD, aP, uTone);
+  return vec4(min(col, vec3(1.2)), alpha);
 }
 
 void main() {
-  // four rays a pixel, so the edges are smooth
   vec4 acc = vec4(0.0);
   for (int i = 0; i < 4; i++) {
-    vec2 o = vec2(float(i % 2), float(i / 2)) * 0.5 - 0.25;
+    if (i >= uAA) break;
+    vec2 o = uAA == 1 ? vec2(0.0) : uAA == 2 ? vec2(i == 0 ? -0.25 : 0.25, i == 0 ? -0.25 : 0.25) : vec2(float(i % 2), float(i / 2)) * 0.5 - 0.25;
     acc += shade(gl_FragCoord.xy + o);
   }
-  frag = acc * 0.25;
+  frag = acc / float(uAA);
 }`;
 
 type Piece = { p: V3; R: M3 };
@@ -227,10 +291,13 @@ export default function GlassCube({
     gl.enableVertexAttribArray(aPos);
     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
     const U = (n: string) => gl.getUniformLocation(prog, n);
-    const uRes = U('uRes'), uView = U('uView'), uC = U('uC'), uRi = U('uRi'), uH = U('uH');
-    const uTone = U('uTone'), uCore = U('uCore'), uGlow = U('uGlow'), uDist = U('uDist'), uTanF = U('uTanF');
+    const uRes = U('uRes'), uView = U('uView'), uC = U('uC'), uRi = U('uRi'), uH = U('uH'), uR = U('uR');
+    const uTone = U('uTone'), uCore = U('uCore'), uGlow = U('uGlow'), uDist = U('uDist'), uTanF = U('uTanF'), uAA = U('uAA');
     const FOV = (20 * Math.PI) / 180;
     gl.uniform1f(uH, 0.465);
+    gl.uniform1f(uR, 0.06);
+    // four rays a pixel where there's a mouse (a computer), two on a phone
+    gl.uniform1i(uAA, fine ? 4 : 2);
     gl.uniform1f(uDist, 15);
     gl.uniform1f(uTanF, Math.tan(FOV / 2));
     gl.uniform3fv(uCore, lime ? [0.72, 1.0, 0.0] : [0.85, 0.86, 0.84]);
