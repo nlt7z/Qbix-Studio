@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import BrandText from '@/components/BrandText';
 import StudioTime from '@/components/hero/StudioTime';
 import { useAudience, type Audience } from '@/components/Audience';
-import IsoCube from '@/components/scene/IsoCube';
+import GlassCube from '@/components/scene/GlassCube';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -184,7 +184,7 @@ export default function Hero() {
           <StudioTime />
         </div>
         <div className="ch-stage">
-          <IsoCube />
+          <GlassCube />
         </div>
       </div>
     </section>

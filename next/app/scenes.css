@@ -21,10 +21,30 @@
   --chalk: #f4f5f2;
 }
 .scn.is-ready { visibility: visible; }
-/* The drawings keep their own corners (the site's are square): a box's
-   radius is its own --r, never its parent's. */
+/* Square, like the rest of the site: no rounded corners in the drawings
+   either. Only what is round in the world keeps its curve, by asking for it:
+   the phone (its body and screen) and anything marked .round (a dot, an
+   avatar's head), each with its own --r, never its parent's. */
 @property --r { syntax: '*'; inherits: false; }
-.scn, .scn * { border-radius: var(--r, 0) !important; }
+.scn, .scn *, .scn *::before, .scn *::after { border-radius: 0 !important; }
+.scn .round, .scn .phone, .scn .phone-screen, .scn .phone-island { border-radius: var(--r, 0) !important; }
+
+/* Glass: a panel that sits over another, frosted, so what's under it shows
+   through blurred (sharp corners, a hairline edge, a faint top light). */
+.scn .glass {
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+}
+[data-tone='dark'] .scn .glass {
+  background: rgba(30, 32, 36, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 24px 48px -24px rgba(0, 0, 0, 0.85);
+}
+[data-tone='paper'] .scn .glass {
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(18, 20, 23, 0.06), 0 20px 44px -22px rgba(18, 20, 23, 0.28);
+}
 .scn .a { position: absolute; }
 .scn .t { white-space: pre; line-height: 1.2; }
 .scn svg { display: block; overflow: visible; }
@@ -145,7 +165,8 @@
 .scn .hush-listen { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; }
 .scn .hush-feat { padding: 12px 14px; display: grid; align-content: space-between; font-size: 13px; }
 
-.scn .hush-ed { background: #141518; color: #e9eae6; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px -28px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.12); overflow: hidden; z-index: 6; }
+/* the editor is dark frosted glass: the site shows through it, blurred */
+.scn .hush-ed { background: rgba(18, 19, 22, 0.8); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4); color: #e9eae6; border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 30px 60px -28px rgba(0, 0, 0, 0.55); overflow: hidden; z-index: 6; }
 .scn .hush-ed-bar { position: relative; height: 32px; display: flex; align-items: center; gap: 2px; padding: 0 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); font-size: 11px; color: rgba(233, 234, 230, 0.45); }
 .scn .hush-ed-bar > span:not(.hush-pub) { padding: 4px 8px; --r: 4px; }
 .scn .hush-ed-bar > span.is-on { background: rgba(255, 255, 255, 0.07); color: #e9eae6; }
@@ -171,13 +192,13 @@
 .scn .hush-m-feats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 12px 14px 0; }
 .scn .hush-m-feats > span { --r: 6px; padding: 7px 8px; display: grid; gap: 3px; font-size: 10.5px; }
 .scn .hush-m-feats .f-label { font-style: normal; font-size: 9px; }
-.scn .hush-toast { display: flex; align-items: center; gap: 8px; padding: 0 12px; background: #121417; color: #f4f5f2; font-size: 12px; z-index: 7; }
+.scn .hush-toast { display: flex; align-items: center; gap: 8px; padding: 0 12px; background: rgba(18, 20, 23, 0.78); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); border: 1px solid rgba(255, 255, 255, 0.1); color: #f4f5f2; font-size: 12px; z-index: 7; }
 .scn .hush-toast .ico { color: #f4f5f2; }
 .scn .hush-toast i { margin-left: auto; font-style: normal; color: rgba(244, 245, 242, 0.5); }
 .scn .hush-note { padding: 14px 16px; display: grid; align-content: space-between; background: #121417; color: #f4f5f2; border-color: #121417; }
 .scn .hush-note .f-label { color: rgba(244, 245, 242, 0.5); }
 .scn .hush-note .f-head { font-size: 26px; }
 
-/* --- the qbix cube (components/scene/IsoCube.tsx) ---------------------------- */
-.iso-cube { display: block; width: 100%; height: 100%; }
+/* --- the qbix cube (components/scene/GlassCube.tsx) -------------------------- */
+.glass-cube { display: block; width: 100%; height: 100%; }
 .start-cube { width: 100%; height: 100%; }

@@ -8,15 +8,17 @@ import { E } from '@/lib/scene/timeline';
 /**
  * Qbix Labs: four products in one window, one after another, as the list
  * beside it names them.
- * 1 · Strata, live: its own film, at stratadesign.app;
+ * 1 · Strata, live: its own film, at stratadesign.app, a frosted caption over it;
  * 2 · AI Bidding, live: Bid King's film, a phone in a hand, on a dark screen;
- * 3 · TTS Editor, on the way: a voice's waveform, its pitch drawn over it, the
- *     playhead lighting the script word by word, three dials under it;
- * 4 · Interview Assistant, on the way: a call, its live transcript, and the
- *     hints that arrive while the candidate talks.
+ * 3 · TTS Editor, on the way: a voice's waveform, its pitch drawn over it, and
+ *     a frosted sheet over its lower half with the script (the playhead lights
+ *     it word by word) and three dials;
+ * 4 · Interview Assistant, on the way: a call; frosted over it, the live
+ *     captions and the assistant, whose hints arrive while the candidate talks.
  * Each move: the window's address is selected and the next one typed; then
  * the next product pushes up into the window, and its name (its tag with it)
  * into the title above. The films play only while their state is showing.
+ * Square, like the site; the only lime is the one thing that's live or now.
  */
 
 const TOP = 20; // the names
@@ -33,14 +35,16 @@ const PRODUCTS = [
 ];
 
 /* --- the TTS Editor: a voice, 4.2 s of it ---------------------------------- */
-const WF = { x: 20, y: 64, w: 678, h: 166 }; // the waveform's block, in its panel
+// the waveform's stage (in its panel); a frosted sheet floats over its lower part
+const WF = { x: 20, y: 60, w: 678, h: 344 };
 const PX0 = 16;
-const PX1 = WF.w - 16; // the plot, in the block
+const PX1 = WF.w - 16; // the plot, in the stage
 const DUR = 4.2;
 const pxs = (PX1 - PX0) / DUR;
 const sx = (s: number) => PX0 + s * pxs;
-const py = (p: number) => 26 + (1 - p) * (WF.h - 52);
-const MID = WF.h / 2;
+const MID = 172; // the waveform's middle; the pitch is drawn above it
+const py = (p: number) => 40 + (1 - p) * (MID - 58);
+const SHEET = { x: 36, y: 258, w: 646, h: 130 };
 // what's said: [word, from, to (s), loudness]
 const SAID: [string, number, number, number][] = [
   ['Welcome', 0.12, 0.66, 0.95],
@@ -85,7 +89,7 @@ for (let x = PX0, i = 0; x <= PX1 - 3; x += 5, i++) {
     const [, a, b, loud] = w;
     const env = Math.pow(Math.sin((Math.PI * (s - a)) / (b - a)), 0.55);
     const r = Math.abs((Math.sin(i * 12.9898 + 4.1) * 43758.5453) % 1);
-    h = Math.max(2, Math.round(env * loud * (0.45 + 0.55 * r) * 122));
+    h = Math.max(2, Math.round(env * loud * (0.45 + 0.55 * r) * 200));
   }
   BARS.push([x, h]);
 }
@@ -94,7 +98,7 @@ function Wave({ c }: { c: string }) {
   return (
     <svg className={c} width={WF.w} height={WF.h} viewBox={`0 0 ${WF.w} ${WF.h}`} aria-hidden>
       {BARS.map(([x, h]) => (
-        <rect key={x} x={x} y={MID - h / 2} width={3} height={h} rx={1.5} />
+        <rect key={x} x={x} y={MID - h / 2} width={3} height={h} />
       ))}
     </svg>
   );
@@ -106,9 +110,11 @@ const SLIDERS: [string, string, number][] = [
   ['Warmth', '70%', 0.7],
 ];
 
-/* --- the Interview Assistant ------------------------------------------------ */
-const CALL = { x: 20, y: 20, w: 400, h: 250 };
-const HINTS = { x: 440, w: 258, h: 68, y: [44, 123, 202] };
+/* --- the Interview Assistant: a call, the assistant and the captions frosted over it --- */
+const SIDE = { x: 422, y: 16, w: 280, h: 388 };
+const HINTS = { x: 438, w: 248, h: 60, y: [56, 124, 192] };
+const HINT = ['Ask what they measured', 'How big was the team?', 'Led the rebuild.'];
+const CAPS = { x: 16, y: 336, w: 390, h: 68 };
 
 export default function Labs() {
   return (
@@ -186,7 +192,7 @@ export default function Labs() {
 
         /* 2 → 3, then: the pitch is drawn over the voice, and the playhead reads it out */
         const draw = (el: HTMLElement | null, pts: [number, number][], at: number, dur: number) => {
-          // dashes of 1 with gaps of 2, offset past the start: no stray round cap before it's drawn
+          // dashes of 1 with gaps of 2, offset past the start: no stray cap before it's drawn
           tl.from(el, { dash: 1.05 }).to(el, { dash: 0 }, at, dur, E.lin);
           const x0 = sx(pts[0][0]);
           const x1 = sx(pts[pts.length - 1][0]);
@@ -203,11 +209,10 @@ export default function Labs() {
         tl.to(q('tts.ph'), { x: sx(NOW) - PX0 }, PH.at, PH.dur, E.lin);
         const R = (s: number) => ((WF.w - sx(s)) / WF.w) * 100;
         tl.from(q('tts.played'), { clip: [0, R(0), 0, 0] }).to(q('tts.played'), { clip: [0, R(NOW), 0, 0] }, PH.at, PH.dur, E.lin);
-        // the word being said, lit
+        // the word being said, lit: from word to word as the playhead reaches each; none in the pause
         const mark = q('tts.mark');
         const words = SAID.map((_, i) => q(`tts.w.${i}`));
         const box = (el: HTMLElement | null) => (el ? { x: el.offsetLeft - 3, w: el.offsetWidth + 6 } : { x: 0, w: 0 });
-        // (from word to word as the playhead reaches each; none in the pause)
         const resume = SAID.findIndex(([, a]) => a >= PAUSE[1]);
         tl.from(mark, { ...box(words[0]), o: 0 });
         SAID.forEach(([, a], i) => {
@@ -247,13 +252,17 @@ export default function Labs() {
         });
         const card = (i: number, at: number) =>
           [q(`int.r${i}`), q(`int.h${i}`)].forEach((el) =>
-            tl.from(el, { y: 10, clip: 'inset(100% 0% 0% 0% round 8px)' }).to(el, { y: 0, clip: 'inset(0% 0% 0% 0% round 8px)' }, at, 0.08, E.out),
+            tl.from(el, { y: 10, clip: 'inset(100% 0% 0% 0%)' }).to(el, { y: 0, clip: 'inset(0% 0% 0% 0%)' }, at, 0.08, E.out),
           );
+        // the lime is one block that moves to the newest hint; it carries the hints' words in ink, held in place inside it
         const cur = q('int.cur');
+        const ink = q('int.cur.ink');
+        const step = HINTS.y[1] - HINTS.y[0];
         card(0, 3.7);
-        tl.from(cur, { clip: 'inset(0% 100% 0% 0% round 8px)' }).to(cur, { clip: 'inset(0% 0% 0% 0% round 8px)' }, 3.74, 0.045, E.out);
+        tl.from(cur, { clip: 'inset(0% 100% 0% 0%)' }).to(cur, { clip: 'inset(0% 0% 0% 0%)' }, 3.74, 0.045, E.out);
         card(1, 3.8);
-        tl.to(cur, { y: HINTS.y[1] - HINTS.y[0] }, 3.855, 0.05, E.move);
+        tl.to(cur, { y: step }, 3.855, 0.05, E.move);
+        tl.to(ink, { y: -step }, 3.855, 0.05, E.move);
         card(2, 3.9);
       }}
     >
@@ -268,7 +277,7 @@ export default function Labs() {
       </A>
 
       {/* --- the window --- */}
-      <A k="win" x={0} y={WY} w={720} h={2 + 36 + CH} r={12} c="win">
+      <A k="win" x={0} y={WY} w={720} h={2 + 36 + CH} c="win">
         <div className="win-bar">
           <span className="win-dots" aria-hidden>
             <i />
@@ -291,7 +300,7 @@ export default function Labs() {
         </div>
         <div className="win-body labs-body">
           <div data-k="panels" className="labs-panels" style={{ height: 4 * CH }}>
-            {/* 1 · Strata, its own film */}
+            {/* 1 · Strata, its own film, a frosted caption over it */}
             <div className="labs-panel" style={{ top: 0, height: CH }}>
               <video
                 data-k="film.strata"
@@ -303,6 +312,9 @@ export default function Labs() {
                 playsInline
                 preload="metadata"
               />
+              <A x={16} y={16} h={44} c="glass labs-cap">
+                A moodboard in, a working design system out.
+              </A>
             </div>
 
             {/* 2 · AI Bidding: Bid King, a phone in a hand, on black */}
@@ -318,9 +330,12 @@ export default function Labs() {
                 preload="metadata"
                 style={{ left: -65, top: CH - 440, width: 806, height: 440 }}
               />
+              <A k="bid.cap" x={0} y={CH - 16 - 44} h={44} c="glass labs-dark-glass labs-cap" style={{ left: 'auto', right: 16 }}>
+                Bid, bluff, or go all in.
+              </A>
             </div>
 
-            {/* 3 · TTS Editor */}
+            {/* 3 · TTS Editor: the voice on its stage, the script and the dials frosted over it */}
             <div className="labs-panel" style={{ top: 2 * CH, height: CH }}>
               <A x={0} y={0} w={CW} h={48} c="labs-tb">
                 <span className="labs-play">
@@ -329,8 +344,8 @@ export default function Labs() {
                   </span>
                   <span data-k="tts.pause" className="labs-ico">
                     <svg width={10} height={10} viewBox="0 0 10 10" aria-hidden className="ico">
-                      <rect x={2} y={1.5} width={2.2} height={7} rx={0.6} fill="currentColor" />
-                      <rect x={5.8} y={1.5} width={2.2} height={7} rx={0.6} fill="currentColor" />
+                      <rect x={2} y={1.5} width={2.2} height={7} fill="currentColor" />
+                      <rect x={5.8} y={1.5} width={2.2} height={7} fill="currentColor" />
                     </svg>
                   </span>
                 </span>
@@ -343,6 +358,11 @@ export default function Labs() {
                 </span>
               </A>
               <A x={WF.x} y={WF.y} w={WF.w} h={WF.h} c="labs-wf">
+                {[0, 1, 2, 3, 4].map((s) => (
+                  <span key={s} className="a labs-ruler" style={{ left: sx(s), top: 10, transform: 'translateX(-50%)' }}>
+                    0:0{s}
+                  </span>
+                ))}
                 <Wave c="labs-wf-base" />
                 <div data-k="tts.played" className="labs-wf-played">
                   <Wave c="labs-wf-on" />
@@ -355,85 +375,85 @@ export default function Labs() {
                     <circle key={s} data-k={`tts.dot.${i}`} className="labs-pt" cx={sx(s)} cy={py(p)} r={3.5} />
                   ))}
                 </svg>
-                <span className="labs-gap f-label" style={{ left: sx(PAUSE[0]), width: sx(PAUSE[1]) - sx(PAUSE[0]) }}>
+                <span className="labs-gap f-label" style={{ left: sx(PAUSE[0]), width: sx(PAUSE[1]) - sx(PAUSE[0]), top: MID - 26 }}>
                   0.6s
                 </span>
-                <i data-k="tts.ph" className="a labs-ph" style={{ left: PX0 - 1, top: 0, height: WF.h }} />
+                <i data-k="tts.ph" className="a labs-ph" style={{ left: PX0 - 1, top: 0, height: MID + 100 }} />
               </A>
-              <A x={WF.x} y={WF.y + WF.h + 8} w={WF.w} h={14} c="labs-ruler">
-                {[0, 1, 2, 3, 4].map((s) => (
-                  <span key={s} className="a" style={{ left: sx(s), transform: 'translateX(-50%)' }}>
-                    0:0{s}
-                  </span>
+              <A x={SHEET.x} y={SHEET.y} w={SHEET.w} h={SHEET.h} c="glass labs-sheet">
+                <A k="tts.line" x={20} y={18} h={32} c="labs-script">
+                  <i data-k="tts.mark" className="labs-mark" />
+                  <span data-k="tts.w.0">Welcome</span> <span data-k="tts.w.1">back.</span> <span className="labs-pause">0.6s</span>{' '}
+                  <span data-k="tts.w.2">Today,</span> <span data-k="tts.w.3">we</span> <span data-k="tts.w.4">take</span>{' '}
+                  <span data-k="tts.w.5">it</span> <span data-k="tts.w.6">slow.</span>
+                </A>
+                {SLIDERS.map(([k, v, f], i) => (
+                  <A key={k} x={20 + i * 210} y={72} w={186} c="labs-sl">
+                    <span className="labs-sl-k">{k}</span>
+                    <span className="labs-sl-v">{v}</span>
+                    <span className="labs-sl-track">
+                      <i style={{ width: `${f * 100}%` }} />
+                      <b style={{ left: `${f * 100}%` }} />
+                    </span>
+                  </A>
                 ))}
               </A>
-              <A k="tts.line" x={20} y={272} h={32} c="labs-script">
-                <i data-k="tts.mark" className="labs-mark" />
-                <span data-k="tts.w.0">Welcome</span> <span data-k="tts.w.1">back.</span> <span className="labs-pause">0.6s</span>{' '}
-                <span data-k="tts.w.2">Today,</span> <span data-k="tts.w.3">we</span> <span data-k="tts.w.4">take</span>{' '}
-                <span data-k="tts.w.5">it</span> <span data-k="tts.w.6">slow.</span>
-              </A>
-              {SLIDERS.map(([k, v, f], i) => (
-                <A key={k} x={20 + i * 234} y={340} w={210} c="labs-sl">
-                  <span className="labs-sl-k">{k}</span>
-                  <span className="labs-sl-v">{v}</span>
-                  <span className="labs-sl-track">
-                    <i style={{ width: `${f * 100}%` }} />
-                    <b style={{ left: `${f * 100}%` }} />
-                  </span>
-                </A>
-              ))}
             </div>
 
-            {/* 4 · Interview Assistant */}
-            <div className="labs-panel" style={{ top: 3 * CH, height: CH }}>
-              <A x={CALL.x} y={CALL.y} w={CALL.w} h={CALL.h} c="labs-call">
-                <svg width={CALL.w} height={CALL.h} viewBox={`0 0 ${CALL.w} ${CALL.h}`} aria-hidden>
-                  <circle cx={200} cy={110} r={38} fill="rgba(244,245,242,0.16)" />
-                  <path d="M90 250 C90 141 310 141 310 250 Z" fill="rgba(244,245,242,0.16)" />
+            {/* 4 · Interview Assistant: the call, and frosted over it the assistant and the captions */}
+            <div className="labs-panel labs-call" style={{ top: 3 * CH, height: CH }}>
+              <svg className="a" width={CW} height={CH} viewBox={`0 0 ${CW} ${CH}`} aria-hidden style={{ left: 0, top: 0 }}>
+                <circle cx={262} cy={172} r={60} fill="rgba(244,245,242,0.16)" />
+                <path d="M42 420 C42 206 482 206 482 420 Z" fill="rgba(244,245,242,0.16)" />
+              </svg>
+              <A x={16} y={16} w={96} h={64} c="labs-self">
+                <svg width={96} height={64} viewBox="0 0 96 64" aria-hidden>
+                  <circle cx={58} cy={26} r={11} fill="rgba(244,245,242,0.22)" />
+                  <path d="M32 64 C32 38 84 38 84 64 Z" fill="rgba(244,245,242,0.22)" />
                 </svg>
-                <A x={CALL.w - 12 - 96} y={12} w={96} h={64} c="labs-self">
-                  <svg width={96} height={64} viewBox="0 0 96 64" aria-hidden>
-                    <circle cx={58} cy={26} r={11} fill="rgba(244,245,242,0.22)" />
-                    <path d="M32 64 C32 38 84 38 84 64 Z" fill="rgba(244,245,242,0.22)" />
-                  </svg>
-                  <span>You</span>
-                </A>
-                <A x={14} y={CALL.h - 30} c="labs-who">
-                  <span className="labs-bars" aria-hidden>
-                    <i data-k="int.bar.0" style={{ height: 4 }} />
-                    <i data-k="int.bar.1" style={{ height: 7 }} />
-                    <i data-k="int.bar.2" style={{ height: 5 }} />
-                  </span>
-                  Sam
-                </A>
+                <span>You</span>
               </A>
-              <A x={HINTS.x} y={20} c="f-label">
-                Assistant
+              {/* the live captions */}
+              <A x={CAPS.x} y={CAPS.y} w={CAPS.w} h={CAPS.h} c="glass labs-dark-glass labs-caps">
+                <span className="labs-line labs-line--you">
+                  <b>You</b>
+                  <span>What was your part in it?</span>
+                </span>
+                <span className="labs-line">
+                  <b>
+                    Sam
+                    <span className="labs-bars" aria-hidden>
+                      <i data-k="int.bar.0" style={{ height: 4 }} />
+                      <i data-k="int.bar.1" style={{ height: 7 }} />
+                      <i data-k="int.bar.2" style={{ height: 5 }} />
+                    </span>
+                  </b>
+                  <span data-k="int.l1">I led the rebuild of our checkout.</span>
+                </span>
               </A>
-              {/* the cards: each a hairline under the lime, its words over it; the lime, the current hint, moves to the newest */}
+              {/* the assistant: its hints, the newest lit, and a note */}
+              <A x={SIDE.x} y={SIDE.y} w={SIDE.w} h={SIDE.h} c="glass labs-dark-glass labs-side">
+                <span className="f-label">Assistant</span>
+              </A>
               {HINTS.y.map((y, i) => (
-                <A key={y} k={`int.r${i}`} x={HINTS.x} y={y} w={HINTS.w} h={HINTS.h} r={8} c={i === 2 ? 'labs-card labs-note' : 'labs-card'} />
+                <A key={y} k={`int.r${i}`} x={HINTS.x} y={y} w={HINTS.w} h={HINTS.h} c={i === 2 ? 'labs-card labs-note' : 'labs-card'} />
               ))}
-              <A k="int.cur" x={HINTS.x} y={HINTS.y[0]} w={HINTS.w} h={HINTS.h} r={8} c="labs-cur" />
-              {['Ask what they measured', 'How big was the team?', 'Led the rebuild.'].map((s, i) => (
-                <A key={s} k={`int.h${i}`} x={HINTS.x} y={HINTS.y[i]} w={HINTS.w} h={HINTS.h} r={8} c="labs-hint">
+              {HINT.map((s, i) => (
+                <A key={s} k={`int.h${i}`} x={HINTS.x} y={HINTS.y[i]} w={HINTS.w} h={HINTS.h} c="labs-hint">
                   <span>
                     {i === 2 && <Check size={14} />}
                     {s}
                   </span>
                 </A>
               ))}
-              <A x={20} y={292} c="f-label">
-                Live transcript
-              </A>
-              <A x={20} y={316} c="labs-line dim">
-                <b>You</b>
-                <span>What was your part in it?</span>
-              </A>
-              <A x={20} y={346} c="labs-line">
-                <b>Sam</b>
-                <span data-k="int.l1">I led the rebuild of our checkout.</span>
+              <A k="int.cur" x={HINTS.x} y={HINTS.y[0]} w={HINTS.w} h={HINTS.h} c="labs-cur">
+                <div data-k="int.cur.ink" className="labs-cur-ink">
+                  {HINT.slice(0, 2).map((s, i) => (
+                    <span key={s} className="labs-hint labs-hint--ink" style={{ top: HINTS.y[i] - HINTS.y[0], height: HINTS.h }}>
+                      <span>{s}</span>
+                    </span>
+                  ))}
+                </div>
               </A>
             </div>
           </div>

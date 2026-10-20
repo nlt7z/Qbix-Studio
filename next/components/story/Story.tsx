@@ -9,7 +9,7 @@ import Labs from '@/components/scenes/Labs';
 import Dream from '@/components/scenes/Dream';
 import { ListingStory } from '@/components/scenes/Listing';
 import { PracticeStory } from '@/components/scenes/Practice';
-import IsoCube from '@/components/scene/IsoCube';
+import GlassCube from '@/components/scene/GlassCube';
 import Marker from '@/components/Marker';
 import SplitText from '@/components/SplitText';
 import { useAudience } from '@/components/Audience';
@@ -212,7 +212,7 @@ export default function Story() {
       </Chapter>
 
       {/* The pieces stack back into the cube, bottom row first: the thing, built. */}
-      <Chapter id="contact" scene={<IsoCube />} states={1} tone={ai ? 'paper' : 'dark'} side={ai ? 'right' : 'left'} h="160vh" className="ch--contact">
+      <Chapter id="contact" scene={<GlassCube />} states={1} tone={ai ? 'paper' : 'dark'} side={ai ? 'right' : 'left'} h="160vh" className="ch--contact">
         <h2 className="ch-title ch-sign">
           Bring the idea. <Marker className={ai ? 'marker--ink' : 'marker--white'}>{'We’ll build the thing.'}</Marker>
         </h2>

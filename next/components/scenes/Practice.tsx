@@ -14,20 +14,22 @@ import { E, type Timeline } from '@/lib/scene/timeline';
  * down, so its type stays type).
  *
  * PracticeStory (the business homepage, dark):
- * 1 · a short questionnaire, typed field by field, a photo of the office
- *     beside it, Send in lime;
- * 2 · sent: the card's labels and lines fold away, its header becomes a
- *     browser's bar, and the answers settle into the homepage they make (the
- *     name is the logo, the photo the picture, the specialties and sessions
- *     the details below); the feel ("Calm, warm, no jargon") is rewritten as
- *     the headline; then the rest of the page comes in around them;
+ * 1 · the practice's old site (not secure, crowded, 2019), and over it, on
+ *     frosted glass, a short questionnaire typed field by field, Send in lime;
+ * 2 · sent: the questionnaire's labels and lines fold, then its glass, the
+ *     old site folds away and its address becomes the draft's; the answers
+ *     settle into the homepage they make (the name is the logo, the
+ *     specialties and sessions the details below), the old site's photo of
+ *     the office grows into the hero, and the feel ("Calm, warm, no jargon")
+ *     is rewritten as the headline; the rest of the page comes in around them;
  * 3 · live: the draft address is replaced by willowcounseling.com behind a
  *     lock, Live, and the window steps aside for its phone.
- * The card is laid out over the site so every answer is near where it goes
- * and nothing crosses on its way.
+ * The card is laid out over the old site so every answer is near where it
+ * goes, and nothing crosses on its way.
  *
  * PracticeTourScene (the practice page, paper): the homepage window stays put
- * while each thing you get comes out beside it and folds away for the next:
+ * while each thing you get comes out beside it (on frosted glass where it lies
+ * over the window, so the window shows through) and folds away for the next:
  * its four other pages, the phone, the booking button clicked open, the
  * Google result, the owner card, the how-to video, thirty days of fixes.
  *
@@ -120,8 +122,12 @@ function Room({ vb = '0 0 256 220' }: { vb?: string }) {
   );
 }
 
-/** The window's bar: three dots, the address (a draft one first, if `draft`) and its tag. */
-function Bar({ draft, live = true }: { draft?: boolean; live?: boolean }) {
+/**
+ * The window's bar: three dots, the address and a tag. In the story it goes
+ * through three: the old site's (not secure), the draft's, then the new one
+ * behind a lock.
+ */
+function Bar({ old, draft, live = true }: { old?: boolean; draft?: boolean; live?: boolean }) {
   return (
     <>
       <A k="bar.dots" x={14} y={13} c="prc-dots">
@@ -129,10 +135,15 @@ function Bar({ draft, live = true }: { draft?: boolean; live?: boolean }) {
         <i />
         <i />
       </A>
-      <A k="url" x={(SW - URL_W) / 2} y={7} w={URL_W} h={22} r={6} c="prc-url">
+      <A k="url" x={(SW - URL_W) / 2} y={7} w={URL_W} h={22} c="prc-url">
+        {old && (
+          <span data-k="url.old" className="prc-url-old">
+            <span className="prc-insecure">Not secure</span>willowcounseling.com
+          </span>
+        )}
         {draft && <span data-k="url.sel" className="prc-url-sel" style={{ width: SEL_W, marginLeft: -SEL_W / 2 }} />}
         {draft && (
-          <span data-k="url.old" className="prc-url-old">
+          <span data-k="url.draft" className="prc-url-old">
             willow-counseling.squarespace.com
           </span>
         )}
@@ -154,6 +165,48 @@ function Bar({ draft, live = true }: { draft?: boolean; live?: boolean }) {
         </A>
       )}
       <A k="bar.line" x={0} y={36} w={SW} h={1} c="prc-barline" />
+    </>
+  );
+}
+
+const OLD_NAV = ['Home', 'About', 'Services', 'Specialties', 'Fees', 'Insurance', 'Forms', 'Blog', 'Links', 'Contact'];
+/** where the old site keeps its photo of the office (framed), in the site's px */
+const OLD_PIC = { x: 426, y: 156, w: 148 };
+
+/** The practice's old site, the "before": a crowded header, ten links, a shouting banner, dense columns, a 2019 footer. */
+function OldSite() {
+  return (
+    <>
+      <A k="o.band" x={0} y={37} w={SW} h={36} c="prc-old-band">
+        <span>Dana Reyes, MA, LMFT ~ Counseling &amp; Psychotherapy Services</span>
+        <span className="prc-old-call">Call (503) 555 0142</span>
+      </A>
+      <A k="o.nav" x={0} y={73} w={SW} h={26} c="prc-old-nav">
+        {OLD_NAV.map((l) => (
+          <span key={l}>{l}</span>
+        ))}
+      </A>
+      <A k="o.ban" x={20} y={110} w={SW - 40} h={36} c="prc-old-ban">
+        Welcome!! Now accepting new clients!!
+      </A>
+      <A k="o.c1" x={30} y={160} w={170} c="prc-old-col">
+        <b>Individual Therapy</b>I provide a safe, supportive and confidential space for adults facing anxiety, depression, stress,
+        grief and life transitions. Sessions are 50 minutes. Please see my Fees page for more information.
+      </A>
+      <A k="o.c2" x={214} y={160} w={130} c="prc-old-col">
+        <b>Couples Counseling</b>Couples counseling can help you improve communication, resolve conflict, rebuild trust and reconnect.
+        I draw on EFT and the Gottman Method. Evening hours available.
+      </A>
+      <A k="o.frame" x={OLD_PIC.x - 6} y={OLD_PIC.y - 6} w={OLD_PIC.w + 12} h={Math.round((OLD_PIC.w * S.pic.h) / S.pic.w) + 12} c="prc-old-frame" />
+      <T k="o.cap" x={OLD_PIC.x - 6} y={OLD_PIC.y + 136} c="prc-old-cap">
+        My office in Portland
+      </T>
+      <A k="o.c3" x={OLD_PIC.x - 6} y={OLD_PIC.y + 164} w={160} c="prc-old-col">
+        <b>Teens &amp; Families</b>Support for teens and their parents through school stress and big changes.
+      </A>
+      <A k="o.foot" x={0} y={404} w={SW} h={26} c="prc-old-foot">
+        © 2019 Dana Reyes Counseling · All Rights Reserved · Site Map · Privacy
+      </A>
     </>
   );
 }
@@ -195,10 +248,10 @@ function SiteParts() {
       <T k="s.sub2" x={S.sub2.x} y={S.sub2.y} c="prc-sub">
         in Portland and online.
       </T>
-      <A k="s.btn" x={S.btn.x} y={S.btn.y} w={S.btn.w} h={S.btn.h} r={20} c="prc-btn">
+      <A k="s.btn" x={S.btn.x} y={S.btn.y} w={S.btn.w} h={S.btn.h} c="prc-btn">
         Book a free consultation
       </A>
-      <A k="s.pic" x={S.pic.x} y={S.pic.y} w={S.pic.w} h={S.pic.h} r={8} c="prc-pic prc-o">
+      <A k="s.pic" x={S.pic.x} y={S.pic.y} w={S.pic.w} h={S.pic.h} c="prc-pic prc-o">
         <Room />
       </A>
       <A k="s.rule" x={28} y={S.rule.y} w={SW - 56} h={1} c="prc-rule" />
@@ -321,21 +374,17 @@ function wipe(tl: Timeline, el: HTMLElement | null, at: number, dur = 0.16, ease
 }
 
 /* ---------------------------------------------------------------------------
-   PracticeStory: a questionnaire becomes the homepage, which goes live
+   PracticeStory: the old site, a questionnaire over it; the answers become the
+   new homepage, which goes live
 --------------------------------------------------------------------------- */
 
-/** the card (then the window) in the scene; it steps left by STEP for the phone */
+/** the window in the scene (it steps left by STEP for the phone) */
 const G = { x: 60, y: 65 };
 const STEP = 60;
-/** the questionnaire, laid over the site: label tops, answer tops, underlines */
-const F = {
-  lab: [56, 126, 196, 266],
-  ans: [76, 146, 216, 286],
-  und: [106, 176, 246, 316],
-  pic: { x: 332, y: 76, k: 240 / 256 },
-  rule: 346,
-  send: { x: 440, y: 368, w: 132, h: 38 },
-};
+/** the questionnaire: a glass card over the old site, in the site's px; its rows' label, answer and line */
+const F = { x: 20, y: 100, w: 340, h: 310 };
+const FR = (i: number) => ({ lab: F.y + 46 + i * 56, ans: F.y + 62 + i * 56, und: F.y + 90 + i * 56 });
+const SEND = { x: F.x + 200, y: F.y + 272, w: 120, h: 34 };
 const LABELS = ['Practice name', 'How should it feel?', 'Specialties', 'Sessions'];
 const K_LOGO = 19 / 15.5;
 const K_V = 19 / 14;
@@ -346,143 +395,141 @@ export function PracticeStory() {
       n={3}
       w={720}
       h={560}
-      label="A short questionnaire about a counseling practice is typed in; its answers become the practice's calm homepage; then the homepage goes live at willowcounseling.com, with its phone"
+      label="A therapist's dated website, with a short questionnaire over it; the answers and the office photo become a calm new homepage; then it goes live at willowcounseling.com, with its phone"
       build={(q, tl) => {
         const cur = q('cursor');
         const grp = q('grp');
+        const ax = F.x + 20;
 
-        /* 0 → 1: the questionnaire: the blank form, then each answer typed in */
-        tl.from(q('frame'), { clip: SHUT }).to(q('frame'), { clip: OPEN }, 0.02, 0.3, E.out);
-        wipe(tl, q('f.head'), 0.08, 0.2);
-        tl.from(q('bar.line'), { sx: 0 }).to(q('bar.line'), { sx: 1 }, 0.06, 0.26, E.out);
+        /* 0 → 1: the old site; the questionnaire over it, blank, then each answer typed in */
+        tl.from(grp, { clip: SHUT }).to(grp, { clip: OPEN }, 0.02, 0.3, E.out);
+        tl.from(q('q.card'), { clip: SHUT }).to(q('q.card'), { clip: OPEN }, 0.22, 0.24, E.out);
+        wipe(tl, q('f.head'), 0.3, 0.16);
+        tl.from(q('f.hline'), { sx: 0 }).to(q('f.hline'), { sx: 1 }, 0.3, 0.2, E.out);
         [0, 1, 2, 3].forEach((i) => {
-          wipe(tl, q(`f.l${i}`), 0.12 + i * 0.035, 0.14);
-          tl.from(q(`f.u${i}`), { sx: 0 }).to(q(`f.u${i}`), { sx: 1 }, 0.14 + i * 0.035, 0.22, E.out);
+          wipe(tl, q(`f.l${i}`), 0.32 + i * 0.03, 0.14);
+          tl.from(q(`f.u${i}`), { sx: 0 }).to(q(`f.u${i}`), { sx: 1 }, 0.34 + i * 0.03, 0.2, E.out);
         });
-        wipe(tl, q('f.lp'), 0.14, 0.14);
         // the answers that become the site start where they're typed, set at the form's size
-        tl.from(q('s.logo'), { x: 0, y: F.ans[0] - S.logo.y, s: K_LOGO });
-        tl.from(q('s.v1'), { x: 28 - S.v1.x, y: F.ans[2] - S.v1.y, s: K_V });
-        tl.from(q('s.v2'), { x: 28 - S.v2.x, y: F.ans[3] - S.v2.y, s: K_V });
+        tl.from(q('s.logo'), { x: ax - S.logo.x, y: FR(0).ans - S.logo.y, s: K_LOGO });
+        tl.from(q('s.v1'), { x: ax - S.v1.x, y: FR(2).ans - S.v1.y, s: K_V });
+        tl.from(q('s.v2'), { x: ax - S.v2.x, y: FR(3).ans - S.v2.y, s: K_V });
+        // and the office photo is the old site's
+        tl.from(q('s.pic'), { x: OLD_PIC.x - S.pic.x, y: OLD_PIC.y - S.pic.y, s: OLD_PIC.w / S.pic.w });
         const ans = [q('s.logo'), q('a.feel'), q('s.v1'), q('s.v2')];
         const ks = [K_LOGO, 1, K_V, K_V];
         const carets = q.all('cr.');
-        let at = 0.26;
+        let at = 0.44;
         ans.forEach((el, i) => {
-          const d = 0.0045 * (el?.textContent?.length ?? 10);
+          const d = 0.0042 * (el?.textContent?.length ?? 10);
           tl.from(carets[i], { o: 0 }).to(carets[i], { o: 1 }, at - 0.01, 0.01, E.lin);
           typeK(tl, el, at, d, carets[i], ks[i]);
           if (i < 3) tl.to(carets[i], { o: 0 }, at + d + 0.01, 0.01, E.lin);
-          at += d + 0.015;
+          at += d + 0.012;
         });
-        // the photo of the office, uploaded beside them
-        tl.from(q('s.pic'), { x: F.pic.x - S.pic.x, y: F.pic.y - S.pic.y, s: F.pic.k, clip: 'inset(100% 0% 0% 0% round 8px)' }).to(
-          q('s.pic'),
-          { clip: 'inset(0% 0% 0% 0% round 8px)' },
-          0.4,
-          0.28,
-          E.out,
-        );
-        wipe(tl, q('f.cap'), 0.6, 0.14);
         // and Send
-        tl.from(q('f.rule'), { sx: 0 }).to(q('f.rule'), { sx: 1 }, 0.66, 0.24, E.out);
-        wipe(tl, q('f.count'), 0.72, 0.16);
-        tl.from(q('f.send'), { clip: 'inset(0% 100% 0% 0% round 19px)' }).to(q('f.send'), { clip: 'inset(0% 0% 0% 0% round 19px)' }, 0.76, 0.18, E.out);
+        tl.from(q('f.rule'), { sx: 0 }).to(q('f.rule'), { sx: 1 }, 0.8, 0.16, E.out);
+        wipe(tl, q('f.count'), 0.82, 0.14);
+        tl.from(q('f.send'), { clip: 'inset(0% 100% 0% 0%)' }).to(q('f.send'), { clip: 'inset(0% 0% 0% 0%)' }, 0.84, 0.14, E.out);
 
-        /* 1 → 2: sent; the card becomes the homepage */
-        const send = { x: G.x + F.send.x + F.send.w / 2 - 8, y: G.y + F.send.y + F.send.h / 2 - 6 };
-        tl.from(cur, { x: 640, y: 540, o: 0 });
+        /* 1 → 2: sent; the old site clears and the answers become the new homepage */
+        const send = { x: G.x + SEND.x + SEND.w / 2 - 8, y: G.y + SEND.y + SEND.h / 2 - 6 };
+        tl.from(cur, { x: 520, y: 600, o: 0 });
         tl.to(cur, { o: 1 }, 1.0, 0.03, E.lin)
           .to(cur, { x: send.x, y: send.y }, 1.0, 0.16, E.soft)
           .to(cur, { s: 0.86 }, 1.16, 0.03, E.lin)
           .to(cur, { s: 1 }, 1.19, 0.03, E.lin)
-          .to(cur, { x: 700, y: 560 }, 1.24, 0.16, E.in)
+          .to(cur, { x: 560, y: 620 }, 1.24, 0.16, E.in)
           .to(cur, { o: 0 }, 1.37, 0.03, E.lin);
         tl.to(q('f.send'), { s: 0.96 }, 1.16, 0.03, E.out).to(q('f.send'), { s: 1 }, 1.19, 0.04, E.out);
         tl.to(carets[3], { o: 0 }, 1.17, 0.01, E.lin);
-        // what was the form folds away: the send, its labels and lines, the header
-        tl.to(q('f.send'), { clip: 'inset(0% 0% 0% 100% round 19px)' }, 1.24, 0.1, E.in);
+        // the questionnaire's labels and lines fold, then its glass; the answers stay
+        tl.to(q('f.send'), { clip: 'inset(0% 0% 0% 100%)' }, 1.22, 0.08, E.in);
         tl.to(q('f.count'), { clip: [0, 0, 0, 100] }, 1.22, 0.08, E.in);
-        tl.to(q('f.rule'), { sx: 0 }, 1.22, 0.12, E.in);
+        tl.to(q('f.rule'), { sx: 0 }, 1.22, 0.1, E.in);
         [0, 1, 2, 3].forEach((i) => {
-          tl.to(q(`f.l${i}`), { clip: [0, 0, 100, 0] }, 1.22 + i * 0.015, 0.08, E.in);
-          tl.to(q(`f.u${i}`), { sx: 0 }, 1.22 + i * 0.015, 0.1, E.in);
+          tl.to(q(`f.l${i}`), { clip: [0, 0, 100, 0] }, 1.22 + i * 0.012, 0.07, E.in);
+          tl.to(q(`f.u${i}`), { sx: 0 }, 1.22 + i * 0.012, 0.08, E.in);
         });
-        tl.to(q('f.lp'), { clip: [0, 0, 100, 0] }, 1.22, 0.08, E.in);
-        tl.to(q('f.cap'), { clip: [0, 0, 100, 0] }, 1.24, 0.08, E.in);
-        tl.to(q('f.head'), { clip: [0, 0, 100, 0] }, 1.24, 0.1, E.in);
-        // the header becomes a browser's bar, with the draft's address
-        ['bar.dots', 'url', 'tag.draft'].forEach((k, i) => wipe(tl, q(k), 1.32 + i * 0.03, 0.16));
-        // the answers settle into their places
+        tl.to(q('f.head'), { clip: [0, 0, 100, 0] }, 1.22, 0.08, E.in);
+        tl.to(q('f.hline'), { sx: 0 }, 1.22, 0.08, E.in);
+        tl.to(q('q.card'), { clip: SHUT }, 1.3, 0.1, E.in);
+        // the old site folds away: first what's under the glass, then the rest, and its address with it
+        ['o.ban', 'o.c1', 'o.c2'].forEach((k, i) => tl.to(q(k), { clip: [0, 0, 100, 0] }, 1.2 + i * 0.01, 0.08, E.in));
+        ['o.band', 'o.nav', 'o.frame', 'o.cap', 'o.c3', 'o.foot'].forEach((k, i) =>
+          tl.to(q(k), { clip: [0, 0, 100, 0] }, 1.28 + i * 0.012, 0.1, E.in),
+        );
+        tl.to(q('url.old'), { clip: [0, 0, 0, 100] }, 1.3, 0.06, E.in);
+        wipe(tl, q('url.draft'), 1.37, 0.12);
+        wipe(tl, q('tag.draft'), 1.44, 0.12);
+        // the answers settle into their places, and the photo grows into the hero
         tl.to(q('s.logo'), { x: 0, y: 0, s: 1 }, 1.36, 0.3, E.soft);
-        tl.to(q('s.pic'), { x: 0, y: 0, s: 1 }, 1.38, 0.3, E.soft);
-        tl.to(q('s.v2'), { x: 0, y: 0, s: 1 }, 1.4, 0.3, E.soft);
-        tl.to(q('s.v1'), { x: 0, y: 0, s: 1 }, 1.47, 0.3, E.soft);
+        tl.to(q('s.pic'), { x: 0, y: 0, s: 1 }, 1.42, 0.3, E.soft);
+        tl.to(q('s.v2'), { x: 0, y: 0, s: 1 }, 1.44, 0.3, E.soft);
+        tl.to(q('s.v1'), { x: 0, y: 0, s: 1 }, 1.5, 0.3, E.soft);
         // the feel, rewritten as the headline
-        tl.to(q('a.feel'), { clip: [0, 100, 0, 0] }, 1.5, 0.07, E.in);
-        tl.from(q('s.c1'), { o: 0 }).to(q('s.c1'), { o: 1 }, 1.56, 0.01, E.lin).to(q('s.c1'), { o: 0 }, 1.71, 0.01, E.lin);
-        tl.type(q('s.h1a'), 1.57, 0.12, q('s.c1'));
-        tl.from(q('s.c2'), { o: 0 }).to(q('s.c2'), { o: 1 }, 1.71, 0.01, E.lin).to(q('s.c2'), { o: 0 }, 1.86, 0.01, E.lin);
-        tl.type(q('s.h1b'), 1.72, 0.09, q('s.c2'));
+        tl.from(q('a.feel'), { x: 0, y: 0 }).to(q('a.feel'), { x: 28 - ax, y: S.h1a.y + 12 - FR(1).ans }, 1.48, 0.15, E.soft);
+        tl.to(q('a.feel'), { clip: [0, 100, 0, 0] }, 1.63, 0.05, E.in);
+        tl.from(q('s.c1'), { o: 0 }).to(q('s.c1'), { o: 1 }, 1.67, 0.01, E.lin).to(q('s.c1'), { o: 0 }, 1.8, 0.01, E.lin);
+        tl.type(q('s.h1a'), 1.68, 0.11, q('s.c1'));
+        tl.from(q('s.c2'), { o: 0 }).to(q('s.c2'), { o: 1 }, 1.8, 0.01, E.lin).to(q('s.c2'), { o: 0 }, 1.91, 0.01, E.lin);
+        tl.type(q('s.h1b'), 1.81, 0.08, q('s.c2'));
         // the rest of the page, around them
-        wipe(tl, q('s.nav'), 1.64, 0.2);
-        wipe(tl, q('s.eye'), 1.58, 0.16);
-        wipe(tl, q('s.sub1'), 1.8, 0.16);
-        wipe(tl, q('s.sub2'), 1.83, 0.16);
-        tl.from(q('s.btn'), { clip: 'inset(0% 100% 0% 0% round 20px)' }).to(q('s.btn'), { clip: 'inset(0% 0% 0% 0% round 20px)' }, 1.84, 0.14, E.out);
-        tl.from(q('s.rule'), { sx: 0 }).to(q('s.rule'), { sx: 1 }, 1.76, 0.18, E.out);
-        wipe(tl, q('s.k1'), 1.8, 0.14);
-        wipe(tl, q('s.k2'), 1.76, 0.14);
+        wipe(tl, q('s.nav'), 1.66, 0.2);
+        wipe(tl, q('s.eye'), 1.64, 0.14);
+        wipe(tl, q('s.sub1'), 1.84, 0.14);
+        wipe(tl, q('s.sub2'), 1.86, 0.14);
+        tl.from(q('s.btn'), { clip: 'inset(0% 100% 0% 0%)' }).to(q('s.btn'), { clip: 'inset(0% 0% 0% 0%)' }, 1.87, 0.1, E.out);
+        tl.from(q('s.rule'), { sx: 0 }).to(q('s.rule'), { sx: 1 }, 1.8, 0.14, E.out);
+        wipe(tl, q('s.k1'), 1.84, 0.12);
+        wipe(tl, q('s.k2'), 1.8, 0.12);
         // its one lime: "calm", the answer set into the headline's voice
-        tl.from(q('s.mk'), { sx: 0 }).to(q('s.mk'), { sx: 1 }, 1.88, 0.1, E.soft).to(q('s.mk'), { sx: 0 }, 2.0, 0.06, E.in);
+        tl.from(q('s.mk'), { sx: 0 }).to(q('s.mk'), { sx: 1 }, 1.92, 0.07, E.soft).to(q('s.mk'), { sx: 0 }, 2.01, 0.05, E.in);
 
         /* 2 → 3: live, on its own address, and on a phone */
-        tl.from(q('url.sel'), { sx: 0 }).to(q('url.sel'), { sx: 1 }, 2.02, 0.08, E.soft);
-        tl.to(q('url.old'), { o: 0 }, 2.12, 0.01, E.lin).to(q('url.sel'), { o: 0 }, 2.12, 0.01, E.lin);
-        tl.from(q('url.lock'), { o: 0 }).to(q('url.lock'), { o: 1 }, 2.12, 0.01, E.lin);
-        tl.type(q('url.new'), 2.13, 0.16);
-        tl.to(q('tag.draft'), { clip: [0, 0, 0, 100] }, 2.3, 0.05, E.in);
-        wipe(tl, q('live'), 2.35, 0.08);
+        tl.from(q('url.sel'), { sx: 0 }).to(q('url.sel'), { sx: 1 }, 2.04, 0.08, E.soft);
+        tl.to(q('url.draft'), { o: 0 }, 2.13, 0.01, E.lin).to(q('url.sel'), { o: 0 }, 2.13, 0.01, E.lin);
+        tl.from(q('url.lock'), { o: 0 }).to(q('url.lock'), { o: 1 }, 2.13, 0.01, E.lin);
+        tl.type(q('url.new'), 2.14, 0.16);
+        tl.to(q('tag.draft'), { clip: [0, 0, 0, 100] }, 2.31, 0.05, E.in);
+        wipe(tl, q('live'), 2.36, 0.08);
         tl.to(grp, { x: -STEP }, 2.4, 0.32, E.soft);
         tl.from(q('phone'), { y: 90, clip: PH_SHUT }).to(q('phone'), { y: 0, clip: PH_OPEN }, 2.5, 0.36, E.out);
       }}
     >
       <A k="grp" x={G.x} y={G.y} w={SW} h={SH} c="prc-light">
         <A k="frame" x={0} y={0} w={SW} h={SH} c="prc-frame" />
-        {/* the questionnaire's header; then the browser's bar in its place */}
-        <A k="f.head" x={0} y={0} w={SW} h={36} c="prc-fhead">
+        <Bar old draft />
+        <OldSite />
+        {/* the questionnaire: frosted, over the old site */}
+        <A k="q.card" x={F.x} y={F.y} w={F.w} h={F.h} c="glass prc-glass" />
+        <A k="f.head" x={F.x} y={F.y} w={F.w} h={36} c="prc-fhead">
           <b>About your practice</b>
           <span>4 questions · 15 min</span>
         </A>
-        <Bar draft />
+        <A k="f.hline" x={F.x} y={F.y + 36} w={F.w} h={1} c="prc-barline" />
         {LABELS.map((s, i) => (
-          <T key={s} k={`f.l${i}`} x={28} y={F.lab[i]} c="prc-fl">
+          <T key={s} k={`f.l${i}`} x={F.x + 20} y={FR(i).lab} c="prc-fl">
             {s}
           </T>
         ))}
-        {F.und.map((y, i) => (
-          <A key={y} k={`f.u${i}`} x={28} y={y} w={272} h={1} c="prc-u" />
+        {LABELS.map((s, i) => (
+          <A key={s} k={`f.u${i}`} x={F.x + 20} y={FR(i).und} w={F.w - 40} h={1} c="prc-u" />
         ))}
-        <T k="f.lp" x={F.pic.x} y={F.lab[0]} c="prc-fl">
-          A photo of your office
-        </T>
-        <T k="f.cap" x={F.pic.x} y={F.pic.y + S.pic.h * F.pic.k + 8} c="prc-cap">
-          office.jpg
-        </T>
-        <A k="f.rule" x={0} y={F.rule} w={SW} h={1} c="prc-barline" style={{ transformOrigin: 'left center' }} />
-        <T k="f.count" x={28} y={F.send.y + 11} c="prc-fl">
+        <A k="f.rule" x={F.x} y={F.y + 264} w={F.w} h={1} c="prc-barline" style={{ transformOrigin: 'left center' }} />
+        <T k="f.count" x={F.x + 20} y={SEND.y + 9} c="prc-fl">
           4 of 4 answered
         </T>
-        <A k="f.send" x={F.send.x} y={F.send.y} w={F.send.w} h={F.send.h} r={19} c="prc-send">
+        <A k="f.send" x={SEND.x} y={SEND.y} w={SEND.w} h={SEND.h} c="prc-send">
           Send answers
         </A>
-        {/* the site (the name, the photo, the specialties and sessions are the answers) */}
+        {/* the new site (the name, the specialties and sessions are the answers; the photo is the old site's) */}
         <SiteParts />
-        <T k="a.feel" x={28} y={F.ans[1]} c="prc-ans">
+        <T k="a.feel" x={F.x + 20} y={FR(1).ans} c="prc-ans prc-o">
           Calm, warm, no jargon
         </T>
-        {F.ans.map((y, i) => (
-          <A key={y} k={`cr.${i}`} x={28} y={y + 1} w={2} h={21} c="caret prc-caret">
+        {LABELS.map((s, i) => (
+          <A key={s} k={`cr.${i}`} x={F.x + 20} y={FR(i).ans + 1} w={2} h={21} c="caret prc-caret">
             <i />
           </A>
         ))}
@@ -519,9 +566,9 @@ const PG = { x: 496, y: TA.y + 1, w: 220, h: 86, gap: 8 };
 const PH_AT = { x: 488, y: 150 };
 const BK = { x: 24, y: 388, w: 356 };
 const GG = { x: 240, y: 176, w: 468, h: 286 };
-const OWN = { x: 404, y: 200, w: 304 };
+const OWN = { x: 362, y: 214, w: 318 };
 const VID = { x: 240, y: 176, w: 468, h: 330 };
-const CAL = { x: 404, y: 176, w: 304 };
+const CAL = { x: 372, y: 170, w: 316 };
 /** the calendar: launch day is the 1st; fixes made on these days; today */
 const FIXES = [3, 8, 12, 16];
 const TODAY = 19;
@@ -666,7 +713,7 @@ export function PracticeTourScene() {
       }}
     >
       {PAGES.map((p, i) => (
-        <A key={p.t} k={`pg.${i}`} x={PG.x} y={PG.y + i * (PG.h + PG.gap)} w={PG.w} h={PG.h} r={10} c="prc-card prc-pg prc-light">
+        <A key={p.t} k={`pg.${i}`} x={PG.x} y={PG.y + i * (PG.h + PG.gap)} w={PG.w} h={PG.h} c="prc-card prc-pg prc-light">
           <span className="prc-pg-path">willowcounseling.com{p.path}</span>
           <span className="prc-serif prc-pg-t">{p.t}</span>
           <span className="prc-pg-d">{p.d}</span>
@@ -674,13 +721,13 @@ export function PracticeTourScene() {
       ))}
       <SiteWindow x={TA.x} y={TA.y} z={TZ} live={false}>
         <svg className="prc-ring" style={{ left: S.btn.x - 6, top: S.btn.y - 6 }} width={S.btn.w + 12} height={S.btn.h + 12} aria-hidden>
-          <rect data-k="bk.ring" x="0.75" y="0.75" width={S.btn.w + 10.5} height={S.btn.h + 10.5} rx={(S.btn.h + 10.5) / 2} pathLength={1} strokeDasharray="1 2" strokeLinecap="round" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <rect data-k="bk.ring" x="0.75" y="0.75" width={S.btn.w + 10.5} height={S.btn.h + 10.5} rx={0} pathLength={1} strokeDasharray="1 2" strokeLinecap="round" fill="none" stroke="currentColor" strokeWidth="1.5" />
         </svg>
       </SiteWindow>
       <PhoneSite x={PH_AT.x} y={PH_AT.y} />
 
       {/* the ways to book */}
-      <A k="bk" x={BK.x} y={BK.y} w={BK.w} r={12} c="prc-card prc-pop prc-light">
+      <A k="bk" x={BK.x} y={BK.y} w={BK.w} c="glass prc-pop prc-light">
         <span className="prc-pop-t">Book a free consultation</span>
         <span data-k="bk.l0" className="prc-pop-row">
           {Ico.phone}
@@ -703,7 +750,7 @@ export function PracticeTourScene() {
       </A>
 
       {/* the search result */}
-      <A k="gg" x={GG.x} y={GG.y} w={GG.w} h={GG.h} r={12} c="prc-card prc-gg prc-light">
+      <A k="gg" x={GG.x} y={GG.y} w={GG.w} h={GG.h} c="glass prc-gg prc-light">
         <span className="prc-gg-bar">
           {Ico.search}
           <span className="prc-gg-qwrap">
@@ -745,7 +792,7 @@ export function PracticeTourScene() {
       </A>
 
       {/* the owner */}
-      <A k="own" x={OWN.x} y={OWN.y} w={OWN.w} r={12} c="prc-card prc-own prc-light">
+      <A k="own" x={OWN.x} y={OWN.y} w={OWN.w} c="glass prc-own prc-light">
         <span className="prc-own-t">Your website</span>
         <span data-k="own.r0" className="prc-own-row">
           <span>Owner</span>
@@ -765,7 +812,7 @@ export function PracticeTourScene() {
       </A>
 
       {/* the how-to video */}
-      <A k="vid" x={VID.x} y={VID.y} w={VID.w} h={VID.h} r={12} c="prc-vid">
+      <A k="vid" x={VID.x} y={VID.y} w={VID.w} h={VID.h} c="glass prc-vid prc-light">
         <span className="prc-vid-top">
           <b>How to edit your text</b>
           <span>2:30</span>
@@ -812,7 +859,7 @@ export function PracticeTourScene() {
       </A>
 
       {/* thirty days of small fixes */}
-      <A k="cal" x={CAL.x} y={CAL.y} w={CAL.w} r={12} c="prc-card prc-cal prc-light">
+      <A k="cal" x={CAL.x} y={CAL.y} w={CAL.w} c="glass prc-cal prc-light">
         <span className="prc-cal-k">After launch</span>
         <span className="prc-cal-t">30 days of small fixes</span>
         <span className="prc-cal-row prc-cal-dow">

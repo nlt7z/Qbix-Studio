@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import StartProjectForm from '@/components/StartProjectForm';
-import IsoCube from '@/components/scene/IsoCube';
+import GlassCube from '@/components/scene/GlassCube';
 import type { BriefDraft } from '@/components/StartProjectForm';
 
 const PARTS = 7;
@@ -23,7 +23,7 @@ export default function StartStudio() {
         <div className="start-stage-pin">
           <div className="start-cube" data-tone="dark">
             {/* the screen's one lime is the form's Send button */}
-            <IsoCube lime={false} label="The qbix cube: 27 pieces, a layer turning now and then" />
+            <GlassCube lime={false} label="The qbix cube: eight pieces of frosted glass, half of it turning now and then" />
           </div>
           <div className="start-stage-hud mono" aria-hidden>
             <span>Your brief</span>

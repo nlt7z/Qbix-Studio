@@ -1,37 +1,51 @@
-/* --- dream (about): ideas as chat bubbles, then the real thing one became ---
-   The bubbles' outlines (tail and all) are drawn as one path, sized to their
-   words when the scene is built. Colours are the chapter's tone; the one lime
-   is the idea that was built. */
+/* --- dream (about): ideas as chat bubbles of frosted glass, then the real thing one became ---
+   Square, like the rest of the site. Each bubble is a .glass pane cut to its
+   shape (a box and a right-angled point under one corner), its edge drawn
+   over it. The window rises inside a mask, not a clip: a clipped parent would
+   keep its glass bar from frosting what's behind it. The one lime is the idea
+   that was built. */
 
-/* an idea: a flat bubble, its tail on one side (it grows out of that corner) */
-.scn .dream-bub { --r: 0px; }
+/* an idea: a pane of glass and its point, growing out of the point */
+.scn .dream-bub { padding-bottom: 12px; z-index: 2; }
 .scn .dream-bub--l { transform-origin: 0% 100%; }
 .scn .dream-bub--r { transform-origin: 100% 100%; }
+.scn .dream-bub-glass { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.scn .dream-bub--l .dream-bub-glass { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), 12px calc(100% - 12px), 0 100%); }
+.scn .dream-bub--r .dream-bub-glass { clip-path: polygon(0 0, 100% 0, 100% 100%, calc(100% - 12px) calc(100% - 12px), 0 calc(100% - 12px)); }
+/* its edge is drawn: the pane's own border and shadow would be cut by its shape (its top light stays) */
+[data-tone] .scn .dream-bub > .glass { border: 0; }
+[data-tone='dark'] .scn .dream-bub > .glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+[data-tone='paper'] .scn .dream-bub > .glass { box-shadow: inset 0 1px 0 #ffffff; }
 .scn .dream-bub-svg { position: absolute; left: 0; top: 0; }
-.scn .dream-bub-svg path { fill: var(--dream-bub); stroke: var(--dream-bub-line); stroke-width: 1; stroke-linejoin: round; }
-[data-tone='dark'] .scn .dream-bub { --dream-bub: #1d1f22; --dream-bub-line: transparent; }
-[data-tone='paper'] .scn .dream-bub { --dream-bub: #ffffff; --dream-bub-line: rgba(18, 20, 23, 0.13); }
+.scn .dream-bub-svg path { fill: none; stroke-width: 1; }
+[data-tone='dark'] .scn .dream-bub-svg path { stroke: rgba(255, 255, 255, 0.16); }
+[data-tone='paper'] .scn .dream-bub-svg path { stroke: rgba(18, 20, 23, 0.14); }
 .scn .dream-bub-txt { position: relative; display: block; padding: 11px 18px; font-size: 20px; line-height: 26px; letter-spacing: -0.012em; white-space: nowrap; }
 
-/* the one still being typed */
-.scn .dream-dots { position: relative; display: flex; gap: 6px; padding: 19px 19px 20px; }
-.scn .dream-dots i { width: 9px; height: 9px; --r: 4.5px; background: var(--fg); opacity: 0.3; animation: dream-dot 1.4s ease-in-out infinite; }
+/* the one still being typed: three squares */
+.scn .dream-dots { position: relative; display: flex; gap: 6px; padding: 20px; }
+.scn .dream-dots i { width: 8px; height: 8px; background: var(--fg); opacity: 0.3; animation: dream-dot 1.4s ease-in-out infinite; }
 .scn .dream-dots i:nth-child(2) { animation-delay: 0.2s; }
 .scn .dream-dots i:nth-child(3) { animation-delay: 0.4s; }
 @keyframes dream-dot { 0%, 60%, 100% { opacity: 0.3; } 28% { opacity: 0.9; } }
 
-/* the lime one: a thought (its trail of circles), then a comment pinned to the thing it became */
-.scn .dream-lime { --r: 0px; z-index: 3; }
-.scn .dream-lime-body { position: relative; display: block; background: var(--lime); color: var(--on-lime); --r: 26px; transform-origin: 0% 100%; }
+/* the lime one: a thought (its trail of squares), then pinned, its edge under the window's glass bar
+   (the timeline sets its stacking: under the ideas, over the window while it travels, under it once tucked) */
+.scn .dream-lime { z-index: 1; }
+.scn .dream-lime-body { position: relative; display: block; background: var(--lime); color: var(--on-lime); transform-origin: 0% 100%; }
 .scn .dream-lime-txt { display: block; padding: 18px 24px; font-size: 28px; line-height: 34px; font-weight: 500; letter-spacing: -0.02em; white-space: nowrap; }
-.scn .dream-corner { position: absolute; left: 0; bottom: 0; width: 26px; height: 26px; --r: 0px; background: var(--lime); transform-origin: 0% 100%; }
-.scn .dream-trail { position: absolute; --r: 50%; background: var(--lime); }
+.scn .dream-trail { position: absolute; background: var(--lime); }
 
-/* the window */
-.scn .dream-win { z-index: 2; }
+/* the window: in its mask; a glass bar over an open top, the page (or the film) under it */
+.scn .dream-mask { left: 0; top: 0; width: 720px; height: 560px; overflow: hidden; z-index: 3; pointer-events: none; }
+.scn .dream-win.win { background: transparent; }
+[data-tone] .scn .dream-win > .dream-bar.glass { border: 0; border-bottom: 1px solid var(--line); }
+[data-tone='dark'] .scn .dream-win > .dream-bar.glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+[data-tone='paper'] .scn .dream-win > .dream-bar.glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9); }
 .scn .dream-title { position: absolute; left: 50%; top: 0; height: 36px; translate: -50% 0; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg2); white-space: nowrap; }
-.scn .dream-film-body { --r: 0px; background: #000; overflow: hidden; }
+.scn .dream-film-body { background: #000; overflow: hidden; }
 .scn .dream-film { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.scn .dream-page { background: var(--win); }
 .scn .dream-url { gap: 6px; }
 .scn .dream-url .ico { color: var(--fg2); }
 
@@ -43,7 +57,7 @@
 .scn .dream-eye { font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg3); }
 .scn .dream-h1 { font-size: 40px; letter-spacing: -0.012em; }
 .scn .dream-sub { font-size: 13.5px; color: var(--fg2); }
-.scn .dream-book { height: 40px; padding: 0 20px; --r: 20px; font-size: 13px; }
+.scn .dream-book { height: 40px; padding: 0 20px; font-size: 13px; }
 .scn .dream-room { overflow: hidden; }
 .scn .dream-room svg { position: absolute; left: 0; top: 0; }
 

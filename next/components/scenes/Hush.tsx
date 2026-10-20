@@ -385,7 +385,7 @@ export default function Hush() {
           </span>
         </div>
       </A>
-      <A k="toast" x={24} y={490} w={252} h={38} r={8} c="hush-toast">
+      <A k="toast" x={24} y={452} w={252} h={38} c="hush-toast">
         <Check size={12} /> <span>Deployed to hush.audio</span> <i>41 s</i>
       </A>
 

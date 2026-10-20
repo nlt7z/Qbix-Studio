@@ -475,7 +475,7 @@ function Reel({ k, x, y, tc = '0:00', lime = false }: { k: string; x: number; y:
         </A>
         <div className="phone-status lst-reel-status">
           <span>9:41</span>
-          <i className="phone-island" />
+          <i className="phone-island round" />
           <span className="phone-bars" aria-hidden>
             <i />
             <i />
@@ -515,6 +515,9 @@ function Reel({ k, x, y, tc = '0:00', lime = false }: { k: string; x: number; y:
    kit's page: five)
    ============================================================================= */
 
+// the editor's inner margin (its words start clear of the flyer it overlaps)
+const ED_PAD = 32;
+
 function kitLayout(H: number) {
   const sy = Math.round((H - SHEET.h) / 2);
   const py = Math.round((H - BLOCK_H) / 2);
@@ -530,8 +533,9 @@ function kitLayout(H: number) {
     story: { x: bx + LEAD + GAP, y: py },
     row: [0, 1, 2].map((i) => ({ x: bx + i * (SQ + GAP), y: py + LEAD + GAP })),
     phone: { x: 402, y: Math.round((H - PHONE.h) / 2) },
-    ed: { x: 362, y: Math.round((H - 290) / 2), w: 320, h: 290 },
-    chat: { x: 360, y: sy + 194 - 112 },
+    // glass panels overlap the flyer's right edge (it shows through them, blurred)
+    ed: { x: 288, y: Math.round((H - 290) / 2), w: 412, h: 290 },
+    chat: { x: 288, y: sy + 52 },
   };
 }
 
@@ -548,10 +552,10 @@ function Kit({ H, tour }: { H: number; tour: boolean }) {
         <b>Back</b>
         <span>PDF, ready to print</span>
       </A>
-      <A k="b" x={L.back.x} y={L.back.y} w={SHEET.w} h={SHEET.h} r={2} c="lst-sheet">
+      <A k="b" x={L.back.x} y={L.back.y} w={SHEET.w} h={SHEET.h} c="lst-sheet">
         <Back k="b" />
       </A>
-      <A k="f" x={L.front.x} y={L.front.y} w={SHEET.w} h={SHEET.h} r={2} c="lst-sheet">
+      <A k="f" x={L.front.x} y={L.front.y} w={SHEET.w} h={SHEET.h} c="lst-sheet">
         <Front k="f" />
       </A>
 
@@ -577,17 +581,17 @@ function Kit({ H, tour }: { H: number; tour: boolean }) {
       {tour && (
         <>
           {/* the editable copy */}
-          <A k="ed" x={L.ed.x} y={L.ed.y} w={L.ed.w} h={L.ed.h} r={12} c="lst-ed">
+          <A k="ed" x={L.ed.x} y={L.ed.y} w={L.ed.w} h={L.ed.h} c="lst-ed glass">
             <div className="lst-ed-head">
               <span className="lst-ed-title">Flyer, front</span>
               <span className="lst-ed-link">
                 <LinkIco /> Editable copy
               </span>
             </div>
-            <span className="a lst-ed-label" style={{ left: 20, top: 66 }}>
+            <span className="a lst-ed-label" style={{ left: ED_PAD, top: 66 }}>
               Price
             </span>
-            <A x={20} y={86} w={280} h={48} r={8} c="lst-field">
+            <A x={ED_PAD} y={86} w={L.ed.w - ED_PAD * 2} h={48} c="lst-field">
               <span>$</span>
               <span className="lst-dig">
                 <i data-k="ed.sel" className="lst-sel" />
@@ -599,11 +603,11 @@ function Kit({ H, tour }: { H: number; tour: boolean }) {
               </span>
               <span>,000</span>
             </A>
-            <A k="ed.ring" x={20} y={86} w={280} h={48} r={8} c="lst-ring" />
-            <span className="a lst-ed-label" style={{ left: 20, top: 152 }}>
+            <A k="ed.ring" x={ED_PAD} y={86} w={L.ed.w - ED_PAD * 2} h={48} c="lst-ring" />
+            <span className="a lst-ed-label" style={{ left: ED_PAD, top: 152 }}>
               Open house
             </span>
-            <A x={20} y={172} w={280} h={48} r={8} c="lst-field">
+            <A x={ED_PAD} y={172} w={L.ed.w - ED_PAD * 2} h={48} c="lst-field">
               Sat, 1 to 4
             </A>
             <div className="lst-ed-foot">
@@ -613,15 +617,17 @@ function Kit({ H, tour }: { H: number; tour: boolean }) {
           </A>
 
           {/* the round of changes */}
-          <A k="ch.a" x={L.chat.x} y={L.chat.y} w={340} c="lst-msg">
+          <A k="ch.a" x={L.chat.x} y={L.chat.y} w={352} c="lst-bub lst-bub--them glass">
             <span className="lst-who">Dana Lee</span>
-            <span className="lst-bub lst-bub--them">Can the open house say Sunday instead?</span>
+            <span>Can the open house say Sunday instead?</span>
+            <i className="lst-tail" />
           </A>
-          <A k="ch.b" x={L.chat.x} y={L.chat.y + 128} w={340} c="lst-msg lst-msg--us">
+          <A k="ch.b" x={0} y={L.chat.y + 136} c="lst-bub lst-bub--us" style={{ left: 'auto', right: 20 }}>
             <span className="lst-who">Qbix</span>
-            <span className="lst-bub lst-bub--us">Done. New files are in your inbox.</span>
+            <span>Done. New files are in your inbox.</span>
+            <i className="lst-tail" />
           </A>
-          <A k="ch.files" x={L.chat.x} y={L.chat.y + 206} w={340} c="lst-files">
+          <A k="ch.files" x={0} y={L.chat.y + 236} w={380} c="lst-files" style={{ left: 'auto', right: 20 }}>
             {['Flyer.pdf', 'Posts.zip', 'Reel.mp4'].map((n, i) => (
               <span key={n} data-k={`ch.file${i}`} className="lst-file">
                 <FileIco />
@@ -655,21 +661,21 @@ function wipe(tl: Timeline, el: El, dir: keyof typeof CLIPS, at: number, dur: nu
 
 /** A sheet coming out of the printer: wiped in from its top edge as it slides down the last bit. */
 function print(tl: Timeline, el: El, at: number, from: Props = {}, dur = 0.26) {
-  tl.from(el as Element, { y: -14, clip: 'inset(0% 0% 100% 0% round 2px)', ...from }).to(
+  tl.from(el as Element, { y: -14, clip: 'inset(0% 0% 100% 0%)', ...from }).to(
     el as Element,
-    { y: 0, clip: 'inset(0% 0% 0% 0% round 2px)' },
+    { y: 0, clip: 'inset(0% 0% 0% 0%)' },
     at,
     dur,
     E.out,
   );
 }
 
-/** A window's or a phone's clip once it's in: past its edges, so its shadow shows. */
-const OPEN = (r: number) => `inset(-64px -64px -64px -64px round ${r}px)`;
+/** A window's, a phone's or a bubble's clip once it's in: past its edges, so its shadow (or tail) shows. */
+const OPEN = 'inset(-64px -64px -64px -64px)';
 
 /** Folded away: up into its top edge. */
-function fold(tl: Timeline, el: El, at: number, dur = 0.1, r = 3) {
-  tl.to(el as Element, { y: -6, clip: `inset(0% 0% 100% 0% round ${r}px)` }, at, dur, E.in);
+function fold(tl: Timeline, el: El, at: number, dur = 0.1) {
+  tl.to(el as Element, { y: -6, clip: `inset(0% 0% 100% 0%)` }, at, dur, E.in);
 }
 
 /** The flyer's front, its parts setting in from `at`. */
@@ -758,8 +764,8 @@ function buildKit(q: Pick, tl: Timeline, H: number, tour: boolean) {
       x: L.back.x + BACK_PIC[i].x - L.row[i].x,
       y: L.back.y + BACK_PIC[i].y - L.row[i].y,
       s: k0,
-      clip: 'inset(0% 0% 100% 0% round 3px)',
-    }).to(p, { clip: 'inset(0% 0% 0% 0% round 3px)' }, 0.46 + i * 0.05, 0.2, E.out);
+      clip: 'inset(0% 0% 100% 0%)',
+    }).to(p, { clip: 'inset(0% 0% 0% 0%)' }, 0.46 + i * 0.05, 0.2, E.out);
   });
   ['p.kit.lab', 'p.map.lab', 'p.esc.lab'].forEach((l) => tl.from(q(l), { clip: [0, 100, 0, 0] }));
   wipe(tl, q('f.cap'), 'right', 0.62, 0.1);
@@ -767,7 +773,7 @@ function buildKit(q: Pick, tl: Timeline, H: number, tour: boolean) {
 
   /* 1 → 2 · five posts: the back folds away around its two pictures, which go down into the feed;
      two crops lift out of the front's photo; the last post comes in beside them */
-  fold(tl, b, 1.0, 0.1, 2);
+  fold(tl, b, 1.0, 0.1);
   tl.to(q('f.cap'), { clip: [0, 100, 0, 0] }, 1.0, 0.05, E.in);
   tl.to(q('b.cap'), { clip: [0, 100, 0, 0] }, 1.0, 0.05, E.in);
   tl.to(f, { x: 0 }, 1.04, 0.16, E.move);
@@ -784,9 +790,9 @@ function buildKit(q: Pick, tl: Timeline, H: number, tour: boolean) {
       x: L.front.x + ph.x - pic.x * s - to.x,
       y: L.front.y + ph.y - pic.y * s - to.y,
       s,
-      clip: 'inset(0px 0px 100% 0px round 3px)',
+      clip: 'inset(0px 0px 100% 0px)',
     });
-    tl.set(post, { clip: `inset(${pic.y}px 0px ${postH - pic.y - pic.h}px 0px round 3px)` }, at);
+    tl.set(post, { clip: `inset(${pic.y}px 0px ${postH - pic.y - pic.h}px 0px)` }, at);
     tl.from(q(`${k}.crop`), { o: 0 }).set(q(`${k}.crop`), { o: 1 }, at).set(q(`${k}.crop`), { o: 0 }, at + 0.3);
     tl.from(q(`${k}.crop.r`), { dash: 1 }).to(q(`${k}.crop.r`), { dash: 0 }, at, 0.08, E.soft);
     tl.to(post, { x: 0, y: 0, s: 1 }, at + 0.1, 0.2, E.move);
@@ -794,27 +800,27 @@ function buildKit(q: Pick, tl: Timeline, H: number, tour: boolean) {
   lift(story, 'p.oh', STORY_VB, { x: 0, y: STORY.top, w: STORY.w, h: STORY.w }, STORY.h, 1.3);
   lift(lead, 'p.lead', LEAD_VB, { x: 0, y: 0, ...LEAD_PIC }, LEAD, 1.45);
   // the story's ink block opens over its picture; the lead post's band and tag
-  tl.to(story, { clip: 'inset(0px 0px 0px 0px round 3px)' }, 1.6, 0.12, E.out);
-  tl.set(lead, { clip: 'inset(0px 0px 0px 0px round 3px)' }, 1.75);
+  tl.to(story, { clip: 'inset(0px 0px 0px 0px)' }, 1.6, 0.12, E.out);
+  tl.set(lead, { clip: 'inset(0px 0px 0px 0px)' }, 1.75);
   wipe(tl, q('f.tag2'), 'right', 1.7, 0.06);
   wipe(tl, q('p.lead.band'), 'up', 1.75, 0.12);
   wipe(tl, q('p.lead.tag'), 'right', 1.79, 0.07);
   // In Escrow, last
-  tl.from(esc, { clip: 'inset(0% 0% 100% 0% round 3px)' }).to(esc, { clip: 'inset(0% 0% 0% 0% round 3px)' }, 1.8, 0.13, E.out);
+  tl.from(esc, { clip: 'inset(0% 0% 100% 0%)' }).to(esc, { clip: 'inset(0% 0% 0% 0%)' }, 1.8, 0.13, E.out);
   wipe(tl, q('p.esc.lab'), 'right', 1.88, 0.08);
 
   /* 2 → 3 · the posts fold away, the phone rises, the video plays */
   [lead, story, map, kit, esc].forEach((p, i) => fold(tl, p, 2.0 + i * 0.018, 0.09));
   const ph = q('ph');
-  tl.from(ph, { y: 90, clip: 'inset(0% 0% 100% 0% round 32px)' }).to(ph, { y: 0, clip: OPEN(32) }, 2.16, 0.26, E.out);
+  tl.from(ph, { y: 90, clip: 'inset(0% 0% 100% 0%)' }).to(ph, { y: 0, clip: OPEN }, 2.16, 0.26, E.out);
   playReel(tl, q, 'ph', 2.32);
 
   if (!tour) return;
 
   /* 3 → 4 · the editable copy: the price typed into it rolls over on the flyer */
   const ed = q('ed'), cur = q('cursor');
-  fold(tl, ph, 3.0, 0.1, 32);
-  tl.from(ed, { y: 14, clip: 'inset(0% 0% 100% 0% round 12px)' }).to(ed, { y: 0, clip: OPEN(12) }, 3.1, 0.16, E.out);
+  fold(tl, ph, 3.0, 0.1);
+  tl.from(ed, { y: 14, clip: 'inset(0% 0% 100% 0%)' }).to(ed, { y: 0, clip: OPEN }, 3.1, 0.16, E.out);
   const dig = where(q('ed.old'), root);
   const aim = { x: dig.x + dig.w * 0.55, y: dig.y + dig.h * 0.55 };
   tl.from(cur, { x: 760, y: H + 40, o: 0 });
@@ -838,10 +844,10 @@ function buildKit(q: Pick, tl: Timeline, H: number, tour: boolean) {
 
   /* 4 → 5 · one round of changes: asked for, made on the flyer, done */
   tl.to(cur, { x: 760, y: H + 40 }, 4.0, 0.12, E.in).to(cur, { o: 0 }, 4.1, 0.02, E.lin);
-  fold(tl, ed, 4.02, 0.1, 12);
+  fold(tl, ed, 4.02, 0.1);
   const ask = q('ch.a'), done = q('ch.b');
   const arrive = (el: HTMLElement | null, at: number) =>
-    tl.from(el, { y: 14, clip: [0, 0, 100, 0] }).to(el, { y: 0, clip: [0, 0, 0, 0] }, at, 0.14, E.out);
+    tl.from(el, { y: 14, clip: 'inset(0% 0% 100% 0%)' }).to(el, { y: 0, clip: OPEN }, at, 0.14, E.out);
   arrive(ask, 4.16);
   // the price is done changing; the open house line rolls over to Sunday, and is underlined
   tl.to(q('f.mark'), { clip: [0, 0, 0, 100] }, 4.3, 0.06, E.in);
@@ -912,9 +918,9 @@ export function ListingHero() {
         const sp = 0.55;
         print(tl, q('f'), 0, {}, 0.24);
         frontIn(tl, q, 'f', 0.1, sp);
-        tl.from(q('kit'), { y: 18, clip: 'inset(0% 0% 100% 0% round 3px)' }).to(q('kit'), { y: 0, clip: 'inset(0% 0% 0% 0% round 3px)' }, 0.34, 0.22, E.out);
-        tl.from(q('esc'), { y: 18, clip: 'inset(0% 0% 100% 0% round 3px)' }).to(q('esc'), { y: 0, clip: 'inset(0% 0% 0% 0% round 3px)' }, 0.4, 0.22, E.out);
-        tl.from(q('ph'), { y: 70, clip: 'inset(0% 0% 100% 0% round 32px)' }).to(q('ph'), { y: 0, clip: OPEN(32) }, 0.42, 0.3, E.out);
+        tl.from(q('kit'), { y: 18, clip: 'inset(0% 0% 100% 0%)' }).to(q('kit'), { y: 0, clip: 'inset(0% 0% 0% 0%)' }, 0.34, 0.22, E.out);
+        tl.from(q('esc'), { y: 18, clip: 'inset(0% 0% 100% 0%)' }).to(q('esc'), { y: 0, clip: 'inset(0% 0% 0% 0%)' }, 0.4, 0.22, E.out);
+        tl.from(q('ph'), { y: 70, clip: 'inset(0% 0% 100% 0%)' }).to(q('ph'), { y: 0, clip: OPEN }, 0.42, 0.3, E.out);
         tl.type(q('ph.c1'), 0.66, 0.14);
         tl.from(q('ph.b1'), { sx: 0 }).to(q('ph.b1'), { sx: 0.4 }, 0.5, 0.5, E.out);
         tl.from(q('ph.a1'), { s: 1 }).to(q('ph.a1'), { s: 1.05 }, 0.42, 0.58, E.out);
@@ -922,7 +928,7 @@ export function ListingHero() {
         ['ph.b2', 'ph.b3'].forEach((k) => tl.from(q(k), { sx: 0 }));
       }}
     >
-      <A k="f" x={HF.x} y={HF.y} w={HF.w} h={HF.h} r={2} c="lst-sheet">
+      <A k="f" x={HF.x} y={HF.y} w={HF.w} h={HF.h} c="lst-sheet">
         <div style={{ zoom: HF.z, position: 'relative', width: SHEET.w, height: SHEET.h }}>
           <Front k="f" ink />
         </div>

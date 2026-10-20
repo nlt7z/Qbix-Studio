@@ -67,7 +67,9 @@ const CHANNELS: Record<Channel, (keyof State)[]> = {
   height: ['h'],
 };
 
-const clipOf = (c: Props['clip']) => (typeof c === 'string' ? c : c ? `inset(${c[0]}% ${c[1]}% ${c[2]}% ${c[3]}%)` : undefined);
+// Clips are square like everything else in the drawings: a `round …` in an inset is dropped.
+const clipOf = (c: Props['clip']) =>
+  typeof c === 'string' ? c.replace(/\s+round\s+[^)]*/, '') : c ? `inset(${c[0]}% ${c[1]}% ${c[2]}% ${c[3]}%)` : undefined;
 
 /** A CSS cubic-bezier as a function of progress (Newton's method, bisection to be safe). */
 function bezier(x1: number, y1: number, x2: number, y2: number) {

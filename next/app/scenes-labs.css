@@ -1,15 +1,18 @@
 /* --- labs (Qbix Labs: four products, one window) ---------------------------
    The products' names in a masked strip above the window; the window's
-   content a strip of four panels in a mask: each move pushes the next one up. */
+   content a strip of four panels in a mask: each move pushes the next one up.
+   Square throughout. Frosted glass only where a panel floats over something:
+   the films' captions and the call's overlays are the dark material (they sit
+   on dark pictures), the TTS sheet the page's light one. */
 .scn .labs-titles { overflow: hidden; }
 .scn .labs-row { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 14px; height: 46px; }
 .scn .labs-name { font-size: 32px; line-height: 1; white-space: nowrap; padding-top: 2px; }
-.scn .labs-soon { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; --r: 4px; box-shadow: inset 0 0 0 1px var(--line2); color: var(--fg2); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; }
+.scn .labs-soon { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; box-shadow: inset 0 0 0 1px var(--line2); color: var(--fg2); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; }
 
 /* the window: its address field holds the four addresses in one cell */
 .scn .labs-url { display: grid; place-items: center; }
 .scn .labs-url-item { grid-area: 1 / 1; position: relative; display: inline-flex; align-items: center; gap: 5px; padding: 0 4px; height: 16px; white-space: pre; color: var(--fg); }
-.scn .labs-url-sel { position: absolute; inset: 0; background: rgba(18, 20, 23, 0.14); transform-origin: left center; --r: 2px; }
+.scn .labs-url-sel { position: absolute; inset: 0; background: rgba(18, 20, 23, 0.14); transform-origin: left center; }
 .scn .labs-url-item > span { position: relative; }
 .scn .labs-lock { display: inline-flex; color: var(--fg2); }
 .scn .labs-body { overflow: hidden; }
@@ -19,49 +22,64 @@
 .scn .labs-film--fill { left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
 .scn .labs-dark { background: #000; }
 
+/* glass over a dark picture: the dark material (the page's own glass, as on a dark chapter) */
+[data-tone] .scn .glass.labs-dark-glass {
+  background: rgba(30, 32, 36, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 24px 48px -24px rgba(0, 0, 0, 0.85);
+  color: var(--chalk);
+}
+/* a film's caption */
+.scn .labs-cap { display: flex; align-items: center; padding: 0 16px; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; }
+
 /* TTS Editor */
 .scn .labs-tb { display: flex; align-items: center; gap: 12px; padding: 0 20px; box-shadow: inset 0 -1px 0 var(--line); }
-.scn .labs-play { position: relative; width: 30px; height: 30px; --r: 15px; background: var(--fg); color: var(--win); }
+.scn .labs-play { position: relative; width: 30px; height: 30px; background: var(--fg); color: var(--win); }
 .scn .labs-ico { position: absolute; inset: 0; display: grid; place-items: center; }
 .scn [data-k='tts.play'] .ico { margin-left: 2px; }
 .scn .labs-tc { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace; font-size: 13px; font-variant-numeric: tabular-nums; white-space: pre; }
 .scn .labs-tc i { font-style: normal; color: var(--fg3); }
-.scn .labs-voice { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; --r: 14px; box-shadow: inset 0 0 0 1px var(--line2); font-size: 12.5px; white-space: nowrap; }
+.scn .labs-voice { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; box-shadow: inset 0 0 0 1px var(--line2); font-size: 12.5px; white-space: nowrap; }
 .scn .labs-voice i { font-style: normal; color: var(--fg3); }
-.scn .labs-wf { background: var(--sunk); --r: 8px; overflow: hidden; }
+.scn .labs-wf { background: var(--sunk); overflow: hidden; }
 .scn .labs-wf svg, .scn .labs-wf-played { position: absolute; left: 0; top: 0; }
 .scn .labs-wf-played { width: 100%; height: 100%; }
 .scn .labs-wf-base rect { fill: var(--fg4); }
 .scn .labs-wf-on rect { fill: rgba(18, 20, 23, 0.46); }
-.scn .labs-gap { position: absolute; top: 12px; text-align: center; text-transform: none; letter-spacing: 0.04em; }
+.scn .labs-gap { position: absolute; text-align: center; text-transform: none; letter-spacing: 0.04em; }
 .scn .labs-curve { fill: none; stroke: var(--fg); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 2; }
 .scn .labs-pt { fill: var(--win); stroke: var(--fg); stroke-width: 1.5; }
 .scn .labs-ph { width: 2px; background: var(--fg); }
-.scn .labs-ph::before { content: ''; position: absolute; left: -4px; top: 0; width: 10px; height: 8px; background: var(--fg); border-radius: 2px !important; }
-.scn .labs-ruler { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--fg3); }
+.scn .labs-ph::before { content: ''; position: absolute; left: -4px; top: 0; width: 10px; height: 8px; background: var(--fg); }
+.scn .labs-ruler { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--fg3); white-space: nowrap; }
 .scn .labs-script { font-size: 22px; font-weight: 500; letter-spacing: -0.015em; word-spacing: 3px; line-height: 32px; white-space: pre; }
 .scn .labs-script > span { position: relative; z-index: 1; }
-.scn .labs-pause { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; margin: 0 2px; vertical-align: 3px; --r: 4px; background: var(--sunk); font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.04em; color: var(--fg2); }
-.scn .labs-mark { position: absolute; left: 0; top: 0; height: 32px; background: var(--lime); --r: 5px; z-index: 0; }
+.scn .labs-pause { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; margin: 0 2px; vertical-align: 3px; box-shadow: inset 0 0 0 1px var(--line2); font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.04em; color: var(--fg2); }
+.scn .labs-mark { position: absolute; left: 0; top: 0; height: 32px; background: var(--lime); z-index: 0; }
 .scn .labs-sl { display: grid; grid-template-columns: 1fr auto; align-content: start; row-gap: 14px; font-size: 13px; }
 .scn .labs-sl-k { color: var(--fg2); }
 .scn .labs-sl-v { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace; font-size: 12px; }
-.scn .labs-sl-track { grid-column: 1 / -1; position: relative; height: 2px; background: var(--fg4); --r: 1px; }
+.scn .labs-sl-track { grid-column: 1 / -1; position: relative; height: 2px; background: var(--fg4); }
 .scn .labs-sl-track i { position: absolute; left: 0; top: 0; height: 2px; background: var(--fg); }
-.scn .labs-sl-track b { position: absolute; top: -7px; width: 16px; height: 16px; margin-left: -8px; --r: 8px; background: var(--win); box-shadow: 0 0 0 1px var(--line2), 0 1px 3px rgba(0, 0, 0, 0.12); }
+.scn .labs-sl-track b { position: absolute; top: -6px; width: 14px; height: 14px; margin-left: -7px; background: var(--win); box-shadow: 0 0 0 1px var(--line2), 0 1px 3px rgba(0, 0, 0, 0.12); }
 
-/* Interview Assistant */
-.scn .labs-call { background: var(--ink); color: var(--chalk); --r: 10px; overflow: hidden; }
-.scn .labs-call svg { position: absolute; left: 0; top: 0; }
-.scn .labs-who { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+/* Interview Assistant: the call fills the window; the assistant and the captions are frosted over it */
+.scn .labs-call { background: var(--ink); color: var(--chalk); }
 .scn .labs-bars { display: inline-flex; align-items: center; gap: 2px; height: 12px; }
-.scn .labs-bars i { width: 2px; background: var(--chalk); --r: 1px; }
-.scn .labs-self { background: rgba(244, 245, 242, 0.1); --r: 6px; overflow: hidden; }
+.scn .labs-bars i { width: 2px; background: var(--chalk); }
+.scn .labs-self { background: rgba(244, 245, 242, 0.1); overflow: hidden; }
 .scn .labs-self span { position: absolute; left: 8px; bottom: 6px; font-size: 10.5px; color: rgba(244, 245, 242, 0.72); }
-.scn .labs-card { box-shadow: inset 0 0 0 1px var(--line2); }
-.scn .labs-cur { background: var(--lime); }
-.scn .labs-note { background: var(--sunk); box-shadow: none; }
-.scn .labs-hint { display: flex; align-items: center; padding: 0 16px; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; }
+.scn .labs-side { padding: 14px 16px; }
+.scn .labs-side .f-label { color: rgba(244, 245, 242, 0.5); }
+.scn .labs-card { background: rgba(244, 245, 242, 0.07); box-shadow: inset 0 0 0 1px rgba(244, 245, 242, 0.1); }
+.scn .labs-note { background: none; }
+.scn .labs-hint { display: flex; align-items: center; padding: 0 14px; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; color: var(--chalk); }
 .scn .labs-hint > span { display: inline-flex; align-items: center; gap: 10px; }
-.scn .labs-line { display: flex; align-items: baseline; gap: 0; font-size: 15px; white-space: pre; }
-.scn .labs-line b { width: 48px; flex: none; font-family: var(--font-mono); font-weight: 400; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); }
+.scn .labs-hint .ico { color: rgba(244, 245, 242, 0.72); }
+.scn .labs-cur { background: var(--lime); overflow: hidden; }
+.scn .labs-cur-ink { position: absolute; left: 0; top: 0; width: 100%; }
+.scn .labs-hint--ink { position: absolute; left: 0; width: 100%; color: var(--ink); }
+.scn .labs-caps { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 0 16px; }
+.scn .labs-line { display: flex; align-items: baseline; font-size: 15px; white-space: pre; }
+.scn .labs-line b { width: 52px; flex: none; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-weight: 400; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244, 245, 242, 0.5); }
+.scn .labs-line--you > span { color: rgba(244, 245, 242, 0.62); }

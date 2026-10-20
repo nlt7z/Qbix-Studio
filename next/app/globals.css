@@ -1990,8 +1990,8 @@ html { -webkit-tap-highlight-color: transparent; }
 /* --- Zero radius everywhere (sharp edges) --- */
 :where(:not(.scn *)), :where(:not(.scn *))::before, :where(:not(.scn *))::after { border-radius: 0 !important; }
 
-/* --- No frosted glass anywhere --- */
-*, *::before, *::after {
+/* --- No frosted glass anywhere (but in the scenes' drawings, components/scene) --- */
+:where(:not(.scn *)), :where(:not(.scn *))::before, :where(:not(.scn *))::after {
   -webkit-backdrop-filter: none !important;
           backdrop-filter: none !important;
 }

@@ -35,9 +35,9 @@ import '@/app/scenes-strata.css';
    ============================================================================= */
 
 // the window (the film is 1600 × 750: 598 wide, 280 high under the bar)
-const HW = { x: 20, y: 30, w: 600, h: 318 };
-// the two tokens, under it
-const HC = { y: 362, h: 88, w: 292, gap: 16 };
+const HW = { x: 20, y: 59, w: 600, h: 318 };
+// the two tokens: glass, over the window's bottom edge (the film shows through them, blurred)
+const HC = { x: 40, y: 333, h: 88, w: 272, gap: 16, drop: 36 };
 
 export function StrataHero() {
   const film = useRef<HTMLVideoElement | null>(null);
@@ -57,12 +57,11 @@ export function StrataHero() {
         tl.from(q('lock'), { o: 0 }).to(q('lock'), { o: 1 }, 0.18, 0.01, E.lin);
         tl.type(q('addr'), 0.18, 0.18);
         tl.from(q('live'), { clip: [0, 100, 0, 0] }).to(q('live'), { clip: [0, 0, 0, 0] }, 0.38, 0.08, E.out);
-        // the tokens slide out from under the window's bottom edge, one, then the other:
-        // moved and clipped together, so the cut stays on the window's edge
-        const travel = HC.y - (HW.y + HW.h) + HC.h;
+        // the tokens come out of the film, one, then the other: each slides down off it,
+        // drawn from its top edge down as it goes, to sit over the window's bottom edge
         const peel = (el: HTMLElement | null, at: number) => {
-          tl.from(el, { y: -travel, clip: `inset(${HC.h}px -40px -64px -40px)` });
-          tl.to(el, { y: 0, clip: `inset(${HC.h - travel}px -40px -64px -40px)` }, at, 0.28, E.out);
+          tl.from(el, { y: -HC.drop, clip: 'inset(0px 0px 100% 0px)' });
+          tl.to(el, { y: 0, clip: 'inset(-40px -40px -64px -40px)' }, at, 0.28, E.out);
         };
         peel(q('tok.a'), 0.44);
         peel(q('tok.b'), 0.56);
@@ -104,20 +103,20 @@ export function StrataHero() {
       </A>
 
       {/* a type style */}
-      <A k="tok.a" x={HW.x} y={HC.y} w={HC.w} h={HC.h} r={10} c="str-tok">
+      <A k="tok.a" x={HC.x} y={HC.y} w={HC.w} h={HC.h} c="str-tok glass">
         <span className="f-mono str-tok-name">type/display</span>
         <span className="str-tok-meta">Eurostile</span>
         <span className="f-head str-tok-aa">Aa</span>
         <span className="str-tok-val">64/68</span>
       </A>
       {/* a spacing scale */}
-      <A k="tok.b" x={HW.x + HC.w + HC.gap} y={HC.y} w={HC.w} h={HC.h} r={10} c="str-tok">
+      <A k="tok.b" x={HC.x + HC.w + HC.gap} y={HC.y} w={HC.w} h={HC.h} c="str-tok glass">
         <span className="f-mono str-tok-name">space</span>
         <span className="str-tok-meta">base 8</span>
-        <svg className="str-tok-dims" width="122" height="12" viewBox="0 0 122 12" aria-hidden>
+        <svg className="str-tok-dims" width="93" height="12" viewBox="0 0 93 12" aria-hidden>
           <path
             data-k="dims"
-            d="M0.5 0.5 v11 M0.5 6 h16 M16.5 0.5 v11 M28.5 0.5 v11 M28.5 6 h32 M60.5 0.5 v11 M72.5 0.5 v11 M72.5 6 h48 M120.5 0.5 v11"
+            d="M0.5 0.5 v11 M0.5 6 h12 M12.5 0.5 v11 M22.5 0.5 v11 M22.5 6 h24 M46.5 0.5 v11 M56.5 0.5 v11 M56.5 6 h36 M92.5 0.5 v11"
             pathLength={1}
             fill="none"
             stroke="currentColor"
@@ -136,9 +135,10 @@ export function StrataHero() {
    ============================================================================= */
 
 // the picture (it becomes the card), and the panel beside it
-const IMG = { x: 8, y: 58, w: 372, h: 524 };
+const IMG = { x: 8, y: 58, w: 424, h: 524 };
 const ART = 364; // the picture's image; its caption under it
-const PAN = { x: 404, y: 58, w: 308, h: 524 };
+// the panel is glass, over the picture's right edge (its own content keeps clear of the overlap)
+const PAN = { x: 380, y: 58, w: 332, h: 524 };
 const PI = { w: PAN.w - 2, r: PAN.w - 2 - 16 }; // the panel's inside: its width, its right edge
 // the picture as a card: the band of the image it keeps, and its height
 const BAND = { top: 140, h: 212 };
@@ -153,16 +153,16 @@ const C_SUB = C_TITLE + 40;
 const C_LINK = C_SUB + 32;
 
 // the picture's sun (behind the ridges)
-const SUN = { x: 256, y: 226, r: 50 };
+const SUN = { x: 232, y: 226, r: 50 };
 
 // the colours it reads, top to bottom as the scan meets them (pins on the picture);
 // the accent is the one lime, so the panel draws it as an outline until it's in the code
 const ACC = 1;
 const COLORS = [
   { hex: '#F4F5F2', name: 'paper', pc: '44%', pin: [56, 92] },
-  { hex: '#B8FF00', name: 'accent', pc: '6%', pin: [240, 206] },
-  { hex: '#959696', name: 'stone', pc: '21%', pin: [110, 298] },
-  { hex: '#121417', name: 'ink', pc: '29%', pin: [300, 336] },
+  { hex: '#B8FF00', name: 'accent', pc: '6%', pin: [218, 204] },
+  { hex: '#959696', name: 'stone', pc: '21%', pin: [120, 298] },
+  { hex: '#121417', name: 'ink', pc: '29%', pin: [300, 340] },
 ] as const;
 
 // the spacing scale, each step drawn at its size: [value, where it sits in the scale];
@@ -199,9 +199,9 @@ const CODE: [string, string, number?][] = [
   ['var', '  --space-4: 16px;'],
   ['var', '  --space-6: 24px;'],
   ['var', '  --space-10: 40px;'],
-  ['var', '  --radius-sm: 6px;'],
-  ['var', '  --radius-md: 12px;'],
-  ['var', '  --radius-full: 99px;'],
+  ['var', '  --radius-none: 0;'],
+  ['var', '  --radius-sm: 2px;'],
+  ['var', '  --radius-md: 4px;'],
   ['sel', '}'],
 ];
 const CODE_Y = 58;
@@ -232,9 +232,9 @@ function Css({ s, chip }: { s: string; chip?: number }) {
 function Ridges() {
   return (
     <svg className="a" style={{ left: 0, top: 0 }} width={IMG.w} height={ART} viewBox={`0 0 ${IMG.w} ${ART}`} aria-hidden>
-      <path d="M0 246 L36 228 L82 242 L128 204 L174 234 L220 220 L256 236 L294 212 L336 234 L372 222 V364 H0 Z" fill="#d0d1cf" />
-      <path d="M0 288 L50 262 L104 282 L160 248 L218 286 L274 264 L326 288 L372 270 V364 H0 Z" fill="#959696" />
-      <path d="M0 326 L62 302 L124 322 L190 290 L252 318 L308 300 L372 318 V364 H0 Z" fill="#121417" />
+      <path d="M0 246 L40 228 L90 242 L140 204 L190 234 L236 220 L272 236 L312 212 L360 234 L424 216 V364 H0 Z" fill="#d0d1cf" />
+      <path d="M0 288 L56 262 L114 282 L174 248 L236 286 L296 264 L352 288 L424 268 V364 H0 Z" fill="#959696" />
+      <path d="M0 326 L68 302 L136 322 L206 290 L274 318 L334 300 L394 318 L424 308 V364 H0 Z" fill="#121417" />
     </svg>
   );
 }
@@ -249,9 +249,9 @@ function Redline({ k, x, y, len, v }: { k: string; x: number; y: number; len: nu
   );
 }
 
-/** A corner of radius r, drawn at a third of its size (a pill's is a quarter circle). */
+/** A corner of radius r, drawn at twice its size (0 is a sharp corner). */
 function Corner({ r }: { r: number }) {
-  const R = Math.min(r / 2, 15.5);
+  const R = Math.min(r * 2, 15.25);
   return (
     <svg className="str-corner" width="16" height="16" viewBox="0 0 16 16" aria-hidden>
       <path d={`M0.75 16 V${0.75 + R} A${R} ${R} 0 0 1 ${0.75 + R} 0.75 H16`} fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -317,7 +317,7 @@ function buildTour(q: Pick, tl: Timeline) {
   COLORS.forEach((c, i) => {
     const t = at(c.pin[1]);
     const pin = q(`pin.${i}`);
-    tl.from(pin, { clip: 'circle(0% at 50% 50%)' }).to(pin, { clip: 'circle(75% at 50% 50%)' }, t, 0.04, E.out);
+    tl.from(pin, { clip: 'inset(50% 50% 50% 50%)' }).to(pin, { clip: 'inset(-3px -3px -3px -3px)' }, t, 0.04, E.out);
     tl.from(q(`c.sw.${i}`), { clip: 'inset(0% 100% 0% 0% round 4px)' }).to(q(`c.sw.${i}`), { clip: 'inset(0% 0% 0% 0% round 4px)' }, t + 0.005, 0.03, E.out);
     wipe(q(`c.hex.${i}`), t + 0.015, 0.05);
     wipe(q(`c.pc.${i}`), t + 0.035, 0.03);
@@ -350,7 +350,7 @@ function buildTour(q: Pick, tl: Timeline) {
   tl.to(btn, { s: 0.97 }, 1.1, 0.03, E.lin).to(btn, { s: 1 }, 1.13, 0.03, E.lin);
   tl.to(cur, { x: BTN.x + 108, y: BTN.y + 40 }, 1.18, 0.12, E.soft);
   // what it measured on the picture is taken off it
-  COLORS.forEach((_, i) => tl.to(q(`pin.${i}`), { clip: 'circle(0% at 50% 50%)' }, 1.14 + i * 0.006, 0.035, E.in));
+  COLORS.forEach((_, i) => tl.to(q(`pin.${i}`), { clip: 'inset(50% 50% 50% 50%)' }, 1.14 + i * 0.006, 0.035, E.in));
   tl.to(q('tbox'), { dash: 1 }, 1.14, 0.045, E.in);
   ['ttag', 'rl.m', 'rl.m.t', 'rl.g', 'rl.g.t'].forEach((k, i) => fold(q(k), 1.14 + i * 0.004, 0.035));
   // the panel is tokens now: what it read keeps its place, names are given
@@ -396,7 +396,6 @@ function buildTour(q: Pick, tl: Timeline) {
   tl.from(q('art'), { clip: `inset(0px 0px 0px 0px)` });
   tl.to(q('title'), { y: C_TITLE - TITLE.y, s: 28 / 64 }, CM, CD, E.move);
   tl.to(q('sub'), { y: C_SUB - SUB.y }, CM, CD, E.move);
-  tl.to(q('no'), { y: C_SUB - SUB.y }, CM, CD, E.move);
   wipe(q('link'), CM + CD - 0.02, 0.05);
   // and a form, from the same tokens
   const form = q('form');
@@ -471,7 +470,7 @@ export function StrataTour() {
       {/* --- left: where the image is dropped --- */}
       <A k="drop" x={IMG.x} y={IMG.y} w={IMG.w} h={IMG.h} r={12} c="str-drop">
         <svg className="str-drop-edge" width={IMG.w} height={IMG.h} aria-hidden>
-          <rect x="0.5" y="0.5" width={IMG.w - 1} height={IMG.h - 1} rx="11.5" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="6 5" />
+          <rect x="0.5" y="0.5" width={IMG.w - 1} height={IMG.h - 1} fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="6 5" />
         </svg>
         <svg className="str-drop-up" width="28" height="28" viewBox="0 0 28 28" aria-hidden>
           <path d="M14 18 V5 M8.5 10.5 L14 5 L19.5 10.5 M5 17 V22.5 H23 V17" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -484,14 +483,14 @@ export function StrataTour() {
       <A k="img" x={IMG.x} y={IMG.y} w={IMG.w} h={IMG.h} r={12} c="str-img">
         <A k="art" x={0} y={0} w={IMG.w} h={ART}>
           {/* the sun: the picture's one lime; once it's a token, the picture keeps its outline */}
-          <A k="sun" x={SUN.x - SUN.r} y={SUN.y - SUN.r} w={SUN.r * 2} h={SUN.r * 2} r={SUN.r} c="str-sun">
-            <i data-k="sun.out" className="str-sun-out" />
+          <A k="sun" x={SUN.x - SUN.r} y={SUN.y - SUN.r} w={SUN.r * 2} h={SUN.r * 2} r={SUN.r} c="str-sun round">
+            <i data-k="sun.out" className="str-sun-out round" />
           </A>
           <Ridges />
           <span className="a str-p-mast" style={{ left: 24, top: 22 }}>
             Field notes
           </span>
-          <span className="a str-p-mast" style={{ right: 24, top: 22 }}>
+          <span className="a str-p-mast" style={{ right: IMG.w - (PAN.x - IMG.x) + 24, top: 22 }}>
             No. 04
           </span>
         </A>
@@ -500,9 +499,6 @@ export function StrataTour() {
         </T>
         <T k="sub" x={24} y={SUB.y} c="str-p-sub">
           Six days above the tree line.
-        </T>
-        <T k="no" x={0} y={SUB.y + 3} c="str-p-no" style={{ left: 'auto', right: 24 }}>
-          Autumn 2026
         </T>
         <T k="link" x={24} y={C_LINK} c="str-p-link">
           Read the notes →
@@ -551,9 +547,9 @@ export function StrataTour() {
       {/* where the tokens are used */}
       <A k="tag.r" x={IMG.x + 10} y={IMG.y + 10} c="str-tag">
         <svg width="9" height="9" viewBox="0 0 9 9" aria-hidden>
-          <path d="M0.75 9 V5.25 A4.5 4.5 0 0 1 5.25 0.75 H9" fill="none" stroke="currentColor" strokeWidth="1.25" />
+          <path d="M0.75 9 V0.75 H9" fill="none" stroke="currentColor" strokeWidth="1.25" />
         </svg>
-        radius 12
+        radius 0
       </A>
       <A k="tag.t" x={0} y={IMG.y + C_TITLE + 6} c="str-tag">
         title 28/32
@@ -563,7 +559,7 @@ export function StrataTour() {
       </A>
 
       {/* --- right: the panel (what it read, then tokens, then code) --- */}
-      <A k="pan" x={PAN.x} y={PAN.y} w={PAN.w} h={PAN.h} r={12} c="str-pan">
+      <A k="pan" x={PAN.x} y={PAN.y} w={PAN.w} h={PAN.h} c="str-pan glass">
         <i className="str-hr" />
         <T k="h1" x={16} y={14} c="str-h">
           ridge.jpg
@@ -665,7 +661,7 @@ export function StrataTour() {
           Radius
         </T>
         <A k="rad.row" x={0} y={MY + ROW} w={PI.w} h={ROW}>
-          {[6, 12, 99].map((r, i) => (
+          {[0, 2, 4].map((r, i) => (
             <span key={r} className="a str-rad-i" style={{ left: 16 + i * 64, top: 6 }}>
               <Corner r={r} />
               <span className="f-mono str-v">{r}</span>

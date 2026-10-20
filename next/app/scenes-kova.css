@@ -1,7 +1,9 @@
 /* =============================================================================
-   KOVA — brand upgrade (components/scenes/Kova.tsx): a money app that already
+   KOVA: brand upgrade (components/scenes/Kova.tsx), a money app that already
    works, on a phone; its grid, its colour and type, its mark. Ink, chalk and
    one lime: the client's own three colours, which are also the page's.
+   Square, like the site (only the phone, its screen and its island are
+   .round); the panels that lie over something are .glass.
    ============================================================================= */
 
 /* --- the sheet beside the phone ------------------------------------------ */
@@ -10,67 +12,73 @@
 .scn .kova-hd .kova-hd-w { display: grid; }
 .scn .kova-hd-w > span { grid-area: 1 / 1; display: block; color: var(--fg); }
 .scn .kova-rule { background: var(--line2); transform-origin: 0 50%; }
+/* the sheet: a glass panel over the phone's corner, and what is on it */
+.scn .kova-card { z-index: 4; }
+.scn .kova-on { z-index: 5; }
 
 /* 1 · the grid, in four numbers */
-.scn .kova-spec { display: flex; align-items: baseline; padding-top: 22px; box-shadow: inset 0 -1px 0 var(--line2); }
-.scn .kova-spec-n { width: 104px; font-size: 52px; line-height: 1; }
+.scn .kova-spec { display: flex; align-items: baseline; padding-top: 13px; box-shadow: inset 0 -1px 0 var(--line2); }
+.scn .kova-spec.is-last { box-shadow: none; }
+.scn .kova-spec-n { width: 96px; font-size: 44px; line-height: 1; }
 .scn .kova-spec-l { font-size: 15px; color: var(--fg2); }
 
 /* 2 · colour and type */
-.scn .kova-sw { padding: 11px 12px; }
+.scn .kova-sw { display: grid; align-content: start; gap: 3px; padding: 11px 10px 10px 12px; }
 .scn .kova-sw-name { font-size: 13px; font-weight: 500; white-space: nowrap; }
-.scn .kova-sw-hex { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; color: var(--fg3); }
+.scn .kova-sw-hex { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.02em; white-space: nowrap; }
 .scn .kova-sw--ink { background: #0b0c0e; color: #f4f5f2; box-shadow: inset 1px 0 0 var(--line2), inset 0 1px 0 var(--line2), inset 0 -1px 0 var(--line2); }
-/* the strip's outer corners (a box's --r is a single radius) */
-.scn .kova-sw--ink { border-radius: 8px 0 0 8px !important; }
-.scn .kova-sw--lime { border-radius: 0 8px 8px 0 !important; }
+.scn .kova-sw--ink .kova-sw-hex { color: rgba(244, 245, 242, 0.5); }
 .scn .kova-sw--chalk { background: #f4f5f2; color: #0b0c0e; }
+.scn .kova-sw--chalk .kova-sw-hex { color: rgba(11, 12, 14, 0.55); }
 .scn .kova-sw--lime { background: var(--lime); color: var(--on-lime); }
-.scn .kova-type { display: flex; align-items: center; gap: 0; box-shadow: inset 0 -1px 0 var(--line2); }
-.scn .kova-aa { width: 104px; font-size: 46px; line-height: 1; }
+.scn .kova-sw--lime .kova-sw-hex { color: rgba(12, 19, 0, 0.62); }
+.scn .kova-type { display: flex; align-items: center; box-shadow: inset 0 -1px 0 var(--line2); }
+.scn .kova-type.is-last { box-shadow: none; }
+.scn .kova-aa { width: 96px; font-size: 40px; line-height: 1; }
 .scn .kova-aa--text { font-family: var(--font-sans); font-weight: 400; letter-spacing: -0.03em; }
 .scn .kova-type-name { display: grid; gap: 4px; font-size: 15px; }
 .scn .kova-type-name i { font-style: normal; }
 
-/* 3 · the mark */
-.scn .kova-keys { fill: none; stroke: var(--fg3); stroke-width: 1; }
+/* 3 · the mark (drawn at 176 in a 208 grid, so its strokes are set in the grid's units) */
+.scn .kova-k { display: block; width: 100%; height: 100%; }
+.scn .kova-keys { fill: none; stroke: var(--fg3); stroke-width: 1.13; }
 .scn .kova-keys [data-k] { stroke-dasharray: 1 1; }
 .scn .kova-keys circle { stroke: var(--fg2); }
-.scn .kova-kline { fill: none; stroke: var(--fg); stroke-width: 1.5; stroke-linejoin: miter; }
+.scn .kova-kline { fill: none; stroke: var(--fg); stroke-width: 1.7; stroke-linejoin: miter; }
+.scn .kova-gl { text-align: right; }
+.scn .kova-gl span { display: inline-block; }
 .scn .kova-kline path { stroke-dasharray: 1 1; }
 .scn .kova-kfill svg { fill: var(--fg); }
 .scn .kova-icon { background: var(--lime); }
 .scn .kova-icon svg { fill: #0b0c0e; }
-.scn .kova-icon-cap { text-align: center; font-size: 14px; font-weight: 500; }
-.scn .kova-icon-cap span { display: inline-block; }
 .scn .kova-icon--sheet { z-index: 7; }
-.scn .kova-ring { z-index: 6; background: var(--ch-bg, #08090a); }
-.scn .kova-tile { background: #f4f5f2; }
+.scn .kova-icon-cap { z-index: 7; text-align: center; font-size: 14px; font-weight: 500; }
+.scn .kova-icon-cap span { display: inline-block; }
+.scn .kova-tile { background: #f4f5f2; transform-origin: 50% 50%; }
 .scn .kova-tile svg { fill: #0b0c0e; }
-.scn .kova-fly { z-index: 5; transform-origin: 50% 50%; }
-.scn .kova-fly svg { width: 100%; height: 100%; }
+.scn .kova-fly { z-index: 6; }
 
 /* --- the phone ---------------------------------------------------------- */
 .scn .kova-phone { background: #2a2c30; box-shadow: var(--lift); z-index: 2; }
 .scn .kova-screen { position: absolute; left: 8px; top: 8px; width: 264px; height: 592px; --r: 38px; overflow: hidden; background: #fff; }
-.scn .kova-layer { position: absolute; inset: 0; --r: 0px; }
+.scn .kova-layer { position: absolute; inset: 0; }
 
 .scn .kova-status { position: absolute; left: 0; top: 0; width: 100%; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px 0 30px; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
 .scn .kova-island { position: absolute; left: 50%; top: 11px; width: 84px; height: 24px; margin-left: -42px; --r: 12px; background: #000; }
 .scn .kova-sig { display: flex; align-items: flex-end; gap: 2px; }
-.scn .kova-sig i { width: 3px; --r: 1px; background: currentColor; }
+.scn .kova-sig i { width: 3px; background: currentColor; }
 .scn .kova-sig i:nth-child(1) { height: 4px; }
 .scn .kova-sig i:nth-child(2) { height: 6px; }
 .scn .kova-sig i:nth-child(3) { height: 8px; }
 .scn .kova-sig i:nth-child(4) { height: 10px; }
-.scn .kova-batt { display: block; margin-left: 6px; width: 23px; height: 11px; padding: 2px; --r: 3px; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 42%, transparent); }
-.scn .kova-batt b { display: block; width: 72%; height: 100%; --r: 1.5px; background: currentColor; }
-.scn .kova-ind { position: absolute; left: 50%; bottom: 8px; width: 104px; height: 4px; margin-left: -52px; --r: 2px; background: currentColor; opacity: 0.85; }
+.scn .kova-batt { display: block; margin-left: 6px; width: 23px; height: 11px; padding: 2px; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 42%, transparent); }
+.scn .kova-batt b { display: block; width: 72%; height: 100%; background: currentColor; }
+.scn .kova-ind { position: absolute; left: 50%; bottom: 8px; width: 104px; height: 4px; margin-left: -52px; background: currentColor; opacity: 0.85; }
 
 /* the app as it ships: the system's type, greys, a placeholder logo */
 .scn .kova-plain { background: #fff; color: #121417; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
 .scn .kova-p-brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
-.scn .kova-p-logo { display: grid; place-items: center; width: 32px; height: 32px; --r: 7px; background: rgba(18, 20, 23, 0.08); color: rgba(18, 20, 23, 0.3); }
+.scn .kova-p-logo { display: grid; place-items: center; width: 32px; height: 32px; background: rgba(18, 20, 23, 0.08); color: rgba(18, 20, 23, 0.3); }
 .scn .kova-p-av { display: grid; place-items: center; background: rgba(18, 20, 23, 0.08); color: rgba(18, 20, 23, 0.55); font-size: 13px; font-weight: 600; }
 .scn .kova-p-rule { background: rgba(18, 20, 23, 0.1); }
 .scn .kova-p-greet { font-size: 17px; line-height: 22px; color: rgba(18, 20, 23, 0.72); }
@@ -80,7 +88,7 @@
 .scn .kova-p-card { box-shadow: inset 0 0 0 1px rgba(18, 20, 23, 0.13); padding: 12px 14px 14px; display: flex; flex-direction: column; justify-content: space-between; }
 .scn .kova-p-h { font-size: 14px; font-weight: 600; color: rgba(18, 20, 23, 0.8); }
 .scn .kova-p-bars { display: flex; align-items: flex-end; justify-content: space-between; height: 72px; }
-.scn .kova-p-bars i { width: 10px; --r: 1px; background: rgba(18, 20, 23, 0.22); }
+.scn .kova-p-bars i { width: 10px; background: rgba(18, 20, 23, 0.22); }
 .scn .kova-p-rows { display: grid; }
 .scn .kova-p-rows > span { display: flex; justify-content: space-between; align-items: center; height: 44px; box-shadow: inset 0 -1px 0 rgba(18, 20, 23, 0.1); font-size: 15px; }
 .scn .kova-p-rows b { font-weight: 400; color: rgba(18, 20, 23, 0.85); }
@@ -91,8 +99,8 @@
 .scn .kova-col { background: rgba(18, 20, 23, 0.045); box-shadow: inset 1px 0 0 rgba(18, 20, 23, 0.14), inset -1px 0 0 rgba(18, 20, 23, 0.14); }
 .scn .kova-ib { color: #121417; box-shadow: inset 1px 0 0 currentColor, inset -1px 0 0 currentColor; }
 .scn .kova-ib::before { content: ''; position: absolute; left: 0; right: 0; top: 4px; height: 1px; background: currentColor; }
-.scn .kova-pill { display: grid; place-items: center; height: 15px; --r: 3px; background: #121417; color: #f4f5f2; font-family: var(--font-mono); font-size: 10.5px; line-height: 1; letter-spacing: 0.02em; }
-.scn .kova-pill-on { position: absolute; inset: 0; display: grid; place-items: center; --r: 3px; background: var(--lime); color: var(--on-lime); }
+.scn .kova-pill { display: grid; place-items: center; height: 15px; background: #121417; color: #f4f5f2; font-family: var(--font-mono); font-size: 10.5px; line-height: 1; letter-spacing: 0.02em; }
+.scn .kova-pill-on { position: absolute; inset: 0; display: grid; place-items: center; background: var(--lime); color: var(--on-lime); }
 
 /* the app, designed */
 .scn .kova-app { background: #0b0c0e; color: #f4f5f2; font-family: var(--font-sans); --fg3: rgba(244, 245, 242, 0.4); }
@@ -102,8 +110,8 @@
 .scn .kova-greet { font-size: 15px; line-height: 22px; color: rgba(244, 245, 242, 0.62); }
 .scn .kova-bal { font-size: 44px; line-height: 48px; }
 .scn .kova-chiprow { display: flex; align-items: center; gap: 8px; height: 24px; white-space: nowrap; }
-.scn .kova-chip { position: relative; display: inline-flex; align-items: center; height: 24px; padding: 0 9px; --r: 12px; box-shadow: inset 0 0 0 1px rgba(244, 245, 242, 0.24); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.scn .kova-chip-on { position: absolute; inset: 0; display: inline-flex; align-items: center; padding: 0 9px; --r: 12px; background: #f4f5f2; color: #0b0c0e; }
+.scn .kova-chip { position: relative; display: inline-flex; align-items: center; height: 24px; padding: 0 9px; box-shadow: inset 0 0 0 1px rgba(244, 245, 242, 0.24); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.scn .kova-chip-on { position: absolute; inset: 0; display: inline-flex; align-items: center; padding: 0 9px; background: #f4f5f2; color: #0b0c0e; }
 .scn .kova-note { font-size: 12.5px; color: rgba(244, 245, 242, 0.5); }
 .scn .kova-spend { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; font-weight: 500; }
 .scn .kova-axis { background: rgba(244, 245, 242, 0.12); }
