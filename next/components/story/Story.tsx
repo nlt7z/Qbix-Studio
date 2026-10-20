@@ -21,7 +21,9 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
  * words and its own scene: a flat drawing that plays with the scroll
  * (components/scene), `states` of them, one after another as you scroll
  * through the chapter, on the side it names in `side` (the words take the
- * other side). Tones alternate black and paper. A chapter with `steps` has
+ * other side). Tones alternate black and paper; the sign-off is lime, its
+ * top edge cut like a folder's, a tab rising out of it over the words (`tab`;
+ * `prev` is the tone round the tab). A chapter with `steps` has
  * the state its scene is showing set on it, as `data-step`, which lights that
  * step (or that product).
  *
@@ -35,7 +37,9 @@ type ChapterProps = {
   id?: string;
   scene?: ReactNode;
   states: number;
-  tone: 'dark' | 'paper';
+  tone: 'dark' | 'paper' | 'lime';
+  prev?: 'dark' | 'paper';
+  tab?: ReactNode;
   side: 'left' | 'right';
   steps?: number;
   caps?: Cap[];
@@ -46,7 +50,7 @@ type ChapterProps = {
   foot?: ReactNode;
 };
 
-function Chapter({ id, scene, states, tone, side, steps, caps, h, className = '', head, body, foot }: ChapterProps) {
+function Chapter({ id, scene, states, tone, prev, tab, side, steps, caps, h, className = '', head, body, foot }: ChapterProps) {
   // A chapter with several states is played by the scroll: it's as long as its moves need (80vh of
   // scroll each); on a phone its scene's runway is (see .ch-run in story.css).
   const moves = Math.max(0, states - 1);
@@ -59,11 +63,13 @@ function Chapter({ id, scene, states, tone, side, steps, caps, h, className = ''
       className={`ch${sub ? ' ch--subcaps' : ''} ${className}`}
       data-chapter
       data-tone={tone}
-      data-nav-theme={tone === 'paper' ? 'light' : 'dark'}
+      data-prev={prev}
+      data-nav-theme={tone === 'paper' ? 'light' : tone}
       data-side={side}
       data-steps={steps}
       style={{ '--h': height, '--moves': moves } as CSSProperties}
     >
+      {tab && <div className="ch-tab">{tab}</div>}
       <div className="ch-frame">
         {/* Beside the words; on a phone, pinned while the scroll plays it. */}
         <div className="ch-run" data-run={moves ? '' : undefined}>
@@ -122,13 +128,13 @@ function Steps({ items }: { items: string[] }) {
 function Act({ children, onClick, href }: { children: string; onClick?: () => void; href?: string }) {
   if (href) {
     return (
-      <Link href={href} className="btn btn-solid btn-lg split-cta">
+      <Link href={href} className="btn btn-solid btn-lg split-cta cut">
         <SplitText text={children} arrow />
       </Link>
     );
   }
   return (
-    <button type="button" className="btn btn-solid btn-lg split-cta" onClick={onClick}>
+    <button type="button" className="btn btn-solid btn-lg split-cta cut" onClick={onClick}>
       <SplitText text={children} arrow />
     </button>
   );
@@ -345,23 +351,25 @@ export default function Story() {
         }
       />
 
-      {/* The pieces stack back into the cube, bottom row first: the thing, built. */}
+      {/* The sign-off, on lime: the glass cube, its core in ink. */}
       <Chapter
         id="contact"
         scene={<GlassCube />}
         states={1}
-        tone={ai ? 'paper' : 'dark'}
+        tone="lime"
+        prev={ai ? 'dark' : 'paper'}
+        tab={<span className="ch-kicker mono">Contact</span>}
         side={ai ? 'right' : 'left'}
         h="160vh"
         className="ch--contact"
         head={
           <h2 className="ch-title ch-sign">
-            Bring the idea. <Marker className={ai ? 'marker--ink' : 'marker--white'}>{'We’ll build the thing.'}</Marker>
+            Bring the idea. <Marker className="marker--ink">{'We’ll build the thing.'}</Marker>
           </h2>
         }
         foot={
           <div className="ch-acts">
-            <button type="button" className="btn btn-solid btn-lg split-cta" onClick={open}>
+            <button type="button" className="btn btn-solid btn-lg split-cta cut" onClick={open}>
               <SplitText text="Tell us your idea" arrow />
             </button>
             <a className="ch-mail" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>

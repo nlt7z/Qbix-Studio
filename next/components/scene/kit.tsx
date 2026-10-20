@@ -33,6 +33,24 @@ export function A({ k, x = 0, y = 0, w, h, r, c = '', style, children }: BoxProp
   );
 }
 
+/**
+ * A clip for a box whose top right corner is cut on the diagonal, its edge kept round the cut as two
+ * hairlines (.notch in globals.css): the box inset by [top, right, bottom, left] (% of it), or open
+ * `bleed` px past its edges so its shadow shows. Shut, the cut is a point, so a wipe between two of
+ * these grows the corner as the box opens.
+ */
+export function notch(cut: number, [t, r, b, l]: [number, number, number, number] = [0, 0, 0, 0], bleed = 0): string {
+  const k = t + b >= 100 || l + r >= 100 ? 0 : 1;
+  const x0 = l ? `${l}%` : `${-bleed}px`;
+  const x1 = r ? `${100 - r}%` : `calc(100% + ${bleed}px)`;
+  const y0 = t ? `${t}%` : `${-bleed}px`;
+  const y1 = b ? `${100 - b}%` : `calc(100% + ${bleed}px)`;
+  const xr = (d: number) => `calc(${100 - r}% - ${d}px)`;
+  const yt = (d: number) => `calc(${t}% + ${d}px)`;
+  const c = cut * k;
+  return `polygon(evenodd, ${x0} ${y0}, ${x1} ${y0}, ${x1} ${y1}, ${x0} ${y1}, ${x0} ${y0}, ${xr(c - k)} ${yt(k)}, ${xr(k)} ${yt(k)}, ${xr(k)} ${yt(c - k)}, ${xr(c - k)} ${yt(k)}, ${x0} ${y0})`;
+}
+
 /** One line of text at (x, y): its box is the line (for typing it out, or wiping it in). */
 export function T({ k, x = 0, y = 0, c = '', style, children }: { k?: string; x?: number; y?: number; c?: string; style?: CSSProperties; children: string }) {
   return (

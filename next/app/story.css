@@ -101,6 +101,41 @@
 
 .ch-sign { font-size: clamp(34px, 3.8vw, 60px); }
 
+/* --- the lime chapter: the sign-off, cut like a folder ----------------------
+   Lime, with ink on it. Its top edge rises into a tab over the words, its
+   shoulders at 45° (the angle of every cut corner); round the tab is the tone
+   of the chapter before. The tab carries the chapter's name. Its last corner,
+   bottom right, is cut into the footer's black. */
+.ch[data-tone='lime'] {
+  --ch-bg: var(--signal);
+  --ch-fg: #0c1300;
+  --ch-dim: rgba(12, 19, 0, 0.66);
+  --tab-h: 44px;
+  --tab-w: 184px;
+  --tab-x: var(--edge);
+  --tab-l: 0px;
+  --corner: clamp(56px, 7vw, 112px);
+}
+.ch[data-prev='dark'] { --ch-around: var(--bg); }
+.ch[data-prev='paper'] { --ch-around: var(--paper); }
+.story > .ch[data-tone='lime'] { background: linear-gradient(var(--ch-around) 50%, var(--bg) 50%) !important; }
+.ch[data-tone='lime']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--signal);
+  clip-path: polygon(
+    0 var(--tab-h), calc(var(--tab-l) - var(--tab-h)) var(--tab-h), var(--tab-l) 0, calc(var(--tab-x) + var(--tab-w)) 0,
+    calc(var(--tab-x) + var(--tab-w) + var(--tab-h)) var(--tab-h), 100% var(--tab-h),
+    100% calc(100% - var(--corner)), calc(100% - var(--corner)) 100%, 0 100%
+  );
+}
+.ch-tab { position: absolute; top: 0; left: var(--tab-x); z-index: 3; height: var(--tab-h); display: flex; align-items: center; }
+.ch-tab .ch-kicker { margin: 0; color: var(--ch-fg); }
+.ch[data-tone='lime'] .marker--ink .marker-in { color: var(--signal); }
+/* The buttons' cut corner, and a focus ring inside it (the cut would clip one outside). */
+.ch .btn-solid.cut:focus-visible { outline: 2px solid var(--ch-bg); outline-offset: -6px; }
+
 /* --- the hero chapter ------------------------------------------------------ */
 .ch--hero .hero-title.hero-title--xl { font-size: clamp(40px, min(7vw, 11vh), 116px); }
 .ch--hero .hero-sub-mask { margin: clamp(16px, 2.6vh, 26px) 0 clamp(20px, 3.4vh, 32px); }
@@ -156,6 +191,8 @@
   .ch--hero .ch-stage { left: max(52%, calc(var(--edge) + var(--copy-w) + var(--stage-gap))); }
   .ch--hero .ch-band { position: absolute; left: var(--edge); right: var(--edge); bottom: clamp(20px, 4vh, 40px); }
   .ch--contact .ch-acts { margin-top: 26px; }
+  /* the tab over the words, wherever they stand */
+  .ch[data-tone='lime'][data-side='left'] { --tab-x: calc(100% - var(--edge) - var(--copy-w)); --tab-l: calc(var(--tab-x) - 32px); }
 }
 
 /* --- phones and tall windows: what it is, the scene, then the rest ---------
@@ -175,6 +212,7 @@
 
   .ch:not(.ch--hero) .ch-copy { display: contents; }
   .ch-head { order: 1; padding: clamp(64px, 10vh, 104px) var(--gutter) clamp(28px, 4vh, 40px); }
+  .ch[data-tone='lime'] { --tab-x: var(--gutter); --tab-l: 0px; --tab-h: 40px; --tab-w: 136px; }
   .ch-run { order: 2; position: relative; }
   .ch-body { order: 3; padding: 0 var(--gutter); }
   .ch-foot { order: 4; padding: 4px var(--gutter) clamp(72px, 11vh, 120px); }

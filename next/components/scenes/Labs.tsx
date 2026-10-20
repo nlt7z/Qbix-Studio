@@ -2,7 +2,7 @@
 
 import '@/app/scenes-labs.css';
 import Scene from '@/components/scene/Scene';
-import { A, Lock, Play, Check } from '@/components/scene/kit';
+import { A, Lock, Play, Check, notch } from '@/components/scene/kit';
 import { E } from '@/lib/scene/timeline';
 
 /**
@@ -259,7 +259,7 @@ export default function Labs() {
         const ink = q('int.cur.ink');
         const step = HINTS.y[1] - HINTS.y[0];
         card(0, 3.7);
-        tl.from(cur, { clip: 'inset(0% 100% 0% 0%)' }).to(cur, { clip: 'inset(0% 0% 0% 0%)' }, 3.74, 0.045, E.out);
+        tl.from(cur, { clip: notch(24, [0, 100, 0, 0]) }).to(cur, { clip: notch(24) }, 3.74, 0.045, E.out);
         card(1, 3.8);
         tl.to(cur, { y: step }, 3.855, 0.05, E.move);
         tl.to(ink, { y: -step }, 3.855, 0.05, E.move);
@@ -312,7 +312,7 @@ export default function Labs() {
                 playsInline
                 preload="metadata"
               />
-              <A x={16} y={16} h={44} c="glass labs-cap">
+              <A x={16} y={16} h={44} c="glass labs-cap notch">
                 A moodboard in, a working design system out.
               </A>
             </div>
@@ -330,7 +330,7 @@ export default function Labs() {
                 preload="metadata"
                 style={{ left: -65, top: CH - 440, width: 806, height: 440 }}
               />
-              <A k="bid.cap" x={0} y={CH - 16 - 44} h={44} c="glass labs-dark-glass labs-cap" style={{ left: 'auto', right: 16 }}>
+              <A k="bid.cap" x={0} y={CH - 16 - 44} h={44} c="glass labs-dark-glass labs-cap notch" style={{ left: 'auto', right: 16 }}>
                 Bid, bluff, or go all in.
               </A>
             </div>
@@ -414,7 +414,7 @@ export default function Labs() {
                 <span>You</span>
               </A>
               {/* the live captions */}
-              <A x={CAPS.x} y={CAPS.y} w={CAPS.w} h={CAPS.h} c="glass labs-dark-glass labs-caps">
+              <A x={CAPS.x} y={CAPS.y} w={CAPS.w} h={CAPS.h} c="glass labs-dark-glass labs-caps notch">
                 <span className="labs-line labs-line--you">
                   <b>You</b>
                   <span>What was your part in it?</span>

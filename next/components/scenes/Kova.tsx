@@ -2,7 +2,7 @@
 
 import '@/app/scenes-kova.css';
 import Scene from '@/components/scene/Scene';
-import { A, T } from '@/components/scene/kit';
+import { A, T, notch } from '@/components/scene/kit';
 import { E } from '@/lib/scene/timeline';
 
 /**
@@ -145,7 +145,7 @@ export default function Kova() {
         const phone = q('phone');
         tl.from(phone, { y: 80, clip: [0, 0, 100, 0] }).to(phone, { y: 0, clip: [0, 0, 0, 0] }, 0.02, 0.3, E.out);
         // the sheet, in glass, over the phone's corner; its title
-        clipIn(q('card'), 0.16, 0.12, [0, 100, 0, 0]);
+        tl.from(q('card'), { clip: notch(32, [0, 100, 0, 0]) }).to(q('card'), { clip: notch(32) }, 0.16, 0.12, E.out);
         tl.type(q('hd.kova'), 0.22, 0.05);
         tl.type(q('hd.grid'), 0.27, 0.04);
         tl.from(q('hd.rule'), { sx: 0 }).to(q('hd.rule'), { sx: 1 }, 0.24, 0.16, E.out);

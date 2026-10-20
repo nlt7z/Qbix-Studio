@@ -4060,3 +4060,22 @@ input:not([type='checkbox']):not([type='radio']):focus-visible, textarea:focus-v
 .pw-hero-figure .block-figure { max-height: 70vh; }
 /* A scene's box on a sub-page: wider than tall where its drawing is. */
 .block-figure--wide { aspect-ratio: 4 / 3; }
+
+/* --- corners: one cut off on the diagonal ----------------------------------------
+   The site's corners are square; the one that matters is cut, top right (where
+   the ↗ of a button points). `.cut` takes the corner off. `.notch` takes it off
+   but keeps the edge round it as two hairlines, so the corner is still drawn:
+   the fill stops on the diagonal, the outline doesn't. --cut sets the size.
+   A notch's lines are the element's own edge (its fill, or its border), so a
+   solid block draws them in its own colour and a glass pane in its hairline. */
+.cut { clip-path: polygon(0 0, calc(100% - var(--cut, 12px)) 0, 100% var(--cut, 12px), 100% 100%, 0 100%); }
+.notch {
+  clip-path: polygon(evenodd,
+    0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    calc(100% - var(--cut, 16px) + 1px) 1px, calc(100% - 1px) 1px, calc(100% - 1px) calc(var(--cut, 16px) - 1px), calc(100% - var(--cut, 16px) + 1px) 1px,
+    0 0);
+}
+
+/* --- the homepage's lime: the logo, and the nav over a lime chapter -------------- */
+body:has(.story) .topnav-fixed:not([data-theme='light']) .topnav-logo { filter: none; }
+.topnav-fixed[data-ground='lime'].is-scrolled { background: var(--signal); }

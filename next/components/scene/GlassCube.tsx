@@ -50,7 +50,8 @@ uniform vec3 uC[8];      // piece centres (cube space)
 uniform mat3 uRi[8];     // piece inverse rotations (cube space -> piece space)
 uniform float uH;        // half size of a piece
 uniform float uR;        // the radius its polished edges are rounded to
-uniform float uTone;     // 0 black page, 1 paper
+uniform float uTone;     // 0 black page, 1 paper (or lime)
+uniform float uLimePage; // 1 on lime: the frost and the core are white
 uniform vec3 uCore;      // the core's colour
 uniform float uGlow;     // how strongly it shines
 uniform float uDist;     // camera distance
@@ -220,10 +221,11 @@ vec4 shade(vec2 fc) {
     + vec3(0.85, 0.9, 1.0) * inner * 0.2
     + vec3(refl) * F;
   float aD = clamp((1.0 - exp(-1.4 * thick)) * 0.6 + F * 0.9 + 0.3 * coreSeen, 0.0, 1.0);
-  // paper: clear, cool glass that darkens the page a touch, with the lime as a colour, not a light
-  vec3 tint = vec3(0.8, 0.84, 0.87);
-  float bodyP = (1.0 - exp(-1.0 * thick)) * 0.36;
-  float limeP = 0.8 * coreSeen + 0.35 * cloud + 0.6 * seam + 0.5 * facing;
+  // paper: clear, cool glass that darkens the page a touch, with the lime as a colour, not a light;
+  // on lime: white frost that pales the lime behind it, round a white core (the lime, the frost, the light)
+  vec3 tint = mix(vec3(0.8, 0.84, 0.87), vec3(1.0), uLimePage);
+  float bodyP = (1.0 - exp(-1.0 * thick)) * mix(0.36, 0.5, uLimePage) * (1.0 - 0.7 * coreSeen * uLimePage);
+  float limeP = mix(0.8 * coreSeen + 0.35 * cloud + 0.6 * seam + 0.5 * facing, 1.1 * coreSeen + 0.2 * cloud + 0.35 * seam + 0.3 * facing, uLimePage);
   float aP = clamp(bodyP + F * 0.9 + limeP + inner * 0.14, 0.0, 1.0);
   vec3 colP = tint * bodyP
     + uCore * limeP * mix(0.55, 1.0, uGlow)
@@ -265,7 +267,7 @@ export default function GlassCube({
     if (!gl) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const fine = window.matchMedia('(pointer: fine)').matches;
-    const tone = () => (canvas.closest<HTMLElement>('[data-tone]')?.dataset.tone === 'paper' ? 1 : 0);
+    const page = () => canvas.closest<HTMLElement>('[data-tone]')?.dataset.tone;
 
     /* the program */
     const sh = (type: number, src: string) => {
@@ -292,7 +294,7 @@ export default function GlassCube({
     gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
     const U = (n: string) => gl.getUniformLocation(prog, n);
     const uRes = U('uRes'), uView = U('uView'), uC = U('uC'), uRi = U('uRi'), uH = U('uH'), uR = U('uR');
-    const uTone = U('uTone'), uCore = U('uCore'), uGlow = U('uGlow'), uDist = U('uDist'), uTanF = U('uTanF'), uAA = U('uAA');
+    const uTone = U('uTone'), uLimePage = U('uLimePage'), uCore = U('uCore'), uGlow = U('uGlow'), uDist = U('uDist'), uTanF = U('uTanF'), uAA = U('uAA');
     const FOV = (20 * Math.PI) / 180;
     gl.uniform1f(uH, 0.465);
     gl.uniform1f(uR, 0.06);
@@ -300,7 +302,6 @@ export default function GlassCube({
     gl.uniform1i(uAA, fine ? 4 : 2);
     gl.uniform1f(uDist, 15);
     gl.uniform1f(uTanF, Math.tan(FOV / 2));
-    gl.uniform3fv(uCore, lime ? [0.72, 1.0, 0.0] : [0.85, 0.86, 0.84]);
 
     /* the pieces, solved: one in each octant */
     const pieces: Piece[] = [];
@@ -355,7 +356,10 @@ export default function GlassCube({
     const draw = (now: number) => {
       gl.viewport(0, 0, W, H);
       gl.uniform2f(uRes, W, H);
-      gl.uniform1f(uTone, tone());
+      const tone = page();
+      gl.uniform1f(uTone, tone === 'paper' || tone === 'lime' ? 1 : 0);
+      gl.uniform1f(uLimePage, tone === 'lime' ? 1 : 0);
+      gl.uniform3fv(uCore, tone === 'lime' ? [1.0, 1.0, 1.0] : lime ? [0.72, 1.0, 0.0] : [0.85, 0.86, 0.84]);
       // the view: a three-quarter view from above, leaning toward the pointer
       const yaw = -0.62 + leanS.x * 0.16, pitch = 0.5 + leanS.y * 0.08;
       const view = mul(rotAxis(0, pitch), rotAxis(1, yaw));

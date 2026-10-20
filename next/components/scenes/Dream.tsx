@@ -329,7 +329,7 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
       <div data-k="lime" className="a dream-lime" style={{ left: C.at.x, top: C.at.y }}>
         <span data-k="lime.c1" className="dream-trail" style={{ left: -32, top: 'calc(100% + 24px)', width: 8, height: 8 }} />
         <span data-k="lime.c0" className="dream-trail" style={{ left: -18, top: 'calc(100% + 6px)', width: 14, height: 14 }} />
-        <span data-k="lime.body" className="dream-lime-body">
+        <span data-k="lime.body" className="dream-lime-body notch">
           <span className="dream-lime-txt">
             {C.lime[0]}
             <br />

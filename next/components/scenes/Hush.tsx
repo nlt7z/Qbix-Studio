@@ -1,7 +1,7 @@
 'use client';
 
 import Scene from '@/components/scene/Scene';
-import { A, T, Cursor, Headphones, Lock, Check, Play } from '@/components/scene/kit';
+import { A, T, Cursor, Headphones, Lock, Check, Play, notch } from '@/components/scene/kit';
 import { E } from '@/lib/scene/timeline';
 
 /**
@@ -140,7 +140,7 @@ export default function Hush() {
         });
         // the code, written beside it as soon as its window is in
         const ed = q('ed');
-        tl.from(ed, { x: 24, clip: 'inset(0% 0% 0% 100% round 10px)' }).to(ed, { x: 0, clip: OPEN(10) }, 1.72, 0.1, E.out);
+        tl.from(ed, { x: 24, clip: notch(24, [0, 0, 0, 100]) }).to(ed, { x: 0, clip: notch(24, [0, 0, 0, 0], 64) }, 1.72, 0.1, E.out);
         const lines = q.all('code.');
         const total = CODE.reduce((n, [, c]) => n + Math.max(1, c.length), 0);
         let at = 1.76;
@@ -158,7 +158,7 @@ export default function Hush() {
           .to(cur, { x: 742, y: 560, o: 0 }, 2.26, 0.16, E.in);
         tl.from(q('ed.pub'), { bg: '#f4f5f2' }).to(q('ed.pub'), { bg: 'rgba(244, 245, 242, 0.55)' }, 2.12, 0.02, E.lin);
         tl.from(q('ed.bar'), { sx: 0 }).to(q('ed.bar'), { sx: 1 }, 2.14, 0.1, E.soft);
-        tl.to(ed, { x: 24, clip: 'inset(0% 0% 0% 100% round 10px)' }, 2.24, 0.14, E.in);
+        tl.to(ed, { x: 24, clip: notch(24, [0, 0, 0, 100]) }, 2.24, 0.14, E.in);
         // the address: selected, then hush.audio typed in, behind a lock
         tl.from(q('url.sel'), { sx: 0 }).to(q('url.sel'), { sx: 1 }, 2.28, 0.05, E.soft);
         tl.to(q('url.old'), { o: 0 }, 2.35, 0.01, E.lin).to(q('url.sel'), { o: 0 }, 2.35, 0.01, E.lin);
@@ -167,7 +167,7 @@ export default function Hush() {
         tl.from(q('live'), { clip: [0, 100, 0, 0] }).to(q('live'), { clip: [0, 0, 0, 0] }, 2.52, 0.08, E.out);
         // and the phone has it too
         tl.from(q('phone'), { y: 90, clip: 'inset(0% 0% 100% 0% round 30px)' }).to(q('phone'), { y: 0, clip: OPEN(30) }, 2.42, 0.28, E.out);
-        tl.from(q('toast'), { y: 14, clip: 'inset(100% 0% 0% 0% round 8px)' }).to(q('toast'), { y: 0, clip: 'inset(0% 0% 0% 0% round 8px)' }, 2.64, 0.14, E.out);
+        tl.from(q('toast'), { y: 14, clip: notch(12, [100, 0, 0, 0]) }).to(q('toast'), { y: 0, clip: notch(12) }, 2.64, 0.14, E.out);
       }}
     >
       {/* --- the site's window (its words and parts are laid over it, so the board's pieces can fly in) --- */}

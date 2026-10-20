@@ -58,6 +58,8 @@ export default function TopNav() {
   const firstLabel = forBusiness ? 'Tell us what you need' : 'Tell us your idea';
   const [active, setActive] = useState<string | null>(null);
   const [navTheme, setNavTheme] = useState<'dark' | 'light'>('dark');
+  // A lime section wears the light skin on a lime bar.
+  const [lime, setLime] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [scrolling, setScrolling] = useState(false);
@@ -114,14 +116,13 @@ export default function TopNav() {
         if (r.top <= line + 8 && r.bottom > line + 8) current = el.id;
       }
       setActive(current);
-      let theme: 'dark' | 'light' = 'dark';
+      let skin = 'dark';
       for (const el of els) {
         const r = el.getBoundingClientRect();
-        if (r.top <= line && r.bottom >= line) {
-          theme = el.getAttribute('data-nav-theme') === 'light' ? 'light' : 'dark';
-        }
+        if (r.top <= line && r.bottom >= line) skin = el.getAttribute('data-nav-theme') ?? 'dark';
       }
-      setNavTheme(theme);
+      setNavTheme(skin === 'light' || skin === 'lime' ? 'light' : 'dark');
+      setLime(skin === 'lime');
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -173,6 +174,7 @@ export default function TopNav() {
     <nav
       className={`topnav-fixed ${scrolled ? 'is-scrolled' : ''} ${scrolling ? 'is-scrolling' : ''}`}
       data-theme={navTheme}
+      data-ground={lime ? 'lime' : undefined}
       aria-label="primary"
     >
       <a
