@@ -23,7 +23,7 @@ export function BidTable({ k = 'bid', lime = true }: { k?: string; lime?: boolea
   return (
     <div className="bk">
       <div className="bk-lot">
-        <img className="bk-photo" src="/art/container.webp" alt="" draggable={false} decoding="async" />
+        <img className="bk-photo" src="/art/container.webp" alt="" draggable={false} loading="lazy" decoding="async" />
         {/* blind: frosted, but for the slit */}
         <span className="bk-frost bk-frost--l" />
         <span className="bk-frost bk-frost--r" />
@@ -61,7 +61,7 @@ export function BidTable({ k = 'bid', lime = true }: { k?: string; lime?: boolea
               {p.seed ? (
                 <Flow count={70} seed={p.seed} ground="28, 30, 34" alpha={0.9} scale={0.14} speed={1.3} />
               ) : (
-                <img src="/art/you.webp" alt="" draggable={false} decoding="async" />
+                <img src="/art/you.webp" alt="" draggable={false} loading="lazy" decoding="async" />
               )}
             </i>
             <span className="bk-who">

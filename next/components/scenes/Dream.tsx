@@ -17,8 +17,8 @@ import { E } from '@/lib/scene/timeline';
  *     thought's trail goes in, and it travels up out of the window and then
  *     tucks its edge under the bar's corner: pinned, the lime glowing through
  *     the glass. The thing it became: Bid King's table, drawn (for AI teams),
- *     or the practice's calm homepage, whose lamp is turned on once it's
- *     pinned (for business).
+ *     or the practice's calm homepage, its office photographed, the shade
+ *     over it lifting once the idea is pinned (for business).
  * The ideas float inside the window's span, so each falls straight into it;
  * the lime one moves only once they are gone, so nothing crosses its way.
  */
@@ -107,40 +107,6 @@ function Bubble({ k, idea }: { k: string; idea: Idea }) {
   );
 }
 
-/**
- * The calm room in the practice's picture, flat: a floor, a rug, a landscape on the wall, a floor
- * lamp, an armchair (its parts parted by gaps of the wall's colour), a plant. The lamp's light is
- * its own layer (it's turned on when the idea is pinned).
- */
-function Room() {
-  const ink = '#121417';
-  return (
-    <svg width="268" height="262" viewBox="0 0 268 262" aria-hidden>
-      <rect x="0" y="206" width="268" height="56" fill={ink} fillOpacity="0.045" />
-      <rect x="0" y="206" width="268" height="1" fill={ink} fillOpacity="0.12" />
-      <ellipse cx="128" cy="229" rx="94" ry="8" fill={ink} fillOpacity="0.07" />
-      <rect x="97" y="44" width="66" height="50" fill="#fff" stroke={ink} strokeWidth="2" />
-      <path d="M100 87 L115 74 L125 81 L139 67 L160 86 L160 91 L100 91 Z" fill={ink} fillOpacity="0.16" />
-      <path d="M213 60 L235 60 L242 86 L206 86 Z" fill={ink} />
-      <rect x="223" y="86" width="2" height="124" fill={ink} />
-      <rect x="213" y="208" width="22" height="4" rx="1" fill={ink} />
-      <g style={{ stroke: 'var(--sunk)', strokeWidth: 2.5 }}>
-        <path d="M84 122 Q84 104 102 104 L158 104 Q176 104 176 122 L176 176 L84 176 Z" fill={ink} stroke="none" />
-        <rect x="86" y="166" width="88" height="30" rx="9" fill={ink} />
-        <rect x="66" y="144" width="28" height="58" rx="13" fill={ink} />
-        <rect x="166" y="144" width="28" height="58" rx="13" fill={ink} />
-      </g>
-      <rect x="72" y="200" width="116" height="7" rx="2" fill={ink} />
-      <path d="M80 206 L86 206 L84 217 L81 217 Z" fill={ink} />
-      <path d="M174 206 L180 206 L179 217 L176 217 Z" fill={ink} />
-      <path d="M36 152 C 30 126 32 102 38 80 C 44 102 46 126 42 152 Z" fill={ink} />
-      <path d="M43 154 C 46 130 52 114 62 100 C 62 122 56 140 49 156 Z" fill={ink} fillOpacity="0.8" />
-      <path d="M33 154 C 26 136 20 124 12 114 C 18 134 22 146 28 158 Z" fill={ink} fillOpacity="0.8" />
-      <path d="M24 156 L56 156 L52 208 L28 208 Z" fill={ink} />
-    </svg>
-  );
-}
-
 export default function Dream({ biz = false }: { biz?: boolean }) {
   const C = biz ? BIZ : AI;
 
@@ -206,8 +172,8 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
           if (lime.style.zIndex !== z) lime.style.zIndex = z;
         });
 
-        /* pinned: the lamp in the practice's room is turned on */
-        if (biz) tl.from(q('pg.light'), { clip: [0, 0, 100, 0] }).to(q('pg.light'), { clip: [0, 0, 0, 0] }, 1.79, 0.12, E.out);
+        /* pinned: the shade over the practice's office lifts */
+        if (biz) tl.from(q('pg.shade'), { clip: [0, 0, 0, 0] }).to(q('pg.shade'), { clip: [0, 0, 100, 0] }, 1.79, 0.16, E.soft);
       }}
     >
       {/* --- the ideas (under the window: they're pulled down into it) --- */}
@@ -265,13 +231,9 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
                 Book a free consultation
               </A>
               <A x={352} y={66} w={268} h={262} c="sunk dream-room">
-                {/* the lamp's light (turned on when the idea is pinned), under the room */}
-                <A k="pg.light" x={197} y={86} w={54} h={84}>
-                  <svg width="54" height="84" viewBox="0 0 54 84" aria-hidden>
-                    <path d="M11 0 L43 0 L54 84 L0 84 Z" fill="#fff" fillOpacity="0.8" />
-                  </svg>
-                </A>
-                <Room />
+                <img src="/art/office.webp" alt="" draggable={false} loading="lazy" decoding="async" />
+                {/* the shade, drawn down until the idea is pinned */}
+                <A k="pg.shade" x={0} y={0} w={268} h={262} c="dream-shade" />
               </A>
             </div>
           ) : (

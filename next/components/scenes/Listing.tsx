@@ -4,6 +4,7 @@ import '@/app/scenes-listing.css';
 import type { ReactNode } from 'react';
 import Scene, { type Pick } from '@/components/scene/Scene';
 import { A, T, Cursor, Caret, Check } from '@/components/scene/kit';
+import { Pictures, usePictures } from '@/components/scene/pictures';
 import { E, type Props, type Timeline } from '@/lib/scene/timeline';
 
 /**
@@ -16,6 +17,10 @@ import { E, type Props, type Timeline } from '@/lib/scene/timeline';
  * kit's own page the tour goes on: the editable copy opens beside the flyer
  * and a new price typed into it rolls over on the flyer; then a change asked
  * for in a message lands on the flyer's open house line.
+ *
+ * On the business homepage the house, its kitchen, its street and its door are
+ * photographs (components/scene/pictures.tsx), laid in the drawings' own
+ * units, so every crop of them is the same crop of the photograph.
  *
  * Everything printed or posted is ink on paper, in either tone. One lime per
  * state, handed on as the story moves: the flyer's tag; the Just Listed post's
@@ -178,41 +183,65 @@ function MapArt() {
 
 type ArtProps = { k?: string; vb?: string; w: number; h: number; line?: boolean };
 
-function Art({ k, vb, w, h, line, base, children }: ArtProps & { base: string; children: ReactNode }) {
+/** A drawing's photograph: laid over the drawing's whole frame (the base viewBox), cropped to fill it. */
+type Photo = { src: string; align?: string; over?: ReactNode };
+
+function Art({ k, vb, w, h, line, base, photo, children }: ArtProps & { base: string; photo: Photo; children: ReactNode }) {
+  const pics = usePictures();
+  const [, , bw, bh] = base.split(' ').map(Number);
   return (
     <svg
       data-k={k}
-      className={`lst-art${line ? ' lst-art--line' : ''}`}
+      className={`lst-art${line ? ' lst-art--line' : ''}${pics ? ' lst-art--photo' : ''}`}
       width={w}
       height={h}
       viewBox={vb ?? base}
       preserveAspectRatio="xMidYMid slice"
       aria-hidden
     >
-      {children}
+      {pics ? (
+        <>
+          <image href={`/art/${photo.src}.webp`} width={bw} height={bh} preserveAspectRatio={`${photo.align ?? 'xMidYMid'} slice`} />
+          {photo.over}
+        </>
+      ) : (
+        children
+      )}
     </svg>
   );
 }
 const House = (p: ArtProps) => (
-  <Art {...p} base="0 0 400 240">
+  <Art {...p} base="0 0 400 240" photo={{ src: 'house', align: 'xMidYMax' }}>
     <HouseArt />
   </Art>
 );
 const Kitchen = (p: ArtProps) => (
-  <Art {...p} base="0 0 240 240">
+  <Art {...p} base="0 0 240 240" photo={{ src: 'kitchen', align: 'xMaxYMid' }}>
     <KitchenArt />
   </Art>
 );
 const Door = (p: ArtProps) => (
-  <Art {...p} base="0 0 113 240">
+  <Art {...p} base="0 0 113 240" photo={{ src: 'door' }}>
     <DoorArt />
   </Art>
 );
+// the street from above, the house pinned on it
+const PIN = (
+  <g className="lst-pin">
+    <path d="M118 121c-8.4-9.5-12.7-15.9-12.7-21.4a12.7 12.7 0 0 1 25.4 0c0 5.5-4.3 11.9-12.7 21.4Z" />
+    <circle cx="118" cy="99.6" r="4.6" />
+  </g>
+);
 const Hood = (p: ArtProps) => (
-  <Art {...p} base="0 0 240 240">
+  <Art {...p} base="0 0 240 240" photo={{ src: 'hood', over: PIN }}>
     <MapArt />
   </Art>
 );
+
+/** A shot in the video, photographed: it fills its frame (it pushes in from its middle). */
+function Shot({ k, src, pos }: { k: string; src: string; pos?: string }) {
+  return <img data-k={k} className="lst-shot" src={`/art/${src}.webp`} alt="" draggable={false} loading="lazy" decoding="async" style={pos ? { objectPosition: pos } : undefined} />;
+}
 
 /** A QR code, drawn: 21 x 21 modules, its three finders, timing rows, and the rest a fixed scatter. */
 const QR_PATH = (() => {
@@ -461,17 +490,18 @@ function SquarePost({ k, art, label }: { k: string; art: ReactNode; label: strin
 /** The 30-second video on a phone: three pictures, story bars, a running time, captions. */
 function Reel({ k, x, y, tc = '0:00', lime = false }: { k: string; x: number; y: number; tc?: string; lime?: boolean }) {
   const W = PHONE.w - 14, H = PHONE.h - 14;
+  const pics = usePictures();
   return (
     <A k={k} x={x} y={y} w={PHONE.w} h={PHONE.h} r={32} c="phone">
-      <div className="phone-screen lst-reel" style={{ ['--r' as string]: '25px' }}>
+      <div className={`phone-screen lst-reel${pics ? ' lst-reel--photo' : ''}`} style={{ ['--r' as string]: '25px' }}>
         <A k={`${k}.f1`} x={0} y={0} w={W} h={H} c="lst-frame">
-          <House k={`${k}.a1`} vb="106 -80 200 425" w={W} h={H} />
+          {pics ? <Shot k={`${k}.a1`} src="house" pos="70% 50%" /> : <House k={`${k}.a1`} vb="106 -80 200 425" w={W} h={H} />}
         </A>
         <A k={`${k}.f2`} x={0} y={0} w={W} h={H} c="lst-frame">
-          <Kitchen k={`${k}.a2`} vb="43 -86 154 327" w={W} h={H} />
+          {pics ? <Shot k={`${k}.a2`} src="kitchen-v" pos="50% 72%" /> : <Kitchen k={`${k}.a2`} vb="43 -86 154 327" w={W} h={H} />}
         </A>
         <A k={`${k}.f3`} x={0} y={0} w={W} h={H} c="lst-frame">
-          <Door k={`${k}.a3`} w={W} h={H} />
+          {pics ? <Shot k={`${k}.a3`} src="door" pos="40% 60%" /> : <Door k={`${k}.a3`} w={W} h={H} />}
         </A>
         <div className="phone-status lst-reel-status">
           <span>9:41</span>
@@ -862,17 +892,19 @@ function buildKit(q: Pick, tl: Timeline, H: number, tour: boolean) {
    The scenes
    ============================================================================= */
 
-/** The homepage (for business): the flyer, its five posts, its video. */
+/** The homepage (for business): the flyer, its five posts, its video, made from photographs. */
 export function ListingStory() {
   return (
     <Scene
       n={3}
       w={720}
       h={560}
-      label="A flyer for 1428 Alder Street prints, front and back; its pictures are cropped into five social posts; then its 30-second video plays on a phone"
+      label="A flyer for 1428 Alder Street prints, front and back, with photographs of the house; the photographs are cropped into five social posts; then its 30-second video plays on a phone"
       build={(q, tl) => buildKit(q, tl, 560, false)}
     >
-      <Kit H={560} tour={false} />
+      <Pictures.Provider value>
+        <Kit H={560} tour={false} />
+      </Pictures.Provider>
     </Scene>
   );
 }

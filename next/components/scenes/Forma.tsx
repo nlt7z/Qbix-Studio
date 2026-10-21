@@ -52,7 +52,7 @@ const PRODUCTS: [keyof typeof T, string, string][] = [
 ];
 
 function Img({ src, pos }: { src: string; pos?: string }) {
-  return <img className="fm-img" src={`/art/${src}.webp`} alt="" draggable={false} decoding="async" style={pos ? { objectPosition: pos } : undefined} />;
+  return <img className="fm-img" src={`/art/${src}.webp`} alt="" draggable={false} loading="lazy" decoding="async" style={pos ? { objectPosition: pos } : undefined} />;
 }
 
 export default function Forma() {

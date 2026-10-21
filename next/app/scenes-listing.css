@@ -35,6 +35,11 @@
 [data-tone='dark'] .scn .lst-sheet { background: #f4f5f2; }
 [data-tone='dark'] .scn .lst-sheet::after { box-shadow: none; }
 .scn .lst-photo { overflow: hidden; }
+/* photographed (the business homepage): In Escrow is the house in black and white on ink; the pin on the street is white */
+.scn .lst-art--photo.lst-art--line image { filter: grayscale(1) contrast(1.15) brightness(0.9); opacity: 0.62; }
+.scn .lst-pin path { fill: #fff; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45)); }
+.scn .lst-pin circle { fill: #121417; }
+.scn .lst-shot { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; object-fit: cover; transform-origin: 50% 50%; user-select: none; }
 .scn .lst-tag {
   display: inline-flex; align-items: center; height: 20px; padding: 0 7px 0 8px;
   background: var(--lime); color: var(--on-lime);
@@ -121,6 +126,10 @@
   background: #121417; color: #f4f5f2; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.04em; font-variant-numeric: tabular-nums;
 }
 .scn .lst-tc--lime { background: var(--lime); color: var(--on-lime); }
+/* photographed: the reel's own marks are white over the picture, as on a phone */
+.scn .lst-reel--photo .lst-reel-status, .scn .lst-reel--photo .lst-reel-who { color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.42); }
+.scn .lst-reel--photo .lst-bars i { background: rgba(255, 255, 255, 0.36); }
+.scn .lst-reel--photo .lst-bars b { background: #fff; }
 /* the video's captions: frosted ink over the picture */
 .scn .lst-cap {
   z-index: 9; padding: 6px 8px 7px; color: #f4f5f2; font-size: 18px; font-weight: 600; line-height: 1.05; letter-spacing: -0.01em;

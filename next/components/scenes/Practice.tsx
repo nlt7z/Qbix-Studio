@@ -4,6 +4,7 @@ import '@/app/scenes-practice.css';
 import type { CSSProperties, ReactNode } from 'react';
 import Scene from '@/components/scene/Scene';
 import { A, T, Cursor, Lock } from '@/components/scene/kit';
+import { Pictures, usePictures } from '@/components/scene/pictures';
 import { E, type Timeline } from '@/lib/scene/timeline';
 
 /**
@@ -11,7 +12,9 @@ import { E, type Timeline } from '@/lib/scene/timeline';
  * (Dana Reyes, LMFT, therapy in Portland and online), and its calm homepage.
  * The site, its phone and its room are drawn once, at the site's own size;
  * the three scenes use the same drawings (the tour and the hero zoom the site
- * down, so its type stays type).
+ * down, so its type stays type). On the business homepage the room is a
+ * photograph of an office (components/scene/pictures.tsx), laid in the
+ * drawing's own units, so the phone's crop of it is the same crop.
  *
  * PracticeStory (the business homepage, dark):
  * 1 · the practice's old site (not secure, crowded, 2019), and over it, on
@@ -82,6 +85,13 @@ const PH_SHUT = 'inset(0% 0% 100% 0% round 30px)';
  */
 function Room({ vb = '0 0 256 220' }: { vb?: string }) {
   const ink = (a: number) => `rgba(18,20,23,${a})`;
+  // photographed: the office, its chair and plants low in the frame (the photograph runs from 150 above)
+  if (usePictures())
+    return (
+      <svg className="prc-room" viewBox={vb} preserveAspectRatio="xMidYMid slice" aria-hidden>
+        <image href="/art/office.webp" x={0} y={-150} width={256} height={384} preserveAspectRatio="xMidYMid slice" />
+      </svg>
+    );
   return (
     <svg className="prc-room" viewBox={vb} preserveAspectRatio="xMidYMid slice" aria-hidden>
       <rect x="-40" y="-40" width="336" height="300" fill="#fff" />
@@ -497,51 +507,53 @@ export function PracticeStory() {
         tl.from(q('phone'), { y: 90, clip: PH_SHUT }).to(q('phone'), { y: 0, clip: PH_OPEN }, 2.5, 0.36, E.out);
       }}
     >
-      <A k="grp" x={G.x} y={G.y} w={SW} h={SH} c="prc-light">
-        <A k="frame" x={0} y={0} w={SW} h={SH} c="prc-frame" />
-        <Bar old draft />
-        <OldSite />
-        {/* the questionnaire: frosted, over the old site */}
-        <A k="q.card" x={F.x} y={F.y} w={F.w} h={F.h} c="glass prc-glass" />
-        <A k="f.head" x={F.x} y={F.y} w={F.w} h={36} c="prc-fhead">
-          <b>About your practice</b>
-          <span>4 questions · 15 min</span>
-        </A>
-        <A k="f.hline" x={F.x} y={F.y + 36} w={F.w} h={1} c="prc-barline" />
-        {LABELS.map((s, i) => (
-          <T key={s} k={`f.l${i}`} x={F.x + 20} y={FR(i).lab} c="prc-fl">
-            {s}
+      <Pictures.Provider value>
+        <A k="grp" x={G.x} y={G.y} w={SW} h={SH} c="prc-light">
+          <A k="frame" x={0} y={0} w={SW} h={SH} c="prc-frame" />
+          <Bar old draft />
+          <OldSite />
+          {/* the questionnaire: frosted, over the old site */}
+          <A k="q.card" x={F.x} y={F.y} w={F.w} h={F.h} c="glass prc-glass" />
+          <A k="f.head" x={F.x} y={F.y} w={F.w} h={36} c="prc-fhead">
+            <b>About your practice</b>
+            <span>4 questions · 15 min</span>
+          </A>
+          <A k="f.hline" x={F.x} y={F.y + 36} w={F.w} h={1} c="prc-barline" />
+          {LABELS.map((s, i) => (
+            <T key={s} k={`f.l${i}`} x={F.x + 20} y={FR(i).lab} c="prc-fl">
+              {s}
+            </T>
+          ))}
+          {LABELS.map((s, i) => (
+            <A key={s} k={`f.u${i}`} x={F.x + 20} y={FR(i).und} w={F.w - 40} h={1} c="prc-u" />
+          ))}
+          <A k="f.rule" x={F.x} y={F.y + 264} w={F.w} h={1} c="prc-barline" style={{ transformOrigin: 'left center' }} />
+          <T k="f.count" x={F.x + 20} y={SEND.y + 9} c="prc-fl">
+            4 of 4 answered
           </T>
-        ))}
-        {LABELS.map((s, i) => (
-          <A key={s} k={`f.u${i}`} x={F.x + 20} y={FR(i).und} w={F.w - 40} h={1} c="prc-u" />
-        ))}
-        <A k="f.rule" x={F.x} y={F.y + 264} w={F.w} h={1} c="prc-barline" style={{ transformOrigin: 'left center' }} />
-        <T k="f.count" x={F.x + 20} y={SEND.y + 9} c="prc-fl">
-          4 of 4 answered
-        </T>
-        <A k="f.send" x={SEND.x} y={SEND.y} w={SEND.w} h={SEND.h} c="prc-send">
-          Send answers
-        </A>
-        {/* the new site (the name, the specialties and sessions are the answers; the photo is the old site's) */}
-        <SiteParts />
-        <T k="a.feel" x={F.x + 20} y={FR(1).ans} c="prc-ans prc-o">
-          Calm, warm, no jargon
-        </T>
-        {LABELS.map((s, i) => (
-          <A key={s} k={`cr.${i}`} x={F.x + 20} y={FR(i).ans + 1} w={2} h={21} c="caret prc-caret">
+          <A k="f.send" x={SEND.x} y={SEND.y} w={SEND.w} h={SEND.h} c="prc-send">
+            Send answers
+          </A>
+          {/* the new site (the name, the specialties and sessions are the answers; the photo is the old site's) */}
+          <SiteParts />
+          <T k="a.feel" x={F.x + 20} y={FR(1).ans} c="prc-ans prc-o">
+            Calm, warm, no jargon
+          </T>
+          {LABELS.map((s, i) => (
+            <A key={s} k={`cr.${i}`} x={F.x + 20} y={FR(i).ans + 1} w={2} h={21} c="caret prc-caret">
+              <i />
+            </A>
+          ))}
+          <A k="s.c1" x={S.h1a.x + 1} y={S.h1a.y + 7} w={2} h={32} c="caret prc-caret">
             <i />
           </A>
-        ))}
-        <A k="s.c1" x={S.h1a.x + 1} y={S.h1a.y + 7} w={2} h={32} c="caret prc-caret">
-          <i />
+          <A k="s.c2" x={S.h1b.x + 1} y={S.h1b.y + 7} w={2} h={32} c="caret prc-caret">
+            <i />
+          </A>
         </A>
-        <A k="s.c2" x={S.h1b.x + 1} y={S.h1b.y + 7} w={2} h={32} c="caret prc-caret">
-          <i />
-        </A>
-      </A>
-      <PhoneSite x={522} y={150} />
-      <Cursor />
+        <PhoneSite x={522} y={150} />
+        <Cursor />
+      </Pictures.Provider>
     </Scene>
   );
 }

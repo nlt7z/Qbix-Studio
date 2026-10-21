@@ -326,7 +326,7 @@ export default function Labs() {
               {WALL_PICS.map((row, r) =>
                 row.map(([src, pos], c) => (
                   <A key={src} x={cell(c, r).x} y={cell(c, r).y} w={WALL.w} h={WALL.h} c="labs-pic">
-                    <img src={`/art/${src}.webp`} alt="" draggable={false} decoding="async" style={pos ? { objectPosition: pos } : undefined} />
+                    <img src={`/art/${src}.webp`} alt="" draggable={false} loading="lazy" decoding="async" style={pos ? { objectPosition: pos } : undefined} />
                   </A>
                 )),
               )}
@@ -392,7 +392,7 @@ export default function Labs() {
               {/* a component drawn from it: a product card, one of the pictures in it */}
               <A k="st.card" x={SYS.x} y={236} w={160} h={136} c="labs-card-ui">
                 <span className="labs-card-pic">
-                  <img src="/art/cross.webp" alt="" draggable={false} decoding="async" />
+                  <img src="/art/cross.webp" alt="" draggable={false} loading="lazy" decoding="async" />
                 </span>
                 <span className="labs-card-row">
                   <span>
@@ -453,7 +453,7 @@ export default function Labs() {
                 </span>
                 <span className="labs-tb-k">Take 3 of 3</span>
                 <span className="labs-voice">
-                  <img src="/art/ava.webp" alt="" draggable={false} decoding="async" />
+                  <img src="/art/ava.webp" alt="" draggable={false} loading="lazy" decoding="async" />
                   <span>
                     <b>Ava</b>
                     <i>Warm, low</i>
@@ -516,9 +516,9 @@ export default function Labs() {
 
             {/* 4 · Interview Assistant: the call, and frosted over it the assistant and the captions */}
             <div className="labs-panel labs-call" style={{ top: 3 * CH, height: CH }}>
-              <img className="labs-cam" src="/art/sam.webp" alt="" draggable={false} decoding="async" />
+              <img className="labs-cam" src="/art/sam.webp" alt="" draggable={false} loading="lazy" decoding="async" />
               <A x={16} y={16} w={120} h={80} c="labs-self">
-                <img src="/art/you.webp" alt="" draggable={false} decoding="async" />
+                <img src="/art/you.webp" alt="" draggable={false} loading="lazy" decoding="async" />
                 <span>You</span>
               </A>
               <A x={148} y={16} h={30} c="glass labs-dark-glass labs-chip notch">
