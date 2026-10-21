@@ -127,9 +127,6 @@
   );
 }
 .ch[data-tone='lime']::before { content: ''; position: absolute; inset: 0; background: var(--signal); clip-path: var(--ch-shape); }
-/* what's drawn on the chapter (generative currents): cut to its shape, under the words */
-.ch-ground { position: absolute; inset: 0; z-index: 0; clip-path: var(--ch-shape); pointer-events: none; }
-.ch-ground .flow { display: block; width: 100%; height: 100%; }
 /* a generative drawing behind the words and the scene, pinned with them (under everything in the frame) */
 .ch-backdrop { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .ch-backdrop .gen { display: block; width: 100%; height: 100%; }
@@ -140,6 +137,17 @@
 .ch .btn-solid.cut:focus-visible { outline: 2px solid var(--ch-bg); outline-offset: -6px; }
 
 /* --- the hero chapter ------------------------------------------------------ */
+/* the core's field round the cube: wider than the cube's box, under it */
+.hero-field {
+  position: absolute;
+  inset: -10% -6%;
+  pointer-events: none;
+  /* it thins out into the page: no edge */
+  -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
+  mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
+}
+.hero-field .flow { display: block; width: 100%; height: 100%; }
+.ch--hero .glass-cube { position: relative; }
 .ch--hero .hero-title.hero-title--xl { font-size: clamp(40px, min(7vw, 11vh), 116px); }
 .ch--hero .hero-sub-mask { margin: clamp(16px, 2.6vh, 26px) 0 clamp(20px, 3.4vh, 32px); }
 .ch--hero .hero-sub { font-size: clamp(16px, 1.35vw, 20px); color: var(--ch-dim); }
@@ -193,6 +201,8 @@
   .ch--hero .ch-copy { width: min(52%, 760px); translate: 0 -55%; }
   .ch--hero .ch-stage { left: max(52%, calc(var(--edge) + var(--copy-w) + var(--stage-gap))); }
   .ch--hero .ch-band { position: absolute; left: var(--edge); right: var(--edge); bottom: clamp(20px, 4vh, 40px); }
+  /* the words over the cube's field */
+  .ch--hero .ch-copy, .ch--hero .ch-band { z-index: 2; }
   .ch--contact .ch-acts { margin-top: 26px; }
   /* the tab over the words, wherever they stand */
   .ch[data-tone='lime'][data-side='left'] { --tab-x: calc(100% - var(--edge) - var(--copy-w)); --tab-l: calc(var(--tab-x) - 32px); }
@@ -255,8 +265,9 @@
   /* the hero: the words, the cube, the studio band */
   .ch--hero .ch-frame { padding-top: calc(64px + 4vh); }
   .ch--hero .ch-copy { order: 1; padding: 26px var(--gutter) 0; }
-  .ch--hero .ch-stage { order: 2; height: 44svh; padding: 12px var(--gutter); }
+  .ch--hero .ch-stage { position: relative; order: 2; height: 44svh; padding: 12px var(--gutter); }
   .ch--hero .ch-band { order: 3; padding: 8px var(--gutter) 56px; background: var(--ch-bg); }
+  .ch--hero .ch-copy, .ch--hero .ch-band { position: relative; z-index: 2; }
   .ch-band { grid-template-columns: minmax(0, 1fr); }
   .ch-band > .studio, .ch-band > .marquee-block { grid-column: 1 / -1; }
 }

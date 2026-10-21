@@ -10,8 +10,7 @@ import Dream from '@/components/scenes/Dream';
 import { ListingStory } from '@/components/scenes/Listing';
 import { PracticeStory } from '@/components/scenes/Practice';
 import GlassCube from '@/components/scene/GlassCube';
-import Flow from '@/components/scene/Flow';
-import { Contours, Ridges } from '@/components/scene/Generative';
+import { Contours, Rings, Ridges } from '@/components/scene/Generative';
 import Marker from '@/components/Marker';
 import SplitText from '@/components/SplitText';
 import { useAudience } from '@/components/Audience';
@@ -25,10 +24,10 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
  * through the chapter, on the side it names in `side` (the words take the
  * other side). Tones alternate black and paper; the sign-off is lime, its
  * top edge cut like a folder's, a tab rising out of it over the words (`tab`;
- * `prev` is the tone round the tab; `ground`, what's drawn on it). Behind a
- * chapter's words and scene, pinned with them, is a generative drawing in its
- * tone's own kind: contours on paper, ridges on black (rising behind the
- * scene), currents on lime (`ground`). A chapter with `steps` has
+ * `prev` is the tone round the tab). Behind a chapter's words and scene,
+ * pinned with them, is a generative drawing in its tone's own kind: contours
+ * on paper, ridges on black (rising behind the scene), ripples on lime
+ * (spreading from the scene). A chapter with `steps` has
  * the state its scene is showing set on it, as `data-step`, which lights that
  * step (or that product).
  *
@@ -45,7 +44,6 @@ type ChapterProps = {
   tone: 'dark' | 'paper' | 'lime';
   prev?: 'dark' | 'paper';
   tab?: ReactNode;
-  ground?: ReactNode;
   side: 'left' | 'right';
   steps?: number;
   caps?: Cap[];
@@ -56,7 +54,7 @@ type ChapterProps = {
   foot?: ReactNode;
 };
 
-function Chapter({ id, scene, states, tone, prev, tab, ground, side, steps, caps, h, className = '', head, body, foot }: ChapterProps) {
+function Chapter({ id, scene, states, tone, prev, tab, side, steps, caps, h, className = '', head, body, foot }: ChapterProps) {
   // A chapter with several states is played by the scroll: it's as long as its moves need (80vh of
   // scroll each); on a phone its scene's runway is (see .ch-run in story.css).
   const moves = Math.max(0, states - 1);
@@ -75,18 +73,17 @@ function Chapter({ id, scene, states, tone, prev, tab, ground, side, steps, caps
       data-steps={steps}
       style={{ '--h': height, '--moves': moves } as CSSProperties}
     >
-      {ground && <div className="ch-ground">{ground}</div>}
       {tab && <div className="ch-tab">{tab}</div>}
       <div className="ch-frame">
-        {tone !== 'lime' && (
-          <div className="ch-backdrop">
-            {tone === 'paper' ? (
-              <Contours seed={seedOf(id)} alpha={0.12} levels={18} scale={240} speed={0.05} moves fps={12} density={1} />
-            ) : (
-              <Ridges seed={seedOf(id)} ink="184, 255, 0" bg="8, 9, 10" alpha={0.17} lines={40} amp={0.18} center={side === 'left' ? 0.3 : 0.7} spread={0.17} speed={0.12} moves fps={12} density={1} />
-            )}
-          </div>
-        )}
+        <div className="ch-backdrop">
+          {tone === 'paper' ? (
+            <Contours seed={seedOf(id)} alpha={0.12} levels={18} scale={240} speed={0.05} moves fps={12} density={1} />
+          ) : tone === 'dark' ? (
+            <Ridges seed={seedOf(id)} ink="184, 255, 0" bg="8, 9, 10" alpha={0.17} lines={40} amp={0.18} center={side === 'left' ? 0.3 : 0.7} spread={0.17} speed={0.12} moves fps={12} density={1} />
+          ) : (
+            <Rings seed={seedOf(id)} around=".ch-scene" ink="12, 19, 0" alpha={0.34} moves fps={20} />
+          )}
+        </div>
         {/* Beside the words; on a phone, pinned while the scroll plays it. */}
         <div className="ch-run" data-run={moves ? '' : undefined}>
           <div className="ch-stage">
@@ -370,7 +367,7 @@ export default function Story() {
         }
       />
 
-      {/* The sign-off, on lime, ink currents drawn over it: the glass cube, its core white. */}
+      {/* The sign-off, on lime, ripples spreading from the glass cube, its core white. */}
       <Chapter
         id="contact"
         scene={<GlassCube />}
@@ -378,7 +375,6 @@ export default function Story() {
         tone="lime"
         prev={ai ? 'dark' : 'paper'}
         tab={<span className="ch-kicker mono">Contact</span>}
-        ground={<Flow count={760} seed={3} ground="184, 255, 0" ink="12, 19, 0" alpha={0.16} scale={2.4} speed={0.6} density={0.6} />}
         side={ai ? 'right' : 'left'}
         h="160vh"
         className="ch--contact"
