@@ -7,11 +7,10 @@ import { scrolling } from '@/lib/scene/quiet';
 /**
  * Generative drawings on canvas, beside Flow (components/scene/Flow.tsx):
  * Contours (a topographic map of a noise field), Ridges (lines lifted into
- * peaks, each hiding the ones behind it), Rings (ripples spreading from
- * something that stands in the picture) and Halftone (a photograph as a field
- * of dots). Colours are 'r, g, b'. Each is drawn at its own device pixels (the
- * scene's zoom included) or at `density`, the first time it comes on the
- * screen; those that move are redrawn at a few frames a second while they're
+ * peaks, each hiding the ones behind it) and Halftone (a photograph as a
+ * field of dots). Colours are 'r, g, b'. Each is drawn at its own device
+ * pixels (the scene's zoom included) or at `density`, the first time it comes
+ * on the screen; those that move are redrawn at a few frames a second while they're
  * on the screen, the tab is open and the page isn't being scrolled, and are a
  * still for reduced motion.
  */
@@ -254,86 +253,6 @@ export function Ridges({
       }
     },
     { moves, fps, density },
-  );
-  return <canvas ref={ref} className={`gen ${className}`} aria-hidden />;
-}
-
-/* --- Rings: ripples spreading out from the middle of `around` ------------------
-   Each ring is a circle bent a little by the noise (more the further out it
-   is), born at the inner radius and fading as it spreads; every fourth one is
-   drawn heavier. On a transparent canvas, so it lies over its chapter. */
-export function Rings({
-  className = '',
-  seed = 5,
-  ink = '12, 19, 0',
-  alpha = 0.3,
-  around,
-  gap = 46,
-  inner = 150,
-  speed = 0.22,
-  moves = false,
-  fps = 24,
-}: {
-  className?: string;
-  seed?: number;
-  ink?: string;
-  alpha?: number;
-  /** the selector, in the same chapter frame, of what the rings spread from (default: the canvas's middle) */
-  around?: string;
-  /** css px between rings, and the radius they're born at */
-  gap?: number;
-  inner?: number;
-  /** rings a second */
-  speed?: number;
-  moves?: boolean;
-  fps?: number;
-}) {
-  const n = useRef(noise3(seed)).current;
-  const { ref } = useArt(
-    (g, W, H, k, t) => {
-      g.clearRect(0, 0, W, H);
-      // the middle: of what it spreads from, in the canvas's pixels
-      let cx = W / 2, cy = H / 2;
-      const el = around ? g.canvas.closest('.ch-frame')?.querySelector(around) : null;
-      if (el) {
-        const c = g.canvas.getBoundingClientRect(), r = el.getBoundingClientRect();
-        if (c.width) {
-          cx = ((r.left + r.width / 2 - c.left) * W) / c.width;
-          cy = ((r.top + r.height / 2 - c.top) * H) / c.height;
-        }
-      }
-      const G = gap * k, R0 = inner * k;
-      const far = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy));
-      const R1 = Math.min(far, R0 + G * 16);
-      const phase = (t * speed) % 1;
-      const count = Math.ceil((R1 - R0) / G) + 1;
-      const seg = 160;
-      g.lineJoin = 'round';
-      for (let i = 0; i < count; i++) {
-        const base = R0 + (i + phase) * G;
-        if (base > R1) break;
-        const u = (base - R0) / (R1 - R0);
-        // born, then fading as it spreads
-        const a = alpha * Math.min(1, (base - R0) / G) * Math.pow(1 - u, 1.6);
-        if (a < 0.01) continue;
-        const ring = Math.floor(i - Math.floor(t * speed));
-        const heavy = ((ring % 4) + 4) % 4 === 0;
-        const warp = (6 + base * 0.05) * k;
-        g.beginPath();
-        for (let j = 0; j <= seg; j++) {
-          const th = (j / seg) * Math.PI * 2;
-          const c = Math.cos(th), s = Math.sin(th);
-          const r = base + warp * n(c * 1.3, s * 1.3, base / (420 * k) + t * 0.05);
-          if (j) g.lineTo(cx + c * r, cy + s * r);
-          else g.moveTo(cx + c * r, cy + s * r);
-        }
-        g.closePath();
-        g.strokeStyle = `rgba(${ink}, ${heavy ? a : a * 0.6})`;
-        g.lineWidth = Math.max(1, k * (heavy ? 1.3 : 0.85));
-        g.stroke();
-      }
-    },
-    { moves, fps },
   );
   return <canvas ref={ref} className={`gen ${className}`} aria-hidden />;
 }

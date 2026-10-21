@@ -10,7 +10,7 @@ import Dream from '@/components/scenes/Dream';
 import { ListingStory } from '@/components/scenes/Listing';
 import { PracticeStory } from '@/components/scenes/Practice';
 import GlassCube from '@/components/scene/GlassCube';
-import { Contours, Rings, Ridges } from '@/components/scene/Generative';
+import { Contours, Ridges } from '@/components/scene/Generative';
 import Marker from '@/components/Marker';
 import SplitText from '@/components/SplitText';
 import { useAudience } from '@/components/Audience';
@@ -26,8 +26,8 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
  * top edge cut like a folder's, a tab rising out of it over the words (`tab`;
  * `prev` is the tone round the tab). Behind a chapter's words and scene,
  * pinned with them, is a generative drawing in its tone's own kind: contours
- * on paper, ridges on black (rising behind the scene), ripples on lime
- * (spreading from the scene). A chapter with `steps` has
+ * on paper, ridges on black (rising behind the scene); the lime is plain.
+ * A chapter with `steps` has
  * the state its scene is showing set on it, as `data-step`, which lights that
  * step (or that product).
  *
@@ -75,15 +75,15 @@ function Chapter({ id, scene, states, tone, prev, tab, side, steps, caps, h, cla
     >
       {tab && <div className="ch-tab">{tab}</div>}
       <div className="ch-frame">
-        <div className="ch-backdrop">
-          {tone === 'paper' ? (
-            <Contours seed={seedOf(id)} alpha={0.12} levels={18} scale={240} speed={0.05} moves fps={12} density={1} />
-          ) : tone === 'dark' ? (
-            <Ridges seed={seedOf(id)} ink="184, 255, 0" bg="8, 9, 10" alpha={0.17} lines={40} amp={0.18} center={side === 'left' ? 0.3 : 0.7} spread={0.17} speed={0.12} moves fps={12} density={1} />
-          ) : (
-            <Rings seed={seedOf(id)} around=".ch-scene" ink="12, 19, 0" alpha={0.34} moves fps={20} />
-          )}
-        </div>
+        {tone !== 'lime' && (
+          <div className="ch-backdrop">
+            {tone === 'paper' ? (
+              <Contours seed={seedOf(id)} alpha={0.12} levels={18} scale={240} speed={0.05} moves fps={12} density={1} />
+            ) : (
+              <Ridges seed={seedOf(id)} ink="184, 255, 0" bg="8, 9, 10" alpha={0.17} lines={40} amp={0.18} center={side === 'left' ? 0.3 : 0.7} spread={0.17} speed={0.12} moves fps={12} density={1} />
+            )}
+          </div>
+        )}
         {/* Beside the words; on a phone, pinned while the scroll plays it. */}
         <div className="ch-run" data-run={moves ? '' : undefined}>
           <div className="ch-stage">
@@ -367,7 +367,7 @@ export default function Story() {
         }
       />
 
-      {/* The sign-off, on lime, ripples spreading from the glass cube, its core white. */}
+      {/* The sign-off, on plain lime: the glass cube, its core white. */}
       <Chapter
         id="contact"
         scene={<GlassCube />}
