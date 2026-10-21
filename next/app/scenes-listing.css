@@ -35,10 +35,14 @@
 [data-tone='dark'] .scn .lst-sheet { background: #f4f5f2; }
 [data-tone='dark'] .scn .lst-sheet::after { box-shadow: none; }
 .scn .lst-photo { overflow: hidden; }
-/* photographed (the business homepage): In Escrow is the house in black and white on ink; the pin on the street is white */
-.scn .lst-art--photo.lst-art--line image { filter: grayscale(1) contrast(1.15) brightness(0.9); opacity: 0.62; }
-.scn .lst-pin path { fill: #fff; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45)); }
-.scn .lst-pin circle { fill: #121417; }
+/* the business homepage: photographs and generative pictures (a contour map, the house in dots, ridges) */
+.scn .lst-gen { position: absolute; inset: 0; display: block; }
+.scn .lst-gen .gen, .scn .lst-shot .gen { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.scn .lst-map { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scn .lst-road { fill: none; stroke: #f4f5f2; stroke-width: 4; stroke-linecap: square; }
+.scn .lst-road--s { stroke-width: 2.5; }
+.scn .lst-pin path { fill: #121417; }
+.scn .lst-pin circle { fill: #f4f5f2; }
 .scn .lst-shot { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; object-fit: cover; transform-origin: 50% 50%; user-select: none; }
 .scn .lst-tag {
   display: inline-flex; align-items: center; height: 20px; padding: 0 7px 0 8px;

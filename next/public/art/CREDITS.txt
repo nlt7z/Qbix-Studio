@@ -16,9 +16,6 @@ bottle.webp    https://unsplash.com/photos/SZzVJJm6Z4I
 calla.webp     https://unsplash.com/photos/sUfBdqe-I5U
 vase.webp      https://unsplash.com/photos/v6o0uSjFw7Q
 glass.webp     https://unsplash.com/photos/sof4ZmR007I
-house.webp     https://unsplash.com/photos/1XRV7Z4lhGo
-kitchen.webp   https://unsplash.com/photos/waqb5i0NrX8
-kitchen-v.webp https://unsplash.com/photos/cc0Gg3BegjE
-hood.webp      https://unsplash.com/photos/fEDg2pdtACo
-door.webp      https://unsplash.com/photos/_lfGDMDIJq0
-office.webp    https://unsplash.com/photos/wgdHqm0dsYs
+house.webp     https://unsplash.com/photos/4vioYQ9Nn9Y
+kitchen.webp   https://unsplash.com/photos/K-ndOjMfxKs
+office.webp    https://unsplash.com/photos/SRZcOAERBUQ

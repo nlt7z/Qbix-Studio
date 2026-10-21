@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { scrolling } from '@/lib/scene/quiet';
 
 type P = { x: number; y: number; life: number };
 
@@ -121,7 +122,8 @@ export default function Flow({
     const loop = () => {
       raf = 0;
       if (!seen || document.hidden || calm || !W) return;
-      step();
+      // still while the page is scrolled
+      if (!scrolling()) step();
       raf = requestAnimationFrame(loop);
     };
     const wake = () => {

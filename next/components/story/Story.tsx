@@ -11,6 +11,7 @@ import { ListingStory } from '@/components/scenes/Listing';
 import { PracticeStory } from '@/components/scenes/Practice';
 import GlassCube from '@/components/scene/GlassCube';
 import Flow from '@/components/scene/Flow';
+import { Contours, Ridges } from '@/components/scene/Generative';
 import Marker from '@/components/Marker';
 import SplitText from '@/components/SplitText';
 import { useAudience } from '@/components/Audience';
@@ -24,7 +25,10 @@ import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
  * through the chapter, on the side it names in `side` (the words take the
  * other side). Tones alternate black and paper; the sign-off is lime, its
  * top edge cut like a folder's, a tab rising out of it over the words (`tab`;
- * `prev` is the tone round the tab; `ground`, what's drawn on it). A chapter with `steps` has
+ * `prev` is the tone round the tab; `ground`, what's drawn on it). Behind a
+ * chapter's words and scene, pinned with them, is a generative drawing in its
+ * tone's own kind: contours on paper, ridges on black (rising behind the
+ * scene), currents on lime (`ground`). A chapter with `steps` has
  * the state its scene is showing set on it, as `data-step`, which lights that
  * step (or that product).
  *
@@ -74,6 +78,15 @@ function Chapter({ id, scene, states, tone, prev, tab, ground, side, steps, caps
       {ground && <div className="ch-ground">{ground}</div>}
       {tab && <div className="ch-tab">{tab}</div>}
       <div className="ch-frame">
+        {tone !== 'lime' && (
+          <div className="ch-backdrop">
+            {tone === 'paper' ? (
+              <Contours seed={seedOf(id)} alpha={0.12} levels={18} scale={240} speed={0.05} moves fps={12} density={1} />
+            ) : (
+              <Ridges seed={seedOf(id)} ink="184, 255, 0" bg="8, 9, 10" alpha={0.17} lines={40} amp={0.18} center={side === 'left' ? 0.3 : 0.7} spread={0.17} speed={0.12} moves fps={12} density={1} />
+            )}
+          </div>
+        )}
         {/* Beside the words; on a phone, pinned while the scroll plays it. */}
         <div className="ch-run" data-run={moves ? '' : undefined}>
           <div className="ch-stage">
@@ -114,6 +127,9 @@ function Chapter({ id, scene, states, tone, prev, tab, ground, side, steps, caps
     </section>
   );
 }
+
+/** A chapter's own seed, so no two backdrops draw the same land. */
+const seedOf = (id = '') => id.split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 9973, 7);
 
 function Steps({ items }: { items: string[] }) {
   return (

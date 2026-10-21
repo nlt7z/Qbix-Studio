@@ -85,11 +85,11 @@ const PH_SHUT = 'inset(0% 0% 100% 0% round 30px)';
  */
 function Room({ vb = '0 0 256 220' }: { vb?: string }) {
   const ink = (a: number) => `rgba(18,20,23,${a})`;
-  // photographed: the office, its chair and plants low in the frame (the photograph runs from 150 above)
+  // photographed: the office, its chair low in the frame and the window's light across it (the photograph runs from 70 above)
   if (usePictures())
     return (
       <svg className="prc-room" viewBox={vb} preserveAspectRatio="xMidYMid slice" aria-hidden>
-        <image href="/art/office.webp" x={0} y={-150} width={256} height={384} preserveAspectRatio="xMidYMid slice" />
+        <image href="/art/office.webp" x={0} y={-70} width={256} height={320} preserveAspectRatio="xMidYMid slice" />
       </svg>
     );
   return (

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import Scene, { type Pick } from '@/components/scene/Scene';
 import { A, T, Cursor, Caret, Check } from '@/components/scene/kit';
 import { Pictures, usePictures } from '@/components/scene/pictures';
+import { Contours, Halftone, Ridges } from '@/components/scene/Generative';
 import { E, type Props, type Timeline } from '@/lib/scene/timeline';
 
 /**
@@ -18,9 +19,11 @@ import { E, type Props, type Timeline } from '@/lib/scene/timeline';
  * and a new price typed into it rolls over on the flyer; then a change asked
  * for in a message lands on the flyer's open house line.
  *
- * On the business homepage the house, its kitchen, its street and its door are
- * photographs (components/scene/pictures.tsx), laid in the drawings' own
- * units, so every crop of them is the same crop of the photograph.
+ * On the business homepage the house and its kitchen are photographs
+ * (components/scene/pictures.tsx), laid in the drawings' own units, so every
+ * crop of them is the same crop of the photograph; the rest is generative:
+ * the neighborhood a contour map, In Escrow the house in dots, the video's
+ * last shot a field of ridges (components/scene/Generative.tsx).
  *
  * Everything printed or posted is ink on paper, in either tone. One lime per
  * state, handed on as the story moves: the flyer's tag; the Just Listed post's
@@ -184,26 +187,23 @@ function MapArt() {
 type ArtProps = { k?: string; vb?: string; w: number; h: number; line?: boolean };
 
 /** A drawing's photograph: laid over the drawing's whole frame (the base viewBox), cropped to fill it. */
-type Photo = { src: string; align?: string; over?: ReactNode };
+type Photo = { src: string };
 
-function Art({ k, vb, w, h, line, base, photo, children }: ArtProps & { base: string; photo: Photo; children: ReactNode }) {
-  const pics = usePictures();
+function Art({ k, vb, w, h, line, base, photo, children }: ArtProps & { base: string; photo?: Photo; children: ReactNode }) {
+  const pics = usePictures() && !!photo;
   const [, , bw, bh] = base.split(' ').map(Number);
   return (
     <svg
       data-k={k}
-      className={`lst-art${line ? ' lst-art--line' : ''}${pics ? ' lst-art--photo' : ''}`}
+      className={`lst-art${line ? ' lst-art--line' : ''}`}
       width={w}
       height={h}
       viewBox={vb ?? base}
       preserveAspectRatio="xMidYMid slice"
       aria-hidden
     >
-      {pics ? (
-        <>
-          <image href={`/art/${photo.src}.webp`} width={bw} height={bh} preserveAspectRatio={`${photo.align ?? 'xMidYMid'} slice`} />
-          {photo.over}
-        </>
+      {pics && photo ? (
+        <image href={`/art/${photo.src}.webp`} width={bw} height={bh} preserveAspectRatio="xMidYMid slice" />
       ) : (
         children
       )}
@@ -211,31 +211,56 @@ function Art({ k, vb, w, h, line, base, photo, children }: ArtProps & { base: st
   );
 }
 const House = (p: ArtProps) => (
-  <Art {...p} base="0 0 400 240" photo={{ src: 'house', align: 'xMidYMax' }}>
+  <Art {...p} base="0 0 400 240" photo={{ src: 'house' }}>
     <HouseArt />
   </Art>
 );
 const Kitchen = (p: ArtProps) => (
-  <Art {...p} base="0 0 240 240" photo={{ src: 'kitchen', align: 'xMaxYMid' }}>
+  <Art {...p} base="0 0 240 240" photo={{ src: 'kitchen' }}>
     <KitchenArt />
   </Art>
 );
 const Door = (p: ArtProps) => (
-  <Art {...p} base="0 0 113 240" photo={{ src: 'door' }}>
+  <Art {...p} base="0 0 113 240">
     <DoorArt />
   </Art>
 );
-// the street from above, the house pinned on it
-const PIN = (
-  <g className="lst-pin">
-    <path d="M118 121c-8.4-9.5-12.7-15.9-12.7-21.4a12.7 12.7 0 0 1 25.4 0c0 5.5-4.3 11.9-12.7 21.4Z" />
-    <circle cx="118" cy="99.6" r="4.6" />
-  </g>
-);
 const Hood = (p: ArtProps) => (
-  <Art {...p} base="0 0 240 240" photo={{ src: 'hood', over: PIN }}>
+  <Art {...p} base="0 0 240 240">
     <MapArt />
   </Art>
+);
+
+/** The neighborhood, generative: the lie of the land in contours, three streets over it, the house pinned. (111 square) */
+function MapGen() {
+  return (
+    <span className="lst-gen">
+      <Contours seed={14} ink="18, 20, 23" bg="244, 245, 242" alpha={0.5} levels={12} scale={46} />
+      <svg className="lst-map" viewBox="0 0 111 111" aria-hidden>
+        <path className="lst-road" d="M-4 72 L115 47" />
+        <path className="lst-road" d="M36 -4 L50 115" />
+        <path className="lst-road lst-road--s" d="M-4 22 L115 31" />
+        <g className="lst-pin">
+          <path d="M57 63c-5.2-5.8-7.8-9.7-7.8-13a7.8 7.8 0 0 1 15.6 0c0 3.3-2.6 7.2-7.8 13Z" />
+          <circle cx="57" cy="50" r="2.7" />
+        </g>
+      </svg>
+    </span>
+  );
+}
+
+/** In Escrow, generative: the house in dots, each as big as the light where it stands. (111 square) */
+const EscrowGen = () => (
+  <span className="lst-gen">
+    <Halftone src="/art/house.webp" ink="184, 255, 0" bg="18, 20, 23" cell={3.6} pos={[0.5, 0.6]} moves fps={12} />
+  </span>
+);
+
+/** The video's last shot, generative: ridges rising behind the open house. */
+const EndCard = ({ k }: { k: string }) => (
+  <span data-k={k} className="lst-shot">
+    <Ridges seed={21} ink="184, 255, 0" bg="11, 12, 14" lines={24} amp={0.3} moves fps={20} />
+  </span>
 );
 
 /** A shot in the video, photographed: it fills its frame (it pushes in from its middle). */
@@ -495,13 +520,13 @@ function Reel({ k, x, y, tc = '0:00', lime = false }: { k: string; x: number; y:
     <A k={k} x={x} y={y} w={PHONE.w} h={PHONE.h} r={32} c="phone">
       <div className={`phone-screen lst-reel${pics ? ' lst-reel--photo' : ''}`} style={{ ['--r' as string]: '25px' }}>
         <A k={`${k}.f1`} x={0} y={0} w={W} h={H} c="lst-frame">
-          {pics ? <Shot k={`${k}.a1`} src="house" pos="70% 50%" /> : <House k={`${k}.a1`} vb="106 -80 200 425" w={W} h={H} />}
+          {pics ? <Shot k={`${k}.a1`} src="house" pos="58% 50%" /> : <House k={`${k}.a1`} vb="106 -80 200 425" w={W} h={H} />}
         </A>
         <A k={`${k}.f2`} x={0} y={0} w={W} h={H} c="lst-frame">
-          {pics ? <Shot k={`${k}.a2`} src="kitchen-v" pos="50% 72%" /> : <Kitchen k={`${k}.a2`} vb="43 -86 154 327" w={W} h={H} />}
+          {pics ? <Shot k={`${k}.a2`} src="kitchen" pos="62% 50%" /> : <Kitchen k={`${k}.a2`} vb="43 -86 154 327" w={W} h={H} />}
         </A>
         <A k={`${k}.f3`} x={0} y={0} w={W} h={H} c="lst-frame">
-          {pics ? <Shot k={`${k}.a3`} src="door" pos="40% 60%" /> : <Door k={`${k}.a3`} w={W} h={H} />}
+          {pics ? <EndCard k={`${k}.a3`} /> : <Door k={`${k}.a3`} w={W} h={H} />}
         </A>
         <div className="phone-status lst-reel-status">
           <span>9:41</span>
@@ -572,6 +597,7 @@ function kitLayout(H: number) {
 function Kit({ H, tour }: { H: number; tour: boolean }) {
   const L = kitLayout(H);
   const capY = L.sy + SHEET.h + 14;
+  const pics = usePictures();
   return (
     <>
       <A k="f.cap" x={L.front.x + L.shift} y={capY} c="lst-cap-row">
@@ -591,13 +617,13 @@ function Kit({ H, tour }: { H: number; tour: boolean }) {
 
       {/* the five posts, where they end up in the feed (until they're dealt, they stand where they come from) */}
       <A k="p.esc" x={L.row[2].x} y={L.row[2].y} w={SQ} h={SQ} c="lst-post lst-post--ink">
-        <SquarePost k="p.esc" art={<House line vb={vb(ESC_VB)} w={SQ} h={SQ} />} label="In Escrow" />
+        <SquarePost k="p.esc" art={pics ? <EscrowGen /> : <House line vb={vb(ESC_VB)} w={SQ} h={SQ} />} label="In Escrow" />
       </A>
       <A k="p.kit" x={L.row[0].x} y={L.row[0].y} w={SQ} h={SQ} c="lst-post">
         <SquarePost k="p.kit" art={<Kitchen w={SQ} h={SQ} />} label="The kitchen" />
       </A>
       <A k="p.map" x={L.row[1].x} y={L.row[1].y} w={SQ} h={SQ} c="lst-post">
-        <SquarePost k="p.map" art={<Hood w={SQ} h={SQ} />} label="The neighborhood" />
+        <SquarePost k="p.map" art={pics ? <MapGen /> : <Hood w={SQ} h={SQ} />} label="The neighborhood" />
       </A>
       <A k="p.oh" x={L.story.x} y={L.story.y} w={STORY.w} h={STORY.h} c="lst-post">
         <StoryPost k="p.oh" />

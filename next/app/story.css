@@ -130,6 +130,9 @@
 /* what's drawn on the chapter (generative currents): cut to its shape, under the words */
 .ch-ground { position: absolute; inset: 0; z-index: 0; clip-path: var(--ch-shape); pointer-events: none; }
 .ch-ground .flow { display: block; width: 100%; height: 100%; }
+/* a generative drawing behind the words and the scene, pinned with them (under everything in the frame) */
+.ch-backdrop { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.ch-backdrop .gen { display: block; width: 100%; height: 100%; }
 .ch-tab { position: absolute; top: 0; left: var(--tab-x); z-index: 3; height: var(--tab-h); display: flex; align-items: center; }
 .ch-tab .ch-kicker { margin: 0; color: var(--ch-fg); }
 .ch[data-tone='lime'] .marker--ink .marker-in { color: var(--signal); }
