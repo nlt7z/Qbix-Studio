@@ -11,14 +11,15 @@ import { E } from '@/lib/scene/timeline';
  * beside it names them.
  * 1 · Strata, live, at stratadesign.app: a wall of inspiration (photographs,
  *     public/art), its colours pinned on it in glass, and the system it makes
- *     beside it: colours, type, components, tokens;
+ *     beside it: colours and their ramps, type, space, components, tokens;
  * 2 · AI Bidding, live: Bid King, drawn (BidKing.tsx): a sealed lot on the
  *     room's currents, the table, your bid;
  * 3 · TTS Editor, on the way: a voice's waveform, its pitch drawn over it, and
  *     a frosted sheet over its lower half with the script (the playhead lights
  *     it word by word) and three dials;
- * 4 · Interview Assistant, on the way: a call; frosted over it, the live
- *     captions and the assistant, whose hints arrive while the candidate talks.
+ * 4 · Interview Assistant, on the way: a call (photographs); frosted over
+ *     it, the live captions and the assistant, whose hints arrive while the
+ *     candidate talks.
  * Each move: the window's address is selected and the next one typed; then
  * the next product pushes up into the window, and its name (its tag with it)
  * into the title above. Each product's own parts come in as it settles.
@@ -39,26 +40,30 @@ const PRODUCTS = [
 ];
 
 /* --- Strata: the wall of inspiration, and the system it makes ------------------ */
-const WALL = { x: 16, y: 40, w: 100, h: 166, gap: 8 };
+const WALL = { x: 16, y: 40, w: 100, h: 110, gap: 8 };
 const WALL_PICS: [string, string?][][] = [
-  [['ribbon', '58% 50%'], ['wall', '50% 70%'], ['slices']],
-  [['curves'], ['block', '40% 50%'], ['ring', '62% 50%']],
+  [['ribbon', '58% 50%'], ['wall', '50% 78%'], ['slices']],
+  [['calla', '74% 50%'], ['block', '40% 50%'], ['bottle', '50% 26%']],
+  [['curves'], ['glass', '46% 50%'], ['ring', '62% 50%']],
 ];
 const cell = (c: number, r: number) => ({ x: WALL.x + c * (WALL.w + WALL.gap), y: WALL.y + r * (WALL.h + WALL.gap) });
 // a colour read off a picture: the point, and the glass tag pinned beside it
 const PINS: { c: number; r: number; px: number; py: number; hex: string }[] = [
-  { c: 2, r: 0, px: 52, py: 96, hex: '#B8FF00' },
-  { c: 1, r: 1, px: 44, py: 118, hex: '#6E8F1A' },
-  { c: 0, r: 0, px: 22, py: 26, hex: '#121417' },
-  { c: 0, r: 1, px: 70, py: 52, hex: '#E6E9E3' },
+  { c: 2, r: 0, px: 50, py: 58, hex: '#B8FF00' },
+  { c: 1, r: 1, px: 40, py: 74, hex: '#6E8F1A' },
+  { c: 0, r: 0, px: 20, py: 20, hex: '#121417' },
+  { c: 0, r: 2, px: 72, py: 36, hex: '#E6E9E3' },
 ];
-const SYS = { x: 356 };
-const SWATCHES: [string, string, string][] = [
-  ['Lime', '#B8FF00', 'var(--lime)'],
-  ['Moss', '#6E8F1A', '#6e8f1a'],
-  ['Ink', '#121417', '#121417'],
-  ['Mist', '#E6E9E3', '#e6e9e3'],
+const SYS = { x: 356, w: 346 };
+// each colour and the ramp made from it (toward white, or for the palest toward ink)
+const SWATCHES: [string, string, string, string][] = [
+  ['Lime', '#B8FF00', '#b8ff00', '#fff'],
+  ['Moss', '#6E8F1A', '#6e8f1a', '#fff'],
+  ['Ink', '#121417', '#121417', '#fff'],
+  ['Mist', '#E6E9E3', '#e6e9e3', '#121417'],
 ];
+const RAMP = [100, 78, 56, 34, 14];
+const SPACE = [4, 8, 12, 16, 24, 32];
 
 /* --- the TTS Editor: a voice, 4.2 s of it ---------------------------------- */
 // the waveform's stage (in its panel); a frosted sheet floats over its lower part
@@ -184,14 +189,15 @@ export default function Labs() {
           tl.from(q(`st.tag.${i}`), { clip: notch(10, [0, 100, 0, 0]) }).to(q(`st.tag.${i}`), { clip: notch(10) }, 0.74 + i * 0.03, 0.07, E.out);
           tl.from(q(`st.sw.${i}`), { clip: [100, 0, 0, 0] }).to(q(`st.sw.${i}`), { clip: [0, 0, 0, 0] }, 0.78 + i * 0.025, 0.08, E.out);
         });
-        tl.from(q('st.type'), { clip: [0, 100, 0, 0] }).to(q('st.type'), { clip: [0, 0, 0, 0] }, 0.86, 0.08, E.out);
+        tl.from(q('st.type'), { clip: [0, 100, 0, 0] }).to(q('st.type'), { clip: [0, 0, 0, 0] }, 0.85, 0.07, E.out);
+        tl.from(q('st.space'), { clip: [0, 100, 0, 0] }).to(q('st.space'), { clip: [0, 0, 0, 0] }, 0.87, 0.06, E.out);
+        tl.from(q('st.card'), { clip: [100, 0, 0, 0] }).to(q('st.card'), { clip: [0, 0, 0, 0] }, 0.88, 0.08, E.out);
+        // the lime button keeps its cut corner as it opens
+        tl.from(q('st.go'), { clip: cut(10, 100) }).to(q('st.go'), { clip: cut(10) }, 0.9, 0.06, E.out);
         q.all('st.ui.').forEach((el, i) => {
-          const t = 0.88 + i * 0.02;
-          // the button keeps its cut corner as it opens
-          if (i === 0) tl.from(el, { clip: cut(10, 100) }).to(el, { clip: cut(10) }, t, 0.07, E.out);
-          else tl.from(el, { clip: [0, 100, 0, 0] }).to(el, { clip: [0, 0, 0, 0] }, t, 0.07, E.out);
+          tl.from(el, { clip: [0, 100, 0, 0] }).to(el, { clip: [0, 0, 0, 0] }, 0.91 + i * 0.015, 0.06, E.out);
         });
-        tl.type(q('st.code.0'), 0.92, 0.04).type(q('st.code.1'), 0.95, 0.03);
+        tl.type(q('st.code.0'), 0.93, 0.03).type(q('st.code.1'), 0.96, 0.025);
 
         /* Bid King, settling: the table fills, the read comes in, the bid is up */
         [0, 1, 2, 3].forEach((i) => {
@@ -313,8 +319,9 @@ export default function Labs() {
           <div data-k="panels" className="labs-panels" style={{ height: 4 * CH }}>
             {/* 1 · Strata: the wall of inspiration, its colours pinned in glass; the system beside it */}
             <div className="labs-panel" style={{ top: 0, height: CH }}>
-              <A x={WALL.x} y={14} c="labs-k">
-                Inspiration · 6
+              <A x={WALL.x} y={14} w={316} c="labs-k labs-k--row">
+                <span>Inspiration · 9</span>
+                <span className="faint">Read 4 colours</span>
               </A>
               {WALL_PICS.map((row, r) =>
                 row.map(([src, pos], c) => (
@@ -343,18 +350,23 @@ export default function Labs() {
                   </div>
                 );
               })}
-              <A x={SYS.x} y={14} w={346} c="labs-k labs-k--row">
+              <A x={SYS.x} y={14} w={SYS.w} c="labs-k labs-k--row">
                 <span>System</span>
-                <span className="faint">v1.0</span>
+                <span className="faint">v1.0 · 48 tokens</span>
               </A>
-              {SWATCHES.map(([name, hex, bg], i) => (
-                <A key={name} k={`st.sw.${i}`} x={SYS.x + i * 88} y={40} w={80} h={92} c="labs-sw">
+              {SWATCHES.map(([name, hex, bg, toward], i) => (
+                <A key={name} k={`st.sw.${i}`} x={SYS.x + i * 88} y={36} w={80} h={86} c="labs-sw">
                   <i style={{ background: bg }} />
+                  <span className="labs-ramp">
+                    {RAMP.map((p) => (
+                      <b key={p} style={{ background: `color-mix(in srgb, ${bg} ${p}%, ${toward})` }} />
+                    ))}
+                  </span>
                   <span>{name}</span>
                   <em>{hex}</em>
                 </A>
               ))}
-              <A k="st.type" x={SYS.x} y={148} w={346} h={62} c="labs-type">
+              <A k="st.type" x={SYS.x} y={134} w={SYS.w} h={50} c="labs-type">
                 <span className="f-head labs-aa">Aa</span>
                 <span className="labs-scale">
                   <span>
@@ -368,27 +380,50 @@ export default function Labs() {
                   </span>
                 </span>
               </A>
-              <A k="st.ui.0" x={SYS.x} y={226} w={130} h={38} c="labs-ui-btn">
+              <A k="st.space" x={SYS.x} y={196} w={SYS.w} h={28} c="labs-space">
+                <span className="labs-space-k">Space</span>
+                {SPACE.map((v) => (
+                  <span key={v} className="labs-space-v">
+                    <i style={{ width: v * 1.5 }} />
+                    {v}
+                  </span>
+                ))}
+              </A>
+              {/* a component drawn from it: a product card, one of the pictures in it */}
+              <A k="st.card" x={SYS.x} y={236} w={160} h={136} c="labs-card-ui">
+                <span className="labs-card-pic">
+                  <img src="/art/cross.webp" alt="" draggable={false} decoding="async" />
+                </span>
+                <span className="labs-card-row">
+                  <span>
+                    <b>Disc 02</b>
+                    <em>$64</em>
+                  </span>
+                  <span className="labs-card-add cut">Add</span>
+                </span>
+              </A>
+              <A k="st.go" x={SYS.x + 168} y={236} w={116} h={34} c="labs-ui-btn">
                 Get started
               </A>
-              <A k="st.ui.1" x={SYS.x + 140} y={226} w={92} h={38} c="labs-ui-line">
+              <A k="st.ui.0" x={SYS.x + 292} y={236} w={54} h={34} c="labs-ui-line">
                 Docs
               </A>
-              <A k="st.ui.2" x={SYS.x + 242} y={233} h={24} c="labs-ui-tag">
-                New
-              </A>
-              <A k="st.ui.3" x={SYS.x} y={274} w={232} h={38} c="labs-ui-field">
+              <A k="st.ui.1" x={SYS.x + 168} y={278} w={178} h={34} c="labs-ui-field">
                 you@studio.com
               </A>
-              <A k="st.ui.4" x={SYS.x + 242} y={282} w={40} h={22} c="labs-ui-toggle">
-                <i />
+              <A k="st.ui.2" x={SYS.x + 168} y={320} w={178} h={34} c="labs-ui-row">
+                <span className="labs-ui-toggle">
+                  <i />
+                </span>
+                Dark mode
+                <span className="labs-ui-tag">New</span>
               </A>
-              <A x={SYS.x} y={324} w={346} h={56} c="labs-code f-mono">
+              <A x={SYS.x} y={382} w={SYS.w} h={26} c="labs-code f-mono">
                 <span data-k="st.code.0" className="t">
                   --color-accent: <b>#B8FF00</b>;
                 </span>
                 <span data-k="st.code.1" className="t">
-                  --space-4: 16px;
+                  --space-4: <b>16px</b>;
                 </span>
               </A>
             </div>
@@ -416,14 +451,30 @@ export default function Labs() {
                   <span data-k="tts.tc">0:00.0</span>
                   <i> / 0:04.2</i>
                 </span>
+                <span className="labs-tb-k">Take 3 of 3</span>
                 <span className="labs-voice">
-                  <i>Voice</i> Ava
+                  <img src="/art/ava.webp" alt="" draggable={false} decoding="async" />
+                  <span>
+                    <b>Ava</b>
+                    <i>Warm, low</i>
+                  </span>
                 </span>
               </A>
               <A x={WF.x} y={WF.y} w={WF.w} h={WF.h} c="labs-wf">
                 {[0, 1, 2, 3, 4].map((s) => (
                   <span key={s} className="a labs-ruler" style={{ left: sx(s), top: 10, transform: 'translateX(-50%)' }}>
                     0:0{s}
+                  </span>
+                ))}
+                <svg className="a labs-ticks" width={WF.w} height={8} viewBox={`0 0 ${WF.w} 8`} aria-hidden style={{ left: 0, top: 26 }}>
+                  {Array.from({ length: 43 }, (_, i) => (
+                    <path key={i} d={`M${sx(i / 10)} ${i % 10 ? 4 : 0} V8`} />
+                  ))}
+                </svg>
+                {/* each word where it's said */}
+                {SAID.map(([w, a, b]) => (
+                  <span key={w} className="a labs-word" style={{ left: sx(a), width: sx(b) - sx(a), top: 40 }}>
+                    {w.replace(/[.,]/g, '')}
                   </span>
                 ))}
                 <Wave c="labs-wf-base" />
@@ -465,16 +516,16 @@ export default function Labs() {
 
             {/* 4 · Interview Assistant: the call, and frosted over it the assistant and the captions */}
             <div className="labs-panel labs-call" style={{ top: 3 * CH, height: CH }}>
-              <svg className="a" width={CW} height={CH} viewBox={`0 0 ${CW} ${CH}`} aria-hidden style={{ left: 0, top: 0 }}>
-                <circle cx={262} cy={172} r={60} fill="rgba(244,245,242,0.16)" />
-                <path d="M42 420 C42 206 482 206 482 420 Z" fill="rgba(244,245,242,0.16)" />
-              </svg>
-              <A x={16} y={16} w={96} h={64} c="labs-self">
-                <svg width={96} height={64} viewBox="0 0 96 64" aria-hidden>
-                  <circle cx={58} cy={26} r={11} fill="rgba(244,245,242,0.22)" />
-                  <path d="M32 64 C32 38 84 38 84 64 Z" fill="rgba(244,245,242,0.22)" />
-                </svg>
+              <img className="labs-cam" src="/art/sam.webp" alt="" draggable={false} decoding="async" />
+              <A x={16} y={16} w={120} h={80} c="labs-self">
+                <img src="/art/you.webp" alt="" draggable={false} decoding="async" />
                 <span>You</span>
+              </A>
+              <A x={148} y={16} h={30} c="glass labs-dark-glass labs-chip notch">
+                Recording <b>14:32</b>
+              </A>
+              <A x={16} y={CAPS.y - 40} h={30} c="glass labs-dark-glass labs-chip notch">
+                Sam Rivera <i>Candidate</i>
               </A>
               {/* the live captions */}
               <A x={CAPS.x} y={CAPS.y} w={CAPS.w} h={CAPS.h} c="glass labs-dark-glass labs-caps notch">

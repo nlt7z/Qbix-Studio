@@ -362,7 +362,7 @@ export default function Story() {
         tone="lime"
         prev={ai ? 'dark' : 'paper'}
         tab={<span className="ch-kicker mono">Contact</span>}
-        ground={<Flow count={760} seed={3} ground="184, 255, 0" ink="12, 19, 0" alpha={0.14} scale={2.4} speed={0.6} density={1} />}
+        ground={<Flow count={760} seed={3} ground="184, 255, 0" ink="12, 19, 0" alpha={0.16} scale={2.4} speed={0.6} density={0.6} />}
         side={ai ? 'right' : 'left'}
         h="160vh"
         className="ch--contact"

@@ -8,9 +8,9 @@ type P = { x: number; y: number; life: number };
  * Generative art: particles carried by a slow field of currents, each drawing
  * a fine line where it goes while the old lines fade, so the picture is the
  * paths they take. Lime on ink by default (colours as 'r, g, b'). Drawn at the
- * canvas's own device pixels, the scene's zoom included; it moves only while
- * it's on the screen and the tab is open, and for reduced motion it's a still,
- * the field already drawn out.
+ * canvas's own device pixels, the scene's zoom included; it's drawn out the
+ * first time it comes on the screen (not on load), moves only while it's on
+ * the screen and the tab is open, and for reduced motion it's a still.
  */
 export default function Flow({
   className = '',
@@ -57,12 +57,17 @@ export default function Flow({
       const u = x / k / scale, v = y / k / scale;
       return Math.sin(u * 0.011 + t * 0.35) * 1.5 + Math.cos(v * 0.013 - t * 0.25) * 1.3 + Math.sin((u + v) * 0.0045 + 1.3) * 2.4;
     };
-    const fade = `rgba(${ground}, 0.06)`;
+    const fade = (n: number) => `rgba(${ground}, ${(1 - Math.pow(0.94, n)).toFixed(3)})`;
     const line = `rgba(${ink}, ${alpha})`;
-    const step = () => {
+    // a step of the currents; the old lines fade every `every` steps (by as much as they would have)
+    let since = 0;
+    const step = (every = 1) => {
       t += 0.004 * speed;
-      g.fillStyle = fade;
-      g.fillRect(0, 0, W, H);
+      if (++since >= every) {
+        g.fillStyle = fade(since);
+        g.fillRect(0, 0, W, H);
+        since = 0;
+      }
       g.strokeStyle = line;
       g.lineWidth = Math.max(1, k * 0.9);
       g.beginPath();
@@ -82,14 +87,23 @@ export default function Flow({
       g.fillStyle = `rgb(${ground})`;
       g.fillRect(0, 0, W, H);
       ps.forEach(spawn);
-      for (let i = 0; i < 180; i++) step();
+      // drawn out ahead: fewer steps, faded less often, the bigger the canvas (a big one comes in mid-scroll)
+      const n = Math.max(40, Math.min(180, Math.round((180 * 4e5) / (W * H))));
+      for (let i = 0; i < n; i++) step(n < 180 ? 4 : 1);
     };
 
+    let raf = 0, seen = false, drawn = false;
     const size = (w: number, h: number) => {
       if (w < 2 || h < 2 || (w === W && h === H)) return;
       W = cv.width = w;
       H = cv.height = h;
       k = W / Math.max(1, cv.clientWidth);
+      drawn = false;
+      if (seen) draw();
+    };
+    const draw = () => {
+      if (drawn || !W) return;
+      drawn = true;
       fresh();
     };
     const ro = new ResizeObserver(([e]) => {
@@ -104,7 +118,6 @@ export default function Flow({
       ro.observe(cv);
     }
 
-    let raf = 0, seen = false;
     const loop = () => {
       raf = 0;
       if (!seen || document.hidden || calm || !W) return;
@@ -116,6 +129,7 @@ export default function Flow({
     };
     const io = new IntersectionObserver(([e]) => {
       seen = e.isIntersecting;
+      if (seen) draw();
       wake();
     });
     io.observe(cv);
