@@ -118,7 +118,7 @@
 }
 .ch[data-prev='dark'] { --ch-around: var(--bg); }
 .ch[data-prev='paper'] { --ch-around: var(--paper); }
-.story > .ch[data-tone='lime'] { background: linear-gradient(var(--ch-around) 50%, var(--bg) 50%) !important; }
+.story > .ch[data-tone='lime'] { background: linear-gradient(var(--ch-around) 50%, transparent 50%) !important; }
 .ch[data-tone='lime'] {
   --ch-shape: polygon(
     0 var(--tab-h), calc(var(--tab-l) - var(--tab-h)) var(--tab-h), var(--tab-l) 0, calc(var(--tab-x) + var(--tab-w)) 0,
@@ -137,17 +137,6 @@
 .ch .btn-solid.cut:focus-visible { outline: 2px solid var(--ch-bg); outline-offset: -6px; }
 
 /* --- the hero chapter ------------------------------------------------------ */
-/* the core's field round the cube: wider than the cube's box, under it */
-.hero-field {
-  position: absolute;
-  inset: -10% -6%;
-  pointer-events: none;
-  /* it thins out into the page: no edge */
-  -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
-  mask-image: radial-gradient(closest-side, #000 62%, transparent 100%);
-}
-.hero-field .flow { display: block; width: 100%; height: 100%; }
-.ch--hero .glass-cube { position: relative; }
 .ch--hero .hero-title.hero-title--xl { font-size: clamp(40px, min(7vw, 11vh), 116px); }
 .ch--hero .hero-sub-mask { margin: clamp(16px, 2.6vh, 26px) 0 clamp(20px, 3.4vh, 32px); }
 .ch--hero .hero-sub { font-size: clamp(16px, 1.35vw, 20px); color: var(--ch-dim); }
@@ -201,8 +190,6 @@
   .ch--hero .ch-copy { width: min(52%, 760px); translate: 0 -55%; }
   .ch--hero .ch-stage { left: max(52%, calc(var(--edge) + var(--copy-w) + var(--stage-gap))); }
   .ch--hero .ch-band { position: absolute; left: var(--edge); right: var(--edge); bottom: clamp(20px, 4vh, 40px); }
-  /* the words over the cube's field */
-  .ch--hero .ch-copy, .ch--hero .ch-band { z-index: 2; }
   .ch--contact .ch-acts { margin-top: 26px; }
   /* the tab over the words, wherever they stand */
   .ch[data-tone='lime'][data-side='left'] { --tab-x: calc(100% - var(--edge) - var(--copy-w)); --tab-l: calc(var(--tab-x) - 32px); }
@@ -265,9 +252,8 @@
   /* the hero: the words, the cube, the studio band */
   .ch--hero .ch-frame { padding-top: calc(64px + 4vh); }
   .ch--hero .ch-copy { order: 1; padding: 26px var(--gutter) 0; }
-  .ch--hero .ch-stage { position: relative; order: 2; height: 44svh; padding: 12px var(--gutter); }
+  .ch--hero .ch-stage { order: 2; height: 44svh; padding: 12px var(--gutter); }
   .ch--hero .ch-band { order: 3; padding: 8px var(--gutter) 56px; background: var(--ch-bg); }
-  .ch--hero .ch-copy, .ch--hero .ch-band { position: relative; z-index: 2; }
   .ch-band { grid-template-columns: minmax(0, 1fr); }
   .ch-band > .studio, .ch-band > .marquee-block { grid-column: 1 / -1; }
 }
@@ -286,5 +272,27 @@
 .ch[data-step='5'] .ch-caps-bar i:nth-child(-n + 6)::after,
 .ch[data-step='6'] .ch-caps-bar i:nth-child(-n + 7)::after { scale: 1 1; }
 
-/* The footer that follows. */
+/* The footer that follows: it waits underneath, and the story lifts off it
+   like a curtain (Colophon.tsx sets the story's bottom margin to its height;
+   through the sign-off's cut corner you see it before it's uncovered). */
 .story ~ .footer { position: relative; z-index: 4; }
+.story { z-index: 1; }
+.story ~ .footer.ft--curtain { position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; }
+
+/* --- the about paragraph, read at the speed of the scroll (ShowcaseText.tsx) --- */
+.showcase .sc-w { color: color-mix(in srgb, var(--ch-fg) 22%, transparent); transition: color 0.3s linear; }
+.showcase .sc-w.on { color: var(--ch-fg); }
+@media (prefers-reduced-motion: reduce) { .showcase .sc-w { transition: none; } }
+
+/* --- the footer's floor: the wordmark, as wide as the page, cut by the screen's edge --- */
+.ft--floor .ft-col-title { font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--text-3); }
+.ft--floor .ft-soon { padding: 0; margin-left: 6px; box-shadow: none; font-size: inherit; letter-spacing: 0; text-transform: none; color: var(--text-3); }
+.story ~ .footer.ft--floor { padding-top: clamp(32px, 5vh, 56px); }
+.ft--floor .ft-grid { padding: 0 0 clamp(18px, 3vh, 28px); }
+.ft--floor .ft-status { box-shadow: none; padding: 0 0 clamp(14px, 2.4vh, 24px); }
+.ft--floor .ft-top { margin-left: auto; }
+/* the lime above it is the screen's lime: the status is plain here, on phones too */
+.ft--floor .ft-taking { height: auto; padding: 0; background: none; color: inherit; }
+.ft-floor { padding: 0 var(--gutter); line-height: 0; overflow: hidden; }
+.floor-mark { display: block; width: 100%; height: auto; overflow: visible; }
+.floor-mark path { fill: #f4f5f2; }

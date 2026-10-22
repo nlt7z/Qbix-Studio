@@ -6,7 +6,6 @@ import BrandText from '@/components/BrandText';
 import StudioTime from '@/components/hero/StudioTime';
 import { useAudience, type Audience } from '@/components/Audience';
 import GlassCube from '@/components/scene/GlassCube';
-import Flow from '@/components/scene/Flow';
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -185,10 +184,6 @@ export default function Hero() {
           <StudioTime />
         </div>
         <div className="ch-stage">
-          {/* the core's field: lime currents turning round the cube, under its glass */}
-          <div className="hero-field" aria-hidden>
-            <Flow count={680} seed={19} ground="8, 9, 10" alpha={0.44} speed={0.8} scale={0.9} swirl={[0.42, 1]} />
-          </div>
           <GlassCube />
         </div>
       </div>

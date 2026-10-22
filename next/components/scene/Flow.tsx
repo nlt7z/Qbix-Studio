@@ -8,10 +8,7 @@ type P = { x: number; y: number; life: number };
 /**
  * Generative art: particles carried by a slow field of currents, each drawing
  * a fine line where it goes while the old lines fade, so the picture is the
- * paths they take. With `swirl` the currents turn round the canvas's middle
- * instead, in a ring between its inner and outer radius (as shares of half its
- * shorter side), a field round something that stands there (the hero's cube).
- * Lime on ink by default (colours as 'r, g, b'). Drawn at the
+ * paths they take. Lime on ink by default (colours as 'r, g, b'). Drawn at the
  * canvas's own device pixels, the scene's zoom included; it's drawn out the
  * first time it comes on the screen (not on load), moves only while it's on
  * the screen and the tab is open, and for reduced motion it's a still.
@@ -26,7 +23,6 @@ export default function Flow({
   scale = 1,
   alpha = 0.78,
   density,
-  swirl,
 }: {
   className?: string;
   count?: number;
@@ -40,8 +36,6 @@ export default function Flow({
   alpha?: number;
   /** canvas pixels per css pixel, for a big soft one (default: the device's) */
   density?: number;
-  /** turn round the middle, in a ring from [inner, outer] (shares of half the shorter side) */
-  swirl?: [number, number];
 }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
 
@@ -54,34 +48,15 @@ export default function Flow({
     const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
     let W = 0, H = 0, k = 1, t = 0;
     const ps: P[] = Array.from({ length: count }, () => ({ x: 0, y: 0, life: 0 }));
-    const [r0, r1] = swirl ?? [0, 0];
-    const half = () => Math.min(W, H) / 2;
     const spawn = (p: P) => {
-      if (swirl) {
-        // in the ring, thicker toward its inside
-        const a = rnd() * Math.PI * 2, r = (r0 + (r1 - r0) * Math.pow(rnd(), 1.4)) * half();
-        p.x = W / 2 + Math.cos(a) * r;
-        p.y = H / 2 + Math.sin(a) * r;
-      } else {
-        p.x = rnd() * W;
-        p.y = rnd() * H;
-      }
+      p.x = rnd() * W;
+      p.y = rnd() * H;
       p.life = 50 + rnd() * 160;
     };
     // the currents: an angle at each point (in the drawing's px), turning slowly with time
-    const currents = (x: number, y: number) => {
+    const angle = (x: number, y: number) => {
       const u = x / k / scale, v = y / k / scale;
       return Math.sin(u * 0.011 + t * 0.35) * 1.5 + Math.cos(v * 0.013 - t * 0.25) * 1.3 + Math.sin((u + v) * 0.0045 + 1.3) * 2.4;
-    };
-    // round the middle: along the circle, drifting a little outward, stirred by the currents
-    const angle = swirl
-      ? (x: number, y: number) => Math.atan2(y - H / 2, x - W / 2) + Math.PI / 2 + 0.16 + currents(x, y) * 0.22
-      : currents;
-    const gone = (x: number, y: number) => {
-      if (x < 0 || y < 0 || x > W || y > H) return true;
-      if (!swirl) return false;
-      const r = Math.hypot(x - W / 2, y - H / 2) / half();
-      return r < r0 * 0.85 || r > r1 * 1.12;
     };
     const fade = (n: number) => `rgba(${ground}, ${(1 - Math.pow(0.94, n)).toFixed(3)})`;
     const line = `rgba(${ink}, ${alpha})`;
@@ -105,7 +80,7 @@ export default function Flow({
         g.lineTo(nx, ny);
         p.x = nx;
         p.y = ny;
-        if (--p.life <= 0 || gone(nx, ny)) spawn(p);
+        if (--p.life <= 0 || nx < 0 || ny < 0 || nx > W || ny > H) spawn(p);
       }
       g.stroke();
     };
@@ -167,7 +142,7 @@ export default function Flow({
       document.removeEventListener('visibilitychange', wake);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [count, seed, ground, ink, speed, scale, alpha, density, swirl?.[0], swirl?.[1]]);
+  }, [count, seed, ground, ink, speed, scale, alpha, density]);
 
   return <canvas ref={ref} className={`flow ${className}`} aria-hidden />;
 }

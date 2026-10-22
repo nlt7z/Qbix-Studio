@@ -12,6 +12,7 @@ import { PracticeStory } from '@/components/scenes/Practice';
 import GlassCube from '@/components/scene/GlassCube';
 import { Contours, Ridges } from '@/components/scene/Generative';
 import Marker from '@/components/Marker';
+import ShowcaseText from '@/components/ShowcaseText';
 import SplitText from '@/components/SplitText';
 import { useAudience } from '@/components/Audience';
 import { useContactModal } from '@/components/ContactModalProvider';
@@ -356,14 +357,15 @@ export default function Story() {
           </>
         }
         body={
-          <p className="ch-lede ch-story">
-            AI has lowered the technical barrier, but the fact that anyone can build does not mean anyone can build
-            well. We bring unusually sharp instincts, more than 10 years of training toward the best taste in the
-            industry, real curiosity about new things (which means you get the newest tech), and respect for every
-            idea that comes in. We put weight on early exploration and research, because{' '}
-            {/* the screen's one lime is the idea in its scene: the highlighter is the page's own ink or paper */}
-            <Marker className={`about-hi ${ai ? 'marker--white' : 'marker--ink'}`}>no idea deserves to be wasted</Marker>.
-          </p>
+          // read at the speed of the scroll; the screen's one lime is the idea in its scene, so the
+          // highlighter is the page's own ink or paper
+          <ShowcaseText
+            className="ch-lede ch-story"
+            markClass={`about-hi ${ai ? 'marker--white' : 'marker--ink'}`}
+            before="AI has lowered the technical barrier, but the fact that anyone can build does not mean anyone can build well. We bring unusually sharp instincts, more than 10 years of training toward the best taste in the industry, real curiosity about new things (which means you get the newest tech), and respect for every idea that comes in. We put weight on early exploration and research, because"
+            accent="no idea deserves to be wasted"
+            after="."
+          />
         }
       />
 
