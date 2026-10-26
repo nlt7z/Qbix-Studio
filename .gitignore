@@ -34,3 +34,9 @@ next/public/vending-machine.mp4
 assets/*.ttf
 assets/*.TTF
 assets/*.otf
+
+# lead lists hold contact data
+leads/
+work/
+research/
+tasks/
