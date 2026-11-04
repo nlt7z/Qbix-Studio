@@ -169,6 +169,7 @@ export async function userFor(token: string | undefined): Promise<User | null> {
 
 /* --- the requests ------------------------------------------------------------------------ */
 export async function me(token: string | undefined) {
+  store(); // with no store yet, even a visitor without a cookie hears 'accounts-off', so the page says joining opens soon
   const u = await userFor(token);
   if (!u) return { reply: { ok: true, user: null, liked: [], saved: [] }, cookie: token ? '' : null };
   const [ids] = await run(['ZREVRANGE', `qm:saves:${u.id}`, 0, -1]);
