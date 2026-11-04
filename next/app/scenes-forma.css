@@ -67,3 +67,18 @@
 .scn .fm-m-pic { position: relative; height: 108px; margin-top: 4px; overflow: hidden; }
 .scn .fm-m-h1 { margin-top: 14px; font-size: 22px; line-height: 1; letter-spacing: -0.03em; }
 .scn .fm-m-btn { --cut: 10px; margin-top: 16px; height: 34px; display: flex; align-items: center; justify-content: center; background: var(--lime); color: var(--on-lime); font-size: 12px; font-weight: 600; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+
+/* depth: one perspective parent (the stage); the site's plane is turned inside it, the phone stands in front of it.
+   Layers are a few px apart along z so they sort under the tilt (z-index alone doesn't in a 3D context). */
+.scn .fm-stage { position: absolute; left: 0; top: 0; width: 100%; height: 100%; perspective: 1800px; perspective-origin: 50% 50%; z-index: 2; pointer-events: none; }
+.scn .fm-plane { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform-style: preserve-3d; transform-origin: 300px 272px; }
+.scn .fm-win { transform: translateZ(0); }
+.scn .fm-logo, .scn .fm-nav, .scn .fm-h1, .scn .fm-sub, .scn .fm-cap { transform: translateZ(2px); }
+.scn .fm-btn { transform: translateZ(8px); }
+.scn .fm-col { transform: translateZ(10px); }
+.scn .fm-veil { background: rgba(18, 20, 23, 0.05); transform: translateZ(12px); pointer-events: none; }
+.scn .fm-phone { will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .scn .fm-plane, .scn .fm-phone { transition: none; } }
+/* depth is perspective, overlap and the veil: no shadow, no hairline round the window or the phone */
+.scn .fm-win, .scn .fm-phone { box-shadow: none; }
+.scn .fm-win { border-color: transparent; }

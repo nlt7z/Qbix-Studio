@@ -104,6 +104,16 @@ const SLOT = { x: SCR.x + M, y: SCR.y + 56, s: 32 };
 // in the gap beside the phone, then turns into the header (two wrappers, so the path curves)
 const FLY0 = { x: ICON.x + 0.7 * ICON.s - 16, y: ICON.y + 0.3 * ICON.s - 16, s: 1.6 };
 
+// the exploded view: the stack's tilt (about the scene's centre, plus a nudge to keep it framed), and each
+// layer's depth (px, toward us) with the beats it lifts off and presses back
+const TILT = { rx: 12, ry: -18, x: 24, y: 8, s: 0.9 };
+const LAYERS: { k: string[]; z: number; in: number; out: number }[] = [
+  { k: ['z.ground', 'z.ground2'], z: 24, in: 0.26, out: 2.22 },
+  { k: ['z.grid'], z: 70, in: 0.3, out: 2.16 },
+  { k: ['z.content', 'd'], z: 104, in: 0.34, out: 2.1 },
+  { k: ['z.sheet'], z: 200, in: 0.38, out: 2.04 },
+];
+
 /** The phone's status bar (its colour is the layer's). */
 function Status() {
   return (
@@ -142,8 +152,11 @@ export default function Kova() {
           tl.from(el, { clip: from }).to(el, { clip: [0, 0, 0, 0] }, at, dur, ease);
 
         /* 0 → 1: the app as it ships, and the grid laid over it */
-        const phone = q('phone');
-        tl.from(phone, { y: 80, clip: [0, 0, 100, 0] }).to(phone, { y: 0, clip: [0, 0, 0, 0] }, 0.02, 0.3, E.out);
+        // (the phone is a stack of planes, so each comes up on its own; they come apart below)
+        ['z.body', 'z.ground', 'z.content'].forEach((k) => {
+          const el = q(k);
+          tl.from(el, { y: 80, clip: [0, 0, 100, 0] }).to(el, { y: 0, clip: [0, 0, 0, 0] }, 0.02, 0.3, E.out);
+        });
         // the sheet, in glass, over the phone's corner; its title
         tl.from(q('card'), { clip: notch(32, [0, 100, 0, 0]) }).to(q('card'), { clip: notch(32) }, 0.16, 0.12, E.out);
         tl.type(q('hd.kova'), 0.22, 0.05);
@@ -195,7 +208,9 @@ export default function Kova() {
         tl.type(q('t.type'), 1.24, 0.04);
         q.all('t.row').forEach((r, i) => clipIn(r, 1.27 + i * 0.05, 0.12, [0, 100, 0, 0]));
         // the screen re-renders in them, top to bottom
-        tl.from(q('d'), { clip: [0, 0, 100, 0] }).to(q('d'), { clip: [0, 0, 0, 0] }, 1.42, 0.24, E.move);
+        // (the app's two planes wipe in, the as-shipped ones wipe out the same way, each on its own plane in the stack)
+        ['z.ground2', 'd'].forEach((k) => tl.from(q(k), { clip: [0, 0, 100, 0] }).to(q(k), { clip: [0, 0, 0, 0] }, 1.42, 0.24, E.move));
+        ['z.ground', 'z.content'].forEach((k) => tl.to(q(k), { clip: [100, 0, 0, 0] }, 1.42, 0.24, E.move));
         // the balance, set in Eurostile, counts up
         const bal = q('d.bal');
         tl.on((t) => {
@@ -237,13 +252,49 @@ export default function Kova() {
         tl.to(flyUp, { y: dy }, 2.67, 0.15, E.move);
         tl.to(fly, { x: dx, s: 1 }, 2.72, 0.13, E.move);
         tl.to(q('d.slot'), { o: 0 }, 2.84, 0.01, E.lin);
+
+        /* the phone comes apart in depth: its planes (ground, grid, content, the sheet) lift off one another along
+           a tilted axis as the grid is laid on it, stay apart while the screen is re-rendered, then press back
+           together (the sheet first), the phone square again for the mark. One perspective on the stage, one tilt
+           on the stack, a depth on each plane: nothing nested. */
+        const stack = q('stack');
+        const inOut = (p: number) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+        const win = (t: number, a: number, d: number) => Math.min(1, Math.max(0, (t - a) / d));
+        const planes = LAYERS.map((l) => ({ ...l, els: l.k.map((k) => q(k)), was: NaN }));
+        let wasTilt = '';
+        let was3d = false;
+        tl.on((t) => {
+          if (!stack) return;
+          const tilt = inOut(win(t, 0.26, 0.44)) * (1 - inOut(win(t, 2.14, 0.36)));
+          let any = tilt > 0.0004;
+          for (const p of planes) {
+            const z = Math.round(p.z * inOut(win(t, p.in, 0.32)) * (1 - inOut(win(t, p.out, 0.3))) * 10) / 10;
+            if (z > 0) any = true;
+            if (z === p.was) continue;
+            p.was = z;
+            p.els.forEach((el, i) => el && (el.style.transform = z ? `translateZ(${z + i * 2}px)` : ''));
+          }
+          const css = tilt > 0.0004 ? `translate(${(TILT.x * tilt).toFixed(2)}px, ${(TILT.y * tilt).toFixed(2)}px) scale(${(1 - (1 - TILT.s) * tilt).toFixed(4)}) rotateX(${(TILT.rx * tilt).toFixed(2)}deg) rotateY(${(TILT.ry * tilt).toFixed(2)}deg)` : '';
+          if (css !== wasTilt) {
+            wasTilt = css;
+            stack.style.transform = css;
+          }
+          // flat when it is flat (the glass keeps its blur, and nothing is 3D that need not be)
+          if (any !== was3d) {
+            was3d = any;
+            stack.classList.toggle('is-3d', any);
+          }
+        });
       }}
     >
       {/* --- the phone (the one round thing: its body, its screen, its island) --- */}
-      <A k="phone" x={PH.x} y={PH.y} w={PH.w} h={PH.h} r={PH.r} c="kova-phone round">
-        <div className="kova-screen round">
+      <A k="stage" x={0} y={0} w={720} h={640} c="kova-stage">
+        <div data-k="stack" className="kova-stack">
+          <A k="z.body" x={PH.x} y={PH.y} w={PH.w} h={PH.h} r={PH.r} c="kova-phone round" />
+          {/* the screen's ground: white, as it ships */}
+          <A k="z.ground" x={SCR.x} y={SCR.y} w={SCR.w} h={SCR.h} r={SCR.r} c="kova-plane kova-ground round" />
           {/* the app as it ships: system type, greys, a placeholder logo, edges off the grid */}
-          <div className="kova-layer kova-plain">
+          <A k="z.content" x={SCR.x} y={SCR.y} w={SCR.w} h={SCR.h} r={SCR.r} c="kova-plane kova-plain round">
             <Status />
             <A k="p.brand" x={14} y={56} h={32} c="kova-p-brand">
               <span className="kova-p-logo">
@@ -283,10 +334,10 @@ export default function Kova() {
               ))}
             </A>
             <i className="kova-ind" />
-          </div>
+          </A>
 
           {/* the grid over it: an 8 pt baseline, four columns */}
-          <div className="kova-layer">
+          <A k="z.grid" x={SCR.x} y={SCR.y} w={SCR.w} h={SCR.h} r={SCR.r} c="kova-plane round">
             <A k="grid.base" x={0} y={TOP} w={SCR.w} h={SCR.h - TOP} c="kova-base" />
             {[0, 1, 2, 3].map((i) => (
               <A key={i} k={`grid.c${i}`} x={colX(i)} y={TOP} w={COL} h={SCR.h - TOP} c="kova-col" />
@@ -304,10 +355,11 @@ export default function Kova() {
                 24
               </span>
             </A>
-          </div>
+          </A>
 
-          {/* the app, designed: ink and chalk (the lime is kept for its mark); Eurostile for the figures, Geist for the words */}
-          <div data-k="d" className="kova-layer kova-app">
+          {/* the app, designed: its ground, then its content; ink and chalk (the lime is kept for its mark); Eurostile for the figures, Geist for the words */}
+          <A k="z.ground2" x={SCR.x} y={SCR.y} w={SCR.w} h={SCR.h} r={SCR.r} c="kova-plane kova-ground2 round" />
+          <A k="d" x={SCR.x} y={SCR.y} w={SCR.w} h={SCR.h} r={SCR.r} c="kova-plane kova-app round">
             <Status />
             <svg data-k="d.slot" className="a kova-slot" style={{ left: M, top: 56 }} width="32" height="32" viewBox="0 0 32 32" aria-hidden>
               <rect x="0.5" y="0.5" width="31" height="31" />
@@ -361,11 +413,10 @@ export default function Kova() {
               </A>
             ))}
             <i className="kova-ind" />
-          </div>
-        </div>
-      </A>
+          </A>
 
-      {/* --- the sheet: glass over the phone's corner; its title stays, its page turns --- */}
+      {/* --- the sheet: glass over the phone's corner; its title stays, its page turns (one more plane of the stack) --- */}
+      <div data-k="z.sheet" className="a kova-sheet" style={{ left: 0, top: 0, width: 720, height: 640 }}>
       <A k="card" x={CARD.x} y={CARD.y} w={CARD.w} h={CARD.h} c="glass kova-card" />
       <A k="hd" x={CX} y={HEAD_Y} c="f-label kova-hd kova-on">
         <span data-k="hd.kova">kova /</span>
@@ -457,6 +508,9 @@ export default function Kova() {
         <A k="fly" x={0} y={0} w={SLOT.s} h={SLOT.s} c="kova-tile">
           <KGlyph />
         </A>
+      </A>
+      </div>
+        </div>
       </A>
     </Scene>
   );

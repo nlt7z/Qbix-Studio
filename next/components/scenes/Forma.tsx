@@ -45,6 +45,23 @@ const PROD = { y: 362, w: 172, h: 96, x: [24, 214, 404] };
 const GRID = { x: 24, y: 64, w: 552, h: 452, n: 6, gap: 16 };
 const PHONE = { x: 540, y: 144 };
 
+// shallow depth (px along z, seen through the stage's perspective). Board pieces start at their own
+// depth and come to their layer in the site as they travel; the site's layers are a few px apart so
+// they sort correctly under the camera's tilt.
+const DEPTH0: Record<string, number> = { slices: 70, pal: -50, wall: 100, obj: 90, flow: -70, type: -20, cross: 40, ring: -10, block: 60 };
+const LAYER = { tile: 4, lime: 6 };
+// the camera, beat by beat: the site's plane (turned about y, tilted about x, set back, shifted) and the phone
+const CAM = [
+  { ry: -9, rx: 4, z: -30, x: 0 },
+  { ry: -6, rx: 3, z: -10, x: 0 },
+  { ry: 7, rx: 3, z: -40, x: 0 },
+  { ry: 15, rx: 2, z: -100, x: -22 },
+];
+const PH = { z: 130, ry: -10, rx: 2, x: -8 };
+const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+const soft = (x: number) => { const t = clamp01(x); return t * t * (3 - 2 * t); };
+
 const PRODUCTS: [keyof typeof T, string, string][] = [
   ['ring', 'Halo lamp', '$240'],
   ['block', 'Prism block', '$120'],
@@ -110,6 +127,23 @@ export default function Forma() {
         tl.from(q('url.lock'), { o: 0 }).to(q('url.lock'), { o: 1 }, 2.125, 0.005, E.lin);
         tl.type(q('url.new'), 2.13, 0.12);
         tl.from(q('live'), { clip: [0, 100, 0, 0] }).to(q('live'), { clip: [0, 0, 0, 0] }, 2.28, 0.07, E.out);
+        /* depth: the camera moves a little with each state; the board's pieces come forward out of their own depth into the site; the phone is in front */
+        const plane = q('plane'), phone = q('phone'), veil = q('veil');
+        const travel: [string, number][] = [['obj', 1.18], ['ring', 1.22], ['block', 1.25], ['cross', 1.28], ['lime', 1.3]];
+        const tz: [HTMLElement | null, number, number, number][] = travel.map(([k, at]) => [q(k === 'lime' ? 'lime' : `t.${k}`), DEPTH0[k] ?? 0, k === 'lime' ? LAYER.lime : LAYER.tile, at]);
+        const still = (['slices', 'wall', 'flow', 'type', 'pal'] as const).map((k) => [q(`t.${k}`), DEPTH0[k]] as const);
+        tl.from(veil, { o: 0 }).to(veil, { o: 1 }, 2.26, 0.26, E.soft);
+        tl.on((t) => {
+          const i = Math.min(CAM.length - 2, Math.max(0, Math.floor(t)));
+          const p = clamp01(t - i), a = CAM[i], b = CAM[i + 1];
+          if (plane) plane.style.transform = `translate3d(${lerp(a.x, b.x, p).toFixed(2)}px, 0, ${lerp(a.z, b.z, p).toFixed(2)}px) rotateX(${lerp(a.rx, b.rx, p).toFixed(3)}deg) rotateY(${lerp(a.ry, b.ry, p).toFixed(3)}deg)`;
+          tz.forEach(([el, z0, z1, at]) => { if (el) el.style.transform = `translateZ(${lerp(z0, z1, soft((t - at) / 0.26)).toFixed(2)}px)`; });
+          still.forEach(([el, z0]) => { if (el) el.style.transform = `translateZ(${z0}px)`; });
+          if (phone) {
+            const k = soft((t - 2.24) / 0.4);
+            phone.style.transform = `translate3d(${(PH.x * k).toFixed(2)}px, 0, ${lerp(40, PH.z, k).toFixed(2)}px) rotateX(${(PH.rx * k).toFixed(2)}deg) rotateY(${lerp(-3, PH.ry, k).toFixed(2)}deg)`;
+          }
+        });
         tl.from(q('phone'), { y: 90, clip: 'inset(0% 0% 100% 0%)' }).to(q('phone'), { y: 0, clip: 'inset(-64px -64px -64px -64px)' }, 2.24, 0.28, E.out);
       }}
     >
@@ -121,6 +155,8 @@ export default function Forma() {
         <span>9 pieces</span>
       </A>
 
+      <div className="fm-stage">
+        <div data-k="plane" className="fm-plane">
       {/* --- the site's window (under the board's pieces, which travel into it) --- */}
       <A k="win" x={WIN.x} y={WIN.y} w={WIN.w} h={WIN.h} c="win fm-win">
         <div className="win-bar">
@@ -230,6 +266,8 @@ export default function Forma() {
         return <A key={i} k={`grid.${i}`} x={GRID.x + i * (cw + GRID.gap)} y={GRID.y} w={cw} h={GRID.h} c="fm-col" />;
       })}
 
+          <A k="veil" x={WIN.x} y={WIN.y} w={WIN.w} h={WIN.h} c="fm-veil" />
+        </div>
       {/* --- the phone --- */}
       <Phone k="phone" x={PHONE.x} y={PHONE.y} w={180} h={372} c="fm-phone">
         <div className="fm-m">
@@ -248,6 +286,7 @@ export default function Forma() {
           <span className="fm-m-btn">Shop the drop</span>
         </div>
       </Phone>
+      </div>
     </Scene>
   );
 }

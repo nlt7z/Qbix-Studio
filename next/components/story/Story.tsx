@@ -168,7 +168,7 @@ const [kit, practice] = offers;
 
 const PRODUCTS = [
   { title: 'Strata', status: 'Live', href: '/products/strata', blurb: 'A moodboard in, a working design system out: tokens, components, and code.' },
-  { title: 'AI Bidding', status: 'Live', blurb: 'Blind auctions as a game. Bid, bluff, or go all in, while the model reads your hand.' },
+  { title: 'AI Bidding', status: 'Live', blurb: 'Blind boxes, sealed bids, one clue a round. Work your way up from flea markets to the Devil’s Auction.' },
   { title: 'TTS Editor', status: 'Soon', blurb: 'Shape pitch, pauses, and emotion, and edit the script until the voice is right.' },
   { title: 'Interview Assistant', status: 'Soon', blurb: 'Live hints, follow-up questions, and clean notes, so you stay in the conversation.' },
 ];
@@ -346,7 +346,7 @@ export default function Story() {
       {ai ? <StudioChapters /> : <OfferChapters />}
 
       {/* Ideas as chat bubbles, floating; then pulled back to the ground: the real thing the lime one
-          became, on a laptop (for AI teams, AI Bidding's own film). */}
+          became, on a laptop (for AI teams, AI Bidding's game screen). */}
       <Chapter
         id="about"
         scene={<Dream key={audience} biz={!ai} />}

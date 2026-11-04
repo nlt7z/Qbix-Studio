@@ -5,6 +5,14 @@
    keep its glass bar from frosting what's behind it. The one lime is the idea
    that was built. */
 
+/* depth: the scene is seen in perspective (one parent; the ideas are moved back and forth by the timeline,
+   the window has its own perspective inside its mask). Near ideas are fuller, far ones fainter (--dp: 0 far, 1 near). */
+.scn { perspective: 800px; perspective-origin: 50% 50%; }
+.scn .dream-bub { backface-visibility: hidden; }
+.scn .dream-bub > .dream-bub-glass { opacity: calc(0.45 + 0.55 * var(--dp, 1)); }
+.scn .dream-bub-svg { opacity: calc(0.35 + 0.65 * var(--dp, 1)); }
+.scn .dream-bub-txt { opacity: calc(0.5 + 0.5 * var(--dp, 1)); }
+
 /* an idea: a pane of glass and its point, growing out of the point */
 .scn .dream-bub { padding-bottom: 12px; z-index: 2; }
 .scn .dream-bub--l { transform-origin: 0% 100%; }
@@ -37,8 +45,8 @@
 .scn .dream-trail { position: absolute; background: var(--lime); }
 
 /* the window: in its mask; a glass bar over an open top, the page (or the film) under it */
-.scn .dream-mask { left: 0; top: 0; width: 720px; height: 560px; overflow: hidden; z-index: 3; pointer-events: none; }
-.scn .dream-win.win { background: transparent; }
+.scn .dream-mask { perspective: 1100px; perspective-origin: 50% 62%; left: 0; top: 0; width: 720px; height: 560px; overflow: hidden; z-index: 3; pointer-events: none; }
+.scn .dream-win.win { background: transparent; transform-origin: 50% 100%; }
 [data-tone] .scn .dream-win > .dream-bar.glass { border: 0; border-bottom: 1px solid var(--line); }
 [data-tone='dark'] .scn .dream-win > .dream-bar.glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); }
 [data-tone='paper'] .scn .dream-win > .dream-bar.glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9); }

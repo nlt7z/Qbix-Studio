@@ -1,5 +1,6 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import '@/app/scenes-dream.css';
 import Scene from '@/components/scene/Scene';
 import { A, T, Lock } from '@/components/scene/kit';
@@ -30,7 +31,7 @@ type Side = 'l' | 'r';
  * on, where it floats (x: its left edge for a tail on the left, its right edge
  * for one on the right; y: its top), and how far it's pulled down.
  */
-type Idea = { s: string; side: Side; x: number; y: number; fall: number };
+type Idea = { s: string; side: Side; x: number; y: number; fall: number; z: number };
 type Copy = { lime: [string, string]; at: { x: number; y: number }; ideas: Idea[] };
 
 // the window, in state 2: its body is 646 × 353, under a 36px glass bar
@@ -39,6 +40,12 @@ const WIN = { x: 36, y: 132, w: 648, h: 391 };
 const PINNED = 0.8;
 const TUCK_X = 16;
 const TUCK_Y = 12;
+// depth: the field is seen from a camera (the scene's perspective); an idea's z runs from far (-160) to near (160)
+const Z_FAR = -160, Z_NEAR = 160;
+const Z_SINK = -300; // where the ideas go as they fall into the window
+// the window's tilt, lying back: rotateX from here to 0 as it rises
+const TILT = 42;
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 // a bubble's tail: a right-angled point under its corner
 const TAIL = 12;
 
@@ -46,15 +53,15 @@ const TAIL = 12;
 // one's (the glass frosts what's under it); the top left is left open for where the lime one pins.
 // x: the left edge for a tail on the left, the right edge for one on the right
 const AI: Copy = {
-  lime: ['what if poker had', 'an AI that bluffs?'],
+  lime: ['what if you bid on boxes', 'no one can see into?'],
   at: { x: 196, y: 186 },
   ideas: [
-    { s: 'a voice you can edit', side: 'l', x: 200, y: 40, fall: 150 },
-    { s: 'moodboard in, system out', side: 'r', x: 645, y: 76, fall: 120 },
-    { s: '', side: 'r', x: 516, y: 278, fall: 12 },
-    { s: 'hints during an interview', side: 'r', x: 660, y: 352, fall: 40 },
-    { s: 'flyers in 48 hours', side: 'l', x: 96, y: 410, fall: 30 },
-    { s: 'a calmer clinic site', side: 'r', x: 466, y: 444, fall: 14 },
+    { s: 'a voice you can edit', side: 'l', x: 200, y: 40, fall: 150, z: -150 },
+    { s: 'moodboard in, system out', side: 'r', x: 645, y: 76, fall: 120, z: 110 },
+    { s: '', side: 'r', x: 516, y: 278, fall: 12, z: 30 },
+    { s: 'hints during an interview', side: 'r', x: 660, y: 352, fall: 40, z: -100 },
+    { s: 'flyers in 48 hours', side: 'l', x: 96, y: 410, fall: 30, z: 150 },
+    { s: 'a calmer clinic site', side: 'r', x: 466, y: 444, fall: 14, z: -140 },
   ],
 };
 
@@ -62,12 +69,12 @@ const BIZ: Copy = {
   lime: ['a site as calm', 'as my office?'],
   at: { x: 196, y: 186 },
   ideas: [
-    { s: 'flyers ready in 48 hours', side: 'l', x: 168, y: 40, fall: 150 },
-    { s: 'my listing, on Instagram', side: 'r', x: 628, y: 76, fall: 120 },
-    { s: '', side: 'r', x: 468, y: 278, fall: 12 },
-    { s: 'a site that books for me', side: 'r', x: 660, y: 352, fall: 40 },
-    { s: 'a menu that talks back', side: 'l', x: 96, y: 410, fall: 30 },
-    { s: 'a calmer waiting room', side: 'r', x: 552, y: 444, fall: 14 },
+    { s: 'flyers ready in 48 hours', side: 'l', x: 168, y: 40, fall: 150, z: -150 },
+    { s: 'my listing, on Instagram', side: 'r', x: 628, y: 76, fall: 120, z: 110 },
+    { s: '', side: 'r', x: 468, y: 278, fall: 12, z: 30 },
+    { s: 'a site that books for me', side: 'r', x: 660, y: 352, fall: 40, z: -100 },
+    { s: 'a menu that talks back', side: 'l', x: 96, y: 410, fall: 30, z: 150 },
+    { s: 'a calmer waiting room', side: 'r', x: 552, y: 444, fall: 14, z: -140 },
   ],
 };
 
@@ -88,8 +95,9 @@ function bubbleEdge(w: number, h: number, side: Side) {
 
 function Bubble({ k, idea }: { k: string; idea: Idea }) {
   const pos = idea.side === 'l' ? { left: idea.x } : { left: 'auto', right: 720 - idea.x };
+  const dp = ((idea.z - Z_FAR) / (Z_NEAR - Z_FAR)).toFixed(3);
   return (
-    <div data-k={k} className={`a dream-bub dream-bub--${idea.side}`} style={{ top: idea.y, ...pos }}>
+    <div data-k={k} className={`a dream-bub dream-bub--${idea.side}`} style={{ top: idea.y, ...pos, '--dp': dp } as unknown as CSSProperties}>
       {/* the frosted pane, cut to the bubble's shape; its edge drawn over it */}
       <i className="glass dream-bub-glass" />
       <svg className="dream-bub-svg" aria-hidden>
@@ -119,7 +127,7 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
       label={
         biz
           ? 'Ideas as chat bubbles, one of them lime: a site as calm as my office? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over the calm counseling homepage it became'
-          : 'Ideas as chat bubbles, one of them lime: what if poker had an AI that bluffs? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over AI Bidding, the auction game it became'
+          : 'Ideas as chat bubbles, one of them lime: what if you bid on boxes no one can see into? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over AI Bidding, the auction game it became'
       }
       build={(q, tl) => {
         /* the bubbles' edges, sized to their words */
@@ -148,7 +156,8 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
         /* 1 → 2: the window rises (from under the drawing's foot), the real thing in it; the ideas are
            pulled down into it, frosted behind its bar, then gone behind the page */
         const win = q('win');
-        tl.from(win, { y: 560 - WIN.y }).to(win, { y: 0 }, 1.04, 0.38, E.move);
+        // it starts lower than its foot: tilted back, its top edge would otherwise lift into view
+        tl.from(win, { y: 560 - WIN.y + 200 }).to(win, { y: 0 }, 1.04, 0.38, E.move);
         // the reply being typed first (it lets go of the lime one's corner), then the lowest first (the
         // window reaches them first), drawn in a little toward its middle as they go
         ideas.forEach((el, i) => {
@@ -157,6 +166,30 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
           const cx = el.offsetLeft + el.offsetWidth / 2;
           tl.to(el, { y: C.ideas[i].fall, x: Math.round((WIN.x + WIN.w / 2 - cx) * 0.1), s: 0.9 }, at, typing ? 0.1 : 0.24, E.in);
           tl.set(el, { o: 0 }, 1.5);
+        });
+        // the depth: the ideas sit at their own distance (translateZ, in the scene's perspective); the
+        // camera drifts a little as the chapter scrolls, so they slide past each other; as they fall they
+        // go back, into the window's depth; the window lies back and is raised to face us
+        const scn = ideas[0]?.parentElement ?? null;
+        const falls = ideas.map((_, i) => {
+          const typing = !C.ideas[i].s;
+          return { at: typing ? 1.02 : 1.04 + (ideas.length - 1 - i) * 0.035, dur: typing ? 0.1 : 0.24 };
+        });
+        const zs: string[] = [];
+        let origin = '', wasTilt = '';
+        tl.on((t) => {
+          const o = `${(360 - (t - 1) * 110).toFixed(1)}px ${(280 - (t - 1) * 60).toFixed(1)}px`;
+          if (scn && o !== origin) { origin = o; scn.style.perspectiveOrigin = o; }
+          ideas.forEach((el, i) => {
+            const f = falls[i], p = clamp01((t - f.at) / f.dur);
+            const z = C.ideas[i].z + (Z_SINK - C.ideas[i].z) * p * p;
+            const css = `translateZ(${z.toFixed(1)}px)`;
+            if (zs[i] !== css) { zs[i] = css; el.style.transform = css; }
+          });
+          const r = clamp01((t - 1.04) / 0.38);
+          const tilt = TILT * (1 - r) ** 2.4;
+          const wc = tilt < 0.05 ? 'none' : `rotateX(${tilt.toFixed(2)}deg)`;
+          if (win && wc !== wasTilt) { wasTilt = wc; win.style.transform = wc; }
         });
         // the thought's trail goes in as the window passes under it
         tl.to(q('lime.c1'), { s: 0 }, 1.2, 0.04, E.in).to(q('lime.c0'), { s: 0 }, 1.22, 0.04, E.in);

@@ -59,9 +59,18 @@
 .scn .kova-fly { z-index: 6; }
 
 /* --- the phone ---------------------------------------------------------- */
-.scn .kova-phone { background: #2a2c30; box-shadow: var(--lift); z-index: 2; }
-.scn .kova-screen { position: absolute; left: 8px; top: 8px; width: 264px; height: 592px; --r: 38px; overflow: hidden; background: #fff; }
-.scn .kova-layer { position: absolute; inset: 0; }
+.scn .kova-phone { background: #2a2c30; }
+/* the phone is a stack of planes (its body, the screen's ground, the grid, the app's content, the sheet), each its
+   own element in one stage: the stage has the perspective, the stack the tilt, each plane its depth (Kova.tsx writes
+   them). Flat, the stack is not 3D at all (so the glass keeps its blur); apart, it is preserve-3d, one level deep. */
+.scn .kova-stage { perspective: 2600px; perspective-origin: 50% 50%; pointer-events: none; }
+.scn .kova-stack { position: absolute; inset: 0; }
+.scn .kova-stack.is-3d { transform-style: preserve-3d; }
+.scn .kova-stack.is-3d > * { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.scn .kova-plane { overflow: hidden; }
+.scn .kova-ground { background: #fff; }
+.scn .kova-ground2 { background: #0b0c0e; }
+.scn .kova-sheet { pointer-events: none; }
 
 .scn .kova-status { position: absolute; left: 0; top: 0; width: 100%; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px 0 30px; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
 .scn .kova-island { position: absolute; left: 50%; top: 11px; width: 84px; height: 24px; margin-left: -42px; --r: 12px; background: #000; }
@@ -76,7 +85,7 @@
 .scn .kova-ind { position: absolute; left: 50%; bottom: 8px; width: 104px; height: 4px; margin-left: -52px; background: currentColor; opacity: 0.85; }
 
 /* the app as it ships: the system's type, greys, a placeholder logo */
-.scn .kova-plain { background: #fff; color: #121417; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+.scn .kova-plain { color: #121417; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
 .scn .kova-p-brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
 .scn .kova-p-logo { display: grid; place-items: center; width: 32px; height: 32px; background: rgba(18, 20, 23, 0.08); color: rgba(18, 20, 23, 0.3); }
 .scn .kova-p-av { display: grid; place-items: center; background: rgba(18, 20, 23, 0.08); color: rgba(18, 20, 23, 0.55); font-size: 13px; font-weight: 600; }
@@ -103,7 +112,7 @@
 .scn .kova-pill-on { position: absolute; inset: 0; display: grid; place-items: center; background: var(--lime); color: var(--on-lime); }
 
 /* the app, designed */
-.scn .kova-app { background: #0b0c0e; color: #f4f5f2; font-family: var(--font-sans); --fg3: rgba(244, 245, 242, 0.4); }
+.scn .kova-app { color: #f4f5f2; font-family: var(--font-sans); --fg3: rgba(244, 245, 242, 0.4); }
 .scn .kova-slot { fill: none; stroke: rgba(244, 245, 242, 0.34); stroke-dasharray: 3 3; }
 .scn .kova-word { display: flex; align-items: center; font-size: 23px; line-height: 1; }
 .scn .kova-av { display: grid; place-items: center; background: rgba(244, 245, 242, 0.1); font-size: 13px; font-weight: 600; }
