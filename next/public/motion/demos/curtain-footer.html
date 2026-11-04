@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en" data-tone="lime">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curtain footer · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "curtain-footer",
+  "title": "Curtain footer",
+  "group": "scroll",
+  "cat": "brand",
+  "order": 50,
+  "kind": "scroll",
+  "tone": "lime",
+  "line": "story margin = footer height · fixed under",
+  "shot": 10300,
+  "summary": "The homepage's last two moves. The lime sign-off is cut like a folder: a tab rises out of its top edge over the words on 45° shoulders, the chapter before showing round it, and its bottom right corner is cut into the footer's black. The footer waits underneath, fixed, and the whole story lifts off it like a curtain; through the cut corner you see the footer before it is uncovered.",
+  "spec": [
+    ["Lime chapter", "lime fill clipped to a polygon: tab 44px × 184px, shoulders 45°, bottom right corner cut by clamp(56px, 7vw, 112px)"],
+    ["Round the tab", "the tone of the chapter before (data-prev): the section's top half is that colour, its bottom half is clear"],
+    ["Footer", "position: fixed to the bottom, z-index 0, under the story (z-index 1)"],
+    ["Room", "the story's margin-bottom = the footer's height (a ResizeObserver keeps it)"],
+    ["When", "only while the footer is shorter than 0.92 of the screen; taller, it scrolls in as usual"],
+    ["Chapter", "160vh long; its frame is pinned for the last 60vh of it"],
+    ["Footer type", "columns 14px grey, links 16px; the wordmark as wide as the page, cut by the screen's edge"]
+  ],
+  "source": ["app/story.css · the lime chapter, the footer that follows, the footer's floor", "components/Colophon.tsx · Colophon (bare), fit", "components/story/Story.tsx · the contact Chapter", "components/FloorMark.tsx (static here)"],
+  "where": "The end of the homepage: the Contact chapter and the footer under it.",
+  "rules": [
+    "The footer is out of the flow: without the story's bottom margin there would be nothing to scroll through to uncover it.",
+    "Lime is only the chapter's surface: the button is ink, the marker is ink. The footer is black with no lime in it.",
+    "If the footer can't fit one screen (short windows), the curtain is off: it is a normal footer.",
+    "The tab names the chapter and stands over the words, on whichever side they are."
+  ],
+  "tags": ["scroll", "footer", "curtain", "fixed", "lime"],
+  "deps": []
+}
+</script>
+<style data-code>
+/* The sign-off and the footer under it — app/story.css (the lime chapter, the footer that follows, the floor) */
+:root {
+  --page-max: 1440px;
+  --gutter: clamp(16px, 4vw, 32px);
+  --col-gap: clamp(12px, 1.6vw, 24px);
+}
+.story {
+  position: relative; z-index: 1;
+  --edge: max(var(--gutter), calc((100vw - var(--page-max)) / 2 + var(--gutter)));   /* the grid's left and right edges */
+  --copy-w: min(40vw, 560px);
+  --stage-gap: clamp(32px, 4vw, 72px);
+}
+.ch {
+  --ch-bg: #08090A; --ch-fg: #f4f5f2; --ch-dim: rgba(244, 245, 242, 0.64);
+  position: relative; background: var(--ch-bg); color: var(--ch-fg);
+}
+.ch[data-tone='paper'] { --ch-bg: #f3f4f5; --ch-fg: #121417; --ch-dim: rgba(18, 20, 23, 0.64); }
+.ch-frame { position: relative; z-index: 2; }
+.ch-copy, .ch-head, .ch-foot { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.ch-head, .ch-foot { width: 100%; }
+.ch-stage { min-width: 0; min-height: 0; pointer-events: none; }
+.ch-scene { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+.ch-kicker { margin: 0 0 18px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ch-dim); }
+.ch-title { margin: 0; font-family: var(--font-headline); font-weight: 400; font-size: clamp(34px, 3.4vw, 58px); line-height: 1.04; letter-spacing: -0.03em; color: var(--ch-fg); text-wrap: balance; }
+.ch-sign { font-size: clamp(34px, 3.8vw, 60px); }
+.ch-lede { margin: 20px 0 0; max-width: 34em; font-size: clamp(16px, 1.2vw, 19px); line-height: 1.6; color: var(--ch-dim); }
+.ch-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 30px; }
+.ch .btn-solid { background: var(--ch-fg); color: var(--ch-bg); }      /* black and white buttons: the lime is the chapter's own */
+.ch .btn-solid.cut:focus-visible { outline: 2px solid var(--ch-bg); outline-offset: -6px; }
+.ch-mail { color: var(--ch-fg); font-size: 16px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+
+/* --- the lime chapter: the sign-off, cut like a folder ------------------------------
+   Lime, with ink on it. Its top edge rises into a tab over the words, its shoulders at 45° (the angle of every
+   cut corner); round the tab is the tone of the chapter before. The tab carries the chapter's name. Its last
+   corner, bottom right, is cut into the footer's black. */
+.ch[data-tone='lime'] {
+  --ch-bg: #B8FF00; --ch-fg: #0c1300; --ch-dim: rgba(12, 19, 0, 0.66);
+  --tab-h: 44px; --tab-w: 184px; --tab-x: var(--edge); --tab-l: 0px;
+  --corner: clamp(56px, 7vw, 112px);
+}
+.ch[data-prev='dark'] { --ch-around: #08090A; }
+.ch[data-prev='paper'] { --ch-around: #f3f4f5; }
+.story > .ch[data-tone='lime'] { background: linear-gradient(var(--ch-around) 50%, transparent 50%) !important; }   /* the top half is the chapter before; the bottom half is clear, so the footer shows through the cut corner */
+.ch[data-tone='lime'] {
+  --ch-shape: polygon(
+    0 var(--tab-h), calc(var(--tab-l) - var(--tab-h)) var(--tab-h), var(--tab-l) 0, calc(var(--tab-x) + var(--tab-w)) 0,
+    calc(var(--tab-x) + var(--tab-w) + var(--tab-h)) var(--tab-h), 100% var(--tab-h),
+    100% calc(100% - var(--corner)), calc(100% - var(--corner)) 100%, 0 100%
+  );
+}
+.ch[data-tone='lime']::before { content: ''; position: absolute; inset: 0; background: #B8FF00; clip-path: var(--ch-shape); }
+.ch-tab { position: absolute; top: 0; left: var(--tab-x); z-index: 3; height: var(--tab-h); display: flex; align-items: center; }
+.ch-tab .ch-kicker { margin: 0; color: var(--ch-fg); }
+/* the highlighter, finished (components/Marker.tsx animates the bar across): ink bar, lime copy of the words */
+.marker { position: relative; display: inline-block; white-space: nowrap; clip-path: inset(-0.06em -0.16em -0.1em); }
+.marker-bar { position: absolute; inset: -0.02em -0.14em -0.06em; overflow: hidden; background: #121417; }
+.marker-in { position: absolute; inset: 0; padding: 0.02em 0.14em 0.06em; line-height: inherit; white-space: nowrap; color: #B8FF00; user-select: none; -webkit-user-select: none; }
+
+/* wide screens: the words pinned beside the object, the chapter 160vh long (its frame sticks for the last 60vh) */
+@media (min-width: 640px) and (min-aspect-ratio: 1/1) {
+  .ch { height: var(--h, 190vh); }
+  .ch-frame { position: sticky; top: 0; height: 100vh; height: 100svh; }
+  .ch-copy { position: absolute; top: 50%; translate: 0 -46%; width: var(--copy-w); }
+  .ch[data-side='right'] .ch-copy { left: var(--edge); }
+  .ch[data-side='left'] .ch-copy { right: var(--edge); }
+  .ch-stage { position: absolute; top: calc(clamp(64px, 6vw, 84px) + 3vh); bottom: 6vh; }
+  .ch[data-side='right'] .ch-stage { left: calc(var(--edge) + var(--copy-w) + var(--stage-gap)); right: var(--edge); }
+  .ch[data-side='left'] .ch-stage { left: var(--edge); right: calc(var(--edge) + var(--copy-w) + var(--stage-gap)); }
+  .ch--contact .ch-acts { margin-top: 26px; }
+  /* the tab over the words, wherever they stand */
+  .ch[data-tone='lime'][data-side='left'] { --tab-x: calc(100% - var(--edge) - var(--copy-w)); --tab-l: calc(var(--tab-x) - 32px); }
+}
+@media (max-width: 639px), (max-aspect-ratio: 1/1) {
+  .ch { height: var(--h, 190vh); }
+  .ch-frame { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: 24px; padding: 64px var(--gutter) 24px; }
+  .ch-title { font-size: clamp(30px, 8.4vw, 44px); }
+  .ch-stage { flex: none; height: 38svh; }
+  .ch[data-tone='lime'] { --tab-h: 40px; --tab-w: 136px; --tab-x: var(--gutter); }
+}
+
+/* --- the footer that follows: it waits underneath, and the story lifts off it like a curtain.
+   Colophon sets the story's bottom margin to its height; through the sign-off's cut corner you see it
+   before it's uncovered. --- */
+.story ~ .footer { position: relative; z-index: 4; }
+.story ~ .footer.ft--curtain { position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; }
+
+.footer { background: #08090A; color: #F7F8F8; --ink: #F7F8F8; --ink-2: #E6E8EA; --text-2: #9AA0A9; --text-3: #838892; }
+.footer.ft { padding: clamp(40px, 5vw, 64px) 0 0; overflow: hidden; }
+.story ~ .footer.ft--floor { padding-top: clamp(32px, 5vh, 56px); }
+.footer .container { width: 100%; max-width: var(--page-max); margin: 0 auto; padding: 0 var(--gutter); }
+.ft-grid {
+  display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap);
+  padding: 0 0 clamp(18px, 3vh, 28px);
+}
+.ft-grid > .ft-col { grid-column: span 3; }
+.ft-col-title { display: block; margin-bottom: 12px; font-size: 14px; color: var(--text-3); }
+.ft-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ft-link { font-size: 16px; color: var(--ink-2); text-decoration: none; transition: color 120ms var(--ease); }
+a.ft-link:hover { color: var(--ink); }
+.ft-link.is-soon { color: var(--text-3); }
+.ft-soon { margin-left: 6px; font-size: inherit; color: var(--text-3); }
+.ft-status {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px clamp(20px, 4vw, 48px);
+  padding: 0 0 clamp(14px, 2.4vh, 24px); font-size: 14px; color: var(--text-2);
+}
+.ft-top { margin-left: auto; padding: 0; background: none; border: 0; cursor: pointer; font: inherit; color: var(--ink-2); }
+.ft-top:hover { color: var(--ink); }
+/* the floor: the wordmark, as wide as the page, cut by the screen's edge */
+.ft-floor { padding: 0 var(--gutter); line-height: 0; overflow: hidden; }
+.floor-mark { display: block; width: 100%; height: auto; overflow: visible; }
+.floor-mark path { fill: #f4f5f2; }
+/* two to a row under 860px on the site; 640px here so the 800px tile keeps its four columns */
+@media (max-width: 640px) { .ft-grid > .ft-col { grid-column: span 6; } .ft-grid { row-gap: 24px; } .ft-link { font-size: 14px; } }
+</style>
+<style>
+  /* the page, round the piece */
+  html, body { background: #08090A; }                               /* the site's page is black: nothing lime shows past the footer */
+  .ch--prev { height: 100vh; }
+  .ch--prev .ch-frame { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 0 var(--edge); }
+  .ch--prev .ch-copy { position: static; width: min(var(--copy-w), 100%); translate: none; }
+  .ch-cube { width: 100%; height: 100%; display: block; }
+  /* the footer has to be shorter than 0.92 of the screen to be a curtain: a little tighter in the 800px tile and short windows */
+  @media (max-height: 640px) {
+    .ft-link { font-size: 14px; } .ft-col ul { gap: 4px; } .ft-col-title { margin-bottom: 8px; }
+  }
+  html.qm-tile .story { --copy-w: 36vw; --edge: 24px; --stage-gap: 20px; }
+  html.qm-tile .ft-floor { padding: 0 24px; }
+  html.qm-tile .footer .container { padding: 0 24px; }
+</style>
+</head>
+<body>
+<!-- code -->
+<main class="story">
+  <!-- the chapter before: its tone is what shows round the tab (data-prev) -->
+  <section class="ch ch--prev" data-tone="dark">
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="ch-kicker mono">About us</p>
+        <h2 class="ch-title">Our story is simple.</h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- the sign-off: lime, cut like a folder; 160vh, its frame pinned for the last 60vh -->
+  <section class="ch ch--contact" id="contact" data-chapter data-tone="lime" data-prev="dark" data-side="right" style="--h: 160vh">
+    <div class="ch-tab"><span class="ch-kicker mono">Contact</span></div>
+    <div class="ch-frame">
+      <div class="ch-stage"><div class="ch-scene"><!-- the glass cube: its own piece --></div></div>
+      <div class="ch-copy">
+        <div class="ch-head">
+          <h2 class="ch-title ch-sign">Bring the idea. <span class="marker marker--ink">We’ll build the thing.<span class="marker-bar" aria-hidden="true"><span class="marker-in">We’ll build the thing.</span></span></span></h2>
+        </div>
+        <div class="ch-foot">
+          <div class="ch-acts">
+            <!-- SplitText: the label is split into letters (see the SplitText button piece) -->
+            <button type="button" class="btn btn-solid split-cta cut">Tell us your idea</button>
+            <a class="ch-mail" href="mailto:contact@qbix.space">contact@qbix.space</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- the footer: a sibling after the story, fixed underneath it -->
+<footer class="footer ft ft--floor" data-nav-theme="dark" data-cta-zone>
+  <div class="container">
+    <div class="ft-grid">
+      <nav class="ft-col" aria-label="Services"><span class="ft-col-title">Services</span>
+        <ul><li><a class="ft-link" href="#">Design service</a></li><li><a class="ft-link" href="#">Brand upgrade</a></li><li><a class="ft-link" href="#">Listing Launch Kit</a></li><li><a class="ft-link" href="#">Practice Website Refresh</a></li></ul></nav>
+      <nav class="ft-col" aria-label="Products"><span class="ft-col-title">Products</span>
+        <ul><li><a class="ft-link" href="#">Strata</a></li><li><span class="ft-link">AI Bidding</span></li><li><span class="ft-link is-soon">TTS Editor<span class="ft-soon">soon</span></span></li><li><span class="ft-link is-soon">Interview Assistant<span class="ft-soon">soon</span></span></li></ul></nav>
+      <nav class="ft-col" aria-label="Studio"><span class="ft-col-title">Studio</span>
+        <ul><li><a class="ft-link" href="#">About</a></li><li><span class="ft-link is-soon">Careers<span class="ft-soon">soon</span></span></li></ul></nav>
+      <nav class="ft-col" aria-label="Elsewhere"><span class="ft-col-title">Elsewhere</span>
+        <ul><li><a class="ft-link" href="#">Are.na</a></li><li><a class="ft-link" href="#">GitHub</a></li><li><a class="ft-link" href="#">X / Twitter</a></li><li><a class="ft-link" href="#">LinkedIn</a></li><li><a class="ft-link" href="#">Instagram</a></li></ul></nav>
+    </div>
+    <div class="ft-status">
+      <span>Taking new projects</span>
+      <span>© 2026 Qbix</span>
+      <button type="button" class="ft-top">Back to top <span aria-hidden="true">↑</span></button>
+    </div>
+  </div>
+  <div class="ft-stage">
+    <div class="ft-floor">
+      <!-- the wordmark, the four letters apart (static here), cut where the screen's edge cuts the letters -->
+      <svg class="floor-mark" viewBox="0 0 918 242" preserveAspectRatio="xMidYMin meet" role="img" aria-label="qbix">
+        <path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5Z"/>
+        <path d="M280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5Z"/>
+        <path d="M583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5Z"/>
+        <path d="M709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/>
+      </svg>
+    </div>
+  </div>
+</footer>
+<!-- /code -->
+<div class="qm-ui" data-tone="dark">
+  <span>Chapter before</span>
+  <button data-prev="dark" class="is-on">Black</button>
+  <button data-prev="paper">Paper</button>
+  <span class="qm-sep">/</span>
+  <span>Words on the</span>
+  <button data-side="right" class="is-on">Left</button>
+  <button data-side="left">Right</button>
+</div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* The curtain — components/Colophon.tsx. The footer is fixed under the story; the story's bottom margin is the footer's
+   height, so the last stretch of scrolling lifts the story off it. Only while the footer fits the screen (under 0.92 of
+   it): taller, it scrolls in as usual. */
+function curtain(footer, story) {
+  const fit = () => {
+    const h = footer.offsetHeight;
+    const on = h < window.innerHeight * 0.92;
+    footer.classList.toggle('ft--curtain', on);
+    story.style.marginBottom = on ? `${h}px` : '';
+  };
+  new ResizeObserver(fit).observe(footer);
+  window.addEventListener('resize', fit);
+  fit();
+}
+curtain(document.querySelector('.footer'), document.querySelector('main.story'));
+document.querySelector('.ft-top').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+</script>
+<script>
+  QM.split(document.querySelector('.ch-acts .btn'), { arrow: true });
+
+  // the glass cube is its own piece: a flat isometric stand-in, so the sign-off has its object
+  (function cube() {
+    const U = 86, c = U * Math.cos(Math.PI / 6), s = U * Math.sin(Math.PI / 6);
+    const P = (x, y, z) => [200 + (x - y) * c, 118 + (x + y) * s - z * U];
+    const poly = (pts, fill, stroke = 'rgba(12,19,0,0.22)') => `<polygon points="${pts.map((p) => p.map((n) => n.toFixed(1)).join(',')).join(' ')}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" stroke-linejoin="round"/>`;
+    const block = (x0, y0, z0, k, top, left, right, stroke) => {
+      const a = (1 - k) / 2, x = x0 + a, y = y0 + a, z = z0 + a, X = x + k, Y = y + k, Z = z + k;
+      return poly([P(x, y, Z), P(X, y, Z), P(X, Y, Z), P(x, Y, Z)], top, stroke)
+        + poly([P(x, Y, z), P(X, Y, z), P(X, Y, Z), P(x, Y, Z)], left, stroke)
+        + poly([P(X, y, z), P(X, Y, z), P(X, Y, Z), P(X, y, Z)], right, stroke);
+    };
+    const cells = [];
+    for (let z = 0; z < 2; z++) for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) cells.push([x, y, z]);
+    cells.sort((a, b) => a[0] + a[1] + a[2] - (b[0] + b[1] + b[2]));
+    const svg = `<svg class="ch-cube" viewBox="40 -70 320 376" preserveAspectRatio="xMidYMid meet" aria-hidden="true">`
+      + cells.map(([x, y, z]) => block(x, y, z, 0.9, 'rgba(255,255,255,0.62)', 'rgba(255,255,255,0.30)', 'rgba(12,19,0,0.10)')).join('')
+      + block(0.82, 0.82, 0.82, 0.36, '#ffffff', 'rgba(255,255,255,0.88)', 'rgba(255,255,255,0.72)', 'none')
+      + '</svg>';
+    document.querySelector('.ch--contact .ch-scene').innerHTML = svg;
+  })();
+
+  QM.demo({ kind: 'scroll', lead: 700, dur: 6600, pause: 900, hold: 1600, back: 2800, stops: [0.12, 0.53, 1] });
+
+  // variants: the chapter before (the tone round the tab), and which side the words stand on
+  const lime = document.querySelector('.ch--contact'), prev = document.querySelector('.ch--prev');
+  document.querySelectorAll('[data-prev]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-prev]').forEach((x) => x.classList.toggle('is-on', x === b));
+    lime.dataset.prev = b.dataset.prev;
+    prev.dataset.tone = b.dataset.prev;
+  }));
+  document.querySelectorAll('[data-side]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-side]').forEach((x) => x.classList.toggle('is-on', x === b));
+    lime.dataset.side = b.dataset.side;
+  }));
+</script>
+</body>
+</html>

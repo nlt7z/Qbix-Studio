@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notched label · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-label-input",
+  "title": "Notched label",
+  "group": "picks",
+  "cat": "inputs",
+  "order": 170,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "label 320 ms expo out · hop 3 px, 18 ms a letter · notch 5 px each side",
+  "summary": "The label rises into the top edge on focus, its letters hopping one after another, while the ring opens a gap under it from the middle outward. The focused edge turns ink and a lime halo holds the field you are in; the typed value carries its unit (USD, weeks, pages). Qbix colours: the lime is the halo and nothing else, so Send brief is ink.",
+  "spec": [
+    ["Label", "14 px, sentence case; lifts 24 px and scales to 0.857 (12 px) onto the top edge when the field is focused or has a value; 320 ms, cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Hop", "each letter rises 3 px at 40% and settles, 320 ms expo out, 18 ms apart, as the field takes focus"],
+    ["Notch", "the ring is two arcs, from the notch round to the bottom middle, so it is always whole; two gap strokes close the notch (dash 1 of 3, pathLength 1) and slide to dashoffset −1 in 320 ms expo out, opening from the middle outward; the gap is the lifted label's width plus 5 px a side, measured once the font is in"],
+    ["Edge", "1 px at 52% ink, 120 ms expo out to 1.5 px solid ink on focus; a 3 px lime halo (box-shadow) arrives with it; hover darkens the edge (55% edge, 45% ink)"],
+    ["Unit", "fades in over 200 ms once the field has a value; the typed value is tabular, with room kept for the unit (92 px, 62 px in the half fields)"],
+    ["Field", "48 px tall, radius 8; a real input fills it, so the whole box takes the click (pointerdown focuses on the next tick)"],
+    ["Reduced motion", "the fields are shown filled, labels lifted, no hop"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Notched label (ix-label-input)", "Idea: bencho.dev label-input (MIT)"],
+  "where": "The Start a brief form on the Design service: a budget in USD, a timeline in weeks and a site size in pages, before Send brief.",
+  "rules": [
+    "The ring is whole at rest and opens only under the lifted label; the notch is measured from the label's own width.",
+    "Focus is the one coloured edge: ink with a lime halo. The lime is the halo only, so the button beside it stays ink.",
+    "The typed value carries its unit; the unit shows only once there is a value.",
+    "A real input under the drawing, with the label as its aria-label; the label is sentence case and never a placeholder."
+  ],
+  "tags": ["input", "form", "label", "focus", "lime"],
+  "shot": 3400
+}
+</script>
+<style data-code>
+/* Notched label · Idea: bencho.dev label-input (MIT).
+   O2's roles in qbix colours: ink on paper; the one lime is the halo of the field you are in. Radii, spacing and type are the O2 library's own. */
+.lf {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
+  --surface: #ffffff; --field-border: rgba(18, 20, 23, 0.52);
+  --focus: #121417; --focus-ring: #B8FF00;                      /* O2's focus green: an ink edge, and the lime as its halo */
+  --primary: #121417; --on-primary: #f3f4f5;                    /* the button: ink on paper (the lime is already spent on the field) */
+  --radius-sm: 8px; --radius-lg: 14px;
+  --duration-fast: 120ms; --duration-base: 200ms; --duration-slower: 320ms; --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  display: grid; gap: 20px; align-content: start; width: 480px; max-width: 100%;
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.lf-heading { margin: 0; font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.lf-meta { margin: 0; font-size: 12px; color: var(--faint); }
+.lf-card { background: var(--surface); border-radius: var(--radius-lg); padding: 32px 24px 24px; display: grid; gap: 24px; }
+.lf-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.lf-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* the field: a ring that is always whole, with a gap that opens under the lifted label */
+.nf { position: relative; height: 48px; cursor: text; --lx: 14px; }
+.nf svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.nf path { fill: none; stroke: var(--field-border); stroke-width: 1; transition: stroke var(--duration-fast) var(--ease-out), stroke-width var(--duration-fast) var(--ease-out); }
+.nf:hover path, .nf.is-hot path { stroke: color-mix(in srgb, var(--field-border) 55%, var(--text)); }
+.nf[data-focus] path { stroke: var(--focus); stroke-width: 1.5; }
+.nf[data-focus]::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-sm); box-shadow: 0 0 0 3px var(--focus-ring); pointer-events: none; }
+.nf .gap { stroke-dasharray: 1 2; stroke-dashoffset: 0; transition: stroke var(--duration-fast) var(--ease-out), stroke-width var(--duration-fast) var(--ease-out), stroke-dashoffset var(--duration-slower) var(--ease-out); }
+.nf[data-up] .gap { stroke-dashoffset: -1; }
+.nf label { position: absolute; z-index: 1; left: var(--lx); top: 50%; white-space: pre; transform-origin: left center; transform: translateY(-50%); color: var(--muted); pointer-events: none; transition: transform var(--duration-slower) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.nf[data-up] label { transform: translateY(-50%) translateY(-24px) scale(0.857); }
+.nf[data-focus] label { color: var(--focus); }
+.nf label span { display: inline-block; }
+.nf[data-focus] label span { animation: nf-hop var(--duration-slower) var(--ease-out) both; animation-delay: calc(var(--i) * 18ms); }
+@keyframes nf-hop { 0% { transform: translateY(0); } 40% { transform: translateY(-3px); } 100% { transform: translateY(0); } }
+.nf input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0 92px 0 var(--lx); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text); outline: 0; font: inherit; font-variant-numeric: tabular-nums; }
+.nf .unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; opacity: 0; transition: opacity var(--duration-base) var(--ease-out); }
+.nf[data-filled] .unit { opacity: 1; }
+.lf-two .nf input { padding-right: 62px; }
+
+/* the button: ink, 36 px, radius 8 */
+.lf-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid transparent; background: var(--primary); color: var(--on-primary); font: inherit; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.lf-btn:hover, .lf-btn.is-hot { background: color-mix(in oklab, var(--primary) 82%, #fff); }
+.lf-btn:active { background: color-mix(in oklab, var(--primary) 70%, #fff); }
+.lf-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .nf path, .nf .gap, .nf label, .nf .unit, .lf-btn { transition: none; }
+  .nf[data-focus] label span { animation: none; }
+}
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<div class="lf">
+  <div><h1 class="lf-heading">Start a brief</h1><p class="lf-meta">Design service · From $500 · 1 to 3 weeks</p></div>
+  <div class="lf-card">
+    <div class="nf" id="f1" data-label="Project budget" data-unit="USD"></div>
+    <div class="lf-two">
+      <div class="nf" id="f2" data-label="Timeline" data-unit="weeks"></div>
+      <div class="nf" id="f3" data-label="Site size" data-unit="pages"></div>
+    </div>
+    <div class="lf-row"><span class="lf-meta">Replies usually within 24 hours.</span><button class="lf-btn" id="go" type="button">Send brief</button></div>
+  </div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Click a field and type: the label lifts, the value keeps its unit</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* Idea: bencho.dev label-input (MIT). The ring is drawn in SVG as two arcs that meet at the bottom middle, with a
+   notch at the top left sized to the lifted label; two short strokes close the notch and slide away when the label
+   rises. The input is a real one underneath. */
+const H = 48, R = 8, IN = 0.5, S = 0.857;                      // field height, radius, half the stroke, the lifted label's scale (12 / 14)
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function build(box) {
+  const label = box.dataset.label, w = box.offsetWidth;        // the layout width: the page may be scaled
+  box.innerHTML = `<svg width="${w}" height="${H}" viewBox="0 0 ${w} ${H}" aria-hidden="true"></svg><label></label><input type="text" autocomplete="off" spellcheck="false" aria-label="${label}"><span class="unit">${box.dataset.unit}</span>`;
+  const lab = box.querySelector('label'), input = box.querySelector('input'), svg = box.querySelector('svg');
+  lab.innerHTML = [...label].map((c, i) => `<span style="--i:${i}">${c}</span>`).join('');
+  const lw = lab.offsetWidth, lx = 14, x0 = lx - 5, x1 = lx + lw * S + 5, a = R - IN, Rr = w - IN, B = H - IN, mid = w / 2, nm = (x0 + x1) / 2;
+  svg.innerHTML = `
+    <path d="M${x1},${IN} L${w - R},${IN} A${a},${a} 0 0 1 ${Rr},${R} L${Rr},${H - R} A${a},${a} 0 0 1 ${w - R},${B} L${mid},${B}"/>
+    <path d="M${x0},${IN} L${R},${IN} A${a},${a} 0 0 0 ${IN},${R} L${IN},${H - R} A${a},${a} 0 0 0 ${R},${B} L${mid},${B}"/>
+    <path class="gap" d="M${nm},${IN} L${x0},${IN}" pathLength="1"/><path class="gap" d="M${nm},${IN} L${x1},${IN}" pathLength="1"/>`;
+  const upd = () => { box.toggleAttribute('data-up', document.activeElement === input || input.value.length > 0); box.toggleAttribute('data-filled', input.value.length > 0); };
+  input.addEventListener('focus', () => { box.setAttribute('data-focus', ''); upd(); });
+  input.addEventListener('blur', () => { box.removeAttribute('data-focus'); upd(); });
+  input.addEventListener('input', upd);
+  box.addEventListener('pointerdown', () => setTimeout(() => input.focus(), 0));
+  return input;
+}
+
+/* the notch is measured against the label's own width, once the font is real */
+let ins;
+const SAMPLE = ['1200', '3', '5'];
+function fill() { ins.forEach((i, k) => { i.value = SAMPLE[k]; i.dispatchEvent(new Event('input')); }); }
+Promise.all([document.fonts.load('400 14px Geist'), document.fonts.load('500 14px Geist')]).catch(() => {}).then(() => {
+  ins = ['f1', 'f2', 'f3'].map((id) => build(document.getElementById(id)));
+  if (reduceMotion) fill();
+});
+</script>
+<script>
+  /* harness glue: a ghost fills the three fields; the viewer's own pointer and keys take over */
+  PickGhost.fit(document.getElementById('pk'), 480, 380, { max: 1.5 });
+  const ready = () => new Promise((r) => { const poll = () => (ins ? r() : setTimeout(poll, 50)); poll(); });
+  PickGhost.start({
+    hot: '.nf, #go',
+    reset() { if (!ins) return; ins.forEach((i) => { i.value = ''; i.blur(); i.dispatchEvent(new Event('input')); }); },
+    async script(g) {
+      while (!ins) await g.wait(100);
+      await g.wait(900);
+      await g.click('#f1 input'); await g.wait(700);
+      await g.type('#f1 input', '1200', 140); await g.wait(900);
+      await g.click('#f2 input'); await g.wait(500);
+      await g.type('#f2 input', '3', 130); await g.wait(700);
+      await g.click('#f3 input'); await g.wait(500);
+      await g.type('#f3 input', '5', 140); await g.wait(700);
+      await g.to('#go'); document.activeElement.blur(); await g.wait(1800);
+    },
+    still() { ready().then(fill); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

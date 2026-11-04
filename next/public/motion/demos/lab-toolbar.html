@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring toolbar · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-toolbar",
+  "title": "Spring toolbar",
+  "group": "lab",
+  "cat": "buttons",
+  "order": 100,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "springs k 260 · c 26 · tooltip travels with the pointer",
+  "summary": "A black toolbar floating under Forma's launch poster. The hover highlight and the tooltip both ride springs, following the position and width of whichever tool the pointer is on, and the tooltip's words slide across in the direction of travel. The colour tool opens inside the bar, its swatches pop out in turn, and the title takes the colour you pick.",
+  "spec": [
+    ["Highlight, tooltip", "x and width on springs k 260 · c 26 (k 240 for the tooltip)"],
+    ["Tooltip text", "slides ±18 px in the direction of travel, 150 ms out, 320 ms in (cubic-bezier(0.2, 0.8, 0.2, 1))"],
+    ["Active tool", "a lime block on its own spring, k 220 · c 22"],
+    ["Colours", "the strip's width springs open (k 190 · c 22), swatches pop 45 ms apart"],
+    ["Press", "scale 1 → 0.86 → 1 in 280 ms"]
+  ],
+  "source": ["Qbix studio library · toolbar"],
+  "where": "The editing bar on a launch poster or a Strata layout.",
+  "rules": [
+    "One highlight and one tooltip that move, not one per tool.",
+    "Text slides across inside the tooltip's own clip; it is never faded.",
+    "The lime is the active tool, the only lime on the screen."
+  ],
+  "tags": ["hover", "click", "spring", "toolbar", "tooltip"],
+  "shot": 5200
+}
+</script>
+<style data-code>
+/* Floating toolbar: one highlight, one tooltip, both on springs */
+.tb-bar { position: absolute; left: 50%; top: 336px; height: 64px; padding: 0 8px; background: #121417; color: #f4f5f2; display: flex; align-items: center; transform: translateX(-50%); --cut: 12px; }
+.tb-it { position: relative; z-index: 1; width: 52px; height: 48px; display: grid; place-items: center; cursor: pointer; flex: none; }
+.tb-it svg { width: 22px; height: 22px; }
+.tb-sep { width: 2px; height: 24px; background: rgba(244, 245, 242, 0.16); margin: 0 8px; flex: none; }
+.tb-hov, .tb-act { position: absolute; left: 0; top: 8px; width: 52px; height: 48px; pointer-events: none; }
+.tb-hov { background: rgba(244, 245, 242, 0.13); transform-origin: 50% 100%; }
+.tb-act { background: #b8ff00; }
+.tb-colw { display: flex; align-items: center; overflow: hidden; flex: none; height: 48px; }
+.tb-sw { flex: none; width: 36px; height: 48px; display: grid; place-items: center; cursor: pointer; }
+.tb-sw i { display: block; width: 20px; height: 20px; }
+.tb-tip { position: absolute; left: 0; top: 292px; height: 32px; background: #121417; color: #f4f5f2; font: 500 12px/32px 'Encode Sans', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; overflow: hidden; pointer-events: none; }
+.tb-tip span { position: absolute; left: 0; top: 0; height: 32px; padding: 0 12px; white-space: nowrap; }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  #tb-stage { position: absolute; left: 50%; top: 47%; width: 740px; height: 410px; transform-origin: 50% 50%; }
+  .tb-poster { position: absolute; left: 0; right: 0; top: 0; height: 280px; background: var(--surface); padding: 32px 36px; display: grid; align-content: start; gap: 14px; --cut: 24px; }
+  .tb-poster .title { font-size: 80px; line-height: 0.98; max-width: 9em; transition: color 600ms var(--ease); }
+  .tb-poster .f { font-size: 15px; line-height: 1.5; margin-top: 4px; }
+  .tb-poster .f span { color: var(--fg2); }
+  #tb-cur { position: absolute; left: 0; top: 0; width: 22px; height: 28px; pointer-events: none; z-index: 9; opacity: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div id="tb-stage">
+  <div class="tb-poster cut">
+    <p class="kicker">Launch night · Friday, 8 pm</p>
+    <h2 class="title" id="tb-head">Forma goes live on Friday.</h2>
+    <div class="f">Objects for bright rooms <span>forma.studio · doors at 6:30 pm</span></div>
+  </div>
+<!-- code -->
+<div class="tb-tip" id="tb-tip"></div>
+<div class="tb-bar cut" id="tb-bar">
+  <div class="tb-act" id="tb-act"></div><div class="tb-hov" id="tb-hov"></div>
+  <div class="tb-it" data-tip="Select" data-mode="1"><svg viewBox="0 0 22 22" fill="none" stroke-width="1.7" stroke-linejoin="miter"><path d="M6 4l11 6.5-5 1.2 2.8 5.2-2 1-2.8-5.2-4 3.4z"/></svg></div>
+  <div class="tb-it" data-tip="Text" data-mode="1"><svg viewBox="0 0 22 22" fill="none" stroke-width="1.8"><path d="M5 6V4.5h12V6M11 4.5v13M8.5 17.5h5"/></svg></div>
+  <div class="tb-it" data-tip="Shape" data-mode="1"><svg viewBox="0 0 22 22" fill="none" stroke-width="1.7"><path d="M4.5 4.5h8v8h-8z"/><path d="M12.5 9.5a5 5 0 1 1-3 4.6"/></svg></div>
+  <div class="tb-sep"></div>
+  <div class="tb-it" data-tip="Colour" id="tb-colorBtn"><svg viewBox="0 0 22 22"><rect x="3.5" y="3.5" width="15" height="15" fill="none" stroke="#f4f5f2" stroke-width="1.6" stroke-opacity=".5"/><rect id="tb-dot" x="7" y="7" width="8" height="8" fill="#f4f5f2"/></svg></div>
+  <div class="tb-colw" id="tb-colw"></div>
+  <div class="tb-sep"></div>
+  <div class="tb-it" data-tip="Export"><svg viewBox="0 0 22 22" fill="none" stroke-width="1.8"><path d="M11 3.5v10M7 9.5l4 4 4-4"/><path d="M4.5 14v4h13v-4"/></svg></div>
+</div>
+<!-- /code -->
+  <svg id="tb-cur" viewBox="0 0 22 28" aria-hidden="true"><path d="M1.5 1.5 L1.5 21.2 L6.3 16.6 L9.6 24.4 L13.2 22.9 L9.9 15.2 L16.4 15.2 Z" fill="#0b0c0e" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+</div>
+<div class="qm-ui"><span>Hover or click the tools</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const $ = (s) => document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const bar = $('#tb-bar'), hov = $('#tb-hov'), act = $('#tb-act'), tip = $('#tb-tip'), colw = $('#tb-colw'), head = $('#tb-head'), dot = $('#tb-dot');
+let T = 0, lastNow = performance.now();
+const jobs = [], ticks = new Set();
+const at = (ms, fn) => jobs.push({ t: T + ms, fn });
+function frame(now) {
+  const dt = Math.min(64, now - lastNow); lastNow = now; T += dt;
+  for (let i = 0; i < jobs.length; i++) if (jobs[i].t <= T) { const j = jobs.splice(i, 1)[0]; i--; j.fn(); }
+  ticks.forEach((f) => f(dt)); requestAnimationFrame(frame);
+}
+function spring(x, k = 170, c = 24) {
+  return { x, v: 0, t: x, k, c, step(dt) { let s = dt / 1000; const n = Math.max(1, Math.ceil(s / 0.008)); s /= n; for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; } } };
+}
+const E = { io: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2), out: (t) => 1 - Math.pow(1 - t, 3) };
+function tween(d, e, f, done) {
+  const t0 = T;
+  const g = () => { const p = d <= 0 ? 1 : Math.min(1, (T - t0) / d); f(e(p)); if (p >= 1) { ticks.delete(g); if (done) done(); } };
+  ticks.add(g); g();
+}
+const EZ = 'cubic-bezier(.2,.8,.2,1)';
+
+const items = [...bar.querySelectorAll('.tb-it')];
+const colors = [['Ink', '#121417'], ['Moss', '#6faf00'], ['Clay', '#c2603a']];
+colw.innerHTML = colors.map(([n, c]) => `<div class="tb-sw" data-tip="${n}" data-c="${c}"><i style="background:${c}${c === '#121417' ? ';box-shadow:inset 0 0 0 2px rgba(244,245,242,.55)' : ''}"></i></div>`).join('');
+const sws = [...colw.children];
+const targets = [...items, ...sws];
+
+/* the active tool is ink on lime, the rest paper */
+let mode = 0;
+function paintIcons() { items.forEach((it, i) => { const s = it.querySelector('svg'); if (it.id === 'tb-colorBtn') return; s.setAttribute('stroke', i === mode ? '#0c1300' : '#f4f5f2'); }); }
+paintIcons();
+
+/* the colour tool opens inline: its width springs, swatches pop in one by one */
+const cw = spring(0, 190, 22); let colOpen = false;
+function setCol(o) {
+  colOpen = o; cw.t = o ? sws.length * 36 + 4 : 0;
+  sws.forEach((s, i) => {
+    const d = o ? i * 45 : 0;
+    s.firstElementChild.animate(o ? [{ transform: 'scale(.2)' }, { transform: 'none' }] : [{ transform: 'none' }, { transform: 'scale(.2)' }], { duration: RM ? 1 : o ? 360 : 200, delay: RM ? 0 : d, easing: o ? 'cubic-bezier(.3,1.5,.5,1)' : 'ease-in', fill: 'both' });
+  });
+}
+
+/* hover highlight and tooltip follow the item under the pointer */
+const hx = spring(0, 260, 26), hw = spring(52, 260, 26), ho = spring(0, 220, 26), tx = spring(0, 240, 26), tw = spring(60, 240, 26), to = spring(0, 220, 26), ax = spring(0, 220, 22);
+let hover = null, tipText = '';
+const rel = (el) => { let x = 0, e = el; while (e && e !== bar) { x += e.offsetLeft; e = e.offsetParent; } return x; };
+function setHover(el) {
+  if (el === hover) return; const prev = hover; hover = el;
+  if (!el) { ho.t = 0; to.t = 0; return; }
+  const x = rel(el); if (ho.x < 0.05) { hx.x = x; hw.x = el.offsetWidth; } ho.t = 1;
+  const txt = el.dataset.tip;
+  if (txt !== tipText) {
+    const old = tip.querySelector('span:not(.out)'), n = document.createElement('span'); n.textContent = txt; tip.appendChild(n); n.style.visibility = 'hidden';
+    const w = n.offsetWidth; n.style.visibility = ''; tw.t = w; tipText = txt;
+    const dir = prev && rel(prev) > x ? -1 : 1;
+    if (old && to.x > 0.1 && !RM) {
+      old.classList.add('out');
+      old.animate([{ transform: 'none' }, { transform: `translateX(${-dir * 100}%)` }], { duration: 150, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }).onfinish = () => old.remove();
+      n.animate([{ transform: `translateX(${dir * 100}%)` }, { transform: 'none' }], { duration: 320, delay: 90, easing: EZ, fill: 'backwards' });
+    } else { if (old) old.remove(); tw.x = w; }
+  }
+  to.t = 1;
+}
+ticks.add((dt) => {
+  cw.step(dt); colw.style.width = Math.max(0, cw.x).toFixed(2) + 'px';
+  if (hover) { hx.t = rel(hover); hw.t = hover.offsetWidth; }
+  [hx, hw, ho, tx, tw, to, ax].forEach((s) => s.step(dt)); if (RM) [hx, hw, ho, tx, tw, to, ax].forEach((s) => { s.x = s.t; });
+  hov.style.cssText = `transform:translateX(${hx.x.toFixed(2)}px) scaleY(${Math.max(0, Math.min(1, ho.x)).toFixed(3)});width:${hw.x.toFixed(2)}px`;
+  ax.t = rel(items[mode]); act.style.transform = `translateX(${ax.x.toFixed(2)}px)`;
+  /* the tooltip sits above the hovered item, uncovered upward by its own clip */
+  const br = bar.offsetLeft - bar.offsetWidth / 2;
+  if (hover) tx.t = br + rel(hover) + hover.offsetWidth / 2;
+  const o = Math.max(0, Math.min(1, to.x));
+  tip.style.cssText = `transform:translate(${(tx.x - tw.x / 2).toFixed(2)}px,${((1 - o) * 14).toFixed(2)}px);width:${tw.x.toFixed(2)}px;clip-path:inset(${((1 - o) * 32).toFixed(2)}px 0 0 0)`;
+});
+
+function press(el) {
+  el.animate([{ transform: 'scale(1)' }, { transform: 'scale(.86)' }, { transform: 'scale(1)' }], { duration: 280, easing: 'ease-out' });
+  if (el.dataset.mode) { mode = items.indexOf(el); paintIcons(); if (colOpen) setCol(false); }
+  else if (el.id === 'tb-colorBtn') setCol(!colOpen);
+  else if (el.dataset.c) { head.style.color = el.dataset.c; dot.setAttribute('fill', el.dataset.c === '#121417' ? '#f4f5f2' : el.dataset.c); at(650, () => setCol(false)); }
+  else if (el.dataset.tip === 'Export') { if (colOpen) setCol(false); }
+}
+
+/* real pointer */
+let lastIn = -1e9, gen = 0, ghostGen = -1;
+const cur = $('#tb-cur');
+function real() { lastIn = T; gen++; cur.style.opacity = 0; }
+targets.forEach((el) => {
+  el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') { real(); setHover(el); } });
+  el.addEventListener('click', () => { real(); setHover(el); press(el); });
+});
+bar.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') { real(); setHover(null); } });
+addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') real(); });
+addEventListener('pointerdown', real);
+requestAnimationFrame(frame);
+</script>
+<script>
+  /* harness glue: a ghost pointer walks the bar, opens colours, picks one */
+  const stageEl = document.getElementById('tb-stage'); let scaleK = 1;
+  const P = { x: 640, y: 440, s: 1 };
+  ticks.add(() => {
+    cur.style.transform = `translate(${(P.x - 2).toFixed(1)}px,${(P.y - 2).toFixed(1)}px) scale(${P.s.toFixed(3)})`;
+    if (gen === ghostGen) {
+      const r = stageEl.getBoundingClientRect(), px = r.left + P.x * scaleK, py = r.top + P.y * scaleK;
+      const hit = targets.find((el) => { const b = el.getBoundingClientRect(); return px >= b.left && px <= b.right && py >= b.top && py <= b.bottom; });
+      setHover(hit || null);
+    }
+  });
+  const wait = (ms, g) => new Promise((res, rej) => at(ms, () => (g === gen ? res() : rej(0))));
+  const glide = (el, d, g) => new Promise((res, rej) => {
+    const x0 = P.x, y0 = P.y, t0 = T;
+    const f = () => {
+      if (g !== gen) { ticks.delete(f); rej(0); return; }
+      const r = stageEl.getBoundingClientRect(), b = el.getBoundingClientRect();
+      const x = (b.left + b.width * 0.55 - r.left) / scaleK, y = (b.top + b.height * 0.6 - r.top) / scaleK;
+      const p = Math.min(1, (T - t0) / d), q = E.io(p);
+      P.x = x0 + (x - x0) * q; P.y = y0 + (y - y0) * q; if (p >= 1) { ticks.delete(f); res(); }
+    };
+    ticks.add(f);
+  });
+  const click = async (el, g) => { tween(100, E.out, (p) => (P.s = 1 - 0.14 * p)); await wait(110, g); press(el); tween(160, E.out, (p) => (P.s = 0.86 + 0.14 * p)); };
+  let round = 0;
+  async function ghost(g) {
+    try {
+      cur.style.opacity = 1;
+      await glide(items[0], 700, g); await wait(500, g);
+      await glide(items[1], 450, g); await wait(550, g); await click(items[1], g); await wait(500, g);
+      await glide(items[2], 420, g); await wait(550, g);
+      await glide(items[3], 480, g); await wait(450, g); await click(items[3], g); await wait(650, g);
+      const pick = sws[[1, 2, 0][round++ % 3]];
+      await glide(pick, 500, g); await wait(450, g); await click(pick, g); await wait(900, g);
+      await glide(items[4], 520, g); await wait(700, g);
+      await glide(items[0], 600, g); await wait(300, g); await click(items[0], g); await wait(400, g);
+      await glide({ getBoundingClientRect: () => { const r = stageEl.getBoundingClientRect(); return { left: r.left + 560 * scaleK, top: r.top + 220 * scaleK, width: 0, height: 0 }; } }, 800, g);
+      await wait(1600, g); ghost(g);
+    } catch (e) { /* the viewer took over */ }
+  }
+  ticks.add(() => { if (RM) return; if (T - lastIn > 2500 && ghostGen !== gen) { if (colOpen) setCol(false); ghostGen = ++gen; ghost(gen); } });
+  function fit() {
+    const s = Math.min(innerWidth / 780, (innerHeight - 70) / 420) * 0.96;
+    scaleK = Math.min(s, 1.7);
+    stageEl.style.transform = `translate(-50%,-50%) scale(${scaleK})`;
+  }
+  addEventListener('resize', fit); fit();
+  QM.demo({ kind: 'loop', restart() { lastIn = -1e9; } });
+</script>
+</body>
+</html>

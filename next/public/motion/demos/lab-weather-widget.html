@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en" data-tone="lime">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather scene · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-weather-widget", "title": "Weather scene", "group": "lab", "cat": "scenes", "order": 380,
+  "kind": "loop", "tone": "lime", "shot": 1800,
+  "line": "sun, cloud, rain, sky as continuous parameters · 2.4/s chase",
+  "summary": "A flat canvas scene carries the day: the sky is lime when it is sunny and goes through paper and a pale cool gray as the cloud and rain come. The sun sets behind the hills, clouds rise to the cover they are given, rain is slanted lines, and the temperature and the words slide through a mask. Click a day to switch; left alone it walks through the week.",
+  "spec": [["Chase", "every parameter eases at 1 − e^(−2.4 dt)"], ["Parameters", "sun, cloud, dark, rain, wind, sky colour, ink colour"], ["Clouds", "9 flat-bottomed clouds in two layers, each appears at its own cover threshold, revealed from its base"], ["Rain", "260 slanted lines, a fraction shown by the rain value"], ["Text", "700 ms slide through a mask, 70 ms apart, expo-out"], ["Auto", "next day every 3.6 s until the viewer clicks"]],
+  "source": ["Qbix studio library · weather-widget"],
+  "where": "A Design service chapter that plans a launch by the week: shoot day, launch day.",
+  "rules": ["Lime is the clear day's sky; on the paper days only the sun is lime.", "No gradients: sky, sun, clouds and hills are flat fills.", "The ink stays dark on every sky: ink on lime, on paper and on the pale rain sky; nothing goes black.", "Things leave by sliding: the sun sets behind the hills, text goes up through a mask."],
+  "tags": ["canvas", "weather", "click", "scene"]
+}
+</script>
+<style data-code>
+.ww { position: absolute; inset: 0; color: var(--ww-fg, #0c1300); user-select: none; }
+.ww canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ww-info { position: absolute; left: clamp(20px, 4vw, 48px); top: clamp(18px, 4vw, 40px); right: clamp(20px, 4vw, 48px); }
+.ww-place { display: flex; justify-content: space-between; gap: 12px; margin: 0; font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.ww-roll { position: relative; overflow: hidden; display: block; }
+.ww-roll > span { display: block; will-change: transform; }
+.ww-temp { font: 400 clamp(84px, 16vh, 170px)/1.12 Eurostile, Geist, sans-serif; letter-spacing: -.03em; height: 1.12em; margin-top: -6px; }
+.ww-cond { font: 400 clamp(20px, 2.6vw, 30px)/1.3 Eurostile, Geist, sans-serif; letter-spacing: -.02em; height: 1.3em; }
+.ww-note { font-size: clamp(13px, 1.4vw, 16px); line-height: 1.4; height: 1.4em; margin-top: 2px; opacity: .72; }
+.ww-days { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 8px; }
+.ww-days button { position: relative; z-index: 1; appearance: none; border: 0; background: none; color: inherit; font: inherit; padding: clamp(10px, 1.6vw, 16px) 4px; cursor: pointer; text-align: center; }
+.ww-days b { display: block; font: 12px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; font-weight: 500; }
+.ww-days em { display: block; font: 400 clamp(26px, 3.6vw, 42px)/1.05 Eurostile, Geist, sans-serif; letter-spacing: -.03em; margin-top: 4px; }
+.ww-days small { display: block; font: 12px 'Encode Sans', Geist, sans-serif; opacity: .64; }
+.ww-days button.on { color: var(--ww-sky, #B8FF00); }
+.ww-sel { position: absolute; top: 8px; bottom: 8px; left: 0; background: var(--ww-fg, #0c1300); transition: transform .7s cubic-bezier(.16, 1, .3, 1), width .7s cubic-bezier(.16, 1, .3, 1);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+@media (prefers-reduced-motion: reduce) { .ww-sel { transition: none; } }
+</style>
+<style>.qm-stage { display: block; padding: 0; }</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="ww" id="ww">
+  <canvas id="ww-c"></canvas>
+  <div class="ww-info">
+    <p class="ww-place"><span>Seattle, Washington</span><span id="ww-date">Tuesday</span></p>
+    <div class="ww-roll ww-temp" id="ww-temp"><span>71°</span></div>
+    <div class="ww-roll ww-cond" id="ww-cond"><span>Sunny</span></div>
+    <div class="ww-roll ww-note" id="ww-note"><span>Good light for the product shoot</span></div>
+  </div>
+  <div class="ww-days" id="ww-days"><div class="ww-sel" id="ww-sel"></div></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const Weather = (() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const LIME = [184, 255, 0], PAPER = [243, 244, 245], INK_L = [12, 19, 0], INK_P = [18, 20, 23];
+  // sky, ink, sun and cloud colours are flat; the numbers are what the day is made of
+  const DAYS = [
+    { d: 'Tue', full: 'Tuesday', hi: 71, lo: 52, c: 'Sunny', n: 'Good light for the product shoot', sun: 1, cloud: 0.12, rain: 0, sky: LIME, ink: INK_L, sunC: PAPER, cl: [243, 244, 245], wind: 0.6 },
+    { d: 'Wed', full: 'Wednesday', hi: 66, lo: 50, c: 'Partly cloudy', n: 'Soft light, easy shadows', sun: 0.8, cloud: 0.55, rain: 0, sky: PAPER, ink: INK_P, sunC: LIME, cl: [212, 216, 221], wind: 1 },
+    { d: 'Thu', full: 'Thursday', hi: 61, lo: 49, c: 'Overcast', n: 'Even light for the flat lays', sun: 0, cloud: 1, rain: 0, sky: [231, 234, 238], ink: INK_P, sunC: PAPER, cl: [255, 255, 255], wind: 0.8 },
+    { d: 'Fri', full: 'Friday', hi: 57, lo: 47, c: 'Steady rain', n: 'Move the shoot indoors', sun: 0, cloud: 1, rain: 1, sky: [219, 224, 230], ink: INK_P, sunC: PAPER, cl: [250, 251, 252], wind: 1.4 },
+    { d: 'Sat', full: 'Saturday', hi: 64, lo: 48, c: 'Clearing', n: 'Good day to launch', sun: 0.85, cloud: 0.38, rain: 0, sky: PAPER, ink: INK_P, sunC: LIME, cl: [212, 216, 221], wind: 0.7 },
+  ];
+  const card = document.getElementById('ww'), cv = document.getElementById('ww-c'), ctx = cv.getContext('2d');
+  const daysEl = document.getElementById('ww-days'), sel = document.getElementById('ww-sel');
+  let lastReal = -1e9;
+  const btns = DAYS.map((d, i) => {
+    const b = document.createElement('button');
+    b.innerHTML = `<b>${d.d}</b><em>${d.hi}°</em><small>${d.lo}°</small>`;
+    b.onclick = () => { lastReal = performance.now(); pick(i); };
+    daysEl.appendChild(b); return b;
+  });
+
+  const S = { sun: 1, cloud: 0.12, rain: 0, wind: 0.6, sky: LIME.slice(), ink: INK_L.slice(), sunC: PAPER.slice(), cl: [243, 244, 245] };
+  let cur = 0, T = DAYS[0];
+  // text slides up out of a mask; the next slides in under it
+  function roll(el, text) {
+    const old = el.firstElementChild; if (old.textContent === text) return;
+    if (reduce) { old.textContent = text; return; }
+    const n = document.createElement('span'); n.textContent = text;
+    Object.assign(n.style, { position: 'absolute', left: '0', top: '0' }); el.appendChild(n);
+    const o = { duration: 700, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' };
+    old.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-105%)' }], o).onfinish = () => old.remove();
+    n.animate([{ transform: 'translateY(105%)' }, { transform: 'translateY(0)' }], { ...o, delay: 70, fill: 'both' }).onfinish = () => { n.style.position = ''; };
+  }
+  function placeSel() { const b = btns[cur]; sel.style.width = b.offsetWidth + 'px'; sel.style.transform = `translateX(${b.offsetLeft}px)`; }
+  function pick(i) {
+    cur = i; T = DAYS[i]; placeSel();
+    btns.forEach((b, j) => b.classList.toggle('on', j === i));
+    roll(document.getElementById('ww-temp'), T.hi + '°'); roll(document.getElementById('ww-cond'), T.c); roll(document.getElementById('ww-note'), T.n);
+    document.getElementById('ww-date').textContent = T.full;
+  }
+
+  let W = 0, H = 0, dpr = 1, clouds = [], drops = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function build() {
+    const r = card.getBoundingClientRect(); W = r.width; H = r.height;
+    dpr = Math.min(2, devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const base = Math.min(W * 1.05, H * 1.25);
+    clouds = [];
+    for (let i = 0; i < 9; i++) {
+      const front = i % 3 !== 0, w = base * (front ? rnd(0.34, 0.46) : rnd(0.24, 0.32));
+      // one cloud is a row of puffs standing on a flat base
+      const puffs = []; const n = 4 + (i % 2);
+      for (let p = 0; p < n; p++) { const t = (p + 0.5) / n; puffs.push([w * (0.12 + 0.76 * t), w * (0.07 + 0.08 * Math.sin(t * Math.PI)) * rnd(0.9, 1.15)]); }
+      clouds.push({ w, puffs, x: rnd(-0.2, 1.1) * W, y: H * (front ? rnd(0.1, 0.4) : rnd(0.14, 0.34)), front, k: [0, 0.3, 0.5, 0.62, 0.72, 0.8, 0.86, 0.92, 0.96][i], sp: front ? rnd(14, 22) : rnd(6, 10), a: 0 });
+    }
+    clouds.sort((a, b) => a.front - b.front);
+    drops = [];
+    for (let i = 0; i < 260; i++) drops.push({ x: Math.random() * W * 1.3, y: Math.random() * H, l: rnd(10, 22), v: rnd(0.9, 1.3), a: rnd(0.25, 0.6), k: Math.random() });
+    placeSel();
+  }
+  const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  const rgb = (c) => `rgb(${c.map(Math.round)})`;
+  const sst = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+  function cloud(c, dt) {
+    if (!reduce) { c.x += c.sp * S.wind * dt; if (c.x > W + c.w * 0.1) c.x = -c.w * 1.05; }
+    c.a = sst(c.k - 0.02, c.k + 0.14, S.cloud + 0.001);
+    if (c.a < 0.01) return;
+    const base = c.y + c.w * 0.2 + (1 - c.a) * H * 0.04;
+    // uncovered from its base upward, never faded
+    ctx.save();
+    ctx.beginPath(); ctx.rect(c.x - 2, base - c.w * 0.3 * c.a - 2, c.w + 4, c.w * 0.3 * c.a + 2); ctx.clip();
+    ctx.fillStyle = rgb(c.front ? S.cl : mix(S.sky, S.cl, 0.6));
+    ctx.beginPath();
+    c.puffs.forEach(([px, r]) => { ctx.moveTo(c.x + px + r, base - r); ctx.arc(c.x + px, base - r, r, 0, Math.PI * 2); });
+    ctx.rect(c.x + c.puffs[0][0], base - c.w * 0.05, c.puffs[c.puffs.length - 1][0] - c.puffs[0][0], c.w * 0.05);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function draw(t, dt) {
+    const k = reduce ? 1 : 1 - Math.exp(-dt * 2.4);
+    for (const p of ['sun', 'cloud', 'rain', 'wind']) S[p] += (T[p] - S[p]) * k;
+    S.sky = mix(S.sky, T.sky, k); S.ink = mix(S.ink, T.ink, k); S.sunC = mix(S.sunC, T.sunC, k); S.cl = mix(S.cl, T.cl, k);
+    card.style.setProperty('--ww-fg', rgb(S.ink)); card.style.setProperty('--ww-sky', rgb(S.sky));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = rgb(S.sky); ctx.fillRect(0, 0, W, H);
+    // the sun sets behind the hills as it goes, it is never faded
+    const m = Math.min(W, H), sx = W * (W > H ? 0.74 : 0.72), sy = H * (W > H ? 0.27 : 0.3) + (1 - S.sun) * H * 0.55, sr = m * 0.085;
+    ctx.fillStyle = rgb(S.sunC); ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = rgb(S.sunC); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy, sr * 1.7, 0, Math.PI * 2); ctx.stroke();
+    clouds.filter((c) => !c.front).forEach((c) => cloud(c, dt));
+    // hills: two flat bands in the ink, one step each from the sky
+    const hb = H * (W > H ? 0.8 : 0.76);
+    for (let l = 0; l < 2; l++) {
+      ctx.fillStyle = rgb(mix(S.sky, S.ink, l ? 0.2 : 0.1));
+      ctx.beginPath(); ctx.moveTo(0, H);
+      for (let x = 0; x <= W + 8; x += 8) {
+        const u = x / W;
+        ctx.lineTo(x, hb + (l ? H * 0.06 : 0) - Math.sin(u * Math.PI * (l ? 1.4 : 2.1) + (l ? 1.2 : 0.3)) * H * (l ? 0.05 : 0.04) - Math.sin(u * 9 + l) * H * 0.006);
+      }
+      ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+    }
+    if (S.rain > 0.01) {
+      const ang = 0.18 + S.wind * 0.08, vx = Math.sin(ang), vy = Math.cos(ang);
+      ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
+      for (const d of drops) {
+        if (d.k > S.rain) continue;
+        if (!reduce) { d.y += d.v * H * 1.1 * dt; d.x += d.v * H * 1.1 * dt * vx / vy; if (d.y > H) { d.y = -d.l - Math.random() * H * 0.2; d.x = Math.random() * W * 1.3 - W * 0.15; } if (d.x > W + 20) d.x -= W * 1.3; }
+        ctx.strokeStyle = `rgba(${S.ink.map(Math.round)},${d.a * Math.min(1, (S.rain - d.k) * 4)})`;
+        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - vx * d.l, d.y - vy * d.l); ctx.stroke();
+      }
+    }
+    clouds.filter((c) => c.front).forEach((c) => cloud(c, dt));
+  }
+
+  let nextAuto = performance.now() + 2600, last = performance.now(), raf = 0;
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(50, now - last) / 1000; last = now;
+    if (!reduce && now - lastReal > 2500 && now > nextAuto) { pick((cur + 1) % DAYS.length); nextAuto = now + 3600; }
+    if (now - lastReal < 2500) nextAuto = now + 1500;
+    draw(now, dt);
+  }
+  addEventListener('resize', build);
+  build(); pick(0);
+  document.fonts && document.fonts.ready.then(placeSel);
+  raf = requestAnimationFrame(frame);
+  return { restart() { lastReal = -1e9; nextAuto = performance.now() + 2600; pick(0); } };
+})();
+</script>
+<script>
+  QM.demo({ kind: 'loop', restart: () => Weather.restart() });
+</script>
+</body>
+</html>

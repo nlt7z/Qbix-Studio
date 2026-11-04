@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en" data-tone="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rising ridges · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "ridges",
+  "title": "Rising ridges",
+  "group": "generative",
+  "cat": "backgrounds",
+  "order": 20,
+  "kind": "loop",
+  "tone": "dark",
+  "line": "40 lines · peaks 18% · 12 fps",
+  "summary": "Lines lifted into peaks, drawn on canvas behind a dark chapter's words, each line's hill hiding the lines behind it. The peaks rise on the side where the scene stands and drift slowly; the words take the flat side. Faint on the chapter, bold where the ridges are the picture.",
+  "spec": [
+    ["Lines", "40, spaced evenly from 0.208 H (top = H × (0.1 + amp × 0.6)) to 0.92 H"],
+    ["Peaks", "amp 0.18 of the height; a gaussian envelope round `center` (0.3 when the scene is on the left, 0.7 on the right), spread 0.17 of the width"],
+    ["Height", "big = max(0, noise3(x / 90, i × 0.31, t × speed))², × 1.6, plus a finer ripple (x / 16) at 0.6"],
+    ["Hiding", "each line is filled with the ground under it before it is stroked, so a hill covers every line behind it"],
+    ["Drift", "speed 0.12, redrawn 12 times a second"],
+    ["Ink", "rgb(184, 255, 0) at alpha 0.17 on rgb(8, 9, 10), the page's own black"],
+    ["Density", "1 canvas pixel a css pixel"],
+    ["Trigger", "drawn the first time it is on screen · paused off screen, in a hidden tab and while the page scrolls · one still frame for reduced motion"]
+  ],
+  "source": [
+    "components/scene/Generative.tsx · Ridges, useArt",
+    "components/story/Story.tsx · Chapter (the backdrop), seedOf",
+    "components/scenes/Listing.tsx · EndCard",
+    "lib/noise.ts",
+    "lib/scene/quiet.ts",
+    "app/story.css · .ch-backdrop"
+  ],
+  "where": "Behind every dark chapter of the homepage, rising on the scene's side; the last shot of the Listing Launch Kit's 30-second video.",
+  "rules": [
+    "Behind words the lime is alpha 0.17. It is a field of fine lines, not a fill: bold ridges (alpha 0.95) only where they are the picture.",
+    "The peaks stand behind the scene (center 0.3 or 0.7 by the chapter's side); the words take the flat side.",
+    "The ground colour is the page's own black, so the canvas is seamless with the section it sits in.",
+    "One seed a chapter (a hash of its id). Draw at density 1, 12 fps, only while seen and the page is at rest; reduced motion draws one still frame."
+  ],
+  "tags": ["canvas", "generative", "backdrop", "dark", "noise", "lime"],
+  "deps": ["noise"]
+}
+</script>
+<style data-code>
+/* A generative backdrop — pinned behind a chapter's words and its scene (app/story.css) */
+.ch-frame { position: relative; z-index: 2; height: 100vh; }   /* one screen; its own stacking context, so the backdrop (z-index -1) sits under the words and over the section's ground */
+.ch-backdrop { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.ch-backdrop .gen { display: block; width: 100%; height: 100%; }
+</style>
+<style>
+  /* the stage is one dark chapter: the frame fills it, the words stand on the side the scene is not */
+  .qm-stage { display: block; padding: 0; --edge: clamp(16px, 4vw, 32px); --ui: 0px; }
+  html:not(.qm-tile) .qm-stage { --ui: 46px; }
+  .qm-stage .ch-frame { position: absolute; inset: 0; height: auto; }
+  .ch-copy {
+    position: absolute; top: 50%; translate: 0 -46%;
+    width: clamp(260px, 47vw, 560px); max-width: calc(100% - 2 * var(--edge));
+    display: flex; flex-direction: column; align-items: flex-start;
+    clip-path: inset(-0.3em -0.3em -0.3em -0.3em);
+    transition: clip-path 560ms var(--ease-out-expo);
+    z-index: 3;
+  }
+  .ch-copy[data-side='left'] { right: var(--edge); }    /* the scene is on the left, the words on the right */
+  .ch-copy[data-side='right'] { left: var(--edge); }
+  .ch-copy.is-off { clip-path: inset(0 0 100% 0); pointer-events: none; }
+  .ch-copy .kicker { margin: 0 0 18px; }
+  .ch-title { margin: 0; font-size: clamp(34px, 3.4vw, 58px); line-height: 1.04; letter-spacing: -0.03em; color: var(--fg); text-wrap: balance; }
+  .ch-lede { margin: 20px 0 0; max-width: 34em; font-size: clamp(16px, 1.2vw, 19px); line-height: 1.6; color: var(--fg2); }
+  .ch-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 30px; }
+  /* a set with no words: what it is, on a plain tab of the page's black so the lines never run through it */
+  .ch-note { z-index: 3; position: absolute; left: var(--edge); bottom: calc(var(--ui) + 20px); margin: 0; display: grid; gap: 8px; padding: 16px 20px 14px; background: var(--ground); clip-path: inset(0 0 100% 0); transition: clip-path 560ms var(--ease-out-expo); }
+  .ch-note.is-on { clip-path: inset(0 0 0 0); }
+  .ch-note b { font-family: var(--font-headline); font-weight: 400; font-size: clamp(22px, 2.4vw, 34px); line-height: 1; letter-spacing: -0.03em; color: var(--fg); text-transform: none; }
+  /* the Listing video's last shot on a phone (app/scenes-listing.css), laid out at its own size and zoomed to its box */
+  .reel-box { z-index: 3; position: absolute; right: var(--edge); top: 24px; bottom: calc(var(--ui) + 24px); width: min(40%, 420px); display: grid; place-items: center; clip-path: inset(0 0 100% 0); transition: clip-path 560ms var(--ease-out-expo); }
+  .reel-box.is-on { clip-path: inset(-2px -2px -2px -2px); }
+  .phone { position: relative; flex: none; width: 240px; height: 494px; padding: 7px; background: #2a2c30; border-radius: 32px; font-family: var(--font-sans); line-height: 1.4; color: #fff; }
+  .phone-screen { position: relative; width: 100%; height: 100%; border-radius: 25px; overflow: hidden; background: #0b0c0e; }
+  .phone .gen { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+  .phone-status { position: absolute; left: 0; right: 0; top: 0; z-index: 8; height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px 0 20px; font-size: 10px; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.42); }
+  .phone-island { width: 54px; height: 16px; border-radius: 8px; background: #0b0c0e; }
+  .phone-bars { display: flex; gap: 2px; align-items: flex-end; }
+  .phone-bars i { width: 3px; background: currentColor; }
+  .phone-bars i:nth-child(1) { height: 4px; } .phone-bars i:nth-child(2) { height: 6px; } .phone-bars i:nth-child(3) { height: 8px; }
+  .lst-bars { position: absolute; left: 12px; right: 12px; top: 36px; z-index: 8; display: flex; gap: 4px; }
+  .lst-bars i { flex: 1; height: 2px; background: #fff; }
+  .lst-who { position: absolute; left: 12px; top: 48px; z-index: 8; font-size: 12px; font-weight: 600; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.42); }
+  .lst-tc { position: absolute; right: 12px; top: 45px; z-index: 8; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; background: #B8FF00; color: #0c1300; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+  .lst-cap {
+    position: absolute; left: 12px; z-index: 9; padding: 6px 8px 7px; color: #f4f5f2; font-size: 18px; font-weight: 600; line-height: 1.05; letter-spacing: -0.01em; white-space: pre;
+    background: rgba(18, 20, 23, 0.7); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4);
+  }
+  .qm-ui .is-dim { opacity: 0.4; }
+  @media (prefers-reduced-motion: reduce) { .ch-copy, .ch-note, .reel-box { transition: none; } }
+</style>
+</head>
+<body>
+<main class="qm-stage" id="stage">
+<!-- code -->
+<div class="ch-frame">
+  <div class="ch-backdrop"><canvas class="gen" aria-hidden="true"></canvas></div>
+  <!-- the chapter's words and its scene go here -->
+</div>
+<!-- /code -->
+  <div class="ch-copy" id="copy" data-side="left">
+    <p class="kicker">Brand upgrade · Growing teams · 1 → 100</p>
+    <h2 class="ch-title">From usable to worth sharing.</h2>
+    <p class="ch-lede">Your product already runs. We take it from usable to worth sharing. We iterate round by round and merge code straight into your repo.</p>
+    <div class="ch-acts"><button type="button" class="btn btn-solid cut" data-split>Start a brief</button></div>
+  </div>
+  <div class="reel-box" id="reel-box" aria-hidden="true">
+    <div class="phone" id="reel">
+      <div class="phone-screen">
+        <canvas class="gen" id="reel-gen"></canvas>
+        <div class="phone-status"><span>9:41</span><i class="phone-island"></i><span class="phone-bars"><i></i><i></i><i></i></span></div>
+        <span class="lst-bars"><i></i><i></i><i></i></span>
+        <span class="lst-who">Dana Lee</span>
+        <span class="lst-tc">0:30</span>
+        <span class="lst-cap" style="top: 334px">Open house</span>
+        <span class="lst-cap" style="top: 366px">Sat, 1 to 4</span>
+      </div>
+    </div>
+  </div>
+  <p class="ch-note kicker" id="note"><b id="note-b"></b><span id="note-s"></span></p>
+  <div class="qm-ui" id="ui">
+    <span>Set</span>
+    <button data-set="chapter" class="is-on">Chapter backdrop</button>
+    <button data-set="card">End card</button>
+    <button data-set="bold">Defaults</button>
+    <span class="qm-sep">/</span>
+    <span class="k-ch">Side</span>
+    <button data-side="left" class="is-on">Left</button>
+    <button data-side="right">Right</button>
+    <span class="qm-sep">/</span>
+    <span class="k-ch">Land</span>
+    <button data-land="brand" class="is-on">Brand</button>
+    <button data-land="practice">Practice</button>
+    <button data-land="about">About</button>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../kit/noise.js"></script>
+<script data-code>
+/* ---- lib/scene/quiet.ts — whether the page is being scrolled right now. The generative drawings
+   hold still while it is, so the scroll keeps every frame (they pick up again once it stops). */
+let lastScroll = -1e9;
+let listening = false;
+function scrolling() {
+  if (!listening) {
+    listening = true;
+    window.addEventListener('scroll', () => (lastScroll = performance.now()), { passive: true });
+  }
+  return performance.now() - lastScroll < 180;
+}
+
+/* ---- components/scene/Generative.tsx · useArt — one canvas, drawn at its own device pixels (or at
+   `density`) the first time it comes on the screen; one that moves is redrawn a few frames a second
+   while it is on the screen, the tab is open and the page isn't being scrolled; a still for reduced motion.
+   paint(g, W, H, k, t): k is canvas pixels per css pixel, t seconds. */
+function art(cv, paint, { moves = false, fps = 24, density, ratio } = {}) {
+  const g = cv.getContext('2d');
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const live = moves && !calm;
+  const t0 = performance.now();
+  let W = 0, H = 0, k = 1, seen = false, raf = 0, last = -1e9, stale = true;
+  const loop = (now) => {
+    raf = 0;
+    if (!seen || document.hidden || !W) return;
+    if (stale || (live && now - last >= 1000 / fps - 2 && !scrolling())) {
+      last = now;
+      stale = false;
+      paint(g, W, H, k, live ? (now - t0) / 1000 : 0);
+    }
+    if (live) raf = requestAnimationFrame(loop);
+  };
+  const wake = () => { if (!raf && seen) raf = requestAnimationFrame(loop); };
+  const again = () => { stale = true; wake(); };
+  const size = (w, h) => {
+    if (w < 2 || h < 2 || (w === W && h === H)) return;
+    W = cv.width = w;
+    H = cv.height = h;
+    k = W / Math.max(1, cv.clientWidth);
+    stale = true;
+    wake();
+  };
+  const ro = new ResizeObserver(([e]) => {
+    const d = e.devicePixelContentBoxSize?.[0];
+    if (density) size(Math.round(e.contentRect.width * density), Math.round(e.contentRect.height * density));
+    // (added for a gallery tile: `ratio` canvas pixels a css pixel as drawn on the screen, whatever the zoom)
+    else if (ratio) { const r = cv.getBoundingClientRect(); size(Math.round(r.width * ratio), Math.round(r.height * ratio)); }
+    else if (d) size(d.inlineSize, d.blockSize);
+    else size(Math.round(e.contentRect.width * devicePixelRatio), Math.round(e.contentRect.height * devicePixelRatio));
+  });
+  try { ro.observe(cv, { box: 'device-pixel-content-box' }); } catch { ro.observe(cv); }
+  const io = new IntersectionObserver(([e]) => { seen = e.isIntersecting; wake(); });
+  io.observe(cv);
+  document.addEventListener('visibilitychange', wake);
+  return {
+    again,
+    stop() {
+      ro.disconnect();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', wake);
+      if (raf) cancelAnimationFrame(raf);
+    },
+  };
+}
+
+const ground = (g, W, H, c) => {
+  if (c) {
+    g.fillStyle = `rgb(${c})`;
+    g.fillRect(0, 0, W, H);
+  } else g.clearRect(0, 0, W, H);
+};
+
+/* ---- Ridges: lines lifted into peaks, each in front hiding those behind -------------
+   (lib/noise.ts → QMNoise.noise3)
+   amp: how tall the peaks are, as a share of the height · center: where across they rise
+   (0 left, 1 right) · spread: how wide */
+function ridges({ seed = 7, ink = '184, 255, 0', bg = '11, 12, 14', alpha = 0.95, lines = 26, amp = 0.34, center = 0.5, spread = 0.2, speed = 0.18 } = {}) {
+  const n = QMNoise.noise3(seed);
+  return (g, W, H, k, t) => {
+    ground(g, W, H, bg);
+    const top = H * (0.1 + amp * 0.6), bottom = H * 0.92;
+    const gap = (bottom - top) / Math.max(1, lines - 1);
+    const A = H * amp;
+    const step = Math.max(3, Math.round(5 * k));
+    g.lineWidth = Math.max(1, 1.1 * k);
+    g.lineJoin = 'round';
+    g.strokeStyle = `rgba(${ink}, ${alpha})`;
+    g.fillStyle = `rgb(${bg})`;
+    const xs = Math.ceil(W / step) + 2;
+    const ys = new Float32Array(xs);
+    const line = () => {
+      g.moveTo(0, ys[0]);
+      for (let j = 1; j < xs; j++) g.lineTo(j * step, ys[j]);
+    };
+    for (let i = 0; i < lines; i++) {
+      const y0 = top + i * gap;
+      for (let j = 0; j < xs; j++) {
+        const x = j * step;
+        const env = Math.exp(-Math.pow((x / W - center) / spread, 2));
+        const big = Math.max(0, n(x / (90 * k), i * 0.31, t * speed));
+        const fine = n(x / (16 * k), i * 0.9 + 40, t * speed * 1.6) * 0.18;
+        ys[j] = y0 - A * env * (big * big * 1.6 + Math.max(0, fine) * 0.6) - A * 0.02 * fine;
+      }
+      // the hill under the line hides the lines behind it (they sit higher: only the hill can cover them)
+      g.beginPath();
+      line();
+      g.lineTo(W + step, y0 + 2);
+      g.lineTo(0, y0 + 2);
+      g.closePath();
+      g.fill();
+      g.beginPath();
+      line();
+      g.stroke();
+    }
+  };
+}
+
+/* ---- Story.tsx — a chapter's own seed, so no two backdrops draw the same land */
+const seedOf = (id = '') => id.split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 9973, 7);
+
+/* Behind a dark chapter's words, rising on the side its scene stands (side 'left' → 0.3, 'right' → 0.7):
+   fine lime lines on the page's own black, 12 fps at one canvas pixel a css pixel. */
+const side = 'left';
+let backdrop = art(
+  document.querySelector('.ch-backdrop .gen'),
+  ridges({ seed: seedOf('brand'), ink: '184, 255, 0', bg: '8, 9, 10', alpha: 0.17, lines: 40, amp: 0.18, center: side === 'left' ? 0.3 : 0.7, spread: 0.17, speed: 0.12 }),
+  { moves: true, fps: 12, density: 1 },
+);
+</script>
+<script>
+  // --- demo glue: the sets the site really uses, the chapter's side, and its id (the land) ------
+  const cv = document.querySelector('.ch-backdrop .gen');
+  const reelCv = document.getElementById('reel-gen');
+  const $ = (id) => document.getElementById(id);
+  const SETS = {
+    // Story.tsx: the dark chapters' backdrop
+    chapter: { paint: (land, s) => ({ seed: seedOf(land), ink: '184, 255, 0', bg: '8, 9, 10', alpha: 0.17, lines: 40, amp: 0.18, center: s === 'left' ? 0.3 : 0.7, spread: 0.17, speed: 0.12 }), moves: true, fps: 12, density: 1 },
+    // Listing.tsx · EndCard: the 30-second video's last shot, in the phone's own frame
+    card: { paint: () => ({ seed: 21, ink: '184, 255, 0', bg: '11, 12, 14', lines: 24, amp: 0.3 }), moves: true, fps: 20, title: 'The video’s last shot', sub: 'Listing Launch Kit · seed 21 · 24 lines · peaks 30% · 20 fps' },
+    // Generative.tsx: the component's own defaults, moving
+    bold: { paint: () => ({}), moves: true, fps: 24, title: 'Defaults', sub: 'Seed 7 · 26 lines · peaks 34% · alpha 0.95 · 24 fps' },
+  };
+  let set = 'chapter', sideNow = 'left', land = 'brand', reel = null;
+  const tile = (s) => (!s.density && QM.tile ? 1 : undefined);   // a gallery tile: one canvas pixel a css pixel
+  function mount() {
+    backdrop.stop();
+    if (reel) { reel.stop(); reel = null; }
+    // the chapter's own backdrop runs behind the phone too (the phone stands on the chapter, as in the story)
+    const s = SETS[set === 'card' ? 'chapter' : set];
+    backdrop = art(cv, ridges(s.paint(land, sideNow)), { moves: s.moves, fps: s.fps, density: s.density, ratio: tile(s) });
+    if (set === 'card') reel = art(reelCv, ridges(SETS.card.paint()), { moves: true, fps: SETS.card.fps, ratio: tile(SETS.card) });
+    const copy = $('copy');
+    copy.dataset.side = sideNow;
+    copy.classList.toggle('is-off', set !== 'chapter');
+    $('reel-box').classList.toggle('is-on', set === 'card');
+    $('note').classList.toggle('is-on', set !== 'chapter');
+    if (set !== 'chapter') { $('note-b').textContent = SETS[set].title; $('note-s').textContent = SETS[set].sub; }
+    document.querySelectorAll('.k-ch, [data-side], [data-land]').forEach((b) => b.classList.toggle('is-dim', set !== 'chapter'));
+  }
+  // the phone is laid out at its own size (240 × 494) and zoomed to its box, as the scenes are
+  const box = $('reel-box'), phone = $('reel');
+  const fit = () => { const k = Math.min(box.clientWidth / 240, box.clientHeight / 494); if (k > 0) phone.style.setProperty('zoom', String(Math.round(k * 1000) / 1000)); };
+  fit();
+  new ResizeObserver(fit).observe(box);
+  mount();
+  document.querySelectorAll('[data-split]').forEach((b) => QM.split(b, { arrow: true }));
+  const on = (sel, key, fn) => document.querySelectorAll(sel).forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll(sel).forEach((x) => x.classList.toggle('is-on', x === b));
+    fn(b.dataset[key]);
+  }));
+  const toChapter = () => {
+    if (set === 'chapter') return;
+    set = 'chapter';
+    document.querySelectorAll('[data-set]').forEach((x) => x.classList.toggle('is-on', x.dataset.set === 'chapter'));
+  };
+  on('[data-set]', 'set', (v) => { set = v; mount(); });
+  on('[data-side]', 'side', (v) => { sideNow = v; toChapter(); mount(); });
+  on('[data-land]', 'land', (v) => { land = v; toChapter(); mount(); });
+  QM.demo({ kind: 'loop', restart: mount });
+</script>
+</body>
+</html>

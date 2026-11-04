@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaning wordmark · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "floor-mark",
+  "title": "Leaning wordmark",
+  "group": "brand",
+  "cat": "brand",
+  "order": 30,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "spring 180 / 14 · lifts up to 46 · falloff (1 − d / 300)²",
+  "summary": "The qbix wordmark as the floor of the page: as wide as the page and sunk, so the bottom edge of the screen cuts the q's tail. Each letter leans up toward the pointer on its own spring, the nearest most, and settles back when the pointer leaves the footer.",
+  "spec": [
+    ["Drawing", "the wordmark's four letters apart, viewBox 918 × 242: the baseline is at 264 and the q's tail runs to 342, so the screen's edge cuts it"],
+    ["Spring", "stiffness 180, damping 14, one for each letter · dt capped at 32 ms"],
+    ["Lift", "target = −(1 − d ÷ 300)² × 46 units, d the pointer's distance to the letter's centre (0 beyond 300), in the drawing's own units"],
+    ["Centres", "q 94 · b 374 · i 600 · x 814, in the drawing's units, so nothing is measured per frame (the svg once, on enter and on resize)"],
+    ["Zone", "the whole footer: it wakes on enter and move, lets go on leave"],
+    ["Loop", "runs only while a spring is moving (speed over 0.3, or more than 0.3 off its target)"],
+    ["Devices", "a mouse only (hover: hover and pointer: fine) · a still for reduced motion"]
+  ],
+  "source": [
+    "components/FloorMark.tsx",
+    "components/Colophon.tsx · bare (the floor)",
+    "app/story.css · the footer's floor",
+    "public/qbix-wordmark.svg"
+  ],
+  "where": "The floor of the home page: under the footer's sitemap, as wide as the page, cut by the bottom edge of the screen.",
+  "rules": [
+    "As wide as the page between its gutters, and sunk: the screen's edge cuts the q's tail. Nothing sits under it.",
+    "Each letter on its own spring, the nearest most. The loop runs only while a spring moves.",
+    "Work in the drawing's own units and measure the svg once (on enter and on resize), never per frame.",
+    "A mouse only. Touch and reduced motion get the still mark."
+  ],
+  "tags": ["svg", "spring", "pointer", "footer", "wordmark", "brand"],
+  "shot": 1900
+}
+</script>
+<style data-code>
+/* The footer's floor: the wordmark, as wide as the page, cut by the screen's edge (app/story.css) */
+.ft-floor { padding: 0 var(--gutter, clamp(16px, 4vw, 32px)); line-height: 0; overflow: hidden; }
+.floor-mark { display: block; width: 100%; height: auto; overflow: visible; }
+.floor-mark path { fill: #121417; }   /* ink, on a light footer */
+</style>
+<style>
+  /* the page's grid (app/globals.css): one gutter, a 12-column footer */
+  :root { --gutter: clamp(16px, 4vw, 32px); --col-gap: clamp(12px, 1.6vw, 24px); --page-max: 1440px; }
+  .qm-stage { display: block; padding: 0; }
+  /* the footer, as the home page's floor (Colophon bare): the sitemap, the status line, then the mark */
+  .footer.ft { position: absolute; left: 0; right: 0; bottom: 0; padding: clamp(32px, 5vh, 56px) 0 0; overflow: hidden; }
+  .footer .container { width: 100%; max-width: var(--page-max); margin: 0 auto; padding: 0 var(--gutter); }
+  .ft-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--col-gap); row-gap: 20px; padding: 0 0 clamp(18px, 3vh, 28px); }
+  .ft-grid > .ft-col { grid-column: span 3; min-width: 0; }
+  .ft-col-title { display: block; margin-bottom: 12px; font-size: 14px; letter-spacing: 0; color: var(--fg3); }
+  .ft-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .ft-link { font-size: clamp(14px, 1.15vw, 16px); color: var(--fg); text-decoration: none; }   /* the site's 16 px; a little smaller in a narrow frame, where it keeps four columns */
+  .ft-link.is-soon { display: inline-flex; align-items: center; gap: 8px; color: var(--fg3); }
+  .ft-soon { margin-left: 6px; font-size: inherit; color: var(--fg3); }
+  .ft-status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px clamp(20px, 4vw, 48px); padding: 0 0 clamp(14px, 2.4vh, 24px); font-size: 13px; color: var(--fg2); }
+  .ft-top { margin-left: auto; padding: 0; background: none; border: 0; cursor: pointer; font: inherit; color: var(--fg2); }
+  .ft-top:hover { color: var(--fg); }
+  @media (max-width: 520px) { .ft-grid > .ft-col { grid-column: span 6; } }
+</style>
+</head>
+<body>
+<main class="qm-stage" id="stage">
+  <footer class="footer ft ft--floor" data-nav-theme="light">
+    <div class="container">
+      <div class="ft-grid">
+        <nav class="ft-col" aria-label="Services"><span class="ft-col-title">Services</span><ul>
+          <li><a class="ft-link" href="#">Design service</a></li>
+          <li><a class="ft-link" href="#">Brand upgrade</a></li>
+          <li><a class="ft-link" href="#">Listing Launch Kit</a></li>
+          <li><a class="ft-link" href="#">Practice Website Refresh</a></li>
+        </ul></nav>
+        <nav class="ft-col" aria-label="Products"><span class="ft-col-title">Products</span><ul>
+          <li><a class="ft-link" href="#">Strata</a></li>
+          <li><span class="ft-link is-static">AI Bidding</span></li>
+          <li><span class="ft-link is-soon">TTS Editor<span class="ft-soon">soon</span></span></li>
+          <li><span class="ft-link is-soon">Interview Assistant<span class="ft-soon">soon</span></span></li>
+        </ul></nav>
+        <nav class="ft-col" aria-label="Studio"><span class="ft-col-title">Studio</span><ul>
+          <li><a class="ft-link" href="#">About</a></li>
+          <li><span class="ft-link is-soon">Careers<span class="ft-soon">soon</span></span></li>
+        </ul></nav>
+        <nav class="ft-col" aria-label="Elsewhere"><span class="ft-col-title">Elsewhere</span><ul>
+          <li><a class="ft-link" href="#">Are.na</a></li>
+          <li><a class="ft-link" href="#">GitHub</a></li>
+          <li><a class="ft-link" href="#">X / Twitter</a></li>
+          <li><a class="ft-link" href="#">LinkedIn</a></li>
+          <li><a class="ft-link" href="#">Instagram</a></li>
+        </ul></nav>
+      </div>
+      <div class="ft-status">
+        <span class="ft-status-item">Taking new projects</span>
+        <span class="ft-status-item">© 2026 Qbix</span>
+        <button type="button" class="ft-top">Back to top <span aria-hidden="true">↑</span></button>
+      </div>
+    </div>
+    <div class="ft-stage">
+<!-- code -->
+<div class="ft-floor">
+  <svg class="floor-mark" viewBox="0 0 918 242" preserveAspectRatio="xMidYMin meet" role="img" aria-label="qbix">
+    <path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5Z"/>
+    <path d="M280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5Z"/>
+    <path d="M583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5Z"/>
+    <path d="M709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/>
+  </svg>
+</div>
+<!-- /code -->
+    </div>
+  </footer>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* ---- components/FloorMark.tsx
+   The qbix wordmark (public/qbix-wordmark.svg, its four letters apart) as the floor of the page: as wide
+   as the page, and sunk, so the bottom edge of the screen cuts the q's tail. Each letter leans up toward
+   the pointer on its own spring, the nearest most. Letter centres are in the drawing's own units, so
+   nothing is measured per frame; the loop runs only while a spring moves. */
+const W = 918;
+const LETTER_X = [94, 374, 600, 814];   // the letters' centres: q, b, i, x
+
+function floorMark(svg) {
+  const paths = Array.from(svg.querySelectorAll('path'));
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hoverFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const live = !reduced && hoverFine;
+  const y = LETTER_X.map(() => 0), v = LETTER_X.map(() => 0), target = LETTER_X.map(() => 0);
+  let left = 0, scale = 1, raf = 0, prev = 0;
+  const measure = () => {
+    const r = svg.getBoundingClientRect();
+    left = r.left;
+    scale = W / Math.max(1, r.width);
+  };
+  const step = (now) => {
+    const dt = Math.min(0.032, (now - (prev || now)) / 1000) || 0.016;
+    prev = now;
+    let busy = false;
+    paths.forEach((p, i) => {
+      v[i] += (180 * (target[i] - y[i]) - 14 * v[i]) * dt;
+      y[i] += v[i] * dt;
+      if (Math.abs(v[i]) > 0.3 || Math.abs(target[i] - y[i]) > 0.3) busy = true;
+      // in the drawing's own units
+      p.style.translate = Math.abs(y[i]) < 0.05 ? '' : `0 ${y[i].toFixed(2)}px`;
+    });
+    raf = busy ? requestAnimationFrame(step) : 0;
+    if (!busy) prev = 0;
+  };
+  const wake = () => {
+    if (!raf) raf = requestAnimationFrame(step);
+  };
+  // the pointer's place (client px across the page): each letter rises by how near it is
+  const aim = (clientX) => {
+    if (!live) return;
+    const x = (clientX - left) * scale;
+    LETTER_X.forEach((cx, i) => {
+      const k = Math.max(0, 1 - Math.abs(x - cx) / 300);
+      target[i] = -k * k * 46;
+    });
+    wake();
+  };
+  const onMove = (e) => aim(e.clientX);
+  const onLeave = () => {
+    target.fill(0);
+    wake();
+  };
+  const zone = svg.closest('footer') ?? svg;
+  if (live) {
+    zone.addEventListener('pointerenter', measure);
+    zone.addEventListener('pointermove', onMove);
+    zone.addEventListener('pointerleave', onLeave);
+    window.addEventListener('resize', measure);
+  }
+  measure();
+  return {
+    aim,
+    leave: onLeave,
+    measure,
+    stop() {
+      zone.removeEventListener('pointerenter', measure);
+      zone.removeEventListener('pointermove', onMove);
+      zone.removeEventListener('pointerleave', onLeave);
+      window.removeEventListener('resize', measure);
+      if (raf) cancelAnimationFrame(raf);
+    },
+  };
+}
+
+const mark = floorMark(document.querySelector('.floor-mark'));
+</script>
+<script>
+  // --- demo glue: the ghost pointer stands in for the mouse over the footer -----------------------
+  const zone = document.querySelector('footer');
+  const floor = document.querySelector('.ft-floor');
+  const inside = (x, y) => { const r = zone.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; };
+  let was = false;
+  QM.demo({
+    kind: 'pointer',
+    // a slow sweep across the wordmark, a little up and down over it
+    path: (t) => {
+      const r = floor.getBoundingClientRect();
+      return [window.innerWidth * (0.5 + 0.43 * Math.sin(t * 0.8)), r.top + r.height * (0.42 + 0.2 * Math.sin(t * 1.9 + 0.6))];
+    },
+    move(x, y) {
+      mark.measure();
+      if (inside(x, y)) { mark.aim(x); was = true; } else if (was) { mark.leave(); was = false; }
+    },
+    leave() { mark.leave(); was = false; },
+  });
+</script>
+</body>
+</html>

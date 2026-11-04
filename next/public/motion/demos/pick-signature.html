@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signature ink · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-signature",
+  "title": "Signature ink",
+  "group": "picks",
+  "cat": "inputs",
+  "order": 100,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "ink 1.3–5.2 px by pen speed · clear rewinds last point first",
+  "summary": "Sign to accept a proposal: the ink thins as the pen speeds up and pools as it slows. Clear plays the strokes back in reverse, last point first, and Accept becomes the filled action once there is ink and the pen is up. The status chip changes fill and word: Awaiting signature, Signed, Accepted.",
+  "spec": [
+    ["Ink", "one short quadratic curve per pen move, each with its own width, in an SVG: crisp at any scale"],
+    ["Width", "clamp(5.6 − v × 2.6, 1.3, 5.2) px, v the pen's speed in px per ms, smoothed 0.35"],
+    ["Clear", "segments removed from the end over min(1100, 260 + 5 × segments) ms, in-out cubic"],
+    ["Accept", "asleep (lime at 32%) until there is ink and the pen is up, then the filled lime; accepting leaves a check"],
+    ["Status chip", "Awaiting signature (grey) → Signed (ink tint) → Accepted (ink); colour 200 ms, expo out"],
+    ["Hint", "“Sign above the line” fades out once there is ink: 200 ms, expo out"],
+    ["Pad", "190 px tall, radius 8, a 1px line 44 px up; the card is radius 14, padding 32"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Sign the PO (ix-signature)", "Idea: bencho.dev signature (MIT)"],
+  "where": "The last step of a proposal: accepting the Practice Website Refresh ($600, $300 deposit), a Design service brief, any quote that needs a yes.",
+  "rules": [
+    "One filled primary, disabled until signed: lime is the only fill on the card besides the status.",
+    "The status chip changes fill and word.",
+    "No shadow, no outline on the pad: it is a recessed grey block.",
+    "A real pad: pointer events with capture and touch-action none, so a finger signs as well as a mouse."
+  ],
+  "tags": ["signature", "pointer", "svg", "form", "paper"],
+  "shot": 6800
+}
+</script>
+<style data-code>
+/* Sign the brief · Idea: bencho.dev signature (MIT).
+   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+.sg {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64);
+  --surface: #ffffff; --surface-muted: #eceef0;
+  --divider: rgba(18, 20, 23, 0.08); --divider-strong: rgba(18, 20, 23, 0.2); --secondary-border: rgba(18, 20, 23, 0.3);
+  --primary: #B8FF00; --on-primary: #0c1300;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  width: 600px; background: var(--surface); border-radius: 14px; padding: 32px; display: grid; gap: 20px;
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.sg-hd { display: flex; align-items: center; gap: 16px; }
+.sg-av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.sg-t { flex: 1; }
+.sg-title { font-size: 20px; letter-spacing: -0.02em; line-height: 1.35; }
+.sg-meta { font-size: 12px; color: var(--muted); }
+.sg-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: var(--divider); transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
+.sg-chip.signed { color: var(--text); background: rgba(18, 20, 23, 0.14); }
+.sg-chip.done { color: #fff; background: var(--text); }
+.sg-terms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.sg-terms div { display: grid; gap: 2px; }
+.sg-terms span { font-size: 12px; color: var(--muted); }
+.sg-terms b { font-weight: 400; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+/* the pad: a recessed block; the ink is an SVG over it */
+.sg-pad { position: relative; height: 190px; border-radius: 8px; background: var(--surface-muted); touch-action: none; cursor: crosshair; user-select: none; -webkit-user-select: none; }
+.sg-pad svg.ink { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--text); }
+.sg-x { position: absolute; left: 24px; bottom: 52px; color: var(--muted); }
+.sg-line { position: absolute; left: 24px; right: 24px; bottom: 44px; height: 1px; background: var(--divider-strong); }
+.sg-hint { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; color: var(--muted); font-size: 12px; transition: opacity 200ms var(--ease-out); }
+.sg-pad.has .sg-hint { opacity: 0; }
+
+.sg-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.sg-who { color: var(--muted); }
+.sg-acts { display: flex; gap: 8px; }
+.sg-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 8px;
+  border: 1px solid var(--secondary-border); background: var(--surface); color: var(--text); font: inherit; font-weight: 500; white-space: nowrap; cursor: pointer;
+  transition: background-color 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+.sg-btn:hover, .sg-btn.is-hot { background: var(--surface-muted); }
+.sg-btn.quiet { border-color: transparent; background: transparent; }
+.sg-btn.quiet:hover, .sg-btn.quiet.is-hot { background: var(--surface-muted); }
+.sg-btn:disabled { color: rgba(18, 20, 23, 0.38); cursor: default; }
+.sg-btn.primary { background: var(--primary); border-color: transparent; color: var(--on-primary); }
+.sg-btn.primary:hover, .sg-btn.primary.is-hot { background: color-mix(in oklab, var(--primary) 88%, #000); }
+.sg-btn.primary:active { background: color-mix(in oklab, var(--primary) 78%, #000); }
+.sg-btn.primary:disabled { background: color-mix(in srgb, var(--primary) 32%, var(--surface)); color: rgba(12, 19, 0, 0.5); }
+.sg-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .sg-chip, .sg-hint, .sg-btn { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<section class="sg" aria-label="Accept the proposal">
+  <div class="sg-hd">
+    <img class="sg-av" src="../assets/art/you.webp" alt="Dana Reyes">
+    <div class="sg-t"><div class="sg-title">Accept the proposal from Qbix</div><div class="sg-meta">Practice Website Refresh · 3 to 5 pages, mobile first</div></div>
+    <span class="sg-chip" id="sg-st" role="status">Awaiting signature</span>
+  </div>
+  <div class="sg-terms">
+    <div><span>Total</span><b>$600</b></div>
+    <div><span>Deposit</span><b>$300</b></div>
+    <div><span>Live in</span><b>7 days</b></div>
+  </div>
+  <div class="sg-pad" id="sg-pad">
+    <svg class="ink" id="sg-ink" viewBox="0 0 520 190" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Signature"></svg>
+    <svg class="sg-x" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg><span class="sg-line" aria-hidden="true"></span><span class="sg-hint" aria-hidden="true">Sign above the line</span>
+  </div>
+  <div class="sg-foot">
+    <span class="sg-who">Signing as Dana Reyes, LMFT</span>
+    <div class="sg-acts"><button class="sg-btn quiet" id="sg-clear" type="button" disabled>Clear</button><button class="sg-btn primary" id="sg-accept" type="button" disabled>Accept proposal</button></div>
+  </div>
+</section>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Sign on the pad</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* The ink thins as the pen moves faster and pools as it slows, the way a nib does. Every pen move is its own
+   short curve with its own width, drawn into an SVG. Clear plays the strokes back, last point first. */
+const NS = 'http://www.w3.org/2000/svg';
+const pad = document.getElementById('sg-pad'), ink = document.getElementById('sg-ink');
+const clearBtn = document.getElementById('sg-clear'), acceptBtn = document.getElementById('sg-accept'), chip = document.getElementById('sg-st');
+const W = 520, H = 190;                                   // the pad's own units (the svg's viewBox)
+const CHECK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+let segs = [], pts = [], pen = false, lastT = 0, vel = 0, rewinding = false, accepted = false;
+
+const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+function tween(ms, step) {
+  return new Promise((done) => {
+    const t0 = performance.now();
+    const f = (now) => { const p = Math.min(1, (now - t0) / ms); step(inOut(p)); p < 1 ? requestAnimationFrame(f) : done(); };
+    requestAnimationFrame(f);
+  });
+}
+function seg(a, b, c, w) {
+  const p = document.createElementNS(NS, 'path');
+  p.setAttribute('d', `M${a.x.toFixed(1)} ${a.y.toFixed(1)}Q${b.x.toFixed(1)} ${b.y.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`);
+  p.setAttribute('stroke-width', w.toFixed(2));
+  ink.appendChild(p);
+  segs.push(p);
+}
+function sync() {
+  const has = segs.length > 0, ready = has && !pen && !rewinding;
+  pad.classList.toggle('has', has);
+  clearBtn.disabled = !has || rewinding;
+  acceptBtn.disabled = !ready || accepted;
+  chip.className = 'sg-chip' + (accepted ? ' done' : ready ? ' signed' : '');
+  chip.textContent = accepted ? 'Accepted' : ready ? 'Signed' : 'Awaiting signature';
+}
+/* the pointer, in the pad's own units: the page may be scaled */
+function local(e) {
+  const r = pad.getBoundingClientRect();
+  return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
+}
+pad.addEventListener('pointerdown', (e) => {
+  if (rewinding || accepted) return;
+  pen = true;
+  try { pad.setPointerCapture(e.pointerId); } catch (_) { /* a scripted pointer */ }
+  const p = local(e);
+  pts = [p]; lastT = performance.now(); vel = 0;
+  const dot = document.createElementNS(NS, 'path');       // a touch is a dot
+  dot.setAttribute('d', `M${p.x} ${p.y}l.01 0`); dot.setAttribute('stroke-width', 4);
+  ink.appendChild(dot); segs.push(dot);
+  sync();
+});
+addEventListener('pointermove', (e) => {
+  if (!pen) return;
+  const p = local(e), a = pts[pts.length - 1];
+  const d = Math.hypot(p.x - a.x, p.y - a.y);
+  if (d < 2.5) return;
+  const now = performance.now(), dt = Math.max(8, now - lastT);
+  lastT = now;
+  vel += (d / dt - vel) * 0.35;                           // px per ms, smoothed: the faster the pen, the thinner the ink
+  const w = Math.max(1.3, Math.min(5.2, 5.6 - vel * 2.6));
+  pts.push(p);
+  if (pts.length >= 3) {                                  // curves through the midpoints, so the line has no corners
+    const n = pts.length, q = pts[n - 2];
+    seg({ x: (pts[n - 3].x + q.x) / 2, y: (pts[n - 3].y + q.y) / 2 }, q, { x: (q.x + p.x) / 2, y: (q.y + p.y) / 2 }, w);
+  } else seg(a, a, p, w);
+});
+const lift = () => { if (!pen) return; pen = false; sync(); };
+addEventListener('pointerup', lift);
+addEventListener('pointercancel', lift);
+
+/* Clear: the signature taken back in the order it was given */
+async function rewind() {
+  if (rewinding || !segs.length) return;
+  rewinding = true; sync();
+  const total = segs.length;
+  let gone = 0;
+  await tween(Math.min(1100, 260 + total * 5), (k) => {
+    const want = Math.round(total * k);
+    while (gone < want && segs.length) { segs.pop().remove(); gone++; }
+  });
+  while (segs.length) segs.pop().remove();
+  rewinding = false; accepted = false; sync();
+}
+clearBtn.addEventListener('click', rewind);
+acceptBtn.addEventListener('click', () => {
+  if (acceptBtn.disabled) return;
+  accepted = true;
+  acceptBtn.innerHTML = CHECK + 'Accepted';
+  clearBtn.disabled = true;
+  sync();
+  clearBtn.disabled = true;
+});
+function clearAll() {
+  segs.forEach((s) => s.remove());
+  segs = []; pen = false; rewinding = false; accepted = false;
+  acceptBtn.textContent = 'Accept proposal';
+  sync();
+}
+clearAll();
+</script>
+<script>
+  /* harness glue: a ghost signs, then clears the pad (or accepts it, on every other pass) */
+  PickGhost.fit(document.getElementById('pk'), 600, 520);
+  /* a signature as fractions of the pad, for the ghost and for the reduced-motion still */
+  const PATH = [[0.12,0.184],[0.109,0.224],[0.102,0.334],[0.103,0.493],[0.112,0.671],[0.13,0.835],[0.157,0.954],[0.188,1.006],[0.219,0.893],[0.248,0.735],[0.27,0.665],[0.283,0.584],[0.287,0.506],[0.282,0.447],[0.273,0.416],[0.261,0.421],[0.252,0.459],[0.249,0.522],[0.255,0.6],[0.27,0.677],[0.293,0.738],[0.323,0.773],[0.355,0.776],[0.385,0.746],[0.41,0.688],[0.427,0.615],[0.434,0.54],[0.433,0.477],[0.425,0.438],[0.414,0.429],[0.403,0.452],[0.398,0.503],[0.4,0.571],[0.411,0.643],[0.431,0.707],[0.459,0.75],[0.49,0.765],[0.521,0.749],[0.549,0.705],[0.569,0.642],[0.58,0.572],[0.582,0.508],[0.577,0.462],[0.566,0.442],[0.555,0.452],[0.547,0.49],[0.546,0.547],[0.553,0.613],[0.57,0.677],[0.595,0.725],[0.625,0.749],[0.657,0.745],[0.687,0.714],[0.71,0.663],[0.725,0.6],[0.731,0.538],[0.728,0.488],[0.719,0.46],[0.707,0.459],[0.698,0.483],[0.693,0.529],[0.697,0.588],[0.71,0.648],[0.732,0.698],[0.761,0.729],[0.792,0.736],[0.823,0.718],[0.85,0.677],[0.868,0.623],[0.877,0.566],[0.878,0.515],[0.871,0.481],[0.86,0.47]];
+  const at = (fx, fy) => () => { const r = pad.getBoundingClientRect(); return { x: r.left + r.width * fx, y: r.top + r.height * fy }; };
+  const lin = (x) => x;
+  let round = 0;
+  PickGhost.start({
+    hot: '.sg-btn:not(:disabled)',
+    reset: clearAll,
+    async script(g) {
+      const accept = round++ % 2 === 1;
+      await g.wait(300);
+      await g.to(at(PATH[0][0], PATH[0][1]), { ms: 500 });
+      await g.down();
+      for (let i = 1; i < PATH.length; i++) await g.to(at(PATH[i][0], PATH[i][1]), { ms: 22 + 12 * (1 + Math.sin(i * 0.5)), ease: lin });
+      await g.up();
+      await g.to(at(0.10, 0.79), { ms: 250 });
+      await g.down();
+      await g.to(at(0.90, 0.73), { ms: 230, ease: lin });         // the quick underline: thin ink
+      await g.up();
+      await g.wait(1400);
+      await g.click(accept ? '#sg-accept' : '#sg-clear', { ms: 650 });
+      await g.wait(accept ? 2200 : 1900);
+    },
+    still() {                                                    // a signed, composed still
+      const P = PATH.map(([x, y]) => ({ x: x * W, y: y * H }));
+      for (let i = 2; i < P.length; i++) seg({ x: (P[i - 2].x + P[i - 1].x) / 2, y: (P[i - 2].y + P[i - 1].y) / 2 }, P[i - 1], { x: (P[i - 1].x + P[i].x) / 2, y: (P[i - 1].y + P[i].y) / 2 }, 3.4 - (i % 3) * 0.6);
+      sync();
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

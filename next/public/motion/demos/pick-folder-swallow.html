@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Into the folder · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-folder-swallow",
+  "title": "Into the folder",
+  "group": "picks",
+  "cat": "loading",
+  "order": 39,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "lid opens at 150 px · lid 260 ms spring · card in over 640 ms",
+  "summary": "Drag the moodboard toward the folder: the lid opens as it nears, the folder takes the card in and closes over it, and a row under it says what it read. Let go anywhere else and the lid shuts and the card glides home. Qbix colours: an ink back and a lime front on paper, the card and the check in ink.",
+  "spec": [
+    ["Lid", "the front panel scales to 0.8 in height from its bottom edge, 260 ms, cubic-bezier(0.34, 1.26, 0.64, 1): a small overshoot, then rest"],
+    ["Near", "the lid opens while the card's top-left is within 150 px of a point 40 px above the mouth, and closes when it leaves"],
+    ["Swallow", "the card glides to 20 px above the mouth in 220 ms (cubic-bezier(0.16, 1, 0.3, 1)), then down to y 102 in 420 ms (cubic-bezier(0.65, 0, 0.35, 1)), behind the front panel; the lid closes"],
+    ["Result", "260 ms after the lid closes the card is gone and the row arrives: opacity and a 6 px rise, 200 ms, expo out; the tip is gone with it"],
+    ["Let go short", "the lid closes and the card glides home in 260 ms, expo out"],
+    ["Card", "128 × 140, 8 px radius; hover turns it white in 120 ms (not while it is held, or in the folder); it rides above the folder while dragged (z 6) and under the front panel once let go (z 3, front 4)"],
+    ["Folder", "240 × 220: a back with a tab, a paper edge, a front panel with a handle slot; flat fills, 12 px corners"],
+    ["Box", "640 × 430, scaled to the stage at 94% (up to 1.7×); card radius 14 px"],
+    ["Reduced motion", "the card is already in, the row is showing, the lid is shut"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Into the drive (bom-folder-swallow)", "Idea: Qbix studio library · folder-upload"],
+  "where": "A Design service folder for Forma: the moodboard goes in and the folder says what it read, eight pages and 24 images. The same move takes Palette.zip and Launch-film.mp4, or the logo files of a Brand upgrade.",
+  "rules": [
+    "Flat fills only: an ink back and a lime front, no gradient, no shadow, no face on the folder.",
+    "Every step within 320 ms, the lid on the spring, the card on expo out and then in-out.",
+    "The lid opens as the card nears and closes when it leaves; once let go the card goes behind the front panel, never over it.",
+    "One lime, on the folder's front; the card's bar and the check are ink.",
+    "The folder says what it took in, in a row under it."
+  ],
+  "tags": ["drag", "folder", "upload", "spring", "files"],
+  "shot": 2550
+}
+</script>
+<style data-code>
+/* Into the folder · Idea: Qbix studio library · folder-upload
+   O2's roles in qbix colours: ink and paper, one lime (the folder's front). Radii, spacing, type and timings are the O2 library's own. */
+.fd {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.6);
+  --surface: #ffffff; --surface-muted: #f3f4f5; --divider-strong: rgba(18, 20, 23, 0.14);
+  --primary: #121417;                         /* O2's primary green: the card's bar and the check, ink here */
+  --primary-soft: #E1FFB8;                    /* the paper edge in the folder: a soft lime tint (lime at 42% over white) */
+  --viz-good: #B8FF00;                        /* the folder's front: the one lime */
+  --viz-o2: #121417; --viz-o2-deep: #08090A;  /* its back, and the slot in the back */
+  --radius-sm: 8px; --radius-lg: 14px;
+  --duration-fast: 120ms; --duration-base: 200ms; --duration-slow: 260ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-spring: cubic-bezier(0.34, 1.26, 0.64, 1);
+  display: grid; grid-template-rows: auto 1fr; gap: 20px; width: 640px; height: 430px;   /* the page's design size */
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.fd-head { display: flex; align-items: baseline; justify-content: space-between; }
+.fd-heading { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.fd-meta { font-size: 12px; color: var(--faint); }
+.fd-card { position: relative; background: var(--surface); border-radius: var(--radius-lg); }
+.fd-stage { position: relative; height: 100%; }
+
+/* the folder: three flat layers, the card slides in between the middle and the front */
+.fd-folder { position: absolute; left: 330px; top: 24px; width: 240px; height: 220px; }
+.fd-folder svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.fd-back { z-index: 1; } .fd-mid { z-index: 2; } .fd-front { z-index: 4; }
+.fd-lid { transform-origin: 50% 100%; transition: transform var(--duration-slow) var(--ease-spring); }
+.fd-open .fd-lid { transform: scaleY(0.8); }
+
+/* the card: a moodboard's first page, to be dragged */
+.fd-doc { position: absolute; left: 0; top: 0; z-index: 3; display: grid; align-content: start; gap: 8px; width: 128px; height: 140px; padding: 14px 12px; border-radius: var(--radius-sm); background: var(--surface-muted); touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; transition: background-color var(--duration-fast) var(--ease-out); }
+.fd-doc:hover { background: var(--surface); }
+.fd-doc.dragging, .fd-doc.in { background: var(--surface-muted); }      /* in the hand, or in the folder: no hover look (white on the white card would lose it) */
+.fd-hd { height: 22px; border-radius: 4px; background: var(--primary); }
+.fd-ln { height: 8px; border-radius: 4px; background: var(--divider-strong); }
+.fd-nm { margin-top: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.fd-doc.dragging { z-index: 6; cursor: grabbing; }
+.fd-doc.in { z-index: 3; }
+
+/* what the folder read, and the tip it replaces */
+.fd-res { position: absolute; left: 330px; top: 262px; width: 240px; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-sm); background: var(--surface-muted); opacity: 0; transform: translateY(6px); transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out); }
+.fd-res.on { opacity: 1; transform: none; }
+.fd-ck { display: block; flex: none; width: 20px; height: 20px; color: var(--primary); }
+.fd-ck svg { display: block; }
+.fd-t, .fd-sub { display: block; }
+.fd-t { font-weight: 500; }
+.fd-sub { font-size: 12px; color: var(--faint); }
+.fd-tip { position: absolute; left: 40px; top: 300px; font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .fd-lid, .fd-doc, .fd-res { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<div class="fd">
+  <div class="fd-head"><h1 class="fd-heading">Files</h1><span class="fd-meta">Forma · Design service</span></div>
+  <div class="fd-card"><div class="fd-stage">
+    <div class="fd-folder" aria-hidden="true">
+      <svg class="fd-back" viewBox="0 0 240 220"><path d="M0 40a12 12 0 0 1 12-12h72a12 12 0 0 1 9 4l9 10h126a12 12 0 0 1 12 12v126a12 12 0 0 1-12 12H12a12 12 0 0 1-12-12z" fill="var(--viz-o2)"/><rect x="14" y="62" width="212" height="10" rx="5" fill="var(--viz-o2-deep)"/></svg>
+      <svg class="fd-mid" viewBox="0 0 240 220"><rect x="14" y="56" width="212" height="12" rx="3" fill="var(--primary-soft)"/></svg>
+      <svg class="fd-front" viewBox="0 0 240 220"><g class="fd-lid"><path d="M0 74a12 12 0 0 1 12-12h216a12 12 0 0 1 12 12v134a12 12 0 0 1-12 12H12a12 12 0 0 1-12-12z" fill="var(--viz-good)"/><rect x="92" y="104" width="56" height="8" rx="4" fill="var(--viz-o2)" opacity=".35"/></g></svg>
+    </div>
+    <div class="fd-doc" role="img" aria-label="Moodboard.pdf"><div class="fd-hd"></div><div class="fd-ln" style="width:80%"></div><div class="fd-ln" style="width:92%"></div><div class="fd-ln" style="width:86%"></div><div class="fd-nm">Moodboard.pdf</div></div>
+    <div class="fd-res"><span class="fd-ck"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span><div><span class="fd-t">Moodboard.pdf</span><span class="fd-sub">8 pages, 24 images</span></div></div>
+    <p class="fd-tip">Drag the moodboard into the folder.</p>
+  </div></div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Drag the moodboard into the folder</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* Into the folder · Idea: Qbix studio library · folder-upload
+   The card follows the hand; the lid opens as it nears the mouth. Let go there and the folder takes the card in
+   (up to the mouth, then down behind the front panel), closes, and says what it read. */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const q = (sel) => document.querySelector(sel);
+const folder = q('.fd-folder'), doc = q('.fd-doc'), res = q('.fd-res'), tip = q('.fd-tip');
+const HOME = { x: 70, y: 80 };                          // the card's top-left at rest, in the stage's own pixels
+const MOUTH = { x: 330 + 56, y: 24 + 30 };              // …and when it sits over the mouth
+let pos = { ...HOME }, busy = false, drag = null, pass = 0;   // pass: a new move cancels the glide before it
+
+/* a CSS cubic-bezier as a function of progress */
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const X = (t) => ((ax * t + bx) * t + cx) * t, Y = (t) => ((ay * t + by) * t + cy) * t, dX = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) { const e = X(t) - x, d = dX(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; }
+    return Y(Math.min(1, Math.max(0, t)));
+  };
+}
+const OUT = bezier(0.16, 1, 0.3, 1), IN_OUT = bezier(0.65, 0, 0.35, 1);
+const tween = (ms, fn, ease, my) => new Promise((done) => {      // resolves true when it arrives, false if cancelled
+  if (reduce) { fn(1); return done(true); }
+  const t0 = performance.now();
+  const step = (now) => {
+    if (my !== pass) return done(false);
+    const p = Math.min(1, (now - t0) / ms);
+    fn(ease(p));
+    if (p < 1) requestAnimationFrame(step); else done(true);
+  };
+  requestAnimationFrame(step);
+});
+const sleep = (ms, my) => new Promise((done) => setTimeout(() => done(my === pass), reduce ? 0 : ms));
+
+const put = (p) => { pos = p; doc.style.transform = `translate(${p.x}px, ${p.y}px)`; };
+const glide = (to, ms, ease, my) => { const from = { ...pos }; return tween(ms, (t) => put({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t }), ease, my); };
+const near = () => Math.hypot(pos.x - MOUTH.x, pos.y - (MOUTH.y - 40)) < 150;
+const scale = () => doc.getBoundingClientRect().width / 128;     // the page may be scaled
+
+doc.addEventListener('pointerdown', (e) => {
+  if (busy) return;
+  pass++;                                                        // a glide home gives way to the hand
+  drag = { sx: e.clientX, sy: e.clientY, p: { ...pos } };
+  try { doc.setPointerCapture(e.pointerId); } catch (_) { /* a scripted pointer */ }
+  doc.classList.add('dragging');
+});
+function cancel() {                                              // the press ended without a release: back home
+  if (!drag) return;
+  drag = null; doc.classList.remove('dragging'); folder.classList.remove('fd-open');
+  glide(HOME, 260, OUT, pass);
+}
+doc.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  if (e.isTrusted && e.pointerType === 'mouse' && !e.buttons) return cancel();   // a press that ended out of sight
+  const k = scale();
+  put({ x: drag.p.x + (e.clientX - drag.sx) / k, y: drag.p.y + (e.clientY - drag.sy) / k });
+  folder.classList.toggle('fd-open', near());                    // the lid opens as the card nears
+});
+async function release() {
+  if (!drag) return;
+  drag = null; doc.classList.remove('dragging');
+  if (near()) await swallow();
+  else { folder.classList.remove('fd-open'); await glide(HOME, 260, OUT, pass); }
+}
+doc.addEventListener('pointerup', release);
+doc.addEventListener('pointercancel', cancel);
+
+async function swallow() {
+  const my = ++pass;
+  busy = true; folder.classList.add('fd-open'); doc.classList.add('in');
+  if (!(await glide({ x: MOUTH.x, y: MOUTH.y - 20 }, 220, OUT, my))) return;
+  if (!(await glide({ x: MOUTH.x, y: 102 }, 420, IN_OUT, my))) return;     // behind the front panel
+  folder.classList.remove('fd-open');                                       // the lid closes
+  if (!(await sleep(260, my))) return;
+  settle();
+  busy = false;
+}
+function settle() { doc.style.visibility = 'hidden'; res.classList.add('on'); tip.style.opacity = 0; }   // the card is in, the row says so
+function reset() {
+  pass++; busy = false; drag = null;
+  folder.classList.remove('fd-open'); res.classList.remove('on'); tip.style.opacity = 1;
+  doc.classList.remove('in', 'dragging'); doc.style.visibility = ''; put(HOME);
+}
+reset();
+if (reduce) settle();
+</script>
+<script>
+  /* harness glue: a ghost drags the card into the folder, through the page's own handlers */
+  PickGhost.fit(document.getElementById('pk'), 640, 430, { max: 1.7 });
+  PickGhost.start({
+    reset,
+    async script(g) {
+      await g.to('.fd-doc', { ms: 500 });
+      await g.down();
+      const p = g.at('.fd-doc');                                              // the ghost holds the card by its middle
+      await g.to({ x: p.x + 60, y: p.y - 70 }, { ms: 520 });                  // lifts it up and away
+      await g.to(() => {                                                      // then over the mouth, the card's top-left on MOUTH
+        const r = q('.fd-stage').getBoundingClientRect(), k = scale();
+        return { x: r.left + (MOUTH.x + 64) * k, y: r.top + (MOUTH.y + 70) * k };
+      }, { ms: 800 });
+      await g.wait(220);
+      await g.up();
+      await g.wait(900 + 2600 + 400);                                          // in, closed, read; a hold; the gap before the next loop
+    },
+    still() { settle(); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

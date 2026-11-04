@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edge flood · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-liquid-flood",
+  "title": "Edge flood",
+  "group": "lab",
+  "cat": "cursor",
+  "order": 90,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "edge-aware · 2 wave layers · clip-path polygon",
+  "summary": "Each tile notices which edge the pointer came in through and floods from that edge; on leaving, it drains out through the edge the pointer left by. The surface is a clip-path polygon recomputed every frame from two sine waves, one for a deep lime band that runs ahead and one for the lime that follows, out of phase.",
+  "spec": [
+    ["Edge", "nearest edge on entry, farthest-out edge on exit"],
+    ["Levels", "two springs: lime k 26 / 8.5, the deep lime band ahead of it k 46 / 10"],
+    ["Surface", "26-point polygon, two waves (6.6 and 11.3 cycles), amplitude 3.5% of the tile growing with energy to 11%"],
+    ["Colour", "tile white, a deep lime band (#6FAE00) ahead, lime behind it with ink type"],
+    ["Trigger", "the pointer crossing a tile; the ghost glides from tile to tile"]
+  ],
+  "source": ["Qbix studio library · liquid-flood"],
+  "where": "The Design service grid: each part of a build lights up from the side you reach it from.",
+  "rules": [
+    "Content is duplicated on the lime layer, so type is always readable on its ground.",
+    "Only one tile is lime at a time; the deep lime band is a lead, not a second signal.",
+    "The cut corner stays on every tile while it floods."
+  ],
+  "tags": ["hover", "clip-path", "liquid", "grid"],
+  "shot": 3200
+}
+</script>
+<style data-code>
+.lf-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(var(--cols, 3), 1fr); grid-template-rows: repeat(var(--rows, 2), 1fr); gap: 8px; }
+.lf-tile { position: relative; background: #ffffff; color: #121417; overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.lf-content { position: absolute; inset: 0; padding: clamp(12px, 2vw, 24px); display: flex; flex-direction: column; box-sizing: border-box; }
+.lf-content svg { width: clamp(20px, 2.6vw, 30px); height: clamp(20px, 2.6vw, 30px); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter; }
+.lf-content h2 { margin: auto 0 4px; font: 400 clamp(18px, 2.4vw, 30px)/1.1 Eurostile, Geist, sans-serif; letter-spacing: -.02em; }
+.lf-content p { font: 400 clamp(10px, 1.1vw, 12px)/1.35 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+.lf-liq { position: absolute; inset: 0; clip-path: polygon(0 0, 0 0, 0 0); will-change: clip-path; }
+.lf-back { background: #6FAE00; }
+.lf-front { background: #B8FF00; color: #0c1300; }
+.lf-front .lf-content p { color: rgba(12, 19, 0, .66); }
+</style>
+<style>
+  .qm-stage { place-items: stretch; padding: clamp(16px, 4.5vmin, 48px); }
+  .lf { display: flex; flex-direction: column; gap: clamp(12px, 3vh, 26px); height: 100%; }
+  .lf-head .title { font-size: clamp(30px, min(5vw, 8vh), 56px); margin-top: 8px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="lf">
+    <div class="lf-head"><p class="kicker">Design service · What is in a build</p><h1 class="title">Move across the tiles.</h1></div>
+<!-- code -->
+<div class="lf-grid" id="grid"></div>
+<!-- /code -->
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const flood = (() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ICONS = {
+    mood: '<rect x="3" y="3" width="10" height="9"/><rect x="15" y="3" width="6" height="9"/><rect x="3" y="14" width="6" height="7"/><rect x="11" y="14" width="10" height="7"/>',
+    palette: '<rect x="3" y="4" width="5" height="12"/><rect x="9.5" y="4" width="5" height="12"/><rect x="16" y="4" width="5" height="12"/><path d="M3 20h18"/>',
+    type: '<path d="M4 5h16M12 5v15M8.5 20h7"/>',
+    parts: '<rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><path d="M13 17h8M17 13v8"/>',
+    pages: '<rect x="2.5" y="4" width="19" height="16"/><path d="M2.5 9h19M6 6.5h.01M9 6.5h.01"/>',
+    domain: '<circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c3.4 3 3.4 16 0 19M12 2.5c-3.4 3-3.4 16 0 19"/>'
+  };
+  const TILES = [
+    ['mood', 'Moodboard', 'From a few references'], ['palette', 'Palette', 'Contrast checked'],
+    ['type', 'Type', 'Two faces, one scale'], ['parts', 'Components', 'Buttons, cards, forms'],
+    ['pages', 'Pages', 'Home, work, contact'], ['domain', 'Live domain', 'Deployed and handed over']
+  ];
+  const grid = document.getElementById('grid');
+  const inner = (t) => `<div class="lf-content"><svg viewBox="0 0 24 24">${ICONS[t[0]]}</svg><h2>${t[1]}</h2><p>${t[2]}</p></div>`;
+  const tiles = TILES.map((t) => {
+    const el = document.createElement('div'); el.className = 'lf-tile';
+    el.innerHTML = inner(t) + `<div class="lf-liq lf-back"></div><div class="lf-liq lf-front">${inner(t)}</div>`;
+    grid.appendChild(el);
+    return { el, back: el.querySelector('.lf-back'), front: el.querySelector('.lf-front'), edge: 'left', target: 0, lf: 0, vf: 0, lb: 0, vb: 0, energy: 0, phase: Math.random() * 6, rect: null };
+  });
+  function layout() {
+    const cols = innerWidth > 560 && innerWidth > innerHeight * 0.95 ? 3 : 2;
+    grid.style.setProperty('--cols', cols); grid.style.setProperty('--rows', 6 / cols);
+    measure();
+  }
+  function measure() { tiles.forEach((t) => (t.rect = t.el.getBoundingClientRect())); }
+  addEventListener('resize', layout); layout();
+  if (document.fonts) document.fonts.ready.then(measure);
+  const entryEdge = (r, x, y) => { const d = { left: x - r.left, right: r.right - x, top: y - r.top, bottom: r.bottom - y }; return Object.keys(d).reduce((a, b) => (d[a] <= d[b] ? a : b)); };
+  const exitEdge = (r, x, y) => { const e = { left: r.left - x, right: x - r.right, top: r.top - y, bottom: y - r.bottom }; return Object.keys(e).reduce((a, b) => (e[a] >= e[b] ? a : b)); };
+  function enter(t, edge) { if (t.lf < 0.05) t.edge = edge; t.target = 1; t.energy = Math.min(1.4, t.energy + 0.9); }
+  function leave(t, edge) { if (t.lf > 0.96 && t.lb > 0.96) t.edge = edge; t.target = 0; t.energy = Math.min(1.4, t.energy + 0.7); }
+  let current = null, lastX = 0, lastY = 0;
+  function track(x, y, inside) {
+    const hit = inside ? tiles.find((t) => x >= t.rect.left && x <= t.rect.right && y >= t.rect.top && y <= t.rect.bottom) : null;
+    if (hit === current) { lastX = x; lastY = y; return; }
+    if (current) leave(current, inside ? exitEdge(current.rect, x, y) : entryEdge(current.rect, lastX, lastY));
+    if (hit) enter(hit, entryEdge(hit.rect, x, y));
+    current = hit; lastX = x; lastY = y;
+  }
+  // the liquid surface as a clip polygon
+  function poly(t, level, amp, ph, n) {
+    const r = t.rect, w = r.width, h = r.height, horiz = t.edge === 'left' || t.edge === 'right';
+    const D = horiz ? w : h, P = horiz ? h : w;
+    const base = level * (D + amp * 2.2) - amp * 1.1;
+    const pts = [];
+    for (let i = 0; i <= n; i++) {
+      const s = i / n;
+      let o = base + amp * (0.62 * Math.sin(s * 6.6 + ph) + 0.38 * Math.sin(s * 11.3 - ph * 1.37 + 1.1));
+      o = Math.max(0, Math.min(D + 2, o));
+      const along = s * P;
+      if (t.edge === 'left') pts.push([o, along]); else if (t.edge === 'right') pts.push([w - o, along]);
+      else if (t.edge === 'top') pts.push([along, o]); else pts.push([along, h - o]);
+    }
+    const c = { left: [[0, h], [0, 0]], right: [[w, h], [w, 0]], top: [[w, 0], [0, 0]], bottom: [[w, h], [0, h]] }[t.edge];
+    return 'polygon(' + [...c, ...pts].map((p) => p[0].toFixed(1) + 'px ' + p[1].toFixed(1) + 'px').join(',') + ')';
+  }
+  let last = performance.now(), measured = 0;
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.04, (now - last) / 1000) || 0.016; last = now;
+    if (now - measured > 1000) { measure(); measured = now; }
+    for (const t of tiles) {
+      const kf = reduce ? 30 : 26, kb = reduce ? 30 : 46;
+      t.vf += ((t.target - t.lf) * kf - t.vf * 8.5) * dt; t.lf += t.vf * dt;
+      t.vb += ((t.target - t.lb) * kb - t.vb * 10) * dt; t.lb += t.vb * dt;
+      t.energy *= Math.exp(-dt * 1.6);
+      t.phase += dt * (reduce ? 1 : 2.4 + t.energy * 3);
+      const D = (t.edge === 'left' || t.edge === 'right') ? t.rect.width : t.rect.height;
+      const amp = D * (reduce ? 0.03 : 0.035 + 0.075 * Math.min(1, t.energy));
+      if (t.lb <= 0.001 && t.lf <= 0.001 && t.target === 0) {
+        if (t.drawn) { t.back.style.clipPath = t.front.style.clipPath = 'polygon(0 0,0 0,0 0)'; t.drawn = false; }
+        continue;
+      }
+      t.drawn = true;
+      // the deep lime band runs ahead, the lime follows
+      t.back.style.clipPath = poly(t, Math.max(0, t.lb + (t.target ? 0.05 : 0)), amp * 1.15, t.phase + 1.9, 26);
+      t.front.style.clipPath = poly(t, Math.max(0, t.lf), amp, t.phase, 26);
+    }
+  })(performance.now());
+  return {
+    move: (x, y) => track(x, y, true),
+    leave: () => track(lastX, lastY, false),
+    path(t) {
+      const per = 2.2, k = Math.floor(t / per), u = Math.min(1, (t - k * per) / 0.9);
+      const e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+      const ord = [0, 4, 2, 3, 1, 5], at = (i) => { const r = tiles[ord[i % 6]].rect; return [r.left + r.width * (0.35 + 0.3 * ((i * 0.37) % 1)), r.top + r.height * 0.5]; };
+      const a = at(k), b = at(k + 1);
+      return [a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e];
+    }
+  };
+})();
+document.addEventListener('pointermove', (e) => flood.move(e.clientX, e.clientY));
+document.documentElement.addEventListener('pointerleave', () => flood.leave());
+</script>
+<script>
+  QM.demo({ kind: 'pointer', move: (x, y) => flood.move(x, y), leave: () => flood.leave(), path: (t) => flood.path(t) });
+</script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Day ruler · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-time-scrubber",
+  "title": "Day ruler",
+  "group": "picks",
+  "cat": "inputs",
+  "order": 70,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "drag it, fling it · one spring, k 120 · c 19, to the nearest day",
+  "summary": "A ruler of days for a go-live date. Drag it, fling it, and one spring carries it to the nearest day: the ticks stand tall at the centre and fall away toward the masked ends, the date and a chip read out above, and a rubber band holds it inside the next 90 days. The lime is the button that sets the date.",
+  "spec": [
+    ["Ruler", "18px a day, 61 ticks in the window; a tick's height is 10 + 40 × a Gaussian of its distance from the centre (+12 on the first of a month), its ink 0.18 + 0.82 × the same; weekends a tone down"],
+    ["Labels", "the date on every Monday, the month on the 1st; the face is masked to nothing at both ends"],
+    ["Drag", "the ruler follows the hand 1:1; past either end it follows at 35% (a rubber band)"],
+    ["Release", "the hand's velocity over its last 100 ms (days per second, capped at 60) decides the landing: round(position + 0.3 × v); then one spring from that velocity carries it there: k 120 · c 19"],
+    ["Keys and wheel", "← → step a day, a sideways wheel steps a day, each by the same spring"],
+    ["Reading", "the date counts in tabular numerals; the chip says whether it is the promised date, or how many days later or earlier; the button says Date set for 1.4 s"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Delivery ruler (ix-time-scrubber)", "Idea: bencho.dev time-scrubber (MIT)"],
+  "where": "The Practice Website Refresh: pick the go-live day for Willow Counseling (Dana Reyes, LMFT). The promise is live in 7 days.",
+  "rules": [
+    "Physics only from a drag: nothing moves until the hand does.",
+    "The date reads out with a chip; one filled primary, and it is the lime button.",
+    "One spring for the throw and the snap: the landing is decided at release.",
+    "Reduced motion lands without the spring."
+  ],
+  "tags": ["ruler", "scrubber", "spring", "fling", "date"],
+  "shot": 4200
+}
+</script>
+<style data-code>
+/* Go-live ruler — idea: bencho.dev time-scrubber (MIT), redrawn for Qbix.
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+.pk {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-7: 32px;
+  --radius-sm: 8px; --radius-lg: 14px;
+  --duration-fast: 120ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --muted: var(--fg2); --surface-muted: var(--sunk);
+  font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
+}
+.card { width: min(600px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-7) var(--space-6) var(--space-6); display: grid; gap: var(--space-6); }
+.hd { display: grid; gap: var(--space-1); }
+.hd h1 { font: 400 20px/1.35 var(--font-sans); letter-spacing: -0.02em; }
+.hd p { color: var(--muted); }
+.read { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.read .d { font-size: 42px; letter-spacing: -0.04em; line-height: 1.15; font-variant-numeric: tabular-nums; min-width: 4.4ch; }
+.read .w { color: var(--muted); font-size: 16px; }
+.read .chip { margin-left: auto; }
+.chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px var(--space-2); border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: rgba(18, 20, 23, .08); }
+.chip.on { color: var(--ground); background: var(--fg); }
+.dial { position: relative; height: 112px; border-radius: var(--radius-sm); background: var(--surface-muted); overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.dial.is-drag { cursor: grabbing; }
+.face { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
+.t { position: absolute; bottom: 36px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--fg); will-change: height, opacity; }
+.t.we { background: var(--muted); }
+.l { position: absolute; bottom: 10px; transform: translateX(-50%); color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; pointer-events: none; }
+.mid::before { content: ""; position: absolute; left: 0; top: 0; bottom: 36px; width: 2px; background: var(--fg); border-radius: 1px; }
+.dial:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.foot { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+.foot .meta { margin-left: auto; font-size: 12px; color: rgba(18, 20, 23, .56); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.btn:hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.btn:active { background: color-mix(in oklab, var(--signal) 78%, #000); }
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+  .page { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
+</style>
+</head>
+<body>
+<div class="vp"><div class="page">
+<!-- code -->
+<div class="card pk">
+  <div class="hd"><h1>Go-live date</h1><p>Willow Counseling · Practice Website Refresh · Dana Reyes, LMFT</p></div>
+  <div class="read"><span class="d" id="d"></span><span class="w" id="w"></span><span id="chip"></span></div>
+  <div class="dial" id="dial" tabindex="0" role="slider" aria-label="Go-live date" aria-valuemin="0" aria-valuemax="90"><div class="face" id="face"></div><div class="mid"></div></div>
+  <div class="foot"><button type="button" class="btn" id="set">Set go-live date</button><span class="meta" id="gap"></span></div>
+</div>
+<!-- /code -->
+</div></div>
+<div class="qm-ui"><span>Drag the ruler · fling it · it lands on a day</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Go-live ruler. Idea: bencho.dev time-scrubber (MIT).
+   One spring carries the throw and the snap: the landing is decided at release, from the hand's own speed. */
+const $ = (s) => document.querySelector(s);
+const dial = $('#dial'), face = $('#face');
+const TODAY = new Date(2026, 10, 3), PROMISED = 7, MAXD = 90, PX = 18, POOL = 61;   // 7 days: Live in 7 days
+const dateAt = (n) => new Date(2026, 10, 3 + n);
+const pool = [];
+for (let i = 0; i < POOL; i++) {
+  const t = document.createElement('i'); t.className = 't';
+  const l = document.createElement('span'); l.className = 'l';
+  face.appendChild(t); face.appendChild(l); pool.push({ t, l });
+}
+let pos = PROMISED, vel = 0, target = PROMISED, drag = null, spring = false, samples = [], lastDay = -1;
+const K = 120, C = 19;
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rubber = (p) => (p < 0 ? p * 0.35 : p > MAXD ? MAXD + (p - MAXD) * 0.35 : p);
+
+function draw() {
+  const w = dial.clientWidth, cx = w / 2, base = Math.round(pos);
+  for (let k = 0; k < POOL; k++) {
+    const day = base + k - 30, x = cx + (day - pos) * PX, el = pool[k];
+    const dist = Math.abs(x - cx), f = Math.exp(-Math.pow(dist / 130, 2));
+    const d = dateAt(day), dow = d.getDay(), ok = day >= 0 && day <= MAXD;
+    el.t.style.left = x.toFixed(1) + 'px'; el.t.style.height = (ok ? 10 + 40 * f + (d.getDate() === 1 ? 12 : 0) : 0) + 'px';
+    el.t.style.opacity = (0.18 + 0.82 * f).toFixed(3); el.t.classList.toggle('we', dow === 0 || dow === 6);
+    const lab = ok && (d.getDate() === 1 ? d.toLocaleDateString('en-US', { month: 'short' }) : dow === 1 ? String(d.getDate()) : '');
+    el.l.style.left = x.toFixed(1) + 'px'; el.l.textContent = lab || ''; el.l.style.opacity = (0.25 + 0.75 * f).toFixed(3);
+  }
+  const day = Math.max(0, Math.min(MAXD, Math.round(pos)));
+  if (day !== lastDay) { lastDay = day; read(day); }
+}
+function read(day) {
+  const d = dateAt(day);
+  $('#d').textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  $('#w').textContent = d.toLocaleDateString('en-US', { weekday: 'long' }) + ', ' + d.getFullYear();
+  const diff = day - PROMISED;
+  $('#chip').innerHTML = diff === 0 ? '<span class="chip on">On the promised date</span>' : diff > 0 ? `<span class="chip">${diff} ${diff === 1 ? 'day' : 'days'} later</span>` : `<span class="chip">${-diff} ${diff === -1 ? 'day' : 'days'} earlier</span>`;
+  $('#gap').textContent = day === 0 ? 'Today' : `In ${day} ${day === 1 ? 'day' : 'days'}`;
+  dial.setAttribute('aria-valuenow', day);
+}
+/* put it on a day with no spring */
+function jump(d) { pos = target = d; vel = 0; spring = false; lastDay = -1; draw(); }
+
+/* one spring carries the throw and the snap: the landing is decided at release */
+let prev = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+  if (spring) {
+    if (still) { pos = target; vel = 0; }
+    else { vel += (K * (target - pos) - C * vel) * dt; pos += vel * dt; }
+    if (Math.abs(target - pos) < 0.002 && Math.abs(vel) < 0.01) { pos = target; vel = 0; spring = false; }
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+const scale = () => dial.getBoundingClientRect().width / dial.offsetWidth || 1;   // the page may draw the piece scaled
+dial.addEventListener('pointerdown', (e) => {
+  try { dial.setPointerCapture(e.pointerId); } catch (x) { /* a scripted pointer */ }
+  dial.classList.add('is-drag'); spring = false;
+  drag = { x: e.clientX, p: pos }; samples = [{ x: e.clientX, t: performance.now() }];
+});
+dial.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  pos = rubber(drag.p - (e.clientX - drag.x) / scale() / PX);
+  const now = performance.now(); samples.push({ x: e.clientX, t: now });
+  while (samples.length > 2 && now - samples[0].t > 100) samples.shift();
+});
+function release() {
+  if (!drag) return;
+  drag = null; dial.classList.remove('is-drag');
+  const a = samples[0], b = samples[samples.length - 1];
+  let v = b.t - a.t > 8 ? -((b.x - a.x) / scale() / (b.t - a.t)) * 1000 / PX : 0;     // days per second
+  v = Math.max(-60, Math.min(60, v));
+  target = Math.max(0, Math.min(MAXD, Math.round(pos + v * 0.3)));
+  vel = v; spring = true;
+}
+dial.addEventListener('pointerup', release); dial.addEventListener('pointercancel', release);
+dial.addEventListener('keydown', (e) => {
+  const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+  if (!d) return;
+  e.preventDefault(); target = Math.max(0, Math.min(MAXD, Math.round(target) + d)); spring = true;
+});
+dial.addEventListener('wheel', (e) => { e.preventDefault(); target = Math.max(0, Math.min(MAXD, Math.round(pos) + Math.sign(e.deltaX || e.deltaY))); spring = true; }, { passive: false });
+$('#set').addEventListener('click', () => { $('#set').textContent = 'Date set'; setTimeout(() => ($('#set').textContent = 'Set go-live date'), 1400); });
+read(PROMISED);
+requestAnimationFrame(loop);
+</script>
+<script>
+  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window; a ghost hand plays it; real input takes over ---- */
+  const ABORT = { abort: true };
+  function vpfit() {
+    const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
+      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+    };
+    addEventListener('resize', go); go();
+  }
+  const hand = (() => {
+    let x = innerWidth * 0.82, y = innerHeight * 0.86, held = null, over = null, gen = 0;
+    const ease = QM.bezier(0.65, 0, 0.35, 1);
+    const under = () => held || document.elementFromPoint(x, y) || document.body;
+    const ev = (type, el, buttons) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, pointerType: 'mouse', isPrimary: true, clientX: x, clientY: y, button: 0, buttons }));
+    const chain = (el) => { const s = []; for (let n = el; n; n = n.parentElement) s.push(n); return s; };
+    function hover(el) {
+      if (el === over) return;
+      const keep = new Set(chain(el));
+      chain(over).forEach((n) => { if (!keep.has(n)) n.classList.remove('is-hover'); });
+      chain(el).forEach((n) => n.classList.add('is-hover'));
+      over = el;
+    }
+    const api = {
+      cancel() { gen++; },
+      async wait(ms) { const my = gen; await QM.wait(ms); if (my !== gen) throw ABORT; },
+      async to(tx, ty, ms = 700) {
+        const my = gen, x0 = x, y0 = y, t0 = performance.now();
+        QM.ghostShow();
+        if (Math.hypot(tx - x0, ty - y0) < 1) { await Promise.resolve(); if (my !== gen) throw ABORT; return; }
+        for (;;) {
+          await new Promise(requestAnimationFrame);
+          if (my !== gen) throw ABORT;
+          const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+          x = x0 + (tx - x0) * k; y = y0 + (ty - y0) * k;
+          QM.ghostAt(x, y);
+          const el = under(); hover(el); ev('pointermove', el, held ? 1 : 0);
+          if (p >= 1) return;
+        }
+      },
+      down() { held = under(); ev('pointerdown', held, 1); },
+      up() { const el = held || under(); ev('pointerup', el, 0); held = null; },
+      release() { if (held) api.up(); },
+    };
+    return api;
+  })();
+
+  async function story() {
+    jump(PROMISED);
+    const r = dial.getBoundingClientRect(), y = r.top + r.height * 0.4, cx = r.left + r.width / 2, k = r.width / dial.offsetWidth;
+    await hand.to(cx - 60 * k, y, 600);
+    hand.down();
+    await hand.to(cx + 90 * k, y, 900);
+    await hand.to(cx + 70 * k, y, 300);
+    await hand.to(cx - 150 * k, y, 150);                    // the flick
+    hand.up(); await hand.wait(1700);
+    await hand.to(cx + 40 * k, y, 500);
+    hand.down();
+    await hand.to(cx - 55 * k, y, 700);
+    hand.up(); await hand.wait(1200);
+  }
+  let paused = false, running = false, lastReal = -1e9;
+  function cancelStory() { hand.cancel(); QM.ghostHide(); hand.release(); running = false; }
+  if (!QM.tile) {
+    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) cancelStory(); } };
+    ['pointerdown', 'pointermove', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+  }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancelStory(); } });
+  (async function idle() {
+    for (;;) {
+      await QM.wait(250);
+      if (QM.reduced || paused || document.hidden || (!QM.tile && performance.now() - lastReal < 2500)) continue;
+      running = true;
+      try { await story(); } catch (e) { if (e !== ABORT) throw e; }
+      if (running) { QM.ghostHide(); hand.release(); }
+      running = false;
+    }
+  })();
+  vpfit();
+  QM.demo({ kind: 'loop', restart() { paused = false; lastReal = -1e9; if (running) cancelStory(); } });
+</script>
+</body>
+</html>

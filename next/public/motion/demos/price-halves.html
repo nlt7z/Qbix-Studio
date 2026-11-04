@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joining halves · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "price-halves",
+  "title": "Joining halves",
+  "group": "blocks",
+  "cat": "cards",
+  "order": 70,
+  "kind": "play",
+  "tone": "paper",
+  "line": "1400 ms · in-out · two halves slide together",
+  "summary": "A price paid in two parts is drawn as two halves that start apart and turned away, then slide together into one block as they scroll in, each swinging flat on the way. The page stays calm: no overshoot, no bounce.",
+  "spec": [
+    ["Duration", "1400 ms, after a 0.15 s delay"],
+    ["Easing", "cubic-bezier(0.65, 0, 0.35, 1): in-out, no overshoot"],
+    ["Move", "translateX ∓34% (of its own width) → 0, rotateY ±18° → 0"],
+    ["Stage", "perspective 900px on the pair"],
+    ["Trigger", "in view, once (margin −20% 0)"],
+    ["Amount", "PRICES.practice.deposit: $300 to start, $300 when the site goes live"]
+  ],
+  "source": ["components/offers/PriceHalves.tsx", "app/globals.css · Practice: two halves of the price (.ph, .ph-half)", "lib/data.ts · PRICES.practice"],
+  "where": "The Price section of the Practice Website Refresh page, under the $600 total.",
+  "rules": [
+    "In-out, not expo out: two solid blocks that meet should arrive and settle, never snap.",
+    "Both halves use the same curve, duration and delay. They differ only in side (−1 left, 1 right).",
+    "They end touching: the seam is the one line that stays, in ink.",
+    "Under reduced motion the pair is simply there."
+  ],
+  "tags": ["price", "3d", "slide", "paper", "in view"]
+}
+</script>
+<style data-code>
+/* Practice: two halves of the price (app/globals.css, components/offers/PriceHalves.tsx) */
+.ph { display: grid; grid-template-columns: 1fr 1fr; margin: 4px 0 22px; perspective: 900px; max-width: 560px; }
+.ph-half {
+  display: flex; flex-direction: column; gap: 6px; padding: 18px 20px;
+  background: #fbfcfc;
+  box-shadow: inset 0 0 0 2px rgba(18, 20, 23, 0.12);
+  /* apart and turned away: --side is -1 for the left half, 1 for the right */
+  transform: translateX(calc(var(--side) * 34%)) rotateY(calc(var(--side) * -18deg));
+  transition: transform 1400ms cubic-bezier(0.65, 0, 0.35, 1) 150ms;
+}
+/* the seam between them */
+.ph-half + .ph-half { box-shadow: inset 0 0 0 2px rgba(18, 20, 23, 0.12), inset 2px 0 0 #121417; }
+.ph.is-in .ph-half { transform: none; }
+.ph-half b { font-weight: 400; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.04em; color: #121417; }
+.ph-half span { font-size: 14px; color: #6b7178; }
+@media (prefers-reduced-motion: reduce) {
+  .ph-half { transform: none; transition: none; }
+}
+</style>
+<style>
+  /* the practice page's cool paper (the --pw-* tokens) */
+  .pw { --pw-paper: #f3f4f5; --pw-ink: #121417; --pw-text: #474c52; --pw-mute: #6b7178; width: min(100%, 880px); }
+  .pw-h2 { margin: 0 0 clamp(20px, 3.4vw, 40px); font-family: var(--font-sans); font-weight: 400; font-size: clamp(30px, 4.6vw, 54px); line-height: 1.05; letter-spacing: -0.04em; color: var(--pw-ink); }
+  .pw-price { margin: 0 0 12px; font-size: clamp(22px, 2.4vw, 28px); color: var(--pw-ink); }
+  .pw-price-big { display: inline-block; margin-right: 6px; font-size: clamp(72px, 12vw, 144px); line-height: 0.9; letter-spacing: -0.055em; }
+  .pw-price-was { font-size: clamp(30px, 4.6vw, 60px); letter-spacing: -0.04em; color: var(--pw-mute); text-decoration: line-through; text-decoration-thickness: 0.08em; font-weight: 400; }
+  .offer-badge {
+    display: inline-flex; align-items: center; height: 24px; padding: 0 8px; margin-left: 4px; vertical-align: middle;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap;
+    background: #B8FF00; color: #0c1300;
+  }
+  .pw-text { margin: 0; font-size: clamp(19px, 2.3vw, 23px); line-height: 1.6; letter-spacing: -0.01em; color: var(--pw-text); }
+  .ph.is-reset .ph-half { transition: none !important; }
+  html:not(.qm-tile) .qm-stage { padding-bottom: 60px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="pw">
+    <h2 class="pw-h2">Price</h2>
+    <p class="pw-price"><span class="pw-price-big">$600</span> <del class="pw-price-was" aria-label="Regular price $800">$800</del> flat. <span class="offer-badge mono">Exclusive offer</span></p>
+<!-- code -->
+<div class="ph" aria-hidden="true">
+  <span class="ph-half" style="--side: -1"><b>$300</b><span>to start</span></span>
+  <span class="ph-half" style="--side: 1"><b>$300</b><span>when the site goes live</span></span>
+</div>
+<!-- /code -->
+    <p class="pw-text">$300 to start, $300 when the site goes live.</p>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* The pair slides together once, as it scrolls in (margin −20% 0). */
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    e.target.classList.add('is-in');
+    io.unobserve(e.target);
+  }
+}, { rootMargin: '-20% 0px' });
+document.querySelectorAll('.ph').forEach((ph) => io.observe(ph));
+</script>
+<script>
+  io.disconnect();
+  const ph = document.querySelector('.ph');
+  const reset = () => {
+    ph.classList.add('is-reset');
+    ph.classList.remove('is-in');
+    void ph.offsetWidth;
+    ph.classList.remove('is-reset');
+  };
+  const play = () => ph.classList.add('is-in');
+  QM.demo({ kind: 'play', lead: 800, dur: 1550, hold: 2800, reset, play });
+</script>
+</body>
+</html>

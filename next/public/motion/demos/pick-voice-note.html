@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hold to record · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-voice-note",
+  "title": "Hold to record",
+  "group": "picks",
+  "cat": "inputs",
+  "order": 60,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "hold to record · slide left to discard · release for a clip",
+  "summary": "Hold the mic in the Interview Assistant's composer: the pill fills with level bars, newest on the right, and the mic turns lime while it listens. Slide left and the mic goes ink and the note is thrown away on release; let go instead and it becomes a clip you can play, scrub, delete or send into the thread, where the assistant answers.",
+  "spec": [
+    ["Level", "one bar every 70 ms, a stand-in shaped like speech (syllables inside phrases, with pauses); 3px bars, 3 + level × 32 px tall, newest on the right"],
+    ["Hold", "pointer down on the mic (or Space / Enter) starts; up ends. Under 500 ms is a tap and is dropped; 30 s is the limit"],
+    ["Discard", "slide 90px left: the mic goes ink and the hint says Release to discard; the wave follows at half the distance and dims; letting go collapses the bars over 260 ms (ease in)"],
+    ["Clip", "the samples are resampled to 56 bars (the loudest each covers), 4 + level × 28 px; play lights the bars as the playhead passes them, a drag across them scrubs"],
+    ["Send", "the clip goes into the thread as a bubble that rises in over 260 ms; the assistant answers 900 ms later"],
+    ["Colour", "the mic is lime only while it records; the clip's Send is the one lime after it"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Voice note (ix-voice-note)", "Idea: bencho.dev voice-note (MIT)"],
+  "where": "The Interview Assistant (Qbix Labs): add a note to Sam's interview by voice, so you stay in the conversation.",
+  "rules": [
+    "Nothing listens: the level is a stand-in, so the piece asks nobody for a microphone.",
+    "One filled primary at a time: the mic while it records, Send once there is a clip.",
+    "Motion answers press and drag.",
+    "touch-action: none on the mic and the wave, so a finger drags instead of scrolling."
+  ],
+  "tags": ["voice", "record", "waveform", "drag", "composer"],
+  "shot": 3800
+}
+</script>
+<style data-code>
+/* Voice note — idea: bencho.dev voice-note (MIT), redrawn for Qbix.
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+.pk {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px;
+  --radius-sm: 8px; --radius-lg: 14px;
+  --duration-fast: 120ms; --duration-base: 200ms; --duration-slow: 260ms;
+  --ease-out: cubic-bezier(.16, 1, .3, 1); --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --muted: var(--fg2); --faint: rgba(18, 20, 23, .56); --surface-muted: var(--sunk);
+  --field-border: rgba(18, 20, 23, .5); --control-track: var(--fg4);
+  font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
+}
+.card { width: min(560px, 100%); height: min(640px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-6); display: grid; grid-template-rows: auto 1fr auto; gap: var(--space-4); overflow: hidden; }
+.hd { display: flex; align-items: center; gap: var(--space-3); }
+.hd h1 { font: 400 16px/1.35 var(--font-sans); letter-spacing: -0.01em; }
+.hd .meta { margin-left: auto; font-size: 12px; color: var(--faint); }
+.thread { display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-4); overflow: hidden; min-height: 0; }
+.m { display: flex; gap: var(--space-3); align-items: flex-start; }
+.m.u { justify-content: flex-end; }
+.m .bub { background: var(--surface-muted); color: var(--fg); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); max-width: 80%; }
+.m .av { flex: 0 0 auto; width: 32px; height: 32px; display: grid; place-items: center; }
+.m .tx { max-width: 84%; padding-top: 4px; }
+.m.new { animation: arrive var(--duration-slow) var(--ease-out) both; }
+@keyframes arrive { from { opacity: 0; transform: translateY(8px); } }
+.clip { display: flex; align-items: center; gap: var(--space-3); min-width: 220px; }
+.comp { position: relative; height: 56px; border-radius: 999px; border: 1px solid var(--field-border); background: var(--surface); display: flex; align-items: center; padding: 0 6px 0 var(--space-4); gap: var(--space-3); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; transition: background-color var(--duration-base) var(--ease-out); }
+.comp.rec { background: var(--surface-muted); }
+.comp .ph { color: var(--faint); flex: 1; }
+.L { flex: 1; min-width: 0; align-items: center; gap: var(--space-3); display: none; }
+.mic { flex: 0 0 auto; margin-left: auto; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface-muted); display: grid; place-items: center; color: var(--fg); touch-action: none; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.mic:hover, .mic.is-hover { background: rgba(18, 20, 23, .1); }
+.comp.rec .mic { background: var(--signal); color: var(--on-lime); }
+.comp.cancel .mic { background: var(--fg); color: var(--ground); }
+.wave { flex: 1; min-width: 0; height: 36px; display: flex; align-items: center; justify-content: flex-end; gap: 2px; overflow: hidden; }
+.wave i { flex: 0 0 3px; width: 3px; border-radius: 2px; background: var(--fg); min-height: 3px; }
+.wave.play i { background: var(--control-track); cursor: pointer; flex: 1 1 0; max-width: 4px; }
+.wave.play i.on { background: var(--fg); }
+.wave.play { justify-content: space-between; touch-action: none; cursor: pointer; }
+.tm { font-variant-numeric: tabular-nums; min-width: 38px; color: var(--muted); }
+.hint { flex: 0 0 auto; color: var(--muted); white-space: nowrap; transition: color var(--duration-fast) var(--ease-out); }
+.comp.cancel .hint { color: var(--fg); }
+.rdot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--fg); animation: pulse 1.6s var(--ease-in-out) infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+.pl { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--field-border); background: var(--surface); color: var(--fg); display: grid; place-items: center; padding: 0; cursor: pointer; }
+.pl:hover, .pl.is-hover { background: var(--surface-muted); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--fg); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.btn.icon { width: 36px; padding: 0; }
+.btn:hover, .btn.is-hover { background: var(--surface-muted); }
+.btn.primary { background: var(--signal); color: var(--on-lime); }
+.btn.primary:hover, .btn.primary.is-hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+@media (prefers-reduced-motion: reduce) { .m.new, .rdot { animation: none; } }
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+  .page { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
+</style>
+</head>
+<body>
+<div class="vp"><div class="page">
+<!-- code -->
+<div class="card pk">
+  <div class="hd"><span id="logo"></span><h1>Interview Assistant</h1><span class="meta" style="margin-left:auto">Interview with Sam</span></div>
+  <div class="thread" id="thread"></div>
+  <div class="comp" id="comp"></div>
+</div>
+<!-- /code -->
+</div></div>
+<div class="qm-ui"><span>Hold the mic · slide left to discard · let go to keep</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Voice note. Idea: bencho.dev voice-note (MIT).
+   A concept, not a recorder: nothing listens. The level is a stand-in shaped like speech, so the piece is about
+   the gesture and the shapes, and asks nobody for a microphone. */
+const $ = (s) => document.querySelector(s);
+const comp = $('#comp'), thread = $('#thread');
+const P = {   // 24px outline icons, round caps
+  mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>',
+  play: '<path d="M6 3 20 12 6 21z" fill="currentColor"/>',
+  pause: '<rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v6M14 11v6"/>',
+  send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+};
+const icon = (n, s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+/* the assistant's mark: a cube */
+const cube = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4 27 10.5 16 17 5 10.5Z" fill="#555a61"/><path d="M5 10.5 16 17V29L5 22.5Z" fill="#121417"/><path d="M16 17 27 10.5V22.5L16 29Z" fill="#30343a"/></svg>`;
+$('#logo').innerHTML = cube(32);
+const SEED = [
+  { who: 'a', t: 'Sam says he led the rebuild of the checkout. Two follow-ups are ready.' },
+  { who: 'u', t: 'Start with the team' },
+  { who: 'a', t: 'How big was the team? Then ask what they measured.' },
+];
+const mm = (s) => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+let seed = 9;
+const rnd = () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+/* a level shaped like speech: syllables inside phrases, with pauses */
+const level = (t) => { const ph = (t % 2.3) / 2.3, env = ph < 0.78 ? Math.sin(Math.PI * ph / 0.78) : 0.04; const syl = Math.abs(Math.sin(t * 8.2 + Math.sin(t * 2.1) * 1.6)); return Math.max(0.05, Math.min(1, env * (0.35 + 0.65 * syl) * (0.8 + 0.3 * rnd()))); };
+
+function addMsg(m, fresh) {
+  const d = document.createElement('div');
+  d.className = 'm ' + m.who + (fresh ? ' new' : '');
+  if (m.who === 'a') { d.innerHTML = `<span class="av">${cube(32)}</span><div class="tx"></div>`; d.querySelector('.tx').textContent = m.t; }
+  else if (m.clip) d.innerHTML = `<div class="bub"><div class="clip"><span>${icon('mic')}</span><div class="wave">${m.clip.map((h) => `<i style="height:${h}px"></i>`).join('')}</div><span class="tm">${mm(m.dur)}</span></div></div>`;
+  else { d.innerHTML = '<div class="bub"></div>'; d.firstChild.textContent = m.t; }
+  thread.appendChild(d);
+  while (thread.children.length > 5) thread.firstChild.remove();
+}
+
+let st = 'idle', t0 = 0, levels = [], startX = 0, dx = 0, prog = 0, playing = false, dur = 0, clip = [], acc = 0, bars = [], wave = null;
+const SAMPLE = 70, CANCEL = 90, N = 56;     // a bar every 70 ms; 90px of slide throws it away; 56 bars in a clip
+comp.innerHTML = `<div class="L" data-s="idle"><span class="ph">Ask about this interview</span></div>
+  <div class="L" data-s="rec"><span class="rdot"></span><span class="tm" id="tm">0:00</span><div class="wave" id="wave"></div><span class="hint" id="hint">Slide left to cancel</span></div>
+  <div class="L" data-s="clip" id="clipL"></div>
+  <button type="button" class="mic" aria-label="Hold to record">${icon('mic', 20)}</button>`;
+const mic = comp.querySelector('.mic');
+const scale = () => comp.getBoundingClientRect().width / comp.offsetWidth || 1;   // the page may draw the piece scaled
+
+function view() {
+  comp.className = 'comp' + (st === 'rec' ? ' rec' : '');
+  comp.querySelectorAll('.L').forEach((l) => { l.style.display = l.dataset.s === (st === 'busy' ? 'rec' : st) ? 'flex' : 'none'; });
+  mic.style.display = st === 'clip' ? 'none' : '';
+  if (st === 'clip') {
+    $('#clipL').innerHTML = `<button type="button" class="pl" id="pl" aria-label="Play">${icon('play')}</button><div class="wave play" id="cw">${clip.map((h) => `<i style="height:${h}px"></i>`).join('')}</div><span class="tm" id="ct">${mm(dur)}</span><button type="button" class="btn icon" id="trash" aria-label="Delete">${icon('trash', 18)}</button><button type="button" class="btn primary" id="send">${icon('send')}Send</button>`;
+    $('#pl').addEventListener('click', toggle);
+    $('#trash').addEventListener('click', () => { st = 'idle'; playing = false; view(); });
+    $('#send').addEventListener('click', send);
+    scrubBind();
+  }
+}
+function startRec(x) {
+  st = 'rec'; t0 = performance.now(); levels = []; startX = x; dx = 0; acc = 0; view();
+  wave = $('#wave'); wave.style.transform = ''; wave.style.opacity = 1; wave.innerHTML = '';
+  for (let i = 0; i < 80; i++) { const b = document.createElement('i'); b.style.height = '3px'; wave.appendChild(b); }
+  bars = [...wave.children];
+  $('#hint').textContent = 'Slide left to cancel';
+}
+mic.addEventListener('pointerdown', (e) => { if (st === 'idle') startRec(e.clientX); });
+mic.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat && st === 'idle') { e.preventDefault(); const r = mic.getBoundingClientRect(); startRec(r.left + r.width / 2); } else if (e.key === 'Escape' && st === 'rec') { dx = -9999; endRec(); } });
+mic.addEventListener('keyup', (e) => { if ((e.key === ' ' || e.key === 'Enter') && st === 'rec') { e.preventDefault(); endRec(); } });
+window.addEventListener('pointermove', (e) => {
+  if (st !== 'rec') return;
+  dx = Math.min(0, e.clientX - startX);
+  const k = scale(), armed = -dx / k > CANCEL;
+  comp.classList.toggle('cancel', armed);
+  $('#hint').textContent = armed ? 'Release to discard' : 'Slide left to cancel';
+  wave.style.transform = `translateX(${(dx / k * 0.5).toFixed(1)}px)`;
+  wave.style.opacity = Math.max(0.2, 1 - (-dx / k) / 160);   // the wave goes with the hand, and dims
+});
+async function endRec() {
+  if (st !== 'rec') return;
+  const ms = performance.now() - t0, cancel = -dx / scale() > CANCEL;
+  st = 'busy';
+  if (cancel || ms < 500) {                                  // a tap or a throw-away: the bars collapse
+    const w = bars, h0 = w.map((b) => parseFloat(b.style.height));
+    const t1 = performance.now();
+    await new Promise((res) => { const f = (now) => { const k = Math.min(1, (now - t1) / 260); w.forEach((b, i) => { b.style.height = Math.max(3, h0[i] * (1 - k * k * k)) + 'px'; }); k < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+    st = 'idle'; view(); return;
+  }
+  dur = Math.max(1, Math.round(ms / 1000));
+  const src = levels.length ? levels : [0.3];
+  clip = Array.from({ length: N }, (_, i) => { const a = Math.floor(i * src.length / N), b = Math.max(a + 1, Math.floor((i + 1) * src.length / N)); return Math.round(4 + Math.max(...src.slice(a, b)) * 28); });
+  prog = 0; playing = false; st = 'clip'; view();
+}
+window.addEventListener('pointerup', endRec);
+window.addEventListener('pointercancel', endRec);
+
+function paint() {
+  const cw = $('#cw'); if (!cw) return;
+  const on = Math.round(prog * N);
+  [...cw.children].forEach((b, i) => b.classList.toggle('on', i < on));
+  $('#ct').textContent = mm(playing || prog > 0 ? prog * dur : dur);
+}
+function toggle() {
+  if (!playing && prog >= 1) prog = 0;
+  playing = !playing;
+  $('#pl').innerHTML = icon(playing ? 'pause' : 'play');
+}
+function scrubBind() {                                       // a drag across the bars scrubs
+  const cw = $('#cw'); let on = false;
+  const at = (e) => { const r = cw.getBoundingClientRect(); prog = Math.max(0, Math.min(1, (e.clientX - r.left) / Math.max(1, r.width))); paint(); };
+  cw.addEventListener('pointerdown', (e) => { on = true; playing = false; $('#pl').innerHTML = icon('play'); at(e); });
+  window.addEventListener('pointermove', (e) => { if (on) at(e); });
+  window.addEventListener('pointerup', () => { on = false; });
+}
+async function send() {
+  const c = clip.slice(), d = dur;
+  st = 'idle'; playing = false; view();
+  addMsg({ who: 'u', clip: c, dur: d }, true);
+  await new Promise((r) => setTimeout(r, 900));
+  addMsg({ who: 'a', t: 'Got it. Adding it to Sam’s notes.' }, true);
+}
+
+let prev = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+  if (st === 'rec') {
+    const el = (performance.now() - t0) / 1000;
+    acc += dt * 1000;
+    while (acc >= SAMPLE) { acc -= SAMPLE; levels.push(level(performance.now() / 1000)); }
+    const n = bars.length, vis = levels.slice(-n);
+    bars.forEach((b, i) => { const k = i - (n - vis.length); b.style.height = (k >= 0 ? 3 + vis[k] * 32 : 3) + 'px'; });
+    const tm = $('#tm'); if (tm) tm.textContent = mm(el);
+    if (el > 30) endRec();                                   // the limit
+  }
+  if (playing) { prog += dt / dur; if (prog >= 1) { prog = 1; playing = false; const pl = $('#pl'); if (pl) pl.innerHTML = icon('play'); } paint(); }
+  requestAnimationFrame(frame);
+}
+function resetThread() { thread.innerHTML = ''; SEED.forEach((m) => addMsg(m, false)); }
+resetThread(); view();
+requestAnimationFrame(frame);
+</script>
+<script>
+  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window; a ghost hand plays it; real input takes over ---- */
+  const ABORT = { abort: true };
+  function vpfit() {
+    const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
+      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+    };
+    addEventListener('resize', go); go();
+  }
+  const hand = (() => {
+    let x = innerWidth * 0.82, y = innerHeight * 0.86, held = null, over = null, gen = 0;
+    const ease = QM.bezier(0.65, 0, 0.35, 1);
+    const under = () => held || document.elementFromPoint(x, y) || document.body;
+    const ev = (type, el, buttons) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, pointerType: 'mouse', isPrimary: true, clientX: x, clientY: y, button: 0, buttons }));
+    const chain = (el) => { const s = []; for (let n = el; n; n = n.parentElement) s.push(n); return s; };
+    function hover(el) {
+      if (el === over) return;
+      const keep = new Set(chain(el));
+      chain(over).forEach((n) => { if (!keep.has(n)) n.classList.remove('is-hover'); });
+      chain(el).forEach((n) => n.classList.add('is-hover'));
+      over = el;
+    }
+    const api = {
+      get x() { return x; }, get y() { return y; },
+      cancel() { gen++; },
+      async wait(ms) { const my = gen; await QM.wait(ms); if (my !== gen) throw ABORT; },
+      async to(tx, ty, ms = 700) {
+        const my = gen, x0 = x, y0 = y, t0 = performance.now();
+        QM.ghostShow();
+        if (Math.hypot(tx - x0, ty - y0) < 1) { await Promise.resolve(); if (my !== gen) throw ABORT; return; }
+        for (;;) {
+          await new Promise(requestAnimationFrame);
+          if (my !== gen) throw ABORT;
+          const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+          x = x0 + (tx - x0) * k; y = y0 + (ty - y0) * k;
+          QM.ghostAt(x, y);
+          const el = under(); hover(el); ev('pointermove', el, held ? 1 : 0);
+          if (p >= 1) return;
+        }
+      },
+      at(el, ms, fx = 0.5, fy = 0.5) { const r = el.getBoundingClientRect(); return api.to(r.left + r.width * fx, r.top + r.height * fy, ms); },
+      down() { held = under(); ev('pointerdown', held, 1); },
+      up() { const el = held || under(); ev('pointerup', el, 0); held = null; },
+      release() { if (held) api.up(); },
+      async click(el, ms = 700) {
+        await api.at(el, ms); await api.wait(90);
+        api.down(); await api.wait(70); const t = held; api.up();
+        t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y }));
+      },
+    };
+    return api;
+  })();
+
+  async function story() {
+    st = 'idle'; playing = false; resetThread(); view();
+    const k = comp.getBoundingClientRect().width / comp.offsetWidth || 1;
+    await hand.wait(500);
+    await hand.at(mic, 600); await hand.wait(200); hand.down();             // hold: it listens
+    await hand.wait(4200); hand.up(); await hand.wait(500);                  // let go: a clip
+    await hand.click($('#pl')); await hand.wait(1700);                       // play it
+    await hand.click($('#trash')); await hand.wait(500);                     // and bin it
+    await hand.at(mic, 500); hand.down(); await hand.wait(1400);             // hold again…
+    await hand.to(hand.x - 170 * k, hand.y, 700); await hand.wait(500);      // …slide left: armed
+    hand.up(); await hand.wait(900);                                         // let go: thrown away
+    await hand.at(mic, 500); hand.down(); await hand.wait(1600); hand.up(); await hand.wait(400);
+    await hand.click($('#send')); await hand.wait(2400);                     // send it
+  }
+  let paused = false, running = false, lastReal = -1e9;
+  function cancelStory() { hand.cancel(); QM.ghostHide(); hand.release(); running = false; }
+  if (!QM.tile) {
+    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) cancelStory(); } };
+    ['pointerdown', 'pointermove', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+  }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancelStory(); } });
+  (async function idle() {
+    for (;;) {
+      await QM.wait(250);
+      if (QM.reduced || paused || document.hidden || (!QM.tile && performance.now() - lastReal < 2500)) continue;
+      running = true;
+      try { await story(); } catch (e) { if (e !== ABORT) throw e; }
+      if (running) { QM.ghostHide(); hand.release(); }
+      running = false;
+    }
+  })();
+  vpfit();
+  QM.demo({ kind: 'loop', restart() { paused = false; lastReal = -1e9; if (running) cancelStory(); } });
+</script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smooth scroll · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "smooth-scroll",
+  "title": "Smooth scroll",
+  "group": "scroll",
+  "cat": "scroll",
+  "order": 60,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "1 − e^(−11 dt) · jump 650–1400 ms",
+  "shot": 1800,
+  "summary": "With a mouse or trackpad the wheel and the keys do not move the page: they move a target, and the page follows it, eased, one step a frame. Owning the scroll is what lets the story hold the page still while a scene plays (it eases to a stop there) without fighting the browser, and gives nav links an eased jump. The plot shows both lines: the target steps with each wheel notch; the page is the smooth curve behind it.",
+  "spec": [
+    ["Follow", "current += (target − current) × (1 − e^(−11 dt)), dt at most 50 ms: a time constant of about 90 ms"],
+    ["Wheel", "target += deltaY (lines × 16, pages × the screen), clamped to the page; the default scroll is prevented"],
+    ["Keys", "↓ ↑ 110px · PageDown, PageUp, Space ± 0.85 screens · Home, End jump"],
+    ["Hold", "holdY: the target may not pass it while the page is at or above it, so the page eases to a stop there"],
+    ["Jump", "an eased tween, easeInOut cubic, max(650, min(1400, distance ÷ 2.4)) ms; holds don't apply"],
+    ["Native scrolls", "the scrollbar, find in page, a hash jump: followed, never fought"],
+    ["Only when", "a fine pointer and no reduced motion; touch and everything else scroll natively"]
+  ],
+  "source": ["lib/smoothScroll.ts · createScroller, smoothScrollTo", "lib/scene/driver.ts · scroller.step, holdY"],
+  "where": "The homepage (the story's scenes play from it); smoothScrollTo is also what the nav links, Back to top and the tour rows call.",
+  "rules": [
+    "It owns the wheel, so it must give it back: a wheel over something that scrolls inside the page (a scrolling box) is left alone.",
+    "Inputs, editable fields and buttons keep their keys.",
+    "A hold never pulls the page back against the wheel: the target stops at it, the page eases to a stop.",
+    "Reduced motion and touch get the browser's own scrolling.",
+    "The jump replaces the target as it goes, so a wheel notch during one takes over at once."
+  ],
+  "tags": ["scroll", "easing", "wheel", "hold", "jump"],
+  "deps": []
+}
+</script>
+<style data-code>
+/* Nav links: the label, its underline drawn left to right on hover (the same text action as the buttons') */
+.jumps { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.jumps a { position: relative; color: inherit; text-decoration: none; font-size: 15px; font-weight: 500; }
+.jumps a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px;
+  background: currentColor; transform: scaleX(0); transform-origin: left center;
+  transition: transform 360ms var(--ease-out-expo);
+}
+.jumps a:hover::after, .jumps a:focus-visible::after, .jumps a.is-hot::after { transform: scaleX(1); }
+</style>
+<style>
+  /* the page the scroller owns: the homepage's chapters, one screen each */
+  .pg { position: relative; min-height: 100vh; padding: clamp(40px, 9vh, 96px) clamp(24px, 5vw, 64px); background: var(--ground); color: var(--fg); overflow: hidden; }
+  .pg:nth-child(even) { background: var(--sunk); }   /* the chapters alternate paper and its sunk shade, so the page still reads as chapters */
+  .pg .title { max-width: min(11em, 42vw); font-size: clamp(30px, 4.4vw, 60px); }
+  .pg-n { position: absolute; left: clamp(20px, 4.4vw, 56px); bottom: clamp(8px, 3vh, 36px); font-family: var(--font-headline); font-size: min(34vh, 24vw); line-height: 0.8; letter-spacing: -0.04em; color: rgba(18, 20, 23, 0.1); }
+  /* the readout */
+  .hud { position: fixed; z-index: 30; right: clamp(16px, 3vw, 40px); top: 50%; translate: 0 -50%; width: min(48vw, 470px); padding: 18px 20px 20px; display: grid; gap: 14px; background: #ffffff; color: var(--fg); }
+  .hud-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .hud-mode { color: var(--fg); }
+  .hud-nums { display: flex; gap: clamp(14px, 3vw, 30px); }
+  .hud-nums b { display: block; min-width: 4.4ch; font-family: var(--font-headline); font-weight: 400; font-size: clamp(24px, 3vw, 34px); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hud-nums .kicker { display: block; margin-top: 6px; font-size: 11px; }
+  .hud-plot { display: block; width: 100%; height: clamp(120px, 24vh, 210px); background: var(--ground); }
+  .hud-key { display: flex; flex-wrap: wrap; gap: 6px 22px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+  .hud-key i { display: inline-block; width: 14px; height: 4px; margin-right: 8px; vertical-align: 2px; }
+  .hud-key .t { background: #121417; }
+  .hud-key .p { background: #B8FF00; height: 6px; vertical-align: 1px; box-shadow: 0 0 0 1.5px #121417; }   /* lime with an ink edge, as on the plot */
+  .hud-jump { display: grid; gap: 10px; padding-top: 6px; }
+  .hud-jump > span { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+  @media (max-width: 720px) { .hud { width: calc(100vw - 32px); right: 16px; top: auto; bottom: 64px; translate: none; } .pg .title { max-width: none; } }
+  html.qm-tile .hud { padding: 14px 16px 16px; gap: 10px; width: min(50vw, 400px); }
+  html.qm-tile .hud-plot { height: 156px; }
+  html.qm-tile .hud-jump { gap: 8px; padding-top: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <section class="pg" data-tone="paper" id="services"><p class="kicker">01</p><h2 class="title">From moodboard to a live domain.</h2><span class="pg-n" aria-hidden="true">01</span></section>
+  <section class="pg" data-tone="paper" id="brand"><p class="kicker">02</p><h2 class="title">From usable to worth sharing.</h2><span class="pg-n" aria-hidden="true">02</span></section>
+  <section class="pg" data-tone="paper" id="products"><p class="kicker">03</p><h2 class="title">Things we’ve shipped.</h2><span class="pg-n" aria-hidden="true">03</span></section>
+  <section class="pg" data-tone="paper" id="about"><p class="kicker">04</p><h2 class="title">Our story is simple.</h2><span class="pg-n" aria-hidden="true">04</span></section>
+  <section class="pg" data-tone="paper" id="practice"><p class="kicker">05</p><h2 class="title">A website that feels as calm as your office.</h2><span class="pg-n" aria-hidden="true">05</span></section>
+  <section class="pg" data-tone="paper" id="contact"><p class="kicker">06</p><h2 class="title">Bring the idea.</h2><span class="pg-n" aria-hidden="true">06</span></section>
+</main>
+
+<aside class="hud" data-tone="paper" aria-label="The scroller, measured">
+  <div class="hud-top"><span class="kicker">Scroller</span><span class="kicker hud-mode" id="mode">Idle</span></div>
+  <div class="hud-nums">
+    <div><b id="n-target">0</b><span class="kicker">Target px</span></div>
+    <div><b id="n-page">0</b><span class="kicker">Page px</span></div>
+    <div><b id="n-gap">0</b><span class="kicker">Gap px</span></div>
+  </div>
+  <canvas class="hud-plot" id="plot" aria-hidden="true"></canvas>
+  <div class="hud-key"><span><i class="t"></i>Target: the notches</span><span><i class="p"></i>Page: what you see</span></div>
+  <div class="hud-jump"><span>Jump to</span>
+<!-- code -->
+<nav class="jumps" aria-label="Sections">
+  <a href="#services" data-jump>Services</a>
+  <a href="#products" data-jump>Products</a>
+  <a href="#about" data-jump>About us</a>
+  <a href="#contact" data-jump>Contact</a>
+</nav>
+<!-- /code -->
+  </div>
+</aside>
+<div class="qm-ui">
+  <span>Wheel</span>
+  <button data-do="notch">1 notch</button>
+  <button data-do="flick">Flick × 6</button>
+  <span class="qm-sep">/</span>
+  <button data-do="hold">Hold the page</button>
+  <span class="qm-sep">/</span>
+  <button data-do="auto" class="is-on">Auto</button>
+  <span class="qm-hint">or use your own wheel</span>
+</div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* The homepage's scrolling with a mouse or trackpad — lib/smoothScroll.ts. The wheel and the keys move a target, and the
+   page follows it, eased, one step a frame. Owning the scroll is what lets the story hold the page still while a scene
+   plays (`holdY`: the page eases to a stop there) without fighting the browser, so nothing is ever pulled back against
+   the wheel. Scrollbars, find-in-page, touch and anything else that scrolls the page natively are simply followed. */
+const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+// Would this wheel scroll something inside the page (a scrolling box) rather than the page?
+function scrollsInside(target, dy) {
+  for (let n = target instanceof Element ? target : null; n && n !== document.body && n !== document.documentElement; n = n.parentElement) {
+    if (n.scrollHeight <= n.clientHeight + 1) continue;
+    if (!/(auto|scroll)/.test(getComputedStyle(n).overflowY)) continue;
+    if (dy > 0 ? n.scrollTop + n.clientHeight < n.scrollHeight - 1 : n.scrollTop > 0) return true;
+  }
+  return false;
+}
+
+function createScroller() {
+  const html = document.documentElement;
+  const prevBehavior = html.style.scrollBehavior;
+  html.style.scrollBehavior = 'auto';   // our scrollTo calls are the easing; CSS smoothing would fight them
+
+  let current = window.scrollY;
+  let target = current;
+  let applied = current;   // what we last set, to tell our scrolls from anyone else's
+  let last = performance.now();
+  let lastStep = -1;
+  let raf = 0;
+  let tween = null;        // { from, to, t0, dur }
+
+  const max = () => Math.max(0, html.scrollHeight - window.innerHeight);
+  const locked = () => document.body.style.overflow === 'hidden' || html.style.overflow === 'hidden';
+  const clampTarget = () => {
+    target = Math.min(max(), Math.max(0, target));
+    const h = S.holdY;
+    if (h != null && !tween && current <= h + 1 && target > h) target = h;
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(loop); };
+  function loop(now) {
+    raf = 0;
+    step(now);
+    if (tween || Math.abs(target - current) > 0.3) raf = requestAnimationFrame(loop);
+  }
+  function step(now) {
+    if (now === lastStep) return;
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+    last = now;
+    lastStep = now;
+    if (locked()) { current = target = applied = window.scrollY; tween = null; return; }
+    if (tween) {
+      const k = Math.min(1, (now - tween.t0) / tween.dur);
+      current = tween.from + (tween.to - tween.from) * easeInOut(k);
+      target = current;
+      if (k >= 1) tween = null;
+    } else {
+      clampTarget();
+      current += (target - current) * (1 - Math.exp(-dt * 11));
+      if (Math.abs(target - current) < 0.3) current = target;
+    }
+    if (Math.abs(window.scrollY - current) >= 0.5) window.scrollTo(0, current);
+    applied = window.scrollY;
+  }
+  function scrollTo(y) {
+    const to = Math.min(max(), Math.max(0, y));
+    const dur = Math.min(1400, Math.max(650, Math.abs(to - current) / 2.4));
+    tween = { from: current, to, t0: performance.now(), dur };
+    kick();
+  }
+
+  const onWheel = (e) => {
+    if (e.defaultPrevented || e.ctrlKey || locked()) return;
+    if (scrollsInside(e.target, e.deltaY)) return;
+    e.preventDefault();
+    tween = null;
+    let d = e.deltaY;
+    if (e.deltaMode === 1) d *= 16;
+    else if (e.deltaMode === 2) d *= window.innerHeight;
+    target += d;
+    clampTarget();
+    kick();
+  };
+  const onKey = (e) => {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || locked()) return;
+    const el = e.target;
+    if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(el.tagName))) return;
+    const vh = window.innerHeight;
+    let d = 0;
+    switch (e.key) {
+      case 'ArrowDown': d = 110; break;
+      case 'ArrowUp': d = -110; break;
+      case 'PageDown': d = vh * 0.85; break;
+      case 'PageUp': d = -vh * 0.85; break;
+      case ' ': d = (e.shiftKey ? -1 : 1) * vh * 0.85; break;
+      case 'Home': e.preventDefault(); scrollTo(0); return;
+      case 'End': e.preventDefault(); scrollTo(max()); return;
+      default: return;
+    }
+    e.preventDefault();
+    tween = null;
+    target += d;
+    clampTarget();
+    kick();
+  };
+  // A scroll we didn't make (the scrollbar, find in page, a hash jump): follow it.
+  const onScroll = () => {
+    if (tween) return;
+    if (Math.abs(window.scrollY - applied) > 2) current = target = applied = window.scrollY;
+  };
+  const onResize = () => clampTarget();
+  window.addEventListener('wheel', onWheel, { passive: false });
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onResize);
+
+  function dispose() {
+    if (raf) cancelAnimationFrame(raf);
+    window.removeEventListener('wheel', onWheel);
+    window.removeEventListener('keydown', onKey);
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onResize);
+    html.style.scrollBehavior = prevBehavior;
+    if (window.__qbixScroller === S) delete window.__qbixScroller;
+  }
+
+  const S = {
+    holdY: null,   // the page may not scroll down past this while it's set (it eases to a stop there)
+    step,          // advance one frame (idempotent per timestamp)
+    scrollTo,      // an eased jump (a nav link, back to top); holds don't apply
+    dispose,
+    // read-only, for the plot beside the piece (the site's scroller keeps these to itself)
+    get target() { return target; },
+    get current() { return current; },
+    get tweening() { return !!tween; },
+  };
+  window.__qbixScroller = S;
+  return S;
+}
+
+/** Scroll the page to y: through the scroller when there is one, else natively. */
+function smoothScrollTo(y) {
+  const s = window.__qbixScroller;
+  if (s) s.scrollTo(y);
+  else window.scrollTo({ top: y, behavior: 'smooth' });
+}
+
+// the homepage owns the scroll only with a fine pointer (a mouse, a trackpad) and no reduced motion
+const scroller = matchMedia('(pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches ? createScroller() : null;
+
+// nav links: an eased jump to the section
+document.querySelectorAll('[data-jump]').forEach((a) => a.addEventListener('click', (e) => {
+  const el = document.querySelector(a.getAttribute('href'));
+  if (!el) return;
+  e.preventDefault();
+  smoothScrollTo(el.getBoundingClientRect().top + window.scrollY);
+}));
+</script>
+<script>
+  /* ---- the plot: target and page, the last 3.6 seconds ---- */
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('plot'), ctx = canvas.getContext('2d');
+  const samples = [], notches = [];
+  const WINDOW = 3600;
+  let cw = 0, ch = 0, rlo = 0, rhi = 400, lastHud = 0;
+  const fit = () => {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cw = canvas.clientWidth; ch = canvas.clientHeight;
+    canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  fit();
+  new ResizeObserver(fit).observe(canvas);
+  window.addEventListener('wheel', () => notches.push(performance.now()), { passive: true, capture: true });
+
+  const fmt = (v) => Math.round(v).toLocaleString('en-US');
+  function draw(now) {
+    requestAnimationFrame(draw);
+    const y = window.scrollY, tg = scroller ? scroller.target : y;
+    samples.push({ t: now, y, g: tg });
+    while (samples.length && samples[0].t < now - WINDOW - 100) samples.shift();
+    while (notches.length && notches[0] < now - WINDOW - 100) notches.shift();
+    if (!cw || !ch) return;
+    // the vertical range follows what is on the plot (eased, so it does not jitter)
+    let lo = Infinity, hi = -Infinity;
+    for (const s of samples) { lo = Math.min(lo, s.y, s.g); hi = Math.max(hi, s.y, s.g); }
+    if (scroller && scroller.holdY != null) { lo = Math.min(lo, scroller.holdY); hi = Math.max(hi, scroller.holdY); }
+    if (hi - lo < 260) { const m = (hi + lo) / 2; lo = m - 130; hi = m + 130; }
+    lo -= (hi - lo) * 0.06; hi += (hi - lo) * 0.06;
+    rlo += (lo - rlo) * 0.16; rhi += (hi - rhi) * 0.16;
+    const X = (t) => ((t - (now - WINDOW)) / WINDOW) * cw;
+    const Y = (v) => ch - 10 - ((v - rlo) / (rhi - rlo)) * (ch - 26);
+
+    ctx.clearRect(0, 0, cw, ch);
+    // bands 100px tall (a notch): surfaces, not lines
+    const b0 = Math.floor(rlo / 100) * 100;
+    for (let v = b0; v < rhi; v += 100) {
+      if (Math.round(v / 100) % 2 === 0) continue;
+      const y0 = Y(v + 100), y1 = Y(v);
+      ctx.fillStyle = 'rgba(18, 20, 23, 0.04)';
+      ctx.fillRect(0, y0, cw, y1 - y0);
+    }
+    // the hold
+    if (scroller && scroller.holdY != null) {
+      const yh = Y(scroller.holdY);
+      ctx.fillStyle = '#121417';
+      for (let x = 0; x < cw; x += 10) ctx.fillRect(x, yh - 1, 6, 2);
+      ctx.font = '500 10px "Encode Sans", sans-serif';
+      ctx.fillText('HOLD', 8, yh - 7);
+    }
+    // the target: the wheel's steps
+    ctx.lineJoin = 'miter';
+    ctx.strokeStyle = '#121417'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    samples.forEach((s, i) => { const x = X(s.t), yy = Y(s.g); if (i) ctx.lineTo(x, yy); else ctx.moveTo(x, yy); });
+    ctx.stroke();
+    // the page: what you see, lime with an ink edge so it reads on the light plot
+    ctx.beginPath();
+    samples.forEach((s, i) => { const x = X(s.t), yy = Y(s.y); if (i) ctx.lineTo(x, yy); else ctx.moveTo(x, yy); });
+    ctx.strokeStyle = '#121417'; ctx.lineWidth = 6.5; ctx.stroke();
+    ctx.strokeStyle = '#B8FF00'; ctx.lineWidth = 3.5; ctx.stroke();
+    // each wheel notch, on the floor of the plot
+    ctx.fillStyle = 'rgba(18, 20, 23, 0.7)';
+    for (const t of notches) ctx.fillRect(X(t) - 1, ch - 7, 2, 7);
+    // the end of both lines
+    ctx.fillStyle = '#121417'; ctx.fillRect(cw - 6, Y(tg) - 3, 6, 6);
+    ctx.fillRect(cw - 11, Y(y) - 5, 11, 10);
+    ctx.fillStyle = '#B8FF00'; ctx.fillRect(cw - 9, Y(y) - 3, 7, 6);
+
+    if (now - lastHud > 66) {
+      lastHud = now;
+      $('n-target').textContent = fmt(tg); $('n-page').textContent = fmt(y); $('n-gap').textContent = fmt(Math.abs(tg - y));
+      const hold = scroller && scroller.holdY != null && tg >= scroller.holdY - 0.5 && y >= scroller.holdY - 40;
+      $('mode').textContent = !scroller ? 'Native' : scroller.tweening ? 'Eased jump' : hold ? 'Held' : Math.abs(tg - y) > 0.6 ? 'Following' : 'Idle';
+    }
+  }
+  requestAnimationFrame(draw);
+
+  /* ---- wheel notches, simulated: a real WheelEvent on the window, 100px each, through the scroller's own handler ---- */
+  const wait = QM.wait;
+  let simToken = 0, simOn = false;
+  const notch = (dy = 100) => window.dispatchEvent(new WheelEvent('wheel', { deltaY: dy, deltaMode: 0, cancelable: true }));
+  async function burst(n, gap, my) {
+    for (let i = 0; i < n; i++) { if (my !== simToken) return false; notch(); await wait(gap); }
+    return my === simToken;
+  }
+  async function pressLink(href, my) {
+    const a = document.querySelector(`[data-jump][href="${href}"]`);
+    QM.ghostShow();
+    const r = a.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.72, 800)) || my !== simToken) return false;
+    a.classList.add('is-hot');
+    await wait(240);
+    a.classList.remove('is-hot');
+    a.click();
+    return my === simToken;
+  }
+  async function runSim(my) {
+    if (!scroller) return;
+    for (;;) {
+      await wait(900); if (my !== simToken) return;
+      if (!(await burst(5, 100, my))) return;                    // a flick: five notches, 100 ms apart
+      await wait(1500); if (my !== simToken) return;
+      if (!(await burst(10, 55, my))) return;                    // a fling: ten, 55 ms apart
+      await wait(1500); if (my !== simToken) return;
+      scroller.holdY = Math.round(scroller.current + 700);       // the story holds the page here while a scene plays
+      if (!(await burst(9, 80, my))) return;
+      await wait(1900); if (my !== simToken) return;
+      scroller.holdY = null;                                     // the scene is done: the page goes on
+      if (!(await burst(3, 100, my))) return;
+      await wait(1100); if (my !== simToken) return;
+      if (!(await pressLink('#services', my))) return;           // a nav link: an eased jump (the page is far from it)
+      await wait(1900); if (my !== simToken) return;
+      QM.ghostHide();
+    }
+  }
+  const startSim = () => { simOn = true; runSim(++simToken); setUi('auto'); };
+  const stopSim = () => {
+    if (!simOn) return;
+    simOn = false; simToken++; QM.ghostHide();
+    if (scroller) scroller.holdY = null;
+    document.querySelectorAll('.is-hot').forEach((x) => x.classList.remove('is-hot'));
+    setUi(null);
+  };
+  function setUi(k) { document.querySelectorAll('[data-do]').forEach((b) => b.classList.toggle('is-on', b.dataset.do === k)); }
+
+  // the viewer takes over: a real wheel, a key, a touch, a click on a jump link
+  window.addEventListener('wheel', (e) => { if (e.isTrusted) stopSim(); }, { passive: true, capture: true });
+  window.addEventListener('keydown', stopSim);
+  window.addEventListener('touchstart', stopSim, { passive: true });
+  document.querySelectorAll('[data-jump]').forEach((a) => a.addEventListener('pointerdown', (e) => { if (e.isTrusted) stopSim(); }));
+
+  // the detail view's buttons
+  document.querySelectorAll('[data-do]').forEach((b) => b.addEventListener('click', async () => {
+    const k = b.dataset.do;
+    if (k === 'auto') { if (scroller) scroller.holdY = null; window.scrollTo(0, 0); startSim(); return; }
+    stopSim();
+    if (k === 'notch') notch();
+    else if (k === 'flick') { const my = ++simToken; await burst(6, 100, my); }
+    else if (k === 'hold' && scroller) {
+      if (scroller.holdY != null) { scroller.holdY = null; b.textContent = 'Hold the page'; b.classList.remove('is-on'); }
+      else { scroller.holdY = Math.round(scroller.current + 600); b.textContent = 'Release'; b.classList.add('is-on'); }
+    }
+  }));
+
+  QM.demo({
+    kind: 'loop',
+    restart() {
+      stopSim();
+      if (scroller) { scroller.holdY = null; scroller.scrollTo(0); }
+      setTimeout(startSim, 1300);
+    },
+  });
+  document.fonts.ready.then(() => setTimeout(startSim, 300));
+</script>
+</body>
+</html>

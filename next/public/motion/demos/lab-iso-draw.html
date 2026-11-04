@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isometric draw · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-iso-draw",
+  "title": "Isometric draw",
+  "group": "lab",
+  "cat": "scenes",
+  "order": 100,
+  "kind": "play",
+  "shot": 8300,
+  "tone": "paper",
+  "line": "12 faces · 900 ms a stroke · 12.4 s loop",
+  "summary": "A desk and a screen showing a page are projected from 3D to isometric paths and drawn stroke by stroke with stroke-dashoffset on a normalised path length. Each face is filled with the ground colour as it starts, so it hides the lines behind it. Then flat colour wipes in from the top, a web address types onto the isometric desk, and everything erases in reverse.",
+  "spec": [
+    ["Projection", "sx = (x − y)·cos 30°·S, sy = (x + y)·sin 30°·S − z·S"],
+    ["Draw", "pathLength = 1, dashoffset 1 → 0, 900 ms a face, 300 ms apart (0 to 4.2 s)"],
+    ["Colour", "flat fills wipe in top to bottom through a clip, 1.5 s (4.3 s)"],
+    ["Address", "typed on the desk with an isometric matrix, 1.6 s (5.9 s)"],
+    ["Erase", "address, colour (bottom up), then the strokes in reverse (8.8 to 12.4 s)"]
+  ],
+  "source": ["Qbix studio library · iso-draw"],
+  "where": "A Design service chapter: a desk and a screen drawing themselves, then the address of the finished site.",
+  "rules": [
+    "The whole story is one function of time, so it can be scrubbed and replayed from a click.",
+    "Lines are ink on paper; the hero block on the screen is the one lime fill.",
+    "Fills uncover top to bottom by clip. They never fade."
+  ],
+  "tags": ["isometric", "svg", "stroke-dashoffset", "blueprint"]
+}
+</script>
+<style data-code>
+.iso { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; cursor: pointer; }
+.iso svg { width: 100%; height: 100%; display: block; }
+.iso-copy { position: absolute; left: clamp(20px, 5vw, 56px); top: clamp(20px, 6vh, 56px); display: grid; gap: 10px; pointer-events: none; }
+.iso-copy .title { font-size: clamp(28px, 4.4vw, 54px); }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  /* in the detail view the drawing keeps clear of the controls bar */
+  html:not(.qm-tile) .iso { padding-bottom: 46px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="iso" id="iso">
+  <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" role="img" aria-label="An isometric desk with a screen showing a web page, drawn line by line, with a web address typed on the desk">
+    <defs><clipPath id="iso-wipe"><rect id="iso-wipe-r" x="0" y="0" width="800" height="0"></rect></clipPath></defs>
+    <g id="iso-faces"></g>
+    <text id="iso-sign" fill="#121417" style="font-family: Eurostile, Geist, sans-serif"></text>
+  </svg>
+  <div class="iso-copy"><p class="kicker">Design service · Forma</p><h2 class="title">Drawn first,<br>then built.</h2></div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Click the picture to redraw</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Isometric self-draw. createIso(svg) -> { render(ms), total } , render is a pure function of time. */
+function createIso(svg) {
+  const NS = 'http://www.w3.org/2000/svg', S = 35, CX = 430, CY = 188, K30 = 0.866, SIGN = 'forma.studio';
+  const P = (x, y, z) => [CX + (x - y) * K30 * S, CY + (x + y) * 0.5 * S - z * S];
+  const rect = (x0, y0, x1, y1, z0, z1, plane, v) => plane === 'x' ? [[v, x0, z0], [v, x1, z0], [v, x1, z1], [v, x0, z1]].map(([a, b, c]) => [a, b, c]) : [[x0, v, z0], [x1, v, z0], [x1, v, z1], [x0, v, z1]];
+  // faces back to front: [3D points, flat colour]; a desk, a screen showing a page, a keyboard
+  const FACES = [
+    [[[0, 0, .3], [8, 0, .3], [8, 8.5, .3], [0, 8.5, .3]], '#ffffff'],                                 // desk, top
+    [[[8, 0, 0], [8, 8.5, 0], [8, 8.5, .3], [8, 0, .3]], '#dcdfe2'],                                   // desk, +x edge
+    [[[0, 8.5, 0], [8, 8.5, 0], [8, 8.5, .3], [0, 8.5, .3]], '#eceef0'],                               // desk, +y edge
+    [[[2.4, 2, .42], [4.8, 2, .42], [4.8, 3.4, .42], [2.4, 3.4, .42]], '#eceef0'],                     // screen foot, top
+    [[[3.3, 2.7, .42], [3.9, 2.7, .42], [3.9, 2.7, 1.9], [3.3, 2.7, 1.9]], '#dcdfe2'],                 // screen neck, +y
+    [[[.8, 2.4, 5.2], [6.4, 2.4, 5.2], [6.4, 2.7, 5.2], [.8, 2.7, 5.2]], '#ffffff'],                   // screen, top
+    [[[6.4, 2.4, 1.9], [6.4, 2.7, 1.9], [6.4, 2.7, 5.2], [6.4, 2.4, 5.2]], '#dcdfe2'],                 // screen, +x side
+    [[[.8, 2.7, 1.9], [6.4, 2.7, 1.9], [6.4, 2.7, 5.2], [.8, 2.7, 5.2]], '#121417'],                   // screen, +y face (the bezel)
+    [[[1.1, 2.7, 2.2], [6.1, 2.7, 2.2], [6.1, 2.7, 4.9], [1.1, 2.7, 4.9]], '#ffffff'],                 // the page on the screen
+    [[[1.5, 2.7, 3.3], [4, 2.7, 3.3], [4, 2.7, 4.5], [1.5, 2.7, 4.5]], '#B8FF00'],                     // its hero block, the one lime
+    [[[4.4, 2.7, 2.6], [5.7, 2.7, 2.6], [5.7, 2.7, 4.5], [4.4, 2.7, 4.5]], '#dcdfe2'],                 // its card
+    [[[1.8, 4.4, .5], [5.4, 4.4, .5], [5.4, 5.6, .5], [1.8, 5.6, .5]], '#ffffff'],                     // keyboard, top
+  ];
+  const g = svg.querySelector('#iso-faces'), wipe = svg.querySelector('#iso-wipe-r'), sign = svg.querySelector('#iso-sign');
+  const els = FACES.map(([pts, col]) => {
+    const d = 'M' + pts.map((p) => P(...p).map((n) => n.toFixed(1)).join(' ')).join(' L') + ' Z';
+    const grp = document.createElementNS(NS, 'g');
+    const base = document.createElementNS(NS, 'path'); base.setAttribute('d', d); base.setAttribute('fill', 'none');            // hides the lines behind
+    const fill = document.createElementNS(NS, 'path'); fill.setAttribute('d', d); fill.setAttribute('fill', col); fill.setAttribute('clip-path', 'url(#iso-wipe)');
+    const line = document.createElementNS(NS, 'path'); line.setAttribute('d', d); line.setAttribute('pathLength', '1'); line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', '#121417'); line.setAttribute('stroke-width', '2'); line.setAttribute('stroke-linejoin', 'round'); line.setAttribute('stroke-dasharray', '1 1');
+    line.setAttribute('vector-effect', 'non-scaling-stroke');
+    grp.append(base, fill, line); g.appendChild(grp); return { base, line };
+  });
+  // the address lies on the desk: an isometric matrix on the text
+  const [ox, oy] = P(1, 7.7, 0.3);
+  sign.setAttribute('transform', `matrix(${K30 * S} ${0.5 * S} ${-K30 * S} ${0.5 * S} ${ox} ${oy})`);
+  sign.setAttribute('font-size', '0.95'); sign.setAttribute('letter-spacing', '0.03');
+  const N = FACES.length, TOTAL = 12400, clamp = (x) => Math.min(1, Math.max(0, x));
+  const ease = (x) => 1 - Math.pow(1 - x, 3);
+  function render(t) {
+    for (let i = 0; i < N; i++) {
+      const d = clamp((t - i * 300) / 900), u = clamp((t - 10600 - (N - 1 - i) * 100) / 500), p = u > 0 ? 1 - u : d;
+      els[i].line.setAttribute('stroke-dashoffset', (1 - ease(p)).toFixed(4));
+      els[i].base.setAttribute('fill', p > 0 ? '#f3f4f5' : 'none');
+      els[i].line.style.display = p > 0 ? '' : 'none';
+    }
+    const w = t < 9400 ? ease(clamp((t - 4300) / 1500)) : 1 - clamp((t - 9400) / 1300);
+    wipe.setAttribute('height', (w * 500).toFixed(1));
+    const n = t < 8800 ? Math.round(clamp((t - 5900) / 1600) * SIGN.length) : Math.round((1 - clamp((t - 8800) / 800)) * SIGN.length);
+    sign.textContent = SIGN.slice(0, n);
+  }
+  render(0);
+  return { render, total: TOTAL };
+}
+</script>
+<script>
+  const iso = createIso(document.querySelector('#iso svg'));
+  let raf = 0, t0 = 0;
+  function run() { cancelAnimationFrame(raf); t0 = performance.now(); const step = (now) => { const t = now - t0; iso.render(Math.min(t, iso.total)); if (t < iso.total) raf = requestAnimationFrame(step); }; raf = requestAnimationFrame(step); }
+  document.getElementById('iso').addEventListener('click', run);
+  if (QM.reduced) iso.render(8000);
+  QM.demo({
+    kind: 'play', lead: 400, dur: iso.total, hold: 500,
+    reset() { cancelAnimationFrame(raf); iso.render(0); },
+    play() { if (QM.reduced) iso.render(8000); else run(); },
+    seekPlay(v) { cancelAnimationFrame(raf); iso.render(v * iso.total); },
+  });
+</script>
+</body>
+</html>

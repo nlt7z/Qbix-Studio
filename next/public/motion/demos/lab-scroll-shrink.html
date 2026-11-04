@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shrinking lines · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-scroll-shrink",
+  "title": "Shrinking lines",
+  "group": "lab",
+  "cat": "scroll",
+  "order": 600,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "per-line scale 1 → 0.9 · virtual scroll · 3 copies looped",
+  "summary": "An article is split into one span per wrapped line. Each frame measures a line's position in the viewport, and lines leaving the top shrink toward 0.9 from their left edge while their ink steps down to a quiet grey. The scroll is a custom virtual one: wheel and drag add momentum, and when idle it drifts slowly by itself through three copies laid end to end.",
+  "spec": [
+    ["Zone", "the top 34% of the frame; progress is smoothstep of how far a line's bottom is inside it"],
+    ["Shrink", "scale 1 → 0.9 from the left edge, ink #121417 → #b4b7bb (a solid step, no opacity)"],
+    ["Scroll", "wheel eases at 11/s, drag keeps a 0.4 velocity blend and decays at 3.2/s"],
+    ["Idle", "after 2.5 s of no input it drifts at max(24 px/s, 5% of the frame height a second)"],
+    ["Loop", "3 copies of the article; the position wraps by one copy's height"]
+  ],
+  "source": ["Qbix studio library · scroll-shrink"],
+  "where": "A field-notes article on the Qbix journal, reading as one long page.",
+  "rules": [
+    "Lines shrink and step toward the ground colour; they are never blurred and never go transparent.",
+    "Lines are measured after wrapping and re-measured on resize and when fonts arrive.",
+    "The lime is only the small marker bar between copies."
+  ],
+  "tags": ["scroll", "text", "lines", "paper"]
+}
+</script>
+<style data-code>
+/* Scroll shrink: a clipped view, a tall track, every wrapped line its own block */
+.ss-view { position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; outline: none; }
+.ss-view.drag { cursor: grabbing; }
+.ss-track { will-change: transform; }
+.ss-col { width: min(560px, 84%); margin: 0 auto; padding: 64px 0 0; }
+.ss-col > * { margin: 0 0 20px; }
+.ss-col .ln { display: block; transform-origin: left center; will-change: transform; }
+.ss-col .kick { font: 400 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); }
+.ss-col h1 { font-family: 'Eurostile', Geist, sans-serif; font-weight: 400; font-size: clamp(36px, 6.4vw, 64px); line-height: 1.04; letter-spacing: -0.03em; }
+.ss-col h2 { font-family: 'Eurostile', Geist, sans-serif; font-weight: 400; font-size: clamp(24px, 3.4vw, 34px); line-height: 1.1; letter-spacing: -0.02em; margin-top: 36px; }
+.ss-col .dek { font-size: 20px; line-height: 1.45; }
+.ss-col .by { font: 400 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); }
+.ss-col p.split:not(.kick):not(.dek):not(.by):not(.pull):not(.end) { font-size: 17px; line-height: 1.6; }
+.ss-col .pull { font-family: 'Eurostile', Geist, sans-serif; font-size: clamp(24px, 3.2vw, 32px); line-height: 1.15; letter-spacing: -0.02em; margin: 28px 0; }
+.ss-col .end { font-size: 15px; line-height: 1.6; color: rgba(18, 20, 23, 0.64); }
+.ss-rule { width: min(560px, 84%); margin: 24px auto 96px; height: 6px; }
+.ss-rule::before { content: ''; display: block; width: 56px; height: 6px; background: #B8FF00; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="ss-view" id="view" tabindex="0" aria-label="Field notes, scrolling article"><div class="ss-track" id="track"></div></div>
+<!-- /code -->
+  <div class="qm-ui"><span>Scroll with the wheel, or drag</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(() => {
+  const ARTICLE = `
+  <div class="ss-col">
+    <p class="kick split">Field notes, issue 12</p>
+    <h1 class="split">A site gets one first look</h1>
+    <p class="dek split">What we learned designing and building forty small sites this year.</p>
+    <p class="by split">By Sera, Qbix studio</p>
+    <p class="split">Most visitors meet a site on a phone, in a feed, with a thumb already moving. The first second decides if they stay. That second belongs to one screen, so design it with care.</p>
+    <p class="split">The best first screen is rarely the busiest. It is one clear headline, one picture with room around it, and one button that says what happens next.</p>
+    <h2 class="split">Lead with the one idea</h2>
+    <p class="split">Say it once, and say it large. Hold it. Let a slow reveal carry the eye toward the button. A page that opens on its strongest idea feels sure of itself, and visitors read that as trust.</p>
+    <p class="pull split">One clear screen, held long enough to read, beats ten quick sections.</p>
+    <h2 class="split">Give the details time</h2>
+    <p class="split">The price, the timeline and the next step are the reason people write to us. Set them large, keep them still for a few seconds, and put them where a thumb will not cover them.</p>
+    <p class="split">A small logo and a real name close the page. People write to the person they saw, not the brand they skimmed past.</p>
+    <p class="end split">Thanks for reading. Next issue: moodboards and the art of the first palette.</p>
+  </div>
+  <div class="ss-rule"></div>`;
+  const view = document.getElementById('view'), track = document.getElementById('track');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const COPIES = 3, INK = [18, 20, 23], DIM = [180, 183, 187];
+  let lines = [], period = 1, vh = 1, pos = 0, vel = 0, wheelAcc = 0, lastInput = -1e9, raf = 0, prev = 0, dragging = false, dragY = 0, dragT = 0;
+  function build() {
+    track.innerHTML = '';
+    for (let c = 0; c < COPIES; c++) { const d = document.createElement('div'); d.className = 'ss-copy'; if (c) d.setAttribute('aria-hidden', 'true'); d.innerHTML = ARTICLE; track.appendChild(d); }
+    // split every block into the lines it actually wraps to
+    track.querySelectorAll('.split').forEach((el) => {
+      const words = el.textContent.split(/\s+/).filter(Boolean);
+      el.innerHTML = words.map((w) => `<span class="w">${w}</span>`).join(' ');
+      const spans = Array.from(el.querySelectorAll('.w')), rows = []; let lastTop = null;
+      spans.forEach((s, i) => { const t = s.offsetTop; if (lastTop === null || Math.abs(t - lastTop) > 2) { rows.push([]); lastTop = t; } rows[rows.length - 1].push(words[i]); });
+      el.innerHTML = rows.map((r) => `<span class="ln">${r.join(' ')}</span>`).join('');
+    });
+    const copies = track.querySelectorAll('.ss-copy'); period = copies[1].offsetTop - copies[0].offsetTop;
+    lines = Array.from(track.querySelectorAll('.ln')).map((el) => ({ el, top: 0, h: 0, s: -1, o: -1 }));
+    lines.forEach((l) => { let y = 0, n = l.el; while (n && n !== track) { y += n.offsetTop; n = n.offsetParent; } l.top = y; l.h = l.el.offsetHeight; });
+    vh = view.clientHeight;
+  }
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v)), ease = (x) => x * x * (3 - 2 * x);
+  function paint() {
+    pos = ((pos % period) + period) % period;
+    track.style.transform = `translate3d(0,${(-pos).toFixed(2)}px,0)`;
+    const zone = vh * 0.34;
+    for (const l of lines) {
+      const y = l.top - pos; if (y > vh + 40 || y + l.h < -160) continue;
+      const p = ease(clamp((zone - (y + l.h)) / zone, 0, 1));
+      const s = Math.round((1 - 0.1 * p) * 1000) / 1000, o = Math.round(p * 100) / 100;
+      if (s !== l.s) { l.el.style.transform = s === 1 ? '' : `scale(${s})`; l.s = s; }
+      if (o !== l.o) { l.el.style.color = o === 0 ? '' : `rgb(${INK.map((v, i) => Math.round(v + (DIM[i] - v) * o))})`; l.o = o; }
+    }
+  }
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - (prev || now)) / 1000); prev = now;
+    if (now - lastInput > 2500 && !reduce && !dragging) pos += Math.max(24, vh * 0.05) * dt;
+    if (!dragging) { pos += vel * dt; vel *= Math.exp(-dt * 3.2); if (Math.abs(vel) < 2) vel = 0; }
+    if (wheelAcc) { const d = wheelAcc * (1 - Math.exp(-dt * 11)); pos += d; wheelAcc -= d; if (Math.abs(wheelAcc) < 0.3) { pos += wheelAcc; wheelAcc = 0; } }
+    paint();
+  }
+  const touch = () => { lastInput = performance.now(); };
+  view.addEventListener('wheel', (e) => { e.preventDefault(); touch(); wheelAcc += e.deltaMode === 1 ? e.deltaY * 32 : e.deltaY; vel = 0; }, { passive: false });
+  view.addEventListener('pointerdown', (e) => { touch(); dragging = true; dragY = e.clientY; dragT = performance.now(); vel = 0; wheelAcc = 0; view.setPointerCapture(e.pointerId); view.classList.add('drag'); });
+  view.addEventListener('pointermove', (e) => { if (!dragging) return; touch(); const now = performance.now(), dy = e.clientY - dragY; pos -= dy; const dt = Math.max(1, now - dragT) / 1000; vel = vel * 0.6 + (-dy / dt) * 0.4; dragY = e.clientY; dragT = now; });
+  const up = () => { if (!dragging) return; dragging = false; touch(); view.classList.remove('drag'); if (performance.now() - dragT > 90) vel = 0; };
+  view.addEventListener('pointerup', up); view.addEventListener('pointercancel', up);
+  view.addEventListener('keydown', (e) => { const k = { ArrowDown: 60, ArrowUp: -60, PageDown: vh * 0.85, PageUp: -vh * 0.85, ' ': vh * 0.85 }[e.key]; if (k) { e.preventDefault(); touch(); wheelAcc += k; } });
+  function start() { if (!raf) { prev = 0; raf = requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else start(); });
+  let rt = 0;
+  function rebuild() { const ratio = pos / (period || 1); build(); pos = ratio * period; lines.forEach((l) => { l.s = -1; l.o = -1; }); paint(); }
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(rebuild, 120); });
+  window.ssApi = { pos: (p) => { pos = p; } };
+  build(); pos = reduce ? 0 : period * 0.16; paint(); start();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(rebuild);
+})();
+</script>
+<script>QM.demo({ kind: 'loop' });</script>
+</body>
+</html>

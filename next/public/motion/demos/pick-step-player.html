@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step player · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-step-player",
+  "title": "Step player",
+  "group": "picks",
+  "cat": "loading",
+  "order": 80,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "pills with two springy edges · k 300 · c 30 · 1.5 s a step",
+  "summary": "A Strata run's five steps are pills with two springy edges. Play fills the current step into a bar, then the bar slides to the next dot and a small wake hops through the dots it crossed. Tap a dot to jump; the current row takes a colour block and the lime is the Play key.",
+  "spec": [
+    ["Pills", "five of them in a 28px rail: the current one is a bar (the rail's width less the dots and gaps), the rest 14px dots, 8px apart; each pill has a left and a right edge"],
+    ["Edges", "every edge is its own spring, k 300 · c 30; changing step changes two slots and every edge eases to where its slot now is, which moves the bar, shrinks the old one and slides the dots in between"],
+    ["Fill", "the current step fills in 1.5 s, linear; the text under it counts with it"],
+    ["Wake", "each dot the bar crossed hops (velocity −150) 70 ms after the one before it; the bar it lands on answers last (−210) on a spring"],
+    ["Finish", "after the last step the bar goes, every pill is full, the title says System ready and the wake runs the whole row"],
+    ["Rows", "check for done, a dot for the rest, a colour block for the current one, 200 ms"],
+    ["Reduced motion", "edges jump to their slots, no wake"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Run steps (ix-step-player)", "Idea: bencho.dev step-player (MIT)"],
+  "where": "A Strata run on the Forma moodboard: read the pictures, pin the colours, measure the type, set the scale, name the tokens.",
+  "rules": [
+    "One filled primary, and it is the lime Play key; motion answers press.",
+    "The current row is a colour block, no shadow.",
+    "Pills are data marks: ink, never colour.",
+    "Every dot is also a button: tab to it, press to jump."
+  ],
+  "tags": ["stepper", "progress", "spring", "wake", "steps"],
+  "shot": 3000
+}
+</script>
+<style data-code>
+/* Run steps — idea: bencho.dev step-player (MIT), redrawn for Qbix.
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+.pk {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-7: 32px;
+  --radius-sm: 8px; --radius-lg: 14px;
+  --duration-fast: 120ms; --duration-base: 200ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --muted: var(--fg2); --surface-muted: var(--sunk); --control-track: var(--fg4);
+  font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
+}
+.card { width: min(560px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-7) var(--space-6) var(--space-6); display: grid; gap: var(--space-6); }
+.hd { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); }
+.hd h1 { font: 400 20px/1.35 var(--font-sans); letter-spacing: -0.02em; }
+.hd p { color: var(--muted); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.btn:hover, .btn.is-hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.btn:active { background: color-mix(in oklab, var(--signal) 78%, #000); }
+.rail { position: relative; height: 28px; }
+.pill { position: absolute; top: 7px; height: 14px; border-radius: 999px; background: var(--control-track); overflow: hidden; cursor: pointer; border: 0; padding: 0; }
+.pill i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--fg); }
+.pill.done { background: var(--fg); }
+.pill:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.now { display: grid; gap: var(--space-1); min-height: 64px; }
+.now .big { font-size: 28px; letter-spacing: -0.03em; line-height: 1.15; }
+.now .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.list { display: grid; gap: 2px; }
+.row { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: var(--space-3); height: 40px; padding: 0 var(--space-3); border-radius: var(--radius-sm); color: var(--muted); transition: background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out); }
+.row.cur { background: var(--surface-muted); color: var(--fg); }
+.row.done { color: var(--fg); }
+.row .res { font-variant-numeric: tabular-nums; color: var(--muted); }
+.row .ic { display: grid; place-items: center; width: 24px; }
+.row .ic svg { color: var(--fg); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(18, 20, 23, .2); }
+.row.cur .dot { background: var(--fg); }
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+  .page { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
+</style>
+</head>
+<body>
+<div class="vp"><div class="page">
+<!-- code -->
+<div class="card pk">
+  <div class="hd">
+    <div><h1>Run 18</h1><p>Strata · Forma moodboard · 9 pictures</p></div>
+    <button type="button" class="btn" id="play"></button>
+  </div>
+  <div class="rail" id="rail"></div>
+  <div class="now"><div class="big" id="name"></div><div class="n" id="live"></div></div>
+  <div class="list" id="list"></div>
+</div>
+<!-- /code -->
+</div></div>
+<div class="qm-ui"><span>Play · tap a dot to jump</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Run steps. Idea: bencho.dev step-player (MIT).
+   Every dot is a pill with two edges, and each edge is a spring. The current step is simply the pill whose slot is
+   wide; changing step changes two slot widths and every edge eases to where its slot now is. */
+const $ = (s) => document.querySelector(s);
+const P = {   // 24px outline icons, round caps
+  Play: '<path d="M6 3 20 12 6 21z"/>',
+  Pause: '<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  RotateCcw: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  Check: '<path d="M20 6 9 17l-5-5"/>',
+};
+const icon = (n, s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const STEPS = [
+  { k: 'Read', run: (p) => `Reading the moodboard, ${Math.round(p * 9)} of 9 pictures`, res: '9 pictures read' },
+  { k: 'Colours', run: (p) => `Pinning colours, ${Math.round(p * 4)} of 4`, res: '4 colours pinned' },
+  { k: 'Type', run: (p) => `Measuring type, ${Math.round(p * 3)} of 3 styles`, res: '3 type styles' },
+  { k: 'Space', run: (p) => `Setting the scale, ${Math.round(p * 6)} of 6 steps`, res: '6 steps, base 8' },
+  { k: 'Tokens', run: (p) => `Naming tokens, ${Math.round(p * 48)} of 48`, res: '48 tokens' },
+];
+const N = STEPS.length, DOT = 14, GAP = 8, STEP_MS = 1500;
+const rail = $('#rail'), list = $('#list');
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sp = (x) => ({ x, v: 0, t: x });
+const K = 300, C = 30;
+const stepS = (s, dt) => { if (still) { s.x = s.t; s.v = 0; return; } s.v += (K * (s.t - s.x) - C * s.v) * dt; s.x += s.v * dt; };
+const pills = STEPS.map((s, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'pill'; b.setAttribute('aria-label', s.k); b.innerHTML = '<i></i>';
+  b.addEventListener('click', () => jump(i)); rail.appendChild(b);
+  return { b, fill: b.firstChild, L: sp(0), R: sp(DOT), y: sp(0), kick: -1, kickV: 0 };
+});
+list.innerHTML = STEPS.map((s, i) => `<div class="row" data-i="${i}"><span class="ic"><span class="dot"></span></span><span>${s.k}</span><span class="res"></span></div>`).join('');
+const rows = [...list.children];
+
+let cur = 0, prog = 0, playing = false, finished = false, first = true;
+const tick = icon('Check');
+function ui() {
+  $('#play').innerHTML = finished ? icon('RotateCcw') + 'Replay' : playing ? icon('Pause') + 'Pause' : icon('Play') + 'Play';
+  rows.forEach((r, i) => {
+    const done = finished || i < cur;
+    r.classList.toggle('cur', !finished && i === cur); r.classList.toggle('done', done);
+    r.querySelector('.ic').innerHTML = done ? tick : '<span class="dot"></span>';
+    r.querySelector('.res').textContent = done ? STEPS[i].res : (i === cur && !finished ? 'Running' : '');
+  });
+  $('#name').textContent = finished ? 'System ready' : STEPS[cur].k;
+  pills.forEach((p, i) => p.b.classList.toggle('done', finished || i < cur));
+}
+function setLive() { $('#live').textContent = finished ? 'All 5 steps done in 7.5 seconds' : (playing || prog > 0 ? STEPS[cur].run(prog) : 'Ready to run'); }
+/* the wake: the dots the bar crossed stand up one after another, and the bar it landed on answers last */
+function wake(from, to) {
+  for (let i = from; i < to; i++) { const p = pills[i]; p.kick = (i - from) * 70 + 40; p.kickV = -150; }
+  const q = pills[to]; q.kick = (to - from) * 70 + 90; q.kickV = -210;
+}
+function go(to) { const from = cur; cur = to; prog = 0; if (to > from) wake(from, to); ui(); }
+function jump(i) { finished = false; go(i); setLive(); }
+function reset() { playing = false; finished = false; cur = 0; prog = 0; pills.forEach((p) => { p.kick = -1; p.y.x = p.y.t = 0; p.y.v = 0; }); first = true; ui(); setLive(); }
+$('#play').addEventListener('click', () => {
+  if (finished) { finished = false; cur = 0; prog = 0; playing = true; ui(); return; }
+  playing = !playing; ui();
+});
+
+let prev = performance.now();
+function loop(now) {
+  const dt = Math.min(0.033, (now - prev) / 1000); prev = now;
+  if (playing) {
+    prog += dt * 1000 / STEP_MS;
+    if (prog >= 1) {
+      if (cur < N - 1) go(cur + 1); else { prog = 1; playing = false; finished = true; wake(0, N - 1); ui(); }
+    }
+    setLive();
+  }
+  const cw = rail.clientWidth, BAR = Math.max(60, cw - (N - 1) * DOT - (N - 1) * GAP);
+  let x = 0;
+  pills.forEach((p, i) => {
+    const w = !finished && i === cur ? BAR : DOT;
+    p.L.t = x; p.R.t = x + w; x += w + GAP;
+    if (first) { p.L.x = p.L.t; p.R.x = p.R.t; }
+    stepS(p.L, dt); stepS(p.R, dt);
+    if (p.kick >= 0) { p.kick -= dt * 1000; if (p.kick < 0 && !still) { p.y.v = p.kickV; p.kick = -1; } }
+    stepS(p.y, dt);
+    const s = p.b.style; s.left = p.L.x.toFixed(2) + 'px'; s.width = Math.max(DOT * 0.6, p.R.x - p.L.x).toFixed(2) + 'px';
+    s.transform = `translateY(${p.y.x.toFixed(2)}px)`;
+    p.fill.style.width = (i === cur && !finished ? prog * 100 : 0) + '%';
+  });
+  first = false;
+  requestAnimationFrame(loop);
+}
+ui(); setLive();
+requestAnimationFrame(loop);
+</script>
+<script>
+  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window; a ghost hand plays it; real input takes over ---- */
+  const ABORT = { abort: true };
+  function vpfit() {
+    const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
+      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+    };
+    addEventListener('resize', go); go();
+  }
+  const hand = (() => {
+    let x = innerWidth * 0.82, y = innerHeight * 0.86, held = null, over = null, gen = 0;
+    const ease = QM.bezier(0.65, 0, 0.35, 1);
+    const under = () => held || document.elementFromPoint(x, y) || document.body;
+    const ev = (type, el, buttons) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, pointerType: 'mouse', isPrimary: true, clientX: x, clientY: y, button: 0, buttons }));
+    const chain = (el) => { const s = []; for (let n = el; n; n = n.parentElement) s.push(n); return s; };
+    function hover(el) {
+      if (el === over) return;
+      const keep = new Set(chain(el));
+      chain(over).forEach((n) => { if (!keep.has(n)) n.classList.remove('is-hover'); });
+      chain(el).forEach((n) => n.classList.add('is-hover'));
+      over = el;
+    }
+    const api = {
+      cancel() { gen++; },
+      async wait(ms) { const my = gen; await QM.wait(ms); if (my !== gen) throw ABORT; },
+      async to(tx, ty, ms = 700) {
+        const my = gen, x0 = x, y0 = y, t0 = performance.now();
+        QM.ghostShow();
+        if (Math.hypot(tx - x0, ty - y0) < 1) { await Promise.resolve(); if (my !== gen) throw ABORT; return; }
+        for (;;) {
+          await new Promise(requestAnimationFrame);
+          if (my !== gen) throw ABORT;
+          const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+          x = x0 + (tx - x0) * k; y = y0 + (ty - y0) * k;
+          QM.ghostAt(x, y);
+          const el = under(); hover(el); ev('pointermove', el, held ? 1 : 0);
+          if (p >= 1) return;
+        }
+      },
+      at(el, ms, fx = 0.5, fy = 0.5) { const r = el.getBoundingClientRect(); return api.to(r.left + r.width * fx, r.top + r.height * fy, ms); },
+      down() { held = under(); ev('pointerdown', held, 1); },
+      up() { const el = held || under(); ev('pointerup', el, 0); held = null; },
+      release() { if (held) api.up(); },
+      async click(el, ms = 700) {
+        await api.at(el, ms); await api.wait(90);
+        api.down(); await api.wait(70); const t = held; api.up();
+        t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y }));
+      },
+    };
+    return api;
+  })();
+
+  async function story() {
+    reset();
+    await hand.click($('#play'));
+    await hand.to(innerWidth * 0.55, innerHeight * 0.6, 500);
+    await hand.wait(2800);
+    await hand.click(pills[3].b); await hand.wait(1900);                  // jump to a dot: a wake through the ones it crossed
+    await hand.to(innerWidth * 0.7, innerHeight * 0.8, 600);
+    await hand.wait(2600);
+    if (playing) await hand.click($('#play'));
+    await hand.wait(900);
+  }
+  let paused = false, running = false, lastReal = -1e9;
+  function cancelStory() { hand.cancel(); QM.ghostHide(); hand.release(); running = false; }
+  if (!QM.tile) {
+    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) cancelStory(); } };
+    ['pointerdown', 'pointermove', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+  }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancelStory(); } });
+  (async function idle() {
+    for (;;) {
+      await QM.wait(250);
+      if (QM.reduced || paused || document.hidden || (!QM.tile && performance.now() - lastReal < 2500)) continue;
+      running = true;
+      try { await story(); } catch (e) { if (e !== ABORT) throw e; }
+      if (running) { QM.ghostHide(); hand.release(); }
+      running = false;
+    }
+  })();
+  vpfit();
+  QM.demo({ kind: 'loop', restart() { paused = false; lastReal = -1e9; if (running) cancelStory(); } });
+</script>
+</body>
+</html>

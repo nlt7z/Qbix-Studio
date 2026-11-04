@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Letter wave · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "split-cta",
+  "title": "Letter wave",
+  "group": "type",
+  "cat": "buttons",
+  "order": 30,
+  "kind": "hover",
+  "line": "300 ms · 18 ms a letter · 2px press",
+  "tone": "paper",
+  "summary": "On hover every letter rolls up and a copy rolls in under it, one after another, so a wave runs across the label and out through the arrow. A press sinks the button 2px, like a key.",
+  "spec": [
+    ["Duration", "300 ms a letter"],
+    ["Easing", "cubic-bezier(0.22, 1, 0.36, 1)"],
+    ["Stagger", "18 ms a letter (16 in the nav)"],
+    ["Move", "rest translateY 0 → −110%, copy 110% → 0"],
+    ["Press", "translateY 2px (1px on a text action)"],
+    ["Trigger", "hover and keyboard focus"]
+  ],
+  "source": ["components/SplitText.tsx", "app/globals.css · SPLIT CTA", "app/globals.css · MODULE · buttons"],
+  "where": "Every button and nav link: Start a brief, Tell us your idea, Explore Strata.",
+  "rules": [
+    "The colour never changes on hover: the wave is the feedback.",
+    "The arrow is ↗︎ (U+2197 + FE0E); a bare ↗ turns into an emoji on iOS.",
+    "Buttons are 48px tall with the top right corner cut; the cut points where the arrow does."
+  ],
+  "tags": ["button", "hover", "letters"]
+}
+</script>
+<style data-code>
+/* SplitText — each letter in its own overflow-hidden box, a copy waiting below */
+.split-text { display: inline-flex; }
+.split-anim { display: inline-flex; align-items: center; padding-block: 0.14em; margin-block: -0.14em; }
+.split-char { position: relative; display: inline-block; overflow: hidden; line-height: 1.15; }
+.split-char.split-arrow { margin-left: 0.42em; }
+.split-char-rest,
+.split-char-next {
+  display: block;
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--d);
+}
+.split-char-next { position: absolute; inset: 0; transform: translateY(110%); }
+.split-cta:hover .split-char-rest, .split-cta:focus-visible .split-char-rest { transform: translateY(-110%); }
+.split-cta:hover .split-char-next, .split-cta:focus-visible .split-char-next { transform: translateY(0); }
+
+/* the button: six pixels tall, its top right corner cut, a press like a key */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 48px; padding: 0 24px; border: 0; cursor: pointer;
+  font: 500 15px/1 Geist, system-ui, sans-serif; letter-spacing: -0.011em;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn:active { transform: translateY(2px); }
+.btn-solid { background: #121417; color: #f3f4f5; }   /* ink with paper type: the site's solid button on a paper chapter */
+.btn-lime { background: #B8FF00; color: #0c1300; }
+.btn-text { clip-path: none; height: auto; padding: 0; background: none; color: #121417; position: relative; }
+.btn-text::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px;
+  background: currentColor; transform: scaleX(0); transform-origin: left center;
+  transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-text:hover::after, .btn-text:focus-visible::after { transform: scaleX(1); }
+.btn-text:active { transform: translateY(1px); }
+@media (prefers-reduced-motion: reduce) {
+  .split-char-rest, .split-char-next { transition: none; }
+  .split-cta:hover .split-char-rest { transform: none; }
+  .split-cta:hover .split-char-next { transform: translateY(110%); }
+}
+</style>
+<style>
+  .sc { display: grid; gap: 40px; justify-items: start; }
+  .sc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 20px 32px; }
+  .sc .btn-text.is-hot::after { transform: scaleX(1); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sc">
+    <p class="kicker">Hover a button</p>
+<!-- code -->
+<div class="sc-row">
+  <button class="btn btn-solid split-cta" data-split data-arrow>Start a brief</button>
+  <button class="btn btn-lime split-cta" data-split data-arrow>Tell us your idea</button>
+  <a class="btn btn-text split-cta" href="#" data-split data-arrow>Explore Strata</a>
+</div>
+<!-- /code -->
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Split a label into letters, each a resting copy and a copy waiting below it.
+   The hover itself is pure CSS, keyed off the host's .split-cta:hover. */
+function splitText(el, { arrow = false, stagger = 18 } = {}) {
+  const text = el.textContent.trim();
+  const chars = text.split('');
+  if (arrow) chars.push('↗︎');
+  el.textContent = '';
+  const sr = Object.assign(document.createElement('span'), { className: 'sr-only', textContent: arrow ? `${text} ↗︎` : text });
+  const anim = Object.assign(document.createElement('span'), { className: 'split-anim' });
+  anim.setAttribute('aria-hidden', 'true');
+  chars.forEach((ch, i) => {
+    const c = document.createElement('span');
+    c.className = 'split-char' + (arrow && i === chars.length - 1 ? ' split-arrow' : '');
+    c.style.setProperty('--d', `${i * stagger}ms`);
+    const g = ch === ' ' ? ' ' : ch;
+    c.innerHTML = `<span class="split-char-rest">${g}</span><span class="split-char-next">${g}</span>`;
+    anim.appendChild(c);
+  });
+  const wrap = Object.assign(document.createElement('span'), { className: 'split-text' });
+  wrap.appendChild(anim);
+  el.append(sr, wrap);
+}
+document.querySelectorAll('[data-split]').forEach((el) => splitText(el, { arrow: el.hasAttribute('data-arrow') }));
+</script>
+<script>
+  QM.demo({ kind: 'hover', targets: '.split-cta', dur: 1300 });
+</script>
+</body>
+</html>

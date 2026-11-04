@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticket printer · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-ticket-print",
+  "title": "Ticket printer",
+  "group": "lab",
+  "cat": "feedback",
+  "order": 50,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "1300 ms feed · odometer 110 ms a column · torn clip-path",
+  "summary": "A lime printer feeds a Qbix invoice out of its slot in two smooth runs. The total is an odometer: each column keeps its own unrolled count, so it only ever rolls forward as lines are added. When the last line is in, the trailing edge turns to a zigzag clip-path and the invoice is torn off. Click to tear or print the next.",
+  "spec": [
+    ["Feed", "1300 ms ease in-out to 226 px out, then 1100 ms to fully out, with the lines rolling in between"],
+    ["Odometer", "one spring per column (k 130 · c 17), unrolled count, 110 ms stagger from the right"],
+    ["Text swaps", "420 ms translateY ±100% inside a mask, cubic-bezier(0.2, 0.8, 0.2, 1)"],
+    ["Tear", "zigzag clip-path on the trailing edge, 260 ms tilt, 760 ms t³ fall"],
+    ["Idle", "print, add 5 lines, total, tear, print the next invoice"]
+  ],
+  "source": ["Qbix studio library · ticket-print"],
+  "where": "The billing desk of a Qbix project: an invoice per client, with the total ticking up as each line is added.",
+  "rules": [
+    "The invoice is uncovered by the slot (a mask), never faded in.",
+    "A column only rolls forward: keep the unwrapped count, never reset it.",
+    "The printer is the lime block; the invoice is white paper on the paper ground."
+  ],
+  "tags": ["click", "odometer", "mask", "clip-path", "invoice"],
+  "shot": 8000
+}
+</script>
+<style data-code>
+/* Invoice printer */
+.tk-feed { position: absolute; z-index: 2; left: 40px; width: 260px; top: -1400px; height: 1829px; overflow: hidden; }
+.tk-ticket { position: absolute; left: 25px; bottom: 0; width: 210px; height: 330px; background: #ffffff; color: #121417; transform-origin: 50% 100%; }
+.tk-in { position: absolute; inset: 0; padding: 22px 20px 0; }
+.tk-row { display: flex; justify-content: space-between; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
+.tk-client { margin-top: 14px; font: 400 30px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
+.tk-what { margin-top: 7px; font-size: 13px; }
+.tk-cut { display: block; width: 100%; height: 2px; margin: 15px 0; }
+.tk-m { display: block; position: relative; overflow: hidden; height: 1.35em; }
+.tk-m > span { position: absolute; left: 0; top: 0; white-space: nowrap; }
+.tk-lbl { font: 500 10.5px/1.35 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
+.tk-price { display: flex; align-items: flex-start; font: 600 46px/1 'Encode Sans', sans-serif; height: 1em; margin-top: 8px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.tk-price .cur { font-size: 0.6em; margin: 0.08em 0.06em 0 0; }
+.tk-col { display: inline-block; position: relative; height: 1em; overflow: hidden; width: 0.6em; }
+.tk-col i { position: absolute; left: 0; top: 0; width: 100%; font-style: normal; display: flex; flex-direction: column; text-align: center; line-height: 1; }
+.tk-comma { width: 0.26em; display: inline-block; }
+.tk-line { margin-top: 10px; font: 500 13px/1.35 'Encode Sans', sans-serif; }
+.tk-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.tk-foot span { font: 500 10px/1.4 'Encode Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); text-align: right; }
+.tk-body { position: absolute; left: 20px; top: 400px; width: 300px; height: 150px; background: #b8ff00; color: #0c1300; --cut: 20px; }
+.tk-slot { position: absolute; left: 35px; top: 24px; width: 230px; height: 10px; background: #0c1300; }
+.tk-body .t1 { position: absolute; left: 28px; bottom: 44px; font: 400 36px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
+.tk-body .t2 { position: absolute; left: 28px; bottom: 22px; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(12, 19, 0, 0.66); }
+.tk-body .t3 { position: absolute; right: 28px; bottom: 22px; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(12, 19, 0, 0.66); text-align: right; }
+.tk-body .t3 b { display: block; font: 400 30px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; color: #0c1300; margin-bottom: 6px; }
+</style>
+<style>
+  .qm-stage { padding: 0; cursor: pointer; }
+  #tk-stage { position: absolute; left: 50%; top: 50%; width: 780px; height: 470px; transform-origin: 50% 50%; }
+  .tk-copy { position: absolute; left: 0; top: 110px; width: 380px; display: grid; gap: 16px; }
+  .tk-copy .title { font-size: 56px; max-width: 7em; }
+  .tk-copy .lede { font-size: 15px; max-width: 24em; }
+  #tk-unit { position: absolute; right: 0; top: -95px; width: 340px; height: 560px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div id="tk-stage">
+  <div class="tk-copy">
+    <p class="kicker">Qbix Studio · Billing</p>
+    <h2 class="title">Every line, in your hand.</h2>
+    <p class="lede">The invoice prints as the work is counted. The total rolls up one column at a time, and when the last line is in it is torn off and sent.</p>
+  </div>
+  <div id="tk-unit">
+<!-- code -->
+<div class="tk-feed"><div class="tk-ticket" id="tk-ticket"><div class="tk-in">
+  <div class="tk-row"><span>Qbix invoice</span><span id="tk-no">No. 0042</span></div>
+  <div class="tk-client" id="tk-client">Forma</div>
+  <div class="tk-what" id="tk-what">Launch site, forma.studio</div>
+  <svg class="tk-cut" viewBox="0 0 170 2" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="1" x2="170" y2="1" stroke="#121417" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="4 4"/></svg>
+  <div class="tk-lbl tk-m" id="tk-lbl"><span>Total so far</span></div>
+  <div class="tk-price" id="tk-price"><span class="cur">$</span></div>
+  <div class="tk-line tk-m" id="tk-line"><span>Design and brief</span></div>
+  <svg class="tk-cut" viewBox="0 0 170 2" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="1" x2="170" y2="1" stroke="#121417" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="4 4"/></svg>
+  <div class="tk-foot"><svg id="tk-bars" width="96" height="30" aria-hidden="true"></svg><span>Due in<br>14 days</span></div>
+</div></div></div>
+<div class="tk-body cut"><div class="tk-slot"></div>
+  <div class="t1">Billing</div><div class="t2">Qbix Studio</div>
+  <div class="t3"><b id="tk-count">12</b>invoices this month</div></div>
+<!-- /code -->
+  </div>
+</div>
+<div class="qm-ui"><span>Click to tear off the ticket, or to print the next</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const $ = (s) => document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tk = $('#tk-ticket');
+let T = 0, lastNow = performance.now();
+const jobs = [], ticks = new Set();
+const at = (ms, fn) => jobs.push({ t: T + ms, fn });
+function frame(now) {
+  const dt = Math.min(64, now - lastNow); lastNow = now; T += dt;
+  for (let i = 0; i < jobs.length; i++) if (jobs[i].t <= T) { const j = jobs.splice(i, 1)[0]; i--; j.fn(); }
+  ticks.forEach((f) => f(dt)); requestAnimationFrame(frame);
+}
+function spring(x, k = 170, c = 24) {
+  return { x, v: 0, t: x, k, c, step(dt) { let s = dt / 1000; const n = Math.max(1, Math.ceil(s / 0.008)); s /= n; for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; } } };
+}
+const E = { io: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2), out: (t) => 1 - Math.pow(1 - t, 3), in: (t) => t * t * t };
+function tween(d, e, f, done) {
+  const t0 = T;
+  const g = () => { const p = d <= 0 ? 1 : Math.min(1, (T - t0) / d); f(e(p)); if (p >= 1) { ticks.delete(g); if (done) done(); } };
+  ticks.add(g); g();
+}
+
+/* zigzag edges: the leading edge is always torn, the trailing edge only after the tear */
+const L = 210, Hh = 330, tooth = 7, depth = 5;
+function zig(bottomTorn) {
+  const p = [];
+  for (let x = 0; x <= L; x += tooth) p.push(`${x}px ${(x / tooth) % 2 ? 0 : depth}px`);
+  if (bottomTorn) { for (let x = L; x >= 0; x -= tooth) p.push(`${x}px ${Hh - ((x / tooth) % 2 ? 0 : depth)}px`); }
+  else p.push(`${L}px ${Hh}px`, `0px ${Hh}px`);
+  return `polygon(${p.join(',')})`;
+}
+tk.style.clipPath = zig(false);
+
+/* rolling digits: each column keeps an unwrapped count, so it always rolls forward */
+const price = $('#tk-price'), cols = [];
+for (let i = 0; i < 4; i++) {
+  if (i === 1) { const c = document.createElement('span'); c.className = 'tk-comma'; c.textContent = ','; price.appendChild(c); }
+  const c = document.createElement('span'); c.className = 'tk-col';
+  const st = document.createElement('i');
+  st.innerHTML = '0123456789'.split('').concat('0').map((d) => `<span>${d}</span>`).join('');
+  c.appendChild(st); price.appendChild(c); cols.push({ el: st, s: spring(0, 130, 17), d: 0 });
+}
+ticks.add((dt) => cols.forEach((c) => { c.s.step(dt); const m = ((c.s.x % 10) + 10) % 10; c.el.style.transform = `translateY(${(-m).toFixed(4)}em)`; }));
+function setPrice(v, instant) {
+  const ds = String(v).padStart(4, '0').split('').map(Number);
+  ds.forEach((d, i) => {
+    const c = cols[i], delta = (d - c.d + 10) % 10; c.d = d;
+    const go = () => { c.s.t += delta; if (instant || RM) { c.s.x = c.s.t; c.s.v = 0; } };
+    if (instant || RM) go(); else at((3 - i) * 110, go);
+  });
+}
+function swapText(box, txt, instant) {
+  const old = box.firstElementChild; if (old && old.textContent === txt) return;
+  const n = document.createElement('span'); n.textContent = txt; box.appendChild(n);
+  if (instant || RM || !old) { if (old) old.remove(); return; }
+  n.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  old.animate([{ transform: 'none' }, { transform: 'translateY(-100%)' }], { duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' }).onfinish = () => old.remove();
+}
+function bars(seed) {
+  let x = 0, h = '', r = seed; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  while (x < 92) { const w = rnd() < 0.35 ? 2.6 : 1.2; h += `<rect x="${x.toFixed(1)}" y="0" width="${w}" height="30" fill="#121417"/>`; x += w + 1.3 + Math.round(rnd() * 2); }
+  $('#tk-bars').innerHTML = h;
+}
+
+const invoices = [
+  { client: 'Forma', what: 'Launch site, forma.studio', totals: [1200, 1650, 1950, 2100, 2250], lines: ['Design and brief', 'Build, 6 pages', 'Shop and checkout', 'Two review rounds', 'Domain and launch'] },
+  { client: 'Kova', what: 'Brand upgrade, 3 weeks', totals: [1100, 1500, 1900, 2300, 2400], lines: ['Brand audit', 'Type and palette', 'Launch page', 'Pitch deck', 'Handover files'] },
+  { client: 'Willow', what: 'Practice website refresh', totals: [1050, 1300, 1450, 1500, 1650], lines: ['Website refresh', 'Booking page', 'Copy edit', 'Image crops', 'Live in 7 days'] },
+];
+let li = 0, no = 41, cnt = 12, state = 'idle', lastIn = -1e9, tearAt = 0, scaleK = 1;
+const ty = spring(Hh, 90, 16); let rot = 0, tx = 0, lift = 0;
+ticks.add((dt) => { ty.step(dt); tk.style.transform = `translate(${tx.toFixed(2)}px,${(ty.x + lift).toFixed(2)}px) rotate(${rot.toFixed(3)}deg)`; });
+
+function print() {
+  state = 'printing'; const L0 = invoices[li++ % invoices.length]; no++;
+  $('#tk-no').textContent = 'No. ' + String(no).padStart(4, '0'); $('#tk-client').textContent = L0.client; $('#tk-what').textContent = L0.what; bars(no);
+  swapText($('#tk-lbl'), 'Total so far', true); swapText($('#tk-line'), L0.lines[0], true); setPrice(L0.totals[0], true);
+  tk.style.clipPath = zig(false); rot = 0; tx = 0; lift = 0; ty.x = Hh; ty.v = 0;
+  /* two smooth runs: the header and total first, the rest once the last line is in */
+  const run = (from, to, d, done) => tween(RM ? 0 : d, E.io, (p) => { ty.t = ty.x = from + (to - from) * p; ty.v = 0; }, done);
+  run(Hh, 104, 1300, () => {
+    let t = 500;
+    for (let i = 1; i < L0.totals.length; i++) { at(RM ? 0 : t, () => { setPrice(L0.totals[i]); swapText($('#tk-line'), L0.lines[i]); }); t += RM ? 0 : 820; }
+    at(RM ? 0 : t + 200, () => {
+      swapText($('#tk-lbl'), 'Total due');
+      at(RM ? 0 : 600, () => run(104, 0, 1100, () => { state = 'done'; $('#tk-count').textContent = ++cnt; }));
+    });
+  });
+}
+function tear() {
+  if (state !== 'done') return; state = 'tearing'; tk.style.clipPath = zig(true);
+  tween(RM ? 0 : 260, E.out, (p) => { rot = 2.4 * p; lift = -6 * p; }, () => {
+    tween(RM ? 0 : 760, E.in, (p) => { rot = 2.4 + 14 * p; lift = -6 - (innerHeight / scaleK + 380) * p; tx = 90 * p; }, () => { state = 'idle'; });
+  });
+}
+ticks.add(() => {
+  if (RM || T - lastIn < 2500) return;
+  if (state === 'idle') print();
+  else if (state === 'done' && !tearAt) tearAt = T + 900;
+  if (state === 'done' && tearAt && T > tearAt) { tearAt = 0; tear(); }
+});
+addEventListener('pointerdown', () => { lastIn = T; tearAt = 0; if (state === 'done') tear(); else if (state === 'idle') print(); });
+if (RM) print();
+requestAnimationFrame(frame);
+</script>
+<script>
+  function fit() {
+    const st = document.getElementById('tk-stage');
+    const s = Math.min(innerWidth / 800, (innerHeight - 60) / 480) * 0.97;
+    scaleK = Math.min(s, 1.5);
+    st.style.transform = `translate(-50%,-50%) scale(${scaleK})`;
+  }
+  addEventListener('resize', fit); fit();
+  QM.demo({ kind: 'loop', restart() { lastIn = -1e9; } });
+</script>
+</body>
+</html>

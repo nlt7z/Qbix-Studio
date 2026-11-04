@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Button life cycle · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-life-of-button",
+  "title": "Button life cycle",
+  "group": "lab",
+  "cat": "buttons",
+  "order": 590,
+  "kind": "play",
+  "tone": "paper",
+  "line": "idle · hover · press · loading · success · reset, all springs",
+  "summary": "One ink button, Publish the site, goes through six stages. Its width, scale, fill and three stacked text masks are all spring-driven: the label slides out as a progress bar slides in, the button shrinks to a block, then widens again as a lime fill with a drawn tick and the words Site is live. A mono row under it names the stage and an underline follows.",
+  "spec": [
+    ["Width", "spring 240 / 22 between label width, 64px (loading) and the success width"],
+    ["Press", "scale 0.93 on a 420 / 20 spring, a kick of velocity on release and on success"],
+    ["Masks", "three layers, translateY ±100% on 300 / 28 springs, so one label leaves as the next arrives"],
+    ["Story", "press → loading 1.7 s → success 1.9 s → reset 0.9 s → idle"],
+    ["Trigger", "hover, press, Enter or Space"]
+  ],
+  "source": ["Qbix studio library · life-of-button"],
+  "where": "The Publish the site action at the end of a Qbix build, from the first hover to the confirmation.",
+  "rules": [
+    "The fill never changes on hover; the arrow arriving is the feedback. Lime appears once, on success.",
+    "The button keeps the cut corner at every width, drawn with calc(100% − 12px).",
+    "The tick is drawn with stroke-dashoffset, square caps."
+  ],
+  "tags": ["button", "spring", "states", "loading", "publish"],
+  "shot": 5600
+}
+</script>
+<style data-code>
+/* Life of a button: three text layers stacked in one clipped box, driven from JS springs */
+.lb { position: relative; height: 56px; min-width: 56px; padding: 0; border: 0; cursor: pointer; overflow: hidden; background: #121417; color: #f4f5f2;
+  font: 500 17px/1 Geist, system-ui, sans-serif; letter-spacing: -0.011em;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.lb:focus-visible { outline: 2px solid #121417; outline-offset: 4px; }
+.lb-ly { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; white-space: nowrap; }
+.lb-bar { display: block; width: 28px; height: 4px; background: rgba(244, 245, 242, 0.24); position: relative; overflow: hidden; }
+.lb-bar i { position: absolute; inset: 0; background: #f4f5f2; transform: scaleX(0); transform-origin: left; }
+.lb-arrow { width: 18px; height: 18px; }
+.lb-ok { color: #0c1300; }   /* the success layer sits on lime: ink text */
+.lb-check { width: 22px; height: 22px; }
+.lb-check path { stroke-dasharray: 24; stroke-dashoffset: 24; }
+.lb-steps { position: relative; display: flex; gap: clamp(14px, 3vw, 28px); font: 400 12px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.38); padding-bottom: 12px; }
+.lb-steps span { transition: color 200ms; } .lb-steps span.on { color: #121417; }
+.lb-uline { position: absolute; left: 0; bottom: 0; height: 2px; background: #121417; width: 30px; }
+.lb-measure { position: absolute; visibility: hidden; white-space: nowrap; font: 500 17px/1 Geist, sans-serif; letter-spacing: -0.011em; pointer-events: none; }
+</style>
+<style>
+  .lbw { display: grid; gap: 44px; justify-items: start; width: min(100%, 720px); }
+  .lbw .title { font-size: clamp(34px, 5.4vw, 64px); max-width: 11em; }
+  .lbw .stagebox { display: grid; gap: 40px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="lbw">
+    <div style="display:grid;gap:14px"><p class="kicker">Qbix · Launch</p><h2 class="title">One button, six stages.</h2></div>
+<!-- code -->
+<div class="stagebox">
+  <button class="lb" id="b" aria-label="Publish the site">
+    <span class="lb-ly" id="l1"><span>Publish the site</span><svg class="lb-arrow" id="arrow" viewBox="0 0 18 18"><path d="M3 9h11M10 4.5 14.5 9 10 13.5" fill="none" stroke="#f4f5f2" stroke-width="2" stroke-linejoin="miter"/></svg></span>
+    <span class="lb-ly" id="l2"><span class="lb-bar"><i id="fill"></i></span></span>
+    <span class="lb-ly lb-ok" id="l3"><svg class="lb-check" viewBox="0 0 22 22"><path id="ck" d="M5 11.5 9.2 15.5 17 6.5" fill="none" stroke="#0c1300" stroke-width="2.6" stroke-linejoin="miter"/></svg><span>Site is live</span></span>
+  </button>
+  <div class="lb-steps" id="steps"><span>Idle</span><span>Hover</span><span>Press</span><span>Loading</span><span>Success</span><span>Reset</span><i class="lb-uline" id="uline"></i></div>
+</div>
+<span class="lb-measure" id="m1">Publish the site</span><span class="lb-measure" id="m3">Site is live</span>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Hover and click the button</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const b = $('b'), l1 = $('l1'), l2 = $('l2'), l3 = $('l3'), arrow = $('arrow'), fill = $('fill'), ck = $('ck'), steps = [...$('steps').querySelectorAll('span')], uline = $('uline');
+  const S = (x, k = 260, c = 22) => ({ x, v: 0, t: x, k, c });
+  const sp = { w: S(200, 240, 22), sc: S(1, 420, 20), y1: S(0, 300, 28), y2: S(1, 300, 28), y3: S(1, 300, 28), ar: S(0, 300, 26), col: S(0, 200, 26), ux: S(0, 260, 26), uw: S(30, 260, 26) };
+  let W1 = 200, W3 = 200, state = 'idle', stepI = 0, loadT = 0, checkT = 0;
+  const INK = [18, 20, 23], LIME = [184, 255, 0];
+  const mix = (a, c, u) => a.map((v, i) => Math.round(v + (c[i] - v) * u));
+  function measure() { W1 = $('m1').offsetWidth + 56 + 28; W3 = $('m3').offsetWidth + 56 + 32; if (['idle', 'hover', 'press', 'reset'].includes(state)) sp.w.t = W1; else if (state === 'success') sp.w.t = W3; }
+  function setStep(i) { stepI = i; steps.forEach((s, k) => s.classList.toggle('on', k === i)); const r = steps[i].getBoundingClientRect(), p = $('steps').getBoundingClientRect(); sp.ux.t = r.left - p.left; sp.uw.t = r.width; }
+  function go(s) {
+    state = s;
+    if (s === 'idle') { setStep(0); sp.w.t = W1; sp.sc.t = 1; sp.ar.t = 0; sp.col.t = 0; sp.y1.t = 0; sp.y2.t = 1; sp.y3.t = 1; }
+    if (s === 'hover') { setStep(1); sp.sc.t = 1.04; sp.ar.t = 1; }
+    if (s === 'press') { setStep(2); sp.sc.t = 0.93; sp.sc.v -= 1.5; }
+    if (s === 'loading') { setStep(3); sp.sc.t = 1; sp.ar.t = 0; sp.w.t = 64; sp.y1.t = -1; sp.y2.t = 0; loadT = 0; }
+    if (s === 'success') { setStep(4); sp.w.t = W3; sp.col.t = 1; sp.y1.t = -1; sp.y2.t = -1; sp.y3.t = 0; sp.sc.v += 2.4; checkT = 0; }
+    if (s === 'reset') { setStep(5); sp.col.t = 0; sp.w.t = W1; sp.y3.t = -1; sp.y1.x = 1; sp.y1.v = 0; sp.y1.t = 0; sp.y2.x = 1; sp.y2.t = 1; }
+  }
+  let last = performance.now(), running = false;
+  function frame(now) {
+    if (document.hidden) { running = false; return; }
+    const dt = Math.min(0.04, (now - last) / 1000); last = now;
+    for (const k in sp) { const s = sp[k]; if (reduce) { s.x = s.t; s.v = 0; continue; } for (let i = 0; i < 3; i++) { s.v += (s.k * (s.t - s.x) - s.c * s.v) * dt / 3; s.x += s.v * dt / 3; } }
+    if (state === 'loading') { loadT += dt; const p = Math.min(1, loadT / 1.5); fill.style.transform = `scaleX(${p * (0.15 + 0.85 * p)})`; }
+    if (state === 'success') checkT += dt;
+    const ckp = state === 'success' ? Math.min(1, Math.max(0, (checkT - 0.18) / 0.4)) : (state === 'reset' ? 1 : 0);
+    ck.style.strokeDashoffset = 24 * Math.pow(1 - ckp, 3);
+    b.style.width = Math.max(56, sp.w.x) + 'px'; b.style.transform = `scale(${sp.sc.x})`;
+    b.style.background = `rgb(${mix(INK, LIME, Math.max(0, Math.min(1, sp.col.x)))})`;
+    l1.style.transform = `translateY(${sp.y1.x * 100}%) translateX(${sp.ar.x * -4}px)`;
+    arrow.style.transform = `translateX(${(sp.ar.x - 1) * 10}px) scaleX(${Math.max(0.001, Math.min(1, sp.ar.x))})`; arrow.style.transformOrigin = 'left center';
+    l2.style.transform = `translateY(${sp.y2.x * 100}%)`; l3.style.transform = `translateY(${sp.y3.x * 100}%)`;
+    uline.style.transform = `translateX(${sp.ux.x}px)`; uline.style.width = Math.max(4, sp.uw.x) + 'px';
+    requestAnimationFrame(frame);
+  }
+  function start() { if (!running && !document.hidden) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', start);
+  let flowToken = 0, hovering = false;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function afterClick() {
+    const my = ++flowToken;
+    go('loading'); await w(1700); if (my !== flowToken) return;
+    go('success'); fill.style.transform = 'scaleX(0)'; await w(1900); if (my !== flowToken) return;
+    go('reset'); await w(900); if (my !== flowToken) return;
+    go(hovering ? 'hover' : 'idle');
+  }
+  b.addEventListener('pointerenter', (e) => { if (!e.isTrusted) return; hovering = true; if (state === 'idle') go('hover'); });
+  b.addEventListener('pointerleave', (e) => { if (!e.isTrusted) return; hovering = false; if (state === 'hover' || state === 'press') go('idle'); });
+  b.addEventListener('pointerdown', () => { if (state === 'idle' || state === 'hover') go('press'); });
+  b.addEventListener('pointerup', () => { if (state === 'press') { sp.sc.t = 1; afterClick(); } });
+  b.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && (state === 'idle' || state === 'hover')) { e.preventDefault(); go('press'); setTimeout(() => { sp.sc.t = 1; afterClick(); }, 140); } });
+  addEventListener('resize', () => { measure(); setStep(stepI); });
+  measure(); sp.w.x = sp.w.t = W1; go('idle'); for (const k of ['ux', 'uw']) sp[k].x = sp[k].t;
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); setStep(stepI); sp.w.x = sp.w.t; sp.ux.x = sp.ux.t; sp.uw.x = sp.uw.t; });
+  if (reduce) { go('success'); checkT = 1; fill.style.transform = 'scaleX(1)'; }
+  start();
+  window.lbApi = { go, afterClick, hardReset() { flowToken++; hovering = false; go('idle'); for (const k in sp) { sp[k].x = sp[k].t; sp[k].v = 0; } fill.style.transform = 'scaleX(0)'; sp.ux.x = sp.ux.t; sp.uw.x = sp.uw.t; }, press(on) { if (on) { go('press'); } else { sp.sc.t = 1; afterClick(); } } };
+})();
+</script>
+<script>
+  (function () {
+    const api = window.lbApi; let run = 0;
+    async function play() {
+      const my = ++run, ok = () => my === run, b = document.getElementById('b'), r = b.getBoundingClientRect();
+      QM.ghostAt(r.right + 160, r.bottom + 120); QM.ghostShow();
+      await QM.ghostTo(r.left + r.width * 0.62, r.top + r.height * 0.62, 900); if (!ok()) return;
+      api.go('hover'); await QM.wait(1000); if (!ok()) return;
+      api.press(true); await QM.wait(240); api.press(false);
+      await QM.ghostTo(r.left + r.width * 0.62 + 70, r.bottom + 90, 800);
+    }
+    QM.demo({ kind: 'play', lead: 600, dur: 8200, hold: 500, reset() { run++; api.hardReset(); }, play });
+  })();
+</script>
+</body>
+</html>

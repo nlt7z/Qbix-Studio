@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en" data-tone="lime">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fitted headline · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-fit-headline",
+  "title": "Fitted headline",
+  "group": "lab",
+  "cat": "brand",
+  "order": 710,
+  "kind": "pointer",
+  "tone": "lime",
+  "line": "fit by measuring · 45 ms rise · lift springs k 220 · c 18",
+  "summary": "One huge word is measured letter by letter until it exactly fills the panel's width, then dropped so its baseline sits just above the bottom edge and the descender is cut by it. The letters rise into view once, from under the floor. After that only the letters near the pointer respond, each lifting on its own spring.",
+  "spec": [
+    ["Fit", "split the word, sum the letters' widths at 100px, scale the size to the column width; re-fit after fonts load and on resize"],
+    ["Floor", "a zero-size probe finds the real baseline; the baseline sits 4% of the size above the bottom edge"],
+    ["Rise", "translateY 110% → 0, 1000 ms cubic-bezier(0.16, 1, 0.3, 1), 45 ms a letter, uncovered by the panel's own edge"],
+    ["Lift", "radius 0.9 × size, lift = −k² × 0.14 × size, spring k 220 · c 18 per letter"],
+    ["Trigger", "pointer inside the panel; the ghost sweeps along the word"]
+  ],
+  "source": ["Qbix studio library · 01-fit-headline", "Qbix studio library/recipes/motion-core.js"],
+  "where": "The sign-off panel of a page: a giant cropped word on lime, the way the footer of qbix.space ends.",
+  "rules": [
+    "Measure, never guess: a vw clamp only approximates the fit.",
+    "The panel's overflow is the mask. Letters are uncovered by the edge, not faded.",
+    "Reduced motion skips the rise and the lift."
+  ],
+  "tags": ["pointer", "type", "spring", "sign-off", "recipe"],
+  "shot": 2800
+}
+</script>
+<style data-code>
+/* Floor word: a giant word that fills the width and sits on the bottom edge */
+.fw-hero { position: relative; overflow: hidden; height: 100svh; display: grid; grid-template-rows: auto 1fr; background: #b8ff00; color: #0c1300; }
+.fw-intro { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px 48px; padding: 28px 32px 0; }
+.fw-intro p { margin: 0; }
+.fw-lede { font: 400 clamp(24px, 3.4vw, 40px)/1.08 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; max-width: 14em; }
+.fw-muted { max-width: 28ch; font-size: 15px; line-height: 1.5; color: rgba(12, 19, 0, 0.66); }
+.fw-floor { position: relative; padding: 0 32px; }
+.fw-word { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; font: 400 22vw/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; white-space: nowrap; color: #0c1300; transform: translateY(var(--sink, 0px)); }
+.fw-word .c { display: inline-block; will-change: transform; }
+.fw-probe { display: inline-block; width: 0; height: 0; }
+</style>
+<style>
+  .qm-stage { padding: 0; display: block; }
+  html:not(.qm-tile) .fw-hero { height: calc(100svh - 46px); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<section class="fw-hero" id="fw-hero">
+  <div class="fw-intro">
+    <p class="fw-lede">Websites, brands and products for founders and small teams.</p>
+    <p class="fw-muted">Forma, Kova, Labs, Dream, Practice, Strata. One studio, one team, one door to open.</p>
+  </div>
+  <div class="fw-floor" id="fw-floor">
+    <h1 class="fw-word" id="fw-word">qbix</h1>
+  </div>
+</section>
+<!-- /code -->
+<div class="qm-ui"><span>Move the pointer along the word</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const word = document.getElementById('fw-word');
+const floor = word.parentElement, hero = floor.parentElement;
+const text = word.textContent.trim();
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* split into letters; each sits in its own inline-block so it can lift alone */
+word.setAttribute('aria-label', text);
+word.textContent = '';
+const chars = [...text].map((ch) => {
+  const s = document.createElement('span'); s.className = 'c'; s.setAttribute('aria-hidden', 'true'); s.textContent = ch; word.appendChild(s); return s;
+});
+const probe = document.createElement('span'); probe.className = 'fw-probe'; word.appendChild(probe);
+
+/* fit: measure the letters at a known size, scale to the column. Splitting drops kerning, so measure the split. */
+function fit(width) {
+  word.style.fontSize = '100px';
+  const w = chars.reduce((a, c) => a + c.getBoundingClientRect().width, 0);
+  const size = (100 * width) / w;
+  word.style.fontSize = size.toFixed(2) + 'px';
+  return size;
+}
+function layout() {
+  const cs = getComputedStyle(floor);
+  const inner = floor.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  word.style.left = cs.paddingLeft; word.style.right = cs.paddingRight;
+  word.style.setProperty('--sink', '0px');
+  const size = fit(inner);
+  /* the probe sits on the baseline: put that a little above the floor, the descender runs off */
+  const base = probe.getBoundingClientRect().bottom;
+  const bottom = hero.getBoundingClientRect().bottom;
+  word.style.setProperty('--sink', bottom - size * 0.04 - base + 'px');
+  floor.style.minHeight = Math.round(size * 0.82) + 'px';
+}
+layout();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+new ResizeObserver(layout).observe(hero);
+
+/* entrance: the letters rise from under the floor, uncovered by the panel's edge */
+function rise() {
+  chars.forEach((c, i) => c.animate([{ transform: 'translateY(110%)' }, { transform: 'none' }], { duration: 1000, delay: 120 + i * 45, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
+}
+if (!RM) rise();
+
+/* after that, one clock lifts only the letters near the pointer, each on its own spring */
+function spring(x, k = 220, c = 18) { return { x, v: 0, t: x, k, c, step(dt) { let s = dt; const n = Math.max(1, Math.ceil(s / 0.008)); s /= n; for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; } } }; }
+const springs = chars.map(() => spring(0));
+const ptr = { x: 0, y: 0, inside: false };
+let centers = [], ready = false;
+function measure() {
+  const hr = hero.getBoundingClientRect();
+  centers = chars.map((c) => { const r = c.getBoundingClientRect(); return { x: r.left + r.width / 2 - hr.left, y: r.top + r.height * 0.6 - hr.top }; });
+}
+function setPointer(cx, cy) { const hr = hero.getBoundingClientRect(); ptr.x = cx - hr.left; ptr.y = cy - hr.top; ptr.inside = cx >= hr.left && cx <= hr.right && cy >= hr.top && cy <= hr.bottom; }
+hero.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') setPointer(e.clientX, e.clientY); });
+hero.addEventListener('pointerleave', () => { ptr.inside = false; });
+setTimeout(() => { measure(); ready = true; }, RM ? 0 : 120 + chars.length * 45 + 1000);
+new ResizeObserver(() => { if (ready) measure(); }).observe(hero);
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min((now - last) / 1000, 1 / 30); last = now;
+  if (ready && !RM) {
+    const size = parseFloat(word.style.fontSize) || 100, radius = size * 0.9;
+    chars.forEach((c, i) => {
+      const s = springs[i];
+      if (ptr.inside && centers[i]) {
+        const d = Math.hypot(ptr.x - centers[i].x, ptr.y - centers[i].y), k = Math.max(0, 1 - d / radius);
+        s.t = -k * k * size * 0.14;
+      } else s.t = 0;
+      s.step(dt);
+      c.style.transform = Math.abs(s.x) < 0.05 ? '' : `translateY(${s.x.toFixed(2)}px)`;
+    });
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+<script>
+  /* the ghost sweeps along the word, near its x-height, and comes back */
+  QM.demo({
+    kind: 'pointer',
+    path(t) {
+      const r = hero.getBoundingClientRect(), s = parseFloat(word.style.fontSize) || 120;
+      return [r.left + r.width * (0.5 + 0.4 * Math.sin(t * 0.7)), r.bottom - s * (0.3 + 0.1 * Math.sin(t * 1.9))];
+    },
+    move(x, y) { setPointer(x, y); },
+    leave() { ptr.inside = false; },
+  });
+</script>
+</body>
+</html>

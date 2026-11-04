@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contour lines · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "contours",
+  "title": "Contour lines",
+  "group": "generative",
+  "cat": "backgrounds",
+  "order": 10,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "18 levels · 240 px hills · 12 fps",
+  "summary": "A topographic map of a slowly changing noise field, drawn on canvas behind a paper chapter's words. The field is sampled on a grid, each level is traced by marching squares, and every fourth level is an index contour, drawn heavier. It is texture, so it stays faint, and it holds still while the page scrolls.",
+  "spec": [
+    ["Field", "noise3(x, y, z) × 0.72 + noise3(2.3x + 11, 2.3y, 1.4z) × 0.28, sampled every 12 px (6 px at the least)"],
+    ["Levels", "18 between −0.9 and 0.9, each traced by marching squares"],
+    ["Index lines", "every fourth level (l % 4 = 2): full alpha, 1.25 px · the rest alpha × 0.55, 0.8 px"],
+    ["Drift", "z = t × 0.05, redrawn 12 times a second"],
+    ["Hills", "240 px across (scale), in css px"],
+    ["Ink", "rgb(18, 20, 23) at alpha 0.12 on the chapter's paper"],
+    ["Density", "1 canvas pixel a css pixel: the lines are soft, so a retina screen adds only cost"],
+    ["Trigger", "drawn the first time it is on screen · paused off screen, in a hidden tab and while the page scrolls · one still frame for reduced motion"]
+  ],
+  "source": [
+    "components/scene/Generative.tsx · Contours, useArt",
+    "components/story/Story.tsx · Chapter (the backdrop), seedOf",
+    "components/scenes/Listing.tsx · MapGen",
+    "lib/noise.ts",
+    "lib/scene/quiet.ts",
+    "app/story.css · .ch-backdrop"
+  ],
+  "where": "Behind every paper chapter of the homepage (pinned with its words and its scene), and as a post's picture: a map card, like a practice site's “Find us”.",
+  "rules": [
+    "Behind words it is alpha 0.12. Alpha 0.5 is only for a map that is the picture (a post), never under type.",
+    "One seed a chapter (a hash of its id), so no two backdrops draw the same land.",
+    "The backdrop sits under everything in the frame (z-index −1, pointer-events none) and is pinned with the words.",
+    "Draw at density 1 and redraw only while seen, in an open tab, with the page at rest, at 12 fps. Reduced motion draws one still frame.",
+    "Ink only, never lime: the screen's one lime is somewhere else."
+  ],
+  "tags": ["canvas", "generative", "backdrop", "paper", "noise", "marching squares"],
+  "deps": ["noise"]
+}
+</script>
+<style data-code>
+/* A generative backdrop — pinned behind a chapter's words and its scene (app/story.css) */
+.ch-frame { position: relative; z-index: 2; height: 100vh; }   /* one screen; its own stacking context, so the backdrop (z-index -1) sits under the words and over the section's ground */
+.ch-backdrop { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.ch-backdrop .gen { display: block; width: 100%; height: 100%; }
+</style>
+<style>
+  /* the stage is one paper chapter: the frame fills it, the words stand on the left */
+  .qm-stage { display: block; padding: 0; --edge: clamp(16px, 4vw, 32px); --ui: 0px; }
+  html:not(.qm-tile) .qm-stage { --ui: 46px; }
+  .qm-stage .ch-frame { position: absolute; inset: 0; height: auto; }
+  .ch-copy {
+    position: absolute; top: 50%; left: var(--edge); translate: 0 -46%;
+    width: clamp(260px, 47vw, 560px); max-width: calc(100% - 2 * var(--edge));
+    display: flex; flex-direction: column; align-items: flex-start;
+    clip-path: inset(-0.3em -0.3em -0.3em -0.3em);
+    transition: clip-path 560ms var(--ease-out-expo);
+    z-index: 3;
+  }
+  .ch-copy.is-off { clip-path: inset(0 0 100% 0); pointer-events: none; }
+  .ch-copy .kicker { margin: 0 0 18px; }
+  .ch-title { margin: 0; font-size: clamp(34px, 3.4vw, 58px); line-height: 1.04; letter-spacing: -0.03em; color: var(--fg); text-wrap: balance; }
+  .ch-lede { margin: 20px 0 0; max-width: 34em; font-size: clamp(16px, 1.2vw, 19px); line-height: 1.6; color: var(--fg2); }
+  .ch-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 30px; }
+  /* a set with no words: what it is, on a plain paper tab so the lines never run through it */
+  .ch-note { z-index: 3; position: absolute; left: var(--edge); bottom: calc(var(--ui) + 20px); margin: 0; display: grid; gap: 8px; padding: 16px 20px 14px; background: var(--ground); clip-path: inset(0 0 100% 0); transition: clip-path 560ms var(--ease-out-expo); }
+  .ch-note.is-on { clip-path: inset(0 0 0 0); }
+  .ch-note b { font-family: var(--font-headline); font-weight: 400; font-size: clamp(22px, 2.4vw, 34px); line-height: 1; letter-spacing: -0.03em; color: var(--fg); text-transform: none; }
+  /* a post whose picture is a map (app/scenes-listing.css), laid out at its own size and zoomed to its box */
+  .post-box { z-index: 3; position: absolute; right: var(--edge); top: 24px; bottom: calc(var(--ui) + 24px); width: min(46%, 560px); display: grid; place-items: center; clip-path: inset(0 0 100% 0); transition: clip-path 560ms var(--ease-out-expo); }
+  .post-box.is-on { clip-path: inset(-2px -2px -2px -2px); }
+  .post-scn { position: relative; flex: none; width: 111px; height: 111px; background: #ffffff; color: #121417; overflow: hidden; font-family: var(--font-sans); line-height: 1.4; }
+  .lst-gen { position: absolute; inset: 0; display: block; }
+  .lst-gen .gen { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+  .lst-map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+  .lst-road { fill: none; stroke: #f4f5f2; stroke-width: 4; stroke-linecap: square; }
+  .lst-road--s { stroke-width: 2.5; }
+  .lst-pin path { fill: #121417; }
+  .lst-pin circle { fill: #f4f5f2; }
+  .lst-label {
+    position: absolute; left: 0; bottom: 0; width: 111px; height: 24px; z-index: 5;
+    display: flex; align-items: center; padding: 0 9px; font-size: 11px; font-weight: 500; white-space: nowrap;
+    background: rgba(255, 255, 255, 0.62); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    -webkit-backdrop-filter: blur(10px) saturate(1.5); backdrop-filter: blur(10px) saturate(1.5);
+  }
+  .qm-ui .is-dim { opacity: 0.4; }
+  @media (prefers-reduced-motion: reduce) { .ch-copy, .ch-note, .post-box { transition: none; } }
+</style>
+</head>
+<body>
+<main class="qm-stage" id="stage">
+<!-- code -->
+<div class="ch-frame">
+  <div class="ch-backdrop"><canvas class="gen" aria-hidden="true"></canvas></div>
+  <!-- the chapter's words and its scene go here -->
+</div>
+<!-- /code -->
+  <div class="ch-copy" id="copy-design">
+    <p class="kicker">Design service · Founders · Launch sites · Brand</p>
+    <h2 class="ch-title">From moodboard to a live domain.</h2>
+    <p class="ch-lede">From moodboard to a live domain. We design it, write the code, and ship it ready for business. Done in one to three weeks.</p>
+    <div class="ch-acts"><button type="button" class="btn btn-solid cut" data-split>Start a brief</button></div>
+  </div>
+  <div class="ch-copy is-off" id="copy-practice">
+    <p class="kicker">Practice Website Refresh · Solo practices · Therapists</p>
+    <h2 class="ch-title">A website that feels as calm as your office.</h2>
+    <p class="ch-lede">A calm, clean website for your practice, rebuilt in one week. Your words, your photos, and it works on any phone.</p>
+    <div class="ch-acts"><button type="button" class="btn btn-solid cut" data-split>See the refresh</button></div>
+  </div>
+  <div class="post-box" id="post-box" aria-hidden="true">
+    <div class="post-scn" id="post-scn">
+      <span class="lst-gen">
+        <canvas class="gen" id="post-gen"></canvas>
+        <svg class="lst-map" viewBox="0 0 111 111">
+          <path class="lst-road" d="M-4 72 L115 47" />
+          <path class="lst-road" d="M36 -4 L50 115" />
+          <path class="lst-road lst-road--s" d="M-4 22 L115 31" />
+          <g class="lst-pin"><path d="M57 63c-5.2-5.8-7.8-9.7-7.8-13a7.8 7.8 0 0 1 15.6 0c0 3.3-2.6 7.2-7.8 13Z" /><circle cx="57" cy="50" r="2.7" /></g>
+        </svg>
+      </span>
+      <span class="lst-label">Find us</span>
+    </div>
+  </div>
+  <p class="ch-note kicker" id="note"><b id="note-b"></b><span id="note-s"></span></p>
+  <div class="qm-ui" id="ui">
+    <span>Set</span>
+    <button data-set="chapter" class="is-on">Chapter backdrop</button>
+    <button data-set="map">Map post</button>
+    <button data-set="bold">Defaults</button>
+    <span class="qm-sep">/</span>
+    <span id="land-k">Land</span>
+    <button data-land="services" class="is-on">Services</button>
+    <button data-land="products">Products</button>
+    <button data-land="about">About</button>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../kit/noise.js"></script>
+<script data-code>
+/* ---- lib/scene/quiet.ts — whether the page is being scrolled right now. The generative drawings
+   hold still while it is, so the scroll keeps every frame (they pick up again once it stops). */
+let lastScroll = -1e9;
+let listening = false;
+function scrolling() {
+  if (!listening) {
+    listening = true;
+    window.addEventListener('scroll', () => (lastScroll = performance.now()), { passive: true });
+  }
+  return performance.now() - lastScroll < 180;
+}
+
+/* ---- components/scene/Generative.tsx · useArt — one canvas, drawn at its own device pixels (or at
+   `density`) the first time it comes on the screen; one that moves is redrawn a few frames a second
+   while it is on the screen, the tab is open and the page isn't being scrolled; a still for reduced motion.
+   paint(g, W, H, k, t): k is canvas pixels per css pixel, t seconds. */
+function art(cv, paint, { moves = false, fps = 24, density, ratio } = {}) {
+  const g = cv.getContext('2d');
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const live = moves && !calm;
+  const t0 = performance.now();
+  let W = 0, H = 0, k = 1, seen = false, raf = 0, last = -1e9, stale = true;
+  const loop = (now) => {
+    raf = 0;
+    if (!seen || document.hidden || !W) return;
+    if (stale || (live && now - last >= 1000 / fps - 2 && !scrolling())) {
+      last = now;
+      stale = false;
+      paint(g, W, H, k, live ? (now - t0) / 1000 : 0);
+    }
+    if (live) raf = requestAnimationFrame(loop);
+  };
+  const wake = () => { if (!raf && seen) raf = requestAnimationFrame(loop); };
+  const again = () => { stale = true; wake(); };
+  const size = (w, h) => {
+    if (w < 2 || h < 2 || (w === W && h === H)) return;
+    W = cv.width = w;
+    H = cv.height = h;
+    k = W / Math.max(1, cv.clientWidth);
+    stale = true;
+    wake();
+  };
+  const ro = new ResizeObserver(([e]) => {
+    const d = e.devicePixelContentBoxSize?.[0];
+    if (density) size(Math.round(e.contentRect.width * density), Math.round(e.contentRect.height * density));
+    // (added for a gallery tile: `ratio` canvas pixels a css pixel as drawn on the screen, whatever the zoom)
+    else if (ratio) { const r = cv.getBoundingClientRect(); size(Math.round(r.width * ratio), Math.round(r.height * ratio)); }
+    else if (d) size(d.inlineSize, d.blockSize);
+    else size(Math.round(e.contentRect.width * devicePixelRatio), Math.round(e.contentRect.height * devicePixelRatio));
+  });
+  try { ro.observe(cv, { box: 'device-pixel-content-box' }); } catch { ro.observe(cv); }
+  const io = new IntersectionObserver(([e]) => { seen = e.isIntersecting; wake(); });
+  io.observe(cv);
+  document.addEventListener('visibilitychange', wake);
+  return {
+    again,
+    stop() {
+      ro.disconnect();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', wake);
+      if (raf) cancelAnimationFrame(raf);
+    },
+  };
+}
+
+const ground = (g, W, H, c) => {
+  if (c) {
+    g.fillStyle = `rgb(${c})`;
+    g.fillRect(0, 0, W, H);
+  } else g.clearRect(0, 0, W, H);
+};
+
+/* ---- Contours: a topographic map of a slowly changing noise field -------------------
+   The field is sampled on a grid and each level traced by marching squares;
+   every fourth level is an index contour, drawn heavier. (lib/noise.ts → QMNoise.noise3) */
+function contours({ seed = 3, ink = '18, 20, 23', bg, alpha = 0.5, levels = 14, scale = 140, speed = 0.04 } = {}) {
+  const n = QMNoise.noise3(seed);
+  return (g, W, H, k, t) => {
+    ground(g, W, H, bg);
+    const cell = Math.max(6, Math.round(12 * k));
+    const cols = Math.ceil(W / cell) + 1, rows = Math.ceil(H / cell) + 1;
+    const f = new Float32Array(cols * rows);
+    const fq = 1 / (scale * k);
+    const z = t * speed;
+    for (let j = 0; j < rows; j++)
+      for (let i = 0; i < cols; i++) {
+        const x = i * cell * fq, y = j * cell * fq;
+        f[j * cols + i] = n(x, y, z) * 0.72 + n(x * 2.3 + 11, y * 2.3, z * 1.4) * 0.28;
+      }
+    const v0 = -0.9, dv = 1.8 / levels;
+    const paths = Array.from({ length: levels }, () => new Path2D());
+    for (let j = 0; j < rows - 1; j++)
+      for (let i = 0; i < cols - 1; i++) {
+        const a = f[j * cols + i], b = f[j * cols + i + 1], c = f[(j + 1) * cols + i + 1], d = f[(j + 1) * cols + i];
+        const lo = Math.min(a, b, c, d), hi = Math.max(a, b, c, d);
+        const l0 = Math.max(0, Math.ceil((lo - v0) / dv - 0.5)), l1 = Math.min(levels - 1, Math.floor((hi - v0) / dv - 0.5));
+        const x0 = i * cell, y0 = j * cell;
+        for (let l = l0; l <= l1; l++) {
+          const v = v0 + (l + 0.5) * dv;
+          const idx = (a > v ? 8 : 0) | (b > v ? 4 : 0) | (c > v ? 2 : 0) | (d > v ? 1 : 0);
+          if (idx === 0 || idx === 15) continue;
+          const T = () => [x0 + (cell * (v - a)) / (b - a), y0];
+          const R = () => [x0 + cell, y0 + (cell * (v - b)) / (c - b)];
+          const B = () => [x0 + (cell * (v - d)) / (c - d), y0 + cell];
+          const L = () => [x0, y0 + (cell * (v - a)) / (d - a)];
+          const seg = (p, q) => {
+            paths[l].moveTo(p[0], p[1]);
+            paths[l].lineTo(q[0], q[1]);
+          };
+          switch (idx) {
+            case 1: case 14: seg(L(), B()); break;
+            case 2: case 13: seg(B(), R()); break;
+            case 3: case 12: seg(L(), R()); break;
+            case 4: case 11: seg(T(), R()); break;
+            case 6: case 9: seg(T(), B()); break;
+            case 7: case 8: seg(T(), L()); break;
+            case 5: seg(T(), L()); seg(B(), R()); break;
+            case 10: seg(T(), R()); seg(L(), B()); break;
+          }
+        }
+      }
+    g.lineJoin = 'round';
+    paths.forEach((p, l) => {
+      const index = l % 4 === 2;
+      g.strokeStyle = `rgba(${ink}, ${index ? alpha : alpha * 0.55})`;
+      g.lineWidth = Math.max(1, k * (index ? 1.25 : 0.8));
+      g.stroke(p);
+    });
+  };
+}
+
+/* ---- Story.tsx — a chapter's own seed, so no two backdrops draw the same land */
+const seedOf = (id = '') => id.split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 9973, 7);
+
+/* Behind a paper chapter's words: faint, drifting, 12 fps at one canvas pixel a css pixel. */
+let backdrop = art(
+  document.querySelector('.ch-backdrop .gen'),
+  contours({ seed: seedOf('services'), alpha: 0.12, levels: 18, scale: 240, speed: 0.05 }),
+  { moves: true, fps: 12, density: 1 },
+);
+</script>
+<script>
+  // --- demo glue: the sets the site really uses, and the land (the chapter's id) ----------------
+  const cv = document.querySelector('.ch-backdrop .gen');
+  const postCv = document.getElementById('post-gen');
+  const $ = (id) => document.getElementById(id);
+  const SETS = {
+    // Story.tsx: the paper chapters' backdrop
+    chapter: { paint: (land) => ({ seed: seedOf(land), alpha: 0.12, levels: 18, scale: 240, speed: 0.05 }), moves: true, fps: 12, density: 1 },
+    // MapGen (components/scenes): a post whose picture is a map. A still (moves is off), bold, hills 46 px across in the drawing's px
+    map: { paint: () => ({ seed: 14, ink: '18, 20, 23', bg: '244, 245, 242', alpha: 0.5, levels: 12, scale: 46 }), moves: false },
+    // Generative.tsx: the component's own defaults (set moving, to see them)
+    bold: { paint: () => ({}), moves: true, fps: 18, title: 'Defaults', sub: 'Seed 3 · 14 levels · hills 140 px · alpha 0.5 · 18 fps' },
+  };
+  let set = 'chapter', land = 'services', post = null;
+  const tile = (s) => (!s.density && QM.tile ? 1 : undefined);   // a gallery tile: one canvas pixel a css pixel
+  function mount() {
+    backdrop.stop();
+    if (post) { post.stop(); post = null; }
+    // the chapter's own backdrop runs behind the post too (the post stands on the chapter, as in the story)
+    const s = SETS[set === 'map' ? 'chapter' : set];
+    backdrop = art(cv, contours(s.paint(land)), { moves: s.moves, fps: s.fps, density: s.density, ratio: tile(s) });
+    if (set === 'map') {
+      const m = SETS.map;
+      post = art(postCv, contours(m.paint()), { moves: m.moves, ratio: tile(m) });
+    }
+    $('copy-design').classList.toggle('is-off', set !== 'chapter');
+    $('copy-practice').classList.toggle('is-off', set !== 'map');
+    $('post-box').classList.toggle('is-on', set === 'map');
+    $('note').classList.toggle('is-on', set === 'bold');
+    if (set === 'bold') { $('note-b').textContent = SETS.bold.title; $('note-s').textContent = SETS.bold.sub; }
+    $('land-k').classList.toggle('is-dim', set !== 'chapter');
+    document.querySelectorAll('[data-land]').forEach((b) => b.classList.toggle('is-dim', set !== 'chapter'));
+  }
+  // the post is laid out at its own size (111 px) and zoomed to its box, as the scenes are
+  const box = $('post-box'), scn = $('post-scn');
+  const fit = () => { const k = Math.min(box.clientWidth / 111, box.clientHeight / 111); if (k > 0) scn.style.setProperty('zoom', String(Math.round(k * 1000) / 1000)); };
+  fit();
+  new ResizeObserver(fit).observe(box);
+  mount();
+  document.querySelectorAll('[data-split]').forEach((b) => QM.split(b, { arrow: true }));
+  const on = (sel, key, fn) => document.querySelectorAll(sel).forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll(sel).forEach((x) => x.classList.toggle('is-on', x === b));
+    fn(b.dataset[key]);
+  }));
+  on('[data-set]', 'set', (v) => { set = v; mount(); });
+  on('[data-land]', 'land', (v) => {
+    land = v;
+    if (set !== 'chapter') { set = 'chapter'; document.querySelectorAll('[data-set]').forEach((x) => x.classList.toggle('is-on', x.dataset.set === 'chapter')); }
+    mount();
+  });
+  QM.demo({ kind: 'loop', restart: mount });
+</script>
+</body>
+</html>

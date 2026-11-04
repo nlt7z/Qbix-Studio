@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accordion panels · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-image-accordion",
+  "title": "Accordion panels",
+  "group": "picks",
+  "cat": "images",
+  "order": 190,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "5 springs · stiffness 190 · damping 17",
+  "summary": "Five panels, one per way to work with Qbix, sit side by side in a strip that never changes width. The hovered one springs open and its neighbours give way by their distance from it, uncovering its number, its name and one line over a fading foot. Each picture is a fixed-size box centred in its panel, so opening a panel admits more of it and nothing is rescaled. Stacks vertically on a phone.",
+  "spec": [
+    ["Springs", "one per panel: stiffness 190, damping 17, semi-implicit Euler, dt capped at 1/30 s"],
+    ["Target", "rest 1 · hovered 0.7 + 4.6 · exp(−(i − focus)² / (2 · 0.78²)), so the neighbours give way by distance"],
+    ["Layout", "flex-grow = max(0.15, x), flex-basis 0, min-width 0: the strip is a fixed width, every pixel one panel takes is paid by the rest"],
+    ["Crop", "each picture sits in one box, 1.15 × the strip's height (640px at most), centred in its panel, object-fit cover"],
+    ["Reveal", "the title at (x − 0.8) / 0.35, the line at (x − 1.5) / 1.8, both clamped to 0..1; the number is always shown"],
+    ["Pointer", "read against the rest layout, floor(p × 5), so the pointer never argues with the panel it opened; leaving the strip returns to rest"],
+    ["Phones", "under 760px the strip stacks, the springs run on height and the foot fades from the left"],
+    ["Reduced motion", "the third panel is open, no spring"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Scene accordion (ix-image-accordion)", "Idea: bencho.dev image-accordion (MIT)"],
+  "where": "The homepage's five ways in: Design service, Brand upgrade, Qbix Labs, Strata and the Practice Website Refresh, each an object render and a line.",
+  "rules": [
+    "The strip is a fixed width: opening one panel is a negotiation, never an expansion.",
+    "min-width: 0 on the panels, or the pictures stop them shrinking and the row overflows.",
+    "Read the pointer against the rest layout, not the layout it has made.",
+    "Hover motion on a landing page only; flat panels, no shadow."
+  ],
+  "tags": ["hover", "spring", "render", "layout", "pointer"],
+  "shot": 3800
+}
+</script>
+<style data-code>
+/* Scene accordion. Idea: bencho.dev image-accordion (MIT).
+   A row of panels that is always the same width. The one under the pointer grows, the others pay. */
+.acc-page { position: fixed; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 24px; padding: 32px clamp(24px, 5vw, 72px); font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.acc-page h1 { max-width: 18em; font-family: var(--font-headline); font-weight: 400; font-size: clamp(28px, calc(18.4px + 2.6vw), 42px); letter-spacing: -0.03em; line-height: 1.15; }
+.acc-strip { display: flex; gap: 8px; min-height: 0; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+/* flex-basis 0 so nothing is reserved before the negotiation; min-width 0 so a picture can't hold a panel open */
+.acc-cell { position: relative; flex: 1 1 0; min-width: 0; min-height: 0; overflow: hidden; background: var(--surface); border-radius: 14px; }
+/* the picture: one fixed box, centred. A wider panel is a wider window onto it. */
+.acc-box { position: absolute; left: 50%; top: 50%; translate: -50% -50%; }
+.acc-box img { display: block; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: var(--pos, 50% 50%); -webkit-user-drag: none; }
+.acc-shade { position: absolute; left: 0; right: 0; bottom: 0; height: 44%; background: linear-gradient(to top, var(--surface) 28%, transparent); pointer-events: none; }
+.acc-lab { position: absolute; left: 20px; bottom: 20px; width: 280px; display: grid; gap: 4px; pointer-events: none; }
+.acc-lab .n { color: var(--fg2); font-variant-numeric: tabular-nums; }
+.acc-lab h2 { font-family: var(--font-sans); font-size: 16px; letter-spacing: -0.01em; font-weight: 500; line-height: 1.35; white-space: nowrap; }
+.acc-lab p { color: var(--fg2); line-height: 1.35; }
+.acc-lab .more { opacity: 0; }
+@media (max-width: 760px) {
+  .acc-page { padding: 20px 16px; gap: 16px; }
+  .acc-strip { flex-direction: column; }
+  .acc-lab { width: auto; right: 16px; left: 16px; bottom: 12px; }
+  .acc-lab .n { display: none; }
+  .acc-shade { height: 100%; background: linear-gradient(to right, var(--surface) 30%, transparent 85%); }
+  .acc-page h1 { font-size: 20px; }
+}
+</style>
+<style>
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Point at a panel</span>
+<main class="qm-stage">
+<!-- code -->
+<div class="acc-page">
+  <h1>Five ways to work with us.</h1>
+  <div class="acc-strip" id="acc">
+    <div class="acc-cell" style="--pos: 50% 55%">
+      <div class="acc-box"><img src="../assets/art/calla.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
+      <div class="acc-lab"><span class="n">01</span><h2>Design service</h2><p class="more">From moodboard to a live domain, in one to three weeks.</p></div>
+    </div>
+    <div class="acc-cell" style="--pos: 50% 50%">
+      <div class="acc-box"><img src="../assets/art/ring.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
+      <div class="acc-lab"><span class="n">02</span><h2>Brand upgrade</h2><p class="more">Your product already runs. We take it from usable to worth sharing.</p></div>
+    </div>
+    <div class="acc-cell" style="--pos: 50% 50%">
+      <div class="acc-box"><img src="../assets/art/cross.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
+      <div class="acc-lab"><span class="n">03</span><h2>Qbix Labs</h2><p class="more">Four products from the studio. Two are live and two are on the way.</p></div>
+    </div>
+    <div class="acc-cell" style="--pos: 50% 50%">
+      <div class="acc-box"><img src="../assets/art/slices.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
+      <div class="acc-lab"><span class="n">04</span><h2>Strata</h2><p class="more">A moodboard in, a working design system out: tokens, components and code.</p></div>
+    </div>
+    <div class="acc-cell" style="--pos: 50% 62%">
+      <div class="acc-box"><img src="../assets/art/bottle.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
+      <div class="acc-lab"><span class="n">05</span><h2>Practice Website Refresh</h2><p class="more">A calm website for your practice, rebuilt in one week.</p></div>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Five grow numbers on five springs. The strip is a fixed width, so opening one panel is a negotiation:
+   the hovered panel asks for a lot, its neighbours give up less the further they are from it. */
+function accordion(strip) {
+  const cells = Array.from(strip.children);
+  const N = cells.length;
+  const K = 190, C = 17;                                      // one spring each
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const grow = cells.map(() => ({ x: 1, v: 0, to: 1 }));
+  const labs = cells.map((c) => ({ more: c.querySelector('.more'), h2: c.querySelector('h2') }));
+  let focus = -1, raf = 0, last = 0;
+  const vertical = () => innerWidth < 760;
+
+  // every picture is the same box, centred in its panel: a wider panel is a wider window
+  function fit() {
+    const r = strip.getBoundingClientRect(), v = vertical();
+    const bh = v ? r.width * 0.8 : r.height, bw = v ? r.width : Math.min(r.height * 1.15, 640);
+    cells.forEach((c) => { const b = c.querySelector('.acc-box'); b.style.width = bw + 'px'; b.style.height = bh + 'px'; });
+  }
+  const aim = () => grow.forEach((g, i) => {
+    g.to = focus < 0 ? 1 : 0.7 + 4.6 * Math.exp(-((i - focus) ** 2) / (2 * 0.78 ** 2));
+  });
+  const clamp01 = (v) => Math.min(1, Math.max(0, v));
+  function paint() {
+    grow.forEach((g, i) => {
+      cells[i].style.flexGrow = Math.max(0.15, g.x).toFixed(3);
+      labs[i].more.style.opacity = clamp01((g.x - 1.5) / 1.8);
+      labs[i].h2.style.opacity = clamp01((g.x - 0.8) / 0.35);
+    });
+  }
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 1 / 30);
+    last = now;
+    let moving = false;
+    grow.forEach((g) => {
+      g.v += (K * (g.to - g.x) - C * g.v) * dt;
+      g.x += g.v * dt;
+      if (Math.abs(g.to - g.x) > 0.001 || Math.abs(g.v) > 0.001) moving = true;
+      else { g.x = g.to; g.v = 0; }
+    });
+    paint();
+    raf = moving ? requestAnimationFrame(frame) : 0;          // parks itself once everything has settled
+  }
+  function set(i) {
+    if (i === focus) return;
+    focus = i;
+    aim();
+    if (still) { grow.forEach((g) => { g.x = g.to; g.v = 0; }); paint(); }
+    else if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
+  }
+  // read against the rest layout, so the pointer never argues with the panel it opened
+  function at(x, y) {
+    const r = strip.getBoundingClientRect();
+    const p = vertical() ? (y - r.top) / r.height : (x - r.left) / r.width;
+    set(Math.max(0, Math.min(N - 1, Math.floor(p * N))));
+  }
+  strip.addEventListener('pointermove', (e) => at(e.clientX, e.clientY));
+  strip.addEventListener('pointerdown', (e) => at(e.clientX, e.clientY));
+  strip.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse' || !e.pointerType) set(-1); });
+
+  new ResizeObserver(fit).observe(strip);
+  fit();
+  paint();
+  if (still) set(2);
+  return { at, leave: () => set(-1) };
+}
+const acc = accordion(document.getElementById('acc'));
+</script>
+<script>
+  /* pointer kind: the ghost walks the strip as the library's own preview does: 1st, 3rd, 5th, 2nd, then out */
+  const strip = document.getElementById('acc');
+  const ease = QM.bezier(0.65, 0, 0.35, 1);
+  function route(steps) {
+    const total = steps.reduce((s, k) => s + k[1] + k[2], 0);
+    return (t) => {
+      let u = (t * 1000) % total, from = steps[steps.length - 1][0]();
+      for (const [p, travel, hold] of steps) {
+        const to = p();
+        if (u < travel) { const k = ease(u / travel); return [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k]; }
+        u -= travel;
+        if (u < hold) return to;
+        u -= hold; from = to;
+      }
+      return from;
+    };
+  }
+  const R = () => strip.getBoundingClientRect();
+  const cellAt = (i) => () => { const r = R(); return innerWidth < 760 ? [r.left + r.width * 0.5, r.top + r.height * (i + 0.5) / 5] : [r.left + r.width * (i + 0.5) / 5, r.top + r.height * 0.5]; };
+  const away = () => { const r = R(); return [r.left - 30, r.top - 40]; };
+  const walk = route([[cellAt(0), 500, 1000], [cellAt(2), 900, 1100], [cellAt(4), 800, 1000], [cellAt(1), 1000, 900], [away, 700, 900]]);
+  QM.demo({
+    kind: 'pointer',
+    path: walk,
+    move(x, y) {
+      if (QM.reduced) return;
+      const r = R();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) acc.at(x, y); else acc.leave();
+    },
+    leave() { if (!QM.reduced) acc.leave(); },
+  });
+</script>
+</body>
+</html>

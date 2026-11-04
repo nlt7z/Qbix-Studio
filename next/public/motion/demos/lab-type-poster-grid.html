@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type lens · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-type-poster-grid",
+  "title": "Type lens",
+  "group": "lab",
+  "cat": "cursor",
+  "order": 640,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "Gaussian field · weight, scale, lens push",
+  "summary": "One letter per cell. A Gaussian distance field from the pointer makes the letters near it heavier and larger, and pushes the ring around it outward like a lens. The nearest cell turns lime.",
+  "spec": [
+    ["Field", "f = exp(−2.4 d²), d = distance to the pointer ÷ half the short side"],
+    ["Weight", "110 → 900 by f, drawn as Geist 400 + a text stroke (the kit ships static weights, not the variable axis)"],
+    ["Scale", "0.72 + 0.8 f"],
+    ["Push", "d · exp(−2.4 d²) · 22% of R, along the line from the pointer: a lens, not a bulge"],
+    ["Follow", "pointer eased 1 − e^(−5 dt)"],
+    ["Idle", "after 2.5 s without input the pointer drifts on a slow Lissajous path"]
+  ],
+  "source": ["Qbix studio library · type-poster-grid"],
+  "where": "A type specimen poster for the Qbix type system: the face and its use come up out of the letters you point at.",
+  "rules": [
+    "One lime cell, the nearest to the pointer. Nothing else is lime.",
+    "Each row starts three letters later, so the alphabet steps along the diagonal.",
+    "Touch devices set touch-action: none so a finger can drive it."
+  ],
+  "tags": ["text", "pointer", "grid", "poster", "specimen"]
+}
+</script>
+<style data-code>
+/* Type poster grid: the grid is positioned absolutely; JS only sets transform, weight and a hot flag */
+.pgrid { position: relative; width: 100%; height: 100%; touch-action: none; user-select: none; }
+.pgrid-c {
+  position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Geist', system-ui, sans-serif; font-weight: 400; line-height: 1; color: var(--fg4);
+  will-change: transform;
+}
+.pgrid-c.is-hot { background: #B8FF00; color: #0c1300; }
+</style>
+<style>
+  .pg { width: 100%; height: calc(100svh - clamp(40px, 9vmin, 96px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; }
+  html:not(.qm-tile) .pg { height: calc(100svh - clamp(40px, 9vmin, 96px) - 46px); }
+  .pg-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+  .pg-row h1 { font-family: var(--font-headline); font-weight: 400; font-size: clamp(30px, 5.4vw, 72px); line-height: 0.95; letter-spacing: -0.03em; }
+  .pg-row p { text-align: right; font-size: 14px; line-height: 1.4; color: var(--fg2); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="pg">
+    <div class="pg-row" style="align-items:center"><span class="kicker">Poster 03</span><span class="tag">Qbix type specimen</span></div>
+<!-- code -->
+<div class="pgrid" data-pgrid="abcdefghijklmnopqrstuvwxyz" aria-hidden="true"></div>
+<!-- /code -->
+    <div class="pg-row"><h1 class="title">Eurostile</h1><p>Headlines, 400<br>Geist for text</p></div>
+  </div>
+  <div class="qm-ui"><span>Move the pointer over the letters</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+function posterGrid(box, { reduce = false } = {}) {
+  const TEXT = box.dataset.pgrid;
+  let W = 0, H = 0, cells = [], cw = 0, ch = 0, R = 1, ox0 = 0, oy0 = 0;
+  let px = 0.62, py = 0.4, tx = 0.62, ty = 0.4, lastInput = -1e9, raf = 0, prev = 0, gt = 0, hot = null;
+
+  function build() {
+    const r = box.getBoundingClientRect();
+    W = r.width; H = r.height; ox0 = r.left; oy0 = r.top;
+    const target = Math.max(34, Math.min(W, H) / 6.2);
+    const cols = Math.max(5, Math.round(W / target));
+    const rows = Math.max(5, Math.round(H / (target * 1.12)));
+    cw = W / cols; ch = H / rows;
+    R = Math.min(W, H) * 0.5;
+    box.innerHTML = '';
+    cells = [];
+    const fsz = Math.min(cw * 1.05, ch * 0.95);
+    for (let r2 = 0; r2 < rows; r2++) for (let c = 0; c < cols; c++) {
+      const el = document.createElement('span');
+      el.className = 'pgrid-c';
+      el.textContent = TEXT[(c + r2 * 3) % TEXT.length];   // each row starts three letters later
+      el.style.cssText = `width:${cw}px;height:${ch}px;font-size:${fsz}px`;
+      box.appendChild(el);
+      cells.push({ el, x: c * cw + cw / 2, y: r2 * ch + ch / 2, fsz, k: '' });
+    }
+  }
+  function render() {
+    const ppx = px * W, ppy = py * H;
+    let best = null, bd = 1e9;
+    for (const c of cells) {
+      const dx = c.x - ppx, dy = c.y - ppy;
+      const dist = Math.hypot(dx, dy);
+      const d = dist / R;
+      const f = Math.exp(-d * d * 2.4);
+      const s = 0.72 + 0.8 * f;
+      const push = d * Math.exp(-d * d * 2.4) * R * 0.22;   // a ring around the pointer is pushed outward
+      const inv = dist > 0.0001 ? 1 / dist : 0;
+      const k = `translate(${(c.x - cw / 2 + dx * inv * push).toFixed(1)}px,${(c.y - ch / 2 + dy * inv * push).toFixed(1)}px) scale(${s.toFixed(3)})`;
+      if (k !== c.k) {
+        c.el.style.transform = k; c.k = k;
+        // weight 110 → 900 as a stroke on Geist 400, and the ink rises with it
+        const stroke = (f * 0.07 * c.fsz).toFixed(2);
+        c.el.style.webkitTextStroke = `${stroke}px currentColor`;
+        c.el.style.color = f > 0.12 ? 'var(--fg)' : f > 0.03 ? 'var(--fg3)' : '';
+      }
+      if (dist < bd) { bd = dist; best = c; }
+    }
+    if (best !== hot) { if (hot) hot.el.classList.remove('is-hot'); if (best) best.el.classList.add('is-hot'); hot = best; if (best) best.el.style.color = ''; }
+  }
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - (prev || now)) / 1000);
+    prev = now;
+    if (now - lastInput > 2500) {
+      gt += dt;
+      tx = 0.5 + 0.36 * Math.sin(gt * 0.55 + 0.6);
+      ty = 0.46 + 0.3 * Math.sin(gt * 0.83);
+    }
+    const e = 1 - Math.exp(-dt * 5);
+    px += (tx - px) * e; py += (ty - py) * e;
+    render();
+  }
+  function aim(clientX, clientY) {
+    lastInput = performance.now();
+    const r = box.getBoundingClientRect();
+    tx = (clientX - r.left) / r.width; ty = (clientY - r.top) / r.height;
+  }
+  window.addEventListener('pointermove', (e) => aim(e.clientX, e.clientY));
+  window.addEventListener('pointerdown', (e) => aim(e.clientX, e.clientY));
+  function start() { if (!raf && !reduce) { prev = 0; raf = requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else start(); });
+  new ResizeObserver(() => { build(); render(); }).observe(box);
+  build(); render(); start();
+  return { aim, idle() { lastInput = -1e9; } };
+}
+</script>
+<script>
+  const pg = posterGrid(document.querySelector('[data-pgrid]'), { reduce: QM.reduced });
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y) => pg.aim(x, y),
+    leave: () => pg.idle(),
+  });
+</script>
+</body>
+</html>

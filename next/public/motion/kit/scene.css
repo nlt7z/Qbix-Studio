@@ -1,0 +1,130 @@
+/* =============================================================================
+   QBIX MOTION — the scenes' drawing kit, from the site's app/scenes.css
+   (unchanged but for this note). A scene is laid out at its own size and
+   zoomed to its box (kit/scene.js → QM.scene), so a 1px line stays a pixel
+   and type stays type. Colours come from the chapter's tone.
+   ============================================================================= */
+.scn-box { position: relative; display: grid; place-items: center; width: 100%; height: 100%; min-width: 0; min-height: 0; contain: inline-size; }
+.scn {
+  position: relative;
+  flex: none;
+  visibility: hidden;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  --lime: #b8ff00;
+  --on-lime: #0c1300;
+  --ink: #121417;
+  --chalk: #f4f5f2;
+}
+.scn.is-ready { visibility: visible; }
+/* Square, like the rest of the site: no rounded corners in the drawings
+   either. Only what is round in the world keeps its curve, by asking for it:
+   the phone (its body and screen) and anything marked .round (a dot, an
+   avatar's head), each with its own --r, never its parent's. */
+@property --r { syntax: '*'; inherits: false; }
+.scn, .scn *, .scn *::before, .scn *::after { border-radius: 0 !important; }
+.scn .round, .scn .phone, .scn .phone-screen, .scn .phone-island { border-radius: var(--r, 0) !important; }
+
+/* Glass: a panel that sits over another, frosted, so what's under it shows
+   through blurred (sharp corners, a hairline edge, a faint top light). */
+.scn .glass {
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+}
+[data-tone='dark'] .scn .glass {
+  background: rgba(30, 32, 36, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 24px 48px -24px rgba(0, 0, 0, 0.85);
+}
+[data-tone='paper'] .scn .glass {
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(18, 20, 23, 0.06), 0 20px 44px -22px rgba(18, 20, 23, 0.28);
+}
+.scn .a { position: absolute; }
+.scn .t { white-space: pre; line-height: 1.2; }
+.scn svg { display: block; overflow: visible; }
+.scn .ico { display: inline-block; vertical-align: -1px; }
+
+/* the page's two tones */
+[data-tone='paper'] .scn {
+  --fg: #121417;
+  --fg2: rgba(18, 20, 23, 0.6);
+  --fg3: rgba(18, 20, 23, 0.38);
+  --fg4: rgba(18, 20, 23, 0.14);
+  --fill: rgba(18, 20, 23, 0.05);
+  --win: #ffffff;
+  --sunk: #eceef0;
+  --line: rgba(18, 20, 23, 0.1);
+  --line2: rgba(18, 20, 23, 0.18);
+  --lift: 0 1px 2px rgba(18, 20, 23, 0.05), 0 18px 40px -18px rgba(18, 20, 23, 0.22);
+}
+[data-tone='dark'] .scn {
+  --fg: #f4f5f2;
+  --fg2: rgba(244, 245, 242, 0.62);
+  --fg3: rgba(244, 245, 242, 0.38);
+  --fg4: rgba(244, 245, 242, 0.14);
+  --fill: rgba(244, 245, 242, 0.06);
+  --win: #131417;
+  --sunk: #1b1d20;
+  --line: rgba(244, 245, 242, 0.09);
+  --line2: rgba(244, 245, 242, 0.16);
+  --lift: 0 24px 48px -20px rgba(0, 0, 0, 0.9);
+}
+
+/* type */
+.scn .f-head { font-family: var(--font-headline); font-weight: 400; letter-spacing: -0.02em; font-synthesis-weight: none; }
+.scn .f-mono { font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; letter-spacing: 0; }
+.scn .f-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg3); }
+.scn .dim { color: var(--fg2); }
+.scn .faint { color: var(--fg3); }
+
+/* a block on a board: white, a hairline */
+.scn .blk { background: var(--win); border: 1px solid var(--line); --r: 6px; overflow: hidden; }
+.scn .sunk { background: var(--sunk); }
+.scn .cap { font-size: 12px; color: var(--fg2); white-space: nowrap; }
+
+/* the browser window */
+.scn .win { background: var(--win); border: 1px solid var(--line2); box-shadow: var(--lift); overflow: hidden; display: flex; flex-direction: column; }
+.scn .win-bar { position: relative; flex: none; height: 36px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-bottom: 1px solid var(--line); }
+.scn .win-dots { display: flex; gap: 6px; }
+.scn .win-dots i { width: 10px; height: 10px; --r: 5px; background: var(--fg4); }
+.scn .win-url { position: absolute; left: 50%; top: 7px; translate: -50% 0; width: 46%; height: 22px; --r: 6px; background: var(--fill); display: flex; align-items: center; justify-content: center; font-size: 11.5px; color: var(--fg2); }
+.scn .win-addr { white-space: pre; }
+.scn .win-body { position: relative; flex: 1; }
+
+/* the phone */
+.scn .phone { background: #0b0c0e; padding: 7px; box-shadow: var(--lift); }
+[data-tone='dark'] .scn .phone { background: #2a2c30; }
+.scn .phone-screen { position: relative; width: 100%; height: 100%; --r: 24px; overflow: hidden; background: var(--win); }
+.scn .phone-status { height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px 0 20px; font-size: 10px; font-weight: 600; }
+.scn .phone-island { width: 54px; height: 16px; --r: 8px; background: #0b0c0e; }
+.scn .phone-bars { display: flex; gap: 2px; align-items: flex-end; }
+.scn .phone-bars i { width: 3px; --r: 1px; background: currentColor; }
+.scn .phone-bars i:nth-child(1) { height: 4px; }
+.scn .phone-bars i:nth-child(2) { height: 6px; }
+.scn .phone-bars i:nth-child(3) { height: 8px; }
+
+/* the pointer and the caret */
+.scn .cursor { z-index: 50; width: 22px; height: 28px; transform-origin: 2px 2px; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.18)); }
+.scn .caret { width: 2px; }
+.scn .caret i { display: block; width: 100%; height: 100%; background: currentColor; animation: scn-blink 1.06s steps(1) infinite; }
+@keyframes scn-blink { 50% { opacity: 0; } }
+
+/* chips and buttons inside the drawings */
+.scn .pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 16px; --r: 18px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.scn .pill--lime { background: var(--lime); color: var(--on-lime); }
+.scn .pill--ink { background: var(--fg); color: var(--win); }
+.scn .pill--line { border: 1px solid var(--line2); color: var(--fg); }
+
+/* the lime "live" tag, its square blinking */
+.scn .live { display: inline-flex; align-items: center; gap: 6px; height: 20px; padding: 0 8px; --r: 4px; background: var(--lime); color: var(--on-lime); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.scn .live::before { content: ''; width: 5px; height: 5px; background: currentColor; animation: scn-blink 1.2s steps(1) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scn .caret i, .scn .live::before { animation: none; }
+}
+

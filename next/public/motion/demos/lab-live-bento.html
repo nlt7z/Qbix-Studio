@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live bento · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-live-bento",
+  "title": "Live bento",
+  "group": "lab",
+  "cat": "data",
+  "order": 20,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "springs · row and column weights · always live",
+  "summary": "A six-cell studio dashboard where every cell is already moving: rolling visit digits, a bar chart of briefs that advances every 2 seconds, a panning object render, a launch countdown, new briefs sliding in. Point at a cell and the weights of its row and column grow on springs, so the whole grid reflows around it.",
+  "spec": [
+    ["Grid", "4 columns × 3 rows (2 × 4 under 640 px), 8px gaps; each column and row has a weight"],
+    ["Hover", "the cell's columns scale to 1.75 (1.35 if it spans two), its rows to 1.6 (1.3)"],
+    ["Spring", "stiffness 170, damping 24 on every weight; cells are placed from the weights each frame"],
+    ["Digits", "a column of 0–9 slid with translateY, 700 ms (0.2, 0.8, 0.2, 1)"],
+    ["Chart", "advances every 2.2 s: the bars shift left a bar over 700 ms, a new one grows in on the right"],
+    ["Briefs", "every 2.9 s a new line unrolls from 0 height while its text slides down out of a sleeve (520 ms)"]
+  ],
+  "source": ["Qbix studio library · live-bento"],
+  "where": "A studio dashboard: visits today, the Lighthouse score, briefs in, days to launch.",
+  "rules": [
+    "The grid never changes cell count; only the weights move.",
+    "Every cell keeps one motion of its own, so the page is alive before anyone points at it.",
+    "One lime cell. The rest are white cells on the paper ground."
+  ],
+  "tags": ["bento", "dashboard", "spring", "hover", "canvas", "studio"],
+  "shot": 3000
+}
+</script>
+<style data-code>
+/* Live bento: a weighted grid, cells placed each frame from spring weights */
+.bento { position: absolute; inset: 0; user-select: none; -webkit-user-select: none; }
+.cell {
+  position: absolute; overflow: hidden;
+  padding: clamp(12px, 1.8vw, 20px);
+  display: flex; flex-direction: column; justify-content: space-between;
+  --cut: 14px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+}
+.cell .lab { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; white-space: nowrap; }
+.cell .big { font-family: 'Eurostile', 'Geist', sans-serif; font-size: clamp(32px, 4.8vw, 62px); line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
+.c-pic { padding: 0; background: #ffffff; }
+.c-pic canvas, .c-chart canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.c-pic .cap { position: absolute; left: clamp(12px, 1.8vw, 20px); bottom: clamp(10px, 1.6vw, 18px); color: #121417; }
+.c-pic .cap b { display: block; font: 400 clamp(22px, 3vw, 38px)/1 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; }
+.c-pic .cap span { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; }
+.c-count { background: #ffffff; color: #121417; }
+.c-rate { background: #B8FF00; color: #0c1300; }
+.c-chart { background: #ffffff; color: #121417; }
+.c-chart .top { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 8px; }
+.c-leads { background: #ffffff; color: #121417; }
+.c-open { background: #ffffff; color: #121417; }
+.roll { display: inline-flex; overflow: hidden; height: 1.05em; line-height: 1.05; }
+.roll .col { display: flex; flex-direction: column; transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.roll .col span, .roll > span { display: block; height: 1.05em; text-align: center; white-space: pre; }
+.feed { margin: 8px 0 0; padding: 0; list-style: none; flex: 1; min-height: 0; overflow: hidden; font-size: clamp(13px, 1.3vw, 15px); }
+.feed li { overflow: hidden; }
+.feed li div { padding: 3px 0 5px; display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; }
+.feed li span { overflow: hidden; text-overflow: ellipsis; }
+.feed li em { flex: none; font: 400 0.82em 'Encode Sans', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
+.quote { font-size: clamp(13px, 1.3vw, 15px); height: 1.35em; overflow: hidden; position: relative; }
+.quote span { display: block; white-space: nowrap; }
+.sub { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; }
+@media (prefers-reduced-motion: reduce) { .roll .col { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .qm-hint { position: absolute; z-index: 5; left: clamp(16px, 3vmin, 28px); bottom: 8px; display: none; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="bento" id="bento">
+  <div class="cell c-pic" data-k="pic"><canvas></canvas><div class="cap"><b>Forma</b><span>forma.studio · Live</span></div></div>
+  <div class="cell c-count" data-k="count"><div class="lab">Visits today</div><div class="big" id="views"></div></div>
+  <div class="cell c-rate" data-k="rate"><div class="lab">Lighthouse score</div><div><div class="big">98</div><div class="quote" id="quote"><span>Performance 99</span></div></div></div>
+  <div class="cell c-chart" data-k="chart"><canvas></canvas><div class="top"><div class="lab">Briefs, last 14 days</div><div class="lab">+18%</div></div></div>
+  <div class="cell c-leads" data-k="leads"><div class="lab">Latest briefs</div><ul class="feed" id="feed"></ul></div>
+  <div class="cell c-open" data-k="open"><div class="lab">Launch in</div><div><div class="big" id="cd" style="font-size:clamp(24px,3.6vw,50px)"></div><div class="sub">Friday · forma.studio</div></div></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Live bento: every cell moves on its own; pointing at one grows its row and column. */
+function liveBento(root) {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const T = {}; root.querySelectorAll('.cell').forEach((t) => { T[t.dataset.k] = t; });
+  const WIDE = { cols: 4, rows: 3, a: { pic: [0, 0, 2, 2], count: [2, 0, 1, 1], rate: [3, 0, 1, 1], chart: [2, 1, 2, 1], leads: [0, 2, 2, 1], open: [2, 2, 2, 1] } };
+  const NARROW = { cols: 2, rows: 4, a: { pic: [0, 0, 2, 1], count: [0, 1, 1, 1], rate: [1, 1, 1, 1], chart: [0, 2, 2, 1], leads: [0, 3, 1, 1], open: [1, 3, 1, 1] } };
+  let L = WIDE, W = 0, H = 0, pad = 16, gap = 8, cw = [], rw = [], cv = [], rv = [], hover = null;
+  function layout() {
+    const r = root.getBoundingClientRect(); W = r.width; H = r.height;
+    const nl = W < 640 ? NARROW : WIDE;
+    if (nl !== L || !cw.length) { L = nl; cw = Array(L.cols).fill(1); rw = Array(L.rows).fill(1); cv = Array(L.cols).fill(0); rv = Array(L.rows).fill(0); }
+    pad = Math.max(12, Math.min(W, H) * 0.04); gap = 8;
+  }
+  function place(dt) {
+    const tc = Array(L.cols).fill(1), tr = Array(L.rows).fill(1);
+    if (hover) {
+      const [c, r, sc, sr] = L.a[hover], fc = sc > 1 ? 1.35 : 1.75, fr = sr > 1 ? 1.3 : 1.6;
+      for (let i = c; i < c + sc; i++) tc[i] = fc;
+      for (let j = r; j < r + sr; j++) tr[j] = fr;
+    }
+    const sp = (arr, vel, tgt) => arr.forEach((v, i) => { if (reduce) { arr[i] = tgt[i]; return; } vel[i] += ((tgt[i] - v) * 170 - vel[i] * 24) * dt; arr[i] += vel[i] * dt; });
+    sp(cw, cv, tc); sp(rw, rv, tr);
+    const aw = W - 2 * pad - gap * (L.cols - 1), ah = H - 2 * pad - gap * (L.rows - 1);
+    const sc = cw.reduce((a, b) => a + b, 0), sr = rw.reduce((a, b) => a + b, 0);
+    const xs = [pad], ys = [pad];
+    cw.forEach((w, i) => xs.push(xs[i] + (w / sc) * aw + gap));
+    rw.forEach((h, i) => ys.push(ys[i] + (h / sr) * ah + gap));
+    for (const k in L.a) {
+      const [c, r, s1, s2] = L.a[k], el = T[k];
+      const x = xs[c], y = ys[r], w = xs[c + s1] - gap - x, h = ys[r + s2] - gap - y;
+      el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.width = w + 'px'; el.style.height = h + 'px';
+      el._r = [x, y, w, h];
+    }
+  }
+  // rolling digits: a column of 0-9 slid up to the digit
+  function roller(el, str) {
+    if (el._str && el._str.length !== str.length) { el.innerHTML = ''; el._cols = null; }
+    if (!el._cols) {
+      el._cols = []; el.classList.add('big', 'roll'); el.innerHTML = '';
+      [...str].forEach((ch) => {
+        if (/\d/.test(ch)) { const c = document.createElement('div'); c.className = 'col'; c.innerHTML = '0123456789'.split('').map((d) => `<span>${d}</span>`).join(''); el.appendChild(c); el._cols.push(c); }
+        else { const s = document.createElement('span'); s.textContent = ch; el.appendChild(s); el._cols.push(null); }
+      });
+    }
+    [...str].forEach((ch, i) => { const c = el._cols[i]; if (c) c.style.transform = `translateY(${-(+ch) * 1.05}em)`; });
+    el._str = str;
+  }
+  let views = 1284;
+  const viewsEl = root.querySelector('#views'), cdEl = root.querySelector('#cd');
+  const fmt = (n) => n.toLocaleString('en-US'), p2 = (n) => String(n).padStart(2, '0');
+  const target = Date.now() + ((2 * 24 + 14) * 3600 + 6 * 60 + 12) * 1000;
+  function tickCd() { let s = Math.max(0, Math.round((target - Date.now()) / 1000)); const d = Math.floor(s / 86400); s -= d * 86400; const h = Math.floor(s / 3600); s -= h * 3600; const m = Math.floor(s / 60); s -= m * 60; roller(cdEl, `${d}d ${p2(h)}:${p2(m)}:${p2(s)}`); }
+  roller(viewsEl, fmt(views)); tickCd();
+
+  // the brief feed: a new line unrolls while its text slides down out of a sleeve
+  const LEADS = ['Ana sent a brief', 'Ben booked a design call', 'Cara asked about a brand upgrade', 'Dev sent a moodboard', 'Eli wants a website refresh', 'Fay approved the homepage'];
+  let ni = 0; const feed = root.querySelector('#feed');
+  function addLead(anim) {
+    const li = document.createElement('li'); li.innerHTML = `<div><span>${LEADS[ni++ % LEADS.length]}</span><em>now</em></div>`;
+    feed.prepend(li);
+    [...feed.children].forEach((l, i) => { l.querySelector('em').textContent = ['now', '1m', '4m', '7m', '11m'][i] || '15m'; });
+    while (feed.children.length > 5) feed.lastElementChild.remove();
+    if (anim && !reduce) {
+      const h = li.offsetHeight, o = { duration: 520, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' };
+      li.animate([{ height: '0px' }, { height: h + 'px' }], o);
+      li.firstElementChild.animate([{ transform: 'translateY(-100%)' }, { transform: 'none' }], { ...o, duration: 560 });
+    }
+  }
+  for (let i = 0; i < 4; i++) addLead(false);
+  // the quote: one line slides out of its sleeve as the next slides in
+  const QUOTES = ['Performance 99', 'Accessibility 100', 'Best practices 100', 'SEO 97'];
+  let qi = 0; const quote = root.querySelector('#quote');
+  function nextQuote() {
+    qi = (qi + 1) % QUOTES.length;
+    const old = quote.firstElementChild, n = document.createElement('span'); n.textContent = QUOTES[qi];
+    if (reduce) { old.textContent = QUOTES[qi]; return; }
+    n.style.cssText = 'position:absolute;left:0;top:0'; quote.appendChild(n);
+    const o = { duration: 600, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'both' };
+    old.animate([{ transform: 'none' }, { transform: 'translateY(-110%)' }], o).onfinish = () => old.remove();
+    n.animate([{ transform: 'translateY(110%)' }, { transform: 'none' }], { ...o, delay: 60 }).onfinish = () => { n.style.position = ''; };
+  }
+
+  // two canvases: a panning object render, and the brief bars
+  const picC = T.pic.querySelector('canvas'), picX = picC.getContext('2d');
+  const chC = T.chart.querySelector('canvas'), chX = chC.getContext('2d');
+  function fit(c) { const r = c.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); const w = Math.round(r.width * d), h = Math.round(r.height * d); if (c.width !== w || c.height !== h) { c.width = w; c.height = h; } return [r.width, r.height, d]; }
+  const pic = new Image(); pic.src = '../assets/art/objects.webp';
+  function drawPic(t) {
+    const [w, h, d] = fit(picC), x = picX; x.setTransform(d, 0, 0, d, 0, 0);
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h);
+    if (!pic.naturalWidth) return;
+    const s = 1.1 + (reduce ? 0 : Math.sin(t * 0.00012) * 0.04), px = reduce ? 0 : Math.sin(t * 0.00009) * w * 0.03;
+    const k = Math.max(w / pic.naturalWidth, h / pic.naturalHeight) * s, iw = pic.naturalWidth * k, ih = pic.naturalHeight * k;
+    x.drawImage(pic, (w - iw) * 0.58 + px, (h - ih) * 0.5, iw, ih);
+  }
+  const bars = Array.from({ length: 15 }, (_, i) => 3 + Math.round(Math.abs(Math.sin(i * 1.7)) * 6 + i * 0.35));
+  let shiftStart = 0;
+  function drawChart(t) {
+    const [w, h, d] = fit(chC), x = chX; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h);
+    const p = Math.max(12, Math.min(w, h) * 0.12), top = Math.max(42, h * 0.34), bw = (w - 2 * p) / 14, mx = 14;
+    const k = reduce ? 1 : Math.min(1, (t - shiftStart) / 700), e = 1 - Math.pow(1 - k, 3);
+    for (let i = 0; i < bars.length; i++) {
+      const xi = p + (i - e) * bw; if (xi < p - bw * 0.9) continue;
+      let bh = (bars[i] / mx) * (h - top - p); if (i === bars.length - 1) bh *= e;
+      if (bh < 1) continue;
+      const first = i === 0;
+      x.fillStyle = i === bars.length - 1 ? '#121417' : 'rgba(18,20,23,0.12)';
+      let bx = xi + bw * 0.18, bwid = bw * 0.64;
+      if (first) { const clip = Math.max(0, p - bx); bx += clip; bwid -= clip; if (bwid <= 0) continue; }   // the oldest bar is cut off at the edge, not faded
+      x.fillRect(bx, h - p - bh, bwid, bh);
+    }
+  }
+  const newBar = () => { bars.shift(); bars.push(3 + Math.round(Math.random() * 9)); shiftStart = performance.now(); };
+
+  const tileAt = (x, y) => {
+    const o = root.getBoundingClientRect(); x -= o.left; y -= o.top;
+    for (const k in L.a) { const [a, b, c, d] = T[k]._r || [0, 0, 0, 0]; if (x >= a && x <= a + c && y >= b && y <= b + d) return k; }
+    return null;
+  };
+  let last = performance.now(), nV = 0, nC = 0, nL = 0, nQ = 0, nB = 0;
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(33, now - last) / 1000; last = now;
+    place(dt);
+    if (now > nV) { views += 1 + Math.floor(Math.random() * 4); roller(viewsEl, fmt(views)); nV = now + (reduce ? 4000 : 1100 + Math.random() * 700); }
+    if (now > nC) { tickCd(); nC = now + 1000; }
+    if (now > nL) { if (nL) addLead(true); nL = now + (reduce ? 8000 : 2900); }
+    if (now > nQ) { if (nQ) nextQuote(); nQ = now + (reduce ? 8000 : 3600); }
+    if (now > nB) { if (nB) newBar(); nB = now + (reduce ? 8000 : 2200); }
+    drawPic(now); drawChart(now);
+  })(last);
+  addEventListener('resize', () => { layout(); place(0); });
+  layout(); place(0);
+  return { point(x, y) { hover = tileAt(x, y); }, clear() { hover = null; }, tileAt, rects: () => { const o = root.getBoundingClientRect(); return Object.fromEntries(Object.entries(T).map(([k, e]) => [k, e._r ? [e._r[0] + o.left, e._r[1] + o.top, e._r[2], e._r[3]] : null])); } };
+}
+const bento = liveBento(document.getElementById('bento'));
+addEventListener('pointermove', (e) => bento.point(e.clientX, e.clientY));
+document.documentElement.addEventListener('mouseleave', () => bento.clear());
+</script>
+<script>
+  /* the ghost visits the cells in turn, easing between them like a hand */
+  const TOUR = ['chart', 'pic', 'open', 'rate', 'leads', 'count', null];
+  let px = innerWidth / 2, py = innerHeight / 2, k = -1, nextAt = 0, ptx = px, pty = py, pvx = 0, pvy = 0, pt = performance.now();
+  QM.demo({
+    kind: 'pointer',
+    path(t) {
+      const now = performance.now(), dt = Math.min(0.033, (now - pt) / 1000); pt = now;
+      if (now > nextAt) { k = (k + 1) % TOUR.length; nextAt = now + (TOUR[k] ? 2300 : 1300); }
+      const R = bento.rects(), r = TOUR[k] && R[TOUR[k]];
+      if (r) { ptx = r[0] + r[2] * 0.55; pty = r[1] + r[3] * 0.55; } else { ptx = innerWidth * 0.5; pty = innerHeight * 0.5; }
+      pvx += (40 * (ptx - px) - 12.6 * pvx) * dt; pvy += (40 * (pty - py) - 12.6 * pvy) * dt;
+      px += pvx * dt; py += pvy * dt;
+      return [px, py];
+    },
+    move(x, y, ghost) { if (ghost) { if (TOUR[k]) bento.point(x, y); else bento.clear(); } },
+    leave() { bento.clear(); },
+  });
+</script>
+</body>
+</html>

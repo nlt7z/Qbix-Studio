@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-ray scan · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-xray-grain",
+  "title": "X-ray scan",
+  "group": "lab",
+  "cat": "cursor",
+  "order": 50,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "two layers · scan band 32% wide · eased 5/s",
+  "summary": "Two drawings of the same page are stacked: the finished home page in ink on paper, and its build underneath on white (a 12 column grid, every box, the spacing redlines, one line of code). A vertical scan band follows the pointer and uncovers the build only inside it.",
+  "spec": [
+    ["Layers", "the page design on paper, the build on white, both drawn once at device size"],
+    ["Band", "32% of the stage, 120 to 380 px, clipped hard at both edges"],
+    ["Edges", "two 2px lime bars mark the band"],
+    ["Follow", "1 − e^(−5 dt)"],
+    ["Idle", "a ghost scans left to right in a slow sine"]
+  ],
+  "source": ["Qbix studio library · xray-grain"],
+  "where": "A Forma case study: the finished home page, shown beside the grid and the spacing under it.",
+  "rules": [
+    "The reveal is a clip, not a feathered mask: the build is uncovered, never faded in.",
+    "Lime is the scan band's two edges and nothing else.",
+    "Both layers share one coordinate system and one list of boxes, so every box sits under its drawing."
+  ],
+  "tags": ["reveal", "canvas", "pointer", "linework"],
+  "shot": 7400
+}
+</script>
+<style data-code>
+.xr { position: absolute; inset: 0; overflow: hidden; }
+.xr canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.xr-copy { position: absolute; left: clamp(20px, 5vw, 56px); bottom: clamp(16px, 4vh, 36px); display: grid; gap: 8px; pointer-events: none; }
+.xr-copy .title { font-size: clamp(24px, 3.6vw, 44px); }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  /* in the detail view the caption keeps clear of the controls bar */
+  html:not(.qm-tile) .xr-copy { bottom: calc(46px + clamp(12px, 3vh, 28px)); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="xr" id="xr">
+  <canvas aria-label="A Forma home page. A scan band reveals the grid, the boxes and the spacing under it."></canvas>
+  <div class="xr-copy"><p class="kicker">Design · the build underneath</p><h2 class="title">Forma, home page</h2></div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Move the pointer left and right to scan</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* X-ray: two layers, one clip. createXray(canvas) -> { to(x) } (css px).
+   Units: 1 = 30px of the real page, so a 48px button is 1.6 tall. y runs up from the foot of the page. */
+function createXray(cv, { reduce = false } = {}) {
+  const g = cv.getContext('2d');
+  const outer = document.createElement('canvas'), inner = document.createElement('canvas');
+  let W = 0, H = 0, k = 1, u = 1, ox = 0, oy = 0, x = 0, tx = 0, first = true;
+  const X = (f) => ox + f * u, Y = (f) => oy - f * u;           // units to css px, y up from the foot of the page
+  const rect = (c, x0, y0, x1, y1) => c.rect(X(x0), Y(y1), (x1 - x0) * u, (y1 - y0) * u);
+  const line = (c, x0, y0, x1, y1) => { c.moveTo(X(x0), Y(y0)); c.lineTo(X(x1), Y(y1)); };
+  const INK = '#121417', WHITE = '#ffffff', PAPER = '#f3f4f5';
+
+  // the page: one list of boxes, [x0, y0, x1, y1], that both layers draw
+  const BOX = {
+    head: [0, 25.6, 24, 28], logo: [1.2, 26.3, 2.2, 27.3], word: [2.5, 26.6, 5.2, 27.0],
+    nav: [[11, 26.5, 12.8, 27.1], [13.6, 26.5, 15.4, 27.1], [16.2, 26.5, 18, 27.1]], btn: [19.8, 26, 22.8, 27.6],
+    kick: [1.2, 23.6, 4.2, 24], h1: [1.2, 16.2, 10.6, 23], para: [[1.2, 15.2, 10.4, 15.55], [1.2, 14.5, 8.6, 14.85]],
+    cta: [1.2, 12, 6.2, 13.6], hero: [12.6, 12, 22.8, 24],
+    cards: [[1.2, 3.6, 7.8, 9.9], [8.7, 3.6, 15.3, 9.9], [16.2, 3.6, 22.8, 9.9]], foot: [0, 0, 24, 2.4],
+  };
+  const HEADLINE = ['Objects', 'made', 'slowly.'], LH1 = 2.27, FS1 = 2.25;
+  const cols = Array.from({ length: 12 }, (_, i) => [1.2 + i * 1.85, 1.2 + i * 1.85 + 1.25]);   // 12 columns, 1.25 wide, 0.6 apart
+
+  function layout() {
+    const mx = Math.max(18, Math.min(W, H) * 0.05), capH = Math.max(70, H * 0.17);
+    u = Math.min((W - 2 * mx) / 29, (H - mx - capH) / 30.5);
+    ox = W * 0.62 - 12 * u; if (ox < mx + 2 * u) ox = mx + 2 * u;
+    ox = Math.min(ox, W - mx - 26 * u);
+    oy = mx + 28.5 * u;
+  }
+  function setup(cnv) { cnv.width = Math.round(W * k); cnv.height = Math.round(H * k); const c = cnv.getContext('2d'); c.setTransform(k, 0, 0, k, 0, 0); c.lineJoin = 'miter'; c.lineCap = 'butt'; return c; }
+  const tooth = (c, a) => { c.fillStyle = a; for (let yy = 6; yy < H; yy += 12) for (let xx = (yy / 12 % 2) * 6 + 3; xx < W; xx += 12) c.fillRect(xx, yy, 1.5, 1.5); };
+  const bar = (c, b, fill) => { c.fillStyle = fill; c.fillRect(X(b[0]), Y(b[3]), (b[2] - b[0]) * u, (b[3] - b[1]) * u); };
+  const hatch = (c, b, alpha) => { c.save(); c.beginPath(); rect(c, ...b); c.clip(); c.beginPath(); for (let y = b[1] + 0.5; y < b[3]; y += 0.5) line(c, b[0], y, b[2], y); c.lineWidth = 1; c.strokeStyle = alpha; c.stroke(); c.restore(); };
+  const disc = (c, cx, cy, r, fill) => { c.fillStyle = fill; c.beginPath(); c.arc(X(cx), Y(cy), r * u, 0, 6.2832); c.fill(); };
+  const headFont = () => `400 ${FS1 * u}px Eurostile, Geist, sans-serif`;
+
+  function drawOuter() {                    // the finished page: ink on white, on paper
+    const c = setup(outer), lw = Math.max(1.5, u * 0.1), B = BOX;
+    c.fillStyle = PAPER; c.fillRect(0, 0, W, H);
+    tooth(c, 'rgba(18,20,23,0.1)');
+    c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = lw;
+    c.beginPath(); rect(c, 0, 0, 24, 28); c.fill(); c.stroke();
+    // header: mark, name, three links, one button
+    bar(c, B.logo, INK); bar(c, B.word, INK);
+    B.nav.forEach((n) => bar(c, n, 'rgba(18,20,23,0.5)'));
+    bar(c, B.btn, INK); bar(c, [20.6, 26.7, 22, 26.9], WHITE);
+    c.beginPath(); line(c, 0, 25.6, 24, 25.6); c.lineWidth = 1; c.strokeStyle = 'rgba(18,20,23,0.3)'; c.stroke();
+    // hero: kicker, headline in Eurostile, two lines of text, the button; a ring object on the right
+    bar(c, B.kick, 'rgba(18,20,23,0.5)');
+    c.fillStyle = INK; c.font = headFont(); c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+    HEADLINE.forEach((t, i) => c.fillText(t, X(B.h1[0]), Y(B.h1[3] - i * LH1 - 1.75)));
+    B.para.forEach((p) => bar(c, p, 'rgba(18,20,23,0.28)'));
+    bar(c, B.cta, INK); bar(c, [2.1, 12.7, 4.6, 12.9], WHITE);
+    c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = lw; c.beginPath(); rect(c, ...B.hero); c.fill(); hatch(c, B.hero, 'rgba(18,20,23,0.2)'); c.beginPath(); rect(c, ...B.hero); c.stroke();
+    disc(c, 17.7, 18, 3.6, INK); disc(c, 17.7, 18, 1.6, WHITE);
+    // three cards: a picture, a name, a price
+    B.cards.forEach((b, i) => {
+      c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = lw; c.beginPath(); rect(c, ...b); c.fill(); c.stroke();
+      const pic = [b[0], 6.3, b[2], b[3]]; hatch(c, pic, 'rgba(18,20,23,0.2)');
+      c.beginPath(); line(c, pic[0], pic[1], pic[2], pic[1]); c.lineWidth = 1; c.strokeStyle = 'rgba(18,20,23,0.3)'; c.stroke();
+      const mx = (b[0] + b[2]) / 2, my = (pic[1] + pic[3]) / 2;
+      if (i === 0) disc(c, mx, my, 1.25, INK);
+      else if (i === 1) bar(c, [mx - 1.2, my - 1.2, mx + 1.2, my + 1.2], INK);
+      else { c.fillStyle = INK; c.beginPath(); c.moveTo(X(mx - 1.4), Y(my - 1.2)); c.lineTo(X(mx + 1.4), Y(my - 1.2)); c.lineTo(X(mx), Y(my + 1.3)); c.closePath(); c.fill(); }
+      bar(c, [b[0] + 0.5, 5.3, b[0] + 4.1, 5.65], INK); bar(c, [b[0] + 0.5, 4.4, b[0] + 2.3, 4.7], 'rgba(18,20,23,0.4)');
+    });
+    // footer: one ink band with its links
+    bar(c, BOX.foot, INK);
+    [[1.2, 3.4], [5, 7.2], [9, 11.2], [18.4, 22.8]].forEach(([a, b]) => bar(c, [a, 1, b, 1.35], 'rgba(255,255,255,0.7)'));
+  }
+
+  function drawInner() {                    // the build: grid, boxes, handles, spacing, a line of code
+    const c = setup(inner), lw = Math.max(2, u * 0.12);
+    c.font = headFont();                                   // the headline box hugs its real text
+    const hw = Math.max(...HEADLINE.map((t) => c.measureText(t).width)) / u;
+    const B = { ...BOX, h1: [BOX.h1[0], BOX.h1[1], BOX.h1[0] + hw, BOX.h1[3]] };
+    c.fillStyle = WHITE; c.fillRect(0, 0, W, H);
+    tooth(c, 'rgba(18,20,23,0.12)');
+    c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); rect(c, 0, 0, 24, 28); c.fill(); c.stroke();
+    c.fillStyle = 'rgba(18,20,23,0.06)'; cols.forEach(([a, b]) => c.fillRect(X(a), Y(28), (b - a) * u, 28 * u));   // the 12 column grid
+    // every box, outlined
+    c.strokeStyle = 'rgba(18,20,23,0.85)'; c.lineWidth = 1; c.beginPath();
+    const list = [B.head, B.logo, B.word, ...B.nav, B.btn, B.kick, B.h1, ...B.para, B.cta, B.hero, ...B.cards, B.foot];
+    list.forEach((b) => rect(c, ...b));
+    B.cards.forEach((b) => { rect(c, b[0], 6.3, b[2], b[3]); rect(c, b[0] + 0.5, 5.3, b[0] + 4.1, 5.65); rect(c, b[0] + 0.5, 4.4, b[0] + 2.3, 4.7); });
+    c.stroke();
+    // handles on the selected boxes
+    const hs = Math.max(4, u * 0.3);
+    [B.h1, B.hero, B.cta].forEach((b) => [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]]].forEach(([hx, hy]) => {
+      c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = 1.2; c.fillRect(X(hx) - hs / 2, Y(hy) - hs / 2, hs, hs); c.strokeRect(X(hx) - hs / 2, Y(hy) - hs / 2, hs, hs);
+    }));
+    // spacing redlines: a measured gap, a bar across it, a tick at each end; the gap itself is tinted
+    const gap = (hz, a, b, at) => {
+      c.fillStyle = 'rgba(18,20,23,0.1)'; c.beginPath();
+      if (hz) rect(c, a, at - 0.5, b, at + 0.5); else rect(c, at - 0.5, a, at + 0.5, b);
+      c.fill();
+      c.strokeStyle = INK; c.lineWidth = lw; c.beginPath();
+      if (hz) { line(c, a, at, b, at); line(c, a, at - 0.4, a, at + 0.4); line(c, b, at - 0.4, b, at + 0.4); }
+      else { line(c, at, a, at, b); line(c, at - 0.4, a, at + 0.4, a); line(c, at - 0.4, b, at + 0.4, b); }
+      c.stroke();
+    };
+    gap(false, 24, 25.6, 0.6); gap(false, 9.9, 12, 0.6); gap(true, 7.8, 8.7, 7); gap(true, 0, 1.2, 19.6); gap(false, 12, 13.6, 6.9);
+    // labels: small ink tags in the voice of the site's tags
+    const fs = Math.max(10, Math.min(12, u * 0.62)); c.font = `500 ${fs}px "Encode Sans", Geist, sans-serif`;
+    if ('letterSpacing' in c) c.letterSpacing = '1px';
+    c.textBaseline = 'alphabetic';
+    const tag = (t, fx, fy) => { const w = c.measureText(t).width; c.fillStyle = INK; c.fillRect(X(fx) - 5, Y(fy) - fs * 1.05, w + 10, fs * 1.6); c.fillStyle = PAPER; c.fillText(t, X(fx), Y(fy)); };
+    tag('48', 1.0, 24.6); tag('64', 1.0, 10.7); tag('24', 8.0, 6.5); tag('36', 0.3, 20.2); tag('48', 7.2, 12.6);
+    tag('H1 66/70', B.h1[2] + 0.45, 20.4); tag('GRID 12', 5.8, 26.6);
+    c.font = `500 ${fs}px "Encode Sans", Geist, sans-serif`;
+    tag('grid-template-columns: repeat(12, 1fr);', 0, -1.2);
+    if ('letterSpacing' in c) c.letterSpacing = '0px';
+  }
+  function paint() {
+    g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(outer, 0, 0);
+    const bw = Math.max(120, Math.min(380, W * 0.32)), x0 = Math.round(x - bw / 2);
+    const a = Math.max(0, x0), b = Math.min(W, x0 + bw); if (b <= a) return;
+    g.drawImage(inner, a * k, 0, (b - a) * k, H * k, a * k, 0, (b - a) * k, H * k);   // uncovered, not faded
+    g.fillStyle = '#B8FF00';
+    if (x0 >= 0) g.fillRect(x0 * k, 0, 2 * k, H * k);
+    if (x0 + bw <= W) g.fillRect((x0 + bw - 2) * k, 0, 2 * k, H * k);
+  }
+  function fit() {
+    W = cv.clientWidth; H = cv.clientHeight; k = Math.min(2, devicePixelRatio || 1);
+    cv.width = Math.round(W * k); cv.height = Math.round(H * k);
+    layout(); drawOuter(); drawInner();
+    if (first) { x = tx = W * 0.6; first = false; }
+    paint();
+  }
+  let prev = 0;
+  function frame(now) { requestAnimationFrame(frame); const dt = Math.min(0.05, (now - (prev || now)) / 1000); prev = now; x += (tx - x) * (reduce ? 1 : 1 - Math.exp(-dt * 5)); paint(); }
+  fit();
+  if (document.fonts) document.fonts.ready.then(fit);
+  new ResizeObserver(() => { if (cv.clientWidth !== W || cv.clientHeight !== H) fit(); }).observe(cv);
+  requestAnimationFrame(frame);
+  return { to(px) { tx = px; } };
+}
+</script>
+<script>
+  const cv = document.querySelector('#xr canvas');
+  const xr = createXray(cv, { reduce: QM.reduced });
+  addEventListener('pointermove', (e) => { const r = cv.getBoundingClientRect(); xr.to(e.clientX - r.left); }, { passive: true });
+  QM.demo({
+    kind: 'pointer',
+    path: (t) => [innerWidth * (0.5 + 0.36 * Math.sin(t * 0.5 - 0.35)), innerHeight * 0.5],
+    move(x) { xr.to(x); },
+    leave() {},
+  });
+</script>
+</body>
+</html>

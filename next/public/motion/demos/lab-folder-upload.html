@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Folder upload · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-folder-upload",
+  "title": "Folder upload",
+  "group": "lab",
+  "cat": "loading",
+  "order": 90,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "flap path recomputed each frame · all springs",
+  "summary": "A folder acts out a moodboard upload. Its front flap is a trapezoid recomputed every frame: it opens as a picture nears, swallows it, chews while the bar fills, and hops when done. Its eyes follow the file the whole way, and everything is driven by springs.",
+  "spec": [
+    ["Flap", "opening o: the top edge rises to −112·cos(0.95 o) and widens by 13% · sin(0.95 o); drawn as a path each frame"],
+    ["Open", "stiffness 260, damping 16; opens fully while a file hovers over the folder, shuts on the swallow"],
+    ["Swallow", "the picture flies to the mouth (260 ms), drops in on a stiffer spring (520), the folder squashes −12% then +6%"],
+    ["Chew", "while uploading, the flap opens and shuts at 9.5 rad/s between 0.08 and 0.24; the body squeezes ±3%"],
+    ["Done", "an upward kick of −520 on the hop spring, eyes turn to ^ ^, the bar clears; 2.6 s later the picture reappears at its home"],
+    ["Eyes", "pupils slide toward the file; a blink every 2.2 to 4.6 s"]
+  ],
+  "source": ["Qbix studio library · folder-upload"],
+  "where": "The drop zone of a Qbix moodboard upload.",
+  "rules": [
+    "Every moving value is a spring with its own stiffness; the story is only a list of targets.",
+    "Flat facets, no radii: the folder has the cut corner on its tab side, a lime flap over an ink back.",
+    "The one lime is the folder's flap; the progress bar is ink on a light tint."
+  ],
+  "tags": ["upload", "svg", "spring", "drag", "character", "moodboard"],
+  "shot": 5200
+}
+</script>
+<style data-code>
+/* Folder upload: an SVG scene, with the copy under it sliding out of sleeves */
+.fu { position: absolute; inset: 0; background: #f3f4f5; color: #121417; }
+.fu svg.fu-s { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.fu-copy { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; }
+.fu-t { font: 400 clamp(26px, 4.6vw, 44px)/1.15 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; height: 1.15em; position: relative; overflow: hidden; }
+.fu-sub { font-size: clamp(14px, 2vw, 16px); color: rgba(18, 20, 23, 0.64); margin-top: 6px; height: 1.4em; line-height: 1.4em; position: relative; overflow: hidden; font-variant-numeric: tabular-nums; }
+.fu-t span, .fu-sub span { position: absolute; left: 0; right: 0; transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.fu .in { transform: translateY(110%); } .fu .out { transform: translateY(-110%); }
+.fu-bar { width: min(220px, 50vw); height: 6px; margin: 14px auto 0; background: rgba(18, 20, 23, 0.14); overflow: hidden; transform: scaleX(0); transform-origin: left; transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1); }
+.fu-bar.is-on { transform: scaleX(1); }
+.fu-bar i { display: block; height: 100%; width: 100%; background: #121417; transform-origin: left; transform: scaleX(0); }
+@media (prefers-reduced-motion: reduce) { .fu-t span, .fu-sub span, .fu-bar { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="fu" id="fu">
+  <svg class="fu-s" id="fu-svg" aria-label="A folder that acts out a file upload">
+    <g id="folder">
+      <path id="back" fill="#121417"/>
+      <rect id="pap1" fill="#d9dce0"/>
+      <rect id="pap2" fill="#ffffff"/>
+      <g id="mid"></g>
+      <path id="flap" fill="#B8FF00"/>
+      <g id="eyes">
+        <g id="eyeL"><rect fill="#ffffff"/><rect fill="#121417"/></g>
+        <g id="eyeR"><rect fill="#ffffff"/><rect fill="#121417"/></g>
+        <path id="happy" fill="none" stroke="#121417" stroke-width="5" stroke-linejoin="miter" stroke-linecap="butt"/>
+      </g>
+    </g>
+    <g id="top">
+      <g id="file">
+        <rect x="-33" y="-42" width="66" height="84" fill="#d3d6da" transform="rotate(-9)"/>
+        <rect x="-33" y="-42" width="66" height="84" fill="#e6e8eb" transform="rotate(6)"/>
+        <rect x="-33" y="-42" width="66" height="84" fill="#ffffff"/>
+        <image href="../assets/art/objects.webp" x="-27" y="-36" width="54" height="46" preserveAspectRatio="xMidYMid slice"/>
+        <rect x="-27" y="18" width="34" height="5" fill="#121417"/>
+        <rect x="-27" y="28" width="22" height="5" fill="rgba(18, 20, 23, 0.24)"/>
+      </g>
+    </g>
+  </svg>
+  <div class="fu-copy" id="fu-copy"><div class="fu-t" id="fu-t"></div><div class="fu-sub" id="fu-sb"></div><div class="fu-bar" id="fu-bar"><i id="fu-fill"></i></div></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Folder upload: a folder with a recomputed flap, eyes that follow the file, and springs for everything. */
+function folderUpload(root) {
+  const $ = (id) => root.querySelector('#' + id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const svg = $('fu-svg'), folder = $('folder'), flap = $('flap'), back = $('back'), mid = $('mid'), topL = $('top'), file = $('file');
+  const eyeL = $('eyeL'), eyeR = $('eyeR'), happy = $('happy'), copy = $('fu-copy'), bar = $('fu-bar'), fillb = $('fu-fill');
+  // the back panel: a tab, with its top right corner cut
+  back.setAttribute('d', 'M-100,-150 L-40,-150 L-30,-138 L86,-138 L100,-124 L100,0 L-100,0 Z');
+  const p1 = $('pap1'), p2 = $('pap2');
+  [[p1, -84, -130, 166, 110, -3], [p2, -80, -124, 162, 110, 2.5]].forEach(([e, x, y, w, h, r]) => { e.setAttribute('x', x); e.setAttribute('y', y); e.setAttribute('width', w); e.setAttribute('height', h); e.setAttribute('transform', `rotate(${r})`); });
+  let W, H, S, CX, BY, home = { x: 0, y: 0 };
+  function resize() {
+    const o = root.getBoundingClientRect(); W = o.width; H = o.height; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    S = Math.max(0.62, Math.min(1.45, Math.min(W / 430, H / 560)));
+    CX = W / 2; BY = H * 0.46 + 40 * S;
+    copy.style.top = BY + 26 * S + 'px';
+    home = { x: Math.min(W - 16 - 62 * S, CX + 150 * S), y: Math.min(H - 16 - 70 * S, BY + 170 * S) };
+    if (W < 520) home = { x: W - 16 - 58 * S, y: Math.min(H - 26 - 56 * S, BY + 190 * S) };
+    if (st === 'idle' && !dragging) { F.x.x = home.x; F.y.x = home.y; }
+  }
+  const spr = (x, k = 170, c = 18) => ({ x, v: 0, t: x, k, c });
+  const step = (s, dt) => { if (reduce) { s.x = s.t; s.v = 0; return; } s.v += (s.k * (s.t - s.x) - s.c * s.v) * dt; s.x += s.v * dt; };
+  const open = spr(0, 260, 16), sq = spr(0, 420, 14), hop = spr(0, 220, 16), lookX = spr(0, 120, 16), lookY = spr(0, 120, 16);
+  const F = { x: spr(0, 300, 30), y: spr(0, 300, 30), s: spr(1, 260, 20), r: spr(0, 200, 18) };
+  let st = 'idle', dragging = false, prog = 0, blinkT = 2, blink = 0, chew = 0, happyOn = 0, clock = 0, seq = 0;
+  function setText(el, txt, quick) {
+    const old = [...el.querySelectorAll('span')];
+    if (old.length && old[old.length - 1].textContent === txt) return;
+    if (quick && old.length) { old[old.length - 1].textContent = txt; return; }
+    const sp = document.createElement('span'); sp.textContent = txt;
+    if (reduce || !old.length) { old.forEach((o) => o.remove()); el.appendChild(sp); return; }
+    sp.className = 'in'; el.appendChild(sp); old.forEach((o) => { o.className = 'out'; setTimeout(() => o.remove(), 650); });
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (sp.className === 'in') sp.className = ''; }));
+  }
+  const say = (a, b, q) => { setText($('fu-t'), a); setText($('fu-sb'), b, q); };
+  const local = (wx, wy) => ({ x: (wx - CX) / S, y: (wy - BY) / S });
+  const overFolder = (x, y) => { const l = local(x, y); return l.x > -130 && l.x < 130 && l.y > -230 && l.y < 30; };
+  const setParent = (p) => { const t = p === 'mid' ? mid : topL; if (file.parentNode !== t) t.appendChild(file); };
+  function flapPath(o) {   // the front flap: a trapezoid whose top edge rises and widens as it opens
+    const th = o * 0.95, c = Math.cos(th), e = 1 + 0.13 * Math.sin(th), ty = -112 * c, hw = 100 * e;
+    return { d: `M-100,0 L100,0 L${hw},${ty} L${-hw},${ty} Z`, ty, e, c };
+  }
+  function render() {
+    const fp = flapPath(Math.max(-0.05, open.x));
+    flap.setAttribute('d', fp.d);
+    const sy = 1 + sq.x, sx = 1 - sq.x * 0.6;
+    folder.setAttribute('transform', `translate(${CX},${BY + hop.x * S}) scale(${S * sx},${S * sy})`);
+    const ey = fp.ty + (0 - fp.ty) * 0.34, ex = 30 * fp.e, ry = 13 * Math.max(0.35, fp.c) * (1 - blink * 0.9), rx = 11;
+    [[eyeL, -ex], [eyeR, ex]].forEach(([g, x]) => {
+      const a = g.children[0], pu = g.children[1], hh = Math.max(1.6, ry * 2), pr = Math.min(11, Math.max(1.5, ry * 0.84));
+      a.setAttribute('x', x - rx); a.setAttribute('y', ey - hh / 2); a.setAttribute('width', rx * 2); a.setAttribute('height', hh);
+      pu.setAttribute('x', x + lookX.x * 4.5 - pr / 2); pu.setAttribute('y', ey + lookY.x * 5 * Math.max(0.4, fp.c) - pr / 2); pu.setAttribute('width', pr); pu.setAttribute('height', pr);
+      g.style.display = happyOn > 0.5 ? 'none' : '';
+    });
+    happy.setAttribute('d', `M${-ex - 9},${ey + 5} L${-ex},${ey - 6} L${-ex + 9},${ey + 5} M${ex - 9},${ey + 5} L${ex},${ey - 6} L${ex + 9},${ey + 5}`);
+    happy.style.display = happyOn > 0.5 ? '' : 'none';   // the eyes swap, they are not faded
+    file.setAttribute('transform', file.parentNode === topL ? `translate(${F.x.x},${F.y.x}) rotate(${F.r.x}) scale(${F.s.x * S})` : `translate(${F.x.x},${F.y.x}) rotate(${F.r.x}) scale(${F.s.x})`);
+  }
+  let last = performance.now();
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    if (CX === undefined) return;   // not laid out yet
+    const dt = Math.min(0.04, (now - last) / 1000); last = now; clock += dt;
+    blinkT -= dt; if (blinkT < 0) { blink = Math.min(1, blink + dt * 14); if (blink >= 1) blinkT = reduce ? 99 : 2.2 + Math.random() * 2.4; } else blink = Math.max(0, blink - dt * 10);
+    if (st === 'upload' && !reduce) { chew += dt; open.t = 0.08 + 0.16 * (0.5 - 0.5 * Math.cos(chew * 9.5)); sq.t = -0.03 * Math.sin(chew * 9.5); }
+    if (st === 'drag' || st === 'hover') { const l = local(F.x.x, F.y.x), d = Math.hypot(l.x, l.y + 110) || 1; lookX.t = l.x / d; lookY.t = (l.y + 110) / d; }
+    else if (st === 'upload') { lookX.t = 0.35 * Math.sin(clock * 1.3); lookY.t = -0.5; }
+    else { lookX.t = 0.25 * Math.sin(clock * 0.7); lookY.t = 0.1; }
+    const n = reduce ? 1 : 3;
+    for (let i = 0; i < n; i++) [open, sq, hop, lookX, lookY, F.x, F.y, F.s, F.r].forEach((s) => step(s, dt / n));
+    render();
+  })(last);
+  const setState = (s) => { st = s; };
+  const idleText = () => say('Drop the moodboard here', 'Drag the pictures onto the folder');
+  function hoverOn(on) {
+    if (on && st === 'drag') { setState('hover'); open.t = 1; sq.t = 0.04; say('Let go to drop', 'The folder is ready'); }
+    else if (!on && st === 'hover') { setState('drag'); open.t = 0; sq.t = 0; idleText(); }
+  }
+  const wait = (ms) => { const my = seq; return new Promise((r, j) => setTimeout(() => (my === seq ? r() : j(0)), reduce ? Math.min(ms, 30) : ms)); };
+  async function swallow(n) {
+    const my = ++seq; setState('swallow'); say('Got it', n + (n === 1 ? ' picture' : ' pictures'));
+    const l = local(F.x.x, F.y.x);
+    setParent('mid'); F.x.x = l.x; F.y.x = l.y; F.s.t = F.s.x;
+    F.x.t = 0; F.y.t = -150; F.s.t = 0.78; F.r.t = 0; open.t = 1.05;
+    try {
+      await wait(260);
+      F.y.k = 520; F.y.t = -46; await wait(240);
+      open.t = 0; sq.t = -0.12; sq.v = -2; await wait(150); sq.t = 0.06; await wait(120); sq.t = 0; F.y.k = 300;
+      setState('upload'); chew = 0; bar.classList.add('is-on');
+      const dur = reduce ? 300 : 2600, t0 = performance.now();
+      for (;;) {
+        const u = Math.min(1, (performance.now() - t0) / dur);
+        prog = u < 1 ? Math.min(0.99, (u * 0.92 + 0.08 * Math.sin(u * Math.PI * 0.5)) * (1 - 0.12 * Math.sin(u * Math.PI * 3) * (1 - u))) : 1;
+        fillb.style.transform = `scaleX(${prog})`;
+        say('Uploading ' + n + (n === 1 ? ' picture' : ' pictures'), Math.round(prog * 100) + '%', prog > 0.011);
+        if (u >= 1) break; await wait(50);
+      }
+      setState('done'); open.t = 0; sq.t = 0; hop.v = -520; hop.t = 0; sq.v = 3;
+      happyOn = 1; bar.classList.remove('is-on'); say(n + (n === 1 ? ' picture' : ' pictures') + ' added', 'Forma moodboard · clay, glaze and light');
+      await wait(2600);
+      happyOn = 0;
+      setParent('top'); F.x.x = home.x; F.y.x = home.y; F.x.t = home.x; F.y.t = home.y; F.s.x = 0.2; F.s.t = 1; F.r.t = 0;   // the picture grows back at its home
+      fillb.style.transform = 'scaleX(0)'; setState('idle'); idleText();
+    } catch (e) { /* cancelled by a newer story */ }
+  }
+  let grab = { dx: 0, dy: 0 }, lastPX = 0;
+  function pickAt(x, y) {
+    if (st !== 'idle') return false;
+    if (Math.hypot(x - F.x.x, y - F.y.x) > 56 * S) return false;
+    dragging = true; setState('drag'); grab = { dx: F.x.x - x, dy: F.y.x - y }; F.s.t = 1.08; lastPX = x; return true;
+  }
+  function moveTo(x, y) {
+    if (!dragging) return;
+    F.x.t = x + grab.dx; F.y.t = y + grab.dy; F.r.t = Math.max(-14, Math.min(14, (x - lastPX) * 0.9)); lastPX = x;
+    hoverOn(overFolder(F.x.t, F.y.t));
+  }
+  function release() {
+    if (!dragging) return; dragging = false; F.r.t = 0;
+    if (st === 'hover') swallow(3); else { setState('idle'); F.x.t = home.x; F.y.t = home.y; F.s.t = 1; open.t = 0; idleText(); }
+  }
+  svg.addEventListener('pointerdown', (e) => { const o = root.getBoundingClientRect(); if (pickAt(e.clientX - o.left, e.clientY - o.top)) svg.setPointerCapture(e.pointerId); });
+  svg.addEventListener('pointermove', (e) => { const o = root.getBoundingClientRect(); moveTo(e.clientX - o.left, e.clientY - o.top); });
+  svg.addEventListener('pointerup', release); svg.addEventListener('pointercancel', release);
+  // real files dropped from the desktop
+  addEventListener('dragover', (e) => { e.preventDefault(); if (st === 'idle') setState('drag'); hoverOn(true); });
+  addEventListener('drop', (e) => { e.preventDefault(); const n = (e.dataTransfer && e.dataTransfer.files.length) || 1; if (st === 'hover' || st === 'drag') { F.x.x = CX; F.y.x = BY - 200 * S; F.s.x = 0.9; swallow(n); } });
+  addEventListener('resize', resize);
+  resize(); idleText(); F.x.x = F.x.t = home.x; F.y.x = F.y.t = home.y;
+  if (reduce) render();
+  const o0 = () => root.getBoundingClientRect();
+  return {
+    // the scripted drag, for a ghost: pick the file up, carry it over the folder, let go
+    state: () => st, home: () => ({ x: home.x + o0().left, y: home.y + o0().top }), mouth: () => ({ x: CX + 10 * S + o0().left, y: BY - 150 * S + o0().top }), S: () => S,
+    pick(x, y) { const o = o0(); return pickAt(x - o.left, y - o.top); }, move(x, y) { const o = o0(); moveTo(x - o.left, y - o.top); }, release, get dragging() { return dragging; },
+  };
+}
+const fu = folderUpload(document.getElementById('fu'));
+</script>
+<script>
+  /* the ghost carries the file to the folder, lets go, and drifts off while it chews */
+  let lastReal = -1e9, gen = 0;
+  ['pointerdown', 'keydown'].forEach((n) => addEventListener(n, (e) => { if (e.isTrusted) { lastReal = performance.now(); gen++; QM.ghostHide(); if (fu.dragging) fu.release(); } }, true));
+  const guard = (g) => { if (g !== gen) throw 0; };
+  async function toss(g) {
+    const h = fu.home(), S = fu.S();
+    QM.ghostShow(); QM.ghostAt(Math.min(innerWidth - 30, h.x + 90), Math.min(innerHeight - 30, h.y + 80));
+    await QM.ghostTo(h.x + 6, h.y + 10, 600); guard(g);
+    fu.pick(h.x + 6, h.y + 10); await QM.wait(200); guard(g);
+    const m = fu.mouth(), t0 = performance.now(), sx = h.x + 6, sy = h.y + 10, tx = m.x, ty = m.y - 20 * S;
+    while (performance.now() - t0 < 1100) { guard(g); const k = Math.min(1, (performance.now() - t0) / 1100), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; const x = sx + (tx - sx) * e, y = sy + (ty - sy) * e - Math.sin(Math.PI * e) * Math.min(60, Math.abs(tx - sx) * 0.25); QM.ghostAt(x, y); fu.move(x, y); await QM.wait(16); }
+    await QM.wait(350); guard(g);
+    fu.release(); await QM.wait(300); guard(g);
+    await QM.ghostTo(Math.min(innerWidth - 30, h.x + 40), Math.min(innerHeight - 30, h.y + 90), 900); guard(g);
+    QM.ghostHide();
+  }
+  async function loop() {
+    for (;;) {
+      await QM.wait(250);
+      if (QM.reduced || document.hidden || performance.now() - lastReal < 2500 || fu.state() !== 'idle' || fu.dragging) continue;
+      const g = gen;
+      try { await toss(g); } catch (e) { if (fu.dragging) fu.release(); }
+    }
+  }
+  QM.demo({ kind: 'loop', restart() {} });
+  loop();
+</script>
+</body>
+</html>

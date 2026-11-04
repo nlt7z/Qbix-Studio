@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rise · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "rise",
+  "title": "Rise",
+  "group": "blocks",
+  "cat": "scroll",
+  "order": 30,
+  "kind": "play",
+  "tone": "paper",
+  "line": "450–1500 ms · expo out · 12–56 px",
+  "summary": "The default entrance. A block comes up from below as it appears, quick off the mark with a long settle. Five speeds trade duration for distance, and a Stagger sets a row of children rising one after another.",
+  "spec": [
+    ["Gesture", "opacity 0 + translateY(y) → rest, one curve for both"],
+    ["Easing", "cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Speeds", "snap 450 ms / 12 px · fast 600 / 20 · base 850 / 32 · slow 1150 / 44 · cinematic 1500 / 56"],
+    ["Stagger", "children 100 ms apart (80 by default), after a 150 ms delayChildren"],
+    ["Footer", "head base · grid base +0.08 s · status fast +0.12 s"],
+    ["Trigger", "in view, once (margin 0 0 −4% 0)"]
+  ],
+  "source": ["components/Reveal.tsx · Reveal, Stagger, RevealItem, SPEEDS", "components/StrataIntro.tsx · pd-outputs-grid"],
+  "where": "Almost every block that is not a headline or a frame: eyebrows, ledes, button rows, the Strata outputs, the footer's head, grid and status.",
+  "rules": [
+    "The fade never travels alone: the distance is the motion. A block that only fades is not qbix. Headlines use Words, frames use media.",
+    "Pick the speed by size: snap for small chrome, base for a block of text, slow and cinematic for a hero or a whole panel.",
+    "Stagger gaps stay between 80 and 100 ms, and the list rises as one gesture, not as separate events.",
+    "Reduced motion drops the offset and the fade: the block is simply there."
+  ],
+  "tags": ["entrance", "stagger", "in view", "speeds"]
+}
+</script>
+<style data-code>
+/* Reveal · rise (components/Reveal.tsx): opacity 0 + y → rest, on an expo-out curve.
+   --dur and --y come from the speed, --at from the delay or the Stagger. */
+.rise {
+  --dur: 850ms;
+  --y: 32px;
+  --at: 0ms;
+  opacity: 0;
+  transform: translateY(var(--y));
+  transition: opacity var(--dur) cubic-bezier(0.16, 1, 0.3, 1) var(--at),
+              transform var(--dur) cubic-bezier(0.16, 1, 0.3, 1) var(--at);
+}
+.rise.is-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .rise { opacity: 1; transform: none; transition: none; }
+}
+</style>
+<style>
+  html:not(.qm-tile) .qm-stage { padding-bottom: 84px; }
+  .rs { width: min(100%, 1120px); display: grid; gap: clamp(26px, 5vmin, 52px); }
+  .rs-head { display: grid; gap: 12px; }
+  .rs .eyebrow { margin: 0; font-family: var(--font-mono); font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: rgba(18, 20, 23, 0.72); }
+  .rs .title { max-width: 11em; font-size: clamp(34px, 5.4vw, 72px); line-height: 1.02; letter-spacing: -0.032em; }
+  /* the panel's one lime: the marker, already drawn */
+  .mk { background: #B8FF00; color: #0c1300; padding: 0.02em 0.14em 0.06em; margin: 0 -0.14em; }
+  .outputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: clamp(18px, 3vw, 40px); }
+  .outputs article { display: grid; align-content: start; gap: 12px; }
+  .outputs .num { font-family: var(--font-headline); font-size: clamp(44px, 6.2vw, 84px); line-height: 0.9; letter-spacing: -0.04em; color: #121417; }
+  .outputs h3 { font-size: clamp(19px, 2.2vw, 26px); letter-spacing: -0.02em; color: #121417; }
+  .outputs p { max-width: 40ch; font-size: clamp(14px, 1.5vw, 17px); line-height: 1.5; letter-spacing: -0.011em; color: rgba(18, 20, 23, 0.78); }
+  .rise.is-reset { transition: none !important; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="rs">
+    <div class="rs-head">
+      <p class="eyebrow">FIG 02 — What you get</p>
+      <h2 class="title">Everything a <span class="mk">system</span> needs.</h2>
+    </div>
+<!-- code -->
+<div class="outputs" data-stagger>
+  <article class="rise">
+    <span class="num">01</span>
+    <h3>Design tokens</h3>
+    <p>Color, type, spacing, and radius as named scales — CSS variables ready to theme.</p>
+  </article>
+  <article class="rise">
+    <span class="num">02</span>
+    <h3>Component library</h3>
+    <p>Buttons, cards, forms, and nav drafted inside your system, not on top of one.</p>
+  </article>
+  <article class="rise">
+    <span class="num">03</span>
+    <h3>Code export</h3>
+    <p>Copy CSS, Tailwind config, or component code straight into the repo.</p>
+  </article>
+  <article class="rise">
+    <span class="num">04</span>
+    <h3>AI handoff</h3>
+    <p>A prompt-ready spec of the whole system, so the model builds in your language.</p>
+  </article>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui" id="ui">
+    <span>Speed</span>
+    <button data-speed="snap">Snap</button>
+    <button data-speed="fast">Fast</button>
+    <button data-speed="base" class="is-on">Base</button>
+    <button data-speed="slow">Slow</button>
+    <button data-speed="cinematic">Cinematic</button>
+    <span class="qm-sep">|</span>
+    <span id="note">850 ms · 32 px</span>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Reveal (components/Reveal.tsx): rise is opacity 0 + y → rest. The speed sets the duration
+   and the distance; Stagger sets each child's delay: `step` apart, after `delayChildren`. */
+const SPEEDS = {            // [duration ms, y px]
+  snap: [450, 12],
+  fast: [600, 20],
+  base: [850, 32],
+  slow: [1150, 44],
+  cinematic: [1500, 56],
+};
+function speed(el, name = 'base') {
+  const [dur, y] = SPEEDS[name];
+  el.style.setProperty('--dur', `${dur}ms`);
+  el.style.setProperty('--y', `${y}px`);
+}
+function stagger(parent, { step = 100, delayChildren = 150 } = {}) {
+  [...parent.children].forEach((child, i) => child.style.setProperty('--at', `${delayChildren + i * step}ms`));
+}
+
+// in view, once (margin 0 0 −4% 0): the parent is watched, its children rise together
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    [...e.target.children].forEach((child) => child.classList.add('is-in'));
+    io.unobserve(e.target);
+  }
+}, { rootMargin: '0px 0px -4% 0px' });
+
+document.querySelectorAll('[data-stagger]').forEach((group) => {
+  stagger(group);
+  [...group.children].forEach((child) => speed(child, 'base'));
+  io.observe(group);
+});
+</script>
+<script>
+  io.disconnect();
+  const group = document.querySelector('[data-stagger]');
+  const items = [...group.children];
+  let name = 'base';
+  const reset = () => {
+    items.forEach((el) => { el.classList.add('is-reset'); el.classList.remove('is-in'); });
+    void group.offsetWidth;
+    items.forEach((el) => el.classList.remove('is-reset'));
+  };
+  const play = () => items.forEach((el) => el.classList.add('is-in'));
+  QM.demo({
+    kind: 'play',
+    lead: 500,
+    hold: 2400,
+    get dur() { return 150 + 100 * (items.length - 1) + SPEEDS[name][0]; },
+    reset,
+    play,
+  });
+  document.querySelectorAll('[data-speed]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-speed]').forEach((x) => x.classList.toggle('is-on', x === b));
+    name = b.dataset.speed;
+    items.forEach((el) => speed(el, name));
+    document.getElementById('note').textContent = `${SPEEDS[name][0]} ms · ${SPEEDS[name][1]} px`;
+    reset();
+    requestAnimationFrame(() => requestAnimationFrame(play));
+  }));
+</script>
+</body>
+</html>

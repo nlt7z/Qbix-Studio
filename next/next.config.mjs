@@ -15,6 +15,9 @@ const nextConfig = {
   async rewrites() {
     return [
       { source: '/samples/:slug', destination: '/samples/:slug/index.html' },
+      // Qbix Motion, the motion library: a static copy in public/motion/, made by the library's
+      // tools/site.py (~/Desktop/qbix/motion). Its index.html sets <base href="/motion/">.
+      { source: '/motion', destination: '/motion/index.html' },
     ];
   },
 

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" data-tone="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App to brand · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<link rel="stylesheet" href="../scenes/scenes.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "kova",
+  "title": "App to brand",
+  "group": "scenes",
+  "cat": "scenes",
+  "order": 20,
+  "kind": "states",
+  "tone": "dark",
+  "n": 3,
+  "line": "3 states · 270vh · scroll",
+  "summary": "Kova, a money app that already works, on a phone, with the studio’s sheet in glass over its corner, its page turned each round. One: the grid’s four numbers draw over the app and everything snaps onto them. Two: the page turns to the tokens and the screen re-renders in them. Three: a k is built on an icon grid, the lime icon comes down, and its mono version slides up into the app’s header.",
+  "spec": [
+    [
+      "States",
+      "3: The grid · Color and type · The mark"
+    ],
+    [
+      "Beats",
+      "0 → 1, beats 0.02 – 0.98: the phone rises, the sheet opens, columns, gutter, baseline and margin draw over the screen, the parts snap on · 1 → 2, 1.00 – 1.83: the sheet turns to ink, chalk and lime, the screen re-renders top to bottom, the balance counts up · 2 → 3, 2.00 – 2.85: the k is built on keylines, the lime icon comes down, the mono icon slides into the header"
+    ],
+    [
+      "Easing",
+      "E.in for what folds away (11), E.move (8), E.out (6), E.soft (5)"
+    ],
+    [
+      "Chapter",
+      "270vh pinned: 110vh, then 80vh a move"
+    ],
+    [
+      "Drawn at",
+      "720 × 640 in its own px, zoomed to its box"
+    ],
+    [
+      "Trigger",
+      "The scroll is the playhead (lib/scene/driver.ts); the shown time chases it, 1 − e^(−6.5 dt)"
+    ]
+  ],
+  "source": [
+    "components/scenes/Kova.tsx · Kova",
+    "app/scenes-kova.css",
+    "components/story/Story.tsx · Chapter",
+    "components/scene/Scene.tsx · Scene",
+    "lib/scene/timeline.ts · Timeline",
+    "lib/scene/driver.ts · playScene"
+  ],
+  "where": "Homepage for AI teams, the Brand upgrade chapter: black, the scene on the left of its words, the three steps listed beside it.",
+  "rules": [
+    "Square, like the site: only the phone itself is round.",
+    "One lime a state, never two on screen: the 24 margin tag (the fix), the lime of the strip (the token), the app icon (the mark). The app stays ink and chalk.",
+    "The sheet is glass over the phone, so the app shows through it, frosted.",
+    "Time is in beats: state k is settled at beat k, each move in the middle of its stretch, so every state holds a while"
+  ],
+  "tags": [
+    "scene",
+    "scroll",
+    "grid",
+    "tokens",
+    "phone",
+    "glass"
+  ],
+  "bundle": {
+    "files": [
+      "components/scenes/Kova.tsx",
+      "app/scenes-kova.css",
+      "app/scenes.css",
+      "components/scene/Scene.tsx",
+      "components/scene/kit.tsx",
+      "lib/scene/timeline.ts",
+      "lib/scene/driver.ts"
+    ]
+  },
+  "shot": 9700
+}
+</script>
+<style>
+  /* demo only: the scene fills the stage at its own proportions; its caption sits in the corner */
+  :root { --pad: clamp(12px, 3vmin, 40px); --bar: 0px; }
+  html:not(.qm-tile) body.has-ui { --bar: 46px; }
+  .qm-stage { padding: var(--pad); place-items: start center; }
+  .qms { width: 100%; height: calc(100svh - 2 * var(--pad) - var(--bar)); display: grid; grid-template-rows: minmax(0, 1fr) 24px; gap: 4px; }
+  .qms-box { min-width: 0; min-height: 0; }
+  .qms-cap { display: flex; align-items: center; gap: 10px; color: var(--fg3); white-space: nowrap; }
+  .qms-cap .qms-n { color: var(--fg); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <section class="qms" id="ch" data-chapter data-tone="dark" data-step="0">
+    <div class="qms-box" id="scene"></div>
+    <p class="kicker qms-cap" id="cap" aria-live="polite"><span class="qms-n">01 / 03</span><span>The grid</span></p>
+  </section>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../scenes/scenes.js"></script>
+<script>
+  /* The real scene (the site's own component, bundled in ../scenes/scenes.js). The site's driver, which plays it
+     with the scroll, is replaced by the harness: it hands the timeline over here. */
+  let STEPS = [["The grid"],["Color and type"],["The mark"]];
+  const n = STEPS.length;
+  let at = 0, step = -1, started = false;
+
+  const section = document.getElementById('ch');
+  const box = document.getElementById('scene');
+  const cap = document.getElementById('cap');
+  const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls, textContent: text });
+  let tl = null, mounted = null;
+  const mount = (props) => {
+    mounted?.unmount();
+    mounted = QMScenes.mount('kova', box, props);
+  };
+
+  function label(s) {
+    step = s;
+    section.dataset.step = String(s);                                       // the chapter's lit step, as the driver sets it
+    section.dispatchEvent(new CustomEvent('scene:step', { detail: s }));
+    const [name, tag] = STEPS[s];
+    cap.replaceChildren(el('span', 'qms-n', `${String(s + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`), el('span', '', name));
+    if (tag) cap.append(el('span', 'tag qms-tag' + (tag === 'Live' ? ' is-live' : ''), tag));
+  }
+  function seek(t) {
+    at = t;
+    if (!tl) return;
+    tl.seek(QM.reduced ? (t > 0 ? Math.max(1, Math.round(t)) : 0) : t);      // reduced motion: a still per state, as the driver
+    const s = Math.max(0, Math.min(n - 1, Math.round(t) - 1));
+    if (s !== step) label(s);
+  }
+
+  window.QMSceneReady = (timeline) => {
+    tl = timeline;
+    step = -1;
+    seek(at);
+    if (started) return;
+    started = true;
+    QM.demo({ kind: 'states', n, seek, dwell: 2600, first: 3000, hold: 3200 });
+  };
+
+  mount();
+</script>
+</body>
+</html>

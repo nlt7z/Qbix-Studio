@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fast scroll · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "fast-scroll",
+  "title": "Fast scroll",
+  "group": "scroll",
+  "cat": "scroll",
+  "order": 70,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "> 2.4 px/ms lands at once · 160 ms settle",
+  "shot": 8200,
+  "summary": "Fast scrolling never outruns the content. While the page is flung, every entrance that triggers lands on its end state at once instead of starting a reveal the visitor has already passed. At a reading pace each reveal plays in full. The same column of word reveals, scrolled slowly and then flung, with the speed it is judged by.",
+  "spec": [
+    ["Speed", "per scroll event: speed = 0.6 × speed + 0.4 × (|Δy| ÷ max(1, Δt)), in px per ms"],
+    ["Fast", "speed above 2.4 px/ms (≈ 2,400 px/s): a fling, not a read"],
+    ["Settle", "160 ms without a scroll event: speed 0, fast off"],
+    ["While fast", "every entrance that triggers lands on its end state at once (framer-motion's skipAnimations)"],
+    ["Already running", "an animation that has started finishes normally"],
+    ["Reading pace", "every reveal plays in full: 0.6–1.2 s"],
+    ["Mirror", "html[data-fast-scroll] while fast, for CSS that wants it"],
+    ["Not touched", "scroll-scrubbed motion: it is tied to position, so it completes when its stretch of page is reached"],
+    ["Reduced motion", "off: the reveals are still anyway"]
+  ],
+  "source": ["components/FastScroll.tsx · FAST, SETTLE_MS", "components/Reveal.tsx · Words (the reveals it gates)"],
+  "where": "Every page: it is mounted once with the layout and gates every entrance (Words, Reveal, Marker) on the site.",
+  "rules": [
+    "The gate is on the start of an entrance, not on its length: a fling skips what has not begun, never cuts what has.",
+    "No timers on the content: a reveal that lands at once is the end state, not a faster animation.",
+    "A page at rest or at reading pace behaves as if this were not here.",
+    "Keep the threshold in px per ms and the settle short: a flick that stops must give the reveals back within a blink."
+  ],
+  "tags": ["scroll", "speed", "entrance", "skip", "global"],
+  "deps": []
+}
+</script>
+<style data-code>
+/* The reveals it gates — a masked word reveal (components/Reveal.tsx · Words), as in the Word reveal piece */
+.words .w-sleeve { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.14em; margin-bottom: -0.14em; }
+.words .w-word {
+  display: inline-block; white-space: pre;
+  transform: translateY(115%);
+  transition: transform var(--w-dur, 850ms) cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--w-at, 0ms);
+}
+.words.is-in .w-word { transform: translateY(0); }
+/* an entrance that triggered while the page was flung: its end state, at once */
+.words.is-instant .w-word { transition: none; }
+@media (prefers-reduced-motion: reduce) { .words .w-word { transform: none; transition: none; } }
+</style>
+<style>
+  .fs-col { padding: 14vh clamp(24px, 5vw, 64px) 30vh; }
+  .fs-block { min-height: 60vh; display: flex; flex-direction: column; justify-content: center; gap: 18px; max-width: min(50vw, 680px); }
+  .fs-block .title { font-size: clamp(32px, 4.4vw, 62px); }
+  .words.is-reset .w-word { transition: none; }
+  /* the readout */
+  .hud { position: fixed; z-index: 30; right: clamp(16px, 3vw, 40px); top: 50%; translate: 0 -50%; width: min(40vw, 380px); padding: 18px 20px 20px; display: grid; gap: 16px; background: #ffffff; color: var(--fg); }
+  .hud-top { display: flex; justify-content: space-between; align-items: center; }
+  .hud-state { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); box-shadow: inset 0 0 0 1px currentColor; }
+  .hud-state.is-fast { background: #121417; color: #f3f4f5; box-shadow: none; }
+  .hud-big b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: clamp(40px, 5vw, 64px); line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .hud-big .kicker { display: block; margin-top: 8px; font-size: 11px; }
+  .gauge { position: relative; height: 8px; margin-top: 18px; background: var(--fg4); }
+  .gauge-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #121417; transform-origin: left; transform: scaleX(0); }
+  .gauge.is-fast .gauge-fill { background: #B8FF00; box-shadow: inset 0 0 0 2px #121417; }   /* lime with an ink edge, so it reads on the light track */
+  .gauge-th { position: absolute; top: -8px; bottom: -8px; left: 24%; width: 3px; margin-left: -1px; background: #121417; }
+  .gauge-peak { position: absolute; top: 0; bottom: 0; width: 3px; background: #121417; opacity: 0; }
+  .gauge-lbl { position: absolute; left: 24%; top: 17px; translate: -50% 0; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); white-space: nowrap; }
+  .hud-counts { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; }
+  .hud-counts b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: clamp(26px, 3vw, 36px); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hud-counts .kicker { display: block; margin-top: 6px; font-size: 10.5px; letter-spacing: 0.08em; white-space: nowrap; }
+  .hud-attr { margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 12px; color: var(--fg2); }
+  .hud-attr code { font-family: var(--font-mono); letter-spacing: 0; color: var(--fg); }
+  .hud-attr b { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+  @media (max-width: 720px) { .hud { width: calc(100vw - 32px); right: 16px; top: auto; bottom: 64px; translate: none; } .fs-block { max-width: none; } }
+  html.qm-tile .hud { padding: 14px 16px 16px; gap: 10px; width: min(44vw, 360px); }
+  html.qm-tile .hud-counts b { font-size: 26px; }
+</style>
+</head>
+<body>
+<main>
+<!-- code -->
+<div class="fs-col">
+  <section class="fs-block"><p class="kicker">Design service</p><h2 class="title words" data-words>From moodboard to a live domain.</h2></section>
+  <section class="fs-block"><p class="kicker">Brand upgrade</p><h2 class="title words" data-words>From usable to worth sharing.</h2></section>
+  <section class="fs-block"><p class="kicker">Qbix Labs</p><h2 class="title words" data-words>Things we’ve shipped.</h2></section>
+  <section class="fs-block"><p class="kicker">Strata</p><h2 class="title words" data-words>One image in. A working system out.</h2></section>
+  <section class="fs-block"><p class="kicker">Practice Website Refresh</p><h2 class="title words" data-words>A website that feels as calm as your office.</h2></section>
+  <section class="fs-block"><p class="kicker">About us</p><h2 class="title words" data-words>Our story is simple.</h2></section>
+  <section class="fs-block"><p class="kicker">Offer</p><h2 class="title words" data-words>What you get</h2></section>
+  <section class="fs-block"><p class="kicker">Offer</p><h2 class="title words" data-words>How it works</h2></section>
+  <section class="fs-block"><p class="kicker">Offer</p><h2 class="title words" data-words>Price</h2></section>
+  <section class="fs-block"><p class="kicker">Offer</p><h2 class="title words" data-words>Questions</h2></section>
+  <section class="fs-block"><p class="kicker">Studio</p><h2 class="title words" data-words>Things we build.</h2></section>
+  <section class="fs-block"><p class="kicker">Contact</p><h2 class="title words" data-words>Bring the idea. We’ll build the thing.</h2></section>
+</div>
+<!-- /code -->
+</main>
+
+<aside class="hud" data-tone="paper" aria-label="The scroll speed, measured">
+  <div class="hud-top"><span class="kicker">Scroll speed</span><span class="hud-state" id="state">Reading</span></div>
+  <div>
+    <div class="hud-big"><b id="speed">0</b><span class="kicker">px/s now</span></div>
+    <div class="gauge" id="gauge"><i class="gauge-fill" id="fill"></i><i class="gauge-peak" id="peak"></i><i class="gauge-th"></i><span class="gauge-lbl">Threshold 2.4 px/ms</span></div>
+  </div>
+  <div class="hud-counts">
+    <div><b id="c-full">0</b><span class="kicker">Played in full</span></div>
+    <div><b id="c-skip">0</b><span class="kicker">Landed at once</span></div>
+    <div><b id="c-peak">0</b><span class="kicker">Peak px/s</span></div>
+  </div>
+  <p class="hud-attr"><code>html[data-fast-scroll]</code><b id="attr">off</b></p>
+</aside>
+<div class="qm-ui">
+  <span>Column</span>
+  <button data-do="auto" class="is-on">Auto: read, then fling</button>
+  <button data-do="reset">Reset</button>
+  <span class="qm-hint">or scroll it yourself, slowly and then fast</span>
+</div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Split a heading into sleeved words (the Word reveal piece), and reveal each when it comes into view, once. */
+function words(el, { duration = 850, step = 50 } = {}) {
+  const text = el.textContent.trim();
+  const parts = text.split(' ');
+  el.setAttribute('aria-label', text);
+  el.textContent = '';
+  el.style.setProperty('--w-dur', `${duration}ms`);
+  parts.forEach((w, i) => {
+    const sleeve = document.createElement('span');
+    sleeve.className = 'w-sleeve';
+    sleeve.setAttribute('aria-hidden', 'true');
+    const word = document.createElement('span');
+    word.className = 'w-word';
+    word.textContent = i < parts.length - 1 ? `${w} ` : w;
+    word.style.setProperty('--w-at', `${i * step}ms`);
+    sleeve.appendChild(word);
+    el.appendChild(sleeve);
+  });
+}
+
+const root = document.documentElement;
+const reveal = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    // framer's skipAnimations, for this reveal: an entrance that triggers while the page is flung lands on its end state at once
+    if (root.hasAttribute('data-fast-scroll')) e.target.classList.add('is-instant');
+    e.target.classList.add('is-in');
+    reveal.unobserve(e.target);
+  }
+}, { rootMargin: '0px 0px -4% 0px' });
+document.querySelectorAll('[data-words]').forEach((el) => { words(el); reveal.observe(el); });
+
+/* Fast scrolling never outruns the content — components/FastScroll.tsx. While the page is being flung (smoothed scroll
+   speed above FAST px/ms), entrances that trigger land on their end state at once instead of starting a reveal the
+   visitor has already scrolled past. Animations already running finish normally, and at a normal reading pace every
+   reveal plays in full. Scroll-scrubbed motion is untouched: it is tied to position. Also mirrors the state on
+   <html data-fast-scroll> for CSS that wants it. */
+const FAST = 2.4;        // px per ms ≈ 2400 px/s: a fling, not a read
+const SETTLE_MS = 160;
+function fastScroll() {
+  const state = { speed: 0, fast: false };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return state;
+  let lastY = window.scrollY, lastT = performance.now(), settle = 0;
+  const set = (fast) => {
+    if (state.fast === fast) return;
+    state.fast = fast;
+    root.toggleAttribute('data-fast-scroll', fast);
+  };
+  window.addEventListener('scroll', () => {
+    const t = performance.now(), y = window.scrollY;
+    const instant = Math.abs(y - lastY) / Math.max(1, t - lastT);
+    state.speed = state.speed * 0.6 + instant * 0.4;
+    lastY = y;
+    lastT = t;
+    set(state.speed > FAST);
+    window.clearTimeout(settle);
+    settle = window.setTimeout(() => { state.speed = 0; set(false); }, SETTLE_MS);
+  }, { passive: true });
+  return state;
+}
+const gate = fastScroll();
+</script>
+<script>
+  /* ---- the readout ---- */
+  const $ = (id) => document.getElementById(id);
+  const GAUGE_MAX = 10000;              // px/s at the end of the gauge; the threshold (2,400) stands a quarter of the way
+  let peak = 0, peakAt = 0;
+  function hud() {
+    requestAnimationFrame(hud);
+    const pxs = gate.speed * 1000;
+    if (pxs > peak) { peak = pxs; peakAt = performance.now(); }
+    const fast = gate.fast;
+    $('speed').textContent = Math.round(pxs).toLocaleString('en-US');
+    $('fill').style.transform = `scaleX(${Math.min(1, pxs / GAUGE_MAX).toFixed(4)})`;
+    $('gauge').classList.toggle('is-fast', fast);
+    $('state').textContent = fast ? 'Flung' : 'Reading';
+    $('state').classList.toggle('is-fast', fast);
+    $('attr').textContent = root.hasAttribute('data-fast-scroll') ? 'on' : 'off';
+    // the fastest the page has gone since the last reset stays on the gauge
+    const pk = $('peak');
+    pk.style.opacity = peak > 0 ? '0.9' : '0';
+    pk.style.left = `calc(${Math.min(1, peak / GAUGE_MAX) * 100}% - 3px)`;
+    $('c-full').textContent = document.querySelectorAll('.words.is-in:not(.is-instant)').length;
+    $('c-skip').textContent = document.querySelectorAll('.words.is-instant').length;
+    $('c-peak').textContent = Math.round(peak).toLocaleString('en-US');
+  }
+  requestAnimationFrame(hud);
+
+  /* ---- the column, re-armed: every reveal waiting again (no transition back), then watched again ---- */
+  const wait = QM.wait;
+  async function rearm() {
+    const els = Array.from(document.querySelectorAll('.words'));
+    els.forEach((el) => { reveal.unobserve(el); el.classList.add('is-reset'); el.classList.remove('is-in', 'is-instant'); });
+    void document.body.offsetWidth;
+    els.forEach((el) => el.classList.remove('is-reset'));
+    // a jump to the top reads as a fling to the gate: let it settle before the reveals are watched again
+    if (window.scrollY > 4) { window.scrollTo(0, 0); await wait(450); }
+    peak = 0;
+    els.forEach((el) => reveal.observe(el));
+  }
+
+  /* ---- the run: a read, then a fling, then back up at a reading pace. Each a scroll over the time given ---- */
+  const maxY = () => Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  let token = 0, auto = false;
+  function glide(to, ms, my, ease) {
+    return new Promise((res) => {
+      const from = window.scrollY, t0 = performance.now();
+      const step = (now) => {
+        if (my !== token) return res(false);
+        const p = Math.min(1, (now - t0) / ms), k = ease(p);
+        window.scrollTo(0, from + (to - from) * k);
+        if (p < 1) requestAnimationFrame(step); else res(true);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+  async function run(my) {
+    for (;;) {
+      await rearm(); if (my !== token) return;
+      await wait(900); if (my !== token) return;
+      // a reading pace: about two screens in four seconds (a few hundred px/s)
+      if (!(await glide(window.innerHeight * 2.3, 4300, my, QM.easeInOut))) return;
+      await wait(500); if (my !== token) return;
+      // flung: the rest of the column in well under a second
+      if (!(await glide(maxY(), 650, my, QM.easeInOut))) return;
+      await wait(2700); if (my !== token) return;
+      // back up, gently: every reveal has played, so nothing triggers on the way
+      if (!(await glide(0, 3400, my, (p) => QM.smooth(0, 1, p)))) return;
+      await wait(300); if (my !== token) return;
+    }
+  }
+  const setUi = (k) => document.querySelectorAll('[data-do]').forEach((b) => b.classList.toggle('is-on', b.dataset.do === k));
+  const start = () => { auto = true; setUi('auto'); run(++token); };
+  const stop = () => { if (!auto) return; auto = false; token++; setUi(null); };
+
+  // the viewer takes over: their own wheel, keys or touch
+  window.addEventListener('wheel', stop, { passive: true });
+  window.addEventListener('keydown', stop);
+  window.addEventListener('touchstart', stop, { passive: true });
+  document.querySelectorAll('[data-do]').forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.do === 'auto') { token++; start(); }
+    else { token++; auto = false; setUi(null); rearm(); }
+  }));
+
+  QM.demo({
+    kind: 'loop',
+    restart() { token++; start(); },
+  });
+  document.fonts.ready.then(() => setTimeout(start, 250));
+</script>
+</body>
+</html>

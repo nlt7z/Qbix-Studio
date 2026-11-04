@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Juggler · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-juggler",
+  "title": "Juggler",
+  "group": "lab",
+  "cat": "cursor",
+  "order": 50,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "3-ball cascade · knock one out · hands pick it up",
+  "summary": "A three-ball cascade is scheduled on a beat: balls follow parabolas between two hands, and each hand catches along an ellipse, sinks, pulls in and throws. A fast pointer swipe knocks a ball down; when it settles on the floor it is thrown back to the next free catch point.",
+  "spec": [
+    ["Beat", "b = 0.34 s; a throw flies 1.8 beats, a hand holds 1.2 beats"],
+    ["Hands", "an ellipse between 0.09 and 0.25 of the scene; the catch takes 0.8 of a beat, the throw the rest"],
+    ["Flight", "p(t) = p0 + v0 t + ½ g t², with v0 solved so the ball lands in the hand at the catch time; g set so the apex clears the title"],
+    ["Knock", "pointer speed over 260 px/s within 22 px of a ball sets it free (restitution 0.5, floor friction 0.25 a second)"],
+    ["Recovery", "after 0.45 s at rest it is lobbed to the next empty catch slot, its apex solved for that slot"],
+    ["Trail", "the arc of each throw drawn as dots"]
+  ],
+  "source": ["Qbix studio library · juggler"],
+  "where": "A Design service section: design, code and launch in the air at once, never dropped.",
+  "rules": [
+    "Everything on the beat is a function of time, never of a keyframe: a knocked ball can rejoin at any moment.",
+    "Hands and balls are flat shapes: one ink ball, one white, one lime, each ringed in ink; the hands are a light tint.",
+    "The arc is dotted, in the site's dotted-pad language, never a stroke."
+  ],
+  "tags": ["canvas", "physics", "pointer", "character", "loop"],
+  "shot": 2200
+}
+</script>
+<style data-code>
+/* Juggler: one canvas, the page only frames it */
+.jug { position: absolute; inset: 0; }
+.jug canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.jug-head { position: absolute; z-index: 2; left: clamp(24px, 4.5vw, 56px); top: clamp(20px, 4vw, 44px); right: 16px; display: grid; gap: 10px; pointer-events: none; }
+.jug-head .title { font-size: clamp(28px, 4.2vw, 52px); }
+.jug-head .lede { font-size: clamp(13px, 1.3vw, 16px); }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="jug" id="jug">
+  <canvas id="jc"></canvas>
+  <div class="jug-head"><p class="kicker">Qbix Studio</p><h2 class="title">3 jobs in the air.</h2><p class="lede">Design, code, ship. We keep all three moving.</p></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Juggler: a cascade scheduled on a beat; a fast swipe knocks a ball out and the hands win it back. */
+function juggler(root) {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d'), head = root.querySelector('.jug-head');
+  const INK = '#121417', COLS = [INK, '#ffffff', '#B8FF00'], HAND = '#d3d5d8', FLOOR = '#d3d5d8', DOT = 'rgba(18,20,23,0.5)';   // ink, white and lime balls, each ringed in ink
+  let W = 0, H = 0, dpr = 1, S = 0, cx = 0, hy = 0, ti = 0, co = 0, r = 10, G = 4000, floorY = 0;
+  const b = 0.34, F = 1.8 * b, DW = 1.2 * b;
+  function resize() {
+    const o = root.getBoundingClientRect(); W = o.width; H = o.height; dpr = Math.min(2, devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const hb = head.getBoundingClientRect().bottom - o.top;
+    S = Math.min(W, H * 1.15); cx = W / 2;
+    floorY = H - clamp(H * 0.05, 14, 40);
+    hy = floorY - clamp(H * 0.16, 50, 150);
+    ti = S * 0.09; co = S * 0.25; r = clamp(S * 0.04, 11, 26);
+    G = (8 * (hy - (hb + clamp(H * 0.05, 18, 60)))) / (F * F);   // the apex of a throw just clears the title
+  }
+  addEventListener('resize', () => { resize(); if (reduce) draw(); }); resize();
+
+  // hand h (0 left, 1 right) at time T: an ellipse, caught at the bottom, thrown from the top
+  function hand(h, T) {
+    const ph = (((T - h * b) % (2 * b)) + 2 * b) % (2 * b);
+    const th = ph < 0.8 * b ? (Math.PI * ph) / (0.8 * b) : Math.PI + (Math.PI * (ph - 0.8 * b)) / DW;
+    const sgn = h ? 1 : -1, c = (ti + co) / 2, a = (co - ti) / 2;
+    return [cx + sgn * (c - a * Math.cos(th)), hy - (ph < 0.8 * b ? r * 1.4 : r * 1.1) * Math.sin(th)];
+  }
+  const sitY = () => -r * 0.62;
+  function fly(ball, T0, p0, Tc, h, g) {
+    const D = Tc - T0, p1 = hand(h, Tc); p1[1] += sitY();
+    g = g || G;
+    ball.m = 'fly'; ball.t0 = T0; ball.p0 = p0; ball.tc = Tc; ball.h = h; ball.g = g;
+    ball.v0 = [(p1[0] - p0[0]) / D, (p1[1] - p0[1] - 0.5 * g * D * D) / D];
+  }
+  let T = 0, balls = [];
+  function init() {
+    T = 0;
+    balls = COLS.map((c, i) => ({ c, i, m: 'held', h: 0, tt: 0, x: 0, y: 0, vx: 0, vy: 0 }));
+    balls[2].h = 1; balls[2].tt = b;
+    const p = hand(1, -b); p[1] += sitY(); fly(balls[1], -b, p, -b + F, 0);
+  }
+  init();
+  const pos = (ball) => {
+    if (ball.m === 'held') { const p = hand(ball.h, T); return [p[0], p[1] + sitY()]; }
+    if (ball.m === 'fly') { const t = T - ball.t0; return [ball.p0[0] + ball.v0[0] * t, ball.p0[1] + ball.v0[1] * t + 0.5 * ball.g * t * t]; }
+    return [ball.x, ball.y];
+  };
+  const vel = (ball) => ball.m === 'fly' ? [ball.v0[0], ball.v0[1] + ball.g * (T - ball.t0)] : ball.m === 'free' ? [ball.vx, ball.vy] : [0, 0];
+  function emptyCatch(minT) {
+    const taken = balls.filter((x) => x.m === 'fly').map((x) => x.tc);
+    for (let k = Math.floor((T - b) / b); k < Math.floor(T / b) + 40; k++) {
+      const Tc = k * b + 0.8 * b, h = ((k % 2) + 2) % 2;
+      if (Tc < minT) continue;
+      if (taken.some((t) => Math.abs(t - Tc) < 1e-3)) continue;
+      if (balls.some((x) => x.m === 'held' && x.h === h && x.tt > Tc - 1e-3 && x.tt < Tc + DW + 1e-3)) continue;
+      return [Tc, h];
+    }
+    return null;
+  }
+  function update(dt) {
+    T += dt;
+    for (const ball of balls) {
+      if (ball.m === 'fly' && T >= ball.tc) { ball.m = 'held'; ball.tt = ball.tc + DW; }
+      if (ball.m === 'held' && T >= ball.tt) { const p = hand(ball.h, ball.tt); p[1] += sitY(); fly(ball, ball.tt, p, ball.tt + F, 1 - ball.h); }
+      if (ball.m === 'free') {
+        ball.vy += G * 0.55 * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+        if (ball.x < r) { ball.x = r; ball.vx = Math.abs(ball.vx) * 0.6; }
+        if (ball.x > W - r) { ball.x = W - r; ball.vx = -Math.abs(ball.vx) * 0.6; }
+        if (ball.y < r) { ball.y = r; ball.vy = Math.abs(ball.vy) * 0.5; }
+        if (ball.y > floorY - r) { ball.y = floorY - r; if (ball.vy > 0) ball.vy = -ball.vy * 0.5; ball.vx *= Math.pow(0.25, dt); if (Math.abs(ball.vy) < 60) ball.vy = 0; }
+        ball.rest = Math.abs(ball.vy) < 1 && ball.y >= floorY - r - 0.5 && Math.abs(ball.vx) < 160 ? (ball.rest || 0) + dt : 0;
+        if (ball.rest > 0.45) {
+          const c = emptyCatch(T + 0.55);
+          if (c) { const [Tc, h] = c, D = Tc - T, p1 = hand(h, Tc), apexH = Math.max(H * 0.25, ball.y - p1[1] + H * 0.18); fly(ball, T, [ball.x, ball.y], Tc, h, ((8 * apexH) / (D * D)) * 0.9); }
+        }
+      }
+    }
+  }
+
+  // the pointer: a fast pass within reach of a ball knocks it out of its flight
+  const P = { x: -999, y: -999, vx: 0, vy: 0, t: 0 };
+  function track(x, y, now) {
+    const o = root.getBoundingClientRect(); x -= o.left; y -= o.top;
+    const dt = Math.max(0.008, (now - P.t) / 1000);
+    if (P.t && now - P.t < 120) { P.vx = P.vx * 0.4 + ((x - P.x) / dt) * 0.6; P.vy = P.vy * 0.4 + ((y - P.y) / dt) * 0.6; } else P.vx = P.vy = 0;
+    P.x = x; P.y = y; P.t = now;
+    const sp = Math.hypot(P.vx, P.vy);
+    if (sp < 260) return;
+    for (const ball of balls) {
+      if (ball.m === 'free') continue;
+      const [bx, by] = pos(ball);
+      if (Math.hypot(bx - P.x, by - P.y) < r + 22) {
+        const [vx, vy] = vel(ball), k = clamp(sp, 0, 2600) / sp;
+        ball.m = 'free'; ball.x = bx; ball.y = by; ball.rest = 0;
+        ball.vx = vx * 0.25 + P.vx * k * 0.8; ball.vy = vy * 0.25 + P.vy * k * 0.8 - 200;
+      }
+    }
+  }
+  root.addEventListener('pointermove', (e) => track(e.clientX, e.clientY, performance.now()));
+  root.addEventListener('pointerdown', (e) => { P.t = 0; track(e.clientX, e.clientY, performance.now()); });
+
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = FLOOR; ctx.fillRect(0, floorY, W, 2);
+    ctx.fillStyle = DOT;                                   // each throw's arc, as dots
+    for (const ball of balls) {
+      if (ball.m !== 'fly') continue;
+      const D = ball.tc - ball.t0;
+      for (let i = 0; i <= 18; i++) { const t = (D * i) / 18; ctx.fillRect(ball.p0[0] + ball.v0[0] * t - 1.5, ball.p0[1] + ball.v0[1] * t + 0.5 * ball.g * t * t - 1.5, 3, 3); }
+    }
+    for (const ball of balls) {
+      const [x, y] = pos(ball);
+      ctx.fillStyle = ball.c; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r - 1, 0, Math.PI * 2); ctx.stroke();
+    }
+    for (const h of [0, 1]) {   // a cupped palm as three flat facets, a thumb and a fingertip block
+      const [x, y0] = hand(h, T), y = y0 + r * 0.12, w = r * 1.8, d = r * 1.2, sgn = h ? 1 : -1;
+      ctx.fillStyle = HAND;
+      ctx.beginPath(); ctx.moveTo(x - w, y - d * 0.05); ctx.lineTo(x, y + d * 0.5); ctx.lineTo(x + w, y - d * 0.05); ctx.lineTo(x + w * 0.7, y + d * 1.1); ctx.lineTo(x - w * 0.7, y + d * 1.1); ctx.closePath(); ctx.fill();
+      ctx.fillRect(x - sgn * w * 0.92 - r * 0.22, y - d * 0.5, r * 0.44, r * 0.9);
+      ctx.fillRect(x + sgn * w * 0.92 - r * 0.25, y - d * 0.32, r * 0.5, r * 0.7);
+    }
+  }
+  let last = performance.now();
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    update(Math.min(1 / 30, (now - last) / 1000)); last = now; draw();
+  })(last);
+  if (reduce) { update(b * 0.9); draw(); }
+  return { track, geo: () => { const o = root.getBoundingClientRect(); return { W: o.width, H: o.height, left: o.left, top: o.top, hy, r, G, F }; } };
+}
+const jug = juggler(document.getElementById('jug'));
+</script>
+<script>
+  /* the ghost swipes through the cascade, then back across the other way */
+  QM.demo({
+    kind: 'pointer',
+    path(t) {
+      const g = jug.geo(), u0 = t % 6.5, yA = g.top + g.hy - (g.G * g.F * g.F) / 8 + g.r * 1.5;
+      let x, y;
+      if (u0 < 3.6) { const u = u0 / 3.6; x = g.W * (0.82 + 0.05 * Math.sin(u * 6.28)); y = yA + g.H * 0.1 * Math.sin(u * 3.14); }
+      else if (u0 < 4.3) { const u = (u0 - 3.6) / 0.7, e = u * u * (3 - 2 * u); x = g.W * 0.82 + (g.W * 0.12 - g.W * 0.82) * e; y = yA + Math.sin(e * Math.PI) * g.r * 1.5; }
+      else { const u = (u0 - 4.3) / 2.2, e = u * u * (3 - 2 * u); x = g.W * 0.12 + (g.W * 0.82 - g.W * 0.12) * e; y = yA + g.r * 1.5 * (1 - e) - Math.sin(e * Math.PI) * g.r * 5; }
+      return [g.left + x, y];
+    },
+    move(x, y, ghost) { if (ghost) jug.track(x, y, performance.now()); },
+    leave() {},
+  });
+</script>
+</body>
+</html>

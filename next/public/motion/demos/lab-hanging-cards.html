@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hanging tags · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-hanging-cards",
+  "title": "Hanging tags",
+  "group": "lab",
+  "cat": "cards",
+  "order": 10,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "verlet rope · 5 tags · 120 Hz solve",
+  "summary": "Five swatch tags, Forma's palette, hang from a rail on strings that only resist stretching. Each tag is a rigid body of five particles, so grabbing one by its corner swings and turns it, and letting go keeps its velocity while damping slowly settles it. A passing pointer gives a tag a light push.",
+  "spec": [
+    ["Rope", "9 particles, resists stretch only"],
+    ["Tag", "4 corners + the hole, 10 stiff links"],
+    ["Solve", "fixed 1/120 s step, 12 iterations, damping 0.994"],
+    ["Gravity", "2.4 × the stage height per s²"],
+    ["Grab", "pointer spread over the corners by bilinear weights"],
+    ["Idle", "a ghost picks a tag, pulls it aside and lets go"]
+  ],
+  "source": ["Qbix studio library · hanging-cards"],
+  "where": "A palette or brand page: the swatch tags of a project, which a visitor can pick up and swing.",
+  "rules": [
+    "The tags are flat blocks with the top right corner cut; the only curve is the punched hole.",
+    "One tag in lime, the rest are the project's own swatches (white, mist, moss, ink). The rope is a single 1.5px line.",
+    "Release keeps the velocity: never snap a tag back to rest."
+  ],
+  "tags": ["physics", "drag", "canvas", "verlet", "palette"],
+  "shot": 3800
+}
+</script>
+<style data-code>
+.ht { position: absolute; inset: 0; overflow: hidden; }
+.ht canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.ht canvas.is-grab { cursor: grabbing; }
+.ht-copy { position: absolute; left: clamp(20px, 5vw, 56px); bottom: clamp(18px, 4vh, 40px); display: grid; gap: 10px; pointer-events: none; }
+.ht-copy .title { font-size: clamp(28px, 4.4vw, 52px); }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="ht" id="ht">
+  <div class="ht-copy">
+    <p class="kicker">Forma · Palette, 05 swatches</p>
+    <h2 class="title">Every colour has a tag.</h2>
+  </div>
+  <canvas aria-label="Five palette swatch tags hanging on strings. Drag one to swing it."></canvas>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag a swatch, then let go</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Hanging tags: a verlet rope per tag, and a rigid tag of five particles.
+   createTags(canvas) -> { grabAt(x, y), dragTo(x, y), release(), push(x, y, dx, dy), tagAt(i), count } (css px in the canvas) */
+function createTags(cv, { reduce = false } = {}) {
+  const ctx = cv.getContext('2d');
+  /* Forma's palette: each tag is its own swatch, named, with its hex under a rule */
+  const TAGS = [
+    { role: 'Accent', name: 'Lime', price: '#B8FF00', bg: '#B8FF00', fg: '#0c1300', sub: 'rgba(12,19,0,.66)' },
+    { role: 'Ground', name: 'Paper', price: '#FFFFFF', bg: '#ffffff', fg: '#121417', sub: 'rgba(18,20,23,.62)' },
+    { role: 'Text', name: 'Ink', price: '#121417', bg: '#121417', fg: '#f4f5f2', sub: 'rgba(244,245,242,.62)' },
+    { role: 'Surface', name: 'Mist', price: '#DADFD6', bg: '#DADFD6', fg: '#121417', sub: 'rgba(18,20,23,.62)' },
+    { role: 'Shade', name: 'Moss', price: '#6FAE00', bg: '#6FAE00', fg: '#0c1300', sub: 'rgba(12,19,0,.66)' },
+  ];
+  const ROPE = 9, STEP = 1 / 120;
+  let W = 0, H = 0, dpr = 1, railY = 0, G = 0, cards = [], grab = null, raf = 0, last = 0, acc = 0;
+  const P = (x, y, pin) => ({ x, y, px: x, py: y, pin: !!pin });
+
+  function build() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    railY = Math.max(16, H * 0.05);
+    G = H * 2.4;
+    const n = W < 520 ? 3 : W < 900 ? 4 : 5;
+    const footH = Math.min(120, H * 0.22);
+    const cw = Math.min(W / n * 0.74, (H - railY - footH) * 0.32, 170), ch = cw * 1.36;
+    cards = [];
+    for (let i = 0; i < n; i++) {
+      const ax = W * (i + 0.5) / n, tag = TAGS[i % TAGS.length];
+      const room = H - footH - railY - ch - 12;
+      const len = ch * 0.55 + Math.max(0, room - ch * 0.55) * (0.1 + 0.8 * ((i * 0.618 + 0.3) % 1));
+      const seg = len / (ROPE - 1);
+      const kick = (i % 2 ? 1 : -1) * cw * 0.1;   // start off to one side so the row is already swinging
+      const rope = [];
+      for (let k = 0; k < ROPE; k++) { const f = k / (ROPE - 1); rope.push(P(ax + kick * f, railY + len * f, k === 0)); }
+      const hx = ax + kick, hy = railY + len, holeV = ch * 0.1;
+      const c = [P(hx - cw / 2, hy - holeV), P(hx + cw / 2, hy - holeV), P(hx + cw / 2, hy - holeV + ch), P(hx - cw / 2, hy - holeV + ch)];
+      const hole = rope[ROPE - 1], links = [], pts = [...c, hole];
+      for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) links.push([pts[a], pts[b], Math.hypot(pts[a].x - pts[b].x, pts[a].y - pts[b].y)]);
+      cards.push({ tag, w: cw, h: ch, rope, seg, c, hole, holeV, links });
+    }
+  }
+
+  const frameOf = (card) => { const [a, b, , d] = card.c; return { a, ux: b.x - a.x, uy: b.y - a.y, vx: d.x - a.x, vy: d.y - a.y }; };
+  function localOf(card, x, y) {              // solve x = a + s·u + t·v
+    const { a, ux, uy, vx, vy } = frameOf(card), det = ux * vy - uy * vx;
+    const dx = x - a.x, dy = y - a.y;
+    return [(dx * vy - dy * vx) / det, (ux * dy - uy * dx) / det];
+  }
+  function hit(x, y) {
+    for (let i = cards.length - 1; i >= 0; i--) {
+      const [s, t] = localOf(cards[i], x, y);
+      if (s >= -0.04 && s <= 1.04 && t >= -0.04 && t <= 1.04) return { card: cards[i], s, t };
+    }
+    return null;
+  }
+  function grabAt(x, y) {
+    const h = hit(x, y); if (!h) return false;
+    const s = Math.max(0, Math.min(1, h.s)), t = Math.max(0, Math.min(1, h.t));
+    grab = { card: h.card, w: [(1 - s) * (1 - t), s * (1 - t), s * t, (1 - s) * t], x, y };
+    cv.classList.add('is-grab');
+    return true;
+  }
+  const dragTo = (x, y) => { if (grab) { grab.x = x; grab.y = y; } };
+  const release = () => { grab = null; cv.classList.remove('is-grab'); };
+  const push = (x, y, dx, dy) => {              // a passing pointer gives a tag a light push
+    if (grab) return;
+    const h = hit(x, y);
+    if (h) h.card.c.forEach((p) => { p.px -= dx * 0.04; p.py -= dy * 0.02; });
+  };
+
+  function solve(dt) {
+    const damp = reduce ? 0.95 : 0.994;
+    for (const card of cards) for (const p of [...card.rope, ...card.c]) {
+      if (p.pin) continue;
+      const vx = (p.x - p.px) * damp, vy = (p.y - p.py) * damp;
+      p.px = p.x; p.py = p.y; p.x += vx; p.y += vy + G * dt * dt;
+    }
+    for (let it = 0; it < 12; it++) {
+      for (const card of cards) {
+        for (let k = 1; k < ROPE; k++) {          // the string only resists stretching
+          const a = card.rope[k - 1], b = card.rope[k];
+          const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1e-6;
+          if (d <= card.seg) continue;
+          const diff = (d - card.seg) / d, wa = a.pin ? 0 : 0.5, wb = a.pin ? 1 : 0.5;
+          a.x += dx * diff * wa; a.y += dy * diff * wa; b.x -= dx * diff * wb; b.y -= dy * diff * wb;
+        }
+        for (const [a, b, rest] of card.links) {   // the tag: stiff links
+          const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1e-6, diff = (d - rest) / d * 0.5;
+          a.x += dx * diff; a.y += dy * diff; b.x -= dx * diff; b.y -= dy * diff;
+        }
+        for (const p of card.c) { if (p.x < 2) p.x = 2; if (p.x > W - 2) p.x = W - 2; if (p.y > H - 2) p.y = H - 2; }
+      }
+      if (grab) {
+        const c = grab.card.c, w = grab.w;
+        let x = 0, y = 0, n2 = 0;
+        for (let i = 0; i < 4; i++) { x += c[i].x * w[i]; y += c[i].y * w[i]; n2 += w[i] * w[i]; }
+        const ex = grab.x - x, ey = grab.y - y;
+        for (let i = 0; i < 4; i++) { c[i].x += ex * w[i] / n2; c[i].y += ey * w[i] / n2; }
+      }
+      for (let i = 0; i < cards.length; i++) for (let j = i + 1; j < cards.length; j++) {  // tags nudge each other apart
+        const A = cards[i], B = cards[j];
+        const ax = (A.c[0].x + A.c[2].x) / 2, bx = (B.c[0].x + B.c[2].x) / 2, ay = (A.c[0].y + A.c[2].y) / 2, by = (B.c[0].y + B.c[2].y) / 2;
+        const min = (A.w + B.w) * 0.42, dx = bx - ax;
+        if (Math.abs(dx) < min && Math.abs(by - ay) < (A.h + B.h) * 0.5) {
+          const pu = (min - Math.abs(dx)) * 0.02 * Math.sign(dx || 1);   // a position fix only: it adds no energy
+          A.c.forEach((p) => { p.x -= pu; p.px -= pu; }); B.c.forEach((p) => { p.x += pu; p.px += pu; });
+        }
+      }
+    }
+  }
+
+  function drawCard(card) {
+    const [a, b, c, d] = card.c, { w, h, tag } = card;
+    const cx = (a.x + b.x + c.x + d.x) / 4, cy = (a.y + b.y + c.y + d.y) / 4;
+    const ang = Math.atan2((b.y - a.y) + (c.y - d.y), (b.x - a.x) + (c.x - d.x));
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang);
+    const cut = Math.max(10, w * 0.12);
+    ctx.fillStyle = tag.bg;
+    ctx.beginPath();                              // the block, its top right corner cut
+    ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2 - cut, -h / 2); ctx.lineTo(w / 2, -h / 2 + cut);
+    ctx.lineTo(w / 2, h / 2); ctx.lineTo(-w / 2, h / 2); ctx.closePath(); ctx.fill();
+    const hy = -h / 2 + card.holeV, hr = Math.max(3, w * 0.03);
+    ctx.fillStyle = '#f3f4f5'; ctx.beginPath(); ctx.arc(0, hy, hr * 1.5, 0, 6.2832); ctx.fill();   // punched hole: the paper shows through
+    const pad = w * 0.11;
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    ctx.fillStyle = tag.sub; ctx.font = `500 ${Math.max(9, w * 0.065)}px "Encode Sans", Geist, sans-serif`;
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '1.2px';
+    ctx.fillText(tag.role.toUpperCase(), -w / 2 + pad, -h / 2 + h * 0.3);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    ctx.fillStyle = tag.fg; ctx.font = `400 ${w * 0.15}px Eurostile, Geist, sans-serif`;
+    const words = tag.name.split(' '); const lines = []; let line = '';
+    for (const wd of words) { const t = line ? line + ' ' + wd : wd; if (ctx.measureText(t).width > w - pad * 2 && line) { lines.push(line); line = wd; } else line = t; }
+    lines.push(line);
+    lines.forEach((l, i) => ctx.fillText(l, -w / 2 + pad, -h / 2 + h * 0.46 + i * w * 0.17));
+    ctx.fillStyle = tag.sub; ctx.fillRect(-w / 2 + pad, h / 2 - h * 0.2, w - pad * 2, 2);
+    ctx.fillStyle = tag.fg; ctx.font = `500 ${w * 0.13}px "Encode Sans", Geist, sans-serif`;
+    ctx.fillText(tag.price, -w / 2 + pad, h / 2 - pad);
+    ctx.restore();
+  }
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#121417'; ctx.fillRect(0, railY - 1, W, 2);
+    for (const card of cards) {
+      ctx.strokeStyle = 'rgba(18,20,23,.6)'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.beginPath(); card.rope.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.stroke();
+      drawCard(card);
+      const r0 = card.rope[0]; ctx.fillStyle = '#121417'; ctx.fillRect(r0.x - 3, r0.y - 3, 6, 6);
+    }
+  }
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - last) / 1000) || 0.016; last = now;
+    acc += dt;
+    while (acc >= STEP) { solve(STEP); acc -= STEP; }
+    draw();
+  }
+  build();
+  last = performance.now(); raf = requestAnimationFrame(frame);
+  new ResizeObserver(() => { if (cv.clientWidth !== W || cv.clientHeight !== H) build(); }).observe(cv);
+  return {
+    grabAt, dragTo, release, push,
+    get count() { return cards.length; },
+    anchor(i) {        // where to take tag i: just under its hole, for a scripted hand
+      if (!cards.length) return [W / 2, H / 2, 100];
+      const c = cards[i % cards.length].c;
+      return [(c[0].x + c[1].x + c[2].x + c[3].x) / 4, (c[2].y + c[3].y) / 2 - cards[i % cards.length].h * 0.2, cards[i % cards.length].w];
+    },
+  };
+}
+</script>
+<script>
+  const cv = document.querySelector('#ht canvas');
+  const tags = createTags(cv, { reduce: QM.reduced });
+  const loc = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  let down = false, lx = 0, ly = 0;
+  cv.addEventListener('pointerdown', (e) => { const [x, y] = loc(e); lx = x; ly = y; down = tags.grabAt(x, y); if (down) cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => { const [x, y] = loc(e); if (down) tags.dragTo(x, y); else tags.push(x, y, x - lx, y - ly); lx = x; ly = y; });
+  const up = () => { down = false; tags.release(); };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+
+  /* the ghost hand: take a tag, pull it aside, let go, wait */
+  const CYC = 4.4;
+  let gcyc = -1, gfrom = null, gdir = 1, gheld = false, gpos = [0, 0];
+  const ease = (u) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+  function ghostPath(t) {
+    t = Math.max(0, t);
+    const r = cv.getBoundingClientRect();
+    const cyc = Math.floor(t / CYC), u = t - cyc * CYC;
+    const k = (cyc * 2 + 1) % tags.count;
+    const [ax, ay, w] = tags.anchor(k);
+    if (cyc !== gcyc) { gcyc = cyc; gfrom = [gpos[0] - r.left || r.width * 0.5, gpos[1] - r.top || r.height * 0.8]; gdir = ax < r.width / 2 ? 1 : -1; }
+    let x, y;
+    if (u < 0.9) { const e = ease(u / 0.9); x = gfrom[0] + (ax - gfrom[0]) * e; y = gfrom[1] + (ay - gfrom[1]) * e; gheld = false; }
+    else if (u < 1.8) { const e = ease((u - 0.9) / 0.9); x = ax + gdir * Math.min(r.width * 0.18, w * 1.0) * e; y = ay - w * 0.15 * e; gheld = true; gfrom = [x, y]; }
+    else { x = gfrom[0] + gdir * 30 * Math.min(1, (u - 1.8) * 2); y = gfrom[1] + 40 * Math.min(1, (u - 1.8) * 2); gheld = false; }
+    gpos = [x + r.left, y + r.top];
+    return gpos;
+  }
+  let ghostGrab = false;
+  QM.demo({
+    kind: 'pointer',
+    path: ghostPath,
+    move(cx, cy, isGhost) {
+      if (!isGhost) return;
+      const r = cv.getBoundingClientRect(), x = cx - r.left, y = cy - r.top;
+      if (gheld && !ghostGrab) ghostGrab = tags.grabAt(x, y);
+      if (gheld && ghostGrab) tags.dragTo(x, y);
+      if (!gheld && ghostGrab) { tags.release(); ghostGrab = false; }
+    },
+    leave() { tags.release(); ghostGrab = false; },
+  });
+</script>
+</body>
+</html>

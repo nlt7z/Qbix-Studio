@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pinned list · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<link rel="stylesheet" href="../kit/scene.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "tour-list",
+  "title": "Pinned list",
+  "group": "scroll",
+  "cat": "scroll",
+  "order": 20,
+  "kind": "scroll",
+  "tone": "paper",
+  "line": "75vh a stop · 0.3 screens' tail · row = button",
+  "shot": 5900,
+  "summary": "The section pins with its scene beside a list that has one row for each of the scene's states. Scrolling walks the scene from one state to the next and lights that row (a white tile, never a line); each row is a button that scrolls to its stop; a 4px meter fills a row at a time, and the last state is held for a third of a screen before the page moves on.",
+  "spec": [
+    ["Height", "stops × 75vh + 130vh (practice page: stops × 60vh + 130vh)"],
+    ["Pinned", "100svh sticky; the list on the left (0.85fr), the scene on the right (1.15fr, 78vh)"],
+    ["Walk", "the page driver's beats: row i is lit when the scene shows state i + 1"],
+    ["Tail", "0.3 screens: the last state is held after the walk ends, before the section scrolls on"],
+    ["Jump", "a row button scrolls to top + (travel − 0.3vh) × i / (n − 1), smoothly"],
+    ["Row", "a white tile when on; colour 300 ms; its text opens on grid-template-rows 0fr → 1fr, 600 ms expo out"],
+    ["Number", "an ink block wipes in under the current number once the tour is half way up the screen: 450 ms, ease-move"],
+    ["Meter", "4px; scaleX((i + 1) / n), 700 ms expo out"]
+  ],
+  "source": ["components/offers/KitTour.tsx · KitTour, TOUR_TAIL", "components/offers/PracticeTour.tsx", "app/globals.css · lk-tour, MODULE rows, MODULE meters", "lib/scene/driver.ts · target"],
+  "where": "The “What you get” section of the offer pages: a fixed-price offer's deliverables beside its scene, here filled with the Design service (moodboard, launch site, your domain, editable copy, one round of changes). The Practice Website Refresh does the same on paper, with an ink stroke wiping across the current row's lead words.",
+  "rules": [
+    "Rows are tiles or air, never lines: the current one is a white tile, the others sit on the paper.",
+    "A row that says nothing more than its title (the last one) has no text to open.",
+    "The tail is part of the contract: the driver, the section's height and the jump all subtract it.",
+    "The current number's chip waits until the tour is well on screen, so the screen's one lime stays in the scene.",
+    "With reduced motion the tour is a plain list: no pin, every row open."
+  ],
+  "tags": ["scroll", "pin", "list", "buttons", "meter"],
+  "deps": ["scene"]
+}
+</script>
+<style data-code>
+/* "What you get" tour — app/globals.css (lk-tour) with the MODULE's rows and meter. The section pins and the scroll walks
+   the scene through one state per row. The site's desktop layout starts at 960px; 720px here so the 800px tile shows it. */
+.container { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 32px); }
+.offer-h2 {
+  margin: 0 0 clamp(20px, 3vw, 32px);
+  font-family: var(--font-headline); font-weight: 400;
+  font-size: clamp(28px, 4vw, 46px); letter-spacing: -0.025em; color: var(--fg);
+}
+.lk-tour { position: relative; height: calc(var(--stops) * 75vh + 130vh); }
+.lk-tour-pin { position: sticky; top: 0; height: 100vh; height: 100svh; display: flex; align-items: center; overflow: hidden; }
+.lk-tour-grid { display: grid; gap: 24px; width: 100%; }
+.lk-tour-stage { height: 100vh; height: 100svh; }
+.lk-tour-list { list-style: none; margin: 0; padding: 0; }
+.lk-tour-list button {
+  all: unset; box-sizing: border-box;
+  display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: baseline;
+  width: 100%; padding: 16px;
+  cursor: pointer; font-size: 18px; color: var(--fg2);
+  transition: color 300ms var(--ease);
+}
+.lk-tour-list button:hover { color: var(--fg); }
+.lk-tour-list button:focus-visible { outline: 2px solid var(--fg); outline-offset: -4px; }
+.lk-tour-list li.is-on { background: #ffffff; }                     /* the row on is a tile: white on the paper */
+.lk-tour-list li.is-on button { color: var(--fg); }
+.lk-tour-k { font-weight: 500; }
+.lk-tour-num {
+  font-size: 12px; color: var(--fg3);
+  /* now: an ink block wipes in under the number of the stop the tour is on */
+  justify-self: start; margin: -3px 0 -3px -6px; padding: 3px 6px;
+  background: linear-gradient(#121417, #121417) no-repeat 0 0 / 0 100%;
+  transition: color 300ms var(--ease), background-size 450ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.lk-tour-list li.is-past .lk-tour-num { color: var(--fg2); }
+.lk-tour-list li.is-on .lk-tour-num { color: var(--fg); }
+.lk-tour-list.is-live li.is-on .lk-tour-num { color: #f3f4f5; background-size: 100% 100%; }
+/* a row's text opens from nothing: its height on grid rows, and it settles up 8px */
+.lk-tour-v { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+.lk-tour-v > p {
+  overflow: hidden; margin: 0; padding: 0 16px;
+  font-size: 16px; line-height: 1.6; color: var(--fg2);
+  transform: translateY(8px); transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lk-tour-list li.is-on .lk-tour-v { grid-template-rows: 1fr; }
+.lk-tour-list li.is-on .lk-tour-v > p { transform: none; padding-bottom: 18px; }
+.lk-tour-meter { margin-top: 28px; height: 4px; background: var(--fg4); }
+.lk-tour-meter span {
+  display: block; height: 4px; background: var(--fg); transform-origin: left;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (min-width: 720px) {
+  .lk-tour-grid { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: center; gap: 40px; }
+  /* the stage is the right-hand column: the page's object plays there, beside the list */
+  .lk-tour-stage { height: min(78vh, 760px); }
+}
+@media (max-width: 719px) {
+  .lk-tour { height: calc(var(--stops) * 70svh + 130svh); }
+  .lk-tour-pin { align-items: stretch; }
+  .lk-tour-grid { grid-template-rows: auto 1fr; align-content: start; gap: 8px; padding-top: 80px; }
+  .lk-tour-stage { order: -1; height: 34svh; }
+  .lk-tour-copy .offer-h2 { margin-bottom: 6px; font-size: 24px; }
+  .lk-tour-list button { padding: 11px 16px; font-size: 16px; grid-template-columns: 36px 1fr; }
+  .lk-tour-v > p { padding-left: 64px; font-size: 14.5px; }
+  .lk-tour-meter { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lk-tour-v, .lk-tour-v > p, .lk-tour-num { transition: none; }
+  /* a plain list: no pin, every row open */
+  .lk-tour { height: auto; }
+  .lk-tour-pin { position: static; height: auto; padding: 72px 0; }
+  .lk-tour-stage, .lk-tour-meter { display: none; }
+  .lk-tour-v { grid-template-rows: 1fr; }
+  .lk-tour-v > p { transform: none; padding-bottom: 18px; }
+}
+</style>
+<style data-code>
+/* The scene: a stand-in for the Design service's own (components/scenes/Forma.tsx), drawn with the kit.
+   Everything made is ink on white, on the paper; the one lime is handed on from state to state. */
+.scn .t { display: inline-block; }
+.scn .tl-g { pointer-events: none; }
+.scn .tl-paper { background: #ffffff; color: #121417; box-shadow: var(--lift); }
+.scn .tl-sheet { overflow: hidden; z-index: 2; }
+.scn .tl-flat { box-shadow: none; }                            /* a card that sits flat in a white window */
+.scn .tl-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
+.scn .tl-tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; background: var(--lime); color: var(--on-lime); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.scn .tl-tag.tl-url { height: 24px; font-family: var(--font-sans); font-size: 11.5px; font-weight: 500; letter-spacing: 0; text-transform: none; }
+.scn .tl-band { background: #121417; color: #ffffff; font-size: 10.5px; line-height: 1.35; display: flex; align-items: center; gap: 10px; padding: 0 16px; }
+.scn .tl-band b { display: grid; place-items: center; width: 28px; height: 28px; background: #ffffff; color: #121417; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+.scn .tl-swatches { display: flex; gap: 6px; }
+.scn .tl-swatches i { display: block; width: 24px; height: 24px; }
+.scn .tl-post { overflow: hidden; z-index: 2; }
+.scn .tl-strip { display: flex; align-items: center; padding: 0 12px; background: #ffffff; color: #121417; font-size: 12px; white-space: nowrap; }
+.scn .tl-tile { overflow: hidden; }                              /* a picture in a tile of the board, cropped to it */
+.scn .tl-big { font-size: 46px; line-height: 0.96; letter-spacing: -0.04em; }
+.scn .tl-col { background: rgba(18, 20, 23, 0.06); }            /* the layout grid, a column of it */
+.scn .tl-blk { background: #121417; }
+.scn .tl-tint { background: rgba(18, 20, 23, 0.1); }
+.scn .phone { --r: 30px; z-index: 2; }
+.scn .tl-bar { height: 3px; background: rgba(18, 20, 23, 0.16); }
+.scn .tl-bar i { display: block; height: 100%; background: #121417; transform-origin: left; }
+.scn .tl-field { background: var(--sunk); font-size: 15px; display: flex; align-items: center; padding: 0 12px; }
+.scn .tl-edit { box-shadow: inset 0 0 0 2px var(--fg), 0 0 0 3px var(--lime); }   /* the field in hand: ink ring, lime outside it */
+.scn .tl-bubble { z-index: 2; padding: 0 18px; display: flex; flex-direction: column; justify-content: center; gap: 3px; font-size: 15px; }
+.scn .tl-bubble--you { background: var(--sunk); }
+.scn .tl-bubble--us { background: #121417; color: #f4f5f2; }
+.scn .tl-file { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; background: var(--sunk); font-size: 12px; color: var(--fg2); white-space: nowrap; }
+</style>
+<style>
+  /* the page round the tour: the section before, the one after */
+  .lead, .after { background: var(--ground); color: var(--fg); }
+  .lead { padding: clamp(56px, 9vw, 104px) 0; }
+  .lead .container > * { max-width: min(100%, 700px); }
+  .lead-p { margin: 0 0 1.1em; font-size: clamp(17px, 1.6vw, 19px); line-height: 1.65; color: var(--fg); }
+  .lead-pull { margin: 1.4em 0 0; font-size: clamp(20px, 2.2vw, 26px); line-height: 1.4; color: var(--fg); }
+  .after { padding: clamp(40px, 6vw, 72px) 0 calc(24vh); }
+  /* the 800px tile: the list a little tighter so the five rows and the open one fit in 500px */
+  html.qm-tile .lk-tour-grid { grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); gap: 24px; }
+  html.qm-tile .lk-tour-stage { height: min(86vh, 760px); }
+  html.qm-tile .offer-h2 { font-size: 30px; margin-bottom: 12px; }
+  html.qm-tile .lk-tour-list button { padding: 10px 14px; font-size: 16px; }
+  html.qm-tile .lk-tour-v > p { padding: 0 14px; font-size: 14px; line-height: 1.5; }
+  html.qm-tile .lk-tour-list li.is-on .lk-tour-v > p { padding-bottom: 12px; }
+  html.qm-tile .lk-tour-meter { margin-top: 18px; }
+</style>
+</head>
+<body class="offer">
+<main>
+  <section class="offer-section lead" data-nav-theme="light">
+    <div class="container">
+      <h2 class="offer-h2">Why it matters</h2>
+      <p class="lead-p">Most launch sites go live on the same template as every other site in their field. Visitors scroll past in a second. A moodboard, a design built for you and a domain of your own give an idea something people remember.</p>
+      <p class="lead-pull">You already have the idea. Send us a brief and we will do the rest.</p>
+    </div>
+  </section>
+<!-- code -->
+<section class="lk-tour" id="what-you-get" data-chapter data-tail="0.3" data-tone="paper" style="--stops: 5">
+  <div class="lk-tour-pin">
+    <div class="container lk-tour-grid">
+      <div class="lk-tour-copy">
+        <h2 class="offer-h2">What you get</h2>
+        <ol class="lk-tour-list">
+          <li><button type="button"><span class="lk-tour-num mono">01</span><span class="lk-tour-k">Moodboard</span></button>
+            <div class="lk-tour-v"><p>Renders, a palette and type on one board. You approve the look before we build.</p></div></li>
+          <li><button type="button"><span class="lk-tour-num mono">02</span><span class="lk-tour-k">Launch site</span></button>
+            <div class="lk-tour-v"><p>Your pages, designed and coded. They open fast on any phone.</p></div></li>
+          <li><button type="button"><span class="lk-tour-num mono">03</span><span class="lk-tour-k">Your domain</span></button>
+            <div class="lk-tour-v"><p>Live on your own domain. The code and the files are yours.</p></div></li>
+          <li><button type="button"><span class="lk-tour-num mono">04</span><span class="lk-tour-k">Editable copy</span></button>
+            <div class="lk-tour-v"><p>A link to your words, so you can change a headline or a price yourself.</p></div></li>
+          <li><button type="button"><span class="lk-tour-num mono">05</span><span class="lk-tour-k">One round of changes</span></button></li>
+        </ol>
+        <div class="lk-tour-meter" aria-hidden="true"><span></span></div>
+      </div>
+      <div class="lk-tour-stage">
+        <!-- the scene, one state per row (kit/scene.js) -->
+        <div class="scn-box" role="img" aria-label="The Design service for Forma, a ceramics studio: a moodboard, a launch site, a live domain, editable copy, a round of changes"><div class="scn" aria-hidden="true"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /code -->
+  <section class="offer-section after" data-nav-theme="light">
+    <div class="container">
+      <h2 class="offer-h2">How it works</h2>
+    </div>
+  </section>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../kit/timeline.js"></script>
+<script src="../kit/scene.js"></script>
+<script data-code>
+/* The tour, in four parts: the scene (a drawing and its timeline), the page driver (the scroll says which beat), the rows
+   (lit by the scene's step) and the jump (a row is a button that scrolls to its stop). */
+const { E } = window.QMTimeline;
+const W = 640, H = 560;
+
+/* --- 1 · the scene: one state per row. 0 → 1 the moodboard is pinned up, 1 → 2 five pages of the site, 2 → 3 the site live on a
+   phone, at its own domain, 3 → 4 the editable copy (a new price typed), 4 → 5 a round of changes. A state folds away up into
+   its top edge, the next wipes in. --- */
+const a = (k, x, y, w, h, c, inner = '') =>
+  `<div ${k ? `data-k="${k}" ` : ''}class="a ${c}" style="left:${x}px;top:${y}px;${w ? `width:${w}px;` : ''}${h ? `height:${h}px;` : ''}">${Array.isArray(inner) ? inner.join('') : inner}</div>`;
+const tx = (k, s) => `<span data-k="${k}" class="t">${s}</span>`;
+const img = (src, pos, css = '') => `<img class="tl-img" src="../assets/art/${src}.webp" alt="" draggable="false" style="${pos ? `object-position:${pos};` : ''}${css}">`;
+const cut = (size, right = 0) => {
+  const k = right >= 100 ? 0 : 1, r = `${100 - right}%`;
+  return `polygon(0 0, calc(${r} - ${size * k}px) 0, ${r} ${size * k}px, ${r} 100%, 0 100%)`;
+};
+const POSTS = [[10, 84], [222, 84], [434, 84], [116, 296], [328, 296]];      // five squares, 196 each, 3 + 2
+const SWATCHES = ['#e8eadf', '#d4c5b0', '#a2b08a', '#121417'];                // Forma's palette: porcelain, clay, sage, ink
+
+function drawService(scn) {
+  scn.innerHTML = [
+    a('lbl', 0, 0, W, 18, 'f-label', tx('lbl.t', 'Forma · A ceramics studio')),
+    // 1 · the moodboard: renders, a palette, the type
+    a('f', 165, 70, 310, 420, 'tl-paper tl-sheet', [
+      a('f.photo', 0, 0, 310, 206, '', [
+        a(null, 0, 0, 204, 206, 'tl-tile', img('objects', '62% 50%')),
+        a(null, 208, 0, 102, 101, 'tl-tile', img('objects', '20% 60%', 'transform:scale(2.3);transform-origin:20% 62%;')),
+        a(null, 208, 105, 102, 101, 'tl-tile', img('cross', '80% 50%')),
+      ]),
+      a('f.tag', 16, 220, null, null, 'tl-tag', tx('f.tagt', 'Moodboard')),
+      a(null, 16, 252, null, null, 'f-head', `<span class="t" data-k="f.addr" style="font-size:26px;letter-spacing:-0.03em">Forma</span>`),
+      a('f.city', 16, 290, null, null, 'dim', 'Ceramic objects · forma.studio'),
+      a('f.facts', 16, 314, null, null, 'tl-swatches', SWATCHES.map((c) => `<i style="background:${c}"></i>`).join('')),
+      a('f.open', 16, 346, null, null, '', '<span class="f-head" style="font-size:19px;letter-spacing:-0.02em;margin-right:8px">Aa</span><span class="dim" style="font-size:12px">Eurostile and Geist</span>'),
+      a('f.band', 0, 372, 310, 48, 'tl-band', '<b>QB</b><span>Prepared by Sera<br>Qbix · Design service</span>'),
+    ]),
+    // 2 · five pages of the site: home, shop, a product, about on its grid, contact
+    a('p0', ...POSTS[0], 196, 196, 'tl-paper tl-post', [img('objects', '66% 50%'), a('p0.tag', 12, 160, null, null, 'tl-tag', 'Launch')]),
+    a('p1', ...POSTS[1], 196, 196, 'tl-paper tl-post', [
+      a(null, 16, 16, null, null, 'f-head', '<span style="font-size:22px;letter-spacing:-0.03em">Shop</span>'),
+      a(null, 16, 60, null, null, 'f-head tl-big', 'Halo<br>$240'),
+      a(null, 16, 168, null, null, 'dim', 'Forma · Lamp')]),
+    a('p2', ...POSTS[2], 196, 196, 'tl-paper tl-post', [img('cross', '78% 50%'), a(null, 0, 166, 196, 30, 'tl-strip', 'Knot stool · $180')]),
+    a('p3', ...POSTS[3], 196, 196, 'tl-paper tl-post', [
+      ...[0, 1, 2, 3, 4, 5].map((i) => a(null, 12 + i * 30, 0, 22, 166, 'tl-col')),
+      a(null, 42, 26, 82, 9, 'tl-blk'),
+      a(null, 42, 46, 112, 5, 'tl-tint'), a(null, 42, 58, 82, 5, 'tl-tint'),
+      a(null, 42, 92, 52, 18, 'tl-blk'),
+      a(null, 102, 78, 82, 66, 'tl-tile', img('objects', '60% 50%', 'transform:scale(2.2);transform-origin:68% 58%;')),
+      a(null, 0, 166, 196, 30, 'tl-strip', 'About · six columns')]),
+    a('p4', ...POSTS[4], 196, 196, 'tl-paper tl-post', [img('objects', '18% 60%', 'transform:scale(2.1);transform-origin:18% 62%;'), a(null, 0, 166, 196, 30, 'tl-strip', 'Contact')]),
+    // 3 · the site live on a phone, at its own domain: three slides' bars fill, the address is typed, the headline types in
+    a('ph', 220, 66, 200, 428, 'phone', [
+      a(null, 0, 0, null, null, 'phone-screen', [
+        a(null, 0, 0, 186, 270, 'tl-tile', img('cross', '74% 50%')),
+        a(null, 66, 8, 54, 16, 'phone-island'),
+        a(null, 12, 34, 162, 3, 'tl-bars', [0, 1, 2].map((i) => a(null, i * 55, 0, 51, 3, 'tl-bar', `<i data-k="bar.${i}"></i>`)).join('')),
+        a('ph.time', 12, 46, null, null, 'tl-tag tl-url', '<span data-k="ph.timet" class="t">forma.studio</span>'),
+        a('ph.cap', 16, 286, 160, 56, 'f-head', `<span style="display:block;font-size:21px;line-height:1.12;letter-spacing:-0.03em">${tx('ph.c1', 'Ceramic objects')}<br>${tx('ph.c2', 'made by hand.')}</span>`),
+        a('ph.btn', 16, 356, 88, 34, 'pill pill--ink', 'Shop'),
+      ].join('')),
+    ].join('')),
+    // 4 · the editable copy: a window, its fields, a new price typed
+    a('ed', 40, 84, 560, 392, 'win', [
+      '<div class="win-bar"><span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="win-url"><span class="win-addr">forma.studio/edit</span></span></div>',
+      '<div class="win-body">',
+      a('ed.card', 28, 28, 168, 262, 'tl-paper tl-sheet tl-flat', [
+        a(null, 0, 0, 168, 104, 'tl-tile', img('cross', '78% 50%')),
+        a(null, 12, 116, null, null, 'f-head', `<span class="t" data-k="ed.old" style="font-size:20px;letter-spacing:-0.03em">$180</span><span class="t" data-k="ed.new" style="position:absolute;left:0;top:0;font-size:20px;letter-spacing:-0.03em">$160</span>`),
+        a(null, 12, 148, null, null, 'dim', '<span style="font-size:11px">Knot stool · Forma</span>'),
+        a(null, 12, 176, 120, 4, '', '<i style="display:block;height:100%;background:rgba(18,20,23,0.12)"></i>'),
+        a(null, 12, 190, 90, 4, '', '<i style="display:block;height:100%;background:rgba(18,20,23,0.12)"></i>')]),
+      a('ed.l1', 232, 28, null, null, 'f-label', 'Price'),
+      a('ed.f1', 232, 46, 300, 40, 'tl-field', `<span class="t" data-k="ed.v1">$160</span><span data-k="ed.caret" class="a caret" style="left:12px;top:12px;height:16px"><i></i></span>`),
+      a('ed.ring', 232, 46, 300, 40, 'tl-edit'),
+      a('ed.l2', 232, 104, null, null, 'f-label', 'Name'),
+      a('ed.f2', 232, 122, 300, 40, 'tl-field', 'Knot stool'),
+      a('ed.l3', 232, 180, null, null, 'f-label', 'Ships'),
+      a('ed.f3', 232, 198, 300, 40, 'tl-field', 'In 3 days'),
+      '</div>',
+    ]),
+    // 5 · a round of changes
+    a('b0', 60, 150, 340, 62, 'tl-bubble tl-bubble--you', tx('b0.t', 'Can the headline be bigger?')),
+    a('b1', 240, 240, 340, 72, 'tl-bubble tl-bubble--us', `${tx('b1.t', '<b style="font-weight:600">Done.</b> Bigger, and live.')}<span data-k="b1.s" class="t" style="font-size:12.5px;opacity:.6">Your final files are on their way.</span>`),
+    a('b2', 240, 336, null, 36, 'pill pill--lime', 'Final files ready'),
+    ...['board.pdf', 'site.zip', 'copy.doc'].map((n, i) => a(`b3.${i}`, 240 + i * 104, 392, null, null, 'tl-file', n)),
+  ].join('');
+}
+
+function buildService(q, tl) {
+  const wipe = (el, from, to, at, dur, ease = E.out) => tl.from(el, { clip: from }).to(el, { clip: to }, at, dur, ease);
+  const OPEN = [0, 0, 0, 0], FOLD = [0, 0, 100, 0];
+  const win = 'inset(-64px -64px -64px -64px)';     // a block with a shadow: open past its edges, so the shadow is not clipped
+  const fold = (el, at, dur = 0.1) => tl.to(el, { clip: FOLD }, at, dur, E.in);
+
+  /* 0 → 1: the moodboard is pinned up, then its pieces set in */
+  tl.type(q('lbl.t'), 0.04, 0.08);
+  tl.from(q('f'), { y: -28, clip: FOLD }).to(q('f'), { y: 0, clip: win }, 0.08, 0.4, E.out);
+  wipe(q('f.photo'), [0, 100, 0, 0], OPEN, 0.3, 0.16);
+  wipe(q('f.tag'), cut(8, 100), OPEN, 0.46, 0.07);
+  tl.type(q('f.addr'), 0.5, 0.14);
+  ['city', 'facts', 'open'].forEach((k, i) => wipe(q(`f.${k}`), [0, 100, 0, 0], OPEN, 0.6 + i * 0.03, 0.08));
+  wipe(q('f.band'), [0, 0, 0, 100], OPEN, 0.7, 0.1);
+
+  /* 1 → 2: the board folds away; five pages come in, then the tag */
+  fold(q('f'), 1.02, 0.12);
+  POSTS.forEach((_, i) => wipe(q(`p${i}`), [100, 0, 0, 0], win, 1.16 + i * 0.06, 0.2));
+  wipe(q('p0.tag'), cut(8, 100), OPEN, 1.5, 0.07);
+
+  /* 2 → 3: the pages fold; a phone rises with the live site: three bars fill, the address types in, the headline types */
+  POSTS.forEach((_, i) => fold(q(`p${i}`), 2.02 + i * 0.016, 0.08));
+  tl.from(q('ph'), { y: 70, clip: 'inset(0% 0% 100% 0%)' }).to(q('ph'), { y: 0, clip: win }, 2.14, 0.3, E.out);
+  [0, 1, 2].forEach((i) => tl.from(q(`bar.${i}`), { sx: 0 }).to(q(`bar.${i}`), { sx: 1 }, 2.4 + i * 0.14, 0.14, E.lin));
+  wipe(q('ph.time'), cut(8, 100), OPEN, 2.4, 0.07);
+  tl.type(q('ph.timet'), 2.44, 0.38);
+  wipe(q('ph.cap'), [0, 100, 0, 0], OPEN, 2.46, 0.08);
+  tl.type(q('ph.c1'), 2.5, 0.08);
+  tl.type(q('ph.c2'), 2.6, 0.1);
+  wipe(q('ph.btn'), cut(10, 100), cut(10), 2.68, 0.1);
+
+  /* 3 → 4: the phone folds; the editor opens; the price field is edited, and the card follows */
+  fold(q('ph'), 3.02, 0.12);
+  tl.from(q('ed'), { clip: 'inset(0% 0% 100% 0%)' }).to(q('ed'), { clip: win }, 3.12, 0.26, E.out);
+  wipe(q('ed.card'), [100, 0, 0, 0], OPEN, 3.3, 0.16);
+  ['l1', 'f1', 'l2', 'f2', 'l3', 'f3'].forEach((k, i) => wipe(q(`ed.${k}`), [0, 100, 0, 0], OPEN, 3.34 + i * 0.03, 0.08));
+  wipe(q('ed.ring'), [0, 100, 0, 0], win, 3.5, 0.08);
+  tl.type(q('ed.v1'), 3.56, 0.1, q('ed.caret'));
+  tl.set(q('ed.old'), { o: 0 }, 3.58);
+  tl.type(q('ed.new'), 3.58, 0.1);
+
+  /* 4 → 5: the editor folds; a change is asked for, and answered */
+  fold(q('ed'), 4.02, 0.12);
+  wipe(q('b0'), [0, 100, 0, 0], OPEN, 4.16, 0.1);
+  tl.type(q('b0.t'), 4.18, 0.1);
+  wipe(q('b1'), [0, 0, 0, 100], OPEN, 4.36, 0.1);
+  tl.type(q('b1.t'), 4.4, 0.08);
+  wipe(q('b1.s'), [0, 100, 0, 0], OPEN, 4.5, 0.08);
+  wipe(q('b2'), cut(14, 100), cut(14), 4.58, 0.12);
+  [0, 1, 2].forEach((i) => wipe(q(`b3.${i}`), [0, 100, 0, 0], OPEN, 4.66 + i * 0.04, 0.08));
+}
+</script>
+<script data-code>
+/* --- 2 · the page driver (lib/scene/driver.ts), for a section with a tail --- */
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const smooth = (a, b, x) => { const k = clamp01((x - a) / (b - a)); return k * k * (3 - 2 * k); };
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TOUR_TAIL = 0.3;      // screens a pinned tour holds its last state before the section scrolls on
+
+function target(section, n) {
+  const vh = window.innerHeight;
+  const r = section.getBoundingClientRect();
+  const tail = Number(section.dataset.tail ?? 0) * vh;
+  const intro = clamp01((vh * 0.85 - r.top) / (vh * 0.85));          // the first state draws as the section comes up
+  if (n < 2 || intro < 1) return intro;
+  const p = clamp01(-r.top / Math.max(1, r.height - vh - tail));     // the walk: the pin's length less the tail
+  const u = p * (n - 1);
+  const i = Math.min(n - 2, Math.floor(u));
+  return 1 + i + smooth(0.18, 0.82, u - i);
+}
+
+function play(section, tl, n) {
+  let shown = target(section, n), last = performance.now(), raf = 0, seen = true, step = -1;
+  tl.seek(shown);
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  function frame(now) {
+    raf = 0;
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+    last = now;
+    const want = target(section, n), was = shown;
+    if (reduced) shown = want > 0 ? Math.max(1, Math.round(want)) : 0;
+    else {
+      const next = shown + (want - shown) * (1 - Math.exp(-dt * 6.5));
+      shown = Math.abs(want - next) < 0.0005 ? want : next;
+    }
+    if (shown !== was) tl.seek(shown);
+    const s = Math.max(0, Math.min(n - 1, Math.round(shown) - 1));
+    if (s !== step) {
+      step = s;
+      section.setAttribute('data-step', String(s));
+      section.dispatchEvent(new CustomEvent('scene:step', { detail: s }));
+    }
+    if (shown !== want) kick();
+  }
+  new IntersectionObserver(([e]) => { seen = e.isIntersecting; if (seen) kick(); }, { rootMargin: '25% 0px 25% 0px' }).observe(section);
+  addEventListener('scroll', () => seen && kick(), { passive: true });
+  addEventListener('resize', kick);
+  kick();
+}
+
+/* --- 3 · the rows: the one the scene shows is on (a tile), the ones before it are past; the meter says how far --- */
+const tour = document.querySelector('.lk-tour');
+const rows = Array.from(tour.querySelectorAll('.lk-tour-list li'));
+const list = tour.querySelector('.lk-tour-list');
+const meter = tour.querySelector('.lk-tour-meter span');
+const n = rows.length;
+function light(active) {
+  rows.forEach((li, i) => {
+    li.className = i === active ? 'is-on' : i < active ? 'is-past' : '';
+    const b = li.querySelector('button');
+    if (i === active) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  meter.style.transform = `scaleX(${(active + 1) / n})`;
+}
+tour.addEventListener('scene:step', (e) => light(e.detail));
+light(0);
+// the current number's chip shows once the tour is well on screen (its top is past the middle of the screen)
+const live = () => list.classList.toggle('is-live', tour.getBoundingClientRect().top < window.innerHeight * 0.5);
+addEventListener('scroll', live, { passive: true });
+live();
+
+/* --- 4 · each row is a button that scrolls to its stop: the walk is the pin's length less the tail --- */
+function jump(i) {
+  const top = tour.getBoundingClientRect().top + window.scrollY;
+  const travel = tour.offsetHeight - window.innerHeight;
+  window.scrollTo({ top: top + (travel - window.innerHeight * TOUR_TAIL) * (i / Math.max(1, n - 1)), behavior: 'smooth' });
+}
+rows.forEach((li, i) => li.querySelector('button').addEventListener('click', () => jump(i)));
+
+if (!reduced) {
+  const box = tour.querySelector('.scn-box');
+  document.fonts.ready.then(() => {
+    drawService(box.querySelector('.scn'));
+    const { tl } = QM.scene(box, { w: W, h: H, n, build: buildService });
+    play(tour, tl, n);
+  });
+}
+</script>
+<script>
+  // the tile scrolls to each row's own stop (the same stops the buttons jump to)
+  QM.demo({
+    kind: 'scroll', lead: 800, dur: 6000, pause: 1400, hold: 1200, back: 2600,
+    get stops() {
+      const top = tour.getBoundingClientRect().top + window.scrollY;
+      const travel = tour.offsetHeight - window.innerHeight;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      return rows.map((_, i) => Math.min(1, (top + (travel - window.innerHeight * TOUR_TAIL) * (i / (n - 1)) + (i === 0 ? window.innerHeight * 0.1 : 0)) / max));
+    },
+  });
+  // a click on a row is the viewer taking over (the harness listens for wheel, touch and keys)
+  document.addEventListener('pointerdown', () => window.dispatchEvent(new Event('wheel')), true);
+</script>
+</body>
+</html>

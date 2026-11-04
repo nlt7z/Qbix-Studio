@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physics 404 · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-physics-404",
+  "title": "Physics 404",
+  "group": "lab",
+  "cat": "feedback",
+  "order": 570,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "SAT contacts · sequential impulses · grab with a soft joint",
+  "summary": "A hand-written 2D rigid body engine drops the numbers 4, 0, 4 and three words (Not built yet) onto a white floor. Boxes collide by separating axis tests with clipped contact points and are solved by sequential impulses with friction and warm starting. A pointer picks a block up through a soft constraint and flings it.",
+  "spec": [
+    ["Engine", "oriented boxes, SAT + edge clipping, 10 solver iterations, 3 sub-steps a frame"],
+    ["Contact", "friction 0.55, restitution 0.12 above 120 px/s, slop 0.6 px, bias 0.18, warm-started"],
+    ["Gravity", "2200 px/s² scaled by the frame height, sleeps after 0.6 s of stillness"],
+    ["Grab", "soft joint pulling the grabbed point at 30% of the error per step, capped at 4200 px/s"],
+    ["Trigger", "drag any block, Reset drops them again"]
+  ],
+  "source": ["Qbix studio library · physics-404"],
+  "where": "The not-found page of a Qbix site: this page isn't built yet, and the numbers are yours to throw.",
+  "rules": [
+    "Blocks are flat with the cut corner (drawn, the collision stays a plain box). No shadows under them.",
+    "The 0 is the lime one; everything else is ink, or white with a 2px ink frame.",
+    "Digits are Eurostile at half the block height, words are Eurostile at a third."
+  ],
+  "tags": ["canvas", "physics", "404", "drag"],
+  "shot": 4500
+}
+</script>
+<style data-code>
+/* Physics 404: one canvas, sized to its frame. Blocks, floor and walls live in the canvas. */
+.ph-cv { position: fixed; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+html:not(.qm-tile) .ph-cv { bottom: 46px; height: calc(100% - 46px); }
+</style>
+<style>
+  .ph-copy { position: absolute; left: clamp(24px, 4vw, 48px); top: clamp(20px, 4vh, 40px); display: grid; gap: 10px; z-index: 2; pointer-events: none; max-width: 22em; }
+  .ph-copy .lede { font-size: 14px; max-width: 24em; }
+  .ph-reset { position: absolute; right: clamp(24px, 4vw, 48px); top: clamp(16px, 3.4vh, 36px); z-index: 3; height: 40px; padding: 0 18px; }
+  .ph-reset.press { transform: translateY(2px); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<canvas class="ph-cv" id="c" aria-label="404, as blocks you can throw"></canvas>
+<!-- /code -->
+  <div class="ph-copy"><p class="kicker">Error · 404</p><p class="lede">This page isn't built yet. Pick a number up and throw it.</p></div>
+  <button class="btn btn-line ph-reset" id="reset">Reset</button>
+  <div class="qm-ui"><span>Grab a number and fling it</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const cv = document.getElementById('c'), ctx = cv.getContext('2d'), resetB = document.getElementById('reset');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W = 0, H = 0, dpr = 1, G = 2200, TH = 100, OX = 0, OY = 0;
+  const FONT = "Eurostile, 'Geist', system-ui, sans-serif";
+  const SPEC = [
+    { t: '4', k: 'd', fill: '#121417', ink: '#f4f5f2' }, { t: '0', k: 'd', fill: '#B8FF00', ink: '#0c1300' }, { t: '4', k: 'd', fill: '#ffffff', ink: '#121417', frame: 1 },
+    { t: 'Not', k: 'w', fill: '#ffffff', ink: '#121417', frame: 1 }, { t: 'built', k: 'w', fill: '#121417', ink: '#f4f5f2' }, { t: 'yet', k: 'w', fill: '#ffffff', ink: '#121417', frame: 1 },
+  ];
+  let bodies = [], walls = [], idc = 0;
+  function mkBody(x, y, hw, hh, a, stat) { const m = stat ? 0 : hw * hh * 4 / 1000, I = stat ? 0 : m * ((2 * hw) ** 2 + (2 * hh) ** 2) / 12; return { id: idc++, x, y, a, vx: 0, vy: 0, w: 0, hw, hh, m, im: stat ? 0 : 1 / m, iI: stat ? 0 : 1 / I, stat }; }
+  const measure = () => { TH = Math.max(64, Math.min(W * 0.2, H * 0.27, 190)); };
+  const wordW = (t) => { ctx.font = `${TH * 0.34}px ${FONT}`; return ctx.measureText(t).width; };
+  function spawn() {
+    bodies = []; measure();
+    const tw = TH * 0.8, gap = Math.min(TH * 0.18, (W - 3 * tw) / 4), total = 3 * tw + 2 * gap, x0 = W / 2 - total / 2 + tw / 2;
+    SPEC.forEach((s, i) => {
+      let hw, hh, x, y;
+      if (s.k === 'd') { hw = tw / 2; hh = TH / 2; x = x0 + i * (tw + gap); y = -TH * (0.7 + i * 0.55); }
+      else { hh = TH * 0.2; hw = wordW(s.t) / 2 + TH * 0.16; x = W * (0.25 + 0.25 * (i - 3)) + (Math.random() - 0.5) * 20; y = -TH * (2.6 + (i - 3) * 0.5); }
+      const b = mkBody(x, y, hw, hh, (Math.random() - 0.5) * 0.5, false); Object.assign(b, s); b.vy = 200; bodies.push(b);
+    });
+    asleep = false; still = 0;
+  }
+  function buildWalls() { const fl = Math.min(22, H * 0.03); walls = [mkBody(W / 2, H + 400 - fl, W * 2, 400, 0, true), mkBody(-400, H / 2 - H, 400, H * 3, 0, true), mkBody(W + 400, H / 2 - H, 400, H * 3, 0, true)]; }
+  function resize() {
+    const r = cv.getBoundingClientRect(); OX = r.left; OY = r.top;
+    dpr = Math.min(2, devicePixelRatio || 1); const ow = W; W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    G = 2200 * Math.max(0.7, Math.min(1.3, H / 700)); buildWalls();
+    if (ow && Math.abs(TH - Math.max(64, Math.min(W * 0.2, H * 0.27, 190))) > TH * 0.15) spawn();
+    else for (const b of bodies) { b.x = Math.max(b.hw, Math.min(W - b.hw, b.x)); b.y = Math.min(b.y, H - b.hh); }
+    asleep = false; still = 0;
+  }
+  // geometry
+  const axes = (b) => [Math.cos(b.a), Math.sin(b.a)];
+  function verts(b) { const [c, s] = axes(b); return [[-b.hw, -b.hh], [b.hw, -b.hh], [b.hw, b.hh], [-b.hw, b.hh]].map(([x, y]) => [b.x + c * x - s * y, b.y + s * x + c * y]); }
+  function norms(b) { const [c, s] = axes(b); return [[s, -c], [c, s], [-s, c], [-c, -s]]; }
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+  function maxSep(va, na, vb) { let best = -1e9, bi = 0; for (let i = 0; i < 4; i++) { const n = na[i], v = va[i]; let mn = 1e9; for (const p of vb) { const d = n[0] * (p[0] - v[0]) + n[1] * (p[1] - v[1]); if (d < mn) mn = d; } if (mn > best) { best = mn; bi = i; } } return [best, bi]; }
+  function clip(pts, n, o) { const out = [], d0 = dot(n, pts[0]) - o, d1 = dot(n, pts[1]) - o; if (d0 <= 0) out.push(pts[0]); if (d1 <= 0) out.push(pts[1]); if (d0 * d1 < 0) { const u = d0 / (d0 - d1); out.push([pts[0][0] + u * (pts[1][0] - pts[0][0]), pts[0][1] + u * (pts[1][1] - pts[0][1])]); } return out; }
+  function collide(A, B) {
+    const va = verts(A), vb = verts(B), na = norms(A), nb = norms(B);
+    const [sa, fa] = maxSep(va, na, vb); if (sa > 0) return null;
+    const [sb, fb] = maxSep(vb, nb, va); if (sb > 0) return null;
+    let vr, vi, nr, ni, f, flip;
+    if (sb > sa + 0.5) { vr = vb; vi = va; nr = nb; ni = na; f = fb; flip = true; } else { vr = va; vi = vb; nr = na; ni = nb; f = fa; flip = false; }
+    const n = nr[f], v1 = vr[f], v2 = vr[(f + 1) % 4];
+    let ii = 0, md = 1e9; for (let i = 0; i < 4; i++) { const d = dot(ni[i], n); if (d < md) { md = d; ii = i; } }
+    let pts = [vi[ii], vi[(ii + 1) % 4]];
+    const t = [v2[0] - v1[0], v2[1] - v1[1]], tl = Math.hypot(t[0], t[1]); t[0] /= tl; t[1] /= tl;
+    pts = clip(pts, [-t[0], -t[1]], -dot(t, v1)); if (pts.length < 2) return null;
+    pts = clip(pts, t, dot(t, v2)); if (pts.length < 2) return null;
+    const front = dot(n, v1), out = [];
+    pts.forEach((p, k) => { const sep = dot(n, p) - front; if (sep <= 0.5) out.push({ p: [p[0] - n[0] * sep * 0.5, p[1] - n[1] * sep * 0.5], depth: -sep, key: A.id + '_' + B.id + '_' + f + (flip ? 'f' : '') + '_' + ii + '_' + k }); });
+    if (!out.length) return null;
+    return { A, B, n: flip ? [-n[0], -n[1]] : n, pts: out };
+  }
+  // solver: sequential impulses, friction, warm starting
+  let cache = new Map(), asleep = false, still = 0, joint = null;
+  const SLOP = 0.6, BETA = 0.18, MU = 0.55, E = 0.12;
+  const relv = (A, B, c) => [B.vx - B.w * c.rB[1] - A.vx + A.w * c.rA[1], B.vy + B.w * c.rB[0] - A.vy - A.w * c.rA[0]];
+  function apply(A, B, c, P) { A.vx -= P[0] * A.im; A.vy -= P[1] * A.im; A.w -= A.iI * (c.rA[0] * P[1] - c.rA[1] * P[0]); B.vx += P[0] * B.im; B.vy += P[1] * B.im; B.w += B.iI * (c.rB[0] * P[1] - c.rB[1] * P[0]); }
+  function step(dt) {
+    const all = bodies.concat(walls);
+    for (const b of bodies) { b.vy += G * dt; b.vx *= 0.9995; b.vy *= 0.9995; b.w *= 0.995; }
+    const man = [];
+    for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) {
+      const A = all[i], B = all[j]; if (A.stat && B.stat) continue;
+      if (!A.stat && !B.stat && Math.hypot(A.x - B.x, A.y - B.y) > Math.hypot(A.hw, A.hh) + Math.hypot(B.hw, B.hh)) continue;
+      const m = collide(A, B); if (m) man.push(m);
+    }
+    const nc = new Map();
+    for (const m of man) {
+      const { A, B, n } = m, t = [-n[1], n[0]];
+      for (const c of m.pts) {
+        c.rA = [c.p[0] - A.x, c.p[1] - A.y]; c.rB = [c.p[0] - B.x, c.p[1] - B.y];
+        const rnA = c.rA[0] * n[1] - c.rA[1] * n[0], rnB = c.rB[0] * n[1] - c.rB[1] * n[0];
+        c.mn = 1 / (A.im + B.im + A.iI * rnA * rnA + B.iI * rnB * rnB);
+        const rtA = c.rA[0] * t[1] - c.rA[1] * t[0], rtB = c.rB[0] * t[1] - c.rB[1] * t[0];
+        c.mt = 1 / (A.im + B.im + A.iI * rtA * rtA + B.iI * rtB * rtB);
+        c.bias = BETA / dt * Math.max(0, c.depth - SLOP);
+        const vn = dot(relv(A, B, c), n); c.bounce = vn < -120 ? -E * vn : 0;
+        const old = cache.get(c.key); c.Pn = old ? old[0] : 0; c.Pt = old ? old[1] : 0;
+        apply(A, B, c, [n[0] * c.Pn + t[0] * c.Pt, n[1] * c.Pn + t[1] * c.Pt]);
+      }
+    }
+    for (let it = 0; it < 10; it++) {
+      for (const m of man) {
+        const { A, B, n } = m, t = [-n[1], n[0]];
+        for (const c of m.pts) {
+          let dv = relv(A, B, c); const vn = dot(dv, n);
+          let dPn = c.mn * (-vn + c.bias + c.bounce); const p0 = c.Pn; c.Pn = Math.max(p0 + dPn, 0); dPn = c.Pn - p0;
+          apply(A, B, c, [n[0] * dPn, n[1] * dPn]);
+          dv = relv(A, B, c); const vt = dot(dv, t); let dPt = c.mt * (-vt); const mx = MU * c.Pn, q0 = c.Pt; c.Pt = Math.max(-mx, Math.min(mx, q0 + dPt)); dPt = c.Pt - q0;
+          apply(A, B, c, [t[0] * dPt, t[1] * dPt]);
+        }
+      }
+      if (joint) solveJoint(dt);
+    }
+    for (const m of man) for (const c of m.pts) nc.set(c.key, [c.Pn, c.Pt]);
+    cache = nc;
+    for (const b of bodies) { b.x += b.vx * dt; b.y += b.vy * dt; b.a += b.w * dt; if (b.y < -H * 3) { b.y = -TH; b.vy = 0; } }
+  }
+  function solveJoint(dt) {
+    const b = joint.b, [c, s] = axes(b), r = [c * joint.lx - s * joint.ly, s * joint.lx + c * joint.ly], p = [b.x + r[0], b.y + r[1]];
+    const vd = [(joint.tx - p[0]) * 0.3 / dt, (joint.ty - p[1]) * 0.3 / dt], sp = Math.hypot(vd[0], vd[1]), cap = 4200; if (sp > cap) { vd[0] *= cap / sp; vd[1] *= cap / sp; }
+    const vp = [b.vx - b.w * r[1], b.vy + b.w * r[0]];
+    const k11 = b.im + b.iI * r[1] * r[1], k12 = -b.iI * r[0] * r[1], k22 = b.im + b.iI * r[0] * r[0], det = k11 * k22 - k12 * k12;
+    const dvx = (vd[0] - vp[0]) * 0.5, dvy = (vd[1] - vp[1]) * 0.5, Px = (k22 * dvx - k12 * dvy) / det, Py = (-k12 * dvx + k11 * dvy) / det;
+    b.vx += Px * b.im; b.vy += Py * b.im; b.w += b.iI * (r[0] * Py - r[1] * Px); b.w *= 0.97;
+  }
+  // render: flat blocks, the top right corner cut
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const fl = Math.min(22, H * 0.03); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, H - fl, W, fl);   // the floor: a white surface on the paper
+    for (const b of bodies) {
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.a);
+      const c = Math.min(18, Math.min(b.hw, b.hh) * 0.5);
+      ctx.fillStyle = b.fill; ctx.beginPath(); ctx.moveTo(-b.hw, -b.hh); ctx.lineTo(b.hw - c, -b.hh); ctx.lineTo(b.hw, -b.hh + c); ctx.lineTo(b.hw, b.hh); ctx.lineTo(-b.hw, b.hh); ctx.closePath(); ctx.fill();
+      if (b.frame) { ctx.save(); ctx.clip(); ctx.lineWidth = 4; ctx.strokeStyle = b.ink; ctx.stroke(); ctx.restore(); }   // a white block gets a 2px inset ink frame
+      ctx.fillStyle = b.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `${b.k === 'd' ? TH * 0.54 : TH * 0.34}px ${FONT}`; ctx.fillText(b.t, 0, TH * 0.02);
+      ctx.restore();
+    }
+  }
+  let last = performance.now(), running = false;
+  function frame(now) {
+    if (document.hidden) { running = false; return; }
+    const dt = Math.min(1 / 30, (now - last) / 1000); last = now;
+    if (!asleep) {
+      const n = reduce ? 6 : 3; for (let i = 0; i < n; i++) step(dt / n);
+      let mx = 0; for (const b of bodies) mx = Math.max(mx, Math.hypot(b.vx, b.vy) + Math.abs(b.w) * 40);
+      if (mx < 9 && !joint) { still += dt; if (still > 0.6) { asleep = true; for (const b of bodies) b.vx = b.vy = b.w = 0; } } else still = 0;
+    }
+    draw(); requestAnimationFrame(frame);
+  }
+  function start() { if (!running && !document.hidden) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', start);
+  // pointer: pick a block up by the point you touched
+  function hit(x, y) { for (let i = bodies.length - 1; i >= 0; i--) { const b = bodies[i], [c, s] = axes(b), dx = x - b.x, dy = y - b.y, lx = c * dx + s * dy, ly = -s * dx + c * dy; if (Math.abs(lx) <= b.hw + 4 && Math.abs(ly) <= b.hh + 4) return { b, lx, ly }; } return null; }
+  function grab(x, y) { const h = hit(x, y); if (!h) return false; joint = { b: h.b, lx: h.lx, ly: h.ly, tx: x, ty: y }; asleep = false; still = 0; bodies.splice(bodies.indexOf(h.b), 1); bodies.push(h.b); return true; }
+  const move = (x, y) => { if (joint) { joint.tx = x; joint.ty = y; } };
+  const release = () => { joint = null; };
+  const pt = (e) => [e.clientX - OX, e.clientY - OY];
+  cv.addEventListener('pointerdown', (e) => { if (grab(...pt(e))) cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => { move(...pt(e)); cv.style.cursor = joint ? 'grabbing' : (hit(...pt(e)) ? 'grab' : 'default'); });
+  cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
+  resetB.addEventListener('click', () => { release(); spawn(); });
+  addEventListener('resize', resize);
+  window.physApi = { grab: (x, y) => grab(x - OX, y - OY), move: (x, y) => move(x - OX, y - OY), release, spawn, get joint() { return joint; }, get bodies() { return bodies; }, off: () => [OX, OY], get asleep() { return asleep; } };
+  resize(); spawn();
+  if (document.fonts) document.fonts.load('20px Eurostile').then(() => { for (const b of bodies) { if (b.k !== 'w') continue; b.hw = wordW(b.t) / 2 + TH * 0.16; b.iI = 1 / (b.m * ((2 * b.hw) ** 2 + (2 * b.hh) ** 2) / 12); } asleep = false; still = 0; });
+  if (reduce) { for (let i = 0; i < 900 && !asleep; i++) { step(1 / 120); let mx = 0; for (const b of bodies) mx = Math.max(mx, Math.hypot(b.vx, b.vy)); if (mx < 5 && i > 200) asleep = true; } draw(); }
+  else start();
+})();
+</script>
+<script>
+  (async function () {
+    QM.demo({ kind: 'loop' });
+    if (QM.reduced) return;
+    const api = window.physApi, ease = QM.easeInOut; let gx = 0, gy = 0;
+    const put = (x, y) => { gx = x; gy = y; QM.ghostAt(x, y); api.move(x, y); };
+    const glide = (x, y, ms, e = ease) => new Promise((res) => { const x0 = gx, y0 = gy, t0 = performance.now(); (function s() { const u = Math.min(1, (performance.now() - t0) / ms), k = e(u); put(x0 + (x - x0) * k, y0 + (y - y0) * k); if (u < 1) requestAnimationFrame(s); else res(); })(); });
+    put(innerWidth * 0.75, innerHeight * 0.8);
+    await QM.wait(3600);
+    let turn = 0;
+    for (;;) {
+      QM.ghostShow();
+      const [ox, oy] = api.off();
+      if (turn++ % 3 === 2) {
+        const r = document.getElementById('reset').getBoundingClientRect();
+        await glide(r.left + r.width * 0.5, r.top + r.height * 0.6, 900);
+        document.getElementById('reset').classList.add('press'); await QM.wait(140); document.getElementById('reset').classList.remove('press'); api.spawn();
+        await glide(innerWidth * 0.6, innerHeight * 0.5, 800); QM.ghostHide(); await QM.wait(4200); continue;
+      }
+      const digits = api.bodies.filter((b) => b.k === 'd'), b = digits[Math.floor(Math.random() * digits.length)];
+      await glide(ox + b.x + b.hw * 0.2, oy + b.y - b.hh * 0.4, 900);
+      if (!api.grab(gx, gy)) { QM.ghostHide(); await QM.wait(3000); continue; }
+      const dir = gx < innerWidth / 2 ? 1 : -1;
+      await glide(Math.max(80, Math.min(innerWidth - 80, gx + dir * innerWidth * 0.08)), Math.max(innerHeight * 0.25, gy - innerHeight * 0.34), 700);
+      await QM.wait(120);
+      await glide(gx + dir * innerWidth * 0.28, gy - innerHeight * 0.06, 170, (u) => u);
+      api.release();
+      await glide(gx, gy + 40, 500); QM.ghostHide();
+      await QM.wait(4600);
+    }
+  })();
+</script>
+</body>
+</html>

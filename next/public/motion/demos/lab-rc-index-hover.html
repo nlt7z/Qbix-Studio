@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trailing preview · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-index-hover",
+  "title": "Trailing preview",
+  "group": "lab",
+  "cat": "images",
+  "order": 110,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "one trailing preview · damp 9 · grows from its rect",
+  "summary": "The titles are the interface. One preview image trails the pointer with weight, leaning into its own speed, and swaps pictures by being uncovered from below. Click a title and that exact frame grows from the preview's rectangle into the detail, whose words slide in after the image has landed.",
+  "spec": [
+    ["Preview", "position damped at 9 /s, tilt 0.012° per px/s (±12°), scale spring 260 / 24 from 0.6; it sits beside the pointer, flipping sides near the right edge"],
+    ["Swap", "the new picture is uncovered upward over 420 ms, expo out, over the old one"],
+    ["Active row", "the other titles step back to a light tone; the active one keeps its ink and gets a lime marker bar"],
+    ["Open", "the frame animates from the preview's rect to the hero rect in 720 ms, ease-move; the text follows at 70 ms steps"],
+    ["Close", "text first, then the frame back to the preview's rect in 560 ms"]
+  ],
+  "source": ["Qbix studio library · 03-index-hover"],
+  "where": "The studio's work index: Forma, Kova, Strata and the rest, each with its picture on the pointer.",
+  "rules": [
+    "No per-row images in the DOM: one preview, one source at a time.",
+    "The detail grows from the image that was clicked, so the picture never jumps.",
+    "Lime is the marker bar on the active row, not the type."
+  ],
+  "tags": ["recipe", "index", "preview", "morph"],
+  "shot": 3800
+}
+</script>
+<style data-code>
+.ih-rows { list-style: none; margin: 0; padding: 0; }
+.ih-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 24px; padding-block: clamp(4px, 1vh, 10px); cursor: pointer; position: relative; }
+.ih-row::before { content: ''; position: absolute; left: 0; top: 50%; width: 10px; height: 10px; margin-top: -5px; background: #B8FF00; transform: scaleX(0); transform-origin: left center; transition: transform 300ms cubic-bezier(.16, 1, .3, 1); }
+.ih-row.on::before { transform: scaleX(1); }
+.ih-name { font: 400 clamp(30px, min(6.2vw, 9vh), 84px)/1.02 Eurostile, Geist, sans-serif; letter-spacing: -.03em; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: #121417; transition: color 300ms cubic-bezier(.16, 1, .3, 1), transform 400ms cubic-bezier(.16, 1, .3, 1); }
+.ih-rows.dim .ih-name { color: rgba(18,20,23,.28); }
+.ih-rows.dim .on .ih-name { color: #121417; transform: translateX(24px); }
+.ih-meta { font: 400 12px/1.5 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(18,20,23,.64); text-align: right; white-space: nowrap; }
+.ih-meta span { display: block; }
+.ih-prev { position: fixed; left: 0; top: 0; z-index: 20; width: clamp(150px, 22vw, 260px); aspect-ratio: 4 / 5; pointer-events: none; overflow: hidden; background: #e6e8ea; visibility: hidden; will-change: transform;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.ih-prev img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ih-detail { position: fixed; inset: 0; z-index: 30; }
+.ih-detail[hidden] { display: none; }
+.ih-bg { position: absolute; inset: 0; background: #f3f4f5; clip-path: inset(0 0 100% 0); transition: clip-path 500ms cubic-bezier(.16, 1, .3, 1); }
+.ih-detail.show .ih-bg { clip-path: inset(0); }
+.ih-frame { position: fixed; overflow: hidden; background: #e6e8ea; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+.ih-frame img { width: 100%; height: 100%; object-fit: cover; }
+.ih-copy { position: absolute; display: grid; gap: 14px; align-content: center; }
+.ih-copy > * { overflow: hidden; }
+.ih-copy > * > * { display: block; transform: translateY(110%); transition: transform 500ms cubic-bezier(.16, 1, .3, 1); }
+.ih-detail.text .ih-copy > * > * { transform: none; }
+.ih-detail.text .ih-copy > :nth-child(2) > * { transition-delay: 70ms; }
+.ih-detail.text .ih-copy > :nth-child(3) > * { transition-delay: 140ms; }
+.ih-detail.text .ih-copy > :nth-child(4) > * { transition-delay: 210ms; }
+.ih-copy h2 { font: 400 clamp(34px, 6vw, 72px)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; color: #121417; }
+.ih-copy p { color: rgba(18,20,23,.64); max-width: 34em; }
+.ih-close { position: absolute; top: 16px; right: 20px; background: none; border: 0; color: #121417; cursor: pointer; padding: 8px; font: 500 15px Geist, sans-serif; }
+</style>
+<style>
+  .qm-stage { display: block; place-items: stretch; padding: clamp(18px, 4vmin, 40px) clamp(18px, 4vw, 48px); }
+  .ih-head { display: flex; justify-content: space-between; margin-bottom: clamp(6px, 2vh, 18px); }
+</style>
+</head>
+<body>
+<main class="qm-stage" id="stage">
+<!-- code -->
+<section id="index" style="width:100%">
+  <ul class="ih-rows" id="rows"></ul>
+</section>
+<div class="ih-prev" id="prev" aria-hidden="true"><img alt=""><img alt=""></div>
+<div class="ih-detail" id="detail" hidden role="dialog" aria-modal="true">
+  <div class="ih-bg"></div>
+  <div class="ih-frame" id="d-frame"><img alt="" id="d-img"></div>
+  <div class="ih-copy" id="d-copy"><div><h2 id="d-title"></h2></div><div><p id="d-line"></p></div><div><p class="mono kicker" id="d-meta"></p></div></div>
+  <button class="ih-close" id="d-close">Close</button>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const indexApi = (() => {
+  const WORK = [
+    { name: 'Forma', line: 'A moodboard turned into a launch site on your own domain, in weeks, for founders who sell objects.', role: 'Design service', year: '2026', img: '../assets/art/objects.webp' },
+    { name: 'Willow Counseling', line: 'A calm practice site, live in 7 days: services, fees and a form that books.', role: 'Practice site', year: '2026', img: '../assets/art/calla.webp' },
+    { name: 'Kova', line: 'A money app, designed and built end to end: one brand, one set of tokens, one launch page.', role: 'Brand and product', year: '2025', img: '../assets/art/curves.webp' },
+    { name: 'Strata', line: 'A moodboard in, a design system out: tokens, components and code.', role: 'Qbix Labs', year: '2026', img: '../assets/art/ribbon.webp' },
+    { name: 'Labs', line: 'Small tools built in the open, made to be lifted into your product.', role: 'Products', year: '2025', img: '../assets/art/cross.webp' },
+    { name: 'Dream', line: 'A first picture of the idea before anyone writes a brief.', role: 'Concept', year: '2024', img: '../assets/art/vase.webp' }
+  ];
+  const stage = document.getElementById('stage');
+  const rows = document.getElementById('rows'), prev = document.getElementById('prev'), layers = [...prev.querySelectorAll('img')];
+  WORK.forEach((w, i) => {
+    const li = document.createElement('li'); li.className = 'ih-row'; li.dataset.i = i;
+    li.innerHTML = `<button class="ih-name">${w.name}</button><div class="ih-meta"><span>${w.role}</span><span>${w.year}</span></div>`;
+    rows.append(li);
+  });
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v)), damp = (a, b, k, dt) => a + (b - a) * (1 - Math.exp(-k * dt));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let active = -1, front = 0, shown = false, opened = -1;
+  const pos = { x: innerWidth / 2, y: innerHeight / 2 }, tgt = { x: pos.x, y: pos.y };
+  let scale = 0.6, sv = 0, tilt = 0, tv = 0, tiltT = 0, side = 1, lastX = pos.x, vis = 0;
+  function show(i) {
+    if (i === active) return;
+    active = i;
+    [...rows.children].forEach((r, k) => r.classList.toggle('on', k === i));
+    rows.classList.toggle('dim', i >= 0);
+    if (i < 0) { shown = false; return; }
+    shown = true;
+    const back = 1 - front, L = layers[back];
+    L.src = WORK[i].img;
+    // the new picture is uncovered upward over the old one
+    L.style.zIndex = 2; layers[front].style.zIndex = 1;
+    L.getAnimations().forEach((a) => a.cancel());
+    L.animate([{ clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0)' }], { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' });
+    front = back;
+  }
+  function hit(x, y) {
+    const rr = rows.getBoundingClientRect();
+    if (x < rr.left - 20 || x > rr.right + 20) return -1;
+    for (const r of rows.children) { const b = r.getBoundingClientRect(); if (y >= b.top && y < b.bottom) return +r.dataset.i; }
+    return -1;
+  }
+  function move(x, y) { tgt.x = x; tgt.y = y; if (opened < 0) show(hit(x, y)); }
+  function leave() { if (opened < 0) show(-1); }
+  let last = performance.now();
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - last) / 1000) || 0.016; last = now;
+    pos.x = damp(pos.x, tgt.x, 9, dt); pos.y = damp(pos.y, tgt.y, 9, dt);
+    const vx = (pos.x - lastX) / Math.max(dt, 1e-3); lastX = pos.x;
+    tiltT = clamp(vx * 0.012, -12, 12);
+    tv += ((tiltT - tilt) * 120 - tv * 16) * dt; tilt += tv * dt;
+    sv += (((shown ? 1 : 0.6) - scale) * 260 - sv * 24) * dt; scale += sv * dt;
+    vis = damp(vis, shown && opened < 0 ? 1 : 0, 30, dt);
+    const w = prev.offsetWidth, h = prev.offsetHeight;
+    prev.style.visibility = shown && opened < 0 ? 'visible' : 'hidden';
+    side = damp(side, pos.x > innerWidth - w - 80 ? -1 : 1, 6, dt);
+    const x = pos.x + side * (w / 2 + 28) - w / 2, y = clamp(pos.y - h / 2, 12, innerHeight - h - 12);
+    prev.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(reduce ? 0 : tilt).toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+  })(performance.now());
+
+  /* the detail: grow from the exact rect */
+  const detail = document.getElementById('detail'), frame = document.getElementById('d-frame'), dImg = document.getElementById('d-img'), copy = document.getElementById('d-copy');
+  function hero() {
+    const vw = innerWidth, vh = innerHeight, m = Math.max(20, vw * 0.05);
+    const width = Math.min(vw * 0.46, 640), height = Math.min(vh - 120, width * 1.1);
+    return { left: m, top: (vh - height) / 2, width, height };
+  }
+  function morph(el, from, to, ms, easing) {
+    el.style.cssText = `left:${to.left}px;top:${to.top}px;width:${to.width}px;height:${to.height}px`;
+    return el.animate([{ left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px' }, { left: to.left + 'px', top: to.top + 'px', width: to.width + 'px', height: to.height + 'px' }], { duration: reduce ? 1 : ms, easing }).finished;
+  }
+  let fromRect = null;
+  async function open(i) {
+    if (opened >= 0) return;
+    opened = i;
+    const w = WORK[i], to = hero();
+    fromRect = prev.getBoundingClientRect();
+    if (!shown || fromRect.width < 20) fromRect = rows.children[i].getBoundingClientRect();
+    dImg.src = w.img;
+    document.getElementById('d-title').textContent = w.name;
+    document.getElementById('d-line').textContent = w.line;
+    document.getElementById('d-meta').textContent = `${w.role} · ${w.year}`;
+    copy.style.left = (to.left + to.width + Math.max(24, innerWidth * 0.04)) + 'px';
+    copy.style.right = Math.max(20, innerWidth * 0.05) + 'px';
+    copy.style.top = to.top + 'px'; copy.style.height = to.height + 'px';
+    detail.hidden = false;
+    requestAnimationFrame(() => detail.classList.add('show'));
+    await morph(frame, fromRect, to, 720, 'cubic-bezier(.65,0,.35,1)');
+    detail.classList.add('text');
+  }
+  async function close() {
+    if (opened < 0) return;
+    const i = opened;
+    detail.classList.remove('text', 'show');
+    const back = fromRect && fromRect.width ? fromRect : rows.children[i].getBoundingClientRect();
+    await morph(frame, frame.getBoundingClientRect(), back, 560, 'cubic-bezier(.65,0,.35,1)');
+    detail.hidden = true; opened = -1;
+  }
+  const isOpen = () => opened >= 0;
+  rows.addEventListener('click', (e) => { const r = e.target.closest('.ih-row'); if (r) open(+r.dataset.i); });
+  document.getElementById('d-close').addEventListener('click', close);
+  detail.querySelector('.ih-bg').addEventListener('click', close);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  return { move, leave, open, close, isOpen, rows, active: () => active };
+})();
+document.addEventListener('pointermove', (e) => indexApi.move(e.clientX, e.clientY));
+document.documentElement.addEventListener('pointerleave', () => indexApi.leave());
+</script>
+<script>
+  /* ghost story, 14 s: down the list over three titles, click the third, read, close */
+  const CYC = 14, STOPS = [[0, 1], [2.4, 3], [5, 4], [7.4, 2]];
+  let lastT = 0, did = 0;
+  const rowPt = (i) => { const b = indexApi.rows.children[i].getBoundingClientRect(); return [b.left + b.width * 0.28, b.top + b.height / 2]; };
+  const ease = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+  QM.demo({ kind: 'pointer',
+    move: (x, y) => indexApi.move(x, y),
+    leave: () => indexApi.leave(),
+    path: (t0) => {
+      const t = t0 % CYC;
+      if (t < lastT) { if (indexApi.isOpen()) indexApi.close(); did = 0; }
+      lastT = t;
+      if (t > 8.6 && did === 0) { did = 1; indexApi.open(indexApi.active() >= 0 ? indexApi.active() : 2); }
+      if (t > 12 && did === 1) { did = 2; indexApi.close(); }
+      let k = 0; for (let i = 0; i < STOPS.length; i++) if (t >= STOPS[i][0]) k = i;
+      const a = rowPt(STOPS[k][1]), nxt = STOPS[Math.min(k + 1, STOPS.length - 1)], b = rowPt(nxt[1]);
+      const u = k < STOPS.length - 1 ? Math.min(1, (t - STOPS[k][0]) / 0.9) : 1, e = ease(u);
+      const p = [a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e];
+      return k === STOPS.length - 1 ? rowPt(STOPS[k][1]).map((v, i) => v + (i ? 0 : 40)) : [p[0] + (k === 0 ? 0 : 0), p[1]];
+    } });
+</script>
+</body>
+</html>

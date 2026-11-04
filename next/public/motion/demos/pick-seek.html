@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search morph · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-seek",
+  "title": "Search morph",
+  "group": "picks",
+  "cat": "buttons",
+  "order": 120,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "one box · width spring k 420 · c 27 · 90 ms press",
+  "summary": "The search icon in the top bar grows, as one object, into the search field after a small press beat. The first Forma results arrive one after another, and Esc folds everything back.",
+  "spec": [
+    ["Box", "one element whose width is the state: 44 → 330 px, centred, on a spring k 420 · c 27 (a slight overshoot); a pill with a 1px edge"],
+    ["Press", "the box scales to 0.92 for 90 ms before it moves: a thing that yields first reads as pushed"],
+    ["Lens", "never moves inside the box; the field and the Esc key wait inside it and show as it grows"],
+    ["Scrim", "ink at 16% over the page under the bar, opacity 200 ms, expo out"],
+    ["Results", "a ring popover: it arrives in 200 ms, then each row 260 ms (opacity, up from −6 px), 60 ms apart; 120 ms in to leave"],
+    ["Trigger", "click or press the box; / or ⌘K anywhere; Esc or a click outside folds it"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Search morph (ix-seek)", "Idea: bencho.dev seek (MIT)"],
+  "where": "The top bar of the studio's work page: find Forma's launch site, its moodboard, its brief and its launch film.",
+  "rules": [
+    "One box whose width is the state: never a button that swaps for an input.",
+    "The scrim dims the page, never blurs it.",
+    "Results sit in a ring popover; the match is marked with the lime, the only colour on the screen.",
+    "The focused field's edge turns ink, the one heavier edge."
+  ],
+  "tags": ["search", "spring", "morph", "scrim", "paper"],
+  "shot": 5200
+}
+</script>
+<style data-code>
+/* Search morph · Idea: bencho.dev seek (MIT).
+   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+.sk {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
+  --surface: #ffffff; --surface-muted: #eceef0; --surface-border: rgba(18, 20, 23, 0.14); --edge: rgba(18, 20, 23, 0.52); --scrim: rgba(18, 20, 23, 0.16);
+  --primary: #B8FF00; --on-primary: #0c1300;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative; overflow: hidden; width: 680px; background: var(--surface); border-radius: 14px;
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.sk-bar { height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: relative; z-index: 3; background: var(--surface); }
+.sk-brand { display: flex; align-items: center; gap: 12px; color: var(--text); font-size: 16px; letter-spacing: -0.01em; line-height: 1.35; }
+.sk-logo { display: block; height: 20px; width: auto; }
+.sk-me { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; object-position: 50% 30%; }
+/* one object: a box whose width is the state. The lens never moves inside it. */
+.sk-seek { position: absolute; left: 50%; top: 14px; height: 44px; width: 44px; margin-left: -22px; border: 1px solid var(--edge); border-radius: 22px; background: var(--surface); overflow: hidden; display: flex; align-items: center; cursor: pointer; z-index: 4; transition: background-color 120ms var(--ease-out), border-color 120ms var(--ease-out); }
+.sk-seek:hover, .sk-seek.is-hot { background: var(--surface-muted); }
+.sk-seek.open { cursor: text; background: var(--surface); border-color: var(--text); }
+.sk-lens { position: absolute; left: 13px; top: 12px; width: 18px; height: 18px; color: var(--text); display: grid; place-items: center; }
+.sk-seek input { position: absolute; left: 40px; top: 0; height: 100%; width: 240px; border: 0; outline: 0; background: transparent; font: inherit; font-size: 16px; color: var(--text); padding: 0; opacity: 0; transition: opacity 120ms var(--ease-out); }
+.sk-seek input::placeholder { color: var(--faint); }
+.sk-seek.open input { opacity: 1; }
+.sk-esc { position: absolute; right: 12px; top: 10px; height: 22px; padding: 0 6px; border-radius: 6px; background: var(--surface-muted); color: var(--muted); font-size: 12px; display: grid; place-items: center; opacity: 0; transition: opacity 120ms var(--ease-out); pointer-events: none; }
+.sk-seek.open .sk-esc { opacity: 1; }
+.sk-results { position: absolute; left: 50%; top: 66px; width: 420px; margin-left: -210px; z-index: 2; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--surface-border); padding: 4px; display: none; transform-origin: 50% 0; }
+.sk-results.show { display: block; }
+.sk-rh { padding: 8px 12px 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.sk-res { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 6px; height: 56px; transition: background-color 120ms var(--ease-out); }
+.sk-res:hover, .sk-res.is-hot { background: var(--surface-muted); }
+.sk-res img { width: 36px; height: 26px; object-fit: cover; border-radius: 3px; }
+.sk-res .t { flex: 1; display: grid; line-height: 1.3; }
+.sk-res .t span:last-child { font-size: 12px; color: var(--muted); }
+.sk-res mark { background: var(--primary); color: var(--on-primary); border-radius: 3px; }
+.sk-res .pr { text-align: right; font-variant-numeric: tabular-nums; }
+.sk-res .pr div:last-child { font-size: 12px; color: var(--muted); }
+.sk-page { padding: 24px; display: grid; gap: 16px; }
+.sk-page h1 { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }
+.sk-page p { margin: 0; font-size: 12px; color: var(--faint); }
+.sk-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.sk-tile { background: var(--surface-muted); border-radius: 14px; padding: 20px; display: grid; gap: 4px; }
+.sk-tile span { font-size: 12px; color: var(--muted); }
+.sk-tile b { font-weight: 400; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sk-row { height: 44px; border-radius: 8px; background: var(--surface-muted); }
+.sk-scrim { position: absolute; inset: 72px 0 0 0; background: var(--scrim); opacity: 0; pointer-events: none; z-index: 1; transition: opacity 200ms var(--ease-out); }
+.sk-scrim.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .sk-seek, .sk-seek input, .sk-esc, .sk-scrim, .sk-res { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<div class="sk" id="sk">
+  <div class="sk-bar">
+    <div class="sk-brand"><svg class="sk-logo" viewBox="0 0 918 342" role="img" aria-label="Qbix"><path fill="currentColor" d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></svg><span>Work</span></div>
+    <img class="sk-me" src="../assets/art/you.webp" alt="Mara">
+  </div>
+  <div class="sk-seek" id="sk-seek" role="search" tabindex="-1">
+    <span class="sk-lens"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+    <input id="sk-q" type="text" placeholder="Search work, briefs, files" autocomplete="off" aria-label="Search">
+    <span class="sk-esc">Esc</span>
+  </div>
+  <div class="sk-page">
+    <div><h1>Work</h1><p>Qbix studio · Mara</p></div>
+    <div class="sk-tiles">
+      <div class="sk-tile"><span>Sites live</span><b>4</b></div>
+      <div class="sk-tile"><span>Briefs open</span><b>3</b></div>
+      <div class="sk-tile"><span>In review</span><b>2</b></div>
+    </div>
+    <div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div><div class="sk-row"></div>
+  </div>
+  <div class="sk-scrim" id="sk-scrim"></div>
+  <div class="sk-results" id="sk-results"></div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Click the search, type Forma, press Esc</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* One box whose width is the state, on a spring: a press compresses it, then it grows from its middle. */
+const $ = (s) => document.querySelector(s);
+const seek = $('#sk-seek'), q = $('#sk-q'), results = $('#sk-results'), scrim = $('#sk-scrim');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ITEMS = [
+  { t: 'Forma launch site', d: 'forma.studio · Design service', v: 'Live', n: '3 weeks', img: 'cross', pos: '50% 50%' },
+  { t: 'Forma moodboard', d: 'Eight pages, 24 images', v: 'PDF', n: '8 pages', img: 'objects', pos: '50% 50%' },
+  { t: 'Forma brief', d: 'Ceramic objects, a site and a film', v: '1 brief', n: 'Signed', img: 'vase', pos: '50% 40%' },
+  { t: 'Forma launch film', d: '30 seconds, captions typed in', v: '0:30', n: 'Video', img: 'ring', pos: '50% 50%' },
+];
+results.innerHTML = '<div class="sk-rh">Forma · Design service</div>' + ITEMS.map((p) =>
+  `<div class="sk-res"><img src="../assets/art/${p.img}.webp" alt="" style="object-position:${p.pos}"><span class="t"><span><mark>Forma</mark>${p.t.slice(5)}</span><span>${p.d}</span></span><span class="pr"><div>${p.v}</div><div>${p.n}</div></span></div>`).join('');
+const rows = [...results.querySelectorAll('.sk-res')];
+
+const W0 = 44, W1 = 330;
+let w = W0, vw = 0, tw = W0, press = 0, raf = 0, last = 0, open = false, rev = 0;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const easeOut = (t) => 1 - Math.pow(1 - t, 4), easeIn = (t) => t * t * t;
+function tween(ms, step, ease) {
+  return new Promise((done) => {
+    const t0 = performance.now();
+    const f = (now) => { const p = Math.min(1, (now - t0) / ms); step(ease(p)); p < 1 ? requestAnimationFrame(f) : done(); };
+    requestAnimationFrame(f);
+  });
+}
+function paint() {
+  seek.style.width = w.toFixed(2) + 'px';
+  seek.style.marginLeft = (-w / 2).toFixed(2) + 'px';
+  seek.style.transform = `scale(${1 - press * 0.08})`;
+}
+function tick(now) {
+  const dt = Math.min(0.033, (now - last) / 1000); last = now;
+  vw += (-420 * (w - tw) - 27 * vw) * dt; w += vw * dt;
+  paint();
+  if (Math.abs(w - tw) < 0.1 && Math.abs(vw) < 1) { w = tw; vw = 0; paint(); raf = 0; return; }
+  raf = requestAnimationFrame(tick);
+}
+const wake = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+
+async function show() {
+  const my = ++rev;
+  results.classList.add('show');
+  rows.forEach((r) => { r.style.opacity = 0; r.style.transform = 'translateY(-6px)'; });
+  results.style.opacity = 0;
+  await tween(200, (k) => { results.style.opacity = k; }, easeOut);
+  for (let i = 0; i < rows.length; i++) {
+    if (my !== rev) return;
+    tween(260, (k) => { rows[i].style.opacity = k; rows[i].style.transform = `translateY(${(1 - k) * -6}px)`; }, easeOut);
+    await sleep(60);
+  }
+}
+async function hide() {
+  const my = ++rev;
+  await tween(120, (k) => { results.style.opacity = 1 - k; }, easeIn);
+  if (my === rev) results.classList.remove('show');
+}
+async function openIt() {
+  if (open) return;
+  open = true;
+  press = 1; paint(); await sleep(90); press = 0;              // a thing that yields before it moves reads as pushed
+  seek.classList.add('open'); scrim.classList.add('on');
+  tw = W1;
+  if (reduceMotion) { w = tw; paint(); } else wake();
+  q.focus({ preventScroll: true });
+}
+function closeIt() {
+  if (!open) return;
+  open = false;
+  seek.classList.remove('open'); scrim.classList.remove('on');
+  q.blur(); hide();
+  tw = W0;
+  if (reduceMotion) { w = tw; paint(); } else wake();
+  q.value = '';
+}
+seek.addEventListener('pointerdown', () => { if (!open) openIt(); });
+seek.addEventListener('click', () => { if (!open) openIt(); });
+q.addEventListener('input', () => {
+  if (open && q.value.toLowerCase().startsWith('for') && !results.classList.contains('show')) show();
+  if (!q.value) hide();
+});
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeIt();
+  if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !open)) { e.preventDefault(); openIt(); }
+});
+document.addEventListener('pointerdown', (e) => { if (open && !e.target.closest('#sk-seek, #sk-results')) closeIt(); });
+paint();
+</script>
+<script>
+  /* harness glue: a ghost opens the search, types, looks at a result and presses Esc */
+  PickGhost.fit(document.getElementById('pk'), 680, 520);
+  function rest() { rev++; open = false; seek.classList.remove('open'); scrim.classList.remove('on'); results.classList.remove('show'); results.style.opacity = ''; rows.forEach((r) => { r.style.opacity = ''; r.style.transform = ''; }); q.value = ''; q.blur(); w = tw = W0; vw = 0; press = 0; paint(); }
+  PickGhost.start({
+    hot: '.sk-res, .sk-seek:not(.open)',
+    reset: rest,
+    async script(g) {
+      await g.wait(500);
+      await g.click('#sk-seek', { ms: 600 });
+      await g.wait(500);
+      await g.type('#sk-q', 'Forma', 90);
+      await g.wait(2200);
+      await g.to(() => rows[1], { ms: 400 });
+      await g.wait(900);
+      await g.key('Escape');
+      await g.wait(1400);
+    },
+    still() { open = true; seek.classList.add('open'); scrim.classList.add('on'); w = tw = W1; paint(); q.value = 'Forma'; results.classList.add('show'); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tick slider · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-age-slider",
+  "title": "Tick slider",
+  "group": "lab",
+  "cat": "inputs",
+  "order": 90,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "ticks lift by Gaussian · snaps to a page on release",
+  "summary": "A bar of ticks you drag to say how many pages the site has. The big number is rolling columns that each take the shortest way round, the ticks nearest the lime thumb lift and darken by a Gaussian falloff, and on release the value snaps to the nearest whole page on a low-damping spring that overshoots and settles. The tier that fits the page count, and how long it takes, changes under it.",
+  "spec": [
+    ["Held", "value spring k 600 · c 48 (tight, follows the hand)"],
+    ["Released", "k 210 · c 11, target rounded to a whole page (overshoots, settles)"],
+    ["Ticks", "lift and scaleY by exp(−d²) with d in tick-widths, ink strength follows"],
+    ["Digits", "one spring per column (k 150 · c 18), shortest way round the 0–9 strip"],
+    ["Tier line", "text slides in the direction of travel, 420 ms"]
+  ],
+  "source": ["Qbix studio library · age-slider"],
+  "where": "The page count on the Design service page (from $500, 1 to 3 weeks): slide to see which tier fits and how long it takes.",
+  "rules": [
+    "The number rolls, it never cross-fades. The tens column grows in and out instead of popping.",
+    "The lime is the thumb, nothing else.",
+    "Release always lands on a whole page."
+  ],
+  "tags": ["pointer", "drag", "spring", "odometer", "slider"],
+  "shot": 3600
+}
+</script>
+<style data-code>
+/* Page count slider */
+.gs-read { display: flex; align-items: flex-end; gap: 14px; }
+.gs-num { display: flex; font: 400 176px/1 'Eurostile', var(--font-headline, sans-serif); height: 1em; letter-spacing: -0.04em; }
+.gs-col { position: relative; display: inline-block; height: 1em; width: 0.58em; overflow: hidden; }
+.gs-col i { position: absolute; left: 0; top: 0; width: 100%; font-style: normal; display: flex; flex-direction: column; text-align: center; line-height: 1; }
+.gs-unit { font: 500 12px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); margin-bottom: 26px; }
+.gs-tier { position: relative; height: 22px; overflow: hidden; font-size: 16px; }
+.gs-tier > span { position: absolute; left: 0; top: 0; white-space: nowrap; }
+.gs-tier em { font-style: normal; color: rgba(18, 20, 23, 0.64); }
+.gs-track { position: relative; width: 760px; height: 110px; touch-action: none; cursor: grab; }
+.gs-track.drag { cursor: grabbing; }
+.gs-tick { position: absolute; bottom: 52px; width: 3px; margin-left: -1.5px; background: rgba(18, 20, 23, 0.3); transform-origin: 50% 100%; }
+.gs-lbl { position: absolute; bottom: 24px; width: 40px; margin-left: -20px; text-align: center; font: 500 11px/1 'Encode Sans', sans-serif; color: rgba(18, 20, 23, 0.5); font-variant-numeric: tabular-nums; }
+.gs-thumb { position: absolute; bottom: 44px; left: 0; width: 8px; height: 64px; margin-left: -4px; background: #b8ff00; transform-origin: 50% 100%; }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  #gs-stage { position: absolute; left: 50%; top: 47%; width: 780px; height: 400px; transform-origin: 50% 50%; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 190px auto auto; align-content: start; row-gap: 0; }
+  .gs-q { grid-column: 1; grid-row: 1; align-self: end; display: grid; gap: 12px; padding-bottom: 28px; }
+  .gs-read { grid-column: 2; grid-row: 1; align-self: end; }
+  .gs-tier, .gs-track { grid-column: 1 / -1; }
+  .gs-q .title { font-size: 44px; max-width: 8em; }
+  .gs-q .lede { font-size: 15px; max-width: 20em; }
+  .gs-tier { grid-row: 2; margin: 12px 0 0 0; }
+  .gs-track { grid-row: 3; margin: 26px 0 0 10px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div id="gs-stage">
+  <div class="gs-q">
+    <p class="kicker">Design service · from $500</p>
+    <h2 class="title">How many pages?</h2>
+    <p class="lede">Slide to see which tier fits your site.</p>
+  </div>
+<!-- code -->
+<div class="gs-read"><div class="gs-num" id="gs-num"></div><div class="gs-unit">pages</div></div>
+<div class="gs-tier" id="gs-tier"><span><b style="font-weight:500">Full site</b> <em>· 2 weeks</em></span></div>
+<div class="gs-track" id="gs-track"><div class="gs-thumb" id="gs-thumb"></div></div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Drag the tick bar · it snaps to a page when you let go</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const $ = (s) => document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const track = $('#gs-track'), thumb = $('#gs-thumb'), numEl = $('#gs-num'), tier = $('#gs-tier');
+let T = 0, lastNow = performance.now();
+const jobs = [], ticks = new Set();
+const at = (ms, fn) => jobs.push({ t: T + ms, fn });
+function frame(now) {
+  const dt = Math.min(64, now - lastNow); lastNow = now; T += dt;
+  for (let i = 0; i < jobs.length; i++) if (jobs[i].t <= T) { const j = jobs.splice(i, 1)[0]; i--; j.fn(); }
+  ticks.forEach((f) => f(dt)); requestAnimationFrame(frame);
+}
+function spring(x, k = 170, c = 24) {
+  return { x, v: 0, t: x, k, c, step(dt) { let s = dt / 1000; const n = Math.max(1, Math.ceil(s / 0.006)); s /= n; for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; } } };
+}
+const io = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+function tween(d, f, done) {
+  const t0 = T;
+  const g = () => { const p = Math.min(1, (T - t0) / d); f(io(p)); if (p >= 1) { ticks.delete(g); if (done) done(); } };
+  ticks.add(g); g();
+}
+const EZ = 'cubic-bezier(.2,.8,.2,1)';
+
+/* the scale: 5 to 50 pages, a tick for each, across the track */
+const MIN = 5, MAX = 50, TW = 760, X0 = 14, X1 = TW - 14, SIG = 36;
+const xOf = (v) => X0 + ((v - MIN) / (MAX - MIN)) * (X1 - X0), vOf = (x) => MIN + ((x - X0) / (X1 - X0)) * (MAX - MIN);
+const ticksEl = [];
+for (let v = MIN; v <= MAX; v += 1) {
+  const t = document.createElement('div'); t.className = 'gs-tick'; t.style.left = xOf(v) + 'px';
+  const major = v % 10 === 0; t.style.height = (major ? 30 : 18) + 'px'; t._x = xOf(v);
+  track.insertBefore(t, thumb); ticksEl.push(t);
+  if (major || v === MIN) { const l = document.createElement('div'); l.className = 'gs-lbl'; l.style.left = xOf(v) + 'px'; l.textContent = v; track.appendChild(l); }
+}
+
+/* rolling readout: each column takes the short way round */
+const cols = [];
+for (let i = 0; i < 3; i++) {
+  const c = document.createElement('span'); c.className = 'gs-col'; const st = document.createElement('i');
+  st.innerHTML = [...'0123456789'].map((d) => `<span>${d}</span>`).join('') + '<span>0</span>';
+  c.appendChild(st); numEl.appendChild(c); cols.push({ c, st, s: spring(0, 150, 18), d: 0, w: spring(1, 170, 22) });
+}
+function showValue(v) {
+  const ds = String(v).padStart(3, '0').split('').map(Number);
+  ds.forEach((d, i) => { const C = cols[i]; let delta = (d - C.d + 10) % 10; if (delta > 5) delta -= 10; C.d = d; C.s.t += delta; if (RM) C.s.x = C.s.t; });
+  cols[0].w.t = v >= 100 ? 1 : 0; cols[1].w.t = v >= 10 ? 1 : 0;          // a leading column grows in, it never pops
+  if (RM) { cols[0].w.x = cols[0].w.t; cols[1].w.x = cols[1].w.t; }
+}
+ticks.add((dt) => cols.forEach((C) => {
+  C.s.step(dt); C.w.step(dt);
+  const m = ((C.s.x % 10) + 10) % 10; C.st.style.transform = `translateY(${(-m).toFixed(4)}em)`;
+  C.c.style.width = (0.58 * Math.max(0, C.w.x)).toFixed(4) + 'em';
+}));
+
+const tiers = [[8, 'Launch site', '1 week'], [24, 'Full site', '2 weeks'], [51, 'Big site', '3 weeks']];
+let tierName = 'Full site';
+function setTier(v) {
+  const r = tiers.find((r) => v <= r[0]); if (r[1] === tierName) return;
+  const up = tiers.indexOf(r) > tiers.findIndex((x) => x[1] === tierName); tierName = r[1];
+  const old = tier.querySelector('span:not(.out)'), n = document.createElement('span');
+  n.innerHTML = `<b style="font-weight:500">${r[1]}</b> <em>· ${r[2]}</em>`; tier.appendChild(n);
+  old.classList.add('out'); if (RM) { old.remove(); return; }
+  n.animate([{ transform: `translateY(${up ? 100 : -100}%)` }, { transform: 'none' }], { duration: 420, easing: EZ });
+  old.animate([{ transform: 'none' }, { transform: `translateY(${up ? -100 : 100}%)` }], { duration: 420, easing: EZ, fill: 'forwards' }).onfinish = () => old.remove();
+}
+
+/* value spring: tight while held, loose and bouncy on release */
+const val = spring(24, 600, 48), hold = spring(0, 260, 22);
+let shownV = -1;
+ticks.add((dt) => {
+  val.step(dt); hold.step(dt);
+  const x = xOf(Math.max(MIN - 1.2, Math.min(MAX + 1.2, val.x))), vel = Math.min(1, Math.abs(val.v) / 80);
+  thumb.style.transform = `translateX(${x.toFixed(2)}px) scale(${(1 + 0.5 * hold.x - 0.18 * vel).toFixed(3)},${(1 + 0.12 * hold.x + 0.1 * vel).toFixed(3)})`;
+  ticksEl.forEach((t) => {
+    const d = (t._x - x) / SIG, k = Math.exp(-d * d);
+    t.style.transform = `translateY(${(-k * (10 + 8 * hold.x)).toFixed(2)}px) scaleY(${(1 + k * (0.7 + 0.5 * hold.x)).toFixed(3)})`;
+    const a = 0.3 + 0.7 * k; t.style.background = `rgba(18,20,23,${a.toFixed(3)})`;
+  });
+  const v = Math.round(Math.max(MIN, Math.min(MAX, val.x)));
+  if (v !== shownV) { shownV = v; showValue(v); setTier(v); }
+});
+function grab() { val.k = 600; val.c = 48; hold.t = 1; track.classList.add('drag'); }
+function release() { hold.t = 0; track.classList.remove('drag'); val.t = Math.round(Math.max(MIN, Math.min(MAX, val.t))); val.k = 210; val.c = 11; }
+
+/* pointer */
+let lastIn = -1e9, gen = 0, dragId = null;
+const toV = (e) => { const r = track.getBoundingClientRect(); return vOf(((e.clientX - r.left) / r.width) * TW); };
+track.addEventListener('pointerdown', (e) => { lastIn = T; gen++; dragId = e.pointerId; track.setPointerCapture(e.pointerId); grab(); val.t = toV(e); });
+track.addEventListener('pointermove', (e) => { if (dragId !== e.pointerId) return; lastIn = T; val.t = Math.max(MIN - 1.6, Math.min(MAX + 1.6, toV(e))); });
+const up = (e) => { if (dragId !== e.pointerId) return; dragId = null; lastIn = T; release(); };
+track.addEventListener('pointerup', up); track.addEventListener('pointercancel', up);
+showValue(24); shownV = 24;
+cols.forEach((C) => { C.w.x = C.w.t; });   // the columns that are not needed start closed
+requestAnimationFrame(frame);
+</script>
+<script>
+  /* harness glue: a ghost hand drags to a few page counts and lets go each time */
+  const plan = [37, 12, 26, 45, 19]; let pi = 0, idle = true;
+  function ghost(g) {
+    if (g !== gen) return;
+    const to = plan[pi++ % plan.length], from = val.x; grab();
+    tween(1300 + Math.abs(to - from) * 15, (p) => { if (g === gen) val.t = from + (to - from) * p; }, () => {
+      if (g !== gen) return;
+      at(260, () => { if (g !== gen) return; release(); at(1500, () => ghost(g)); });
+    });
+  }
+  ticks.add(() => {
+    if (RM) return;
+    if (T - lastIn > 2500 && dragId === null) { if (idle) { idle = false; const g = ++gen; at(150, () => ghost(g)); } } else idle = true;
+  });
+  function fit() {
+    const st = document.getElementById('gs-stage');
+    const s = Math.min(innerWidth / 820, (innerHeight - 70) / 410) * 0.96;
+    st.style.transform = `translate(-50%,-50%) scale(${Math.min(s, 1.7)})`;
+  }
+  addEventListener('resize', fit); fit();
+  QM.demo({ kind: 'loop', restart() { lastIn = -1e9; } });
+</script>
+</body>
+</html>

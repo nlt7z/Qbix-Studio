@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pinned story · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-pinned",
+  "title": "Pinned story",
+  "group": "lab",
+  "cat": "scroll",
+  "order": 110,
+  "kind": "scroll",
+  "tone": "paper",
+  "line": "sticky product · step = state · reversible",
+  "summary": "The product stays fixed on one side while the story scrolls past on the other, and each step changes what the product shows: pictures arrive, are read, a finding is checked, a design system is sent. The state is a function of scroll position, so scrolling back plays every state in reverse.",
+  "spec": [
+    ["Layout", "two columns (0.8 : 1.2) with the product sticky in its cell; under 900 px it pins to the top at 46% of the height"],
+    ["State", "the step whose top has passed the middle of the screen; the step number is a data-state on the product"],
+    ["Measure", "step tops are measured on load and resize and compared with scrollY, so the loop never reads layout"],
+    ["Meter", "step 2's local scroll progress drives the reading bar exactly; findings appear at 18%, 45%, 72% of it"],
+    ["Reveals", "pictures and views are uncovered with clip-path, 400–700 ms (0.16, 1, 0.3, 1), 60 ms apart"],
+    ["Reduced motion", "the scan bars stop; states still change with the scroll"]
+  ],
+  "source": ["Qbix studio library · 09-pinned-story"],
+  "where": "A Strata chapter: how a moodboard becomes a design system, one step at a time.",
+  "rules": [
+    "The product UI is HTML, not a screenshot: it stays sharp and alive, and the lime is the one thing that follows the scroll (the reading meter).",
+    "Inactive steps dim their headline to a tone, they never fade out.",
+    "Nothing in the product reads layout while scrolling."
+  ],
+  "tags": ["scroll", "pinned", "sticky", "story", "product ui"],
+  "shot": 3200
+}
+</script>
+<style data-code>
+/* Pinned story: the product is sticky in its grid cell; the step number is its data-state */
+.story { position: relative; padding-inline: clamp(24px, 5vw, 64px); }
+@media (min-width: 700px) {
+  .story { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(24px, 5vw, 56px); align-items: start; }
+  .story .stage { grid-column: 2; grid-row: 1; position: sticky; top: max(24px, calc(50vh - 190px)); }
+  .story .steps { grid-column: 1; grid-row: 1; }
+  .step { min-height: 90vh; }
+}
+@media (max-width: 699px) {
+  .story .stage { position: sticky; top: 0; height: 46vh; z-index: 2; background: #f3f4f5; padding-block: 12px 8px; }
+  .story .stage .mock { height: 100%; }
+  .step { min-height: 78vh; padding-top: 6vh; }
+}
+.step { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.step .n { font: 400 12px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); }
+.step h2 { font: 400 clamp(30px, 3.6vw, 52px)/1.04 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; color: #121417; text-wrap: balance; transition: color 400ms cubic-bezier(0.16, 1, 0.3, 1); }
+.step p { margin: 0; color: rgba(18, 20, 23, 0.64); max-width: 36ch; font-size: clamp(15px, 1.4vw, 17px); }
+.step:not(.is-on) h2 { color: rgba(18, 20, 23, 0.3); }
+
+/* the product: one flat surface with the cut corner */
+.mock { position: relative; min-height: 340px; background: #ffffff; overflow: hidden; display: grid; grid-template-rows: auto 1fr; --cut: 20px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.mock .bar { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px 18px; font-size: 14px; }
+.mock .bar b { font-weight: 600; }
+.mock .bar span { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); }
+.mock .body { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; padding: 4px 18px 18px; min-height: 0; }
+.photos { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: min-content; gap: 8px; align-content: start; }
+.ph { position: relative; aspect-ratio: 1; overflow: hidden; background: #eceef0; clip-path: inset(0); transition: filter 400ms cubic-bezier(0.16, 1, 0.3, 1), transform 500ms cubic-bezier(0.16, 1, 0.3, 1), clip-path 700ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ph img { width: 100%; height: 100%; object-fit: cover; }
+.ph .scan { position: absolute; left: 0; right: 0; height: 4px; top: -4px; background: #121417; display: none; }
+.ph .ring { position: absolute; width: 46%; aspect-ratio: 1; left: 30%; top: 26%; }
+.ph .ring rect { fill: none; stroke: #121417; stroke-width: 3; stroke-dasharray: 200; stroke-dashoffset: 200; transition: stroke-dashoffset 700ms cubic-bezier(0.16, 1, 0.3, 1); }
+/* 0 · the pictures are uncovered one after another */
+.mock[data-state="0"] .ph { clip-path: inset(100% 0 0 0); }
+.mock[data-state="0"].arrived .ph { clip-path: inset(0); }
+.mock[data-state="0"].arrived .ph:nth-child(2) { transition-delay: 60ms; } .mock[data-state="0"].arrived .ph:nth-child(3) { transition-delay: 120ms; }
+.mock[data-state="0"].arrived .ph:nth-child(4) { transition-delay: 180ms; } .mock[data-state="0"].arrived .ph:nth-child(5) { transition-delay: 240ms; } .mock[data-state="0"].arrived .ph:nth-child(6) { transition-delay: 300ms; }
+/* 1 · reading: a bar sweeps each picture */
+.mock[data-state="1"] .ph .scan { display: block; animation: scan 1.6s linear infinite; }
+.mock[data-state="1"] .ph:nth-child(even) .scan { animation-delay: 0.5s; }
+@keyframes scan { to { top: 100%; } }
+/* 2 · one finding in focus, the rest wash out to a light tone */
+.mock[data-state="2"] .ph:not(.is-focus) { filter: grayscale(1) contrast(0.35) brightness(1.75); }
+.mock[data-state="2"] .ph.is-focus { transform: scale(1.04); }
+.mock[data-state="2"] .ph.is-focus .ring rect { stroke-dashoffset: 0; }
+.mock[data-state="3"] .ph { filter: grayscale(1) contrast(0.4) brightness(1.65); }
+
+.panel { position: relative; min-height: 0; }
+.view { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; clip-path: inset(0 0 100% 0); transition: clip-path 500ms cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; overflow: hidden; }
+.view.is-on { clip-path: inset(0); pointer-events: auto; }
+.view h3 { font: 400 12px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); }
+.view .quiet { color: rgba(18, 20, 23, 0.5); font-size: 13px; }
+.files { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font: 400 13px 'Encode Sans', sans-serif; font-variant-numeric: tabular-nums; }
+.files li { display: flex; justify-content: space-between; gap: 8px; }
+.files li span:last-child { color: rgba(18, 20, 23, 0.5); }
+.meter { height: 6px; background: #eceef0; overflow: hidden; }
+.meter i { display: block; height: 100%; width: 100%; background: #B8FF00; transform-origin: 0 50%; transform: scaleX(0); }
+.finds { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13.5px; }
+.finds li { clip-path: inset(0 0 100% 0); transition: clip-path 400ms cubic-bezier(0.16, 1, 0.3, 1); padding: 8px 10px; }
+.finds li.is-in { clip-path: inset(0); }
+.finds li b { display: block; font-weight: 500; }
+.finds li span { color: rgba(18, 20, 23, 0.5); font-size: 12.5px; }
+.mock[data-state="2"] .finds li:first-child { background: #eceef0; }
+.mock[data-state="2"] .finds li:not(:first-child) { color: rgba(18, 20, 23, 0.4); }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; clip-path: inset(0 0 100% 0); transition: clip-path 400ms cubic-bezier(0.16, 1, 0.3, 1); }
+.mock[data-state="2"] .acts { clip-path: inset(0); }
+.acts button { border: 0; padding: 7px 12px; font-size: 13px; cursor: pointer; background: #eceef0; color: #121417; }
+.acts button.primary { background: #121417; color: #f3f4f5; }
+.doc { display: grid; gap: 8px; font-size: 13px; }
+.doc h4 { font: 400 20px/1.1 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.02em; }
+.doc ol { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.sent { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: rgba(18, 20, 23, 0.64); }
+.sent svg { width: 20px; height: 20px; color: #121417; }
+.sent path { stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 500ms 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.mock[data-state="3"] .sent path { stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) { .mock[data-state="1"] .ph .scan { animation: none; display: none; } .ph, .view, .finds li, .acts { transition: none; } }
+</style>
+<style>
+  .pn-run { padding-block: 6vh 20vh; }
+  .after { height: 10vh; }
+</style>
+</head>
+<body>
+<div class="pn-run">
+<!-- code -->
+<section class="story" id="story">
+  <div class="stage" aria-hidden="true">
+    <div class="mock" id="mock" data-state="0">
+      <div class="bar"><b>Forma moodboard</b><span id="bar-note">6 pictures</span></div>
+      <div class="body">
+        <div class="photos" id="photos"></div>
+        <div class="panel">
+          <div class="view is-on" data-view="0">
+            <h3>Uploaded</h3>
+            <ul class="files" id="files"></ul>
+            <p class="quiet">Straight from the client's folder. Nothing renamed.</p>
+          </div>
+          <div class="view" data-view="1">
+            <h3 id="find-title">Reading pictures</h3>
+            <div class="meter"><i id="meter"></i></div>
+            <ul class="finds" id="finds">
+              <li><b>Palette: bone and lime</b><span>Picture 2, centre</span></li>
+              <li><b>Type: wide caps</b><span>Picture 3, the label</span></li>
+              <li><b>Shape: round, matte</b><span>Picture 4, left</span></li>
+            </ul>
+            <div class="acts"><button class="primary" tabindex="-1">Keep</button><button tabindex="-1">Edit</button><button tabindex="-1">Drop</button></div>
+          </div>
+          <div class="view" data-view="2">
+            <div class="doc">
+              <h4>Design system, Forma</h4>
+              <span class="quiet">Tokens, 12 components and code attached</span>
+              <ol><li>Palette: bone and lime</li><li>Type: wide caps</li><li>Shape: round, matte</li></ol>
+              <div class="sent"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.4" stroke-linejoin="miter"/></svg>Sent to Mara at 4:12 pm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="steps" id="steps">
+    <article class="step is-on"><span class="n">1 / 4</span><h2>Drop in the moodboard</h2><p>40 pictures from the shoot and the client's folder. No sorting, no renaming.</p></article>
+    <article class="step"><span class="n">2 / 4</span><h2>It reads every one</h2><p>Strata looks at each picture, pulls out the palette and finds the type.</p></article>
+    <article class="step"><span class="n">3 / 4</span><h2>You check what it found</h2><p>Each finding sits next to its picture. Keep it, fix the wording, or drop it.</p></article>
+    <article class="step"><span class="n">4 / 4</span><h2>Send a system you trust</h2><p>The system goes out with tokens, components and code, and your name on it.</p></article>
+  </div>
+</section>
+<!-- /code -->
+<div class="after"></div>
+</div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Pinned story: the step number is the product's data-state; scrolling back plays it in reverse. */
+function pinnedStory(story) {
+  const mock = story.querySelector('#mock'), photos = story.querySelector('#photos'), files = story.querySelector('#files');
+  const finds = [...story.querySelectorAll('#finds li')], meter = story.querySelector('#meter');
+  const steps = [...story.querySelectorAll('.step')], views = [...story.querySelectorAll('.view')];
+  const barNote = story.querySelector('#bar-note'), findTitle = story.querySelector('#find-title');
+  const ART = [['curves'], ['objects'], ['container', '78% 50%'], ['cross'], ['bottle'], ['block']], sizes = ['2.4 MB', '3.1 MB', '2.8 MB', '2.2 MB', '3.4 MB', '2.9 MB'];
+  ART.forEach(([a, pos], i) => {
+    const d = document.createElement('div'); d.className = 'ph' + (i === 1 ? ' is-focus' : '');
+    d.innerHTML = `<img alt="" src="../assets/art/${a}.webp"${pos ? ` style="object-position:${pos}"` : ''}><span class="scan"></span>` + (i === 1 ? '<svg class="ring" viewBox="0 0 60 60"><rect x="5" y="5" width="50" height="50"/></svg>' : '');
+    photos.append(d);
+    const li = document.createElement('li'); li.innerHTML = `<span>forma-${String(i + 1).padStart(2, '0')}.jpg</span><span>${sizes[i]}</span>`; files.append(li);
+  });
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  let tops = [];
+  const measure = () => { tops = steps.map((s) => s.getBoundingClientRect().top + scrollY); };   // measured once; the loop only compares
+  measure();
+  new ResizeObserver(measure).observe(story.querySelector('#steps'));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  let state = -1;
+  function setState(s) {
+    if (s === state) return; state = s;
+    mock.dataset.state = s;
+    steps.forEach((el, i) => el.classList.toggle('is-on', i === s));
+    const view = s === 0 ? 0 : s === 3 ? 2 : 1;
+    views.forEach((v, i) => v.classList.toggle('is-on', i === view));
+    barNote.textContent = ['6 pictures', 'Reading', '3 findings', 'System sent'][s];
+    findTitle.textContent = s === 1 ? 'Reading pictures' : 'Findings';
+    if (s === 0) requestAnimationFrame(() => mock.classList.add('arrived'));
+    if (s >= 2) { finds.forEach((f) => f.classList.add('is-in')); meter.style.transform = 'scaleX(1)'; }
+  }
+  setState(0);
+  let ticking = false;
+  function tick() {
+    ticking = false;
+    const mid = scrollY + innerHeight * 0.5; let s = 0;
+    tops.forEach((t, i) => { if (mid >= t) s = i; });
+    setState(s);
+    if (s === 1) {   // step 2's own progress drives the meter and the findings
+      const p = clamp((mid - tops[1]) / Math.max(tops[2] - tops[1], 1), 0, 1);
+      meter.style.transform = `scaleX(${p.toFixed(3)})`;
+      finds.forEach((f, i) => f.classList.toggle('is-in', p > 0.18 + i * 0.27));
+    }
+  }
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(tick); } }, { passive: true });
+  addEventListener('resize', measure);
+  tick();
+}
+pinnedStory(document.getElementById('story'));
+</script>
+<script>
+  QM.demo({ kind: 'scroll', lead: 1400, dur: 9000, hold: 1500, back: 2400, stops: [0.34, 0.67, 1], pause: 1500 });
+</script>
+</body>
+</html>

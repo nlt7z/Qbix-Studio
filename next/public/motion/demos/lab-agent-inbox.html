@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inbox arrival · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-agent-inbox", "title": "Inbox arrival", "group": "lab", "cat": "feedback", "order": 390,
+  "kind": "play", "tone": "paper", "shot": 7600,
+  "line": "520 ms expo · steps 520 ms apart · words 55 ms apart",
+  "summary": "A new email in the studio inbox arrives by growing its height while its content slides down into place. Opened, it ticks off the agent's steps one by one and sets a draft reply word by word, each word rising out of its own mask. Approve slides the row off to the right, the gap closes, and the archived counter rolls up by one.",
+  "spec": [["Arrive", "height 0 → h in 520 ms, content slides down 560 ms, expo out"], ["Open", "height to content in 520 ms; steps every 520 ms, a check draws in 450 ms"], ["Draft", "word by word, 55 ms apart, each word rises out of a mask 500 ms"], ["Approve", "row slides right 460 ms ease-move, then height collapses 420 ms"], ["Counter", "number slides up through a mask, 520 ms, 60 ms apart"], ["API", "Web Animations for the heights, transform transitions for the rest"]],
+  "source": ["Qbix studio library · agent-inbox"],
+  "where": "A Practice or Labs chapter that shows an agent doing the busywork: the owner only approves.",
+  "rules": ["Nothing fades: words, steps and the button are uncovered through masks.", "Rows are flat white blocks on the paper, 8px apart, the top right corner cut; an unread row has an ink avatar, a read one a light tint.", "Lime is the one Approve button on screen."],
+  "tags": ["agent", "list", "click", "waapi", "studio inbox"]
+}
+</script>
+<style data-code>
+.ai { width: min(100%, 720px); height: 100%; display: flex; flex-direction: column; }
+.ai-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-bottom: clamp(10px, 2vh, 18px); }
+.ai-head h2 { font: 400 clamp(30px, 5vw, 50px)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; margin: 8px 0 0; }
+.ai-count { text-align: right; font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+.ai-roll { font: 400 clamp(30px, 4.4vw, 44px)/1.1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; height: 1.1em; overflow: hidden; position: relative; color: #121417; text-transform: none; }
+.ai-roll span { display: block; }
+.ai-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.ai-list::-webkit-scrollbar { display: none; }
+.ai-row { overflow: hidden; margin-bottom: 8px; }
+.ai-in { background: #ffffff; padding: clamp(12px, 2vw, 18px); cursor: pointer; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.ai-top { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 12px; align-items: center; }
+.ai-av { grid-row: span 2; width: 40px; height: 40px; display: grid; place-items: center; background: #121417; color: #f4f5f2; font: 500 13px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; transition: background 160ms, color 160ms; }
+.ai-row.read .ai-av { background: #eceef0; color: #121417; }
+.ai-who { font-weight: 500; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-t { font: 11px 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(18,20,23,.38); }
+.ai-subj { grid-column: 2/4; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(18,20,23,.64); }
+.ai-more { height: 0; overflow: hidden; }
+.ai-pad { padding: 16px 0 2px 52px; }
+.ai-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; font-size: 14px; color: rgba(18,20,23,.64); }
+.ai-steps li { display: flex; gap: 9px; align-items: center; overflow: hidden; }
+.ai-steps li span { display: block; transform: translateY(110%); transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
+.ai-steps li.on span { transform: none; }
+.ai-steps svg { flex: none; width: 16px; height: 16px; }
+.ai-steps path { fill: none; stroke: #121417; stroke-width: 2.4; stroke-linecap: square; stroke-linejoin: miter; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset .45s cubic-bezier(.16, 1, .3, 1) .1s; }
+.ai-steps li.on path { stroke-dashoffset: 0; }
+.ai-draft { font: 400 clamp(17px, 2vw, 21px)/1.3 Eurostile, Geist, sans-serif; letter-spacing: -.02em; margin: 14px 0 0; min-height: 2.6em; }
+.ai-draft .w { display: inline-block; overflow: hidden; vertical-align: top; padding-block: .12em; margin-block: -.12em; }
+.ai-draft .w i { display: inline-block; transform: translateY(115%); }
+.ai-draft .w.on i { transform: none; transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
+.ai-acts { overflow: hidden; margin-top: 14px; display: flex; gap: 20px; align-items: center; }
+.ai-acts > * { transform: translateY(64px); transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
+.ai-acts.on > * { transform: none; }
+.ai-ok { height: 48px; padding: 0 24px; border: 0; background: #B8FF00; color: #0c1300; font: 500 15px/1 Geist, sans-serif; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.ai-ok:active, .ai-ok.press { transform: translateY(2px) !important; }
+.ai-ed { background: none; border: 0; color: rgba(18,20,23,.64); font: 500 14px Geist, sans-serif; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .ai-steps li span, .ai-steps path, .ai-acts > *, .ai-draft .w i { transition: none; } }
+</style>
+<style>
+  .qm-stage { align-items: stretch; justify-items: center; }
+  .ai { min-height: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="ai">
+  <div class="ai-head">
+    <div><p class="kicker">Studio · Qbix agent</p><h2>Inbox</h2></div>
+    <div class="ai-count"><div class="ai-roll" id="ai-cnt"><span>3</span></div>archived today</div>
+  </div>
+  <div class="ai-list" id="ai-list"></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const Inbox = (() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EXPO = 'cubic-bezier(.16,1,.3,1)';
+  const POOL = [
+    { who: 'Dana Reyes', av: 'DR', subj: 'The homepage looks right. Approved.',
+      steps: ['Read the review round', 'Checked the changes against the brief', 'Marked the homepage approved'],
+      draft: 'Hi Dana, thank you. The homepage is approved and the build is queued for tomorrow morning.' },
+    { who: 'Mina at Forma', av: 'MF', subj: 'The domain is ready, forma.studio',
+      steps: ['Checked the DNS records', 'Connected forma.studio to the build', 'Issued the certificate'],
+      draft: 'Hi Mina, forma.studio is connected and secure. The site goes live at 2 pm today.' },
+    { who: 'Ravi at Kova', av: 'RK', subj: 'New brief: a launch page for Kova',
+      steps: ['Read the brief', 'Pulled 6 moodboard references', 'Checked the dates against the calendar'],
+      draft: 'Hi Ravi, thanks for the brief. Two layouts and a palette can be ready by Thursday.' },
+    { who: 'Willow Counseling', av: 'WC', subj: 'Can the booking button be bigger?',
+      steps: ['Found the button in the layout', 'Tested it at 48 and 56 px', 'Kept the contrast above 7 to 1'],
+      draft: 'Hi Dana, yes. The booking button is now 56 px tall and still reads at 7 to 1.' },
+    { who: 'Noor at Forma', av: 'NF', subj: 'Invoice 0042 is paid',
+      steps: ['Matched the payment to invoice 0042', 'Marked the project paid', 'Attached the receipt'],
+      draft: 'Hi Noor, thank you. Invoice 0042 is paid and the receipt is attached.' },
+  ];
+  const TIMES = ['now', '2m', '6m', '14m', '38m', '1h'];
+  const list = document.getElementById('ai-list'), cnt = document.getElementById('ai-cnt');
+  let pi = 0, archived = 3, rows = [], open = null;
+
+  function make(item) {
+    const r = document.createElement('div'); r.className = 'ai-row';
+    r.innerHTML = `<div class="ai-in"><div class="ai-top"><div class="ai-av">${item.av}</div>
+      <div class="ai-who">${item.who}</div><div class="ai-t">now</div><div class="ai-subj">${item.subj}</div></div>
+      <div class="ai-more"><div class="ai-pad"><ul class="ai-steps">${item.steps.map((s) => `<li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>${s}</span></li>`).join('')}</ul>
+      <p class="ai-draft"></p><div class="ai-acts"><button class="ai-ok">Approve and send</button><button class="ai-ed">Edit</button></div></div></div></div>`;
+    const o = { el: r, item, state: 'closed', timers: [] };
+    r.querySelector('.ai-top').addEventListener('click', () => toggle(o));
+    r.querySelector('.ai-ok').addEventListener('click', (e) => { e.stopPropagation(); approve(o); });
+    return o;
+  }
+  const ages = () => rows.forEach((o, i) => { o.el.querySelector('.ai-t').textContent = TIMES[Math.min(TIMES.length - 1, i)]; });
+  // a new email: its height opens while its content slides down into place
+  function arrive() {
+    const o = make(POOL[pi]); pi = (pi + 1) % POOL.length;
+    rows.unshift(o); list.prepend(o.el); ages();
+    if (reduce) return o;
+    const h = o.el.offsetHeight;
+    o.el.animate([{ height: '0px', marginBottom: '0px' }, { height: h + 'px', marginBottom: '8px' }], { duration: 520, easing: EXPO });
+    o.el.firstElementChild.animate([{ transform: `translateY(-${h}px)` }, { transform: 'none' }], { duration: 560, easing: EXPO });
+    return o;
+  }
+  function setHeight(el, to) {
+    const from = el.offsetHeight;
+    el.style.height = to + 'px';
+    if (!reduce) el.animate([{ height: from + 'px' }, { height: to + 'px' }], { duration: 520, easing: EXPO });
+  }
+  function toggle(o) {
+    if (o.state === 'gone') return;
+    if (open && open !== o) close(open);
+    if (o.state !== 'closed') { close(o); return; }
+    o.state = 'opening'; open = o; o.el.classList.add('read');
+    const more = o.el.querySelector('.ai-more'), pad = more.firstElementChild;
+    const lis = [...o.el.querySelectorAll('.ai-steps li')], draft = o.el.querySelector('.ai-draft'), acts = o.el.querySelector('.ai-acts');
+    draft.innerHTML = o.item.draft.split(' ').map((w) => `<span class="w"><i>${w}</i></span>`).join(' ');
+    setHeight(more, pad.offsetHeight);
+    const later = (ms, f) => o.timers.push(setTimeout(f, reduce ? 0 : ms));
+    lis.forEach((li, i) => later(260 + i * 520, () => li.classList.add('on')));
+    const t0 = 260 + lis.length * 520, words = [...draft.children];
+    words.forEach((s, i) => later(t0 + i * 55, () => s.classList.add('on')));
+    later(t0 + words.length * 55 + 150, () => { acts.classList.add('on'); o.state = 'ready'; more.style.height = pad.offsetHeight + 'px'; reveal(o); });
+    later(560, () => reveal(o));
+  }
+  function reveal(o) {
+    const lr = list.getBoundingClientRect(), r = o.el.getBoundingClientRect();
+    if (r.bottom > lr.bottom - 8 || r.top < lr.top) list.scrollTo({ top: list.scrollTop + r.top - lr.top, behavior: reduce ? 'auto' : 'smooth' });
+  }
+  function close(o) {
+    o.timers.forEach(clearTimeout); o.timers = [];
+    setHeight(o.el.querySelector('.ai-more'), 0);
+    o.el.querySelectorAll('.ai-steps li').forEach((li) => li.classList.remove('on'));
+    o.el.querySelector('.ai-acts').classList.remove('on');
+    o.state = 'closed'; if (open === o) open = null;
+  }
+  // approve: the row slides right, then its height closes, and the counter rolls up
+  function approve(o) {
+    if (o.state === 'gone') return;
+    o.state = 'gone'; o.timers.forEach(clearTimeout);
+    if (open === o) open = null;
+    const btn = o.el.querySelector('.ai-ok'); btn.classList.add('press'); setTimeout(() => btn.classList.remove('press'), 160);
+    const done = () => { o.el.remove(); const i = rows.indexOf(o); if (i >= 0) rows.splice(i, 1); ages(); };
+    bump();
+    if (reduce) { done(); return; }
+    const h = o.el.offsetHeight;
+    o.el.firstElementChild.animate([{ transform: 'none' }, { transform: 'translateX(105%)' }], { duration: 460, delay: 160, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' }).onfinish = () => {
+      o.el.animate([{ height: h + 'px', marginBottom: '8px' }, { height: '0px', marginBottom: '0px' }], { duration: 420, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' }).onfinish = done;
+    };
+  }
+  function bump() {
+    archived++;
+    const old = cnt.firstElementChild, n = document.createElement('span'); n.textContent = archived;
+    if (reduce) { old.textContent = archived; return; }
+    Object.assign(n.style, { position: 'absolute', right: '0', top: '0' }); cnt.appendChild(n);
+    const o = { duration: 520, easing: EXPO, fill: 'both' };
+    old.animate([{ transform: 'none' }, { transform: 'translateY(-110%)' }], o).onfinish = () => old.remove();
+    n.animate([{ transform: 'translateY(110%)' }, { transform: 'none' }], { ...o, delay: 60 }).onfinish = () => { n.style.position = ''; };
+  }
+  function reset() {
+    rows.forEach((o) => o.timers.forEach(clearTimeout));
+    rows = []; open = null; list.innerHTML = ''; list.scrollTop = 0; pi = 0; archived = 3;
+    cnt.innerHTML = '<span>3</span>';
+  }
+  return { arrive, toggle, approve, reset, rows: () => rows, get open() { return open; }, still() { reset(); arrive(); arrive(); const o = arrive(); toggle(o); } };
+})();
+</script>
+<script>
+  // the story the viewer watches: three emails land, the top one is opened, read, approved
+  let run = 0, touched = -1e9;
+  addEventListener('pointerdown', (e) => { if (e.isTrusted) touched = performance.now(); });
+  const idle = () => performance.now() - touched > 5000;
+  const at = (el, dx = 40, dy = 0.55) => { const r = el.getBoundingClientRect(); return [r.left + Math.min(r.width * 0.4, dx + 60), r.top + r.height * dy]; };
+  QM.demo({
+    kind: 'play', dur: 10500, hold: 1400, lead: 300,
+    reset() { if (idle()) { run++; Inbox.reset(); QM.ghostHide(); } },
+    async play() {
+      if (!idle()) return;
+      if (QM.reduced) { Inbox.still(); return; }
+      const my = ++run, ok = () => my === run && idle();
+      for (let i = 0; i < 3; i++) { Inbox.arrive(); await QM.wait(620); if (!ok()) return; }
+      await QM.wait(500);
+      const top = Inbox.rows()[0]; QM.ghostShow();
+      if (!ok() || !(await QM.ghostTo(...at(top.el.querySelector('.ai-top')), 900)) || !ok()) return;
+      Inbox.toggle(top);
+      await QM.wait(260 + 3 * 520 + 16 * 55 + 700); if (!ok()) return;
+      const btn = top.el.querySelector('.ai-ok');
+      if (!(await QM.ghostTo(...at(btn, 40, 0.5), 800)) || !ok()) return;
+      await QM.wait(350); if (!ok()) return;
+      Inbox.approve(top);
+      await QM.wait(1300); if (!ok()) return;
+      QM.ghostTo(innerWidth * 0.82, innerHeight * 0.86, 700);
+      Inbox.arrive();
+    },
+  });
+</script>
+</body>
+</html>

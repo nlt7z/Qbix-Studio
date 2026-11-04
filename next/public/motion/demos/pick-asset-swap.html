@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swap places · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-asset-swap",
+  "title": "Swap places",
+  "group": "picks",
+  "cat": "cards",
+  "order": 260,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "460 ms in-out · figures roll 620 ms · digit by digit",
+  "summary": "Two project cards trade places when the arrow is pressed. The cards cross on an in-out curve while each figure rolls, digit by digit, to its new value: the project that sends twelve design hours shows 116 left, and when they swap it rolls to 140 as the other rolls down to 32.",
+  "spec": [
+    ["Cross", "both cards glide 460 ms on cubic-bezier(0.65, 0, 0.35, 1) between the two slots, 36px apart; the arrow turns 180° with them"],
+    ["Roll", "620 ms on cubic-bezier(0.16, 1, 0.3, 1); each figure is a column of digits 0 to 9, three times over, one column per place"],
+    ["Direction", "each digit rolls the way the number moves; the travel per column is ((to − from) × dir) mod 10, so the units digit turns furthest"],
+    ["Roles", "the top slot sends 12 hours (−12), the bottom receives them (+12); the role, the chip and the figure follow the slot, not the card"],
+    ["Figures", "tabular, so a rolling column never changes the width of its neighbour"],
+    ["Press", "ignored while the cards are crossing"],
+    ["Reduced motion", "the swapped state, and presses swap at once"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Swap stock (ix-asset-swap)", "Idea: bencho.dev asset-swap (MIT)"],
+  "where": "Design hours moved between two Qbix projects, Kova and Forma, and what each has left in its block after. Any pair of cards whose figures depend on which slot they sit in.",
+  "rules": [
+    "Flat white cards on the paper ground.",
+    "One filled primary: the lime button. Hover is a colour block.",
+    "Rolling figures are tabular.",
+    "Reverse the transfer by swapping the cards, never by editing a number."
+  ],
+  "tags": ["swap", "numbers", "odometer", "click", "cards"],
+  "shot": 3500
+}
+</script>
+<style data-code>
+/* Swap hours. Idea: bencho.dev asset-swap (MIT). */
+.as { position: relative; width: 460px; height: 470px; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.as-head { position: absolute; left: 0; top: 0; right: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.as-head h1 { margin: 0; font-family: var(--font-sans); font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }
+.as-go { height: 36px; padding: 0 16px; border: 1px solid transparent; border-radius: 8px; background: var(--signal); color: var(--on-lime); font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.as-go:hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.as-go:disabled { background: color-mix(in srgb, var(--signal) 32%, var(--surface)); color: rgba(12, 19, 0, 0.4); cursor: default; }
+.as-part { position: absolute; left: 0; top: 52px; right: 0; display: flex; align-items: center; gap: 12px; color: var(--fg2); }
+.as-part img { display: block; width: 36px; height: 26px; border-radius: 4px; object-fit: cover; }
+.as-part b { font-weight: 500; color: var(--fg); }
+.as-slot { position: absolute; left: 0; width: 460px; height: 164px; will-change: transform; }
+.as-wh { width: 100%; height: 100%; background: var(--surface); border-radius: 14px; padding: 20px 24px; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; column-gap: 16px; }
+.as-wh .role { grid-column: 1; display: flex; align-items: center; gap: 8px; color: var(--fg2); }
+.as-wh .nm { grid-column: 1; display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; align-self: center; }
+.as-wh .nm img { display: block; width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
+.as-wh .nm small { display: block; font-size: 14px; color: var(--fg2); font-weight: 400; letter-spacing: 0; }
+.as-wh .chipcol { grid-column: 2; grid-row: 1; justify-self: end; }
+.as-wh .qty { grid-column: 1 / 3; display: flex; align-items: baseline; justify-content: space-between; }
+.as-wh .qty .unit { color: var(--fg2); }
+.as-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--fg2); background: rgba(18, 20, 23, 0.07); transition: background-color 200ms cubic-bezier(0.16, 1, 0.3, 1), color 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.as-chip.in { color: #fff; background: var(--fg); }
+.as-digits { display: inline-flex; height: 1.15em; overflow: hidden; font-size: 20px; font-variant-numeric: tabular-nums; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
+.as-digits .col { display: block; height: 1.15em; }
+.as-digits .col > span { display: block; height: 1.15em; text-align: center; }
+.as-digits .sep { width: 0.3em; text-align: center; }
+.as-mid { position: absolute; left: 50%; width: 44px; height: 44px; margin-left: -22px; border-radius: 50%; z-index: 2; background: var(--surface); border: 1px solid rgba(18, 20, 23, 0.52); color: var(--fg); display: grid; place-items: center; cursor: pointer; padding: 0; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.as-mid:hover, .as-mid.is-hot { background: var(--fill); }
+.as-mid:focus-visible, .as-go:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.as-mid svg { display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+<style>
+  .as-fit { position: fixed; z-index: 1; }
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Press the arrow</span>
+<main class="qm-stage">
+<div class="as-fit" id="fit">
+<!-- code -->
+<div class="as" id="frame">
+  <div class="as-head"><h1>Hours transfer</h1><button class="as-go" id="go" type="button">Move 12 hours</button></div>
+  <div class="as-part"><img src="../assets/art/objects.webp" alt=""><span><b>Design hours</b> · 12 to move</span></div>
+  <div class="as-slot" id="s0"></div>
+  <div class="as-slot" id="s1"></div>
+  <button class="as-mid" id="mid" type="button" aria-label="Swap the two projects"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/></svg></button>
+</div>
+<!-- /code -->
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const $ = (s) => document.querySelector(s);
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MOVE = 12;
+/* the two projects: how many design hours each has left in its block now */
+const PROJECTS = [
+  { name: 'Kova money app', by: 'Brand upgrade · 8 weeks', onhand: 128, img: '../assets/art/ring.webp' },
+  { name: 'Forma launch site', by: 'Design service · 3 weeks', onhand: 44, img: '../assets/art/cross.webp' },
+];
+const SLOT_Y = [96, 96 + 164 + 36];       // the two places a card can sit
+let order = [0, 1];                       // order[slot] = project index
+
+/* a cubic-bezier as a function of progress, and a tween that runs one */
+const bezier = (x1, y1, x2, y2) => {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; }
+    return sy(Math.min(1, Math.max(0, t)));
+  };
+};
+const EASE_OUT = bezier(0.16, 1, 0.3, 1), EASE_IN_OUT = bezier(0.65, 0, 0.35, 1);
+let gen = 0;                              // a reset starts a new generation and what was rolling stops
+const tween = (ms, fn, ease, my = gen) => new Promise((res) => {
+  const t0 = performance.now();
+  const f = (now) => { if (my !== gen) return res(); const p = Math.min(1, (now - t0) / ms); fn(ease(p)); if (p < 1) requestAnimationFrame(f); else res(); };
+  requestAnimationFrame(f);
+});
+
+/* ── rolling figures: a column of digits per place, each a strip 0-9 ── */
+function Rolling(host) {
+  let len = 0, cols = [];
+  const nums = []; for (let i = 0; i < 30; i++) nums.push(i % 10);
+  const strip = '<span>' + nums.join('</span><span>') + '</span>';
+  function build(n) {
+    host.innerHTML = ''; cols = [];
+    const s = String(n);
+    for (let i = 0; i < s.length; i++) {
+      const left = s.length - i;
+      if (i && left % 3 === 0) { const c = document.createElement('span'); c.className = 'sep'; c.textContent = ','; host.appendChild(c); }
+      const c = document.createElement('span'); c.className = 'col'; c.innerHTML = strip; host.appendChild(c); cols.push({ el: c, v: +s[i] });
+    }
+    len = s.length;
+  }
+  function put(n, pos) {              // pos: per-column fractional values
+    const ds = pos || [...String(n)].map(Number);
+    cols.forEach((c, i) => { c.el.style.transform = `translateY(${-(ds[i] + 10) * 1.15}em)`; });
+  }
+  return {
+    set(n) { build(n); put(n); this.val = n; },
+    async to(n, ms) {
+      const my = gen, from = this.val; this.val = n;
+      const b = String(n);
+      if (b.length !== len) build(n);
+      const fa = [...String(from).padStart(len, '0')].map(Number);
+      const fb = [...b].map(Number);
+      const dir = n > from ? 1 : -1;
+      // each digit rolls the way the number moves; the units digit turns the furthest
+      const travel = fb.map((d, i) => ((((d - fa[i]) * dir) % 10) + 10) % 10);
+      await tween(ms, (k) => { put(n, fb.map((d, i) => fa[i] + dir * travel[i] * k)); }, EASE_OUT, my);
+      if (my === gen) put(n);
+    },
+  };
+}
+
+const slots = [$('#s0'), $('#s1')];
+const cards = PROJECTS.map((w) => {
+  const el = document.createElement('div'); el.className = 'as-wh';
+  el.innerHTML = `<div class="role"><span data-role></span></div>
+    <div class="chipcol"><span class="as-chip" data-delta></span></div>
+    <div class="nm"><img src="${w.img}" alt=""><span>${w.name}<small>${w.by}</small></span></div>
+    <div class="qty"><span class="as-digits" data-n></span><span class="unit">design hours left after the move</span></div>`;
+  return { el, roll: Rolling(el.querySelector('[data-n]')), role: el.querySelector('[data-role]'), delta: el.querySelector('[data-delta]') };
+});
+const after = (i, slot) => PROJECTS[i].onhand + (slot === 0 ? -MOVE : MOVE);   // top slot sends, bottom slot receives
+function label(i, slot) {
+  cards[i].role.textContent = slot === 0 ? 'Sends' : 'Receives';
+  cards[i].delta.className = 'as-chip' + (slot === 0 ? '' : ' in');
+  cards[i].delta.textContent = (slot === 0 ? '−' : '+') + MOVE + ' hours';
+}
+const pos = [SLOT_Y[0], SLOT_Y[1]];   // live y of each project's card
+function layout() {
+  cards.forEach((c, wi) => { slots[wi].style.transform = `translateY(${pos[wi]}px)`; });
+  $('#mid').style.top = ((SLOT_Y[0] + 164 + SLOT_Y[1]) / 2 - 22) + 'px';
+}
+cards.forEach((c, wi) => slots[wi].appendChild(c.el));
+const arrow = $('#mid svg');
+let busy = false;
+function reset() {
+  gen++; busy = false;
+  order = [0, 1];
+  order.forEach((wi, s) => { pos[wi] = SLOT_Y[s]; label(wi, s); cards[wi].roll.set(after(wi, s)); });
+  layout(); arrow.style.transform = '';
+}
+async function swap() {
+  if (busy) return; busy = true;
+  const next = [order[1], order[0]];
+  const from = pos.slice(), to = [0, 0]; next.forEach((wi, s) => { to[wi] = SLOT_Y[s]; });
+  order = next;
+  next.forEach((wi, s) => label(wi, s));
+  if (still) { next.forEach((wi, s) => { pos[wi] = SLOT_Y[s]; cards[wi].roll.set(after(wi, s)); }); layout(); busy = false; return; }
+  const my = gen, jobs = [];
+  // the two cards cross on the in-out curve while the figures roll
+  jobs.push(tween(460, (k) => { cards.forEach((c, wi) => { pos[wi] = from[wi] + (to[wi] - from[wi]) * k; }); layout(); arrow.style.transform = `rotate(${k * 180}deg)`; }, EASE_IN_OUT, my));
+  next.forEach((wi, s) => jobs.push(cards[wi].roll.to(after(wi, s), 620)));
+  try { await Promise.all(jobs); } finally { if (my === gen) { busy = false; arrow.style.transform = ''; } }
+}
+$('#mid').addEventListener('click', () => swap());
+$('#go').addEventListener('click', () => { const b = $('#go'); b.disabled = true; b.textContent = 'Moved'; setTimeout(() => { b.disabled = false; b.textContent = 'Move ' + MOVE + ' hours'; }, 1400); });
+reset();
+if (still) swap();
+</script>
+<script src="../assets/picks/p3-ghost.js"></script>
+<script>
+  /* loop kind: the ghost presses the arrow three times */
+  PickGhost.fit($('#fit'), 460, 470, { max: 1.45 });
+  PickGhost.start({
+    hot: '.as-mid',
+    reset,
+    still: () => { reset(); swap(); },
+    async script(g) {
+      await g.wait(500);
+      await g.click('#mid', { ms: 650 }); await g.wait(1500);
+      await g.click('#mid', { ms: 300 }); await g.wait(1400);
+      await g.click('#mid', { ms: 300 }); await g.wait(1500);
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Player morph · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-sound",
+  "title": "Player morph",
+  "group": "picks",
+  "cat": "buttons",
+  "order": 90,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "one object · one spring · k 280 · damping 0.74",
+  "summary": "A mini bar for a launch film grows into the full player and folds back, one object throughout: the poster, the title and the play key travel while the scrubber and the skip keys arrive. A single spring from 0 to 1 is the state, and every position, size, radius and type size is read off it. Play is the one lime.",
+  "spec": [
+    ["State", "one number, open, from 0 (a 340 × 64 bar) to 1 (a 440 × 436 card), on one spring: k 280, damping ratio 0.74, a little overshoot, no separate transitions"],
+    ["Poster", "the hinge: it travels from a 48px circle at the left of the bar to a 16px inset, 10px-radius picture 230px tall at the top of the card; the picture crops as it grows and never cross-fades"],
+    ["Title and line", "from 15px at the left of the bar to 22px under the picture; the line reads Paused · 0:12 of 0:30 while closed and Made by Qbix · 0:30 open"],
+    ["Play", "from a 48px circle at the right end of the bar to a 56px circle centred under the scrubber"],
+    ["Arriving", "the scrubber, the times, the skip keys (back and forward 5 seconds) and the minimise key come in over the second half of the move (opacity from 0.45 to 0.85 of it) and only take input once half-visible"],
+    ["Corners", "the radius runs from 32px (a pill) to 14px; the bar's width grows 340 → 440, its height 64 → 436"],
+    ["Scrub", "a drag on the bar seeks; a 10px grab area above and below it; Esc folds the player, Space plays and pauses"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Film player (ix-sound)", "Idea: bencho.dev sound (MIT)"],
+  "where": "Forma's 30-second launch film, from the Design service: a bar on the page that opens into the player.",
+  "rules": [
+    "One container: the poster, the title and the play key travel, they are never swapped.",
+    "Play is the one filled action, and it is the lime.",
+    "No shadow, no outline; the minimise key sits on the picture.",
+    "Reduced motion opens it without the spring."
+  ],
+  "tags": ["player", "film", "spring", "morph", "scrubber"],
+  "shot": 4300
+}
+</script>
+<style data-code>
+/* Film player · idea: bencho.dev sound (MIT), redrawn for Qbix.
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+.pk {
+  --radius-sm: 8px; --duration-fast: 120ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --muted: var(--fg2); --surface-muted: var(--sunk); --control-track: var(--fg4);
+  font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
+}
+.film { position: relative; width: 520px; height: 480px; }
+.pl { position: absolute; background: var(--surface); overflow: hidden; cursor: pointer; }
+.pl.open { cursor: default; }
+.pl > * { position: absolute; }
+.poster { background: var(--sunk); overflow: hidden; }
+.poster .sc { position: absolute; inset: 0; background: center 62% / cover no-repeat; }
+.ttl { white-space: nowrap; font-size: 16px; letter-spacing: -0.01em; line-height: 1.2; }
+.sub { white-space: nowrap; color: var(--muted); font-size: 14px; }
+.circ { border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.play { background: var(--signal); color: var(--on-lime); }
+.play:hover, .play.is-hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.skip { background: transparent; color: var(--fg); width: 48px; height: 48px; }
+.skip:hover, .skip.is-hover { background: var(--surface-muted); }
+.min { background: rgba(22, 25, 27, .55); color: #fff; width: 32px; height: 32px; }
+.min:hover, .min.is-hover { background: rgba(22, 25, 27, .75); }
+.bar { height: 6px; border-radius: 3px; background: var(--control-track); cursor: pointer; touch-action: none; }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--fg); }
+.bar b { position: absolute; top: -4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--fg); }
+.tm { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.hit { position: absolute; left: 0; right: 0; top: -10px; bottom: -10px; }
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .fit { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<div class="fit" id="fit">
+<!-- code -->
+<div class="pk film" id="stage">
+  <div class="pl" id="pl">
+    <div class="poster" id="poster"><div class="sc" id="sc" style="background-image:url(../assets/art/objects.webp)"></div></div>
+    <div class="ttl" id="ttl">Forma launch film</div>
+    <div class="sub" id="sub"></div>
+    <button class="circ play" id="play" type="button" aria-label="Play"></button>
+    <button class="circ skip" id="back" type="button" aria-label="Back 5 seconds"></button>
+    <button class="circ skip" id="fwd" type="button" aria-label="Forward 5 seconds"></button>
+    <button class="circ min" id="min" type="button" aria-label="Minimise"></button>
+    <div class="bar" id="bar"><i id="bi"></i><b id="bk"></b><span class="hit"></span></div>
+    <span class="tm" id="t0"></span><span class="tm" id="t1"></span>
+  </div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Open the bar · play · drag the scrubber · fold it</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Film player. Idea: bencho.dev sound (MIT).
+   One number is the state: a single spring, 0 to 1, and every position, size, radius and type size is read off it.
+   Nothing has a transition of its own, which is why it reads as one object changing. */
+const $ = (s) => document.querySelector(s);
+const SW = 520, SH = 480, DUR = 30;
+const P = {   // 24px outline icons, round caps
+  Play: '<path d="M6 3 20 12 6 21z"/>',
+  Pause: '<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  Undo2: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/>',
+  Redo2: '<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"/>',
+  ChevronDown: '<path d="m6 9 6 6 6-6"/>',
+};
+const ic = (n, s) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+const el = { pl: $('#pl'), poster: $('#poster'), ttl: $('#ttl'), sub: $('#sub'), play: $('#play'), back: $('#back'), fwd: $('#fwd'), min: $('#min'), bar: $('#bar'), t0: $('#t0'), t1: $('#t1'), sc: $('#sc') };
+el.back.innerHTML = ic('Undo2', 22); el.fwd.innerHTML = ic('Redo2', 22); el.min.innerHTML = ic('ChevronDown', 18);
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let playing = false, pos = 12, open = 0, ov = 0, target = 0, raf = 0, last = 0;
+const lerp = (a, b, k) => a + (b - a) * k;
+const sat = (v) => Math.max(0, Math.min(1, v));
+function layout() {
+  const k = open, c = sat(k), W = lerp(340, 440, k), H = lerp(64, 436, k);
+  Object.assign(el.pl.style, { width: W + 'px', height: H + 'px', left: (SW - W) / 2 + 'px', top: (SH - H) / 2 + 'px', borderRadius: lerp(32, 14, c) + 'px' });
+  const pw = lerp(48, W - 32, k), ph = lerp(48, 230, k), px = lerp(8, 16, k), py = lerp(8, 16, k);
+  Object.assign(el.poster.style, { left: px + 'px', top: py + 'px', width: pw + 'px', height: ph + 'px', borderRadius: lerp(24, 10, c) + 'px' });
+  Object.assign(el.ttl.style, { left: lerp(68, 16, k) + 'px', top: lerp(11, 258, k) + 'px', fontSize: lerp(15, 22, c) + 'px' });
+  Object.assign(el.sub.style, { left: lerp(68, 16, k) + 'px', top: lerp(33, 292, k) + 'px', fontSize: lerp(13, 14, c) + 'px' });
+  const ps = lerp(48, 56, c);
+  Object.assign(el.play.style, { width: ps + 'px', height: ps + 'px', left: lerp(W - 56, (W - 56) / 2, k) + 'px', top: lerp(8, 364, k) + 'px' });
+  const f = sat((k - 0.45) / 0.4);                                     // the rest arrives over the second half of the move
+  Object.assign(el.back.style, { left: (W - 48) / 2 - 92 + 'px', top: 368 + 'px', opacity: f, pointerEvents: f > 0.5 ? 'auto' : 'none' });
+  Object.assign(el.fwd.style, { left: (W - 48) / 2 + 92 + 'px', top: 368 + 'px', opacity: f, pointerEvents: f > 0.5 ? 'auto' : 'none' });
+  Object.assign(el.min.style, { left: pw + px - 32 - 10 + 'px', top: py + 10 + 'px', opacity: f, pointerEvents: f > 0.5 ? 'auto' : 'none' });
+  Object.assign(el.bar.style, { left: '16px', width: W - 32 + 'px', top: '324px', opacity: f });
+  Object.assign(el.t0.style, { left: '16px', top: '336px', opacity: f }); Object.assign(el.t1.style, { right: '16px', top: '336px', opacity: f });
+  el.pl.classList.toggle('open', k > 0.5);
+  paintTime();
+}
+function paintTime() {
+  const p = pos / DUR;
+  $('#bi').style.width = p * 100 + '%'; $('#bk').style.left = p * 100 + '%';
+  el.t0.textContent = mmss(pos); el.t1.textContent = '-' + mmss(DUR - pos);
+  el.sub.textContent = open > 0.5 ? 'Made by Qbix · 0:30' : `${playing ? 'Playing' : 'Paused'} · ${mmss(pos)} of 0:30`;
+  el.play.innerHTML = ic(playing ? 'Pause' : 'Play', open > 0.5 ? 24 : 20);
+  el.play.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+}
+function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
+function tick(now) {
+  const dt = Math.min(0.033, (now - last) / 1000); last = now;
+  const K = 280, C = 2 * Math.sqrt(K) * 0.74;
+  ov += (-K * (open - target) - C * ov) * dt; open += ov * dt;
+  if (playing) pos = Math.min(DUR, pos + dt);
+  layout();
+  raf = requestAnimationFrame(tick);   // the film keeps running while playing
+  if (!playing && Math.abs(open - target) < 0.001 && Math.abs(ov) < 0.01) { open = target; layout(); raf = 0; }
+}
+const setOpen = (v) => { target = v ? 1 : 0; if (still) { open = target; ov = 0; layout(); } else wake(); };
+el.pl.addEventListener('click', (e) => { if (!open || open < 0.5) { if (!e.target.closest('#play')) setOpen(true); } });
+el.min.addEventListener('click', (e) => { e.stopPropagation(); setOpen(false); });
+el.play.addEventListener('click', (e) => { e.stopPropagation(); playing = !playing; paintTime(); wake(); });
+el.back.addEventListener('click', () => { pos = Math.max(0, pos - 5); paintTime(); });
+el.fwd.addEventListener('click', () => { pos = Math.min(DUR, pos + 5); paintTime(); });
+let scrub = false;
+const seekTo = (e) => { const r = el.bar.getBoundingClientRect(); pos = DUR * sat((e.clientX - r.left) / r.width); paintTime(); };
+el.bar.addEventListener('pointerdown', (e) => { scrub = true; seekTo(e); try { el.bar.setPointerCapture(e.pointerId); } catch (x) { /* a scripted pointer */ } });
+window.addEventListener('pointermove', (e) => { if (scrub) seekTo(e); });
+window.addEventListener('pointerup', () => { scrub = false; }); window.addEventListener('pointercancel', () => { scrub = false; });
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); if (e.key === ' ' && open > 0.5) { playing = !playing; paintTime(); wake(); e.preventDefault(); } });
+/* back to the bar, at rest, at 0:12 */
+function reset() { open = 0; ov = 0; target = 0; playing = false; pos = 12; layout(); }
+layout();
+if (still) { open = target = 1; playing = false; layout(); }
+</script>
+<script>
+  /* ---- harness glue: the piece scaled to the window as the original was, a ghost hand that plays it, real input that takes over ---- */
+  const ABORT = { abort: true };
+  function fit(el, W, H, pad) {
+    const ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min((innerWidth - 2 * pad) / W, (innerHeight - bar - 2 * pad) / H);
+      Object.assign(el.style, { width: W + 'px', height: H + 'px', left: innerWidth / 2 + 'px', top: (innerHeight - bar) / 2 + 'px', transform: `translate(-50%, -50%) scale(${k})` });
+    };
+    addEventListener('resize', go); go();
+  }
+  const hand = (() => {
+    let x = innerWidth * 0.82, y = innerHeight * 0.86, held = null, over = null, gen = 0;
+    const ease = QM.bezier(0.65, 0, 0.35, 1);
+    const under = () => held || document.elementFromPoint(x, y) || document.body;
+    const ev = (type, el, buttons) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, pointerType: 'mouse', isPrimary: true, clientX: x, clientY: y, button: 0, buttons }));
+    const chain = (el) => { const s = []; for (let n = el; n; n = n.parentElement) s.push(n); return s; };
+    function hover(el) {
+      if (el === over) return;
+      const keep = new Set(chain(el));
+      chain(over).forEach((n) => { if (!keep.has(n)) n.classList.remove('is-hover'); });
+      chain(el).forEach((n) => n.classList.add('is-hover'));
+      over = el;
+    }
+    const api = {
+      cancel() { gen++; },
+      async wait(ms) { const my = gen; await QM.wait(ms); if (my !== gen) throw ABORT; },
+      async to(tx, ty, ms = 700) {
+        const my = gen, x0 = x, y0 = y, t0 = performance.now();
+        QM.ghostShow();
+        if (Math.hypot(tx - x0, ty - y0) < 1) { await Promise.resolve(); if (my !== gen) throw ABORT; return; }
+        for (;;) {
+          await new Promise(requestAnimationFrame);
+          if (my !== gen) throw ABORT;
+          const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+          x = x0 + (tx - x0) * k; y = y0 + (ty - y0) * k;
+          QM.ghostAt(x, y);
+          const el = under(); hover(el); ev('pointermove', el, held ? 1 : 0);
+          if (p >= 1) return;
+        }
+      },
+      at(el, ms, fx = 0.5, fy = 0.5) { const r = el.getBoundingClientRect(); return api.to(r.left + r.width * fx, r.top + r.height * fy, ms); },
+      down() { held = under(); ev('pointerdown', held, 1); },
+      up() { const el = held || under(); ev('pointerup', el, 0); held = null; },
+      release() { if (held) api.up(); },
+      async click(el, ms = 700, fx = 0.5, fy = 0.5) {
+        await api.at(el, ms, fx, fy); await api.wait(90);
+        api.down(); await api.wait(70); const t = held; api.up();
+        t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y }));
+      },
+    };
+    return api;
+  })();
+
+  async function story() {
+    reset();
+    await hand.wait(700);
+    await hand.click($('#pl'), 700, 0.45);                  // open the bar
+    await hand.wait(1000);
+    await hand.click($('#play'), 500);                      // play
+    await hand.wait(900);
+    await hand.at($('#bar'), 500, 0.34);                    // scrub
+    hand.down();
+    await hand.at($('#bar'), 700, 0.7);
+    hand.up();
+    await hand.wait(1000);
+    await hand.click($('#min'), 500);                       // and fold it
+    await hand.wait(2200);
+  }
+  let paused = false, running = false, lastReal = -1e9;
+  function cancelStory() { hand.cancel(); QM.ghostHide(); hand.release(); running = false; }
+  if (!QM.tile) {
+    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) cancelStory(); } };
+    ['pointerdown', 'pointermove', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+  }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancelStory(); } });
+  (async function idle() {
+    for (;;) {
+      await QM.wait(250);
+      if (QM.reduced || paused || document.hidden || (!QM.tile && performance.now() - lastReal < 2500)) continue;
+      running = true;
+      try { await story(); } catch (e) { if (e !== ABORT) throw e; }
+      if (running) { QM.ghostHide(); hand.release(); }
+      running = false;
+    }
+  })();
+  fit(document.getElementById('fit'), 520, 480, 24);
+  QM.demo({ kind: 'loop', restart() { paused = false; lastReal = -1e9; if (running) cancelStory(); } });
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glass lens · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-grain-glass",
+  "title": "Glass lens",
+  "group": "lab",
+  "cat": "cursor",
+  "order": 20,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "4 drifting colour points · fixed grain · lens ×1.19",
+  "summary": "Each card is a mesh of four drifting colour points, blended by inverse distance and then posterised against fixed grain, so the blend reads as flat tones and dots instead of a gradient. A lens follows the pointer: it magnifies the centre, pulls the rim in, splits the red and blue channels a little and stretches along the direction it moves.",
+  "spec": [
+    ["Mesh", "4 points, weight 1 / (d² + 0.035)^1.6, domain-warped by 0.07"],
+    ["Grain", "fixed hash per pixel, ±0.45 of a tone step, then rounded to a flat tone"],
+    ["Lens", "radius 19% of the short side, 54 to 150 px"],
+    ["Refraction", "f = 0.84 + 0.46·r⁶, red and blue offset by 0.02·r⁵"],
+    ["Stretch", "along the velocity, up to 28% at 2,600 px/s"],
+    ["Follow", "1 − e^(−7 dt)"]
+  ],
+  "source": ["Qbix studio library · grain-glass"],
+  "where": "A Design service chapter where the three offers sit as cards and the lens reads their details.",
+  "rules": [
+    "No gradient fills: the mesh is quantised to four flat tones per card, the transition is grain.",
+    "One lime card on the screen; the other two stay white and paper, with a little ink or lime in the grain.",
+    "Captions sit on flat panels, so the lens bends their type but the type never sits on grain."
+  ],
+  "tags": ["lens", "grain", "canvas", "refraction", "mesh"]
+}
+</script>
+<style data-code>
+.gg { position: absolute; inset: 0; overflow: hidden; background: #f3f4f5; }
+.gg canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>
+<style>.qm-stage { padding: 0; }</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="gg" id="gg"><canvas aria-label="Three Qbix offer cards with a glass lens that follows the pointer"></canvas></div>
+<!-- /code -->
+  <div class="qm-ui"><span>Move the pointer to push the lens</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Grain cards + glass lens. createGrainGlass(canvas) -> { to(x, y) } (css px in the canvas) */
+function createGrainGlass(cv, { reduce = false } = {}) {
+  const g = cv.getContext('2d', { willReadFrequently: true });
+  const lo = document.createElement('canvas'), lg = lo.getContext('2d');
+  const ink = document.createElement('canvas'), ig = ink.getContext('2d');
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const CARDS = [
+    // tone 0 is pinned to the top left of every card, so it is the light one the number sits on
+    { n: '01', title: 'Design service', fact: 'From $500, in 1 to 3 weeks', pal: ['#ffffff', '#f3f4f5', '#e4e7ea', '#121417'], panel: '#ffffff', fg: '#121417' },
+    { n: '02', title: 'Brand upgrade', fact: 'From usable to worth sharing', pal: ['#B8FF00', '#a6e600', '#B8FF00', '#ffffff'], panel: '#B8FF00', fg: '#0c1300' },
+    { n: '03', title: 'Website Refresh', fact: '$600, live in 7 days', pal: ['#ffffff', '#f3f4f5', '#ffffff', '#B8FF00'], panel: '#ffffff', fg: '#121417' },
+  ].map((c) => ({ ...c, rgb: c.pal.map(hex), panelRgb: hex(c.panel) }));
+  const GROUND = [243, 244, 245];
+  let W = 0, H = 0, k = 1, S = 2, lw = 0, lh = 0, rects = [], hash, lens = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0 }, t = 0, base = null;
+
+  function layout() {
+    const m = Math.max(16, Math.min(W, H) * 0.07), gap = Math.max(12, Math.min(W, H) * 0.035);
+    rects = [];
+    if (W / H >= 0.9) {
+      let cw = (W - 2 * m - 2 * gap) / 3, ch = cw * 1.38;
+      if (ch > H - 2 * m - H * 0.06) { ch = H - 2 * m - H * 0.06; cw = ch / 1.38; }
+      const x0 = (W - (cw * 3 + gap * 2)) / 2, y0 = (H - ch) / 2;
+      for (let i = 0; i < 3; i++) rects.push([x0 + i * (cw + gap), y0 + (i - 1) * H * 0.03, cw, ch]);
+    } else {
+      const cw = W - 2 * m; let ch = (H - 2 * m - 2 * gap) / 3; if (ch > cw * 0.62) ch = cw * 0.62;
+      const y0 = (H - (ch * 3 + gap * 2)) / 2;
+      for (let i = 0; i < 3; i++) rects.push([m, y0 + i * (ch + gap), cw, ch]);
+    }
+  }
+  function paintInk() {                       // the captions, drawn once at device size
+    ink.width = Math.round(W * k); ink.height = Math.round(H * k);
+    ig.setTransform(k, 0, 0, k, 0, 0); ig.clearRect(0, 0, W, H);
+    rects.forEach(([x, y, w, h], i) => {
+      const c = CARDS[i], s = Math.min(w, h * 1.4), pad = Math.max(14, s * 0.075);
+      const big = Math.max(20, Math.min(s * 0.15, 46)), small = Math.max(11, Math.min(big * 0.4, 15));
+      ig.fillStyle = c.fg; ig.textBaseline = 'alphabetic';
+      ig.font = `400 ${big}px Eurostile, Geist, sans-serif`;
+      ig.fillText(c.title, x + pad, y + h - pad - small * 1.9, w - pad * 2);
+      ig.font = `400 ${small}px Geist, system-ui, sans-serif`; ig.globalAlpha = 0.72;
+      ig.fillText(c.fact, x + pad, y + h - pad, w - pad * 2); ig.globalAlpha = 1;
+      ig.font = `500 ${small * 0.9}px "Encode Sans", Geist, sans-serif`;
+      if ('letterSpacing' in ig) ig.letterSpacing = '1.2px';
+      ig.fillStyle = '#0c1300';
+      ig.fillText(c.n + ' / 03', x + pad, y + pad + small);
+      if ('letterSpacing' in ig) ig.letterSpacing = '0px';
+    });
+  }
+  const wt = (qx, qy, cx, cy) => { const dx = qx - cx, dy = qy - cy; return Math.pow(dx * dx + dy * dy + 0.035, -1.6); };
+  function blob(fi, fj, tt, asp) {
+    let cx, cy;
+    if (fj < 0.5) { cx = 0.18 + 0.1 * Math.sin(tt * 0.3 + fi); cy = 0.12 + 0.08 * Math.cos(tt * 0.27); }
+    else { cx = 0.5 + 0.42 * Math.sin(tt * (0.21 + 0.05 * fj) + fj * 1.9 + fi * 2.3); cy = 0.5 + 0.42 * Math.cos(tt * (0.17 + 0.04 * fj) + fj * 2.6 + fi); }
+    return [cx * asp, cy];
+  }
+  function mesh() {                           // every card, at low resolution, flat tones only
+    const img = lg.createImageData(lw, lh), d = img.data;
+    for (let i = 0; i < d.length; i += 4) { d[i] = GROUND[0]; d[i + 1] = GROUND[1]; d[i + 2] = GROUND[2]; d[i + 3] = 255; }
+    const tt = reduce ? 6 : t, cut = 12;
+    rects.forEach(([rx, ry, rw, rh], ci) => {
+      const c = CARDS[ci], asp = rw / rh, art = rh * 0.64;
+      const bl = [0, 1, 2, 3].map((j) => blob(ci, j, tt, asp));
+      const x0 = Math.max(0, Math.floor(rx / S)), x1 = Math.min(lw, Math.ceil((rx + rw) / S));
+      const y0 = Math.max(0, Math.floor(ry / S)), y1 = Math.min(lh, Math.ceil((ry + rh) / S));
+      for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+        const px = (x + 0.5) * S - rx, py = (y + 0.5) * S - ry;
+        if (px < 0 || py < 0 || px > rw || py > rh) continue;
+        if (px > rw - cut && py < px - (rw - cut)) continue;       // the cut corner, top right
+        let col;
+        if (py > art) col = c.panelRgb;                              // the caption panel is flat
+        else {
+          let qx = (px / rw) * asp, qy = py / art;
+          qx += 0.07 * Math.sin(qy * 3.1 + tt * 0.7 + ci); qy += 0.07 * Math.cos(qx * 2.7 - tt * 0.6);
+          let ws = 0, ts = 0;
+          for (let j = 0; j < 4; j++) { const w = wt(qx, qy, bl[j][0], bl[j][1]); ws += w; ts += w * j; }
+          let v = ts / ws + (hash[y * lw + x] - 0.5) * 0.9;           // fixed grain, then a flat tone
+          v = v < 0 ? 0 : v > 3 ? 3 : Math.round(v);
+          col = c.rgb[v];
+        }
+        const o = (y * lw + x) * 4; d[o] = col[0]; d[o + 1] = col[1]; d[o + 2] = col[2];
+      }
+    });
+    lg.putImageData(img, 0, 0);
+  }
+  function lensPass() {
+    const R = Math.max(54, Math.min(150, Math.min(W, H) * 0.19)) * k, Lx = lens.x * k, Ly = lens.y * k;
+    const sp = Math.hypot(lens.vx, lens.vy), amt = Math.min(0.28, sp / 2600);
+    const nx = sp ? lens.vx / sp : 0, ny = sp ? lens.vy / sp : 0;
+    const bx0 = Math.max(0, Math.floor(Lx - R * 1.3)), by0 = Math.max(0, Math.floor(Ly - R * 1.3));
+    const bx1 = Math.min(cv.width, Math.ceil(Lx + R * 1.3)), by1 = Math.min(cv.height, Math.ceil(Ly + R * 1.3));
+    const bw = bx1 - bx0, bh = by1 - by0; if (bw < 2 || bh < 2) return;
+    const src = g.getImageData(bx0, by0, bw, bh), out = g.createImageData(bw, bh), s = src.data, o = out.data;
+    o.set(s);
+    const sample = (px, py, ch) => {
+      const ix = Math.max(0, Math.min(bw - 1, Math.round(px - bx0))), iy = Math.max(0, Math.min(bh - 1, Math.round(py - by0)));
+      return s[(iy * bw + ix) * 4 + ch];
+    };
+    for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
+      const px = x + bx0, py = y + by0, dirx = px - Lx, diry = py - Ly;
+      let dx = dirx / R, dy = diry / R;
+      if (sp > 0.001) { const a = dx * nx + dy * ny, ppx = dx - a * nx, ppy = dy - a * ny, q = 1 + amt * 0 + sp / 2600 * 0; dx = a * nx / (1 + amt) + ppx * (1 + amt * 0.45); dy = a * ny / (1 + amt) + ppy * (1 + amt * 0.45); void q; }
+      const r = Math.hypot(dx, dy); if (r > 1) continue;
+      const f = 0.84 + 0.46 * Math.pow(r, 6), ca = 0.02 * Math.pow(r, 5), i = (y * bw + x) * 4;
+      o[i] = sample(Lx + dirx * f * (1 + ca), Ly + diry * f * (1 + ca), 0);
+      o[i + 1] = sample(Lx + dirx * f, Ly + diry * f, 1);
+      o[i + 2] = sample(Lx + dirx * f * (1 - ca), Ly + diry * f * (1 - ca), 2);
+    }
+    g.putImageData(out, bx0, by0);
+  }
+  function draw() {
+    if (!W) return;
+    mesh();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = '#f3f4f5'; g.fillRect(0, 0, cv.width, cv.height);
+    g.imageSmoothingEnabled = false;
+    g.drawImage(lo, 0, 0, lw, lh, 0, 0, lw * S * k, lh * S * k);
+    g.drawImage(ink, 0, 0);
+    lensPass();
+  }
+  function fit() {
+    W = cv.clientWidth; H = cv.clientHeight; k = Math.min(1.5, devicePixelRatio || 1);
+    S = Math.max(2, Math.round(Math.max(W, H) / 380));
+    cv.width = Math.round(W * k); cv.height = Math.round(H * k);
+    lw = Math.ceil(W / S); lh = Math.ceil(H / S); lo.width = lw; lo.height = lh;
+    hash = new Float32Array(lw * lh); let s = 7;
+    for (let i = 0; i < hash.length; i++) { s = (s * 16807) % 2147483647; hash[i] = s / 2147483647; }
+    layout(); paintInk();
+    if (!lens.x) { lens.x = lens.tx = rects[1][0] + rects[1][2] * 0.4; lens.y = lens.ty = rects[1][1] + rects[1][3] * 0.35; }
+    draw();
+  }
+  let prev = 0;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - (prev || now)) / 1000); prev = now; t += dt;
+    const e = 1 - Math.exp(-dt * 7), nx = lens.x + (lens.tx - lens.x) * e, ny = lens.y + (lens.ty - lens.y) * e;
+    const vx = dt ? (nx - lens.x) / dt : 0, vy = dt ? (ny - lens.y) / dt : 0;
+    lens.vx += (vx - lens.vx) * 0.2; lens.vy += (vy - lens.vy) * 0.2; lens.x = nx; lens.y = ny;
+    draw();
+  }
+  fit();
+  if (document.fonts) document.fonts.ready.then(() => { paintInk(); draw(); });
+  new ResizeObserver(() => { if (cv.clientWidth !== W || cv.clientHeight !== H) fit(); }).observe(cv);
+  requestAnimationFrame(frame);
+  return { to(x, y) { lens.tx = x; lens.ty = y; }, rects: () => rects };
+}
+</script>
+<script>
+  const cv = document.querySelector('#gg canvas');
+  const gg = createGrainGlass(cv, { reduce: QM.reduced });
+  addEventListener('pointermove', (e) => { const r = cv.getBoundingClientRect(); gg.to(e.clientX - r.left, e.clientY - r.top); }, { passive: true });
+  QM.demo({
+    kind: 'pointer',
+    // across the three cards, drifting up and down
+    path: (t) => {
+      const R = gg.rects(); if (!R.length) return [innerWidth / 2, innerHeight / 2];
+      const a = R[0], b = R[2];
+      const x0 = a[0] + a[2] * 0.35, x1 = b[0] + b[2] * 0.65, y0 = a[1] + a[3] * 0.3, y1 = a[1] + a[3] * 0.85;
+      const u = 0.5 + 0.5 * Math.sin(t * 0.55 - 1), v = 0.5 + 0.5 * Math.sin(t * 0.8 + 1.2);
+      return [x0 + (x1 - x0) * u, y0 + (y1 - y0) * v];
+    },
+    move(x, y) { const r = cv.getBoundingClientRect(); gg.to(x - r.left, y - r.top); },
+    leave() {},
+  });
+</script>
+</body>
+</html>

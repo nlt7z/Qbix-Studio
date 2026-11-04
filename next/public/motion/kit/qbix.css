@@ -1,0 +1,228 @@
+/* =============================================================================
+   QBIX MOTION — the shared kit every demo stands on.
+   Tokens are the site's own (qbix.space · app/globals.css, story.css,
+   scenes.css): black and paper chapters, one lime, Eurostile over Geist with
+   Encode Sans as the technical voice. No hairlines, no radii, no glass, no
+   blur. Things are told apart by surfaces and gaps; where a frame is needed
+   it is 2px. The corner that matters is cut, top right.
+   ============================================================================= */
+
+@font-face { font-family: 'Eurostile'; src: url('fonts/Eurostile-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Geist'; src: url('fonts/Geist-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Geist'; src: url('fonts/Geist-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Geist'; src: url('fonts/Geist-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Encode Sans'; src: url('fonts/EncodeSans-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'Encode Sans'; src: url('fonts/EncodeSans-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+
+:root {
+  /* ground: a gray ladder, never pure black */
+  --bg: #08090A;
+  --bg-2: #0F1011;
+  --bg-card: #161718;
+  --bg-charcoal: #1F2023;
+  --bg-elevated: #26282C;
+  /* ink: an off-white ladder, never pure white */
+  --ink: #F7F8F8;
+  --ink-2: #E6E8EA;
+  --text: #D0D6E0;
+  --text-2: #9AA0A9;
+  --text-3: #838892;
+  /* the page's two tones, and the one lime */
+  --paper: #f3f4f5;
+  --paper-ink: #121417;
+  --chalk: #f4f5f2;
+  --signal: #B8FF00;
+  --signal-hover: #C9F24A;
+  --signal-shade: #6FAE00;
+  --on-lime: #0c1300;
+
+  /* type: three voices */
+  --font-headline: 'Eurostile', 'Eurostile Next', 'Geist', system-ui, sans-serif;
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Encode Sans', 'Geist', system-ui, sans-serif;
+
+  /* the module: one 8px pixel sizes everything */
+  --px: 8px;
+  --cut: 12px;
+
+  /* motion: the site's curves (globals.css, lib/scene/timeline.ts) */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);            /* UI feedback */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);  /* entrances: quick off the mark, a long settle */
+  --ease-move: cubic-bezier(0.65, 0, 0.35, 1);     /* a move from one place to another */
+  --ease-soft: cubic-bezier(0.45, 0, 0.25, 1);     /* a gentle move */
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);        /* exits */
+  --ease-back: cubic-bezier(0.22, 1.2, 0.36, 1);   /* props on a table */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.46, 1);
+  --ease-ambient: cubic-bezier(0.45, 0, 0.55, 1);  /* always-on loops */
+  --ease-portfolio: cubic-bezier(0.22, 1, 0.36, 1);/* the SplitText wave */
+}
+
+/* the three tones a chapter can take (story.css .ch, scenes.css .scn) */
+[data-tone='dark'] {
+  --ground: #08090A;
+  --fg: #f4f5f2;
+  --fg2: rgba(244, 245, 242, 0.64);
+  --fg3: rgba(244, 245, 242, 0.38);
+  --fg4: rgba(244, 245, 242, 0.14);
+  --fill: rgba(244, 245, 242, 0.06);
+  --surface: #131417;
+  --sunk: #1b1d20;
+  --lift: 0 24px 48px -20px rgba(0, 0, 0, 0.9);
+}
+[data-tone='paper'] {
+  --ground: #f3f4f5;
+  --fg: #121417;
+  --fg2: rgba(18, 20, 23, 0.64);
+  --fg3: rgba(18, 20, 23, 0.38);
+  --fg4: rgba(18, 20, 23, 0.14);
+  --fill: rgba(18, 20, 23, 0.05);
+  --surface: #ffffff;
+  --sunk: #eceef0;
+  --lift: 0 1px 2px rgba(18, 20, 23, 0.05), 0 18px 40px -18px rgba(18, 20, 23, 0.22);
+}
+[data-tone='lime'] {
+  --ground: #B8FF00;
+  --fg: #0c1300;
+  --fg2: rgba(12, 19, 0, 0.66);
+  --fg3: rgba(12, 19, 0, 0.42);
+  --fg4: rgba(12, 19, 0, 0.16);
+  --fill: rgba(12, 19, 0, 0.07);
+  --surface: #0c1300;
+  --sunk: #a6e600;
+  --lift: 0 24px 48px -24px rgba(12, 19, 0, 0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; border-radius: 0; }
+html, body { margin: 0; padding: 0; }
+html { background: var(--ground, #08090A); color-scheme: dark; -webkit-text-size-adjust: 100%; }
+html[data-tone='paper'] { color-scheme: light; }
+body {
+  min-height: 100vh;
+  background: var(--ground);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, h4, h5 { margin: 0; font-family: var(--font-headline); font-weight: 400; font-synthesis-weight: none; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+em, i { font-style: normal; }
+button { font: inherit; color: inherit; }
+img { display: block; max-width: 100%; }
+::selection { background: var(--signal); color: var(--on-lime); }
+
+/* --- type ------------------------------------------------------------------- */
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.kicker { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg2); }
+.title { font-family: var(--font-headline); font-weight: 400; font-size: clamp(34px, 5.2vw, 64px); line-height: 1.04; letter-spacing: -0.03em; color: var(--fg); }
+.title--xl { font-size: clamp(40px, min(7.4vw, 11vh), 96px); line-height: 1.0; }
+.lede { font-size: clamp(16px, 1.6vw, 19px); line-height: 1.6; color: var(--fg2); max-width: 34em; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* --- corners: one cut off on the diagonal (globals.css .cut / .notch) ------- */
+.cut { clip-path: polygon(0 0, calc(100% - var(--cut, 12px)) 0, 100% var(--cut, 12px), 100% 100%, 0 100%); }
+.notch {
+  clip-path: polygon(evenodd,
+    0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    calc(100% - var(--cut, 16px) + 1px) 1px, calc(100% - 1px) 1px, calc(100% - 1px) calc(var(--cut, 16px) - 1px), calc(100% - var(--cut, 16px) + 1px) 1px,
+    0 0);
+}
+
+/* --- buttons: six pixels tall, the cut corner, a press like a key ----------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; padding: 0 24px;
+  border: 0; cursor: pointer; user-select: none; white-space: nowrap;
+  font-family: var(--font-sans); font-size: 15px; font-weight: 500; letter-spacing: -0.011em; line-height: 1;
+  text-decoration: none;
+  transition: transform 300ms var(--ease-portfolio), background 120ms var(--ease), color 120ms var(--ease);
+}
+.btn:active { transform: translateY(2px); }
+.btn-solid { background: var(--fg); color: var(--ground); }
+.btn-lime { background: var(--signal); color: var(--on-lime); }
+.btn-line { background: transparent; color: var(--fg); box-shadow: inset 0 0 0 2px currentColor; }
+.btn:focus-visible { outline: 2px solid var(--ground); outline-offset: -6px; }
+/* a text action: the label and its arrow; its underline draws left to right on hover */
+.btn-text { position: relative; height: auto; padding: 0; background: transparent; color: inherit; }
+.btn-text::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px;
+  background: currentColor; transform: scaleX(0); transform-origin: left center;
+  transition: transform 360ms var(--ease-out-expo);
+}
+.btn-text:hover::after, .btn-text:focus-visible::after, .btn-text.is-hot::after { transform: scaleX(1); }
+.btn-text:active { transform: translateY(1px); }
+
+/* --- tags: three pixels tall, a 1px frame of their own colour --------------- */
+.tag {
+  display: inline-flex; align-items: center; height: 24px; padding: 0 8px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px currentColor; color: var(--fg2);
+}
+.tag.is-live { background: var(--fg); color: var(--ground); box-shadow: none; }
+
+/* --- the SplitText wave (globals.css "SPLIT CTA") --------------------------- */
+.split-text { display: inline-flex; }
+.split-anim { display: inline-flex; align-items: center; padding-block: 0.14em; margin-block: -0.14em; }
+.split-char { position: relative; display: inline-block; overflow: hidden; line-height: 1.15; }
+.split-char.split-arrow { margin-left: 0.42em; }
+.split-char-rest, .split-char-next { display: block; transition: transform 300ms var(--ease-portfolio); transition-delay: var(--d); }
+.split-char-rest { transform: translateY(0); }
+.split-char-next { position: absolute; inset: 0; transform: translateY(110%); }
+.split-cta:hover .split-char-rest, .split-cta:focus-visible .split-char-rest, .split-cta.is-hot .split-char-rest { transform: translateY(-110%); }
+.split-cta:hover .split-char-next, .split-cta:focus-visible .split-char-next, .split-cta.is-hot .split-char-next { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .split-char-rest, .split-char-next { transition: none; }
+  .split-cta:hover .split-char-rest, .split-cta.is-hot .split-char-rest { transform: translateY(0); }
+  .split-cta:hover .split-char-next, .split-cta.is-hot .split-char-next { transform: translateY(110%); }
+}
+
+/* =============================================================================
+   THE DEMO STAGE — every piece is one screen, laid out to read at a tile's
+   size (the gallery draws tiles at 800 × 500 and scales them down) and at a
+   detail view's (up to about 1400 × 900).
+   ============================================================================= */
+.qm-stage {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: clamp(24px, 6vmin, 72px);
+  overflow: hidden;
+}
+.qm-stage > * { min-width: 0; }
+/* a demo's own controls (variants, a note): shown in the detail view, never in a tile */
+.qm-ui {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px;
+  padding: 14px clamp(16px, 3vw, 28px);
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--fg2);
+  background: var(--ground);
+}
+.qm-ui button {
+  all: unset; cursor: pointer; padding: 4px 0; color: var(--fg3);
+  transition: color 160ms var(--ease);
+}
+.qm-ui button:hover { color: var(--fg2); }
+.qm-ui button.is-on { color: var(--fg); }
+.qm-ui .qm-sep { color: var(--fg4); }
+html.qm-tile .qm-ui, html.qm-tile .qm-hint { display: none !important; }
+/* in the detail view the stage keeps clear of the controls bar */
+html:not(.qm-tile) body:has(.qm-ui) .qm-stage { padding-bottom: calc(clamp(24px, 6vmin, 72px) + 46px); }
+html.qm-tile { scrollbar-width: none; }
+html.qm-tile::-webkit-scrollbar { display: none; }
+.qm-hint { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg3); }
+
+/* the ghost pointer the harness moves in a tile (the system arrow, black with a white edge) */
+.qm-ghost {
+  position: fixed; left: 0; top: 0; z-index: 9999; width: 22px; height: 28px;
+  pointer-events: none; transform-origin: 2px 2px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
+  transition: opacity 240ms var(--ease);
+}
+.qm-ghost.is-off { opacity: 0; }

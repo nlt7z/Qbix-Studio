@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word reveal · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "word-reveal",
+  "title": "Word reveal",
+  "group": "type",
+  "cat": "text",
+  "order": 10,
+  "kind": "play",
+  "line": "850 ms · expo out · 50 ms a word",
+  "tone": "paper",
+  "summary": "Each word slides up out of an invisible sleeve, one after another, so a headline is uncovered, never faded.",
+  "spec": [
+    ["Duration", "850 ms a word (base)"],
+    ["Easing", "cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Stagger", "50 ms a word"],
+    ["Move", "translateY 115% → 0 inside an overflow-hidden sleeve"],
+    ["Trigger", "In view, once (margin 0 0 −4% 0)"],
+    ["Speeds", "snap 450 · fast 600 · base 850 · slow 1150 · cinematic 1500 ms"]
+  ],
+  "source": ["components/Reveal.tsx · Words", "components/Reveal.tsx · SPEEDS"],
+  "where": "Section titles on the offer pages, Strata and the footer head.",
+  "rules": [
+    "The sleeve is padded 0.14em below (and pulled back by a −0.14em margin), so descenders never clip while the word rises.",
+    "No opacity and no blur: the word is covered, then uncovered.",
+    "One word per sleeve. Never per letter on a headline."
+  ],
+  "tags": ["text", "entrance", "mask", "in view"]
+}
+</script>
+<style data-code>
+/* Masked word reveal — components/Reveal.tsx → Words */
+.words .w-sleeve {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.14em;   /* room for g, p, y while the word rises */
+  margin-bottom: -0.14em;
+}
+.words .w-word {
+  display: inline-block;
+  white-space: pre;
+  transform: translateY(115%);
+  transition: transform var(--w-dur, 850ms) cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--w-at, 0ms);
+}
+.words.is-in .w-word { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .words .w-word { transform: none; transition: none; }
+}
+</style>
+<style>
+  .wr { width: min(100%, 920px); display: grid; gap: 22px; }
+  .wr .title { max-width: 13em; font-size: clamp(40px, 7.2vw, 104px); }
+  .words.is-reset .w-word { transition: none; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="wr">
+    <p class="kicker">Design service · Founders · Launch sites</p>
+<!-- code -->
+<h2 class="title words" data-words>From moodboard to a live domain.</h2>
+<!-- /code -->
+  </div>
+  <div class="qm-ui" id="ui">
+    <span>Speed</span>
+    <button data-speed="450">Snap</button>
+    <button data-speed="600">Fast</button>
+    <button data-speed="850" class="is-on">Base</button>
+    <button data-speed="1150">Slow</button>
+    <button data-speed="1500">Cinematic</button>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Split a heading into sleeved words; reveal it when it comes into view, once. */
+function words(el, { duration = 850, step = 50, delay = 0 } = {}) {
+  const text = el.textContent.trim();
+  const parts = text.split(' ');
+  el.setAttribute('aria-label', text);
+  el.textContent = '';
+  el.style.setProperty('--w-dur', `${duration}ms`);
+  parts.forEach((w, i) => {
+    const sleeve = document.createElement('span');
+    sleeve.className = 'w-sleeve';
+    sleeve.setAttribute('aria-hidden', 'true');
+    const word = document.createElement('span');
+    word.className = 'w-word';
+    word.textContent = i < parts.length - 1 ? `${w} ` : w;
+    word.style.setProperty('--w-at', `${delay + i * step}ms`);
+    sleeve.appendChild(word);
+    el.appendChild(sleeve);
+  });
+}
+
+const reveal = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    e.target.classList.add('is-in');
+    reveal.unobserve(e.target);
+  }
+}, { rootMargin: '0px 0px -4% 0px' });
+
+document.querySelectorAll('[data-words]').forEach((el) => {
+  words(el);
+  reveal.observe(el);
+});
+</script>
+<script>
+  const el = document.querySelector('[data-words]');
+  reveal.disconnect();
+  let dur = 850;
+  const reset = () => {
+    el.classList.add('is-reset');
+    el.classList.remove('is-in');
+    el.style.setProperty('--w-dur', `${dur}ms`);
+    void el.offsetWidth;
+    el.classList.remove('is-reset');
+  };
+  QM.demo({
+    kind: 'play',
+    get dur() { return dur + 50 * 6; },
+    hold: 1800,
+    reset,
+    play: () => el.classList.add('is-in'),
+  });
+  document.querySelectorAll('[data-speed]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-speed]').forEach((x) => x.classList.toggle('is-on', x === b));
+    dur = Number(b.dataset.speed);
+    reset();
+    requestAnimationFrame(() => el.classList.add('is-in'));
+  }));
+</script>
+</body>
+</html>

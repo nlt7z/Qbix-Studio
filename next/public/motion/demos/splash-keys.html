@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en" data-tone="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Key-press splash · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "splash-keys",
+  "title": "Key-press splash",
+  "group": "brand",
+  "cat": "loading",
+  "order": 20,
+  "kind": "play",
+  "tone": "dark",
+  "line": "560 ms rise · 90 ms apart · opens in 1000 ms",
+  "summary": "The loading screen is the brand's own keyboard. Q, B, I and X rise out of their slots one after another, each is pressed once like typing the name, and then the screen opens along the middle of the keys: the two halves draw in a little and part, top and bottom, onto the page, so the keyboard opens with the screen.",
+  "spec": [
+    ["Keys", "four caps, 234 / 228 / 223 / 220 wide of 262 tall, each standing in a slot (overflow hidden) it rises out of"],
+    ["Rise", "560 ms, cubic-bezier(0.16, 1, 0.3, 1), translate 110% → 0 · 90 ms apart"],
+    ["Press", "300 ms, cubic-bezier(0.45, 0, 0.25, 1), down 5% and scale 0.985 at 40% · at 0.62 s, then 0.15 s a key"],
+    ["Open", "1500 ms after the keys are ready, 1000 ms: each half y 0 → ∓1.6% → ±100% (times 0 / 0.16 / 1, eases (0.3, 0, 0.6, 1) then (0.7, 0, 0.12, 1)). No fade"],
+    ["Seam", "each half carries its half of the keyboard, the cut running through the middle of the keys"],
+    ["Wait", "the keys are decoded first (900 ms at the most), so none pops in"],
+    ["Once", "once a session (sessionStorage) · the home page's cube gathers when it is done (window.__qbixSplashDone)"],
+    ["Reduced motion", "the keys stand risen; after 600 ms the halves fade away in 300 ms"]
+  ],
+  "source": [
+    "components/LoadingScreen.tsx",
+    "app/globals.css · the splash (the keys), LOADING SCREEN",
+    "public/splash · key-q, key-b, key-i, key-x"
+  ],
+  "where": "The first screen of the home page, once a session, over the hero (“We build the coolest things.”).",
+  "rules": [
+    "The keyboard is cut along its middle: each half carries its half in the same place, so it opens with the screen.",
+    "Type only once the keys are decoded: nothing may pop in.",
+    "Open by parting, never by fading: the page underneath is uncovered. Only reduced motion fades.",
+    "Lock the page's scroll while it is up, let go when it is gone. Once a session; what comes next waits for __qbixSplashDone."
+  ],
+  "tags": ["splash", "loading", "keys", "brand", "once", "mask"],
+  "shot": 2300
+}
+</script>
+<style data-code>
+/* THE SPLASH — the brand's keyboard, Q B I X (app/globals.css). The keys are the brand render cut into
+   four. Each half of the screen carries its half of the keyboard (the seam runs through the middle of the
+   keys), so when the halves part the keyboard opens with them. Each key sits in a slot (overflow hidden):
+   it rises out of it, and a press sinks it a little back in. */
+.loading-root { position: fixed; inset: 0; z-index: 1000; pointer-events: auto; }
+.loading-root.is-gone { display: none; }
+.loading-half { position: absolute; left: 0; right: 0; height: 50vh; overflow: hidden; background: var(--bg); will-change: transform; }
+.loading-half--top { top: 0; }
+.loading-half--bottom { bottom: 0; }
+.loading-seam { position: absolute; left: 0; right: 0; display: flex; justify-content: center; }
+.loading-seam--top { top: 100%; transform: translateY(-50%); }
+.loading-seam--bottom { top: 0; transform: translateY(-50%); }
+.loading-keys { --kh: clamp(84px, 11vw, 136px); display: flex; gap: calc(var(--kh) * 0.05); }
+.loading-key { position: relative; overflow: hidden; height: var(--kh); width: calc(var(--kh) * var(--w) / 262); }
+.loading-keycap { display: block; width: 100%; height: 100%; translate: 0 110%; user-select: none; -webkit-user-drag: none; }
+/* Rise (translate), then one press (transform): separate properties, so they compose. */
+.loading-key.is-typing .loading-keycap {
+  animation:
+    key-rise 0.56s cubic-bezier(0.16, 1, 0.3, 1) var(--r, 0s) both,
+    key-press 0.3s cubic-bezier(0.45, 0, 0.25, 1) var(--d, 0.7s) both;
+}
+.loading-key.is-still .loading-keycap { translate: 0 0; }
+@keyframes key-rise { from { translate: 0 110%; } to { translate: 0 0; } }
+@keyframes key-press {
+  0%, 100% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(5%) scale(0.985); }
+}
+
+/* Opening: a small draw-in toward the seam, then the halves part (no fade). */
+.loading-root.is-out { pointer-events: none; }
+.loading-root.is-out .loading-half--top { animation: loading-open-top 1000ms both; }
+.loading-root.is-out .loading-half--bottom { animation: loading-open-bottom 1000ms both; }
+@keyframes loading-open-top {
+  0% { transform: translateY(0%); animation-timing-function: cubic-bezier(0.3, 0, 0.6, 1); }
+  16% { transform: translateY(1.6%); animation-timing-function: cubic-bezier(0.7, 0, 0.12, 1); }
+  100% { transform: translateY(-100%); }
+}
+@keyframes loading-open-bottom {
+  0% { transform: translateY(0%); animation-timing-function: cubic-bezier(0.3, 0, 0.6, 1); }
+  16% { transform: translateY(-1.6%); animation-timing-function: cubic-bezier(0.7, 0, 0.12, 1); }
+  100% { transform: translateY(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-root.is-out .loading-half { animation: loading-fade 300ms both; }
+  @keyframes loading-fade { to { opacity: 0; } }
+}
+</style>
+<style>
+  /* the page under the splash: the hero (components/sections/Hero.tsx, app/story.css) */
+  .qm-stage { display: block; padding: 0; --edge: clamp(16px, 4vw, 32px); }
+  .ch-copy { position: absolute; left: var(--edge); top: 50%; translate: 0 -55%; width: min(80%, 900px); }
+  .hero-title { margin: 0; font-size: clamp(40px, min(7vw, 11vh), 116px); line-height: 0.96; letter-spacing: -0.045em; white-space: nowrap; color: var(--fg); }
+  .hero-line { display: block; }
+  .hero-sub { margin: clamp(16px, 2.6vh, 26px) 0 0; max-width: 34em; font-size: clamp(16px, 1.35vw, 20px); line-height: 1.55; color: var(--fg2); }
+  /* the keys, a little bigger than the site's cap (136 px) so they read in a tile */
+  .loading-keys { --kh: clamp(96px, 18vw, 220px); }
+</style>
+</head>
+<body>
+<main class="qm-stage" id="stage">
+  <div class="ch-copy">
+    <h1 class="hero-title"><span class="hero-line">We build the</span> <span class="hero-line">coolest things.</span></h1>
+    <p class="hero-sub">Qbix never writes off a small idea.<br>We’re a sharp team that moves fast, from sketch to shipped product.</p>
+  </div>
+</main>
+<!-- code -->
+<div class="loading-root" aria-hidden="true">
+  <div class="loading-half loading-half--top">
+    <div class="loading-seam loading-seam--top">
+      <div class="loading-keys">
+        <span class="loading-key" style="--r: 0s; --d: 0.62s; --w: 234"><img class="loading-keycap" src="../assets/splash/key-q.webp" alt="" width="234" height="262" draggable="false" decoding="async"></span>
+        <span class="loading-key" style="--r: 0.09s; --d: 0.77s; --w: 228"><img class="loading-keycap" src="../assets/splash/key-b.webp" alt="" width="228" height="262" draggable="false" decoding="async"></span>
+        <span class="loading-key" style="--r: 0.18s; --d: 0.92s; --w: 223"><img class="loading-keycap" src="../assets/splash/key-i.webp" alt="" width="223" height="262" draggable="false" decoding="async"></span>
+        <span class="loading-key" style="--r: 0.27s; --d: 1.07s; --w: 220"><img class="loading-keycap" src="../assets/splash/key-x.webp" alt="" width="220" height="262" draggable="false" decoding="async"></span>
+      </div>
+    </div>
+  </div>
+  <div class="loading-half loading-half--bottom">
+    <div class="loading-seam loading-seam--bottom">
+      <div class="loading-keys">
+        <span class="loading-key" style="--r: 0s; --d: 0.62s; --w: 234"><img class="loading-keycap" src="../assets/splash/key-q.webp" alt="" width="234" height="262" draggable="false" decoding="async"></span>
+        <span class="loading-key" style="--r: 0.09s; --d: 0.77s; --w: 228"><img class="loading-keycap" src="../assets/splash/key-b.webp" alt="" width="228" height="262" draggable="false" decoding="async"></span>
+        <span class="loading-key" style="--r: 0.18s; --d: 0.92s; --w: 223"><img class="loading-keycap" src="../assets/splash/key-i.webp" alt="" width="223" height="262" draggable="false" decoding="async"></span>
+        <span class="loading-key" style="--r: 0.27s; --d: 1.07s; --w: 220"><img class="loading-keycap" src="../assets/splash/key-x.webp" alt="" width="220" height="262" draggable="false" decoding="async"></span>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* ---- components/LoadingScreen.tsx
+   The splash: the brand's own keyboard cut into its four keys: Q B I X rise out of the dark one after
+   another, then each is pressed once, like typing the name. Then the screen opens: the two halves, with
+   the keyboard cut along its middle, draw in a little and part, top and bottom, onto the page. Plays
+   once per session. */
+const TYPE_MS = 1500;   // from the keys being ready to the screen opening
+const WAIT_MS = 900;    // the longest we wait for the keys to load before going on without them
+const EXIT_MS = 1000;
+const SEEN_KEY = 'qbix.splashSeen';
+
+function loadingScreen(root) {
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const keys = Array.from(root.querySelectorAll('.loading-key'));
+  const imgs = Array.from(root.querySelectorAll('.loading-keycap'));
+  let timers = [];
+  const later = (fn, ms) => timers.push(window.setTimeout(fn, ms));
+  const stop = () => { timers.forEach((t) => window.clearTimeout(t)); timers = []; };
+  const exitDur = reduced ? 300 : EXIT_MS;
+  const typeMs = reduced ? 600 : TYPE_MS;
+
+  let run = 0;   // each play() is a run; a reset ends it, so a late callback never starts it again
+  // back to rest: the keys below their slots, the halves shut
+  const reset = () => {
+    run++;
+    stop();
+    root.classList.remove('is-out', 'is-gone');
+    keys.forEach((k) => k.classList.remove('is-typing', 'is-still'));
+    document.body.style.overflow = '';
+  };
+
+  const play = () => {
+    reset();
+    const mine = run;
+    // The homepage story waits for this before its blocks gather.
+    window.__qbixSplashDone = false;
+    document.body.style.overflow = 'hidden';
+    let started = false;
+    // Type once the keys are there (or after a short wait without them), then open.
+    const start = () => {
+      if (started || mine !== run) return;
+      started = true;
+      keys.forEach((k) => k.classList.add(reduced ? 'is-still' : 'is-typing'));
+      later(() => {
+        root.classList.add('is-out');
+        window.__qbixSplashDone = true;
+      }, typeMs);
+      later(() => {
+        root.classList.add('is-gone');
+        document.body.style.overflow = '';
+        try { sessionStorage.setItem(SEEN_KEY, '1'); } catch { /* ignore */ }
+      }, typeMs + exitDur);
+    };
+    Promise.all(imgs.map((im) => (im.decode ? im.decode().catch(() => undefined) : Promise.resolve()))).then(start);
+    later(start, WAIT_MS);
+  };
+
+  // On load: once per session, so skip straight to gone if this session has seen it.
+  const mount = () => {
+    let seen = false;
+    try { seen = sessionStorage.getItem(SEEN_KEY) === '1'; } catch { /* private mode: play it */ }
+    if (seen) {
+      window.__qbixSplashDone = true;
+      root.classList.add('is-gone');
+      return;
+    }
+    play();
+  };
+  return { mount, play, reset };
+}
+
+const splash = loadingScreen(document.querySelector('.loading-root'));
+splash.mount();   // on load
+</script>
+<script>
+  // --- demo glue: the page under the splash waits for it; the harness plays it ---------------------
+  const root = document.querySelector('.loading-root');
+  const TOTAL = TYPE_MS + EXIT_MS;
+  splash.reset();   // the harness plays it from rest, on its own beat (the page's mount() above would play it on load)
+  QM.demo({
+    kind: 'play',
+    dur: TOTAL,
+    hold: 1800,
+    lead: 400,
+    reset: splash.reset,
+    play: splash.play,
+    // the scrubber: every animation paused at the same moment of the whole
+    seekPlay(v) {
+      splash.reset();
+      const T = v * TOTAL;
+      root.querySelectorAll('.loading-key').forEach((k) => k.classList.add('is-typing'));
+      if (T >= TYPE_MS) root.classList.add('is-out');
+      void root.offsetWidth;
+      root.getAnimations({ subtree: true }).forEach((a) => {
+        a.pause();
+        a.currentTime = String(a.animationName).startsWith('loading-open') ? T - TYPE_MS : T;
+      });
+    },
+  });
+</script>
+</body>
+</html>

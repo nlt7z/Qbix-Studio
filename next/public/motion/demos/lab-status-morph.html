@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status morph · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-status-morph",
+  "title": "Status morph",
+  "group": "lab",
+  "cat": "loading",
+  "order": 10,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "spring 210 / 21 · 4 states · click to advance",
+  "summary": "One black panel measures the next state's content, then springs its width and height to fit. The old content is covered upward by a clip while the new content is uncovered from below, one piece after another. It runs building, deploying, ready and live for Forma's launch site.",
+  "spec": [
+    ["Size", "width and height each a spring, k 210, damping 21, to the measured size of the next state"],
+    ["Exit", "each piece clips away upward over 280 ms, ease-in"],
+    ["Enter", "each piece uncovers from below over 460 ms, expo out, 60 ms apart, after 110 ms"],
+    ["Progress", "building 2.6 s, deploying 3 s, ready 2.4 s, live 1.9 s, then round again"],
+    ["Trigger", "click the panel for the next state"]
+  ],
+  "source": ["Qbix studio library · status-morph"],
+  "where": "The hand-off of a Qbix build: the panel under the project's title tells the client what is done and what is still deploying.",
+  "rules": [
+    "The panel is measured, never given a size: whatever the next state holds sets it.",
+    "Content is uncovered by a clip, never faded; the lime is the progress and the done mark, one at a time.",
+    "The panel keeps the cut corner at every size. It is the one black object on a white pad."
+  ],
+  "tags": ["status", "spring", "panel", "click", "deploy"],
+  "shot": 2000
+}
+</script>
+<style data-code>
+/* The surface: a black panel with the cut corner. Its size is sprung from JS. */
+.sm-surf { --cut: 12px; position: relative; background: #121417; color: #f4f5f2; overflow: hidden; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); touch-action: manipulation; }
+.sm-c { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 1.1em; white-space: nowrap;
+  padding: 1.2em 1.4em; transform: translate(-50%, -50%); visibility: hidden; }
+.sm-c.is-in { visibility: visible; }
+.sm-t b { display: block; font: 500 1.05em/1.25 Geist, system-ui, sans-serif; letter-spacing: -0.011em; font-weight: 500; }
+.sm-t span { display: block; margin-top: .25em; font: 400 .8em/1.3 'Encode Sans', Geist, sans-serif; letter-spacing: .04em; color: rgba(244,245,242,.62); font-variant-numeric: tabular-nums; }
+.sm-1 { padding-bottom: 2.3em; }
+.sm-stack { position: relative; height: 2.9em; flex: none; }
+.sm-ph { position: absolute; top: .1em; width: 2.6em; height: 2.6em; background: #26282C; overflow: hidden; }
+.sm-ph img { width: 100%; height: 100%; object-fit: cover; clip-path: inset(100% 0 0 0); transition: clip-path 340ms cubic-bezier(.16, 1, .3, 1); }
+.sm-ph.is-up img { clip-path: inset(0); }
+.sm-bar { position: absolute; left: 1.4em; right: 1.4em; bottom: 1.1em; height: .3em; background: rgba(244,245,242,.14); }
+.sm-bar i { position: absolute; inset: 0 auto 0 0; width: 0; background: #B8FF00; }
+.sm-frame { position: relative; width: 3.5em; height: 6.2em; background: rgba(244,245,242,.12); overflow: hidden; flex: none; }
+.sm-frame i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: #B8FF00; }
+.sm-frame svg { position: absolute; left: 50%; top: 50%; width: 1.2em; height: 1.2em; margin: -.6em 0 0 -.6em; }
+.sm-pct { margin-left: .5em; font: 400 2.1em/1 Eurostile, Geist, sans-serif; letter-spacing: -.02em; font-variant-numeric: tabular-nums; min-width: 2.2em; }
+.sm-ok { width: 2.3em; height: 2.3em; background: #B8FF00; display: grid; place-items: center; flex: none; }
+.sm-send { margin-left: .5em; height: 2.6em; padding: 0 1.1em; background: #f4f5f2; color: #121417; display: grid; place-items: center; font: 500 .95em/1 Geist, sans-serif; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.sm-4 .sm-t b { font-size: 1.1em; }
+</style>
+<style>
+  .qm-stage { place-items: stretch; }
+  .sm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(20px, 5vw, 64px); align-items: center; width: 100%; }
+  .sm-head { display: grid; gap: clamp(10px, 2vmin, 20px); align-content: center; }
+  .sm-head .title { font-size: clamp(34px, min(6.6vw, 10vh), 72px); }
+  .sm-pad { height: 100%; min-height: 56vmin; display: grid; place-items: center; background: #ffffff; position: relative; }
+  .sm-surf-box { font-size: clamp(14px, 3.4vmin, 28px); width: 100%; height: 14em; position: relative; }
+  .sm-surf { position: absolute; left: 50%; top: 50%; }
+  .sm-count { position: absolute; left: 16px; bottom: 14px; color: var(--fg3); }
+  @media (max-width: 640px) { .sm { grid-template-columns: 1fr; } .sm-pad { min-height: 46vmin; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sm">
+    <div class="sm-head">
+      <p class="kicker">Qbix · Forma launch site</p>
+      <h1 class="title">Forma’s site is on its way.</h1>
+      <p class="lede">Moodboard in, one build, a live domain out. The panel tells the client where it stands.</p>
+    </div>
+    <div class="sm-pad">
+<!-- code -->
+<div class="sm-surf-box">
+  <div class="sm-surf" id="surf">
+    <div class="sm-c sm-1" id="c1"><div class="sm-stack" id="stack"></div><div class="sm-t"><b id="bdT">Building 3 pages</b><span id="bdS">1 of 3 pages</span></div><div class="sm-bar"><i id="bdBar"></i></div></div>
+    <div class="sm-c sm-2" id="c2"><div class="sm-frame"><i id="dFill"></i><svg viewBox="0 0 16 16" fill="none" stroke="#f4f5f2" stroke-width="2" stroke-linecap="square"><path d="M8 13V3.5M3.5 7.5L8 3l4.5 4.5"/></svg></div><div class="sm-t"><b>Deploying</b><span>Build 214</span><span id="dEta">About 20 s left</span></div><div class="sm-pct" id="pct">0%</div></div>
+    <div class="sm-c sm-3" id="c3"><div class="sm-ok"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0c1300" stroke-width="2" stroke-linecap="square"><path d="M3.5 8.5l3 3 6-6.5"/></svg></div><div class="sm-t"><b>Ready to ship</b><span>All checks passed</span></div><div class="sm-send" id="send">Ship</div></div>
+    <div class="sm-c sm-4" id="c4"><div class="sm-ok"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0c1300" stroke-width="2" stroke-linecap="square"><path d="M3.5 8.5l3 3 6-6.5"/></svg></div><div class="sm-t"><b>Live at forma.studio</b><span>Opened by 1 person</span></div></div>
+  </div>
+</div>
+<!-- /code -->
+      <span class="mono sm-count" id="count">01 / 04</span>
+    </div>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const surf = $('#surf');
+  const PICS = ['../assets/art/objects.webp', '../assets/art/calla.webp', '../assets/art/curves.webp', '../assets/art/vase.webp', '../assets/art/block.webp'];
+
+  /* a tiny clock: jobs at a time, ticks every frame */
+  let T = 0, last = performance.now(), raf = 0;
+  const jobs = [], ticks = new Set();
+  const at = (ms, fn) => jobs.push({ t: T + ms, fn });
+  function loop(now) {
+    const dt = Math.min(64, now - last); last = now; T += dt;
+    for (let i = 0; i < jobs.length; i++) if (jobs[i].t <= T) { const j = jobs.splice(i, 1)[0]; i--; j.fn(); }
+    ticks.forEach((f) => f(dt));
+    raf = requestAnimationFrame(loop);
+  }
+  const spring = (x, k, c) => ({ x, v: 0, t: x, k, c, step(dt) {
+    let s = dt / 1000, n = Math.max(1, Math.ceil(s / 0.008)); s /= n;
+    while (n--) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; }
+  } });
+  const E = { io: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2) };
+  function tween(d, f, done) {
+    const t0 = T;
+    const g = () => { const p = d <= 0 ? 1 : Math.min(1, (T - t0) / d); f(E.io(p)); if (p >= 1) { ticks.delete(g); done && done(); } };
+    ticks.add(g); g();
+  }
+
+  /* the surface: width and height spring to the size of whatever is inside */
+  const W = spring(120, 210, 21), H = spring(60, 210, 21);
+  const C = [$('#c1'), $('#c2'), $('#c3'), $('#c4')];
+  ticks.add((dt) => {
+    W.step(dt); H.step(dt);
+    if (RM) { W.x = W.t; H.x = H.t; }
+    surf.style.cssText = `width:${W.x.toFixed(2)}px;height:${H.x.toFixed(2)}px;transform:translate(-50%,-50%)`;
+  });
+
+  /* old content is clipped away upward, new content is uncovered from below, a piece at a time */
+  const pieces = (c) => Array.from(c.children).filter((el) => !el.classList.contains('sm-bar'));
+  let cur = -1;
+  function show(i) {
+    const prev = cur; cur = i;
+    const nc = C[i];
+    nc.classList.add('is-in');
+    W.t = nc.offsetWidth; H.t = nc.offsetHeight;
+    $('#count').textContent = `0${i + 1} / 04`;
+    if (RM) { C.forEach((c, k) => c.classList.toggle('is-in', k === i)); return; }
+    if (prev >= 0 && prev !== i) {
+      const oc = C[prev];
+      oc.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+      pieces(oc).forEach((el, k) => el.animate(
+        [{ transform: 'translateY(0)', clipPath: 'inset(0)' }, { transform: 'translateY(-16px)', clipPath: 'inset(0 0 100% 0)' }],
+        { duration: 280, delay: k * 30, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' }));
+      setTimeout(() => { if (cur !== prev) oc.classList.remove('is-in'); }, 280 + 100);
+    }
+    nc.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+    pieces(nc).forEach((el, k) => el.animate(
+      [{ transform: 'translateY(18px)', clipPath: 'inset(100% 0 0 0)' }, { transform: 'translateY(0)', clipPath: 'inset(0)' }],
+      { duration: 460, delay: (prev >= 0 ? 110 : 0) + k * 60, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
+  }
+
+  /* each status runs its own little progress, then hands on */
+  let flow = 0;
+  function buildStack(n) {
+    const st = $('#stack'); st.innerHTML = ''; st.style.width = (2.6 + (n - 1) * 0.75) + 'em';
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement('div'); d.className = 'sm-ph'; d.style.left = (i * 0.75) + 'em'; d.style.zIndex = i;
+      d.innerHTML = `<img alt="" src="${PICS[i % PICS.length]}">`; st.appendChild(d);
+    }
+  }
+  function build(f) {
+    const n = 3;
+    buildStack(n); $('#bdT').textContent = `Building ${n} pages`; $('#bdS').textContent = `0 of ${n} pages`; $('#bdBar').style.width = '0%';
+    show(0);
+    const ph = Array.from($('#stack').children); let done = 0;
+    tween(RM ? 0 : 2600, (p) => {
+      if (f !== flow) return;
+      $('#bdBar').style.width = (p * 100).toFixed(1) + '%';
+      const k = Math.min(n, Math.floor(p * n + 0.02));
+      while (done < k) { ph[done].classList.add('is-up'); done++; }
+      $('#bdS').textContent = `${k} of ${n} pages`;
+    }, () => { if (f === flow) at(RM ? 0 : 500, () => { if (f === flow) deploy(f); }); });
+  }
+  function deploy(f) {
+    $('#pct').textContent = '0%'; $('#dFill').style.height = '0%';
+    show(1);
+    tween(RM ? 0 : 3000, (p) => {
+      if (f !== flow) return;
+      $('#pct').textContent = Math.round(p * 100) + '%'; $('#dFill').style.height = (p * 100).toFixed(1) + '%';
+      $('#dEta').textContent = p < 1 ? `About ${Math.max(1, Math.ceil((1 - p) * 20))} s left` : 'Done';
+    }, () => { if (f === flow) at(RM ? 0 : 450, () => { if (f === flow) ready(f); }); });
+  }
+  function ready(f) {
+    show(2);
+    if (RM) return;
+    at(2400, () => {
+      if (f !== flow) return;
+      $('#send').animate([{ transform: 'translateY(0)' }, { transform: 'translateY(2px)' }, { transform: 'translateY(0)' }], { duration: 300, easing: 'ease-out' });
+      at(260, () => { if (f === flow) live(f); });
+    });
+  }
+  function live(f) { show(3); at(1900, () => { if (f === flow) build(f); }); }
+
+  /* a click skips ahead to the next state */
+  surf.addEventListener('click', () => {
+    const f = ++flow;
+    [() => deploy(f), () => ready(f), () => live(f), () => build(f)][cur]();
+  });
+
+  function start() { flow++; jobs.length = 0; if (RM) { buildStack(3); ready(flow); } else build(flow); }
+  window.__statusMorph = { restart: () => { cur = -1; C.forEach((c) => c.classList.remove('is-in')); start(); } };
+  (document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 500))]) : Promise.resolve()).then(start);
+  raf = requestAnimationFrame(loop);
+})();
+</script>
+<script>
+  QM.demo({ kind: 'loop', restart() { /* the story runs by itself; a click skips ahead */ } });
+</script>
+</body>
+</html>

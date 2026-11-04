@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en" data-tone="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form to site · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<link rel="stylesheet" href="../scenes/scenes.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "practice-story",
+  "title": "Form to site",
+  "group": "scenes",
+  "cat": "scenes",
+  "order": 60,
+  "kind": "states",
+  "tone": "dark",
+  "n": 3,
+  "line": "3 states · 270vh · scroll",
+  "summary": "Willow Counseling, an invented sample practice. A therapist’s dated website, with a short questionnaire over it on frosted glass, typed field by field. Sent, the answers settle into the homepage they make (the name is the logo, the office photo grows into the hero, the feel is rewritten as the headline); then the address becomes willowcounseling.com behind a lock, Live, and the window steps aside for its phone.",
+  "spec": [
+    [
+      "States",
+      "3: A short questionnaire · Your new homepage in 3 days · Live in 7 days"
+    ],
+    [
+      "Beats",
+      "0 → 1, beats 0.02 – 0.98: the old site, the questionnaire over it, each answer typed in · 1 → 2, 1.00 – 2.00: a pointer sends it, the form and the old site fold, the answers settle into the homepage, “calm” is marked · 2 → 3, 2.01 – 2.86: the draft address is replaced by the live one, Live, the window steps aside for the phone"
+    ],
+    [
+      "Easing",
+      "E.lin for typing and jumps (17), E.in for folds (15), E.out (12), E.soft (9)"
+    ],
+    [
+      "Chapter",
+      "270vh pinned: 110vh, then 80vh a move"
+    ],
+    [
+      "Drawn at",
+      "720 × 560 in its own px, zoomed to its box; the site is drawn once, at its own size (600 × 430)"
+    ],
+    [
+      "Trigger",
+      "The scroll is the playhead (lib/scene/driver.ts); the shown time chases it, 1 − e^(−6.5 dt)"
+    ],
+    [
+      "Variants",
+      "Photographs (the homepage: the office is a photograph) or Drawings (the office drawn flat)"
+    ]
+  ],
+  "source": [
+    "components/scenes/Practice.tsx · PracticeStory",
+    "app/scenes-practice.css",
+    "components/scene/pictures.tsx · Pictures",
+    "components/story/Story.tsx · Chapter",
+    "components/scene/Scene.tsx · Scene",
+    "lib/scene/timeline.ts · Timeline",
+    "lib/scene/driver.ts · playScene"
+  ],
+  "where": "Business homepage, the Practice chapter: black, the scene on the left of its words, the three steps listed beside it.",
+  "rules": [
+    "One lime a state, never two on screen: Send, then “calm” marked in the headline, then Live. The site’s own button is ink.",
+    "The card is laid out over the old site so every answer is near where it goes, and nothing crosses on its way.",
+    "The window is clipped, not faded: it opens and folds on an inset, its corners kept.",
+    "Time is in beats: state k is settled at beat k, each move in the middle of its stretch, so every state holds a while"
+  ],
+  "tags": [
+    "scene",
+    "scroll",
+    "browser",
+    "phone",
+    "typing",
+    "glass",
+    "photograph"
+  ],
+  "bundle": {
+    "files": [
+      "components/scenes/Practice.tsx",
+      "app/scenes-practice.css",
+      "components/scene/pictures.tsx",
+      "app/scenes.css",
+      "components/scene/Scene.tsx",
+      "components/scene/kit.tsx",
+      "lib/scene/timeline.ts",
+      "lib/scene/driver.ts"
+    ]
+  },
+  "shot": 10100
+}
+</script>
+<style>
+  /* demo only: the scene fills the stage at its own proportions; its caption sits in the corner */
+  :root { --pad: clamp(12px, 3vmin, 40px); --bar: 0px; }
+  html:not(.qm-tile) body.has-ui { --bar: 46px; }
+  .qm-stage { padding: var(--pad); place-items: start center; }
+  .qms { width: 100%; height: calc(100svh - 2 * var(--pad) - var(--bar)); display: grid; grid-template-rows: minmax(0, 1fr) 24px; gap: 4px; }
+  .qms-box { min-width: 0; min-height: 0; }
+  .qms-cap { display: flex; align-items: center; gap: 10px; color: var(--fg3); white-space: nowrap; }
+  .qms-cap .qms-n { color: var(--fg); }
+</style>
+</head>
+<body class="has-ui">
+<main class="qm-stage">
+  <section class="qms" id="ch" data-chapter data-tone="dark" data-step="0">
+    <div class="qms-box" id="scene"></div>
+    <p class="kicker qms-cap" id="cap" aria-live="polite"><span class="qms-n">01 / 03</span><span>A short questionnaire</span></p>
+  </section>
+  <div class="qm-ui" id="ui">
+    <span>Pictures</span>
+    <button type="button" data-v="1" class="is-on">Photographs</button>
+    <button type="button" data-v="0">Drawings</button>
+    <span class="qm-sep">the business homepage shows photographs</span>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../scenes/scenes.js"></script>
+<script>
+  /* The real scene (the site's own component, bundled in ../scenes/scenes.js). The site's driver, which plays it
+     with the scroll, is replaced by the harness: it hands the timeline over here. */
+  let STEPS = [["A short questionnaire"],["Your new homepage in 3 days"],["Live in 7 days"]];
+  const n = STEPS.length;
+  let at = 0, step = -1, started = false;
+
+  const section = document.getElementById('ch');
+  const box = document.getElementById('scene');
+  const cap = document.getElementById('cap');
+  const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls, textContent: text });
+  let tl = null, mounted = null;
+  const mount = (props) => {
+    mounted?.unmount();
+    mounted = QMScenes.mount('practice-story', box, props);
+  };
+
+  function label(s) {
+    step = s;
+    section.dataset.step = String(s);                                       // the chapter's lit step, as the driver sets it
+    section.dispatchEvent(new CustomEvent('scene:step', { detail: s }));
+    const [name, tag] = STEPS[s];
+    cap.replaceChildren(el('span', 'qms-n', `${String(s + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`), el('span', '', name));
+    if (tag) cap.append(el('span', 'tag qms-tag' + (tag === 'Live' ? ' is-live' : ''), tag));
+  }
+  function seek(t) {
+    at = t;
+    if (!tl) return;
+    tl.seek(QM.reduced ? (t > 0 ? Math.max(1, Math.round(t)) : 0) : t);      // reduced motion: a still per state, as the driver
+    const s = Math.max(0, Math.min(n - 1, Math.round(t) - 1));
+    if (s !== step) label(s);
+  }
+
+  window.QMSceneReady = (timeline) => {
+    tl = timeline;
+    step = -1;
+    seek(at);
+    if (started) return;
+    started = true;
+    QM.demo({ kind: 'states', n, seek, dwell: 2800, first: 3200, hold: 3200 });
+  };
+
+  /* Photographs or drawings: the site shows photographs on the business homepage (components/scene/pictures.tsx) */
+  document.querySelectorAll('#ui [data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('#ui [data-v]').forEach((x) => x.classList.toggle('is-on', x === b));
+    mount({ pictures: b.dataset.v === '1' });
+  }));
+  mount();
+</script>
+</body>
+</html>

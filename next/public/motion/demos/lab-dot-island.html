@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dot-matrix island · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-dot-island",
+  "title": "Dot-matrix island",
+  "group": "lab",
+  "cat": "loading",
+  "order": 70,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "LED dots · spring frame · switches from the middle out",
+  "summary": "A canvas draws a countdown to a launch, a voice note to the designer and a moodboard upload as an LED dot matrix. The outer frame springs its width and height; on a switch the dots turn into the new content from the middle outward. Click the bar to move to the next state.",
+  "spec": [
+    ["Grid", "64 × 24 square dots on one pixel (3.4 to 9 px); the island shows 34 to 58 columns, 11 to 21 rows"],
+    ["Frame", "width and height are springs: stiffness 170, damping 17, 3 sub-steps a frame"],
+    ["Switch", "0.55 s; the change travels from the centre column out, each dot easing by 1 − e^(−16 dt)"],
+    ["Dots", "a dot is in range if its centre is inside the frame, with the top right corner cut at 45°; its brightness is one of 10 solid steps"],
+    ["Captions", "title and sub slide up out of a sleeve, the sub 90 ms behind (700 ms, 0.2 0.8 0.2 1)"],
+    ["States", "countdown 2.6 s · voice note 3.4 s · upload 3.8 s · done 2.4 s"]
+  ],
+  "source": ["Qbix studio library · dot-island"],
+  "where": "A status bar at the top of a Qbix project screen: the launch clock, a voice note, an upload, the site going live.",
+  "rules": [
+    "Dots are squares on the 8px-family grid; the frame has the cut corner, never a radius.",
+    "Lime marks what is live (the voice note, the done check). Everything else is chalk on ink, and the island is the one black object on the paper.",
+    "A dot's brightness is a step of colour on the island, never an opacity on the page."
+  ],
+  "tags": ["status", "dot matrix", "canvas", "spring", "click", "launch"],
+  "shot": 5200
+}
+</script>
+<style data-code>
+/* Dot-matrix island: a canvas, and two captions that slide out of sleeves */
+.isle { position: absolute; inset: 0; }
+.isle canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: manipulation; }
+.isle-cap { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; color: #121417; }
+.isle-row { position: relative; overflow: hidden; margin: 0 auto; }
+.isle-row span { position: absolute; left: 0; right: 0; top: 0; white-space: nowrap; transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.isle-row span.in { transform: translateY(105%); }
+.isle-row span.out { transform: translateY(-105%); }
+.isle-t { font: 400 clamp(26px, 5vw, 44px)/1.2 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; height: 1.2em; }
+.isle-s { font-size: clamp(14px, 2.2vw, 17px); line-height: 1.4; height: 1.4em; color: rgba(18, 20, 23, 0.64); margin-top: 4px; }
+@media (prefers-reduced-motion: reduce) { .isle-row span { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="isle" id="isle">
+  <canvas aria-label="A dot matrix status bar that changes shape between states"></canvas>
+  <div class="isle-cap"><div class="isle-row isle-t"></div><div class="isle-row isle-s"></div></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Dot-matrix island: three states drawn as LED dots, the frame a pair of springs. */
+function dotIsland(root) {
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d'), capEl = root.querySelector('.isle-cap');
+  const tEl = root.querySelector('.isle-t'), sEl = root.querySelector('.isle-s');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const INK = '#121417', GROUND = '#f3f4f5', CHALK = [244, 245, 242], LIME = [184, 255, 0], OFF = '#1d2024';
+  const MAXC = 64, MAXR = 24, N = MAXC * MAXR, LV = 10;
+  const G = {
+    '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'], '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+    '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'], '3': ['11111', '00010', '00100', '00010', '00001', '10001', '01110'],
+    '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'], '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+    '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'], '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+    '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'], '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+    ':': ['0', '0', '1', '0', '1', '0', '0'], '/': ['00001', '00010', '00010', '00100', '01000', '01000', '10000'],
+    'L': ['10000', '10000', '10000', '10000', '10000', '10000', '11111'], 'i': ['1', '0', '1', '1', '1', '1', '1'],
+    'v': ['00000', '00000', '10001', '10001', '10001', '01010', '00100'], 'e': ['00000', '00000', '01110', '10001', '11111', '10000', '01110'],
+    rocket: ['0001000', '0011100', '0011100', '0111110', '0111110', '0101010', '0100010'],
+    play: ['10000', '11000', '11100', '11110', '11100', '11000', '10000'],
+    board: ['1110111', '1110111', '1110111', '0000000', '1110111', '1110111', '1110111'],
+    check: ['0000001', '0000011', '0000110', '1001100', '1111000', '0110000', '0000000'],
+  };
+  const gw = (ch) => G[ch][0].length;
+  const textW = (s) => { let w = 0; for (let i = 0; i < s.length; i++) { w += gw(s[i]); if (i < s.length - 1) w += 1; } return w; };
+  let buf = null, col0 = 0;
+  function put(c, r, v, k) { c += col0; if (c < 0 || c >= MAXC || r < 0 || r >= MAXR) return; const i = r * MAXC + c; if (v > buf.v[i]) { buf.v[i] = v; buf.k[i] = k; } }
+  function glyph(name, c, r, v, k) { const g = G[name]; for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) if (g[y][x] === '1') put(c + x, r + y, v, k); }
+  function text(s, c, r, v, k) { for (let i = 0; i < s.length; i++) { glyph(s[i], c, r, v, k); c += gw(s[i]) + 1; } }
+  const mk = () => ({ v: new Float32Array(N), k: new Uint8Array(N) });
+  const A = mk(), B = mk(), cur = mk(), pad = (n) => (n < 10 ? '0' : '') + n;
+  const STATES = [
+    { c: 40, r: 11, dur: 2.6, title: 'Forma launches today', sub: 'forma.studio goes live at 2 pm', draw(t) {
+      glyph('rocket', 3, 2, 1, 0);
+      const left = Math.max(0, 872 - Math.floor(t)), s = Math.floor(left / 60) + ':' + pad(left % 60);
+      text(s, 40 - 3 - textW(s), 2, 1, 0); } },
+    { c: 58, r: 11, dur: 3.4, title: 'Voice note for the designer', sub: 'Dana from Willow Counseling, 0:12', draw(t, lt) {
+      glyph('play', 3, 2, 1, 1);
+      const prog = Math.min(1, lt / 3.1);
+      for (let b = 0; b < 12; b++) {
+        const x = 10 + b * 2, amp = reduce ? 0.55 + 0.35 * Math.sin(b * 1.7) : 0.5 + 0.5 * Math.abs(Math.sin(b * 0.9 + t * 3.1) * Math.cos(b * 0.37 - t * 1.7));
+        const h = Math.max(1, Math.round(amp * 7)), y0 = 2 + Math.floor((7 - h) / 2), played = (b + 0.5) / 12 < prog;
+        for (let y = 0; y < h; y++) put(x, y0 + y, played ? 1 : 0.42, played ? 1 : 0);
+      }
+      const s = '0:' + pad(Math.min(12, Math.floor(prog * 12)));
+      text(s, 58 - 3 - textW(s), 2, 1, 0); } },
+    { c: 54, r: 21, dur: 3.8, title: 'Uploading the moodboard', sub: '24 pictures, 38 MB', draw(t, lt) {
+      glyph('board', 3, 2, 1, 0);
+      const n = Math.min(24, Math.floor((Math.max(0, lt - 0.35) / 2.9) * 24)), s = n + '/24';
+      text(s, 54 - 3 - textW(s), 2, 1, 0);
+      for (let p = 0; p < 24; p++) { const gx = 3 + (p % 12) * 4, gy = 12 + Math.floor(p / 12) * 4, done = p < n; for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) put(gx + x, gy + y, done ? 1 : 0.2, 0); }
+    } },
+    { c: 34, r: 11, dur: 2.4, title: 'forma.studio is live', sub: 'Shared with the client', draw() {
+      glyph('check', 3, 2, 1, 1); text('Live', 34 - 3 - textW('Live'), 2, 1, 0); } },
+  ];
+  let si = 0, stateT = 0, prevI = -1, switchT = -9, clock = 0;
+  const isl = { w: { x: 0, v: 0 }, h: { x: 0, v: 0 } };
+  let W = 0, H = 0, P = 6, top = 0, cx = 0, dpr = 1;
+  function resize() {
+    const o = root.getBoundingClientRect(); W = o.width; H = o.height; dpr = Math.min(2, devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    P = Math.max(3.4, Math.min(9, (W - 40) / 58, (H * 0.5) / 21));
+    const capH = Math.min(120, H * 0.2);
+    top = Math.max(16, (H - (15 * P + capH + 24)) / 2); cx = W / 2;
+    const st = STATES[si];
+    if (!isl.w.x || reduce) { isl.w.x = st.c * P; isl.h.x = st.r * P; }
+  }
+  function caption(el, txt, instant) {   // the old line slides up out of its sleeve, the new one comes up behind it
+    const old = el.querySelectorAll('span'), sp = document.createElement('span'); sp.textContent = txt;
+    if (instant || reduce) { old.forEach((o) => o.remove()); el.appendChild(sp); return; }
+    sp.className = 'in'; el.appendChild(sp);
+    old.forEach((o) => { o.className = 'out'; setTimeout(() => o.remove(), 800); });
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (sp.className === 'in') sp.className = ''; }));
+  }
+  function go(i, instant) {
+    prevI = si; si = (i + STATES.length) % STATES.length; stateT = 0; switchT = clock;
+    caption(tEl, STATES[si].title, instant);
+    setTimeout(() => caption(sEl, STATES[si].sub, instant), instant ? 0 : 90);
+  }
+  function fill(target, st, t, lt) { target.v.fill(0); target.k.fill(0); buf = target; col0 = (MAXC - st.c) / 2; st.draw(t, lt); }
+  // inside the frame: a rectangle with the top right corner cut at 45 degrees
+  const inside = (x, y, l, t, r, b, cut) => x >= l && x <= r && y >= t && y <= b && (x - (r - cut)) + (t + cut - y) <= cut;
+  const mixc = (a, b, k) => `rgb(${a.map((v, i) => Math.round(v * k + b[i] * (1 - k))).join(',')})`;
+  const INKRGB = [18, 20, 23];
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = GROUND; ctx.fillRect(0, 0, W, H);
+    const iw = Math.max(P * 4, isl.w.x), ih = Math.max(P * 4, isl.h.x), cut = Math.min(ih / 2, P * 3);
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(cx - iw / 2, top); ctx.lineTo(cx + iw / 2 - cut, top); ctx.lineTo(cx + iw / 2, top + cut); ctx.lineTo(cx + iw / 2, top + ih); ctx.lineTo(cx - iw / 2, top + ih); ctx.closePath(); ctx.fill();
+    const d = P * 0.7, m = P * 0.8;
+    for (let r = 0; r < MAXR; r++) {
+      const y = top + (r + 0.5) * P; if (y > top + ih) break;
+      for (let c = 0; c < MAXC; c++) {
+        const x = cx + (c - MAXC / 2 + 0.5) * P;
+        if (!inside(x, y, cx - iw / 2 + m, top + m * 0.5, cx + iw / 2 - m, top + ih - m * 0.5, cut)) continue;
+        const i = r * MAXC + c, v = cur.v[i], l = Math.min(LV, Math.round(v * LV));
+        ctx.fillStyle = l < 1 ? OFF : mixc(cur.k[i] ? LIME : CHALK, INKRGB, l / LV);
+        ctx.fillRect(x - d / 2, y - d / 2, d, d);
+      }
+    }
+    capEl.style.top = top + ih + Math.max(18, P * 3.4) + 'px';
+  }
+  let last = performance.now();
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now; clock += dt; stateT += dt;
+    const st = STATES[si];
+    if (stateT > st.dur * (reduce ? 2 : 1)) go(si + 1);
+    const steps = 3, h = dt / steps;
+    for (let s = 0; s < steps; s++) for (const [sp, tg] of [[isl.w, STATES[si].c * P], [isl.h, STATES[si].r * P]]) {
+      if (reduce) { sp.x = tg; sp.v = 0; continue; }
+      sp.v += (170 * (tg - sp.x) - 17 * sp.v) * h; sp.x += sp.v * h;
+    }
+    fill(B, st, clock, stateT);
+    const tr = reduce ? 1 : Math.min(1, (clock - switchT) / 0.55);
+    if (tr < 1 && prevI >= 0) fill(A, STATES[prevI], clock, 9);
+    const k = 1 - Math.exp(-dt * (reduce ? 60 : 16));
+    for (let r = 0; r < MAXR; r++) for (let c = 0; c < MAXC; c++) {
+      const i = r * MAXC + c; let v = B.v[i], kk = B.k[i];
+      if (tr < 1) {   // the change travels from the centre column outward
+        const dd = Math.abs(c - MAXC / 2 + 0.5) / (MAXC / 2), m = Math.min(1, Math.max(0, (tr - dd * 0.45) / 0.55));
+        v = A.v[i] * (1 - m) + B.v[i] * m; kk = m > 0.5 ? B.k[i] : A.k[i];
+      }
+      cur.v[i] += (v - cur.v[i]) * k; if (v > 0.05) cur.k[i] = kk;
+    }
+    draw();
+  })(last);
+  cv.addEventListener('pointerdown', (e) => {
+    const o = cv.getBoundingClientRect(), x = e.clientX - o.left, y = e.clientY - o.top;
+    if (Math.abs(x - cx) < isl.w.x / 2 + 12 && y > top - 12 && y < top + isl.h.x + 12) go(si + 1);
+  });
+  addEventListener('resize', resize);
+  resize();
+  caption(tEl, STATES[0].title, true); caption(sEl, STATES[0].sub, true);
+  fill(cur, STATES[0], 0, 0);
+  return { next: () => go(si + 1) };
+}
+const island = dotIsland(document.getElementById('isle'));
+</script>
+<script>
+  QM.demo({ kind: 'loop', restart() {} });
+</script>
+</body>
+</html>

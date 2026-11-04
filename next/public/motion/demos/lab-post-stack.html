@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fanning deck · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-post-stack",
+  "title": "Fanning deck",
+  "group": "lab",
+  "cat": "cards",
+  "order": 10,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "springs · fan on hover · throw to the back",
+  "summary": "Five of Qbix's own posts (shipped work, a new Strata release) sit in a deck of white cards, each back card smaller and a step deeper in tint. Hover and the deck fans open on a spring; flick the top card and it is thrown aside, then settles in at the back.",
+  "spec": [
+    ["Spring", "stiffness 190, damping 23 on x, y, rotation, scale, depth; shade 120 / 22"],
+    ["Rest", "each card 4.5% smaller, 4% of the width higher, 40px deeper, a few degrees off true"],
+    ["Fan", "eased 1 − e^(−7 dt) toward open; cards spread across 0.95 of a card width each side"],
+    ["Throw", "past 38% of a card's width, or faster than 900 px/s: the card flies off, then joins the back at 260 ms"],
+    ["Shade", "a card's surface steps from white toward a pale ink tint with its depth (a solid colour, never a veil)"]
+  ],
+  "source": ["Qbix studio library · post-stack"],
+  "where": "A feed preview on the studio pages: this week's shipped work, ready to review.",
+  "rules": [
+    "All motion is one spring per property, retargeted every frame; nothing is a keyframe.",
+    "Depth is read from size and a deeper tint, never a shadow or a blur.",
+    "The one lime is the tag on the card that is on top."
+  ],
+  "tags": ["cards", "spring", "drag", "hover", "stack"],
+  "shot": 3300
+}
+</script>
+<style data-code>
+/* Post stack: white cards, every card position is a spring toward a target */
+.deck { position: absolute; inset: 0; perspective: 1400px; touch-action: none; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.post {
+  position: absolute; left: 0; top: 0;
+  width: var(--w); height: calc(var(--w) * 1.3);
+  padding: calc(var(--w) * 0.055);
+  display: flex; flex-direction: column; gap: calc(var(--w) * 0.04);
+  font-size: calc(var(--w) * 0.047);
+  background: #ffffff; color: #121417;
+  transform-origin: 50% 80%; will-change: transform;
+  cursor: grab; overflow: hidden;
+  --cut: calc(var(--w) * 0.09);
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+}
+.post:active { cursor: grabbing; }
+.post .who { display: flex; gap: 0.7em; align-items: center; line-height: 1.15; }
+.post .av { flex: none; width: 2.3em; height: 2.3em; display: grid; place-items: center; background: var(--c); color: var(--t, #f4f5f2); font: 500 0.9em var(--font-mono, 'Encode Sans', sans-serif); letter-spacing: 0.06em; }
+.post .who b { display: block; font-weight: 600; }
+.post .who span { color: rgba(18, 20, 23, 0.55); font-size: 0.86em; }
+.post .txt { margin: 0; line-height: 1.34; }
+.post .pic { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #eceef0; }
+.post .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.post .meta { display: flex; justify-content: space-between; color: rgba(18, 20, 23, 0.55); font: 400 0.82em var(--font-mono, 'Encode Sans', sans-serif); letter-spacing: 0.1em; text-transform: uppercase; }
+.post .flag { position: absolute; left: 0; top: 0; z-index: 1; height: 2em; padding: 0 0.9em; display: none; align-items: center; background: #B8FF00; color: #0c1300; font: 500 0.8em var(--font-mono, 'Encode Sans', sans-serif); letter-spacing: 0.12em; text-transform: uppercase; }
+.post.is-top .flag { display: inline-flex; }
+@media (prefers-reduced-motion: reduce) { .post { will-change: auto; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .ps-head { position: absolute; z-index: 3; left: clamp(24px, 5vw, 64px); top: clamp(22px, 5vh, 52px); display: grid; gap: 12px; pointer-events: none; }
+  .ps-head .title { font-size: clamp(28px, 4vw, 52px); max-width: 9em; }
+  .qm-hint { position: absolute; z-index: 3; right: clamp(24px, 5vw, 64px); top: clamp(24px, 5vh, 54px); text-align: right; pointer-events: none; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="ps-head"><p class="kicker">Qbix · This week</p><h2 class="title">Shipped this week.</h2></div>
+  <p class="qm-hint">Hover to fan · flick the top card</p>
+<!-- code -->
+<div class="deck" id="deck">
+  <article class="post" style="--c:#121417"><div class="who"><div class="av">QB</div><div><b>Qbix</b><span>2h</span></div></div><p class="txt">Shipped: forma.studio is live. Moodboard to domain in 12 days.</p><div class="pic"><img src="../assets/art/objects.webp" alt=""><span class="flag">Shipped</span></div><div class="meta"><span>214 likes</span><span>18 replies</span></div></article>
+  <article class="post" style="--c:#dadfd6;--t:#121417"><div class="who"><div class="av">ST</div><div><b>Strata</b><span>5h</span></div></div><p class="txt">Strata 0.9 is out. A moodboard goes in; tokens, components and code come out.</p><div class="pic"><img src="../assets/art/cross.webp" alt=""><span class="flag">Release</span></div><div class="meta"><span>486 likes</span><span>31 replies</span></div></article>
+  <article class="post" style="--c:#dadfd6;--t:#121417"><div class="who"><div class="av">SE</div><div><b>Sera</b><span>1d</span></div></div><p class="txt">Kova's brand upgrade is done: one palette, one type pair, 14 components.</p><div class="pic"><img src="../assets/art/bottle.webp" alt=""><span class="flag">Shipped</span></div><div class="meta"><span>129 likes</span><span>9 replies</span></div></article>
+  <article class="post" style="--c:#121417"><div class="who"><div class="av">QL</div><div><b>Qbix Labs</b><span>1d</span></div></div><p class="txt">TTS Editor now exports captions with the audio. One click, two files.</p><div class="pic"><img src="../assets/art/block.webp" alt=""><span class="flag">Update</span></div><div class="meta"><span>98 likes</span><span>12 replies</span></div></article>
+  <article class="post" style="--c:#121417"><div class="who"><div class="av">QB</div><div><b>Qbix</b><span>2d</span></div></div><p class="txt">Willow Counseling is live. A new practice site in 7 days.</p><div class="pic"><img src="../assets/art/calla.webp" alt=""><span class="flag">Shipped</span></div><div class="meta"><span>342 likes</span><span>27 replies</span></div></article>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Post stack: hover fans the deck, drag the top card away and it goes to the back. */
+function postStack(deck) {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cards = [...deck.querySelectorAll('.post')];
+  const N = cards.length;
+  let order = cards.map((_, i) => i);                 // order[0] is the top card
+  const KEYS = ['x', 'y', 'r', 's', 'z', 'ry', 'sh'];
+  const S = cards.map(() => { const o = { v: {} }; KEYS.forEach((k) => { o[k] = k === 's' ? 1 : 0; o.v[k] = 0; }); return o; });
+  let W = 0, H = 0, cw = 0, ch = 0, cx = 0, cy = 0;
+  let fan = 0, fanOn = false, hover = -1, drag = null, thrown = null;
+  const restR = [0, -3, 2.4, -1.6, 3.2];
+
+  function size() {
+    const r = deck.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cw = Math.min(W * 0.34, (H * 0.64) / 1.3, 340); ch = cw * 1.3;
+    cx = W / 2; cy = H * 0.6;
+    deck.style.setProperty('--w', cw + 'px');
+  }
+  addEventListener('resize', size); size();
+
+  function targets() {
+    const dx = Math.min((W - cw) / 2 * 0.9, cw * 0.95);
+    return cards.map((c, i) => {
+      const d = order.indexOf(i);
+      const st = { x: 0, y: -d * cw * 0.04, r: restR[d], s: 1 - d * 0.045, z: -d * 40, ry: 0, sh: d * 0.11 };
+      const p = N - 1 - d, u = (p / (N - 1)) * 2 - 1;
+      const fn = { x: u * dx, y: u * u * ch * 0.06, r: u * 11, s: 0.94, z: p * 14, ry: -u * 10, sh: d * 0.03 };
+      if (hover === i) { fn.y -= ch * 0.07; fn.s = 1; fn.z += 60; fn.sh = 0; }
+      const t = {};
+      KEYS.forEach((k) => { t[k] = st[k] + (fn[k] - st[k]) * fan; });
+      if (drag && drag.card === i) { t.x = drag.dx; t.y = drag.dy; t.r = (drag.dx / cw) * 14; t.s = 1.02; t.z = 80; t.sh = 0; t.ry = 0; }
+      if (thrown && thrown.card === i) { t.x = thrown.dir * (W * 0.5 + cw * 0.4); t.y = -ch * 0.05; t.r = thrown.dir * 16; t.z = 0; }
+      return t;
+    });
+  }
+
+  const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
+  function step(dt) {
+    const T = targets();
+    cards.forEach((c, i) => {
+      const s = S[i], t = T[i];
+      KEYS.forEach((k) => {
+        if (reduce) { s[k] = t[k]; return; }
+        const K = k === 'sh' ? 120 : 190, D = k === 'sh' ? 22 : 23;
+        s.v[k] += ((t[k] - s[k]) * K - s.v[k] * D) * dt;
+        s[k] += s.v[k] * dt;
+      });
+      c.style.transform = `translate3d(${cx - cw / 2 + s.x}px, ${cy - ch / 2 + s.y}px, ${s.z}px) rotateY(${s.ry}deg) rotate(${s.r}deg) scale(${s.s})`;
+      c.style.background = `rgb(${mix([255, 255, 255], [196, 202, 207], Math.max(0, Math.min(1, s.sh))).join(',')})`;
+      c.classList.toggle('is-top', order[0] === i && !(thrown && thrown.card === i));
+      c.style.zIndex = drag && drag.card === i ? 99 : hover === i && fan > 0.4 ? 97 : thrown && thrown.card === i && thrown.phase === 0 ? 98 : N - order.indexOf(i);
+    });
+  }
+
+  const cardAt = (x, y) => { const el = document.elementFromPoint(x, y); const c = el && el.closest('.post'); return c ? cards.indexOf(c) : -1; };
+  const inStack = (x, y) => {
+    const r = deck.getBoundingClientRect(); x -= r.left; y -= r.top;
+    const rad = Math.max(cw, fan * (W - 40));
+    return Math.abs(x - cx) < rad / 2 + 20 && Math.abs(y - cy) < ch * 0.62;
+  };
+  const api = {
+    down(x, y) { drag = { card: order[0], sx: x, sy: y, dx: 0, dy: 0, vx: 0, lx: x, lt: performance.now(), moved: false }; },
+    move(x, y) {
+      if (drag) {
+        const now = performance.now(), dtm = Math.max(1, now - drag.lt);
+        drag.vx = drag.vx * 0.6 + ((x - drag.lx) / dtm * 1000) * 0.4; drag.lx = x; drag.lt = now;
+        drag.dx = x - drag.sx; drag.dy = (y - drag.sy) * 0.6;
+        if (Math.abs(drag.dx) > 6) drag.moved = true;
+        return;
+      }
+      fanOn = inStack(x, y); hover = fanOn ? cardAt(x, y) : -1;
+    },
+    up() {
+      if (!drag) return;
+      const d = drag; drag = null;
+      if (Math.abs(d.dx) > cw * 0.38 || Math.abs(d.vx) > 900) {
+        thrown = { card: d.card, dir: Math.sign(d.dx || d.vx) || 1, phase: 0 };
+        setTimeout(() => {
+          order = order.filter((i) => i !== d.card).concat(d.card);
+          thrown.phase = 1;
+          setTimeout(() => { thrown = null; }, 60);
+        }, reduce ? 0 : 260);
+      } else if (!d.moved) fanOn = !fanOn;
+    },
+    leave() { if (!drag) { fanOn = false; hover = -1; } },
+    open(on) { fanOn = on; },
+    get dragging() { return !!drag; },
+    get top() { return cards[order[0]]; },
+  };
+  deck.addEventListener('pointerdown', (e) => {
+    if (cardAt(e.clientX, e.clientY) === order[0] && fan < 0.5) { api.down(e.clientX, e.clientY); deck.setPointerCapture(e.pointerId); }
+    else if (e.pointerType !== 'mouse') fanOn = !fanOn;
+  });
+  deck.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || drag) api.move(e.clientX, e.clientY); });
+  deck.addEventListener('pointerup', api.up);
+  deck.addEventListener('pointercancel', api.up);
+  deck.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') api.leave(); });
+
+  let last = performance.now();
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(33, now - last) / 1000; last = now;
+    fan += ((fanOn && !drag ? 1 : 0) - fan) * (reduce ? 1 : 1 - Math.exp(-dt * 7));
+    step(dt);
+  })(last);
+  if (reduce) fanOn = true;
+  return api;
+}
+const stack = postStack(document.getElementById('deck'));
+</script>
+<script>
+  /* the ghost's story: fan open, run along the cards, close, then throw the top card */
+  const deckEl = document.getElementById('deck');
+  let lastReal = -1e9;
+  ['pointerdown', 'pointermove', 'wheel'].forEach((n) => addEventListener(n, (e) => { if (e.pointerType === 'mouse' || n !== 'pointermove') lastReal = performance.now(); }, { passive: true }));
+  const g = { x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, show: false, phase: -1, t0: 0 };
+  const geo = () => { const r = deckEl.getBoundingClientRect(); const cw = Math.min(r.width * 0.34, (r.height * 0.64) / 1.3, 340); return { r, cw, ch: cw * 1.3, cx: r.left + r.width / 2, cy: r.top + r.height * 0.6, dx: Math.min((r.width - cw) / 2 * 0.9, cw * 0.95) }; };
+  const PLAN = [[0, 'to', 0, 0.1], [700, 'fan'], [800, 'to', -0.85, 0.05], [2400, 'to', 0.85, 0.05], [3500, 'away'],
+    [4500, 'to', 0.05, 0.12], [5100, 'down'], [5200, 'to', 1.15, 0.1], [6000, 'up'], [7600, 'end']];
+  let sdrag = false;
+  function director(now, dt) {
+    if (QM.reduced) return;
+    const idle = now - lastReal > 2500 || QM.tile;
+    if (!idle) { if (g.show) { g.show = false; g.phase = -1; QM.ghostHide(); stack.up(); stack.leave(); } return; }
+    const G = geo();
+    if (!g.show) { g.show = true; g.x = innerWidth * 0.9; g.y = innerHeight * 0.92; g.vx = g.vy = 0; g.t0 = now; g.phase = 0; g.tx = g.x; g.ty = g.y; QM.ghostShow(); }
+    const t = now - g.t0;
+    while (g.phase < PLAN.length && t >= PLAN[g.phase][0]) {
+      const [, a, u, v] = PLAN[g.phase++];
+      if (a === 'to') { g.tx = G.cx + u * (u > 1 ? G.cw * 0.5 : G.dx); g.ty = G.cy + v * G.ch; }
+      if (a === 'fan') stack.open(true);
+      if (a === 'away') { stack.open(false); stack.leave(); g.tx = G.cx + Math.min(G.r.width * 0.42, G.cw * 0.9); g.ty = G.cy + G.ch * 0.58; }
+      if (a === 'down') { stack.down(g.x, g.y); sdrag = true; }
+      if (a === 'up') { stack.up(); sdrag = false; }
+      if (a === 'end') { g.t0 = now; g.phase = 0; }
+    }
+    const k = sdrag ? 38 : 55, d = 2 * Math.sqrt(k), h = Math.min(dt, 0.033);
+    g.vx += (k * (g.tx - g.x) - d * g.vx) * h; g.vy += (k * (g.ty - g.y) - d * g.vy) * h;
+    g.x += g.vx * h; g.y += g.vy * h;
+    QM.ghostAt(g.x, g.y);
+    if (sdrag) stack.move(g.x, g.y); else if (g.phase > 1 && g.phase < 5) stack.move(g.x, g.y);
+  }
+  let lt = performance.now();
+  (function frame(now) { requestAnimationFrame(frame); director(now, Math.min(33, now - lt) / 1000); lt = now; })(lt);
+  QM.demo({ kind: 'loop', restart() {} });
+</script>
+</body>
+</html>

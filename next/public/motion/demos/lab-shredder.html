@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shredder · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-shredder",
+  "title": "Shredder",
+  "group": "lab",
+  "cat": "feedback",
+  "order": 520,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "10 strips · curl by length · hold to speed up",
+  "summary": "An old homepage draft is drawn to an offscreen canvas, then fed into a flat ink shredder head. Each vertical strip curls and flips in short segments as it leaves the blade, and the whole pile drops when the sheet is through. Holding anywhere speeds the feed.",
+  "spec": [
+    ["Strips", "10 per sheet, each cut into 4px segments that curl by length squared"],
+    ["Feed", "speed eases toward (sheet + head) / 3.6 s, / 1.2 s while held"],
+    ["Drop", "gravity 900, spin and sideways drift per strip, a new sheet slides in"],
+    ["Draw", "2D canvas, no gradient, no shadow, strips are flat white paper with a light-tint back"],
+    ["Trigger", "always on; press and hold to speed up"]
+  ],
+  "source": ["Qbix studio library · shredder"],
+  "where": "A clean-up moment in a Qbix project: old homepage drafts and logo sketches going out before the next round goes in.",
+  "rules": [
+    "The sheet is drawn once to an offscreen canvas and sampled, so the strips always match the document.",
+    "The only lime is the head's status light, lit while a sheet is feeding.",
+    "No blur, no shadow under the pile: the strips are told apart by the paper ground."
+  ],
+  "tags": ["canvas", "paper", "loading", "hold", "drafts"],
+  "shot": 3300
+}
+</script>
+<style data-code>
+/* Shredder: the canvas fills its frame; the page ground shows through it */
+.shred { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; }
+</style>
+<style>
+  .sh-copy { position: absolute; left: clamp(24px, 6vw, 72px); top: 50%; transform: translateY(-50%); width: min(38%, 360px); display: grid; gap: 18px; z-index: 2; pointer-events: none; }
+  .sh-copy .title { font-size: clamp(34px, 5.2vw, 60px); }
+  @media (max-width: 640px) { .sh-copy { top: 24px; transform: none; width: 60%; } .sh-copy .lede { display: none; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<canvas class="shred" id="shred" aria-label="A homepage draft being shredded"></canvas>
+<!-- /code -->
+  <div class="sh-copy">
+    <p class="kicker">Studio · Clean-up</p>
+    <h2 class="title">Old drafts, cut to strips.</h2>
+    <p class="lede">Old homepage drafts and logo sketches leave the desk before the next round goes in.</p>
+  </div>
+  <div class="qm-ui"><span>Hold anywhere to feed faster</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Shredder: a sheet goes in, strips curl out, the pile drops. */
+(function () {
+  const cv = document.getElementById('shred'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const INK = '#121417', SHEET = '#ffffff', LIME = '#B8FF00', HEAD = '#121417', SLOT = '#f3f4f5', BAR = '#08090A', OFF = '#3a3d42', BACK = '#d9dce0', LINE = '#dcdfe2';   // a white sheet on the paper, one ink head
+  let W, H, dpr, s, docW, docH, headY, headH, cx, N = 10;
+  const doc = document.createElement('canvas');
+  let seedN = 1; const rnd = () => ((seedN = (seedN * 16807) % 2147483647) - 1) / 2147483646;
+  const docs = [
+    { title: 'Homepage', tag: 'DRAFT 2', addr: 'Forma · forma.studio', price: 'Round 1' },
+    { title: 'Logo ideas', tag: 'OLD VERSION', addr: 'Kova · 6 marks', price: 'Round 2' },
+    { title: 'Type test', tag: 'DRAFT 1', addr: 'Willow Counseling', price: 'Nov 3' },
+  ];
+  let di = 0;
+  function drawDoc() {
+    const d = docs[di % docs.length], k = dpr;
+    doc.width = Math.round(docW * k); doc.height = Math.round(docH * k);
+    const c = doc.getContext('2d'); c.setTransform(k, 0, 0, k, 0, 0);
+    const u = docW / 150;
+    c.fillStyle = SHEET; c.fillRect(0, 0, docW, docH);
+    c.fillStyle = LIME; c.fillRect(14 * u, 16 * u, 22 * u, 3 * u);                       // the marker bar
+    c.fillStyle = INK; c.font = `${20 * u}px Eurostile, 'Geist', sans-serif`; c.textBaseline = 'alphabetic';
+    c.fillText(d.title, 14 * u, 44 * u);
+    c.fillStyle = 'rgba(18, 20, 23, 0.55)'; c.font = `500 ${6.6 * u}px 'Encode Sans', Geist, sans-serif`;
+    const tw = c.measureText(d.tag).width; c.fillText(d.tag, docW - 14 * u - tw, 20 * u);
+    c.fillStyle = INK; c.font = `500 ${9 * u}px Geist, sans-serif`; c.fillText(d.addr, 14 * u, 62 * u);
+    c.font = `500 ${12 * u}px Geist, sans-serif`; c.fillText(d.price, 14 * u, 80 * u);
+    seedN = 11 + di * 7; c.fillStyle = LINE;
+    for (let y = 96; y < docH / u - 40; y += 9) { const L = (0.45 + rnd() * 0.5) * (150 - 28); c.fillRect(14 * u, y * u, L * u, 3.4 * u); if (rnd() < 0.18) y += 6; }
+    c.strokeStyle = INK; c.lineWidth = 1.3 * u; c.lineJoin = 'miter'; c.beginPath();
+    const by = docH - 24 * u; c.moveTo(16 * u, by);
+    for (let i = 0; i < 7; i++) c.lineTo((22 + i * 9) * u, by - (i % 2 ? 10 : -2) * u);
+    c.stroke();
+    c.fillStyle = LINE; c.fillRect(14 * u, docH - 14 * u, 60 * u, 1.2 * u);
+  }
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    dpr = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    s = Math.max(0.72, Math.min(1.45, Math.min(W / 640, H / 400)));
+    docW = 150 * s; docH = docW * 1.3; headH = 50 * s;
+    cx = W > 640 ? W * 0.7 : W / 2;
+    headY = Math.min(H - 60 * s, Math.max(H * 0.5, 40 * s + docH + 10 * s));
+    drawDoc();
+  }
+  function makeStrips() {
+    const a = []; seedN = 99 + di * 13;
+    for (let i = 0; i < N; i++) a.push({ i, c: (rnd() < 0.5 ? -1 : 1) * (0.22 + rnd() * 0.6), tw: (rnd() - 0.5) * 0.8, tws: (rnd() < 0.5 ? -1 : 1) * (0.3 + rnd() * 1.1), sw: rnd() * 6, fan: (i - (N - 1) / 2) * 0.018 + (rnd() - 0.5) * 0.02, rx: 0, ry: 0, vx: 0, vy: 0, rot: 0, vr: 0, extra: 0 });
+    return a;
+  }
+  let phase = 'enter', pt = 0, F = 0, feedV = 0, strips = [], falling = [], fast = false, clock = 0;
+  function drawStrip(st, img, srcTop, len, rootX, rootY, rot, t, boost) {
+    const sw = docW / N, h = Math.max(3, 4 * s), n = Math.ceil(len / h), L0 = 150 * s;
+    let x = rootX, y = rootY;
+    for (let j = 0; j < n; j++) {
+      const d = j * h, seg = Math.min(h, len - d); if (seg <= 0) break;
+      const u = d / L0;
+      const ang = rot + st.fan + (reduce ? 0 : Math.sin(t * 1.3 + st.sw) * 0.05 * u) + st.c * u * u * (0.55 + boost);
+      const tw = Math.cos(st.tw + u * u * st.tws * (1 + boost * 0.6) + (reduce ? 0 : Math.sin(t * 0.8 + st.sw) * 0.25 * u));
+      ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.scale(Math.max(0.06, Math.abs(tw)), 1);
+      if (tw > 0) ctx.drawImage(img, st.i * sw * dpr, (srcTop + d) * dpr, (sw - 0.9 * s) * dpr, seg * dpr, -sw / 2, -0.4, sw - 0.9 * s, seg + 0.8);
+      else { ctx.fillStyle = BACK; ctx.fillRect(-sw / 2, -0.4, sw - 0.9 * s, seg + 0.8); }
+      ctx.restore();
+      x -= Math.sin(ang) * seg; y += Math.cos(ang) * seg;
+    }
+  }
+  // a block with the top right corner cut (the qbix corner)
+  function cutRect(x, y, w, h, c) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w - c, y); ctx.lineTo(x + w, y + c); ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.closePath(); }
+  function draw(t) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const dx = cx - docW / 2, sw = docW / N;
+    for (const f of falling) for (const st of f.strips) drawStrip(st, f.img, 0, docH, f.x + st.i * sw + sw / 2 + st.rx, f.y + st.ry, st.rot, t, 0.5 + st.extra);
+    const out = F - headH;
+    if (out > 0) { const top = docH - F + headH; for (const st of strips) drawStrip(st, doc, top, Math.min(out, docH - top), dx + st.i * sw + sw / 2, headY + headH, 0, t, Math.min(0.5, out / docH * 0.5)); }
+    let enterY = 0;
+    if (phase === 'enter') { const u = Math.min(1, pt / 0.9); enterY = -Math.pow(1 - u, 3) * (headY + 20); }
+    const vis = docH - F;
+    if (vis > 0) ctx.drawImage(doc, 0, 0, doc.width, Math.max(1, vis * dpr), dx, headY - vis + enterY, docW, vis);
+    const hw = docW + 44 * s;
+    ctx.fillStyle = HEAD; cutRect(cx - hw / 2, headY - 2 * s, hw, headH + 2 * s, 12 * s); ctx.fill();
+    ctx.fillStyle = SLOT; ctx.fillRect(cx - docW / 2 - 5 * s, headY - 1 * s, docW + 10 * s, 3.2 * s);
+    ctx.fillStyle = BAR; ctx.fillRect(cx - hw / 2 + 14 * s, headY + headH * 0.42, hw - 28 * s - 30 * s, headH * 0.3);
+    ctx.fillStyle = F > 0 && phase === 'feed' ? LIME : OFF; ctx.fillRect(cx + hw / 2 - 34 * s, headY + headH * 0.42, 14 * s, headH * 0.3);
+    ctx.fillStyle = SLOT; ctx.fillRect(cx - docW / 2 - 3 * s, headY + headH - 2.5 * s, docW + 6 * s, 2.5 * s);
+  }
+  let last = performance.now(), running = false;
+  function frame(now) {
+    if (document.hidden) { running = false; return; }
+    const dt = Math.min(0.04, (now - last) / 1000); last = now; clock += dt; pt += dt;
+    if (phase === 'enter' && pt > 1.25) { phase = 'feed'; pt = 0; feedV = 0; }
+    if (phase === 'feed') {
+      const target = (docH + headH) / (fast ? 1.2 : 3.6);
+      feedV += (target - feedV) * Math.min(1, dt * 3); F += feedV * dt;
+      if (F >= docH + headH) {
+        const dx = cx - docW / 2;
+        const img = document.createElement('canvas'); img.width = doc.width; img.height = doc.height; img.getContext('2d').drawImage(doc, 0, 0);
+        for (const st of strips) { st.vx = (st.i - (N - 1) / 2) * 6 * s + (Math.random() - 0.5) * 20 * s; st.vy = feedV * 0.6; st.vr = (Math.random() - 0.5) * 0.9; st.ry = 0; }
+        falling.push({ img, strips, x: dx, y: headY + headH, age: 0 });
+        di++; drawDoc(); strips = makeStrips(); F = 0; phase = 'enter'; pt = 0;
+      }
+    }
+    for (const f of falling) { f.age += dt; for (const st of f.strips) { st.vy += 900 * s * dt; st.ry += st.vy * dt; st.rx += st.vx * dt; st.rot += st.vr * dt * Math.min(1, f.age * 2); st.extra = Math.min(0.6, f.age * 0.5); } }
+    falling = falling.filter((f) => f.strips.some((st) => f.y + st.ry < H + 40));
+    draw(clock);
+    requestAnimationFrame(frame);
+  }
+  function start() { if (!running && !document.hidden) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', start);
+  cv.addEventListener('pointerdown', (e) => { fast = true; cv.setPointerCapture(e.pointerId); });
+  const up = () => { fast = false; };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  addEventListener('resize', () => { resize(); if (reduce) draw(0); });
+  window.shredHold = (v) => { fast = v; };
+  resize(); strips = makeStrips();
+  if (document.fonts) document.fonts.load("20px Eurostile").then(() => document.fonts.ready).then(() => { drawDoc(); if (reduce) draw(0); });
+  if (reduce) { phase = 'feed'; F = docH * 0.62; draw(0); }
+  else { phase = 'enter'; pt = 0.45; start(); }
+})();
+</script>
+<script>
+  (async function () {
+    QM.demo({ kind: 'loop' });
+    if (QM.reduced) return;
+    // the ghost presses and holds on the sheet now and then: the feed speeds up
+    for (;;) {
+      await QM.wait(3800);
+      const r = document.getElementById('shred').getBoundingClientRect();
+      QM.ghostShow();
+      await QM.ghostTo(r.left + r.width * 0.7, r.top + r.height * 0.3, 900);
+      window.shredHold(true); await QM.wait(2200); window.shredHold(false);
+      await QM.ghostTo(r.left + r.width * 0.86, r.top + r.height * 0.18, 600);
+      QM.ghostHide(); await QM.wait(4200);
+    }
+  })();
+</script>
+</body>
+</html>

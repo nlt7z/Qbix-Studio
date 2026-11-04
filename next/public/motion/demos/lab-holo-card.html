@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foil tilt · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-holo-card",
+  "title": "Foil tilt",
+  "group": "lab",
+  "cat": "cards",
+  "order": 70,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "tilt ±18° · spring 120 / 16 · lime foil bands",
+  "summary": "A white member card tilts in 3D perspective toward the pointer on a spring. A guilloche rosette is generated in code and drawn twice: a fine ink line at rest, and again in full ink on a lime foil that shows only through hard-edged diagonal bands whose position follows the tilt, so the foil seems to run across the engraving as the card turns.",
+  "spec": [
+    ["Tilt", "rotateY = x · 18°, rotateX = −y · 18°, perspective 1100px"],
+    ["Spring", "stiffness 120, damping 16 (40 / 14 for reduced motion)"],
+    ["Foil", "a lime fill carrying a full-ink copy of the rosette and the numeral, masked by a repeating band: 18% clear, 8% lime, 18% clear, 240% size, positioned by the tilt"],
+    ["Pattern", "two guilloche families, 16 and 12 rotated sine curves, drawn as one SVG path"],
+    ["Trigger", "the pointer anywhere on the screen; drag works the same"]
+  ],
+  "source": ["Qbix studio library · holo-card"],
+  "where": "The member card on the Strata early-access page: the one that says you are in.",
+  "rules": [
+    "Foil is bands, never a rainbow or a glare: hard edges, one lime.",
+    "The card keeps the cut corner and has no shadow; the tilt is the depth.",
+    "The pattern is code, not an image."
+  ],
+  "tags": ["3d", "tilt", "foil", "pointer", "card"],
+  "shot": 2600
+}
+</script>
+<style data-code>
+.hc-stage { perspective: 1100px; display: grid; place-items: center; }
+.hc { --rx: 0deg; --ry: 0deg; --fx: 50%; --fy: 50%;
+  position: relative; width: var(--w, 300px); aspect-ratio: 5 / 7; background: #ffffff; color: #121417; overflow: hidden;
+  transform: rotateX(var(--rx)) rotateY(var(--ry)); container-type: inline-size; isolation: isolate; will-change: transform;
+  clip-path: polygon(0 0, calc(100% - 9cqw) 0, 100% 9cqw, 100% 100%, 0 100%); }
+.hc-face { position: absolute; inset: 0; padding: 7cqw; display: flex; flex-direction: column; box-sizing: border-box; }
+.hc-row { display: flex; justify-content: space-between; font: 400 3.8cqw/1.2 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18,20,23,.64); position: relative; z-index: 2; }
+.hc-rose { position: absolute; left: 50%; top: 41%; width: 118cqw; height: 118cqw; transform: translate(-50%, -50%); }
+.hc-num { position: absolute; left: 0; right: 0; top: 41%; transform: translateY(-52%); text-align: center; font: 400 40cqw/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
+.hc-num em { font-size: .28em; vertical-align: .95em; margin-right: .1em; letter-spacing: 0; }
+.hc-info { margin-top: auto; position: relative; z-index: 2; display: grid; gap: 3cqw; }
+.hc-info h2 { font: 400 10.5cqw/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
+.hc-info p { font-size: 4cqw; line-height: 1.5; display: flex; justify-content: space-between; color: rgba(18,20,23,.64); }
+.hc-info p b { font-weight: 500; color: #121417; }
+/* the foil sits under the card face: a lime fill with the engraving in full ink, seen only through moving bands */
+.hc-lit { position: absolute; inset: 0; background: #B8FF00; color: #0c1300; pointer-events: none;
+  -webkit-mask-image: repeating-linear-gradient(115deg, transparent 0 18%, #000 18% 26%, transparent 26% 44%);
+  mask-image: repeating-linear-gradient(115deg, transparent 0 18%, #000 18% 26%, transparent 26% 44%);
+  -webkit-mask-size: 240% 240%; mask-size: 240% 240%; -webkit-mask-position: var(--fx) var(--fy); mask-position: var(--fx) var(--fy); }
+.hc-lit .hc-rose path { stroke: currentColor; stroke-opacity: .4; }
+.hc-rose path { stroke: #121417; stroke-opacity: .3; }
+</style>
+<style>
+  .qm-stage { place-items: stretch; }
+  .hcd { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(20px, 6vw, 80px); align-items: center; width: 100%; }
+  .hcd-head { display: grid; gap: clamp(10px, 2vmin, 20px); }
+  .hcd-head .title { font-size: clamp(34px, min(6vw, 10vh), 72px); }
+  @media (max-width: 640px) { .hcd { grid-template-columns: 1fr; justify-items: start; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="hcd">
+    <div class="hcd-head">
+      <p class="kicker">Qbix Labs · Early access</p>
+      <h1 class="title">Every early member gets a card.</h1>
+      <p class="lede">Turn it in the light. The engraving is code; the foil is one lime.</p>
+    </div>
+    <div class="hc-stage" id="stage">
+<!-- code -->
+<div class="hc" id="card">
+  <div class="hc-lit" aria-hidden="true">
+    <div class="hc-face">
+      <svg class="hc-rose" viewBox="-100 -100 200 200"><path class="rose-d"/></svg>
+      <div class="hc-num"><em>No.</em>27</div>
+    </div>
+  </div>
+  <div class="hc-face">
+    <div class="hc-row"><span>Qbix Labs</span><span>Early access</span></div>
+    <svg class="hc-rose" viewBox="-100 -100 200 200" aria-hidden="true"><path class="rose-d"/></svg>
+    <div class="hc-num"><em>No.</em>27</div>
+    <div class="hc-info"><h2>Strata</h2><p><span>Moodboard in, system out</span><b>Member</b></p></div>
+  </div>
+</div>
+<!-- /code -->
+    </div>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const holo = (() => {
+  const root = document.documentElement, card = document.getElementById('card');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // a guilloche rosette, the fine engraved pattern on bank notes: rotated sine curves
+  (function rosette() {
+    let d = '';
+    for (let k = 0; k < 16; k++) {
+      const ph = k / 16 * Math.PI * 2 / 9;
+      for (let i = 0; i <= 360; i++) {
+        const t = i / 360 * Math.PI * 2, r = 62 + 15 * Math.sin(9 * t + ph * 9) + 6 * Math.sin(27 * t - ph * 3);
+        d += (i ? 'L' : 'M') + (Math.cos(t) * r).toFixed(2) + ' ' + (Math.sin(t) * r).toFixed(2);
+      }
+    }
+    for (let k = 0; k < 12; k++) {
+      const ph = k / 12 * Math.PI * 2 / 14;
+      for (let i = 0; i <= 360; i++) {
+        const t = i / 360 * Math.PI * 2, r = 92 + 4 * Math.sin(14 * t + ph * 14);
+        d += (i ? 'L' : 'M') + (Math.cos(t) * r).toFixed(2) + ' ' + (Math.sin(t) * r).toFixed(2);
+      }
+    }
+    document.querySelectorAll('.rose-d').forEach((p) => { p.setAttribute('d', d); p.setAttribute('fill', 'none'); p.setAttribute('stroke-width', '.45'); });
+  })();
+  function size() {
+    const h = Math.min(innerHeight * 0.76, innerWidth * 0.82 * 1.4, 640);
+    root.style.setProperty('--w', (h / 1.4).toFixed(1) + 'px');
+  }
+  size(); addEventListener('resize', size);
+  let tx = 0, ty = 0, has = false;
+  // spring state for x and y tilt
+  const s = { x: 0, y: 0, vx: 0, vy: 0 };
+  let last = performance.now();
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.04, (now - last) / 1000) || 0.016; last = now;
+    const gx = has ? tx : 0, gy = has ? ty : 0;
+    const k = reduce ? 40 : 120, c = reduce ? 14 : 16;
+    s.vx += ((gx - s.x) * k - s.vx * c) * dt; s.x += s.vx * dt;
+    s.vy += ((gy - s.y) * k - s.vy * c) * dt; s.y += s.vy * dt;
+    card.style.setProperty('--ry', (s.x * 18).toFixed(2) + 'deg');
+    card.style.setProperty('--rx', (-s.y * 18).toFixed(2) + 'deg');
+    card.style.setProperty('--fx', (50 + s.x * 50).toFixed(1) + '%');
+    card.style.setProperty('--fy', (50 + s.y * 50).toFixed(1) + '%');
+  })(performance.now());
+  return {
+    move(x, y) {
+      const r = card.getBoundingClientRect();
+      // the card's own box tilts too, so measure from its layout centre
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      tx = Math.max(-1.2, Math.min(1.2, (x - cx) / (r.width / 2)));
+      ty = Math.max(-1.2, Math.min(1.2, (y - cy) / (r.height / 2)));
+      has = true;
+    },
+    leave() { has = false; },
+    path(t) {
+      const r = card.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      return [cx + Math.sin(t * 0.85) * 0.95 * r.width / 2, cy + Math.sin(t * 1.7) * 0.6 * r.height / 2];
+    }
+  };
+})();
+document.addEventListener('pointermove', (e) => holo.move(e.clientX, e.clientY));
+document.documentElement.addEventListener('pointerleave', () => holo.leave());
+</script>
+<script>
+  QM.demo({ kind: 'pointer', move: (x, y) => holo.move(x, y), leave: () => holo.leave(), path: (t) => holo.path(t) });
+</script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exploded key · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-keyboard-explode",
+  "title": "Exploded key",
+  "group": "lab",
+  "cat": "scenes",
+  "order": 60,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "7 layers · isometric · lift 70 ms apart",
+  "summary": "A hand-written orthographic isometric projection draws the seven layers of a key, with back-face culling and shading from each face's normal. The layers lift one after another, labels slide out of masks, then it closes and presses once. Drag to turn the view; click to open or close.",
+  "spec": [
+    ["Projection", "orthographic, 32° elevation, yaw 45° + drag; each point goes through one function P(x, y, z)"],
+    ["Open", "each layer's lift eases over 1100 ms (cubic in-out), 70 ms apart from the top down; closing runs bottom up"],
+    ["Labels", "a rule draws to the column (500 ms), the name slides up out of a clip, 80 ms apart"],
+    ["Shading", "faces facing away are culled; the rest are multiplied by 0.64 + 0.36 × (normal · light)"],
+    ["Press", "the stem, spring and cap travel 0.1 of a unit down and back over 420 ms (sine)"],
+    ["Camera", "pulls back as it opens (1.45× to 1×) and drifts ±0.22 rad while nobody is turning it"]
+  ],
+  "source": ["Qbix studio library · keyboard-explode"],
+  "where": "A Labs page: what is inside a part, one layer at a time.",
+  "rules": [
+    "One projection function: everything, springs and text included, goes through it.",
+    "The stem is the one lime: it is the part that moves. The keycap is the one dark object; every other layer is white or a light tint.",
+    "Hidden parts (spring, stem) are uncovered as the layers above lift away, not faded in."
+  ],
+  "tags": ["isometric", "canvas", "exploded view", "drag", "click"],
+  "shot": 5400
+}
+</script>
+<style data-code>
+/* Key anatomy: a canvas; the page frames it */
+.anat { position: absolute; inset: 0; }
+.anat canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.anat canvas:active { cursor: grabbing; }
+.anat-head { position: absolute; z-index: 2; left: clamp(24px, 4.5vw, 56px); top: clamp(20px, 4vw, 44px); display: grid; gap: 10px; pointer-events: none; }
+.anat-head .title { font-size: clamp(28px, 4.2vw, 52px); }
+.anat-head .lede { font-size: clamp(13px, 1.3vw, 16px); }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="anat" id="anat">
+  <canvas id="ac"></canvas>
+  <div class="anat-head"><p class="kicker">Qbix Labs · Parts</p><h2 class="title">Anatomy of a key.</h2><p class="lede">7 layers under one letter.</p></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Key anatomy: a hand-written isometric projection, exploded layer by layer. */
+function keyAnatomy(root) {
+  const SANS = "'Geist', system-ui, sans-serif", MONO = "'Encode Sans', 'Geist', sans-serif";
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const ease = (t) => { t = clamp(t, 0, 1); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+  const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const sq = (a, dy = 0) => [[-a, -a + dy], [a, -a + dy], [a, a + dy], [-a, a + dy]];
+  const GAP = 0.42, INK = '#121417';
+  // layers bottom to top: z, height, outline at the foot and at the head
+  const LAYERS = [
+    { name: 'PCB', sub: 'Reads the press', col: '#dfe2e5', z: 0, h: 0.07, bot: sq(0.85), top: sq(0.85) },
+    { name: 'Plate', sub: 'Holds the switch steady', col: '#ffffff', z: 0.11, h: 0.06, bot: sq(0.78), top: sq(0.78) },
+    { name: 'Bottom housing', sub: 'Clips into the plate', col: '#ffffff', z: 0.17, h: 0.24, bot: sq(0.39), top: sq(0.37) },
+    { name: 'Spring', sub: '45 grams to press', col: '#c9ced6', z: 0.2, h: 0.34, spring: true, hidden: true },
+    { name: 'Stem', sub: 'Cross mount, linear', col: '#B8FF00', z: 0.3, h: 0.36, stem: true, hidden: true },
+    { name: 'Top housing', sub: 'Clear, lets light through', col: '#ffffff', z: 0.41, h: 0.2, bot: sq(0.39), top: sq(0.33), alpha: 0.7 },
+    { name: 'Keycap', sub: 'PBT, one unit wide', col: '#121417', z: 0.64, h: 0.4, bot: sq(0.48), top: sq(0.37, -0.03), cap: true },
+  ];
+  const N = LAYERS.length;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d'), head = root.querySelector('.anat-head');
+  let W = 0, H = 0, dpr = 1, S0 = 80, top0 = 0, avail = 0, ready = false;
+  const EL = (32 * Math.PI) / 180, CE = Math.cos(EL), SE = Math.sin(EL);
+  function resize() {
+    const o = root.getBoundingClientRect(); W = o.width; H = o.height; dpr = Math.min(2, devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const hb = head.getBoundingClientRect().bottom - o.top;
+    top0 = hb + clamp(H * 0.02, 8, 24); avail = H - top0 - clamp(H * 0.04, 14, 36);
+    S0 = Math.min((W * 0.6) / 2.5, avail / ((LAYERS[N - 1].z + LAYERS[N - 1].h + (N - 1) * GAP) * CE + 2.4 * SE));
+    if (reduce && ready) render(performance.now());
+  }
+
+  let yaw = Math.PI / 4, yawUser = 0, S = S0, ox = 0, oy = 0, cY = Math.cos(yaw), sY = Math.sin(yaw);
+  const P = (x, y, z) => { const xr = x * cY - y * sY, yr = x * sY + y * cY; return [ox + xr * S, oy + (-yr * SE - z * CE) * S]; };
+  const Lv = (() => { const v = [-0.4, -0.5, 0.76], m = Math.hypot(...v); return v.map((a) => a / m); })();
+  function face(pts3, col, alpha) {
+    const r = pts3.map(([x, y, z]) => [x * cY - y * sY, x * sY + y * cY, z]), a = r[0], b = r[1], c = r[2];
+    const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    const m = Math.hypot(...n) || 1; n = n.map((q) => q / m);
+    if (-n[1] * CE + n[2] * SE <= 0) return;                         // back-face culling
+    const k = 0.64 + 0.36 * Math.max(0, n[0] * Lv[0] + n[1] * Lv[1] + n[2] * Lv[2]);   // normal-based shading
+    ctx.fillStyle = `rgba(${hex(col).map((q) => Math.round(q * k))},${alpha ?? 1})`;
+    ctx.beginPath(); pts3.forEach((p, i) => { const s = P(...p); i ? ctx.lineTo(s[0], s[1]) : ctx.moveTo(s[0], s[1]); }); ctx.closePath(); ctx.fill();
+  }
+  function prism(bot, topP, z0, z1, col, alpha) {
+    const n = bot.length;
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; face([[...bot[i], z0], [...bot[j], z0], [...topP[j], z1], [...topP[i], z1]], col, alpha); }
+    face(topP.map((p) => [...p, z1]), col, alpha);
+  }
+  function onTop(z, fn) {   // the plane at height z mapped onto the canvas, 1 unit = 1U
+    const o = P(0, 0, z), ax = P(1, 0, z), ay = P(0, 1, z);
+    ctx.save(); ctx.transform(ax[0] - o[0], ax[1] - o[1], ay[0] - o[0], ay[1] - o[1], o[0], o[1]); fn(); ctx.restore();
+  }
+
+  const ex = LAYERS.map(() => ({ from: 0, to: 0, t0: 0 })), lab = LAYERS.map(() => ({ from: 0, to: 0, t0: 0 }));
+  let target = 0, press = 0, keyPos = [0, 0];
+  const val = (s, now, dur) => s.from + (s.to - s.from) * ease((now - s.t0) / dur);
+  function setTarget(t, now) {
+    target = t;
+    LAYERS.forEach((_, i) => {
+      const d = t ? (N - 1 - i) * 70 : i * 60;
+      const e = ex[i]; e.from = val(e, now, 1100); e.to = t; e.t0 = now + d + (t ? 0 : 350);
+      const l = lab[i]; l.from = val(l, now, 500); l.to = t; l.t0 = now + (t ? 700 + (N - 1 - i) * 80 : (N - 1 - i) * 30);
+    });
+  }
+
+  function render(now) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const E = LAYERS.map((_, i) => (reduce ? target : val(ex[i], now, 1100)));
+    const Eavg = E.reduce((a, b) => a + b, 0) / N;
+    S = S0 * (1 + 0.45 * (1 - Eavg));     // closer and centred when assembled
+    const kx = W * (W > 700 ? 0.4 : 0.37), keyX = kx + (1 - Eavg) * (W * 0.5 - kx);
+    const stackH = (LAYERS[N - 1].z + LAYERS[N - 1].h + (N - 1) * GAP * Eavg) * CE * S;
+    const baseY = top0 + avail - 1.25 * SE * S, centerShift = (1 - Eavg) * ((avail - stackH - 2.4 * SE * S) / 2);
+    ox = keyX; oy = baseY - Math.max(0, centerShift); cY = Math.cos(yaw); sY = Math.sin(yaw);
+    keyPos = [ox, oy - stackH / 2];
+    const anchors = [];
+    LAYERS.forEach((L, i) => {
+      let z0 = L.z + i * GAP * E[i];
+      const pk = (i >= 3 ? press * 0.1 : 0) * (1 - Eavg);
+      z0 -= L.cap || L.stem ? pk : 0;
+      const z1 = z0 + L.h * (L.spring ? 1 - press * 0.3 * (1 - Eavg) : 1);
+      // the spring and stem are uncovered as the layers above lift away
+      const hid = L.hidden ? clamp((E[i] - 0.12) / 0.35, 0, 1) : 1;
+      if (hid <= 0) { anchors.push(null); return; }
+      ctx.save();
+      if (hid < 1) { const a = P(0, 0, z0), bb = P(0, 0, z1), hh = Math.abs(a[1] - bb[1]); ctx.beginPath(); ctx.rect(0, Math.min(a[1], bb[1]) + hh * (1 - hid) * 0 - 4, W, hh * hid + 8); ctx.clip(); }
+      if (L.spring) {
+        const turns = 5, R = 0.17, seg = 90, pts = [];
+        for (let k = 0; k <= seg; k++) { const a = (k / seg) * turns * Math.PI * 2; pts.push([R * Math.cos(a), R * Math.sin(a), z0 + ((z1 - z0) * k) / seg]); }
+        ctx.lineCap = 'butt'; ctx.lineWidth = Math.max(1.5, S * 0.028);
+        for (const pass of [0, 1]) for (let k = 0; k < seg; k++) {
+          const [x, y] = pts[k], depth = x * sY + y * cY;
+          if (depth < 0 !== !!pass) continue;
+          const a = P(...pts[k]), b = P(...pts[k + 1]);
+          ctx.strokeStyle = pass ? INK : '#9a9ea4'; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+        }
+      } else if (L.stem) {
+        prism(sq(0.17), sq(0.17), z0, z0 + 0.12, L.col);
+        const t = 0.045, w = 0.16;
+        prism([[-w, -t], [w, -t], [w, t], [-w, t]], [[-w, -t], [w, -t], [w, t], [-w, t]], z0 + 0.12, z1, L.col);
+        prism([[-t, -w], [t, -w], [t, w], [-t, w]], [[-t, -w], [t, -w], [t, w], [-t, w]], z0 + 0.12, z1, L.col);
+      } else {
+        prism(L.bot, L.top, z0, z1, L.col, L.alpha);
+        if (i === 0) onTop(z1, () => {   // traces and two pads
+          ctx.strokeStyle = 'rgba(18,20,23,0.4)'; ctx.lineWidth = 0.018; ctx.lineJoin = 'miter';
+          for (const tr of [[[-0.8, -0.5], [-0.35, -0.5], [-0.2, -0.35], [-0.2, 0.1]], [[0.8, 0.4], [0.4, 0.4], [0.25, 0.25], [0.25, -0.1]], [[-0.8, 0.6], [-0.1, 0.6], [0.1, 0.4]], [[0.8, -0.6], [0.3, -0.6]]]) { ctx.beginPath(); tr.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); }
+          ctx.fillStyle = INK; ctx.fillRect(-0.24, 0.06, 0.09, 0.09); ctx.fillRect(0.2, -0.14, 0.09, 0.09);
+        });
+        if (i === 1) onTop(z1, () => { ctx.fillStyle = 'rgba(18,20,23,0.16)'; ctx.fillRect(-0.39, -0.39, 0.78, 0.78); });
+        if (L.cap) onTop(z1, () => { ctx.fillStyle = '#ffffff'; ctx.font = `500 .3px ${SANS}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.save(); ctx.translate(0, -0.03); ctx.scale(1, -1); ctx.fillText('Q', 0, 0); ctx.restore(); });
+      }
+      ctx.restore();
+      const r = L.bot ? Math.max(...L.bot.map(([x, y]) => P(x, y, (z0 + z1) / 2)[0])) : 0;
+      anchors.push([L.bot ? r : ox + 0.2 * S, P(0, 0, (z0 + z1) / 2)[1]]);
+    });
+    // labels: a rule draws out to the column, the name slides up out of a clip
+    const fs = clamp(W * 0.013, 12, 16);
+    const keyR = Math.max(...anchors.filter(Boolean).map((a) => a[0]));
+    ctx.font = `500 ${fs}px ${SANS}`; const nameW = Math.max(...LAYERS.map((L) => ctx.measureText(L.name).width));
+    ctx.font = `400 ${fs * 0.84}px ${SANS}`; const subW = Math.max(nameW, ...LAYERS.map((L) => ctx.measureText(L.sub).width));
+    const ys = anchors.map((a) => a && a[1]);
+    const gaps = ys.filter(Boolean).map((y, i, arr) => (i ? arr[i - 1] - y : 99));
+    let colX = Math.min(W - 16 - subW, ox + 1.3 * S0 + 24);
+    const roomSub = Math.min(...gaps) > fs * 2.6 && colX > keyR + 34;
+    if (!roomSub) colX = Math.min(W - 16 - nameW, ox + 1.3 * S0 + 24);
+    LAYERS.forEach((L, i) => {
+      const a = anchors[i]; if (!a) return;
+      const t = reduce ? target : val(lab[i], now, 500);
+      if (t <= 0.01) return;
+      const x0 = a[0] + 8, x1 = colX - 10, y = a[1];
+      ctx.fillStyle = 'rgba(18,20,23,0.4)'; ctx.fillRect(x0, y - 1, (x1 - x0) * t, 2);
+      ctx.save(); ctx.beginPath(); ctx.rect(colX - 2, y - fs * 1.6, W, fs * 3.4); ctx.clip();
+      const off = (1 - t) * fs * 1.6;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.font = `500 ${fs}px ${SANS}`; ctx.fillStyle = INK; ctx.fillText(L.name, colX, y + off - (roomSub ? fs * 0.45 : 0));
+      if (roomSub) { ctx.font = `400 ${fs * 0.84}px ${SANS}`; ctx.fillStyle = 'rgba(18,20,23,0.6)'; ctx.fillText(L.sub, colX, y + off + fs * 0.75); }
+      ctx.restore();
+    });
+  }
+
+  let lastReal = -1e9, drag = null;
+  cv.addEventListener('pointerdown', (e) => { lastReal = performance.now(); drag = { x: e.clientX, y0: yawUser, moved: false }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => { lastReal = performance.now(); if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 4) drag.moved = true; yawUser = drag.y0 + dx * 0.008; });
+  const up = () => { if (!drag) return; if (!drag.moved) setTarget(target ? 0 : 1, performance.now()); drag = null; lastReal = performance.now(); };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+
+  // the idle story: press, open, hold, close, press
+  let last = performance.now(), loopT = 0, wob = 0, pi = 0, pressT = -1e9;
+  const PLAN = [[300, 'press'], [1000, 'open'], [6200, 'close'], [8300, 'press'], [9800, 'end']];
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(50, now - last); last = now;
+    const idle = now - lastReal > 2500;
+    if (idle) {
+      loopT += dt;
+      while (pi < PLAN.length && loopT >= PLAN[pi][0]) {
+        const a = PLAN[pi++][1];
+        if (a === 'press') pressT = now;
+        if (a === 'open') setTarget(1, now);
+        if (a === 'close') setTarget(0, now);
+        if (a === 'end') { loopT = 0; pi = 0; }
+        root.dispatchEvent(new CustomEvent('plan', { detail: a }));
+      }
+    }
+    wob += ((idle ? 1 : 0) - wob) * (1 - Math.exp(-dt / 600));
+    yaw = Math.PI / 4 + yawUser + wob * Math.sin(now / 2600) * 0.22;
+    const pt = (now - pressT) / 420; press = pt >= 0 && pt <= 1 ? Math.sin(pt * Math.PI) : 0;
+    render(now);
+  })(last);
+  addEventListener('resize', resize); resize(); ready = true;
+  if (reduce) { target = 1; render(performance.now()); }
+  return { center: () => { const o = root.getBoundingClientRect(); return [o.left + keyPos[0], o.top + keyPos[1]]; } };
+}
+const anat = keyAnatomy(document.getElementById('anat'));
+</script>
+<script>
+  /* the ghost taps the key to open it and to close it again */
+  document.getElementById('anat').addEventListener('plan', async (e) => {
+    if (QM.reduced || !['open', 'close'].includes(e.detail)) return;
+    const [x, y] = anat.center();
+    QM.ghostShow(); QM.ghostAt(innerWidth * 0.85, innerHeight * 0.9);
+    await QM.ghostTo(x, y, 380);
+    await QM.wait(500);
+    QM.ghostHide();
+  });
+  QM.demo({ kind: 'loop', restart() {} });
+</script>
+</body>
+</html>

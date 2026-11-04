@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scroll formations · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-formations",
+  "title": "Scroll formations",
+  "group": "lab",
+  "cat": "scroll",
+  "order": 120,
+  "kind": "states",
+  "shot": 5800,
+  "tone": "paper",
+  "line": "12 cards · 5 layouts · one scroll value",
+  "summary": "Twelve pictures take five formations as the scroll runs: a pile, a fan, a grid, a ring around a clearing, and one hero. Each formation is a function that returns a pose (x, y, rotation, scale) for every card in stage units. Between two formations each card waits, morphs and holds, with a small per-card delay so the change travels as a wave. The pose is a pure function of the scroll, so scrolling back is an exact reverse.",
+  "spec": [
+    ["Pose", "x, y in units of min(stage, 1.6 × the card area), rotation °, scale"],
+    ["Morph", "per card: hold 18%, ease in-out cubic, hold; stagger 22% across the 12 cards"],
+    ["Order", "pile → fan → grid → ring → hero (card 6)"],
+    ["Reverse", "target pose = f(scroll), so back is the same path run backwards"],
+    ["Caption", "a mask slide up, one step per formation"]
+  ],
+  "source": ["Qbix studio library · 06-scroll-formations"],
+  "where": "A Strata chapter: twelve moodboard pictures sorted into one hero image as the page scrolls.",
+  "rules": [
+    "Cards are flat pictures with the cut corner; no shadows between them, depth is only draw order.",
+    "Progress is the lime marker bar, the one lime on the screen.",
+    "Reduced motion shows the grid as a still."
+  ],
+  "tags": ["scroll", "layout", "states", "images"]
+}
+</script>
+<style data-code>
+.fm { position: absolute; inset: 0; overflow: hidden; }
+.fm-card { position: absolute; left: 0; top: 0; overflow: hidden; background: #e6e8ea; will-change: transform;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.fm-card img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.fm-copy { position: absolute; left: clamp(20px, 5vw, 56px); top: 50%; width: min(30%, 300px); transform: translateY(-50%); display: grid; gap: 14px; z-index: 500; }
+.fm-copy .title { font-size: clamp(24px, 3.2vw, 40px); }
+.fm-mask { position: relative; overflow: hidden; }
+.fm-step { transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+.fm-step.is-off { position: absolute; left: 0; top: 0; width: 100%; transform: translateY(110%); }
+.fm-step.is-past { transform: translateY(-110%); }
+.fm-bar { position: absolute; left: 0; bottom: 0; height: 4px; width: 100%; background: #B8FF00; transform-origin: left; transform: scaleX(0); z-index: 600; }
+</style>
+<style>.qm-stage { padding: 0; }</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="fm" id="fm">
+  <div class="fm-copy">
+    <p class="kicker" id="fm-no">Step 01 / 05</p>
+    <div class="fm-mask" id="fm-mask"></div>
+  </div>
+  <div class="fm-bar" id="fm-bar"></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Formations: pose(card, scroll) is a pure function. createFormations(root, pictures, steps) -> { at(p) } with p in 0..1; a picture is a src or [src, object-position] */
+function createFormations(root, pictures, steps, { reduce = false } = {}) {
+  const N = pictures.length, ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x)), lerp = (a, b, t) => a + (b - a) * t;
+  const cards = pictures.map((p, i) => {
+    const [src, pos] = Array.isArray(p) ? p : [p];
+    const el = document.createElement('div'); el.className = 'fm-card';
+    const img = document.createElement('img'); img.alt = ''; img.src = src; if (pos) img.style.objectPosition = pos; el.append(img); root.insertBefore(el, root.firstChild);
+    return { el, img, k: i / (N - 1) };
+  });
+  const mask = root.querySelector('.fm-mask'), no = root.querySelector('.kicker'), bar = root.querySelector('.fm-bar');
+  const stepEls = steps.map(([h, p], i) => { const d = document.createElement('div'); d.className = 'fm-step' + (i ? ' is-off' : ''); d.innerHTML = `<h2 class="title">${h}</h2><p class="lede" style="margin-top:10px;font-size:14px">${p}</p>`; mask.append(d); return d; });
+  const rnd = (i) => { const x = Math.sin(i * 91.7 + 3.1) * 43758.5453; return x - Math.floor(x); };
+  let W = 0, H = 0, U = 0, CW = 0, wide = true, ox = 0, oy = 0, shown = -1;
+  const F = [
+    (i) => ({ x: (rnd(i) - 0.5) * 0.1, y: (rnd(i + 9) - 0.5) * 0.08, r: (rnd(i + 3) - 0.5) * 18, s: 1 }),                                  // pile
+    (i) => { const a = (i / (N - 1) - 0.5) * 1.4; return { x: Math.sin(a) * 0.7, y: 0.38 - Math.cos(a) * 0.55, r: a * 40, s: 0.92 }; },     // fan
+    (i) => { const cols = 4, rows = 3, c = i % cols, r = Math.floor(i / cols); return { x: (c - (cols - 1) / 2) * 0.31, y: (r - (rows - 1) / 2) * 0.38, r: 0, s: 0.92 }; },   // grid
+    (i) => { const a = (i / N) * 6.2832 - 1.5708; return { x: Math.cos(a) * 0.5, y: Math.sin(a) * 0.4, r: (a + 1.5708) * 8.6, s: 0.55 }; },  // ring, a clearing inside
+    (i) => { const d = i - 5; if (d === 0) return { x: 0, y: -0.08, r: 0, s: 1.9 }; return { x: Math.sign(d) * 0.55 + d * 0.06, y: 0.38, r: 0, s: 0.5 }; },  // one hero
+  ];
+  function measure() {
+    W = root.clientWidth; H = root.clientHeight;
+    const rw = W * 0.7; U = Math.min(rw / 1.5, H * 0.95); ox = W - rw / 2; oy = H * 0.5; CW = U * 0.27;
+    cards.forEach((c, i) => { const asp = i % 3 === 0 ? 1 : 0.78; c.w = CW; c.h = CW / asp; c.el.style.width = c.w + 'px'; c.el.style.height = c.h + 'px'; c.el.style.marginLeft = -c.w / 2 + 'px'; c.el.style.marginTop = -c.h / 2 + 'px'; });
+  }
+  function pose(c, i, seg) {
+    if (reduce) return F[2](i);
+    const a = Math.min(F.length - 2, Math.floor(seg)), local = seg - a, HOLD = 0.18, STAG = 0.22;
+    const t = ease(clamp((local - HOLD - c.k * STAG) / (1 - 2 * HOLD - STAG)));
+    const A = F[a](i), B = F[a + 1](i);
+    return { x: lerp(A.x, B.x, t), y: lerp(A.y, B.y, t), r: lerp(A.r, B.r, t), s: lerp(A.s, B.s, t) };
+  }
+  // t in beats: 0..1 the pile is laid down, 1..5 the five formations, one beat each
+  function at(t) {
+    const seg = clamp(t - 1, 0, F.length - 1 - 1e-6);
+    const rev = clamp(t);
+    cards.forEach((c, i) => {
+      const p = reduce ? F[2](i) : pose(c, i, seg);
+      c.el.style.transform = `translate(${(ox + p.x * U).toFixed(1)}px, ${(oy + p.y * U).toFixed(1)}px) rotate(${p.r.toFixed(2)}deg) scale(${p.s.toFixed(3)})`;
+      c.el.style.zIndex = Math.round(100 + p.s * 100 - Math.abs(p.x) * 10);
+      const r = reduce ? 1 : clamp((rev - c.k * 0.6) / 0.4);              // the pile is uncovered card by card
+      c.img.style.clipPath = `inset(0 0 ${((1 - r) * 100).toFixed(1)}% 0)`;
+    });
+    bar.style.transform = `scaleX(${clamp(t / 5).toFixed(4)})`;
+    const idx = reduce ? 2 : Math.max(0, Math.min(4, Math.round(t - 1)));
+    if (idx !== shown) {
+      shown = idx; no.textContent = `Step 0${idx + 1} / 05`;
+      stepEls.forEach((d, k) => { d.classList.toggle('is-off', k !== idx); d.classList.toggle('is-past', k < idx); });
+    }
+  }
+  measure(); new ResizeObserver(() => { measure(); at(cur); }).observe(root);
+  let cur = 0; const wrapAt = at;
+  return { at: (t) => { cur = t; wrapAt(t); } };
+}
+</script>
+<script>
+  const A = '../assets/art/';
+  const STEPS = [
+    ['A pile of pictures.', 'Twelve references for one brief.'],
+    ['Hold a few up.', 'Fan them out. Most go back in the folder.'],
+    ['Give them an order.', 'A grid says the pictures can be compared.'],
+    ['Leave room in the middle.', 'The headline needs a clearing.'],
+    ['End on one.', 'The picture you want them to remember, at full size.'],
+  ];
+  // object renders and three portraits; a portrait is cropped around its face. Card 6 ends as the hero.
+  const pictures = [['cross'], ['ava'], ['glass'], ['curves'], ['sam', '27% 30%'], ['objects'], ['block'], ['ring'], ['you'], ['wall'], ['bottle'], ['vase']].map(([n, pos]) => [A + n + '.webp', pos]);
+  const fm = createFormations(document.getElementById('fm'), pictures, STEPS, { reduce: QM.reduced });
+  fm.at(QM.reduced ? 3 : 0);
+  QM.demo({ kind: 'states', n: 5, dwell: 2200, first: 2200, hold: 800, rewind: 1600, seek(t) { fm.at(t); } });
+</script>
+</body>
+</html>

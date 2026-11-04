@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch to final · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-sketch-to-final",
+  "title": "Sketch to final",
+  "group": "lab",
+  "cat": "scenes",
+  "order": 700,
+  "kind": "play",
+  "tone": "paper",
+  "line": "one layout · pencil strokes ↔ clipped blocks",
+  "summary": "One set of layout coordinates draws both the final page and its pencil sketch. Sketch lines are bowed curves drawn twice and stroked in with stroke-dashoffset; the final blocks are uncovered in turn with a clip.",
+  "spec": [
+    ["Layout", "one list of boxes (logo, links, hero, three thumbs, title, price, facts, text, button) for wide and tall frames"],
+    ["Sketch", "each line is a cubic with a random bow and overshoot, drawn twice; a seeded random keeps the draft the same every time"],
+    ["Draw", "stroke-dashoffset len → 0, 520 ms + 0.9 ms per unit of length, 45 ms per stroke, 70 ms per box"],
+    ["To final", "pencil unwinds in 420 ms (ease-in), then each block is uncovered by clip-path, 760 ms, 70 ms apart; pictures from the bottom, text from the left"],
+    ["To draft", "blocks are covered from the right in 520 ms, the pencil is drawn back in"],
+    ["Rhythm", "draft 3.6 s, final 3.2 s; a click or the Draft / Final switch changes it by hand"]
+  ],
+  "source": ["Qbix studio library · sketch-to-final"],
+  "where": "A Forma chapter: the page a founder sees as a pencil plan first, then as the finished homepage.",
+  "rules": [
+    "Both states read from the same boxes, so nothing in the sketch can drift from the final.",
+    "Only the final's “Shop the drop” is lime; the pen ring in the sketch is its draft.",
+    "Reveal is a clip, never an opacity."
+  ],
+  "tags": ["draw", "sketch", "layout", "forma"],
+  "shot": 6400
+}
+</script>
+<style data-code>
+/* Sketch to final: a stage of absolutely placed blocks, and an svg of pencil on top */
+.s2f { position: absolute; }
+.s2f-el { position: absolute; overflow: hidden; }
+.s2f-el svg { display: block; width: 100%; height: 100%; }
+.s2f-title { font-family: var(--font-headline, 'Eurostile', sans-serif); letter-spacing: -0.03em; line-height: 1; white-space: nowrap; color: var(--fg); }
+.s2f-price { font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; color: var(--fg); }
+.s2f-facts, .s2f-links { color: var(--fg2); white-space: nowrap; }
+.s2f-links { display: flex; justify-content: flex-end; align-items: center; gap: 1.4em; }
+.s2f-logo { display: flex; align-items: center; gap: 0.5em; font-weight: 600; white-space: nowrap; color: var(--fg); }
+.s2f-logo b { display: block; width: 0.8em; height: 0.8em; background: var(--fg); }
+.s2f-para { color: var(--fg2); line-height: 1.45; }
+.s2f-btn { background: #B8FF00; color: #0c1300; display: flex; align-items: center; justify-content: center; font-weight: 500; white-space: nowrap; --cut: 12px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.s2f-ink { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+.s2f-ink path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+<style>
+  .sf { width: 100%; height: calc(100svh - clamp(40px, 9vmin, 96px)); display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 16px; }
+  html:not(.qm-tile) .sf { height: calc(100svh - clamp(40px, 9vmin, 96px) - 46px); }
+  .sf-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .sf-tog { position: relative; display: flex; background: var(--fill); flex: none; }
+  .sf-tog button { all: unset; cursor: pointer; position: relative; z-index: 1; height: 32px; padding: 0 16px; display: flex; align-items: center; font: 500 12px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); transition: color 350ms var(--ease); }
+  .sf-tog button[aria-pressed='true'] { color: var(--ground); }
+  .sf-tog i { position: absolute; top: 0; bottom: 0; left: 0; background: var(--fg); transition: transform 550ms var(--ease-move), width 550ms var(--ease-move); }
+  .sf-box { position: relative; min-height: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sf">
+    <div class="sf-head">
+      <span class="kicker">Forma · Homepage</span>
+      <div class="sf-tog" role="group" aria-label="Show draft or final"><i></i><button data-m="draft" aria-pressed="false">Draft</button><button data-m="final" aria-pressed="true">Final</button></div>
+    </div>
+    <div class="sf-box">
+<!-- code -->
+<div class="s2f" data-s2f>
+  <div class="s2f-stage"></div>
+  <svg class="s2f-ink" aria-hidden="true"></svg>
+</div>
+<!-- /code -->
+    </div>
+  </div>
+  <div class="qm-ui"><span>Click to switch between sketch and final</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+function sketchToFinal(root, { reduce = false } = {}) {
+  const stage = root.querySelector('.s2f-stage');
+  const ink = root.querySelector('.s2f-ink');
+  const NS = 'http://www.w3.org/2000/svg';
+  const SCENE = `<g><rect width="400" height="260" fill="#eceef0"/><rect y="202" width="400" height="58" fill="#ffffff"/>
+    <ellipse cx="118" cy="205" rx="42" ry="5" fill="#dde0e3"/><ellipse cx="214" cy="205" rx="34" ry="5" fill="#dde0e3"/><ellipse cx="312" cy="207" rx="54" ry="6" fill="#dde0e3"/>
+    <circle cx="118" cy="126" r="50" fill="#B8FF00"/><circle cx="118" cy="126" r="25" fill="#eceef0"/><rect x="111" y="176" width="14" height="22" fill="#121417"/><rect x="98" y="196" width="40" height="6" fill="#121417"/>
+    <path d="M186 202V134Q186 114 202 108V90H226V108Q242 114 242 134V202Z" fill="#121417"/>
+    <rect x="268" y="152" width="76" height="50" fill="#f7f8f9"/><path d="M268 152L282 140H358L344 152Z" fill="#ffffff"/><path d="M344 152L358 140V190L344 202Z" fill="#d3d7db"/></g>`;
+  let mode = 'final', items = [], lastInput = -1e9, lastSwitch = 0, W = 0, H = 0;
+
+  // a seeded random so the draft looks the same every time it is drawn
+  let seed = 7;
+  const rnd = () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const j = (a) => (rnd() - 0.5) * 2 * a;
+
+  function layout(w, h) {
+    const L = [];
+    const g = Math.max(10, Math.min(w, h) * 0.035);
+    const navH = Math.max(22, Math.min(40, h * 0.085));
+    L.push({ k: 'logo', x: 0, y: 0, w: w * 0.4, h: navH });
+    L.push({ k: 'links', x: w * 0.45, y: 0, w: w * 0.55, h: navH });
+    const top = navH + g * 0.8;
+    if (w / h >= 1.15) {
+      const hw = w * 0.6, hh = (h - top) * 0.7;
+      L.push({ k: 'hero', x: 0, y: top, w: hw, h: hh, crop: '0 0 400 260' });
+      const ty = top + hh + g * 0.6, th = h - ty, tw = (hw - g * 0.6 * 2) / 3;
+      ['50 80 140 100', '170 86 100 72', '250 126 130 93'].forEach((c, i) => L.push({ k: 'thumb', x: i * (tw + g * 0.6), y: ty, w: tw, h: th, crop: c }));
+      const cx = hw + g * 1.4, cw = w - cx, u = (h - top) / 12;
+      L.push({ k: 'title', x: cx, y: top, w: cw, h: u * 1.5 });
+      L.push({ k: 'price', x: cx, y: top + u * 2, w: cw, h: u * 0.8 });
+      L.push({ k: 'facts', x: cx, y: top + u * 3, w: cw, h: u * 0.6 });
+      L.push({ k: 'para', x: cx, y: top + u * 4.2, w: cw, h: u * 3.6 });
+      L.push({ k: 'btn', x: cx, y: top + u * 8.6, w: Math.min(cw, u * 4.4), h: u * 1.15 });
+    } else {
+      const hh = (h - top) * 0.44;
+      L.push({ k: 'hero', x: 0, y: top, w, h: hh, crop: '0 0 400 260' });
+      const u = (h - top - hh - g) / 6.6;
+      let y = top + hh + g;
+      L.push({ k: 'title', x: 0, y, w, h: u * 1.5 }); y += u * 1.85;
+      L.push({ k: 'price', x: 0, y, w: w * 0.6, h: u * 0.8 }); y += u * 1.05;
+      L.push({ k: 'facts', x: 0, y, w, h: u * 0.62 }); y += u * 1.25;
+      L.push({ k: 'btn', x: 0, y, w: Math.min(w * 0.6, u * 4.6), h: u * 1.25 });
+    }
+    return L;
+  }
+  // ---- final: plain DOM ----
+  function finalEl(it) {
+    const el = document.createElement('div');
+    el.className = 's2f-el';
+    Object.assign(el.style, { left: it.x + 'px', top: it.y + 'px', width: it.w + 'px', height: it.h + 'px' });
+    const fs = (k) => (el.style.fontSize = k + 'px');
+    if (it.k === 'hero' || it.k === 'thumb') el.innerHTML = `<svg viewBox="${it.crop}" preserveAspectRatio="xMidYMid slice">${SCENE}</svg>`;
+    else if (it.k === 'title') { el.classList.add('s2f-title'); el.textContent = 'Bright rooms.'; fs(Math.min(it.h * 0.95, it.w / 6.2)); }
+    else if (it.k === 'price') { el.classList.add('s2f-price'); el.textContent = 'From $120'; fs(it.h * 0.82); }
+    else if (it.k === 'facts') { el.classList.add('s2f-facts'); el.textContent = 'Hand-finished ceramics'; fs(Math.min(it.h * 0.85, it.w / 13)); }
+    else if (it.k === 'para') { el.classList.add('s2f-para'); el.textContent = 'Lamps, stools and blocks, made by hand in small runs and glazed in lime and bone.'; fs(Math.min(it.h / 4.6, it.w / 17)); }
+    else if (it.k === 'btn') { el.classList.add('s2f-btn'); el.textContent = 'Shop the drop'; fs(Math.min(it.h * 0.4, it.w / 6.5)); }
+    else if (it.k === 'logo') { el.classList.add('s2f-logo'); el.innerHTML = '<b></b>Forma'; fs(Math.min(it.h * 0.5, 17)); }
+    else if (it.k === 'links') { el.classList.add('s2f-links'); el.innerHTML = '<span>Objects</span><span>Studio</span><span>Journal</span>'; fs(Math.min(it.h * 0.48, 15)); }
+    stage.appendChild(el);
+    return el;
+  }
+  // ---- the draft: pencil strokes, each one a slightly bowed line drawn twice ----
+  function line(x1, y1, x2, y2) {
+    const len = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+    const o1 = j(Math.min(4, len * 0.02)), o2 = 1.5 + rnd() * 3;
+    const ax = x1 - ux * o2 * rnd(), ay = y1 - uy * o2 * rnd(), bx = x2 + ux * o2 * rnd(), by = y2 + uy * o2 * rnd();
+    const bow = j(Math.min(6, len * 0.025));
+    const c1x = ax + (bx - ax) * 0.33 - uy * bow + j(1), c1y = ay + (by - ay) * 0.33 + ux * bow + j(1);
+    const c2x = ax + (bx - ax) * 0.66 - uy * (bow + o1) + j(1), c2y = ay + (by - ay) * 0.66 + ux * (bow + o1) + j(1);
+    return `M${ax.toFixed(1)} ${ay.toFixed(1)}C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`;
+  }
+  const twice = (f) => [f(), f()];
+  const rect = (x, y, w, h) => [line(x, y, x + w, y), line(x + w, y, x + w, y + h), line(x + w, y + h, x, y + h), line(x, y + h, x, y)];
+  function smooth(pts) {
+    let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+      d += `Q${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)}`;
+    }
+    const l = pts[pts.length - 1];
+    return d + `L${l[0].toFixed(1)} ${l[1].toFixed(1)}`;
+  }
+  function ellipse(cx, cy, rx, ry) {
+    const pts = [], a0 = rnd() * 6.28, n = 26;
+    for (let i = 0; i <= n + 3; i++) {
+      const a = a0 + (i / n) * Math.PI * 2, k = 1 + j(0.04) + (i > n ? 0.05 : 0);
+      pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]);
+    }
+    return smooth(pts);
+  }
+  function scribble(x0, x1, yc, hgt) {   // handwriting: loops rolled along a line
+    const pts = [], loops = Math.max(2, Math.round((x1 - x0) / (hgt * 0.9)));
+    const a = (x1 - x0) / (loops * Math.PI * 2), b = a * 1.7;
+    for (let th = 0; th <= loops * Math.PI * 2; th += 0.35) {
+      const amp = hgt * (0.38 + 0.18 * Math.sin(th * 0.37 + rnd()));
+      pts.push([x0 + a * th - b * Math.sin(th) + b * 0.5, yc - amp * Math.cos(th) + j(hgt * 0.04)]);
+    }
+    return smooth(pts);
+  }
+  function wave(x0, x1, yc, amp) {
+    const pts = [], ph = rnd() * 6, f = 0.9 / amp;
+    for (let x = x0; x <= x1; x += Math.max(4, amp * 1.2)) pts.push([x, yc + Math.sin((x - x0) * f * 0.25 + ph) * amp * 0.5 + j(amp * 0.25)]);
+    pts.push([x1, yc]);
+    return smooth(pts);
+  }
+  function draftPaths(it) {
+    const { x, y, w, h } = it, out = [];
+    const add = (d, pen) => out.push({ d, pen });
+    if (it.k === 'hero') {
+      twice(() => rect(x, y, w, h)).flat().forEach((d) => add(d));
+      const s = Math.max(w / 400, h / 260), ox = x + (w - 400 * s) / 2, oy = y + (h - 260 * s) / 2;
+      const P = (px, py) => [ox + px * s, oy + py * s];
+      const inside = (p) => [Math.min(x + w - 4, Math.max(x + 4, p[0])), Math.min(y + h - 4, Math.max(y + 4, p[1]))];
+      const L = (a, b) => { const p = inside(P(...a)), q = inside(P(...b)); add(line(p[0], p[1], q[0], q[1])); };
+      L([0, 202], [400, 202]);                                                                                  // the table edge
+      L([111, 176], [111, 196]); L([125, 176], [125, 196]); L([98, 196], [138, 196]); L([98, 196], [98, 202]); L([138, 196], [138, 202]);   // the lamp's stand and base
+      L([186, 202], [186, 134]); L([242, 202], [242, 134]); L([186, 134], [202, 108]); L([242, 134], [226, 108]);   // the vase
+      L([202, 108], [202, 90]); L([226, 108], [226, 90]); L([202, 90], [226, 90]);
+      L([268, 152], [344, 152]); L([344, 152], [344, 202]); L([268, 152], [268, 202]);                            // the block
+      L([268, 152], [282, 140]); L([282, 140], [358, 140]); L([344, 152], [358, 140]); L([358, 140], [358, 190]); L([344, 202], [358, 190]);
+      const lamp = P(118, 126);
+      if (lamp[1] - 50 * s > y && lamp[0] - 50 * s > x) { add(ellipse(lamp[0], lamp[1], 50 * s, 50 * s)); add(ellipse(lamp[0], lamp[1], 25 * s, 25 * s)); }   // the lamp's ring
+    } else if (it.k === 'thumb') {
+      twice(() => rect(x, y, w, h)).flat().forEach((d) => add(d));
+      add(line(x + 3, y + 3, x + w - 3, y + h - 3)); add(line(x + w - 3, y + 3, x + 3, y + h - 3));
+    } else if (it.k === 'title') add(scribble(x + 2, x + Math.min(w, h * 6.2) * 0.92, y + h * 0.55, h * 0.7));
+    else if (it.k === 'price') add(scribble(x + 2, x + h * 4.6, y + h * 0.55, h * 0.75));
+    else if (it.k === 'facts') add(wave(x, x + Math.min(w, h * 13) * 0.9, y + h * 0.5, h * 0.5));
+    else if (it.k === 'para') {
+      const lh = Math.min(h / 4.6, w / 17) * 1.45;
+      [0.96, 0.9, 0.55].forEach((k, i) => add(wave(x, x + w * k, y + lh * (i + 0.6), lh * 0.3)));
+    } else if (it.k === 'btn') {
+      twice(() => rect(x, y, w, h)).flat().forEach((d) => add(d));
+      add(wave(x + w * 0.25, x + w * 0.75, y + h * 0.5, h * 0.18));
+      add(ellipse(x + w / 2, y + h / 2, w * 0.62, h * 0.95), true);   // the one pen of colour
+    } else if (it.k === 'logo') {
+      const s = Math.min(h * 0.5, 17);
+      rect(x + 1, y + h / 2 - s * 0.45, s * 0.9, s * 0.9).forEach((d) => add(d));
+      add(scribble(x + s * 1.4, x + s * 4.2, y + h / 2, s * 0.8));
+    } else if (it.k === 'links') {
+      const s = Math.min(h * 0.48, 15);
+      [3.6, 3, 3.6].reduceRight((r, wd) => { const x1 = r - wd * s; add(line(x1, y + h / 2, r - s * 0.2, y + h / 2)); return x1 - s * 1.2; }, x + w);
+    }
+    return out;
+  }
+  function build() {
+    const r = root.parentElement.getBoundingClientRect();   // the box the sketch fills
+    W = r.width; H = r.height;
+    if (W < 10 || H < 10) return;
+    Object.assign(root.style, { left: '0px', top: '0px', width: W + 'px', height: H + 'px' });
+    ink.setAttribute('width', W); ink.setAttribute('height', H);
+    stage.innerHTML = ''; ink.innerHTML = '';
+    seed = 7;
+    items = layout(W, H).map((it) => {
+      const el = finalEl(it);
+      const paths = draftPaths(it).flatMap((p) => {
+        const stroke = (color, width) => {
+          const pe = document.createElementNS(NS, 'path');
+          pe.setAttribute('d', p.d);
+          pe.setAttribute('stroke', color);
+          pe.setAttribute('stroke-width', width);
+          ink.appendChild(pe);
+          const len = pe.getTotalLength() + 2;
+          pe.style.strokeDasharray = len;
+          return { el: pe, len };
+        };
+        return p.pen ? [stroke('#121417', 6), stroke('#B8FF00', 3)] : [stroke('rgba(18, 20, 23, 0.72)', 1.4)];
+      });
+      return { ...it, el, paths };
+    });
+    show(mode, true);
+  }
+  const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)';
+  const onMode = [];
+  function show(next, instant, fromBlank) {
+    mode = next;
+    onMode.forEach((f) => f(next));
+    items.forEach((it, i) => {
+      const d0 = instant ? 0 : i * 70;
+      it.el.getAnimations().forEach((a) => a.cancel());
+      it.paths.forEach((p) => p.el.getAnimations().forEach((a) => a.cancel()));
+      if (next === 'final') {
+        it.el.style.clipPath = it.k === 'btn' ? '' : 'inset(0 0 0 0)';
+        it.paths.forEach((p) => (p.el.style.strokeDashoffset = p.len));
+        if (instant) return;
+        const fromBottom = it.k === 'hero' || it.k === 'thumb';
+        it.el.animate([{ clipPath: fromBottom ? 'inset(100% 0 0 0)' : 'inset(0 100% 0 0)' }, { clipPath: it.k === 'btn' ? 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' : 'inset(0 0 0 0)' }],
+          { duration: 760, delay: 180 + d0, easing: EASE, fill: 'backwards' });
+        it.paths.forEach((p, k) => p.el.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: -p.len }],
+          { duration: 420, delay: d0 * 0.6 + k * 10, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'backwards' }));
+      } else {
+        it.el.style.clipPath = 'inset(0 0 0 100%)';
+        it.paths.forEach((p) => (p.el.style.strokeDashoffset = 0));
+        if (instant) return;
+        if (!fromBlank) it.el.animate([{ clipPath: it.k === 'btn' ? 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)' : 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 100%)' }],
+          { duration: 520, delay: d0 * 0.7, easing: EASE, fill: 'backwards' });
+        it.paths.forEach((p, k) => p.el.animate([{ strokeDashoffset: p.len }, { strokeDashoffset: 0 }],
+          { duration: 520 + Math.min(500, p.len * 0.9), delay: 200 + d0 * 1.4 + k * 45, easing: 'cubic-bezier(0.3, 0.1, 0.3, 1)', fill: 'backwards' }));
+      }
+    });
+    lastSwitch = performance.now();
+  }
+  function blank() {   // nothing drawn yet: no blocks, no pencil
+    mode = 'draft';
+    onMode.forEach((f) => f('draft'));
+    items.forEach((it) => {
+      it.el.getAnimations().forEach((a) => a.cancel());
+      it.paths.forEach((p) => p.el.getAnimations().forEach((a) => a.cancel()));
+      it.el.style.clipPath = 'inset(0 0 0 100%)';
+      it.paths.forEach((p) => (p.el.style.strokeDashoffset = p.len));
+    });
+  }
+  const toggle = () => { lastInput = performance.now(); show(mode === 'draft' ? 'final' : 'draft', reduce); };
+  window.addEventListener('pointerdown', (e) => { if (!e.target.closest('.sf-tog, .qm-ui')) toggle(); });
+  let rt = 0;
+  new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(build, 120); }).observe(root.parentElement);
+  build();
+  return { show, blank, onMode: (f) => onMode.push(f), press: (m) => { lastInput = performance.now(); if (m !== mode) show(m, reduce); } };
+}
+</script>
+<script>
+  const s2f = sketchToFinal(document.querySelector('[data-s2f]'), { reduce: QM.reduced });
+  const knob = document.querySelector('.sf-tog i');
+  const btns = Array.from(document.querySelectorAll('.sf-tog button'));
+  const place = (m) => {
+    const b = btns.find((x) => x.dataset.m === m);
+    btns.forEach((x) => x.setAttribute('aria-pressed', x === b));
+    knob.style.width = b.offsetWidth + 'px';
+    knob.style.transform = `translateX(${b.offsetLeft}px)`;
+  };
+  s2f.onMode(place);
+  btns.forEach((b) => b.addEventListener('click', () => s2f.press(b.dataset.m)));
+  let timers = [];
+  QM.demo({
+    kind: 'play',
+    lead: 300,
+    dur: 8200,
+    hold: 600,
+    reset() { timers.forEach(clearTimeout); timers = []; s2f.blank(); },
+    play() {
+      s2f.show('draft', false, true);
+      timers.push(setTimeout(() => s2f.show('final'), 3900));
+    },
+  });
+</script>
+</body>
+</html>

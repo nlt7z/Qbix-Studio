@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lime wipe · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lime-load-wipe",
+  "title": "Lime wipe",
+  "group": "blocks",
+  "cat": "loading",
+  "order": 10,
+  "kind": "play",
+  "tone": "paper",
+  "line": "640 ms · expo out · on first paint",
+  "summary": "A solid lime block is uncovered left to right the moment the page paints, like a bar filling. The fill and its ink label open together as one clipped unit, so the label never shows on the bare ground before its fill arrives.",
+  "spec": [
+    ["Duration", "640 ms"],
+    ["Easing", "cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Move", "clip-path inset(0 100% 0 0) → inset(-8px)"],
+    ["Fill", "both: shut before the wipe, left open after"],
+    ["Trigger", "first paint, a CSS animation with no script"],
+    ["Applies to", ".btn-primary · .topnav-cta · .tag.active"]
+  ],
+  "source": ["app/globals.css · LIME LOAD WIPE"],
+  "where": "The lime primary button: Open Strata (twice on /products/strata) and Send brief in the contact form. Below the fold, Lime in view takes over.",
+  "rules": [
+    "Clip the whole block, never the fill alone: the label rides inside the clip, so it never shows on the bare ground before the lime reaches it.",
+    "It opens to inset(-8px), past the edges, not to inset(0): a focus ring or outline outside the block is not clipped once the wipe is done.",
+    "Only the page's one lime button takes it. The nav action is now text and active tags are not lime, so .btn-primary is the one that shows it today.",
+    "Keep the fill-mode both: before the animation starts the block must already be shut, or it flashes."
+  ],
+  "tags": ["lime", "button", "clip", "on load"]
+}
+</script>
+<style data-code>
+/* LIME LOAD WIPE (app/globals.css): every solid-lime block is uncovered left to right on
+   first paint, like a bar filling. The whole block (fill and ink label together) is
+   clipped as one unit, so the label never shows alone on the ground. */
+@keyframes lime-load-wipe {
+  from { clip-path: inset(0 100% 0 0); }
+  /* opens past the edges, so a focus ring isn't clipped once it's done */
+  to   { clip-path: inset(-8px); }
+}
+.btn-primary,
+.topnav-cta,
+.tag.active {
+  animation: lime-load-wipe 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .topnav-cta,
+  .tag.active { animation: none; }
+}
+
+/* the block it is made for: lime fill, ink label */
+.btn-primary { background: #B8FF00; color: #0c1300; }
+</style>
+<style>
+  html:not(.qm-tile) .qm-stage { padding-bottom: 84px; }
+  .lw { width: min(100%, 780px); display: grid; justify-items: start; gap: clamp(14px, 3vmin, 26px); }
+  .lw .eyebrow { margin: 0; font-family: var(--font-mono); font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: var(--fg2); }
+  .lw .title { font-size: clamp(40px, 7.4vw, 104px); line-height: 1.02; letter-spacing: -0.032em; }
+  .lw .title span { display: block; }
+  .lw .lede { max-width: 32em; font-size: clamp(16px, 1.9vw, 22px); }
+  .lw-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: clamp(4px, 1vw, 12px); }
+  /* demo only: the block shut again between plays */
+  .btn-primary.is-reset { animation: none !important; clip-path: inset(0 100% 0 0); }
+  html.is-slow .btn-primary { animation-duration: 3200ms; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="lw">
+    <p class="eyebrow">Qbix Labs · Strata · Live</p>
+    <h1 class="title"><span>One image in.</span><span>A working system out.</span></h1>
+    <p class="lede">Strata turns a moodboard into a design system you can actually ship: tokens, components, and code, ready to hand to AI or your library.</p>
+    <div class="lw-cta">
+<!-- code -->
+<a class="btn btn-primary" href="#">Open Strata &#x2197;&#xFE0E;</a>
+<!-- /code -->
+      <a class="btn btn-line" href="#">How it works</a>
+    </div>
+  </div>
+  <div class="qm-ui" id="ui">
+    <span>Speed</span>
+    <button data-slow="0" class="is-on">640 ms</button>
+    <button data-slow="1">3.2 s (slow)</button>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script>
+  const btn = document.querySelector('.btn-primary');
+  let slow = false;
+  const reset = () => { btn.classList.add('is-reset'); void btn.offsetWidth; };
+  const play = () => btn.classList.remove('is-reset');
+  QM.demo({
+    kind: 'play',
+    lead: 600,
+    hold: 2600,
+    get dur() { return slow ? 3200 : 640; },
+    reset,
+    play,
+    seekPlay(v) {
+      btn.classList.remove('is-reset');
+      const a = btn.getAnimations().find((x) => x.animationName === 'lime-load-wipe');
+      if (a) { a.pause(); a.currentTime = v * (slow ? 3200 : 640); }
+    },
+  });
+  document.querySelectorAll('[data-slow]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-slow]').forEach((x) => x.classList.toggle('is-on', x === b));
+    slow = b.dataset.slow === '1';
+    document.documentElement.classList.toggle('is-slow', slow);
+    reset();
+    requestAnimationFrame(() => requestAnimationFrame(play));
+  }));
+</script>
+</body>
+</html>

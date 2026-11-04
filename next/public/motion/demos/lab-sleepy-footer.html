@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sleepy footer · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-sleepy-footer",
+  "title": "Sleepy footer",
+  "group": "lab",
+  "cat": "brand",
+  "order": 30,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "canvas-fitted wordmark · wakes at 4 body widths",
+  "summary": "The sign-off wordmark is stretched to the page width from text measured in canvas, and a small lime animal sleeps on its x. Come near and it opens its eyes, lifts its ears and its pupils follow the pointer; leave and it yawns and lies down again.",
+  "spec": [
+    ["Fit", "font size = (width − 2 × padding) ÷ the measured width of the word; capped at half the height"],
+    ["Breath", "sine, 3.8 s: the body scales 4% in height, 1.5% in width"],
+    ["Wake", "awake 0 → 1 over 280 ms when the pointer is within max(150 px, 4 body widths); held for 1.3 s after"],
+    ["Sleep", "awake 1 → 0 over 1.6 s, with a yawn (a mouth that opens and closes) on the way down"],
+    ["Z", "a new z every 1.5 s while it sleeps; it grows 0.55 → 1.3 over 3 s as it rises, and is gone at the top"],
+    ["Eyes", "pupils slide up to 0.07 of the body toward the pointer"]
+  ],
+  "source": ["Qbix studio library · sleepy-footer"],
+  "where": "The sign-off at the bottom of qbix.space, under the giant wordmark.",
+  "rules": [
+    "The wordmark is measured, not scaled by eye, so it meets both edges at every width.",
+    "The animal is flat lime facets, the one lime on paper, sitting on the ink letter: no outline, no shadow.",
+    "The z's grow and are gone at the top; they are never faded."
+  ],
+  "tags": ["footer", "canvas", "wordmark", "pointer", "character"],
+  "shot": 4300
+}
+</script>
+<style data-code>
+/* Sleepy footer: the pitch above, a canvas wordmark below with something asleep on it */
+.sign { position: absolute; inset: 0; overflow: hidden; }
+.sign canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.sign-top {
+  position: absolute; left: 0; right: 0; top: 0;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px 64px;
+  padding: clamp(20px, 4.5vw, 56px) clamp(20px, 4.5vw, 56px) 0;
+}
+.sign h2 { font: 400 clamp(28px, 4.6vw, 58px)/1.02 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; max-width: 9em; color: #121417; }
+.sign .pitch p { margin: 12px 0 0; color: rgba(18, 20, 23, 0.64); font-size: clamp(13px, 1.4vw, 16px); max-width: 26em; }
+.sign .btn { margin-top: 16px; }
+.sign nav { display: flex; gap: clamp(28px, 5vw, 64px); font-size: clamp(13px, 1.3vw, 15px); color: #121417; }
+.sign nav div { display: flex; flex-direction: column; gap: 6px; }
+.sign nav b { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.38); margin-bottom: 4px; }
+.sign nav a { color: inherit; text-decoration: none; }
+.sign.is-tight nav, .sign.is-tight .pitch p:not(.kicker) { display: none; }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<footer class="sign" id="sign">
+  <canvas id="sc"></canvas>
+  <div class="sign-top">
+    <div class="pitch">
+      <p class="kicker">Qbix Studio</p>
+      <h2 style="margin-top:12px">Have an idea? Bring it.</h2>
+      <p>Send a brief or a moodboard. Live in 1 to 3 weeks.</p>
+      <a class="btn btn-solid" href="#" id="cta" onclick="return false">Tell us your idea</a>
+    </div>
+    <nav><div><b>Services</b><a href="#">Design service</a><a href="#">Brand upgrade</a><a href="#">Website Refresh</a></div><div><b>Studio</b><a href="#">About</a><a href="#">Strata</a><a href="#">Contact</a></div></nav>
+  </div>
+</footer>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Sleepy footer: a measured wordmark with a small animal asleep on the x. */
+function sleepyFooter(root, word = 'Qbix', letterIndex = 3) {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const FONT = '"Eurostile","Geist",sans-serif', LIME = '#B8FF00', SHADE = '#a6e600', INK = '#121417', PAPER = '#f3f4f5';   // ink wordmark, a lime animal
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  let W = 0, H = 0, dpr = 1, fs = 100, base = 0, cap = 0, xh = 0, cx = 0, cy = 0, s = 40, wx0 = 0;
+
+  function measure() {
+    const r = root.getBoundingClientRect(); W = r.width; H = r.height;
+    dpr = Math.min(2, devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const pad = clamp(W * 0.045, 16, 56);
+    ctx.font = `400 100px ${FONT}`;
+    fs = ((W - 2 * pad) / ctx.measureText(word).width) * 100;   // the word meets both margins
+    ctx.font = `400 ${fs}px ${FONT}`;
+    const mx = ctx.measureText(word[letterIndex]), mb = ctx.measureText('b');
+    xh = mx.actualBoundingBoxAscent || fs * 0.55; cap = mb.actualBoundingBoxAscent || fs * 0.72;
+    wx0 = (W - ctx.measureText(word).width) / 2;
+    base = Math.min(H * 0.5 + fs * 0.72, H + fs * 0.12);   // the window crops the foot of the letters, as the sign-off does
+    s = clamp(mx.width * 0.34, 24, 70);
+    cx = wx0 + ctx.measureText(word.slice(0, letterIndex)).width + mx.width * 0.5; cy = base - xh;
+    // the pitch hides what does not fit above the animal
+    const top = root.querySelector('.sign-top'), room = base - cap - 8;
+    root.classList.remove('is-tight');
+    if (top.offsetHeight > room) root.classList.add('is-tight');
+  }
+
+  let awake = 0, hold = 0, falling = false, yawn = 0;
+  const ptr = { x: -9999, y: -9999 }, zs = []; let nextZ = 0;
+  const poly = (pts) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill(); };
+
+  function creature(t) {
+    const br = reduce ? 0 : Math.sin((t / 3800) * Math.PI * 2), a = awake;
+    const sy = 1 + 0.04 * br * (1 - a) + 0.06 * a, sx = 1 - 0.015 * br * (1 - a);
+    let lx = 0, ly = 0;
+    if (a > 0.01) { const dx = ptr.x - (cx + root.getBoundingClientRect().left), dy = ptr.y - (cy + root.getBoundingClientRect().top - s * 0.6); const m = Math.hypot(dx, dy) || 1; lx = (dx / m) * s * 0.07 * a; ly = (dy / m) * s * 0.05 * a; }
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(sx, sy);
+    // tail: a flat bent bar
+    ctx.strokeStyle = LIME; ctx.lineCap = 'butt'; ctx.lineJoin = 'miter'; ctx.lineWidth = s * 0.17;
+    ctx.beginPath(); ctx.moveTo(-0.85 * s, -0.14 * s); ctx.lineTo(-1.3 * s, -0.2 * s - a * 0.2 * s); ctx.lineTo(-1.2 * s, -0.62 * s - a * 0.4 * s); ctx.stroke();
+    // ears: triangles that lift and open as it wakes
+    ctx.fillStyle = LIME;
+    for (const side of [-1, 1]) {
+      ctx.save(); ctx.translate(side * 0.46 * s, -0.95 * s); ctx.rotate(side * (0.62 * (1 - a) + 0.08 * a) + (reduce ? 0 : br * 0.03 * (1 - a) * side));
+      ctx.fillStyle = LIME; poly([[-0.22 * s, 0.14 * s], [0, -0.5 * s], [0.22 * s, 0.14 * s]]);
+      ctx.fillStyle = SHADE; poly([[-0.1 * s, 0.08 * s], [0, -0.3 * s], [0.1 * s, 0.08 * s]]);
+      ctx.restore();
+    }
+    // body: one faceted dome
+    ctx.fillStyle = LIME;
+    poly([[-s, 0], [-0.94 * s, -0.55 * s], [-0.5 * s, -1.05 * s], [0.5 * s, -1.05 * s], [0.94 * s, -0.55 * s], [s, 0]]);
+    ctx.fillStyle = SHADE;
+    for (const side of [-1, 1]) poly([[side * 0.2 * s, 0], [side * 0.5 * s, 0], [side * 0.5 * s, -0.12 * s], [side * 0.2 * s, -0.12 * s]]);   // paws
+    // eyes: a dash asleep, a square with a pupil awake
+    for (const side of [-1, 1]) {
+      const ex = side * 0.3 * s + lx, ey = -0.58 * s + ly, w = 0.19 * s;
+      ctx.fillStyle = INK;
+      const hgt = Math.max(s * 0.04, 0.2 * s * a);
+      ctx.fillRect(ex - w / 2, ey - hgt / 2, w, hgt);
+      if (a > 0.5) { ctx.fillStyle = PAPER; ctx.fillRect(ex - s * 0.04 + lx * 0.5, ey - s * 0.07 + ly * 0.4, s * 0.08, s * 0.14); }
+    }
+    // nose and mouth
+    const nx = lx * 0.6, ny = -0.4 * s + ly * 0.5;
+    ctx.fillStyle = INK; poly([[nx - 0.05 * s, ny - 0.03 * s], [nx + 0.05 * s, ny - 0.03 * s], [nx, ny + 0.03 * s]]);
+    if (yawn > 0.05) { ctx.fillStyle = INK; ctx.fillRect(nx - (0.05 * yawn + 0.02) * s, ny + 0.06 * s, (0.1 * yawn + 0.04) * s, 0.2 * s * yawn); }
+    else if (a > 0.5) { ctx.fillStyle = INK; ctx.fillRect(nx - 0.07 * s, ny + 0.07 * s, 0.14 * s, s * 0.03); }
+    ctx.restore();
+  }
+
+  function drawZ(t) {
+    if (reduce) return;
+    if (awake < 0.15 && t > nextZ) { zs.push({ t0: t, k: zs.length % 3 }); nextZ = t + 1500; }
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = INK;
+    for (let i = zs.length - 1; i >= 0; i--) {
+      const z = zs[i], u = (t - z.t0) / 3000;
+      if (u > 1 || awake > 0.15) { zs.splice(i, 1); continue; }
+      // grows to full size, then shrinks to nothing at the top (a z leaves by scale, never by fade)
+      const sc = (0.55 + 0.75 * u) * (1 - Math.pow(Math.max(0, (u - 0.6) / 0.4), 2));
+      const x = cx + s * 0.55 + u * s * 0.9 + Math.sin(u * Math.PI * 2 + z.k) * s * 0.12, y = cy - s * 1.25 - u * s * 1.7;
+      ctx.font = `400 ${s * 0.55 * sc}px ${FONT}`; ctx.fillText('z', x, y);
+    }
+  }
+
+  let last = performance.now();
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(50, now - last) / 1000; last = now;
+    const o = root.getBoundingClientRect();
+    const near = Math.hypot(ptr.x - (cx + o.left), ptr.y - (cy + o.top - s * 0.6)) < Math.max(150, s * 4);
+    if (near) hold = now + 1300;
+    const want = near || now < hold ? 1 : 0;
+    if (reduce) awake = 0;
+    else if (want > awake) { awake = Math.min(1, awake + dt / 0.28); falling = false; }
+    else if (want < awake) { awake = Math.max(0, awake - dt / 1.6); falling = true; }
+    yawn = falling && awake > 0 && awake < 0.95 ? Math.sin(Math.PI * clamp((1 - awake) / 0.8, 0, 1)) : 0;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = INK; ctx.font = `400 ${fs}px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(word, wx0, base);
+    creature(now); drawZ(now);
+  })(last);
+  addEventListener('resize', measure);
+  measure();
+  if (document.fonts) { document.fonts.load('400 100px Eurostile').then(measure).catch(() => {}); document.fonts.ready.then(measure); }
+  return { point(x, y) { ptr.x = x; ptr.y = y; }, away() { ptr.x = ptr.y = -9999; }, spot: () => { const o = root.getBoundingClientRect(); return { x: cx + o.left, y: cy + o.top, s }; } };
+}
+const sleepy = sleepyFooter(document.getElementById('sign'));
+addEventListener('pointermove', (e) => sleepy.point(e.clientX, e.clientY));
+document.documentElement.addEventListener('mouseleave', () => sleepy.away());
+</script>
+<script>
+  QM.split(document.getElementById('cta'), { arrow: true });
+  let gx = innerWidth * 0.2, gy = innerHeight * 0.3, gvx = 0, gvy = 0, gp = performance.now();
+  QM.demo({
+    kind: 'pointer',
+    path(t) {
+      const now = performance.now(), dt = Math.min(0.033, (now - gp) / 1000); gp = now;
+      const A = sleepy.spot(), u = t % 10;
+      let tx, ty;
+      if (u < 2.4) { tx = innerWidth * (0.3 + 0.08 * Math.sin(u * 0.9)); ty = innerHeight * (0.45 + 0.05 * Math.cos(u * 1.1)); }
+      else if (u < 6.6) { const k = u - 2.4; tx = A.x + A.s * 1.6 * Math.cos(k * 1.2) + A.s * 0.3; ty = A.y - A.s * 1.6 + A.s * 0.5 * Math.sin(k * 1.5); }
+      else { tx = innerWidth * 0.84; ty = innerHeight * 0.3; }
+      gvx += (16 * (tx - gx) - 8 * gvx) * dt; gvy += (16 * (ty - gy) - 8 * gvy) * dt; gx += gvx * dt; gy += gvy * dt;
+      return [gx, gy];
+    },
+    move(x, y, ghost) { if (ghost) sleepy.point(x, y); },
+    leave() { sleepy.away(); },
+  });
+</script>
+</body>
+</html>

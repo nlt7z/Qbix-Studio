@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slide to confirm · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-slide-confirm",
+  "title": "Slide to confirm",
+  "group": "picks",
+  "cat": "inputs",
+  "order": 110,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "follows a step behind · takes over past 62% · 320 ms unfurl",
+  "summary": "Slide to book a Design service: the knob follows the finger a step behind, and past the mark it finishes the track itself, unfurls leftward into the full bar and turns its arrow into a check as the status becomes Booked. Let go early and it springs back; after a hold it resets.",
+  "spec": [
+    ["Follow", "x chases the finger: x += (target − x) × (1 − e^(−16 dt)), so the knob is a step behind"],
+    ["Mark", "62% of the travel: past it, it commits (260 ms, ease out, to the end)"],
+    ["Unfurl", "320 ms in-out: the knob's right edge stays planted, its width grows by what its offset loses"],
+    ["Back", "damped spring, k 260 · c 24, if let go short of the mark"],
+    ["Glyph", "arrow and check swap in 120 ms, ease out"],
+    ["Label", "fades with the travel (1 − 2.2 × progress); “Booked” arrives over the last 40% of the unfurl"],
+    ["Hold", "resets 2.8 s after it is booked"],
+    ["Track", "56 px, a pill, 1px edge; knob 48 px, 3 px in; Enter or Space on the knob books it"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Slide to release (ix-slide-confirm)", "Idea: bencho.dev slide-confirm (MIT)"],
+  "where": "Booking a Design service for Forma ($500 and up, live in 1 to 3 weeks), or sending a brief: an action that should not be a stray tap.",
+  "rules": [
+    "Drag-driven: the knob follows the hand, it never jumps.",
+    "One filled element, no shadow: the lime knob, which becomes the whole bar, so the answer is the thing you were pushing.",
+    "The status chip fills with the fixed name (Booked) and nothing else.",
+    "Always a keyboard way: the knob is focusable and Enter books it."
+  ],
+  "tags": ["drag", "confirm", "spring", "mobile", "lime"],
+  "shot": 2300
+}
+</script>
+<style data-code>
+/* Slide to book · Idea: bencho.dev slide-confirm (MIT).
+   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+.sc {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64);
+  --page: #f3f4f5; --surface: #ffffff; --divider: rgba(18, 20, 23, 0.08); --edge: rgba(18, 20, 23, 0.52);
+  --primary: #B8FF00; --on-primary: #0c1300; --primary-soft: #eaffb2;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  width: 360px; height: 560px; background: var(--page); border-radius: 28px; display: flex; flex-direction: column; padding: 24px 16px 20px; gap: 14px;
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.sc-hd { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+.sc-title { font-size: 20px; letter-spacing: -0.02em; line-height: 1.35; }
+.sc-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: var(--divider); transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
+.sc-chip.done { color: #fff; background: var(--text); }
+.sc-panel { background: var(--surface); border-radius: 14px; padding: 18px 16px; display: grid; gap: 14px; }
+.sc-po { display: flex; align-items: center; gap: 12px; }
+.sc-av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.sc-po .t { flex: 1; display: grid; line-height: 1.3; }
+.sc-po .t b { font-weight: 500; }
+.sc-po .t span { font-size: 12px; color: var(--muted); }
+.sc-lines { display: grid; }
+.sc-ln { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.sc-ln + .sc-ln { border-top: 1px solid var(--divider); }
+.sc-ln img { width: 32px; height: 23px; object-fit: cover; border-radius: 3px; }
+.sc-ln .t { flex: 1; display: grid; line-height: 1.3; }
+.sc-ln .t span:last-child { font-size: 12px; color: var(--muted); }
+.sc-ln .n { font-variant-numeric: tabular-nums; }
+.sc-tot { display: flex; justify-content: space-between; align-items: baseline; }
+.sc-tot > span:first-child { color: var(--muted); }
+.sc-tot b { color: var(--text); font-weight: 400; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sc-tot small { margin-left: 8px; font-size: 14px; color: var(--muted); }
+.sc-grow { flex: 1; }
+
+/* the track: a pill; the knob is a circle inside it, 3px in */
+.sc-track { position: relative; height: 56px; border-radius: 28px; border: 1px solid var(--edge); background: var(--surface); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+.sc-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--primary-soft); }
+.sc-label { position: absolute; inset: 0; display: grid; place-items: center; padding-left: 40px; color: var(--muted); font-weight: 500; pointer-events: none; }
+.sc-label.after { color: var(--on-primary); padding: 0; opacity: 0; }
+.sc-knob { position: absolute; top: 3px; left: 3px; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 24px; overflow: hidden; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; cursor: grab; touch-action: none; }
+.sc-knob:hover, .sc-knob.is-hot { background: color-mix(in oklab, var(--primary) 88%, #000); }
+.sc-knob.drag { cursor: grabbing; }
+.sc-knob:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.sc-ic { position: absolute; display: grid; place-items: center; width: 48px; height: 48px; right: 0; top: 0; transition: opacity 120ms var(--ease-out); }
+.sc-ic.chk { opacity: 0; }
+.sc-knob.done .sc-ic.arr { opacity: 0; }
+.sc-knob.done .sc-ic.chk { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .sc-chip, .sc-ic { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<div class="sc" id="sc">
+  <div class="sc-hd"><div class="sc-title">Design service</div><span class="sc-chip" id="sc-st" role="status">Draft</span></div>
+  <div class="sc-panel">
+    <div class="sc-po"><img class="sc-av" src="../assets/art/cross.webp" alt="" style="object-position: 62% 50%"><div class="t"><b>Forma launch site</b><span>Ines, founder · live in 1 to 3 weeks</span></div></div>
+    <div class="sc-lines">
+      <div class="sc-ln"><img src="../assets/art/objects.webp" alt=""><span class="t"><span>Moodboard</span><span>Palette, type and a grid</span></span><span class="n">PDF</span></div>
+      <div class="sc-ln"><img src="../assets/art/block.webp" alt=""><span class="t"><span>Design and code</span><span>Five pages, built in code</span></span><span class="n">5</span></div>
+      <div class="sc-ln"><img src="../assets/art/ring.webp" alt=""><span class="t"><span>Live on your domain</span><span>forma.studio, connected</span></span><span class="n">Live</span></div>
+    </div>
+    <div class="sc-tot"><span>From</span><span><b>$500</b><small>and up</small></span></div>
+  </div>
+  <div class="sc-grow"></div>
+  <div class="sc-track" id="sc-track">
+    <div class="sc-fill" id="sc-fill"></div>
+    <div class="sc-label" id="sc-lab">Slide to book the service</div>
+    <button class="sc-knob" id="sc-knob" type="button" aria-label="Slide to book the service. Press Enter to book it.">
+      <span class="sc-ic arr"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+      <span class="sc-ic chk"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+    </button>
+    <div class="sc-label after" id="sc-lab2" aria-hidden="true">Booked</div>
+  </div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Slide the knob across</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* The knob follows the finger a step behind and, past the mark, finishes the track itself. Then it unfurls
+   leftward to fill the track, its right edge planted: the width grows by exactly what the offset loses. */
+const $ = (id) => document.getElementById(id);
+const track = $('sc-track'), knob = $('sc-knob'), fill = $('sc-fill'), lab = $('sc-lab'), lab2 = $('sc-lab2'), chip = $('sc-st');
+const PAD = 3, GRIP = 48, MARK = 0.62, HOLD = 2800;
+let span = 0, x = 0, held = false, busy = false, committed = false, timer = 0, tgt = 0, gx = 0, gx0 = 0, raf = 0, lastFrame = 0;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const inOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const outExpo = (t) => 1 - Math.pow(1 - t, 4);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const measure = () => { span = track.clientWidth - PAD * 2 - GRIP; };
+function tween(ms, step, ease) {
+  return new Promise((done) => {
+    const t0 = performance.now();
+    const f = (now) => { const p = Math.min(1, (now - t0) / ms); step(ease(p)); p < 1 ? requestAnimationFrame(f) : done(); };
+    requestAnimationFrame(f);
+  });
+}
+function paint(unfurl = 0) {
+  const f = clamp(x / span, 0, 1);
+  knob.style.left = PAD + x - unfurl * x + 'px';                // the right edge stays planted while it opens out
+  knob.style.width = GRIP + unfurl * x + 'px';
+  fill.style.width = (x + GRIP / 2 + PAD) * (1 - unfurl) + 'px';
+  lab.style.opacity = Math.max(0, 1 - f * 2.2) * (1 - unfurl);
+  lab2.style.opacity = unfurl > 0.6 ? (unfurl - 0.6) / 0.4 : 0;
+}
+function reset() {
+  clearTimeout(timer);
+  committed = busy = held = false; x = tgt = 0;
+  knob.classList.remove('done', 'drag');
+  chip.className = 'sc-chip'; chip.textContent = 'Draft';
+  measure(); paint(0);
+}
+async function commit(from) {
+  committed = busy = true;
+  await tween(reduceMotion ? 1 : 260, (k) => { x = from + (span - from) * k; paint(0); }, outExpo);   // past the mark it takes over
+  knob.classList.add('done');
+  chip.className = 'sc-chip done'; chip.textContent = 'Booked';
+  await tween(reduceMotion ? 1 : 320, (k) => paint(k), inOut);
+  busy = false;
+  timer = setTimeout(reset, HOLD);
+}
+function back(from) {
+  busy = true;
+  let v = 0, p = from, last = performance.now();
+  const step = (now) => {                                      // a damped spring home
+    const dt = Math.min(0.033, (now - last) / 1000); last = now;
+    v += (-260 * p - 24 * v) * dt; p += v * dt; x = Math.max(0, p); paint(0);
+    if (Math.abs(p) < 0.3 && Math.abs(v) < 4) { x = 0; paint(0); busy = false; } else requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function chase(now) {                                          // x follows the target a step behind
+  const dt = Math.min(0.033, (now - (lastFrame || now)) / 1000);
+  lastFrame = now;
+  x += (tgt - x) * (1 - Math.exp(-16 * dt)); paint(0);
+  raf = held ? requestAnimationFrame(chase) : 0;
+}
+knob.addEventListener('pointerdown', (e) => {
+  if (busy || committed) return;
+  held = true; gx0 = e.clientX; gx = x; tgt = x;
+  knob.classList.add('drag');
+  try { knob.setPointerCapture(e.pointerId); } catch (_) { /* a scripted pointer */ }
+});
+addEventListener('pointermove', (e) => {
+  if (!held) return;
+  const k = track.getBoundingClientRect().width / track.offsetWidth;    // the page may be scaled
+  tgt = clamp(gx + (e.clientX - gx0) / k, 0, span);
+  if (!raf) { lastFrame = 0; raf = requestAnimationFrame(chase); }
+});
+function release() {
+  if (!held) return;
+  held = false;
+  knob.classList.remove('drag');
+  if (tgt / span >= MARK) commit(x); else back(x);
+}
+addEventListener('pointerup', release);
+addEventListener('pointercancel', release);
+knob.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !committed && !busy) { e.preventDefault(); commit(x); } });
+addEventListener('resize', () => { measure(); paint(committed ? 1 : 0); });
+reset();
+</script>
+<script>
+  /* harness glue: a ghost drags the knob most of the way across, and lets go */
+  PickGhost.fit(document.getElementById('pk'), 360, 560);
+  const at = (f) => () => { const r = track.getBoundingClientRect(); return { x: r.left + r.width * f, y: r.top + r.height / 2 }; };
+  PickGhost.start({
+    hot: '.sc-knob',
+    reset,
+    async script(g) {
+      await g.wait(500);
+      await g.to('#sc-knob', { ms: 600 });
+      await g.down();
+      await g.to(at(0.34), { ms: 700 });
+      await g.wait(250);
+      await g.to(at(0.7), { ms: 650 });
+      await g.up();
+      await g.wait(3600);
+    },
+    still() { x = span; knob.classList.add('done'); chip.className = 'sc-chip done'; chip.textContent = 'Booked'; committed = true; paint(1); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assembly line · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-assembly",
+  "title": "Assembly line",
+  "group": "picks",
+  "cat": "scenes",
+  "order": 30,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "16 s line · five stages · real perspective, flat faces",
+  "summary": "A launch site built like a board on an assembly line, in real CSS 3D perspective with flat faces and no shadows. The grid is printed across the sheet by a squeegee, the small type drops on one piece after another, a gantry picks and places the photographs and the button, a band of lime runs over it, and the address is typed as it goes live. The camera drifts slowly; the stage list follows the loop.",
+  "spec": [
+    ["Line", "16 s, looping: Grid 0.3–2.1 s, Type 2.1–4.5 s, Photos 4.5–10.7 s, Colour 10.7–12.3 s, Live 12.3–14.7 s; the last second clears the sheet"],
+    ["Stage", "perspective 1100px, origin 50% 30%; a 300 × 210 sheet 8px thick (flat faces, rounded 10px), scaled to the frame by min(1.7, width ÷ 430, height ÷ 290)"],
+    ["Camera", "rotateX 57° → 52° and rotate −36° → −24°, 14 s each way, ease in-out, alternating"],
+    ["Grid", "a squeegee crosses the sheet in 1.7 s (ease in-out) and the six lime columns are revealed behind it; they wipe off left to right at the end of the loop"],
+    ["Type", "15 small parts, 140 ms apart, each drops 60px onto its place and appears over 450 ms, expo out"],
+    ["Photos", "a gantry (two rails, a beam, a head, a nozzle) moves over each target in 500 ms ease in-out; the part appears under the nozzle, goes down onto the sheet in 380 ms and the head lifts away; one every 1.2 s, the button last"],
+    ["Colour", "a band of lime runs left to right over the sheet in 1.4 s; the button takes the lime as it passes"],
+    ["Live", "the address is typed (0.8 s), the Live tag is uncovered and its square blinks, two rings run out from the middle; the button gives the lime up to the tag"],
+    ["List", "the stage in a colour block while it runs, done in ink, the others dim; each stage's time at the right"],
+    ["Reduced motion", "the finished, live site stands still"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Assembly scene (ein-assembly)"],
+  "where": "The Design service: Forma's launch site, assembled layer by layer from moodboard to a live domain (forma.studio).",
+  "rules": [
+    "Real perspective, flat faces, no shadows.",
+    "The loop is longer than the eye: five stages over 16 s.",
+    "The current stage is a colour block.",
+    "The lime is passed on, never doubled: the grid, then the button, then the Live tag."
+  ],
+  "tags": ["3d", "assembly", "perspective", "line", "launch site"],
+  "shot": 7200
+}
+</script>
+<style data-code>
+/* Launch site assembly — redrawn for Qbix.
+   The composition, the stage list, the camera and the 16 s line are the original's; the object is a launch site
+   (Forma's, from the Design service) on an ink sheet, with the lime passed from the grid to the button to the Live tag. */
+.pk {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-5: 20px; --space-6: 24px;
+  --radius-sm: 8px;
+  --duration-base: 200ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --muted: var(--fg2); --surface-muted: var(--sunk); --divider-strong: rgba(18, 20, 23, .2);
+  font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
+}
+.page { position: absolute; inset: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--space-6); padding: var(--space-6) 48px; overflow: hidden; align-items: center; }
+.side { display: grid; gap: var(--space-5); align-content: center; position: relative; z-index: 1; }
+.side header { display: grid; gap: var(--space-1); }
+.side h1 { font: 400 28px/1.35 var(--font-sans); letter-spacing: -0.03em; }
+.side header p { color: var(--muted); font-size: 15.4px; }
+.stages { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.stages li { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: var(--space-3); height: 40px; padding: 0 var(--space-3); border-radius: var(--radius-sm); color: var(--muted); transition: background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out); }
+.stages li .mark { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted); transition: background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out); }
+.stages li[data-s="now"] { background: var(--surface-muted); color: var(--fg); }
+.stages li[data-s="now"] .mark { background: var(--fg); color: var(--ground); }
+.stages li[data-s="done"] { color: var(--fg); }
+.stages li[data-s="done"] .mark { background: var(--fg4); color: var(--fg); }
+.stages .t { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--muted); }
+/* the scene: real perspective, a world turned on two axes, flat faces */
+.scene { position: relative; align-self: stretch; min-height: 0; perspective: 1100px; perspective-origin: 50% 30%; overflow: hidden; }
+.world { position: absolute; top: 56%; left: 50%; width: 300px; height: 210px; margin: -105px 0 0 -150px; transform-style: preserve-3d; }
+.world .grp, .world .sl { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+.world .floor { position: absolute; left: -190px; top: -150px; width: 680px; height: 510px; transform: translateZ(-1px); }
+.world .floor svg { display: block; }
+/* a slab: a flat box standing on the floor; each face has its own colour and, through --o, its own opacity */
+.sl .f { position: absolute; display: block; opacity: var(--o, 1); }
+.sl .t { inset: 0; }
+.sl .fr { top: 100%; transform-origin: top; transform: rotateX(90deg); }
+.sl .bk { top: 0; transform-origin: top; transform: rotateX(90deg); }
+.sl .rt { left: 100%; transform-origin: left; transform: rotateY(-90deg); }
+.sl .lf { left: 0; transform-origin: left; transform: rotateY(-90deg); }
+.sheet .t { border-radius: 10px; background: #121417; }
+.sheet .t svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.sheet .fr, .sheet .bk { background: #08090a; }
+.sheet .rt, .sheet .lf { background: #1d2024; }
+.world .tx { position: absolute; left: 0; top: 0; white-space: pre; line-height: 1; color: #f4f5f2; background: #121417; padding: 2px 3px; margin: -2px 0 0 -3px; font: 400 6.5px var(--font-sans); }
+.world .tx.h { font: 400 17px var(--font-headline); letter-spacing: -0.02em; }
+.world .tx.lg { font: 400 12px var(--font-headline); letter-spacing: -0.02em; }
+.world .tx.url { color: rgba(244, 245, 242, .72); font: 400 6px var(--font-sans); padding: 1px 2px; margin: -1px 0 0 -2px; }
+.world .grid { position: absolute; left: 0; top: 0; width: 300px; height: 210px; }
+.world .grid i { position: absolute; top: 22px; height: 182px; background: rgba(184, 255, 0, .16); box-shadow: inset 1px 0 0 rgba(184, 255, 0, .55), inset -1px 0 0 rgba(184, 255, 0, .55); }
+.world .photo .t { background: #2a2d31 center / cover no-repeat; }
+.world .photo .fr, .world .photo .bk { background: #0b0c0d; }
+.world .photo .rt, .world .photo .lf { background: #1d2024; }
+.world .btn .t { background: #3a3e44; color: #f4f5f2; font: 500 6.5px/15px var(--font-sans); text-align: center; transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
+.world .btn.is-lime .t { background: #B8FF00; color: #0c1300; }
+.world .btn .fr, .world .btn .bk { background: #1b1d20; }
+.world .btn .rt, .world .btn .lf { background: #2a2d31; }
+.world .live { position: absolute; left: 0; top: 0; width: 38px; height: 11px; display: flex; align-items: center; gap: 3px; padding: 0 5px; border-radius: 6px; background: #B8FF00; color: #0c1300; font: 500 5.5px/1 var(--font-sans); letter-spacing: .1em; text-transform: uppercase; }
+.world .live::before { content: ""; width: 3px; height: 3px; background: currentColor; animation: blink 1.2s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.world .reflow { position: absolute; left: 0; top: 0; width: 300px; height: 210px; border-radius: 10px; background: linear-gradient(90deg, transparent 0 35%, rgba(184, 255, 0, .34) 50%, transparent 65% 100%) 0 0 / 300% 100% no-repeat; opacity: 0; }
+.world .ring { position: absolute; left: 75px; top: 30px; width: 150px; height: 150px; border: 1.5px solid #B8FF00; border-radius: 50%; opacity: 0; }
+.gantry .f { background: #8e9398; }
+.gantry .t { background: #eceef0; }
+.gantry .rt, .gantry .lf { background: #c5c8cc; }
+.gantry .fr, .gantry .bk { background: #9ea3a8; }
+.gantry .head .t { background: #f4f5f2; }
+@media (prefers-reduced-motion: reduce) { .world .live::before { animation: none; } .stages li, .stages li .mark { transition: none; } }
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<div class="vp">
+<!-- code -->
+<div class="pk page">
+  <section class="side">
+    <header><h1>Assembly</h1><p>Forma · launch site</p></header>
+    <ol class="stages" id="stages"></ol>
+  </section>
+  <section class="scene" id="scene"><div class="world" id="world"></div></section>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>A launch site on the line · Grid, Type, Photos, Colour, Live</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Launch site assembly. A sheet on an assembly line: stage by stage the grid is printed, the type is dropped on,
+   a gantry places the photographs and the button, a band of colour runs over it, and it goes live.
+   One clock, t in seconds from 0 to 16, draws everything; the stage list reads the same clock. */
+const $ = (s) => document.querySelector(s);
+const STAGES = [['Grid', 0.3, 2.1], ['Type', 2.1, 4.5], ['Photos', 4.5, 10.7], ['Colour', 10.7, 12.3], ['Live', 12.3, 14.7]];
+const LOOP = 16;
+const list = $('#stages'), scene = $('#scene'), world = $('#world');
+list.innerHTML = STAGES.map(([n, a, b], i) => `<li data-s="next"><span class="mark">${i + 1}</span><span>${n}</span><span class="t">${(b - a).toFixed(1)} s</span></li>`).join('');
+const items = [...list.children];
+
+/* ---- the clock's shapes ---- */
+const bezier = (x1, y1, x2, y2) => {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; } return sy(Math.min(1, Math.max(0, t))); };
+};
+const E = { out: bezier(0.16, 1, 0.3, 1), io: bezier(0.65, 0, 0.35, 1), in: bezier(0.7, 0, 0.84, 0), lin: (x) => x };
+const seg = (t, a, b, f = E.lin) => f(Math.min(1, Math.max(0, (t - a) / (b - a))));
+const mix = (a, b, k) => a + (b - a) * k;
+
+/* ---- the parts ---- */
+const ZT = 9.2;   // type rests this far above the floor (the sheet's top is at 8)
+const TEXTS = [   // [words, x, y, kind]
+  ['Forma', 14, 24, 'lg'], ['Objects', 150, 27], ['Studio', 184, 27], ['Journal', 214, 27], ['Cart (0)', 258, 27],
+  ['Objects for', 14, 48, 'h'], ['bright rooms.', 14, 67, 'h'],
+  ['Hand-finished ceramics,', 14, 93], ['made in small runs.', 14, 102],
+  ['Halo lamp', 14, 177], ['$240', 78, 177], ['Prism block', 110, 177], ['$120', 174, 177], ['Knot stool', 206, 177], ['$180', 270, 177],
+];
+const PHOTOS = [  // [picture, x, y, width, depth]
+  ['objects', 150, 44, 136, 72], ['glass', 14, 132, 80, 40], ['block', 110, 132, 80, 40], ['cross', 206, 132, 80, 40],
+];
+const BTN = { x: 14, y: 114, w: 70, d: 15 };
+const PARK = [320, 105];
+
+const mk = (cls, css = '', html = '') => { const e = document.createElement('div'); e.className = cls; if (css) e.style.cssText = css; if (html) e.innerHTML = html; return e; };
+/* a slab: a flat box w × d and h tall, standing on z = 0 */
+function slab(cls, w, d, h, o = {}) {
+  const g = mk('sl ' + cls, `width:${w}px;height:${d}px`), n = o.inset || 0;
+  g.innerHTML = `<i class="f t" style="transform:translateZ(${h}px);${o.top || ''}">${o.html || ''}</i>`
+    + `<i class="f fr" style="height:${h}px;left:${n}px;width:${w - 2 * n}px"></i><i class="f bk" style="height:${h}px;left:${n}px;width:${w - 2 * n}px"></i>`
+    + `<i class="f rt" style="width:${h}px;top:${n}px;height:${d - 2 * n}px"></i><i class="f lf" style="width:${h}px;top:${n}px;height:${d - 2 * n}px"></i>`;
+  return g;
+}
+const at = (g, x, y, z) => { g.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`; };
+const see = (g, o) => g.style.setProperty('--o', o.toFixed(3));
+
+/* the floor: halftone dots that grow toward the sheet */
+let dots = '';
+for (let y = 8; y < 510; y += 16) for (let x = 8; x < 680; x += 16) {
+  const u = Math.hypot((x - 340) / 330, (y - 255) / 250);
+  if (u < 1) dots += `<circle cx="${x}" cy="${y}" r="${(0.5 + 2.1 * Math.pow(1 - u, 1.3)).toFixed(2)}"/>`;
+}
+world.appendChild(mk('floor', '', `<svg width="680" height="510" viewBox="0 0 680 510" fill="rgba(18,20,23,.2)" aria-hidden="true">${dots}</svg>`));
+
+/* the sheet, and what is printed on it */
+const print = `<svg viewBox="0 0 300 210" fill="none" stroke="rgba(244,245,242,.3)" stroke-width="0.8" stroke-dasharray="3 2" aria-hidden="true">
+  <path d="M0 18H300" stroke-dasharray="none" stroke="rgba(244,245,242,.16)"/>
+  <circle cx="10" cy="9" r="2.2" stroke-dasharray="none"/><circle cx="18" cy="9" r="2.2" stroke-dasharray="none"/><circle cx="26" cy="9" r="2.2" stroke-dasharray="none"/>
+  <rect x="96" y="4" width="108" height="10" rx="5" stroke-dasharray="none"/>
+  <rect x="150" y="44" width="136" height="72"/><rect x="14" y="132" width="80" height="40"/><rect x="110" y="132" width="80" height="40"/><rect x="206" y="132" width="80" height="40"/>
+  <rect x="14" y="114" width="70" height="15"/>
+</svg>`;
+world.appendChild(slab('sheet', 300, 210, 8, { inset: 10, html: print }));
+
+/* the grid: six columns of lime, printed by the squeegee */
+const grid = mk('grid', '', Array.from({ length: 6 }, (_, i) => `<i style="left:${(14 + i * 46.667).toFixed(2)}px;width:38.67px"></i>`).join(''));
+grid.style.transform = 'translateZ(8.6px)';
+world.appendChild(grid);
+const squeegee = slab('squeegee', 5, 222, 7, {});
+squeegee.querySelectorAll('.f').forEach((f) => { f.style.background = '#e9ebed'; });
+squeegee.querySelector('.fr').style.background = squeegee.querySelector('.bk').style.background = '#9ea3a8';
+world.appendChild(squeegee);
+
+/* small parts: type */
+const texts = TEXTS.map(([w, x, y, k], i) => {
+  const e = mk('tx' + (k ? ' ' + k : ''), '', w);
+  world.appendChild(e);
+  return { e, x, y, s: 2.1 + i * 0.14 };
+});
+/* the address in the bar, and the Live tag */
+const url = mk('tx url', '', 'localhost:3000'); world.appendChild(url);
+const live = mk('live', '', 'Live'); world.appendChild(live);
+at(live, 254, 3.5, 9.6);
+
+/* big parts: photographs and the button, placed by the gantry */
+const parts = PHOTOS.map(([pic, x, y, w, d], j) => {
+  const g = slab('photo', w, d, 3, { top: `background-image:url(../assets/art/${pic}.webp)` });
+  world.appendChild(g);
+  return { g, x, y, w, d, s: 4.5 + j * 1.2, c: [x + w / 2, y + d / 2], j };
+});
+const btn = slab('btn', BTN.w, BTN.d, 3, { html: 'Shop the drop' });
+world.appendChild(btn);
+parts.push({ g: btn, x: BTN.x, y: BTN.y, w: BTN.w, d: BTN.d, s: 4.5 + 4 * 1.2, c: [BTN.x + BTN.w / 2, BTN.y + BTN.d / 2], j: 4, btn: true });
+
+/* the colour band, and the rings that run out when it is live */
+const reflow = mk('reflow'); reflow.style.transform = 'translateZ(12.5px)'; world.appendChild(reflow);
+const rings = [mk('ring'), mk('ring')]; rings.forEach((r) => { r.style.transform = 'translateZ(12px)'; world.appendChild(r); });
+
+/* the gantry: two rails on the floor, a beam on legs that rides them, a head on the beam, a nozzle */
+const gantry = mk('grp gantry');
+const rails = [slab('rail', 330, 5, 5), slab('rail', 330, 5, 5)];
+at(rails[0], -15, -14, 0); at(rails[1], -15, 219, 0);
+const beam = mk('grp');
+const leg1 = slab('leg', 5, 5, 41), leg2 = slab('leg', 5, 5, 41), bar = slab('bar', 5, 242, 5), head = slab('head', 12, 12, 7), rod = slab('rod', 2, 2, 1);
+at(leg1, 0, -14, 5); at(leg2, 0, 219, 5); at(bar, 0, -16, 46);
+[leg1, leg2, bar, head, rod].forEach((g) => beam.appendChild(g));
+rails.forEach((r) => gantry.appendChild(r)); gantry.appendChild(beam);
+world.appendChild(gantry);
+const HEAD_Z = 39;
+
+/* where the head is, in the sheet's own units: parked beyond the right edge, then over each part in turn */
+function headAt(t) {
+  let prev = PARK;
+  for (const p of parts) {
+    const last = p.j === 4, end = last ? 10.5 : p.s + 1.2;
+    if (t < p.s) return prev;
+    if (t < end) return [mix(prev[0], p.c[0], seg(t, p.s, p.s + 0.5, E.io)), mix(prev[1], p.c[1], seg(t, p.s, p.s + 0.5, E.io))];
+    prev = p.c;
+  }
+  const k = seg(t, 10.5, 10.9, E.io);
+  return [mix(prev[0], PARK[0], k), mix(prev[1], PARK[1], k)];
+}
+const TYPED = 'forma.studio';
+
+/* ---- the whole scene at time t ---- */
+function draw(t) {
+  // 1 · the squeegee crosses, the grid is printed behind it; at the end of the loop it wipes off the other way
+  const p1 = seg(t, 0.3, 2.0, E.io);
+  const sq = t < 0.3 ? 0 : t < 0.55 ? seg(t, 0.3, 0.55) : t < 2.0 ? 1 : 1 - seg(t, 2.0, 2.25);
+  at(squeegee, mix(-12, 306, p1), -6, 8); see(squeegee, sq);
+  grid.style.clipPath = t < 14.8 ? `inset(0 ${((1 - p1) * 100).toFixed(2)}% 0 0)` : `inset(0 0 0 ${(seg(t, 14.8, 15.6, E.io) * 100).toFixed(2)}%)`;
+
+  // 2 · the type drops on, a part at a time
+  texts.forEach((p, i) => {
+    const a = seg(t, p.s, p.s + 0.45, E.out), r = seg(t, 14.9 + i * 0.02, 15.5, E.in);
+    at(p.e, p.x, p.y, ZT + mix(60, 0, a) + 44 * r);
+    p.e.style.opacity = (a * (1 - r)).toFixed(3);
+  });
+
+  // 3 · the gantry places the photographs and the button
+  const gv = seg(t, 4.2, 4.5) * (1 - seg(t, 10.6, 10.95));
+  see(gantry, gv);
+  const [hx, hy] = headAt(t);
+  at(beam, hx - 2.5, 0, 0);
+  at(head, -3.5, hy - 6, HEAD_Z);
+  let rodL = 2;
+  parts.forEach((p) => {
+    const r = seg(t, 14.9 + p.j * 0.03, 15.5, E.in);
+    const appear = seg(t, p.s + 0.5, p.s + 0.62);
+    const z = t < p.s + 0.62 ? 34 : mix(34, 0, seg(t, p.s + 0.62, p.s + 1.0, E.out));
+    at(p.g, p.x, p.y, 8 + z + 44 * r); see(p.g, appear * (1 - r));
+    if (t >= p.s + 0.5 && t < p.s + 1.15) rodL = Math.max(2, mix(HEAD_Z - (z + 3), 2, seg(t, p.s + 1.0, p.s + 1.15)));
+  });
+  rod.style.transform = `translate3d(1.5px, ${hy - 1}px, ${HEAD_Z - rodL}px) scale3d(1, 1, ${rodL})`;
+
+  // 4 · the band of colour runs over it, and the button takes the lime
+  const band = seg(t, 10.8, 12.2);
+  reflow.style.backgroundPosition = `${((1 - band) * 100).toFixed(2)}% 0`;
+  reflow.style.opacity = (t < 10.7 ? 0 : t < 10.85 ? seg(t, 10.7, 10.85) : t < 12.1 ? 1 : 1 - seg(t, 12.1, 12.3)).toFixed(3);
+  btn.classList.toggle('is-lime', t >= 11.4 && t < 13.3);
+
+  // 5 · the address is typed, it is live: the tag, a blinking square, two rings
+  const typed = seg(t, 12.4, 13.2);
+  url.textContent = t >= 12.4 && t < 15.3 ? TYPED.slice(0, Math.floor(typed * TYPED.length)) : 'localhost:3000';
+  at(url, 104, 8.4, 9.4);
+  live.style.clipPath = t < 14.9 ? `inset(0 ${((1 - seg(t, 13.3, 13.5, E.out)) * 100).toFixed(1)}% 0 0)` : `inset(0 0 0 ${(seg(t, 14.9, 15.3, E.in) * 100).toFixed(1)}%)`;
+  rings.forEach((r, i) => {
+    const k = seg(t, 12.4 + i * 0.5, 14.2 + i * 0.5);
+    r.style.transform = `translateZ(12px) scale(${(0.3 + 1.7 * E.out(k)).toFixed(3)})`;
+    r.style.opacity = (k > 0 && k < 1 ? 0.9 * (1 - Math.pow(k, 0.7)) : 0).toFixed(3);
+  });
+}
+
+/* ---- the camera, and the list ---- */
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function camera(el) {                                       // 14 s each way, ease in-out, alternating
+  const ph = (el % 28) / 14, k = E.io(ph < 1 ? ph : 2 - ph);
+  world.style.transform = `rotateX(${(57 - 5 * k).toFixed(3)}deg) rotate(${(-36 + 12 * k).toFixed(3)}deg)`;
+}
+function fitScene() {
+  const k = Math.max(0.45, Math.min(1.7, scene.clientWidth / 430, scene.clientHeight / 290));
+  world.style.scale = k.toFixed(3);
+}
+function sync(t) {
+  items.forEach((li, i) => {
+    const [, s, e] = STAGES[i];
+    let st = still ? 'done' : t >= e ? 'done' : t >= s ? 'now' : 'next';
+    if (!still && (t >= 14.7 || t < 0.3)) st = 'next';
+    if (li.dataset.s !== st) li.dataset.s = st;
+  });
+}
+new ResizeObserver(fitScene).observe(scene); fitScene();
+let t0 = performance.now(), frozen = null;
+function frame(now) {
+  const el = frozen != null ? frozen : still ? 14.2 : (now - t0) / 1000;
+  const t = el % LOOP;
+  camera(still ? 14 : el); draw(t); sync(t);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+<script>
+  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window ---- */
+  function vpfit() {
+    const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
+      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+    };
+    addEventListener('resize', go); go();
+  }
+  vpfit();
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') frozen = (performance.now() - t0) / 1000; });
+  QM.demo({
+    kind: 'loop',
+    restart() { frozen = null; t0 = performance.now(); },
+    seekPlay(v) { frozen = Math.max(0, Math.min(1, v)) * LOOP; },
+  });
+</script>
+</body>
+</html>

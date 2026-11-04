@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flick strip · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-momentum",
+  "title": "Flick strip",
+  "group": "lab",
+  "cat": "images",
+  "order": 110,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "drag 1:1 · coast e^(−3.2 t) · spring 140 lands on a card",
+  "summary": "An endless strip of launch cards you can flick. One number, pos, is the strip: dragging moves it 1:1, release hands the pointer's velocity to a friction coast, and when the coast slows a spring takes over from the current position and velocity and lands exactly on the nearest card. Speed drives a small skew and each picture slides inside its frame.",
+  "spec": [
+    ["Drag", "pos −= dx, velocity low-passed at 0.35"],
+    ["Coast", "vel × e^(−3.2 dt) until |vel| < 260 px/s"],
+    ["Snap", "spring stiffness 140, damping 85% of critical, to the nearest card"],
+    ["Wrap", "each card's x is wrapped to ±half the loop, so it jumps only while out of view"],
+    ["Skew", "clamp(−vel × 0.004, ±9°), eased at 10/s"],
+    ["Parallax", "picture shifts by −dist × 12% of the card width"]
+  ],
+  "source": ["Qbix studio library · 05-momentum-strip"],
+  "where": "The work index: nine launches on one strip that always comes to rest on one card.",
+  "rules": [
+    "Cards are flat blocks with the cut corner; the skew is capped so a fast fling still reads as pictures.",
+    "It always lands on a card, never between two.",
+    "The caption changes by a mask slide, not a cross-fade."
+  ],
+  "tags": ["drag", "momentum", "spring", "carousel"]
+}
+</script>
+<style data-code>
+.mo { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr auto; padding: clamp(20px, 5vh, 48px) 0 clamp(52px, 9vh, 76px); overflow: hidden; }
+.mo-head { padding: 0 clamp(20px, 5vw, 56px); display: grid; gap: 10px; }
+.mo-head .title { font-size: clamp(26px, 4vw, 48px); }
+.mo-strip { position: relative; margin: clamp(14px, 3vh, 28px) 0; overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none; }
+.mo-strip.is-drag { cursor: grabbing; }
+.mo-tile { position: absolute; left: 0; top: 0; height: 100%; width: clamp(150px, 27vw, 290px); overflow: hidden; background: #e6e8ea; will-change: transform;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.mo-tile img { max-width: none; position: absolute; top: 0; left: -15%; width: 130%; height: 100%; object-fit: cover; pointer-events: none; }
+.mo-under { padding: 0 clamp(20px, 5vw, 56px); display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+.mo-cap { height: 26px; overflow: hidden; position: relative; font-size: clamp(15px, 1.7vw, 19px); color: var(--fg); }
+.mo-cap span { display: block; transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1); }
+.mo-cap span.is-out { position: absolute; left: 0; top: 0; transform: translateY(-110%); }
+.mo-cap span.is-in { transform: translateY(110%); transition: none; }
+.mo-count { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; color: var(--fg2); }
+</style>
+<style>.qm-stage { padding: 0; }</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="mo" id="mo">
+  <div class="mo-head"><p class="kicker">Shipped work · this year</p><h2 class="title">Nine launches.</h2></div>
+  <div class="mo-strip" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Work strip"></div>
+  <div class="mo-under"><div class="mo-cap" aria-live="polite"></div><span class="mo-count"></span></div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag, flick, or use the arrow keys</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Momentum strip. createStrip(el, items) -> { down(x), drag(x), up(), step(dir) } */
+function createStrip(strip, items, { capEl, countEl, reduce = false } = {}) {
+  const N = items.length;
+  const tiles = items.map(([name, src], i) => {
+    const el = document.createElement('div'); el.className = 'mo-tile';
+    const img = document.createElement('img'); img.alt = ''; img.src = src; el.append(img); strip.append(el);
+    return { el, img, i, name };
+  });
+  let W = 0, cw = 0, gap = 0, span = 0, total = 0, pos = 0, vel = 0, skew = 0, mode = 'rest', sv = 0, st = 0, shown = -1;
+  const wrap = (v, lo, hi) => { const r = hi - lo; return ((((v - lo) % r) + r) % r) + lo; };
+  function measure() {
+    const old = span; W = strip.clientWidth; cw = tiles[0].el.offsetWidth; gap = Math.max(14, cw * 0.06); span = cw + gap; total = span * N;
+    if (old) pos = Math.round(pos / old) * span;
+  }
+  const nearest = () => Math.round(pos / span) * span;
+  function snapTo(target) { st = target; sv = vel; mode = reduce ? 'rest' : 'snap'; if (reduce) pos = target; }
+  let dragging = null;
+  function down(x) { dragging = { x, t: performance.now(), locked: false }; vel = 0; }
+  function drag(x) {
+    if (!dragging) return;
+    const dx = x - dragging.x;
+    if (!dragging.locked) { if (Math.abs(dx) < 4) return; dragging.locked = true; mode = 'drag'; strip.classList.add('is-drag'); }
+    const now = performance.now(), dt = Math.max((now - dragging.t) / 1000, 1 / 240);
+    pos -= dx; vel = vel + (-dx / dt - vel) * 0.35; dragging.x = x; dragging.t = now;
+  }
+  function up() { if (!dragging) return; if (dragging.locked) { mode = reduce ? 'snap' : 'coast'; if (reduce) snapTo(nearest()); } dragging = null; strip.classList.remove('is-drag'); }
+  function step(dir) { vel = 0; snapTo(Math.round((mode === 'snap' ? st : pos) / span + dir) * span); }
+  strip.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); step(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); } });
+  strip.addEventListener('wheel', (e) => { if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; e.preventDefault(); pos += e.deltaX; vel = e.deltaX * 30; mode = 'coast'; }, { passive: false });
+
+  function setCaption(i) {
+    if (i === shown) return; shown = i;
+    Array.from(capEl.children).forEach((old) => { old.classList.add('is-out'); setTimeout(() => old.remove(), 450); });
+    const s = document.createElement('span'); s.textContent = items[i][0]; s.className = 'is-in'; capEl.append(s);
+    requestAnimationFrame(() => requestAnimationFrame(() => s.classList.remove('is-in')));
+    countEl.textContent = `${String(i + 1).padStart(2, '0')} / ${String(N).padStart(2, '0')}`;
+  }
+  function render(dt) {
+    if (mode === 'coast') { vel *= Math.exp(-3.2 * dt); pos += vel * dt; if (Math.abs(vel) < 260) snapTo(nearest()); }
+    else if (mode === 'snap') {                                    // a spring from the current position and velocity
+      const k = 140, c = 2 * Math.sqrt(k) * 0.85;
+      sv += (-k * (pos - st) - c * sv) * dt; pos += sv * dt; vel = sv;
+      if (Math.abs(pos - st) < 0.05 && Math.abs(sv) < 5) { pos = st; mode = 'rest'; vel = 0; }
+    } else if (mode === 'rest') vel = 0;
+    const target = Math.max(-9, Math.min(9, -vel * 0.004)); skew += (target - skew) * (1 - Math.exp(-10 * dt));
+    const center = W / 2 - cw / 2;
+    for (const t of tiles) {
+      const x = wrap(t.i * span - pos, -total / 2, total / 2), dist = x / (W / 2 + cw);
+      t.el.style.transform = `translate3d(${(center + x).toFixed(1)}px,0,0) skewX(${skew.toFixed(2)}deg)`;
+      t.img.style.transform = `translate3d(${(-Math.max(-1.1, Math.min(1.1, dist)) * cw * 0.12).toFixed(1)}px,0,0)`;
+    }
+    setCaption(((Math.round(pos / span) % N) + N) % N);
+  }
+  measure(); render(0);
+  new ResizeObserver(measure).observe(strip);
+  let prev = 0; const loop = (now) => { requestAnimationFrame(loop); const dt = Math.min(0.05, (now - (prev || now)) / 1000); prev = now; render(dt); };
+  requestAnimationFrame(loop);
+  return { down, drag, up, step };
+}
+</script>
+<script>
+  const A = '../assets/art/';
+  const items = [['Forma · Homepage', A + 'objects.webp'], ['Kova · App', A + 'curves.webp'], ['Strata · Design system', A + 'ribbon.webp'], ['Willow Counseling · Practice site', A + 'calla.webp'],
+    ['Halo lamp · Product page', A + 'ring.webp'], ['Knot stool · Product page', A + 'cross.webp'], ['Prism block · Product page', A + 'block.webp'], ['Carafe · Product page', A + 'bottle.webp'], ['Kova · Brand', A + 'wall.webp']];
+  const root = document.getElementById('mo'), strip = root.querySelector('.mo-strip');
+  const s = createStrip(strip, items, { capEl: root.querySelector('.mo-cap'), countEl: root.querySelector('.mo-count'), reduce: QM.reduced });
+  strip.addEventListener('pointerdown', (e) => { s.down(e.clientX); strip.setPointerCapture(e.pointerId); });
+  strip.addEventListener('pointermove', (e) => s.drag(e.clientX));
+  strip.addEventListener('pointerup', () => s.up()); strip.addEventListener('pointercancel', () => s.up());
+
+  /* the ghost hand: take hold, throw the strip left, let it land, go back */
+  const CYC = 4.6; let down = false;
+  const ease = (u) => u * u * (3 - 2 * u);
+  function ghostPath(t) {
+    t = Math.max(0, t); const u = (t % CYC) / CYC, W = innerWidth, r = strip.getBoundingClientRect(), y = r.top + r.height * 0.55;
+    let x; const x0 = W * 0.7, x1 = W * 0.3;
+    if (u < 0.12) { x = x0; down = false; } else if (u < 0.3) { x = x0 + (x1 - x0) * Math.pow((u - 0.12) / 0.18, 1.6); down = true; }
+    else if (u < 0.62) { x = x1; down = false; } else { x = x1 + (x0 - x1) * ease((u - 0.62) / 0.3); down = false; if (u > 0.92) x = x0; }
+    return [x, y];
+  }
+  let gDown = false;
+  QM.demo({
+    kind: 'pointer', path: ghostPath,
+    move(x, y, ghost) {
+      if (!ghost) return;
+      if (down && !gDown) { s.down(x); gDown = true; } else if (!down && gDown) { s.up(); gDown = false; } else if (gDown) s.drag(x);
+    },
+    leave() { s.up(); gDown = false; },
+  });
+</script>
+</body>
+</html>

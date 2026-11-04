@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floor word · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-floor-word",
+  "title": "Floor word",
+  "group": "picks",
+  "cat": "brand",
+  "order": 35,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "fitted by measuring · 560 ms rise · 34 ms a letter",
+  "summary": "“Design. Code. Ship.” is measured to fill the page's width in Eurostile and sits on the bottom edge, its last pixels running off the page. The letters rise in once, each out of its own sleeve; letters near the pointer darken from faint to ink. Colour only, no lift.",
+  "spec": [
+    ["Fit", "the line is laid out, measured, and its font-size set to size × (page − 2 gutters) / width: it fills the page; refit on resize and when the fonts land"],
+    ["Gutter", "clamp(20px, 4vw, 64px) either side"],
+    ["Floor", "a window 0.84 of the font-size tall, the word placed from its top: the foot of the line, and any descender, runs off the page"],
+    ["Rise", "each letter in its own overflow-hidden sleeve, translate 0 110% → 0 over 560 ms on cubic-bezier(0.16, 1, 0.3, 1), 34 ms apart"],
+    ["Near", "n = max(0, 1 − d / R), d = hypot(dx, dy × 0.5) from a letter's centre to the pointer, R = 0.9 × the font-size"],
+    ["Colour", "faint = ink 16% over the ground; near → ink by n, over 200 ms; there is no lift and no scale"],
+    ["Leave", "the pointer leaving the window returns every letter to faint"],
+    ["Reduced motion", "the letters are in place, no rise; the colour still follows the pointer"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Floor word (land-floor-word)", "Idea: Qbix studio library · 01-fit-headline"],
+  "where": "A landing page's last line: a header, one sentence and a button above, and the studio's three verbs on the floor.",
+  "rules": [
+    "Display type for this line only. Fit it by measuring, never by guessing a size.",
+    "Pointer proximity is colour only: no lift, no scale.",
+    "One lime: the button. The letters stay in ink and paper."
+  ],
+  "tags": ["type", "display", "letters", "pointer", "landing"],
+  "shot": 3600
+}
+</script>
+<style data-code>
+/* Floor word. Idea: Qbix studio library · 01-fit-headline */
+:root { --gutter: clamp(20px, 4vw, 64px); }
+.fw-page { position: fixed; inset: 0; display: grid; grid-template-rows: auto 1fr auto; padding: 0 var(--gutter); font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.fw-top { height: 76px; display: flex; align-items: center; justify-content: space-between; }
+.fw-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 500; }
+.fw-brand svg { display: block; fill: var(--fg); }
+.fw-brand .meta { color: var(--fg2); font-weight: 400; font-size: 12px; }
+.fw-signin { display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border: 0; border-radius: 8px; font: inherit; font-weight: 500; color: #fff; background: var(--fg); cursor: pointer; transition: background 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.fw-signin:hover, .fw-signin.is-hot { background: color-mix(in oklab, var(--fg) 82%, #fff); }
+.fw-mid { align-self: center; display: grid; gap: 20px; justify-items: start; }
+.fw-sub { margin: 0; font-size: 20px; letter-spacing: -0.02em; color: var(--fg2); max-width: 24ch; text-wrap: balance; line-height: 1.35; }
+.fw-cta { min-height: 46px; padding: 0 24px; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 8px; font: inherit; font-weight: 500; color: var(--on-lime); background: var(--signal); cursor: pointer; transition: background 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.fw-cta:hover, .fw-cta.is-hot { background: color-mix(in oklab, var(--signal) 88%, #000); }
+/* the word sits on the bottom edge: its last pixels run off the page */
+.fw-floor { position: relative; overflow: hidden; margin: 0 calc(var(--gutter) * -1); padding: 0 var(--gutter); height: calc(var(--fs, 120px) * 0.84); }
+.fw-word { position: absolute; left: var(--gutter); top: 0; white-space: nowrap; font-family: var(--font-headline); font-weight: 400; font-size: var(--fs, 120px); letter-spacing: -0.03em; line-height: 1; margin: 0; cursor: default; }
+.fw-l { display: inline-block; overflow: hidden; vertical-align: top; height: 1.2em; margin-top: -0.1em; padding-top: 0.1em; }
+.fw-l i { display: inline-block; font-style: normal; translate: 0 110%; color: color-mix(in srgb, var(--fg) 16%, var(--ground)); transition: translate 560ms cubic-bezier(0.16, 1, 0.3, 1), color 200ms cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--i) * 34ms), 0s; }
+.fw-word.is-in .fw-l i { translate: 0 0; color: color-mix(in srgb, var(--fg) calc(var(--n, 0) * 100%), color-mix(in srgb, var(--fg) 16%, var(--ground))); }
+@media (max-width: 760px) { .fw-sub { font-size: 16px; } .fw-cta { min-height: 42px; padding: 0 20px; } .fw-brand .meta { display: none; } }
+</style>
+<style>
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: 92px; text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Move the pointer along the word</span>
+<main class="qm-stage">
+<!-- code -->
+<div class="fw-page">
+  <header class="fw-top">
+    <span class="fw-brand">
+      <svg width="62" height="23" viewBox="0 0 918 342" role="img" aria-label="Qbix"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></svg>
+      <span class="meta">Design and products</span>
+    </span>
+    <button class="fw-signin" type="button">Start a brief</button>
+  </header>
+  <div class="fw-mid">
+    <p class="fw-sub">Qbix never writes off a small idea.</p>
+    <button class="fw-cta" type="button">Tell us your idea ↗︎</button>
+  </div>
+  <div class="fw-floor" id="floor"><h1 class="fw-word" id="word" aria-label="Design. Code. Ship."></h1></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* The word is measured, not guessed: its font-size is whatever makes it fill the page. Its letters rise once;
+   the ones near the pointer darken. */
+const word = document.getElementById('word');
+const text = 'Design. Code. Ship.';
+const root = document.documentElement;
+word.innerHTML = [...text].map((c, i) => `<span class="fw-l" aria-hidden="true"><i style="--i:${i}">${c === ' ' ? '&nbsp;' : c}</i></span>`).join('');
+const ls = [...word.querySelectorAll('i')];
+function fitWord() {
+  const g = Math.min(64, Math.max(20, innerWidth * 0.04));
+  root.style.setProperty('--gutter', g + 'px');
+  const fs = parseFloat(getComputedStyle(word).fontSize), w = word.getBoundingClientRect().width || 1;
+  const target = innerWidth - 2 * g;
+  if (Math.abs(w - target) > 1) root.style.setProperty('--fs', (fs * target / w) + 'px');
+}
+document.fonts.ready.then(fitWord); document.fonts.addEventListener('loadingdone', fitWord);
+new ResizeObserver(fitWord).observe(word); fitWord(); addEventListener('resize', fitWord);
+
+let centers = [];
+function measure() { centers = ls.map((n) => { const r = n.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }); }
+function near(x, y) {                                       // colour only: letters near the pointer darken
+  const R = parseFloat(getComputedStyle(root).getPropertyValue('--fs')) * 0.9;
+  measure();
+  ls.forEach((n, i) => { const d = Math.hypot(centers[i].x - x, (centers[i].y - y) * 0.5); n.style.setProperty('--n', Math.max(0, 1 - d / R).toFixed(3)); });
+}
+const calm = () => ls.forEach((n) => n.style.setProperty('--n', 0));
+addEventListener('pointermove', (e) => near(e.clientX, e.clientY));
+document.addEventListener('pointerleave', calm);
+async function enter() { word.classList.remove('is-in'); void word.offsetWidth; await new Promise((r) => setTimeout(r, 80)); word.classList.add('is-in'); }
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) word.classList.add('is-in');
+else setTimeout(() => word.classList.add('is-in'), 100);
+</script>
+<script src="../assets/picks/p3-ghost.js"></script>
+<script>
+  /* loop kind: the letters rise, then the ghost walks the word from end to end */
+  let passes = 0;
+  PickGhost.start({
+    moves: true,
+    hot: '.fw-signin, .fw-cta',
+    reset: calm,
+    still: () => { calm(); word.classList.add('is-in'); },
+    async script(g) {
+      calm();
+      if (passes++) await enter();                  // the first pass keeps the entrance the page has just made
+      await g.wait(1200);
+      const r = word.getBoundingClientRect(), y = r.top + r.height * 0.45;
+      await g.to({ x: r.left + 20, y }, { ms: 500 });
+      await g.to({ x: r.right - 20, y }, { ms: 3200 });
+      await g.to({ x: r.left + r.width * 0.5, y: y - 40 }, { ms: 1000 });
+      await g.wait(600);
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sleeve and stamp · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-id-card",
+  "title": "Sleeve and stamp",
+  "group": "lab",
+  "cat": "cards",
+  "order": 30,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "620 ms drop · 520 ms ink spread · click to stamp",
+  "summary": "A studio team card slides up out of a lime sleeve with a thumb notch, then a stamp comes down from above (it grows as it nears, flattens, lifts away) and leaves a rough, slightly spreading ink mark that reads APPROVED. Click the card to stamp it again; click anywhere else to put it back.",
+  "spec": [
+    ["Card", "springs k 120 · c 19 between sleeve, raised and resting"],
+    ["Stamp drop", "620 ms ease in-out, scale 1.95 → 1 as it descends, 120 ms press, 640 ms lift"],
+    ["Ink", "feTurbulence 0.07 displaces the edge, feTurbulence 0.85 knocks out speckle, feMorphology dilates 0 → 0.38 over 520 ms"],
+    ["Sleeve", "slides down 330 px once the card is clear"],
+    ["Notch", "a clip-path polygon, not a radial gradient"]
+  ],
+  "source": ["Qbix studio library · id-card"],
+  "where": "The team page of a studio site, or a client onboarding step: the card that says you are in.",
+  "rules": [
+    "The ink is dark on the white card with a multiply blend; the sleeve and the stamp take the one lime, never on screen together.",
+    "The stamp reads as height through scale, never through a drop shadow.",
+    "Everything is flat blocks with the cut corner."
+  ],
+  "tags": ["pointer", "click", "svg filter", "spring", "card", "stamp"],
+  "shot": 4200
+}
+</script>
+<style data-code>
+/* Studio card: a white card, a lime sleeve with a thumb notch, a rough ink stamp */
+.idc-card { position: absolute; left: 20px; top: 0; width: 340px; height: 214px; background: #ffffff; color: #121417; overflow: hidden; z-index: 1; cursor: pointer; touch-action: manipulation; --cut: 20px; }
+.idc-dots { position: absolute; inset: 0; width: 100%; height: 100%; }
+.idc-band { position: absolute; left: 0; right: 0; top: 0; height: 38px; background: #121417; color: #f4f5f2; display: flex; align-items: center; padding: 0 16px; gap: 10px; font: 500 11px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; }
+.idc-band .no { margin-left: auto; font-variant-numeric: tabular-nums; }
+.idc-photo { position: absolute; left: 16px; top: 54px; width: 82px; height: 100px; background: #eceef0; overflow: hidden; }
+.idc-photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 2% 30%; }
+.idc-fl { position: absolute; left: 112px; top: 52px; width: 170px; }
+.idc-fl small { display: block; white-space: nowrap; font: 500 9.5px/1.3 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
+.idc-nm { margin-top: 2px; font: 400 25px/1.05 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
+.idc-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.idc-v { margin-top: 2px; font: 500 13px/1.2 'Encode Sans', sans-serif; font-variant-numeric: tabular-nums; }
+.idc-vert { position: absolute; right: 14px; top: 50px; writing-mode: vertical-rl; font: 500 10px/1 'Encode Sans', sans-serif; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(18, 20, 23, 0.6); }
+.idc-foot { position: absolute; left: 16px; right: 16px; bottom: 13px; display: flex; justify-content: space-between; align-items: baseline; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.08em; color: rgba(18, 20, 23, 0.6); }
+.idc-foot b { font-weight: 500; color: #121417; font-variant-numeric: tabular-nums; }
+.idc-ink { position: absolute; left: 0; top: 0; width: 340px; height: 214px; pointer-events: none; mix-blend-mode: multiply; }
+.idc-sleeve { position: absolute; left: 4px; top: 162px; width: 372px; height: 200px; background: #b8ff00; color: #0c1300; z-index: 2;
+  clip-path: polygon(0 0, calc(50% - 46px) 0, calc(50% - 32px) 26px, calc(50% + 32px) 26px, calc(50% + 46px) 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+.idc-sleeve .t1 { position: absolute; left: 0; right: 0; bottom: 62px; text-align: center; font: 400 34px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
+.idc-sleeve .t2 { position: absolute; left: 0; right: 0; bottom: 38px; text-align: center; font: 500 11px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(12, 19, 0, 0.66); }
+.idc-stamp { position: absolute; left: 0; top: 0; width: 64px; height: 64px; margin: -32px 0 0 -32px; z-index: 3; pointer-events: none; opacity: 0; }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  #idc-stage { position: absolute; left: 50%; top: 46%; width: 380px; height: 250px; transform-origin: 50% 50%; }
+  .idc-hint { position: absolute; left: 0; right: 0; bottom: 56px; text-align: center; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div id="idc-stage">
+<!-- code -->
+<div class="idc-card cut" id="idc-card">
+  <svg class="idc-dots" width="340" height="214" aria-hidden="true">
+    <defs><pattern id="idc-pat" width="12" height="12" patternUnits="userSpaceOnUse"><rect x="5" y="5" width="2" height="2" fill="#121417" fill-opacity="0.12"/></pattern></defs>
+    <rect x="150" y="38" width="190" height="176" fill="url(#idc-pat)"/>
+  </svg>
+  <div class="idc-band"><b style="font-weight:500">Qbix studio</b><span class="no">No. 0031</span></div>
+  <div class="idc-photo"><img src="../assets/art/sam.webp" alt=""></div>
+  <div class="idc-fl">
+    <small>Name</small>
+    <div class="idc-nm">Sam</div>
+    <div class="idc-two"><div><small>Role</small><div class="idc-v">Designer</div></div><div><small>Member since</small><div class="idc-v">2023.09</div></div></div>
+  </div>
+  <div class="idc-vert">Studio</div>
+  <div class="idc-foot"><b>0031 118 3305</b><span>Issued by Qbix</span></div>
+  <svg class="idc-ink" id="idc-ink" width="340" height="214" aria-hidden="true">
+    <defs><filter id="idc-inkf" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="4" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="1.8" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="1" seed="11" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -2.4 0 0 0 2.2" result="m"/>
+      <feComposite in="d" in2="m" operator="in" result="s"/>
+      <feMorphology in="s" operator="dilate" radius="0" id="idc-spread"/>
+    </filter></defs>
+    <g id="idc-seals" filter="url(#idc-inkf)"></g>
+  </svg>
+</div>
+<div class="idc-sleeve" id="idc-sleeve"><div class="t1">Qbix</div><div class="t2">Keep your card with you in the studio</div></div>
+<svg class="idc-stamp" id="idc-stamp" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="#b8ff00"/><rect x="7" y="7" width="50" height="50" fill="#a6e600"/><rect x="18" y="18" width="28" height="28" fill="#121417"/></svg>
+<!-- /code -->
+</div>
+<p class="qm-hint idc-hint">Click the card to stamp it. Click elsewhere to reset.</p>
+<div class="qm-ui"><span>Studio card · stamp it as many times as you like</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const $ = (s) => document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage = $('#idc-stage'), card = $('#idc-card'), sleeve = $('#idc-sleeve'), stampEl = $('#idc-stamp'), seals = $('#idc-seals'), spread = $('#idc-spread');
+
+let T = 0, lastNow = performance.now();
+const jobs = [], ticks = new Set();
+const at = (ms, fn) => jobs.push({ t: T + ms, fn });
+function frame(now) {
+  const dt = Math.min(64, now - lastNow); lastNow = now; T += dt;
+  for (let i = 0; i < jobs.length; i++) if (jobs[i].t <= T) { const j = jobs.splice(i, 1)[0]; i--; j.fn(); }
+  ticks.forEach((f) => f(dt)); requestAnimationFrame(frame);
+}
+function spring(x, k = 170, c = 24) {
+  return { x, v: 0, t: x, k, c, step(dt) { let s = dt / 1000; const n = Math.max(1, Math.ceil(s / 0.008)); s /= n; for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; } } };
+}
+const E = { io: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2), out: (t) => 1 - Math.pow(1 - t, 3) };
+function tween(d, e, f, done) {
+  const t0 = T;
+  const g = () => { const p = d <= 0 ? 1 : Math.min(1, (T - t0) / d); f(e(p)); if (p >= 1) { ticks.delete(g); if (done) done(); } };
+  ticks.add(g); g();
+}
+
+/* card, sleeve and stamp state (y in stage px) */
+const PEEK = 116, UP = -20, MID = 28;
+const cy = spring(PEEK, 120, 19), dip = spring(1, 380, 22), sl = spring(0, 120, 19);
+ticks.add((dt) => {
+  cy.step(dt); dip.step(dt); sl.step(dt);
+  card.style.transform = `translateY(${cy.x.toFixed(2)}px) scale(${dip.x.toFixed(4)})`;
+  sleeve.style.transform = `translateY(${sl.x.toFixed(2)}px)`;
+});
+
+let sealN = 0;
+function sealSVG(x, y, rot, kind) {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('transform', `translate(${x} ${y}) rotate(${rot})`);
+  const w = kind ? ['SIGNED', 'OFF'] : ['OK', 'APPROVED'], hw = kind ? 34 : 43;   // APPROVED wants a wider frame
+  const f = `font-family="Eurostile, Geist, sans-serif" fill="#121417" text-anchor="middle"`;
+  g.innerHTML = `<rect x="${-hw}" y="-26" width="${hw * 2}" height="52" fill="none" stroke="#121417" stroke-width="2.6"/><rect x="${-hw + 4.5}" y="-21.5" width="${hw * 2 - 9}" height="43" fill="none" stroke="#121417" stroke-width="0.9"/>` +
+    `<text y="${kind ? -3 : -2}" font-size="${kind ? 14 : 22}" ${f}>${w[0]}</text><text y="${kind ? 14 : 15}" font-size="${kind ? 14 : 12.5}" ${f}>${w[1]}</text>`;
+  g.style.opacity = 0; seals.appendChild(g); return g;
+}
+
+/* the stamp comes down from above (scale reads as height), presses, lifts away */
+let pressing = false;
+function stamp(x, y, kind, done) {
+  if (pressing) return; pressing = true;
+  const rot = -8 + Math.random() * 14, g = sealSVG(x, y, rot, kind);
+  const sx = card.offsetLeft + x, syBase = () => cy.x + y;
+  const ox = 230, oy = -330;
+  stampEl.style.opacity = 1;
+  const place = (p, s) => { const q = p * p; stampEl.style.transform = `translate(${(sx + ox * p).toFixed(2)}px,${(syBase() + oy * q).toFixed(2)}px) scale(${s.toFixed(4)})`; };
+  tween(RM ? 1 : 620, E.io, (p) => { const h = 1 - p; place(h, 1 + 0.95 * Math.sqrt(h)); }, () => {
+    g.style.opacity = 0.94; dip.x = 0.982; dip.v = 0;
+    tween(RM ? 1 : 520, E.out, (p) => { spread.setAttribute('radius', (p * 0.38).toFixed(3)); g.setAttribute('transform', `translate(${x} ${y}) rotate(${rot}) scale(${(1.03 - 0.03 * p).toFixed(4)})`); });
+    tween(120, E.out, (p) => place(0, 1 - 0.05 * Math.sin(p * Math.PI)), () => {
+      tween(RM ? 1 : 640, E.io, (p) => place(p, 1 + 0.95 * Math.sqrt(p)), () => { stampEl.style.opacity = 0; pressing = false; if (done) done(); });
+    });
+  });
+}
+
+/* story: sleeve → card rises → stamp → back into the sleeve */
+let state = 'in', busy = false, lastIn = -1e9, stAt = 0, prev = '';
+function out() {
+  busy = true; state = 'out';
+  cy.t = UP; cy.k = 70; cy.c = 15;
+  at(RM ? 0 : 520, () => { sl.t = 230; sl.k = 60; sl.c = 14; });
+  at(RM ? 0 : 1050, () => { cy.k = 120; cy.c = 19; cy.t = MID; });
+  at(RM ? 0 : 1700, () => { state = 'shown'; busy = false; });
+}
+function autoStamp() { busy = true; stamp(284, 170, 0, () => { state = 'stamped'; busy = false; }); }
+function back() {
+  busy = true; state = 'back';
+  sl.k = 110; sl.c = 19; sl.t = 0; cy.k = 70; cy.c = 16; cy.t = PEEK;
+  at(1500, () => { seals.innerHTML = ''; spread.setAttribute('radius', 0); cy.k = 120; cy.c = 19; state = 'in'; busy = false; });
+}
+ticks.add(() => {
+  if (state !== prev) { prev = state; stAt = T; }
+  if (RM || busy || T - lastIn < 2500) return;
+  const held = T - stAt;
+  if (state === 'in' && held > 500) out();
+  else if (state === 'shown' && held > 350) autoStamp();
+  else if (state === 'stamped' && held > 2400) back();
+});
+card.addEventListener('pointerdown', (e) => {
+  lastIn = T;
+  if (state === 'in') { out(); return; }
+  if (state !== 'shown' && state !== 'stamped') return;
+  const r = card.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * 340, y = ((e.clientY - r.top) / r.height) * 214;
+  if (seals.children.length >= 6) seals.firstElementChild.remove();
+  stamp(Math.max(40, Math.min(300, x)), Math.max(40, Math.min(186, y)), sealN++ % 2, () => { state = 'stamped'; });
+});
+addEventListener('pointerdown', (e) => { if (!card.contains(e.target)) { lastIn = T; if (state === 'stamped' || state === 'shown') back(); else if (state === 'in') out(); } });
+if (RM) { cy.x = cy.t = MID; sl.x = sl.t = 230; state = 'stamped'; const g = sealSVG(280, 160, -4, 0); g.style.opacity = 0.94; spread.setAttribute('radius', 0.38); lastIn = Infinity; }
+requestAnimationFrame(frame);
+</script>
+<script>
+  function fit() {
+    const s = Math.min(innerWidth / 400, (innerHeight - 70) / 262) * 0.96;
+    stage.style.transform = `translate(-50%,-50%) scale(${Math.min(s, 1.8)})`;
+  }
+  addEventListener('resize', fit); fit();
+  QM.demo({ kind: 'loop', restart() { lastIn = -1e9; } });
+</script>
+</body>
+</html>

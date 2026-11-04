@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en" data-tone="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flow field · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "flow",
+  "title": "Flow field",
+  "group": "generative",
+  "cat": "backgrounds",
+  "order": 30,
+  "kind": "loop",
+  "tone": "dark",
+  "line": "420 particles · fine lime lines · still on scroll",
+  "summary": "Particles carried by a slow field of currents, each drawing a fine line where it goes while the old lines fade, so the picture is the paths they take. It is drawn out ahead the first time it comes on screen, so the lines are already there, and it holds still while the page scrolls.",
+  "spec": [
+    ["Particles", "420 on Forma's motion study · 70 in a face and 110 in the read (Bid King) · each lives 50–210 steps, then starts again somewhere else"],
+    ["Currents", "angle = sin(0.011 u + 0.35 t) × 1.5 + cos(0.013 v − 0.25 t) × 1.3 + sin(0.0045 (u + v) + 1.3) × 2.4, with (u, v) the point in the drawing's px ÷ scale"],
+    ["Step", "t += 0.004 × speed · a particle moves 1.15 px × speed along its angle and draws that segment"],
+    ["Fade", "the ground over the whole canvas at alpha 1 − 0.94ⁿ each step, so old lines melt away"],
+    ["Line", "0.9 px (a device pixel at least), rgba(184, 255, 0, 0.78) on rgb(11, 12, 14)"],
+    ["Drawn ahead", "the first time it is on screen: 40–180 steps at once, fewer and faded every fourth the bigger the canvas, so a big one coming in mid-scroll is no stall"],
+    ["Density", "the canvas's own device pixels, the scene's zoom included (a big soft one may ask for a lower `density`)"],
+    ["Trigger", "moves only while on screen and the tab is open · still while the page scrolls (lib/scene/quiet.ts) · a single drawn frame for reduced motion"]
+  ],
+  "source": [
+    "components/scene/Flow.tsx",
+    "components/scenes/Forma.tsx · the motion study",
+    "components/scenes/BidKing.tsx · At the table, The read",
+    "lib/scene/quiet.ts",
+    "app/scenes-forma.css · .fm-flow",
+    "app/scenes-bid.css · .bk-av, .bk-signal"
+  ],
+  "where": "The motion study on Forma's moodboard (the Design service chapter); the three models' faces and “The read” in Bid King's room (AI Bidding, Labs and About).",
+  "rules": [
+    "Colours are 'r, g, b'. The ground is the colour of the box it sits in, so the canvas has no edge.",
+    "Lime lines on ink only: the screen's one lime is the lines themselves.",
+    "`scale` is the size of the currents and `speed` the pace: a 32 px face uses scale 0.14 so a small square still holds several currents.",
+    "Never drawn on load: the first time it is seen, so a field of lines is already there rather than a wipe. Still while the page scrolls, paused off screen and in a hidden tab."
+  ],
+  "tags": ["canvas", "generative", "particles", "dark", "lime", "scene"]
+}
+</script>
+<style data-code>
+/* Flow — the canvas fills the box it is drawn in; the box carries the ground the lines fade into */
+.flow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.fm-flow { position: relative; width: 232px; height: 200px; overflow: hidden; background: #0b0c0e; }
+
+/* Forma's motion study: a dark glass caption over it, its top right corner notched (.notch is the kit's) */
+.fm-flow-cap {
+  --cut: 12px;
+  position: absolute; left: 12px; bottom: 12px;
+  display: inline-flex; align-items: center; height: 30px; padding: 0 12px;
+  font-size: 12px; font-weight: 500; color: #f4f5f2;
+  background: rgba(30, 32, 36, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+}
+</style>
+<style>
+  .qm-stage { display: block; padding: 0; --ui: 0px; }
+  html:not(.qm-tile) .qm-stage { --ui: 46px; }
+  /* a view is one drawing, laid out at its own size and zoomed to its box (the scenes' way: zoom, not a transform) */
+  .fl-view { position: absolute; inset: 0 0 var(--ui) 0; display: none; padding: clamp(24px, 6vmin, 72px); }
+  .fl-view.is-on { display: grid; place-items: center; }
+  .fl-box { position: relative; width: 100%; height: 100%; display: grid; place-items: center; min-width: 0; min-height: 0; contain: inline-size; }
+  .fl-scn { position: relative; flex: none; font-family: var(--font-sans); font-size: 13px; line-height: 1.4; color: #f4f5f2; -webkit-font-smoothing: antialiased; }
+  /* the board's title, over the piece (app/scenes-forma.css .fm-lbl) */
+  .fm-lbl { position: absolute; left: 0; right: 0; top: 0; height: 18px; display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244, 245, 242, 0.62); white-space: nowrap; }
+  .fm-lbl span:last-child { color: rgba(244, 245, 242, 0.38); }
+  #v-study .fm-flow { position: absolute; left: 0; top: 26px; }
+
+  /* Bid King's table (app/scenes-bid.css): the three models' faces and what the table reads, all Flow */
+  .bk { padding: 12px; background: #0b0c0e; color: #f4f5f2; }
+  .bk-k { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244, 245, 242, 0.5); white-space: nowrap; }
+  .bk-side { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; min-height: 0; }
+  .bk-side-k { display: flex; justify-content: space-between; }
+  .bk-side-k em { font-style: normal; color: rgba(244, 245, 242, 0.32); }
+  .bk-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; height: 52px; padding: 0 12px; background: rgba(244, 245, 242, 0.05); }
+  .bk-row.is-out { color: rgba(244, 245, 242, 0.42); }
+  .bk-av { position: relative; width: 32px; height: 32px; overflow: hidden; background: rgba(244, 245, 242, 0.12); }
+  .bk-av img, .bk-av .flow, .bk-signal .flow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+  .bk-av img { object-position: 50% 30%; }
+  .bk-row.is-out .bk-av { opacity: 0.4; }
+  .bk-who b { display: block; font-size: 14px; font-weight: 500; line-height: 1.2; }
+  .bk-who em { font-style: normal; font-size: 11px; color: rgba(244, 245, 242, 0.5); }
+  .bk-said { font-size: 12.5px; color: rgba(244, 245, 242, 0.72); white-space: nowrap; }
+  .bk-read { margin-top: auto; display: grid; gap: 10px; padding: 12px; background: rgba(244, 245, 242, 0.05); }
+  .bk-signal { position: relative; height: 30px; overflow: hidden; }
+  .bk-read-v { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
+  .bk-read-v b { font-weight: 500; }
+  .bk-read-v em { font-style: normal; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .bk-meter { position: relative; height: 4px; background: rgba(244, 245, 242, 0.12); }
+  .bk-meter i { position: absolute; left: 0; top: 0; width: 82%; height: 100%; background: #f4f5f2; }
+</style>
+</head>
+<body>
+<main class="qm-stage" id="stage">
+  <section class="fl-view is-on" id="v-study">
+    <div class="fl-box" id="box-study">
+      <div class="fl-scn" id="scn-study" style="width: 232px; height: 226px">
+        <div class="fm-lbl"><span>Forma / Moodboard</span><span>9 pieces</span></div>
+<!-- code -->
+<div class="fm-flow">
+  <canvas class="flow" data-count="420" data-seed="11" aria-hidden="true"></canvas>
+  <span class="fm-flow-cap notch">Motion study</span>
+</div>
+<!-- A face in Bid King's room, 32 px square (the three models: seeds 41, 77, 13):
+     <canvas class="flow" data-count="70" data-seed="41" data-ground="28, 30, 34" data-alpha="0.9" data-scale="0.14" data-speed="1.3"></canvas>
+     and what the table reads, 208 × 30:
+     <canvas class="flow" data-count="110" data-seed="5" data-ground="22, 24, 28" data-alpha="0.7" data-scale="0.45" data-speed="1.1"></canvas> -->
+<!-- /code -->
+      </div>
+    </div>
+  </section>
+  <section class="fl-view" id="v-table" aria-hidden="true">
+    <div class="fl-box" id="box-table">
+      <div class="fl-scn bk" id="scn-table" style="width: 256px; height: 414px">
+        <div class="bk-side">
+          <span class="bk-k bk-side-k">At the table <em>4</em></span>
+          <div class="bk-row"><i class="bk-av"><img src="../assets/art/you.webp" alt="" draggable="false"></i><span class="bk-who"><b>You</b><em>Sealed</em></span><span class="bk-said">$1,200</span></div>
+          <div class="bk-row"><i class="bk-av"><canvas class="flow" data-count="70" data-seed="41" data-ground="28, 30, 34" data-alpha="0.9" data-scale="0.14" data-speed="1.3"></canvas></i><span class="bk-who"><b>Vex</b><em>Model</em></span><span class="bk-said">Sealed</span></div>
+          <div class="bk-row"><i class="bk-av"><canvas class="flow" data-count="70" data-seed="77" data-ground="28, 30, 34" data-alpha="0.9" data-scale="0.14" data-speed="1.3"></canvas></i><span class="bk-who"><b>Moss</b><em>Model</em></span><span class="bk-said">Bluffing</span></div>
+          <div class="bk-row is-out"><i class="bk-av"><canvas class="flow" data-count="70" data-seed="13" data-ground="28, 30, 34" data-alpha="0.9" data-scale="0.14" data-speed="1.3"></canvas></i><span class="bk-who"><b>Juno</b><em>Model</em></span><span class="bk-said">Folded</span></div>
+          <div class="bk-read">
+            <span class="bk-k">The read</span>
+            <span class="bk-signal"><canvas class="flow" data-count="110" data-seed="5" data-ground="22, 24, 28" data-alpha="0.7" data-scale="0.45" data-speed="1.1"></canvas></span>
+            <span class="bk-read-v"><b>Moss is bluffing</b><em>82%</em></span>
+            <span class="bk-meter"><i></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="qm-ui" id="ui">
+    <span>View</span>
+    <button data-view="study" class="is-on">Motion study</button>
+    <button data-view="table">At the table</button>
+    <span class="qm-sep">/</span>
+    <button id="redraw">Draw again</button>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* ---- lib/scene/quiet.ts — whether the page is being scrolled right now. The generative drawings
+   hold still while it is, so the scroll keeps every frame (they pick up again once it stops). */
+let lastScroll = -1e9;
+let listening = false;
+function scrolling() {
+  if (!listening) {
+    listening = true;
+    window.addEventListener('scroll', () => (lastScroll = performance.now()), { passive: true });
+  }
+  return performance.now() - lastScroll < 180;
+}
+
+/* ---- components/scene/Flow.tsx
+   Generative art: particles carried by a slow field of currents, each drawing a fine line where it
+   goes while the old lines fade, so the picture is the paths they take. Lime on ink by default
+   (colours as 'r, g, b'). Drawn at the canvas's own device pixels, the scene's zoom included; it's
+   drawn out the first time it comes on the screen (not on load), moves only while it's on the screen
+   and the tab is open, and for reduced motion it's a still.
+   count · seed · ground · ink · speed · scale (the size of the currents: above 1, wider) ·
+   alpha (how strong each line is drawn) · density (canvas pixels per css pixel, for a big soft one) */
+function flow(cv, { count = 520, seed = 7, ground = '11, 12, 14', ink = '184, 255, 0', speed = 1, scale = 1, alpha = 0.78, density, ratio } = {}) {
+  const g = cv.getContext('2d', { alpha: false });
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let s = seed;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  let W = 0, H = 0, k = 1, t = 0;
+  const ps = Array.from({ length: count }, () => ({ x: 0, y: 0, life: 0 }));
+  const spawn = (p) => {
+    p.x = rnd() * W;
+    p.y = rnd() * H;
+    p.life = 50 + rnd() * 160;
+  };
+  // the currents: an angle at each point (in the drawing's px), turning slowly with time
+  const angle = (x, y) => {
+    const u = x / k / scale, v = y / k / scale;
+    return Math.sin(u * 0.011 + t * 0.35) * 1.5 + Math.cos(v * 0.013 - t * 0.25) * 1.3 + Math.sin((u + v) * 0.0045 + 1.3) * 2.4;
+  };
+  const fade = (n) => `rgba(${ground}, ${(1 - Math.pow(0.94, n)).toFixed(3)})`;
+  const line = `rgba(${ink}, ${alpha})`;
+  // a step of the currents; the old lines fade every `every` steps (by as much as they would have)
+  let since = 0;
+  const step = (every = 1) => {
+    t += 0.004 * speed;
+    if (++since >= every) {
+      g.fillStyle = fade(since);
+      g.fillRect(0, 0, W, H);
+      since = 0;
+    }
+    g.strokeStyle = line;
+    g.lineWidth = Math.max(1, k * 0.9);
+    g.beginPath();
+    const v = 1.15 * k * speed;
+    for (const p of ps) {
+      const a = angle(p.x, p.y);
+      const nx = p.x + Math.cos(a) * v, ny = p.y + Math.sin(a) * v;
+      g.moveTo(p.x, p.y);
+      g.lineTo(nx, ny);
+      p.x = nx;
+      p.y = ny;
+      if (--p.life <= 0 || nx < 0 || ny < 0 || nx > W || ny > H) spawn(p);
+    }
+    g.stroke();
+  };
+  const fresh = () => {
+    g.fillStyle = `rgb(${ground})`;
+    g.fillRect(0, 0, W, H);
+    ps.forEach(spawn);
+    // drawn out ahead: fewer steps, faded less often, the bigger the canvas (a big one comes in mid-scroll)
+    const n = Math.max(40, Math.min(180, Math.round((180 * 4e5) / (W * H))));
+    for (let i = 0; i < n; i++) step(n < 180 ? 4 : 1);
+  };
+
+  let raf = 0, seen = false, drawn = false;
+  const size = (w, h) => {
+    if (w < 2 || h < 2 || (w === W && h === H)) return;
+    W = cv.width = w;
+    H = cv.height = h;
+    k = W / Math.max(1, cv.clientWidth);
+    drawn = false;
+    if (seen) draw();
+  };
+  const draw = () => {
+    if (drawn || !W) return;
+    drawn = true;
+    fresh();
+  };
+  const ro = new ResizeObserver(([e]) => {
+    const d = e.devicePixelContentBoxSize?.[0];
+    if (density) size(Math.round(e.contentRect.width * density), Math.round(e.contentRect.height * density));
+    // (added for a gallery tile: `ratio` canvas pixels a css pixel as drawn on the screen, whatever the zoom)
+    else if (ratio) { const r = cv.getBoundingClientRect(); size(Math.round(r.width * ratio), Math.round(r.height * ratio)); }
+    else if (d) size(d.inlineSize, d.blockSize);
+    else size(Math.round(e.contentRect.width * devicePixelRatio), Math.round(e.contentRect.height * devicePixelRatio));
+  });
+  try { ro.observe(cv, { box: 'device-pixel-content-box' }); } catch { ro.observe(cv); }
+
+  const loop = () => {
+    raf = 0;
+    if (!seen || document.hidden || calm || !W) return;
+    // still while the page is scrolled
+    if (!scrolling()) step();
+    raf = requestAnimationFrame(loop);
+  };
+  const wake = () => { if (!raf) raf = requestAnimationFrame(loop); };
+  const io = new IntersectionObserver(([e]) => {
+    seen = e.isIntersecting;
+    if (seen) draw();
+    wake();
+  });
+  io.observe(cv);
+  document.addEventListener('visibilitychange', wake);
+  return {
+    // draw it out again from the start (the same seed: the same first picture)
+    restart() { s = seed; t = 0; since = 0; drawn = false; if (seen) draw(); wake(); },
+    stop() {
+      ro.disconnect();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', wake);
+      if (raf) cancelAnimationFrame(raf);
+    },
+  };
+}
+
+/* A canvas's options from its data attributes: <canvas class="flow" data-count="420" data-seed="11"> */
+const flowOptions = (d) => ({
+  count: d.count && +d.count, seed: d.seed && +d.seed, ground: d.ground, ink: d.ink,
+  speed: d.speed && +d.speed, scale: d.scale && +d.scale, alpha: d.alpha && +d.alpha, density: d.density && +d.density,
+});
+const flowCanvases = Array.from(document.querySelectorAll('canvas.flow'));
+const flows = flowCanvases.map((cv) => flow(cv, flowOptions(cv.dataset)));
+</script>
+<script>
+  // --- demo glue: the two drawings the site puts Flow in, laid out at their own size and zoomed to their box ---
+  const $ = (id) => document.getElementById(id);
+  const fit = (box, scn, w, h) => {
+    const f = () => { const k = Math.min(box.clientWidth / w, box.clientHeight / h); if (k > 0) scn.style.setProperty('zoom', String(Math.round(k * 1000) / 1000)); };
+    f();
+    new ResizeObserver(f).observe(box);
+  };
+  fit($('box-study'), $('scn-study'), 232, 226);
+  fit($('box-table'), $('scn-table'), 256, 414);
+  // a gallery tile draws one canvas pixel a css pixel (the drawings are zoomed to their box); the detail view, the site's own rule
+  function mount() {
+    flows.forEach((f, i) => {
+      f.stop();
+      flows[i] = flow(flowCanvases[i], { ...flowOptions(flowCanvases[i].dataset), ratio: QM.tile ? 1 : undefined });
+    });
+  }
+  mount();
+  document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-view]').forEach((x) => x.classList.toggle('is-on', x === b));
+    $('v-study').classList.toggle('is-on', b.dataset.view === 'study');
+    $('v-table').classList.toggle('is-on', b.dataset.view === 'table');
+    $('v-table').setAttribute('aria-hidden', String(b.dataset.view !== 'table'));
+  }));
+  $('redraw').addEventListener('click', () => flows.forEach((f) => f.restart()));
+  QM.demo({ kind: 'loop', restart: () => flows.forEach((f) => f.restart()) });
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lit slots · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-saas",
+  "title": "Lit slots",
+  "group": "lab",
+  "cat": "scenes",
+  "order": 810,
+  "kind": "play",
+  "tone": "paper",
+  "line": "typed ask · 3 open slots lit · 1 picked and dropped in",
+  "summary": "The hero of a product page shows the product doing its one job on a loop. A request is typed into a bar, the open slots in a week light up one after another as frames, and one is picked and uncovered as a lime block in the calendar. Rebuilt from the saas-landing recipe in the qbix language: flat blocks, one lime, nothing faded.",
+  "spec": [
+    ["Type", "one letter every 38 ms, a 2px caret, 700 ms before and 500 ms after"],
+    ["Slots", "three open frames uncovered left to right, 220 ms apart, 2px ink inset frames"],
+    ["Pick", "the other slots are covered again, the chosen block is uncovered top to bottom in 600 ms"],
+    ["Answer", "a mono line slides up out of a sleeve: 3 open, 1 picked"],
+    ["Loop", "reset to rest, 700 ms, play, hold 3.6 s"]
+  ],
+  "source": ["Qbix studio library · 11-saas-landing"],
+  "where": "The hero of a studio page: Sera finds the review hour that works for the client, the designer and the developer.",
+  "rules": [
+    "The calendar is HTML, so it stays sharp and follows the tone.",
+    "Events are flat white blocks; only the picked slot is lime.",
+    "A slot is a 2px inset frame, not a border; nothing is rounded."
+  ],
+  "tags": ["hero", "product", "typing", "calendar"],
+  "shot": 5600
+}
+</script>
+<style data-code>
+/* Week planner: an ask bar over a five-day grid. Times map to percentages of the column height. */
+.wk { --ch: clamp(230px, 56vh, 330px); background: #ffffff; padding: 14px; display: grid; gap: 12px; width: 100%; --c: 14px;
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
+.wk-ask { display: flex; align-items: center; gap: 10px; min-height: 36px; background: #f3f4f5; padding: 0 12px; font-size: 14px; color: #121417; white-space: nowrap; overflow: hidden; }
+.wk-ask svg { flex: none; width: 14px; height: 14px; }
+.wk-caret { width: 2px; height: 16px; background: #121417; flex: none; margin-left: -8px; }
+.wk-answer { margin-left: auto; flex: none; overflow: hidden; height: 1.6em; font: 400 11px/1.6 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: #121417; }
+.wk-answer span { display: block; transform: translateY(110%); transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+.wk-answer.on span { transform: translateY(0); }
+.wk-week { display: grid; grid-template-columns: 28px repeat(5, 1fr); gap: 4px; }
+.wk-dh { font: 400 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); padding: 2px 0 4px; }
+.wk-hours { position: relative; height: var(--ch); }
+.wk-hours span { position: absolute; left: 0; font: 400 10px/1 'Encode Sans', Geist, sans-serif; color: rgba(18, 20, 23, 0.38); transform: translateY(-50%); }
+.wk-col { position: relative; height: var(--ch); background: #f3f4f5; }
+.wk-ev { position: absolute; left: 0; right: 0; background: #ffffff; padding: 5px 6px; overflow: hidden; display: grid; align-content: start; gap: 2px; }
+.wk-ev b { font-weight: 500; font-size: 11px; line-height: 1.2; color: #121417; }
+.wk-ev span { font-size: 10px; line-height: 1.2; color: rgba(18, 20, 23, 0.55); }
+.wk-slot { position: absolute; left: 0; right: 0; box-shadow: inset 0 0 0 2px #121417; clip-path: inset(0 100% 0 0); transition: clip-path 380ms cubic-bezier(0.16, 1, 0.3, 1); }
+.wk-slot.on { clip-path: inset(0 0 0 0); }
+.wk-pick { position: absolute; left: 0; right: 0; background: #B8FF00; color: #0c1300; padding: 6px; display: grid; align-content: start; gap: 2px; clip-path: inset(0 0 100% 0); transition: clip-path 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+.wk-pick.on { clip-path: inset(0 0 0 0); }
+.wk-pick b { font-weight: 500; font-size: 12px; line-height: 1.2; } .wk-pick span { font-size: 10px; opacity: 1; color: rgba(12, 19, 0, 0.7); }
+.wk.is-reset * { transition: none !important; }
+</style>
+<style>
+  .hero { width: min(100%, 1080px); display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr); gap: clamp(20px, 4vw, 48px); align-items: center; }
+  .hero .title { font-size: clamp(32px, 4.6vw, 60px); }
+  .hero .copy { display: grid; gap: 16px; }
+  .hero .lede { font-size: 15px; }
+  .hero .tags { display: flex; gap: 8px; }
+  @media (max-width: 700px) { .hero { grid-template-columns: 1fr; } .hero .lede { display: none; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="hero">
+    <div class="copy">
+      <p class="kicker">Qbix · Review planner</p>
+      <h2 class="title">Review hours that fit the week.</h2>
+      <p class="lede">Sera reads your calendar, the designer's and the developer's, and finds the review hour that costs nobody a meeting.</p>
+      <div class="tags"><span class="tag is-live">Live</span><span class="tag">Forma</span></div>
+    </div>
+<!-- code -->
+<div class="wk" id="wk" aria-label="Sera finding a review hour">
+  <div class="wk-ask"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z" fill="#121417"/></svg><span id="ask-text"></span><span class="wk-caret"></span><span class="wk-answer" id="answer"><span>3 open, 1 picked</span></span></div>
+  <div class="wk-week" id="week">
+    <div></div><div class="wk-dh">Mon 9</div><div class="wk-dh">Tue 10</div><div class="wk-dh">Wed 11</div><div class="wk-dh">Thu 12</div><div class="wk-dh">Fri 13</div>
+    <div class="wk-hours" id="hours"></div>
+    <div class="wk-col"></div><div class="wk-col"></div><div class="wk-col"></div><div class="wk-col"></div><div class="wk-col"></div>
+  </div>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Plays on a loop</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(() => {
+  const H0 = 8, H1 = 18, pct = (h) => ((h - H0) / (H1 - H0)) * 100;
+  const hours = document.getElementById('hours');
+  for (let h = 9; h < H1; h += 2) { const s = document.createElement('span'); s.style.top = pct(h) + '%'; s.textContent = (h > 12 ? h - 12 : h) + (h >= 12 ? 'p' : 'a'); hours.append(s); }
+  const cols = [...document.querySelectorAll('.wk-col')];
+  const EVENTS = [
+    [0, 9, 10.5, 'Palette', 'Ana'], [0, 13, 15, 'Build', 'Theo'], [1, 10, 12, 'Kickoff', 'Mara'], [1, 14, 15, 'QA', 'Theo'],
+    [2, 9, 10, 'Standup', 'All'], [2, 11, 12.5, 'Layout', 'Ana'], [3, 9.5, 11.5, 'Build', 'Theo'], [3, 16, 17, 'Invoice', 'Sera'],
+    [4, 10, 11, 'Demo', 'All'], [4, 13, 16, 'Launch', 'Sera'],
+  ];
+  const place = (e, a, b) => { e.style.top = `calc(${pct(a)}% + 1px)`; e.style.height = `calc(${pct(b) - pct(a)}% - 2px)`; };
+  EVENTS.forEach(([c, a, b, t, who]) => { const e = document.createElement('div'); e.className = 'wk-ev'; place(e, a, b); e.innerHTML = `<b>${t}</b><span>${who}</span>`; cols[c].append(e); });
+  const SLOTS = [[1, 15.5, 17], [2, 14, 16], [3, 12.5, 14.5]];
+  const slotEls = SLOTS.map(([c, a, b]) => { const s = document.createElement('div'); s.className = 'wk-slot'; place(s, a, b); cols[c].append(s); return s; });
+  const picked = document.createElement('div'); picked.className = 'wk-pick'; place(picked, 14, 16); picked.innerHTML = '<b>Review</b><span>Mara, Ana, Theo</span>'; cols[2].append(picked);
+  const ask = document.getElementById('ask-text'), answer = document.getElementById('answer'), PROMPT = 'Find an hour for the Forma review';
+  let run = 0;
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  function clear() { ask.textContent = ''; answer.classList.remove('on'); picked.classList.remove('on'); slotEls.forEach((s) => s.classList.remove('on')); }
+  async function play() {
+    const my = ++run, ok = () => my === run;
+    await wait(700); if (!ok()) return;
+    for (let i = 1; i <= PROMPT.length; i++) { ask.textContent = PROMPT.slice(0, i); await wait(38); if (!ok()) return; }
+    await wait(500); if (!ok()) return;
+    for (const s of slotEls) { s.classList.add('on'); await wait(220); if (!ok()) return; }
+    answer.classList.add('on'); await wait(900); if (!ok()) return;
+    slotEls.forEach((s, i) => { if (i !== 1) s.classList.remove('on'); });
+    picked.classList.add('on');
+  }
+  function reset() { run++; const w = document.getElementById('wk'); w.classList.add('is-reset'); clear(); void w.offsetWidth; w.classList.remove('is-reset'); }
+  window.wkApi = { play, reset, still() { run++; ask.textContent = PROMPT; answer.classList.add('on'); picked.classList.add('on'); } };
+})();
+</script>
+<script>
+  if (QM.reduced) { window.wkApi.still(); }
+  QM.demo({ kind: 'play', lead: 450, dur: 4600, hold: 3600, reset: window.wkApi.reset, play: window.wkApi.play });
+</script>
+</body>
+</html>

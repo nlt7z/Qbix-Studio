@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thinking · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-chat-thinking",
+  "title": "Thinking",
+  "group": "picks",
+  "cat": "loading",
+  "order": 37,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "steps tick in every 1 s · 120–260 ms · fold into one row",
+  "summary": "The companion sits beside the reply, its cube bobbing and three dots blinking, while the activity rows tick in one by one under a live header whose label swaps and shimmers. When the answer arrives the companion goes, the steps fold into a single “AI reasoning” row, and the answer rises in. The cube's lime top is the one lime: it is there only while the model is working.",
+  "spec": [
+    ["Rows", "one every 1 s (the first after 0.6 s); each rises 6px over 200 ms, expo out; the newest is the running one (a pulsing ring)"],
+    ["Header", "three dots, the live label (it swaps: the old one leaves in 120 ms ease-in, the new one rises in 200 ms) shimmering over 3 s, a seconds counter every 250 ms, a chevron"],
+    ["Companion", "a 56px cube with a lime top, bobbing, and a three-dot emote that pops in over 260 ms and blinks on a 1.4 s loop"],
+    ["Done", "after 0.8 s: the companion leaves (120 ms), a tile takes its place (200 ms), the list folds (grid rows 1fr → 0fr, 200 ms) into one row with a count, the answer rises in 260 ms later"],
+    ["Rows are folded, never removed", "the steps stay in the document inside the folded row, and the header opens them again"],
+    ["Loop", "3.6 s after the answer the thread starts over; paused while the page is hidden"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Thinking (bom-chat-thinking)", "Idea: Qbix studio library · thinking"],
+  "where": "Strata's chat: ask for a design system from Forma's moodboard and watch the model read the board, pull the palette, measure the type and draft the components before it answers.",
+  "rules": [
+    "Quiet motion, 120 to 260 ms. Steps fold, never vanish.",
+    "No morphing orbs: the companion is a plain cube and only lives in the conversation.",
+    "One lime, and only while it is thinking.",
+    "The header is a real button: it opens and closes the folded steps."
+  ],
+  "tags": ["chat", "thinking", "timeline", "ai", "steps"],
+  "shot": 3700
+}
+</script>
+<style data-code>
+/* Thinking · redrawn for Qbix (Idea: library/demos/thinking.html).
+   Layout, sizes and motion are the original's; colours are Qbix's: paper, ink, one lime. */
+.pk {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
+  --radius-sm: 8px; --radius-lg: 14px; --radius-pill: 999px;
+  --duration-fast: 120ms; --duration-base: 200ms;
+  --ease-out: cubic-bezier(.16, 1, .3, 1); --ease-in: cubic-bezier(.7, 0, .84, 0); --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --text: var(--fg); --muted: var(--fg2); --faint: rgba(18, 20, 23, .56);
+  --surface-muted: var(--sunk); --divider-strong: rgba(18, 20, 23, .2); --field-border: rgba(18, 20, 23, .5);
+  font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--text);
+}
+.ct { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
+.thread { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(760px, 100%); height: min(600px, 100%); background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; }
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); padding: var(--space-5) var(--space-6) var(--space-4); }
+.head h1 { font: 400 16px/1.35 var(--font-sans); letter-spacing: -0.01em; }
+.head .meta { font-size: 12px; color: var(--faint); }
+.msgs { display: flex; flex-direction: column; gap: var(--space-5); padding: var(--space-2) var(--space-6); overflow: hidden; justify-content: flex-end; min-height: 0; }
+.you { align-self: flex-end; max-width: 78%; padding: var(--space-2) var(--space-4); background: var(--surface-muted); color: var(--text); border-radius: var(--radius-lg); animation: rise var(--duration-base) var(--ease-out) both; }
+.bot { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--space-3); align-items: start; animation: rise var(--duration-base) var(--ease-out) both; }
+.who { position: relative; width: 56px; height: 56px; margin-top: -10px; }
+.who > * { position: absolute; left: 0; top: 0; transition: opacity var(--duration-fast) var(--ease-in); }
+.tile { display: grid; place-items: center; width: 28px; height: 28px; margin: 20px 0 0 14px; border-radius: var(--radius-sm); background: var(--text); color: var(--ground); opacity: 0; }
+.bot.is-done .tile { opacity: 1; transition-duration: var(--duration-base); transition-timing-function: var(--ease-out); }
+.bot.is-done .companion { opacity: 0; }
+/* the companion: a cube with a lime top, and a thinking emote */
+.companion svg { display: block; overflow: visible; }
+.companion .bob { animation: bob 2.4s var(--ease-in-out) infinite alternate; }
+@keyframes bob { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+.companion .emote { transform-box: fill-box; transform-origin: 50% 100%; animation: emote-pop var(--duration-slow, 260ms) var(--ease-out) both; }
+.companion .emote rect { animation: emote-dot 1.4s var(--ease-in-out) infinite both; }
+.companion .emote rect:nth-child(2) { animation-delay: .18s; } .companion .emote rect:nth-child(3) { animation-delay: .36s; }
+@keyframes emote-pop { 0% { opacity: 0; transform: translateY(2px) scale(.4); } 70% { opacity: 1; transform: translateY(0) scale(1.15); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes emote-dot { 0%, to { opacity: .25; } 40% { opacity: 1; } }
+.col { min-width: 0; display: grid; gap: var(--space-3); padding-top: var(--space-1); }
+.answer { display: grid; gap: var(--space-2); animation: rise var(--duration-base) var(--ease-out) both; }
+.answer .lead { font-size: 20px; letter-spacing: -0.02em; line-height: 1.35; }
+.answer .rest { color: var(--muted); }
+/* the activity timeline */
+.tl { display: grid; }
+.sum { display: flex; align-items: center; gap: var(--space-2); min-height: 28px; padding: var(--space-1) var(--space-2) var(--space-1) 0; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); text-align: left; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.sum:hover, .sum.is-hover { background: var(--surface-muted); color: var(--text); }
+.sum .mk { display: grid; place-items: center; width: 16px; color: var(--faint); }
+.tl.is-live .sum .mk { color: var(--muted); }
+.dots { display: inline-flex; gap: 2px; align-items: center; height: 12px; }
+.dots i { width: 3px; height: 3px; border-radius: var(--radius-pill); background: currentColor; opacity: .35; animation: dot 1.9s var(--ease-in-out) infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes dot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2.5px); } }
+.lbl { display: grid; min-width: 0; overflow: hidden; }
+.lbl span { grid-area: 1 / 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lbl .in { animation: lin var(--duration-base) var(--ease-out) both; }
+.lbl .out { animation: lout var(--duration-fast) var(--ease-in) both; }
+@keyframes lin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes lout { from { opacity: 1; } to { opacity: 0; transform: translateY(-4px); } }
+.tl.is-live .lbl span:not(.out) { color: transparent; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 38%, var(--text) 50%, var(--muted) 62%, var(--muted) 100%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: shim 3s linear infinite; }
+.tl.is-live .lbl .in { animation: lin var(--duration-base) var(--ease-out) both, shim 3s linear infinite; }
+@keyframes shim { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.sum .cnt { margin-left: auto; color: var(--faint); font-variant-numeric: tabular-nums; }
+.sum .chev { color: var(--faint); transition: transform var(--duration-base) var(--ease-out); }
+.tl.is-open .chev { transform: rotate(180deg); }
+.wrap { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; transition: grid-template-rows var(--duration-base) var(--ease-out), opacity var(--duration-base) var(--ease-out), visibility 0s linear var(--duration-base); }
+.tl.is-open .wrap { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition-delay: 0s; }
+.wrap > ol { min-height: 0; overflow: hidden; margin: 0; padding: 0 0 0 var(--space-1); list-style: none; }
+.st { position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: var(--space-2); padding: 3px 0; animation: rise var(--duration-base) var(--ease-out) both; }
+.st::before { content: ""; position: absolute; left: 7.5px; top: 23px; bottom: -3px; width: 1px; background: var(--divider-strong); }
+.st:last-child::before { display: none; }
+.st .m { position: relative; display: grid; place-items: center; width: 16px; height: 16px; margin-top: 2px; color: var(--faint); }
+.st.is-running .m { color: var(--text); }
+.st.is-running .m::after { content: ""; position: absolute; inset: -2px; border: 1.5px solid var(--text); border-radius: var(--radius-pill); opacity: 0; animation: ring 1.6s var(--ease-in-out) infinite; }
+@keyframes ring { 0% { opacity: .55; transform: scale(.7); } 100% { opacity: 0; transform: scale(1.25); } }
+.st .line { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--space-2); line-height: 20px; }
+.st .l { color: var(--muted); }
+.st.is-running .l { color: var(--text); }
+.st .d { color: var(--faint); font-variant-numeric: tabular-nums; }
+.st .note { margin: 0; color: var(--faint); line-height: 1.35; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: 2px 0 0; padding: 0; list-style: none; }
+.chips li { padding: 0 6px; line-height: 18px; color: var(--muted); background: var(--surface-muted); border-radius: var(--radius-sm); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.composer { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) var(--space-6) var(--space-5); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3); border: 1px solid var(--field-border); border-radius: var(--radius-lg); }
+.composer .clip { color: var(--muted); display: grid; place-items: center; width: 36px; height: 36px; }
+.composer input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; height: 36px; font: inherit; color: inherit; }
+.composer input::placeholder { color: var(--faint); }
+.send { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: var(--radius-pill); background: rgba(18, 20, 23, .22); color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+  .you, .bot, .answer, .st, .lbl .in, .companion .bob, .companion .emote, .companion .emote rect, .dots i, .st.is-running .m::after { animation: none; }
+  .tl.is-live .lbl span:not(.out) { animation: none; }
+}
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<div class="vp">
+<!-- code -->
+<div class="pk ct">
+  <div class="thread">
+    <div class="head"><h1>Forma · Moodboard</h1><span class="meta">Strata · 9 images</span></div>
+    <div class="msgs" id="msgs"></div>
+    <div class="composer">
+      <span class="clip" id="clip"></span>
+      <input type="text" placeholder="Ask about this moodboard" autocomplete="off" aria-label="Message">
+      <button class="send" id="send" type="button" aria-label="Send" title="Send" disabled></button>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Ask, and watch it think</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Thinking. The companion's emote sits beside the reply while the activity rows tick in one by one under
+   a live header. When the answer arrives the emote goes, the steps fold into one row, the answer rises in. */
+const $ = (s, r = document) => r.querySelector(s);
+const msgs = $('#msgs');
+const P = {   // 24px outline icons, round caps
+  Paperclip: '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+  ArrowUp: '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+  ChevronDown: '<path d="m6 9 6 6 6-6"/>',
+  Lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+  ListChecks: '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+  Sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>',
+  Box: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  Palette: '<path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>',
+  Type: '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/>',
+};
+const icon = (n, s = 16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+$('#clip').innerHTML = icon('Paperclip', 20);
+$('#send').innerHTML = icon('ArrowUp', 20);
+/* the companion: a cube with a lime top, and a thinking emote */
+const COMPANION = `<svg class="cube" width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
+  <g class="bob"><path d="M28 14 47 25 28 36 9 25Z" fill="#B8FF00"/><path d="M9 25 28 36V56L9 45Z" fill="#121417"/><path d="M28 36 47 25V45L28 56Z" fill="#363a40"/></g>
+  <g class="emote"><rect x="36" y="1" width="4" height="4" fill="#121417"/><rect x="42" y="1" width="4" height="4" fill="#121417"/><rect x="48" y="1" width="4" height="4" fill="#121417"/></g></svg>`;
+
+const STEPS = [
+  { icon: 'Lightbulb', label: 'Reading the moodboard', thought: 'Nine pictures of ceramic objects. Chalk white, soft mist, one sharp lime.' },
+  { icon: 'Palette', label: 'Pulling the palette', detail: '4 colors', chips: ['Ink', 'Chalk', 'Mist', 'Lime'] },
+  { icon: 'Type', label: 'Measuring type and spacing', detail: '8px grid' },
+  { icon: 'ListChecks', label: 'Drafting the components', detail: 'Button, card, form' },
+];
+const ANSWER = ['A system in four colors, 24 tokens.', 'Chalk, mist and ink, with the lime kept for the button. Export the CSS or hand the spec to AI.'];
+
+function stepHTML(s, running) {
+  const body = s.thought
+    ? `<div class="line"><span class="l">${s.label}</span></div><p class="note">${s.thought}</p>`
+    : `<div class="line"><span class="l">${s.label}</span>${s.detail ? `<span class="d">${s.detail}</span>` : ''}</div>${s.chips ? `<ul class="chips">${s.chips.map((c) => `<li>${c}</li>`).join('')}</ul>` : ''}`;
+  return `<li class="st${running ? ' is-running' : ''}"><span class="m">${icon(s.icon, 12)}</span><div>${body}</div></li>`;
+}
+
+const ABORT = { abort: true };
+let gen = 0;
+const sleep = (ms, my = gen) => new Promise((res, rej) => setTimeout(() => (my === gen ? res() : rej(ABORT)), ms));
+
+async function play(my) {
+  msgs.innerHTML = '';
+  const q = document.createElement('div'); q.className = 'you'; q.textContent = 'Make a design system from this.'; msgs.append(q);
+  await sleep(420, my);
+  const bot = document.createElement('div'); bot.className = 'bot';
+  bot.innerHTML = `<div class="who"><span class="companion">${COMPANION}</span><span class="tile">${icon('Box', 16)}</span></div>
+    <div class="col"><div class="tl is-live is-open"><button class="sum" type="button" aria-expanded="true"><span class="mk"><span class="dots"><i></i><i></i><i></i></span></span><span class="lbl"></span><span class="cnt">0s</span><span class="chev">${icon('ChevronDown', 14)}</span></button><div class="wrap"><ol></ol></div></div></div>`;
+  msgs.append(bot);
+  const tl = $('.tl', bot), lbl = $('.lbl', tl), ol = $('ol', tl), cnt = $('.cnt', tl), sum = $('.sum', tl);
+  sum.addEventListener('click', () => { const open = tl.classList.toggle('is-open'); sum.setAttribute('aria-expanded', String(open)); });
+  const t0 = performance.now();
+  const tick = setInterval(() => { cnt.textContent = Math.floor((performance.now() - t0) / 1000) + 's'; }, 250);
+  const setLabel = (t) => {
+    const old = lbl.querySelector('span');
+    if (old) { old.className = 'out'; setTimeout(() => old.remove(), 120); }
+    const n = document.createElement('span'); n.textContent = t; n.className = old ? 'in' : ''; lbl.append(n);
+  };
+  try {
+    setLabel('Working');
+    for (let i = 0; i < STEPS.length; i++) {
+      await sleep(i ? 1000 : 600, my);
+      ol.querySelectorAll('.is-running').forEach((e) => e.classList.remove('is-running'));
+      ol.insertAdjacentHTML('beforeend', stepHTML(STEPS[i], true));
+      setLabel(STEPS[i].label);
+    }
+    await sleep(800, my);
+  } finally { clearInterval(tick); }
+  ol.querySelectorAll('.is-running').forEach((e) => e.classList.remove('is-running'));
+  // the run ends: the companion goes, the steps fold into one row, the answer arrives
+  bot.classList.add('is-done');
+  tl.classList.remove('is-live', 'is-open');
+  sum.setAttribute('aria-expanded', 'false');
+  lbl.innerHTML = '<span>AI reasoning</span>';
+  $('.mk', tl).innerHTML = icon('Sparkles', 14);
+  cnt.textContent = STEPS.length + ' steps';
+  await sleep(260, my);
+  const a = document.createElement('div'); a.className = 'answer';
+  a.innerHTML = `<p class="lead">${ANSWER[0]}</p><p class="rest">${ANSWER[1]}</p>`;
+  $('.col', bot).append(a);
+}
+/* with reduced motion the run is drawn finished, at once */
+function still() {
+  msgs.innerHTML = '<div class="you">Make a design system from this.</div>';
+  const bot = document.createElement('div'); bot.className = 'bot is-done';
+  bot.innerHTML = `<div class="who"><span class="companion"></span><span class="tile">${icon('Box', 16)}</span></div>
+    <div class="col"><div class="tl"><button class="sum" type="button" aria-expanded="false"><span class="mk">${icon('Sparkles', 14)}</span><span class="lbl"><span>AI reasoning</span></span><span class="cnt">${STEPS.length} steps</span><span class="chev">${icon('ChevronDown', 14)}</span></button><div class="wrap"><ol>${STEPS.map((s) => stepHTML(s, false)).join('')}</ol></div></div>
+    <div class="answer"><p class="lead">${ANSWER[0]}</p><p class="rest">${ANSWER[1]}</p></div></div>`;
+  msgs.append(bot);
+  const tl = $('.tl', bot), sum = $('.sum', tl);
+  sum.addEventListener('click', () => { const open = tl.classList.toggle('is-open'); sum.setAttribute('aria-expanded', String(open)); });
+}
+async function main() {
+  const my = ++gen;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return still();
+  for (;;) {
+    try { await play(my); await sleep(3600, my); } catch (e) { if (e !== ABORT) throw e; return; }
+    while (document.hidden) await sleep(400, my);
+  }
+}
+</script>
+<script>
+  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window ---- */
+  function vpfit() {
+    const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
+      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+    };
+    addEventListener('resize', go); go();
+  }
+  vpfit();
+  document.fonts.ready.then(main);
+  QM.demo({ kind: 'loop', restart() { main(); } });
+</script>
+</body>
+</html>

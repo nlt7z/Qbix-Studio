@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moodboard to site · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<link rel="stylesheet" href="../scenes/scenes.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "forma",
+  "title": "Moodboard to site",
+  "group": "scenes",
+  "cat": "scenes",
+  "order": 10,
+  "kind": "states",
+  "tone": "paper",
+  "n": 3,
+  "line": "3 states · 270vh · scroll",
+  "summary": "A moodboard for Forma, a studio of ceramic objects: renders, a lime slice, a motion study, the palette and the type. Its pieces travel into the launch site, the layout grid is laid over it, then the site goes live at forma.studio and a phone comes up with it. Things that carry on travel; nothing is cut.",
+  "spec": [
+    [
+      "States",
+      "3: Moodboard · Design and code · Live on your domain"
+    ],
+    [
+      "Beats",
+      "0 → 1, beats 0.10 – 0.78: the board comes in piece by piece, the slice cut in · 1 → 2, 1.02 – 1.86: what is not kept folds, the pieces travel into the site, its words are typed, the grid is laid over it · 2 → 3, 2.02 – 2.52: the grid lifts, the address is selected and typed, the phone rises"
+    ],
+    [
+      "Easing",
+      "E.out for entrances (11), E.move for the travels into the site (3), E.in for folds (4), E.soft for the address selection, E.lin for jumps"
+    ],
+    [
+      "Chapter",
+      "270vh pinned: 110vh, then 80vh a move"
+    ],
+    [
+      "Drawn at",
+      "720 × 540 in its own px, zoomed to its box (zoom, not a transform, so type and hairlines stay sharp)"
+    ],
+    [
+      "Trigger",
+      "The scroll is the playhead (lib/scene/driver.ts); the shown time chases it, 1 − e^(−6.5 dt)"
+    ]
+  ],
+  "source": [
+    "components/scenes/Forma.tsx · Forma",
+    "app/scenes-forma.css",
+    "components/story/Story.tsx · Chapter",
+    "components/scene/Scene.tsx · Scene",
+    "lib/scene/timeline.ts · Timeline",
+    "lib/scene/driver.ts · playScene"
+  ],
+  "where": "Homepage for AI teams, the Services chapter: paper, the scene on the right of its words, the three steps listed beside it.",
+  "rules": [
+    "Things that carry on travel; nothing is cut. Only what is not kept folds away.",
+    "Photographs are the only pictures; everything else is drawn, flat, in the chapter’s tone.",
+    "One lime a state: the board’s slice, which becomes the site’s button.",
+    "Time is in beats: state k is settled at beat k, each move in the middle of its stretch, so every state holds a while"
+  ],
+  "tags": [
+    "scene",
+    "scroll",
+    "moodboard",
+    "browser",
+    "phone"
+  ],
+  "bundle": {
+    "files": [
+      "components/scenes/Forma.tsx",
+      "app/scenes-forma.css",
+      "app/scenes.css",
+      "components/scene/Scene.tsx",
+      "components/scene/kit.tsx",
+      "lib/scene/timeline.ts",
+      "lib/scene/driver.ts"
+    ]
+  },
+  "shot": 9300
+}
+</script>
+<style>
+  /* demo only: the scene fills the stage at its own proportions; its caption sits in the corner */
+  :root { --pad: clamp(12px, 3vmin, 40px); --bar: 0px; }
+  html:not(.qm-tile) body.has-ui { --bar: 46px; }
+  .qm-stage { padding: var(--pad); place-items: start center; }
+  .qms { width: 100%; height: calc(100svh - 2 * var(--pad) - var(--bar)); display: grid; grid-template-rows: minmax(0, 1fr) 24px; gap: 4px; }
+  .qms-box { min-width: 0; min-height: 0; }
+  .qms-cap { display: flex; align-items: center; gap: 10px; color: var(--fg3); white-space: nowrap; }
+  .qms-cap .qms-n { color: var(--fg); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <section class="qms" id="ch" data-chapter data-tone="paper" data-step="0">
+    <div class="qms-box" id="scene"></div>
+    <p class="kicker qms-cap" id="cap" aria-live="polite"><span class="qms-n">01 / 03</span><span>Moodboard</span></p>
+  </section>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../scenes/scenes.js"></script>
+<script>
+  /* The real scene (the site's own component, bundled in ../scenes/scenes.js). The site's driver, which plays it
+     with the scroll, is replaced by the harness: it hands the timeline over here. */
+  let STEPS = [["Moodboard"],["Design and code"],["Live on your domain"]];
+  const n = STEPS.length;
+  let at = 0, step = -1, started = false;
+
+  const section = document.getElementById('ch');
+  const box = document.getElementById('scene');
+  const cap = document.getElementById('cap');
+  const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls, textContent: text });
+  let tl = null, mounted = null;
+  const mount = (props) => {
+    mounted?.unmount();
+    mounted = QMScenes.mount('forma', box, props);
+  };
+
+  function label(s) {
+    step = s;
+    section.dataset.step = String(s);                                       // the chapter's lit step, as the driver sets it
+    section.dispatchEvent(new CustomEvent('scene:step', { detail: s }));
+    const [name, tag] = STEPS[s];
+    cap.replaceChildren(el('span', 'qms-n', `${String(s + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`), el('span', '', name));
+    if (tag) cap.append(el('span', 'tag qms-tag' + (tag === 'Live' ? ' is-live' : ''), tag));
+  }
+  function seek(t) {
+    at = t;
+    if (!tl) return;
+    tl.seek(QM.reduced ? (t > 0 ? Math.max(1, Math.round(t)) : 0) : t);      // reduced motion: a still per state, as the driver
+    const s = Math.max(0, Math.min(n - 1, Math.round(t) - 1));
+    if (s !== step) label(s);
+  }
+
+  window.QMSceneReady = (timeline) => {
+    tl = timeline;
+    step = -1;
+    seek(at);
+    if (started) return;
+    started = true;
+    QM.demo({ kind: 'states', n, seek, dwell: 2400, first: 2800, hold: 3200 });
+  };
+
+  mount();
+</script>
+</body>
+</html>

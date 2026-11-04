@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checklist · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-checklist",
+  "title": "Checklist",
+  "group": "picks",
+  "cat": "feedback",
+  "order": 230,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "120 to 260 ms · expo out · lime on done",
+  "summary": "Ticking a task fills the box, draws the check in one stroke and strikes the text through; the count and the bar above update, and the Go live button wakes at seven. Seven tasks for one site: Willow Counseling's Practice Website Refresh, live in 7 days.",
+  "spec": [
+    ["Box", "22px, 6px radius, 1px edge; ticked it fills lime in 120 ms (colour and edge together)"],
+    ["Check", "one stroke drawn by stroke-dashoffset 18 → 0 over 200 ms, delayed 60 ms"],
+    ["Strike", "a 1.5px line scaleX 0 → 1 from the left over 200 ms, delayed 90 ms; the text goes muted in 200 ms"],
+    ["Bar", "width follows done / total over 260 ms"],
+    ["Count", "n of 7, tabular; the hint says how many are to go, then that it is all set"],
+    ["Button", "disabled until all seven are done, then it takes the lime: the page's one filled primary"],
+    ["Hover", "a colour block on the row, 120 ms; never a lift"],
+    ["Easing", "cubic-bezier(0.16, 1, 0.3, 1) throughout"],
+    ["Reduced motion", "five already ticked, transitions off"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Release checklist (ix-checklist)", "Idea: bencho.dev checklist (MIT)"],
+  "where": "The Practice Website Refresh: what has to be true before a practice's site goes live. Any launch list: a launch site's files, a brand upgrade's handoff.",
+  "rules": [
+    "All motion 120 to 260 ms on the one expo curve.",
+    "One filled primary, disabled until everything is done.",
+    "Hover is a colour block. Lime means done: the boxes, the bar and the button.",
+    "Rows are real buttons with role=checkbox, so keys and screen readers work."
+  ],
+  "tags": ["checklist", "click", "stroke", "progress", "lime"],
+  "shot": 5200
+}
+</script>
+<style data-code>
+/* Launch checklist. Idea: bencho.dev checklist (MIT). */
+.ck { width: 520px; background: var(--surface); border-radius: 14px; padding: 24px; display: grid; gap: 16px; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.ck-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.ck-top h1 { margin: 0; font-family: var(--font-sans); font-size: 20px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.35; }
+.ck-top p { margin: 4px 0 0; color: var(--fg2); }
+.ck-count { font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.35; }
+.ck-count span { color: var(--fg2); }
+.ck-track { height: 6px; border-radius: 999px; background: rgba(18, 20, 23, 0.09); overflow: hidden; }
+.ck-track > i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--signal); transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.ck-item { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; margin: 0 -12px; width: calc(100% + 24px); border: 0; border-radius: 8px; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-item:hover, .ck-item.is-hot { background: var(--fill); }
+.ck-item:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.ck-box { position: relative; width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; border: 1px solid rgba(18, 20, 23, 0.52); background: var(--surface); transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), border-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-item[aria-checked="true"] .ck-box { background: var(--signal); border-color: var(--signal); }
+.ck-box svg { display: block; width: 14px; height: 14px; fill: none; stroke: var(--on-lime); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ck-box path { stroke-dasharray: 18; stroke-dashoffset: 18; transition: stroke-dashoffset 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-item[aria-checked="true"] .ck-box path { stroke-dashoffset: 0; transition-delay: 60ms; }
+.ck-label { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.ck-t { position: relative; display: inline-block; width: fit-content; max-width: 100%; font-size: 14px; line-height: 1.35; color: var(--fg); transition: color 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-t::after { content: ""; position: absolute; left: 0; right: 0; top: 52%; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: 0 50%; transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1) 90ms; }
+.ck-item[aria-checked="true"] .ck-t { color: var(--fg2); }
+.ck-item[aria-checked="true"] .ck-t::after { transform: scaleX(1); }
+.ck-who img { display: block; width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: 40% 35%; }
+.ck-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 8px; }
+.ck-foot span { color: var(--fg2); }
+.ck-go { height: 36px; padding: 0 16px; border: 1px solid transparent; border-radius: 8px; background: var(--signal); color: var(--on-lime); font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-go:hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.ck-go:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.ck-go:disabled { background: color-mix(in srgb, var(--signal) 32%, var(--surface)); color: rgba(12, 19, 0, 0.4); cursor: default; }
+@media (prefers-reduced-motion: reduce) { .ck *, .ck *::before, .ck *::after { transition-duration: 1ms !important; } }
+</style>
+<style>
+  .ck-fit { position: fixed; z-index: 1; }
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Tick the tasks</span>
+<main class="qm-stage">
+<div class="ck-fit" id="fit">
+<!-- code -->
+<section class="ck" id="panel">
+  <div class="ck-top">
+    <div><h1>Launch checklist</h1><p>Willow Counseling · Live in 7 days</p></div>
+    <div class="ck-count" id="count"></div>
+  </div>
+  <div class="ck-track" aria-hidden="true"><i id="bar"></i></div>
+  <ul id="list" role="group" aria-label="Launch tasks">
+    <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">Short questionnaire answered</span></span><span class="ck-who" title="Dana"><img src="../assets/art/you.webp" alt=""></span></button></li>
+    <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">New homepage approved in 3 days</span></span><span class="ck-who" title="Dana"><img src="../assets/art/you.webp" alt=""></span></button></li>
+    <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">3 to 5 pages written</span></span><span class="ck-who" title="Sera"><img src="../assets/offers/sera.jpg" alt=""></span></button></li>
+    <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">Checked on every phone</span></span><span class="ck-who" title="Sera"><img src="../assets/offers/sera.jpg" alt=""></span></button></li>
+    <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">“Book a free consultation” on every page</span></span><span class="ck-who" title="Sera"><img src="../assets/offers/sera.jpg" alt=""></span></button></li>
+    <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">Name, city and specialties set for Google</span></span><span class="ck-who" title="Sera"><img src="../assets/offers/sera.jpg" alt=""></span></button></li>
+    <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">Domain connected, email still working</span></span><span class="ck-who" title="Dana"><img src="../assets/art/you.webp" alt=""></span></button></li>
+  </ul>
+  <div class="ck-foot"><span id="hint"></span><button class="ck-go" id="release" type="button" disabled>Go live</button></div>
+</section>
+<!-- /code -->
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* A tick is one attribute; the box, the check, the strike, the count, the bar and the button all follow it. */
+const $ = (s) => document.querySelector(s);
+const list = $('#list');
+const items = [...list.querySelectorAll('.ck-item')];
+const N = items.length;
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function paint() {
+  const n = items.filter((b) => b.getAttribute('aria-checked') === 'true').length;
+  $('#count').innerHTML = `${n}<span> of ${N}</span>`;
+  $('#bar').style.width = (n / N * 100) + '%';
+  $('#release').disabled = n < N;
+  $('#hint').textContent = n === N ? 'All set for willowcounseling.com' : `${N - n} to go`;
+}
+const set = (b, v) => { b.setAttribute('aria-checked', v); paint(); };
+list.addEventListener('click', (e) => { const b = e.target.closest('.ck-item'); if (b) set(b, b.getAttribute('aria-checked') !== 'true'); });
+function reset(n = 2) { items.forEach((b, i) => b.setAttribute('aria-checked', i < n)); paint(); }
+reset(still ? 5 : 2);
+</script>
+<script src="../assets/picks/p3-ghost.js"></script>
+<script>
+  /* loop kind: the ghost ticks three, takes one back and ticks it again, then the last two: the button wakes */
+  PickGhost.fit($('#fit'), 520, 590, { max: 1.5 });
+  PickGhost.start({
+    hot: '.ck-item',
+    reset: () => reset(2),
+    still: () => reset(5),
+    async script(g) {
+      await g.wait(500);
+      await g.click(items[2], { ms: 520 }); await g.wait(650);
+      await g.click(items[3], { ms: 480 }); await g.wait(650);
+      await g.click(items[4], { ms: 480 }); await g.wait(900);
+      await g.click(items[1], { ms: 520 }); await g.wait(1000);
+      await g.click(items[1], { ms: 300 }); await g.wait(900);
+      await g.click(items[5], { ms: 480 }); await g.wait(500);
+      await g.click(items[6], { ms: 420 }); await g.wait(1800);
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

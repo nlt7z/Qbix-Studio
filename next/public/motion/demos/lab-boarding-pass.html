@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tear-off stub · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-boarding-pass",
+  "title": "Tear-off stub",
+  "group": "lab",
+  "cat": "cards",
+  "order": 20,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "spring in · 520 ms rip · 900 ms fall",
+  "summary": "A launch-night pass and its lime stub are two clipped blocks that share one toothed edge. The white pass springs up into view, the stub opens from the top of the perforation and swings about its foot, then falls under gravity while the pass recoils. Pull the stub right to tear it yourself.",
+  "spec": [
+    ["Enter", "spring k 150 · c 19 from below the frame, 900 ms"],
+    ["Rip", "stub rotates 0 → 6.5° about its bottom edge, 520 ms ease in-out (220 ms when dragged)"],
+    ["Fall", "rotation 6.5° → 28°, translate with t², 900 ms; the pass recoils −1.2° for 260 ms"],
+    ["Edge", "one clip-path polygon of teeth per half, generated from the same points"],
+    ["Idle", "enter, hold 1.5 s, tear, hold 1.5 s, leave, next pass"]
+  ],
+  "source": ["Qbix studio library · boarding-pass"],
+  "where": "The admit pass for a Forma launch night or a Qbix studio visit, on the invite page.",
+  "rules": [
+    "Both halves are cut from the same list of tooth points so the edge always meets.",
+    "The pass is white on the paper ground; the stub is the lime block and nothing else on the pass is lime.",
+    "The fall is gravity (t²), not an eased slide."
+  ],
+  "tags": ["pointer", "drag", "spring", "gravity", "ticket"],
+  "shot": 2600
+}
+</script>
+<style data-code>
+/* Launch pass: two clipped halves with one toothed edge */
+.tp { position: relative; width: 600px; height: 250px; }
+.tp-part { position: absolute; top: 0; height: 250px; color: #121417; }
+.tp-main { left: 0; width: 440px; background: #ffffff; transform-origin: 100% 100%; }
+.tp-stub { left: 434.4px; width: 165px; background: #b8ff00; color: #0c1300; transform-origin: 0 100%; cursor: grab; touch-action: none; }
+.tp-in { position: absolute; inset: 0; padding: 22px 28px; }
+.tp-hd { display: flex; justify-content: space-between; font: 500 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.6); }
+.tp-hd b { font-weight: 500; color: #121417; }
+.tp-route { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: end; margin-top: 18px; }
+.tp-route small, .tp-fields small { display: block; margin-bottom: 4px; font: 500 10px/1.2 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
+.tp-w { display: block; font: 400 52px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; white-space: nowrap; }
+.tp-mask { display: block; overflow: hidden; padding-bottom: 0.14em; margin-bottom: -0.14em; }
+.tp-t { display: block; margin-top: 8px; font: 500 14px/1 'Encode Sans', sans-serif; }
+.tp-route .r { text-align: right; }
+.tp-route svg { width: 40px; height: 20px; margin-bottom: 30px; }
+.tp-fields { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; margin-top: 24px; }
+.tp-fields span { display: block; font: 500 15px/1.2 var(--font-sans, 'Geist'); white-space: nowrap; }
+.tp-note { position: absolute; left: 28px; right: 28px; bottom: 18px; font-size: 12.5px; color: rgba(18, 20, 23, 0.6); }
+.tp-stub .tp-in { display: flex; flex-direction: column; justify-content: space-between; padding: 22px 20px 18px 31px; }
+.tp-adm small { display: block; margin-bottom: 6px; font: 500 10px/1.2 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(12, 19, 0, 0.6); }
+.tp-adm b { display: block; font: 400 64px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; font-weight: 400; }
+.tp-bc svg { display: block; }
+.tp-bc span { display: block; margin-top: 6px; font: 500 10px/1 'Encode Sans', sans-serif; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  #tp-stage { position: absolute; left: 50%; top: 47%; width: 640px; height: 300px; transform-origin: 50% 50%; display: grid; place-items: center; }
+  .tp-hint { position: absolute; left: 0; right: 0; bottom: 60px; text-align: center; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div id="tp-stage">
+<!-- code -->
+<div class="tp" id="tp">
+  <div class="tp-part tp-main" id="tp-main">
+    <div class="tp-in">
+      <div class="tp-hd"><span id="tp-kind">Forma launch night</span><b id="tp-no">No. 0412</b></div>
+      <div class="tp-route">
+        <div><small>From</small><span class="tp-mask"><span class="tp-w" id="tp-from">Doors</span></span><span class="tp-t" id="tp-t1">6:30 pm</span></div>
+        <svg viewBox="0 0 40 20" fill="none" stroke="#121417" stroke-width="2" aria-hidden="true"><path d="M2 10h30" stroke-dasharray="2 4"/><path d="M30 4l7 6-7 6"/></svg>
+        <div class="r"><small>To</small><span class="tp-mask"><span class="tp-w" id="tp-to">Live</span></span><span class="tp-t" id="tp-t2">8:00 pm</span></div>
+      </div>
+      <div class="tp-fields">
+        <div><small>Guest</small><span id="tp-guest">Ana R.</span></div>
+        <div><small>Date</small><span id="tp-date">Fri, Nov 13</span></div>
+        <div><small>Where</small><span id="tp-where">Seattle</span></div>
+        <div><small>Host</small><span id="tp-host">Sera</span></div>
+      </div>
+      <div class="tp-note" id="tp-note">Forma goes live at 8. Come early for the first look.</div>
+    </div>
+  </div>
+  <div class="tp-part tp-stub" id="tp-stub">
+    <div class="tp-in">
+      <div class="tp-adm"><small>Admit one</small><b id="tp-adm">01</b></div>
+      <div class="tp-bc"><svg id="tp-bars" width="114" height="46" aria-hidden="true"></svg><span id="tp-code">0412 2611 01</span></div>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+</div>
+<p class="qm-hint tp-hint" id="tp-hint">Pull the stub right to tear</p>
+<div class="qm-ui"><span>Launch pass · tear the stub, tap for the next</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const $ = (s) => document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const passEl = $('#tp'), mainP = $('#tp-main'), stubP = $('#tp-stub');
+
+/* spring + tween on one clock */
+function spring(x, k = 170, c = 24) {
+  return { x, v: 0, t: x, k, c, step(dt) { let s = dt / 1000; const n = Math.max(1, Math.ceil(s / 0.008)); s /= n; for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; } } };
+}
+const E = { io: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2), out: (t) => 1 - Math.pow(1 - t, 3), in2: (t) => t * t };
+let T = 0, lastNow = performance.now();
+const ticks = new Set(), jobs = [];
+const at = (ms, fn) => jobs.push({ t: T + ms, fn });
+function frame(now) {
+  const dt = Math.min(64, now - lastNow); lastNow = now; T += dt;
+  for (let i = 0; i < jobs.length; i++) if (jobs[i].t <= T) { const j = jobs.splice(i, 1)[0]; i--; j.fn(); }
+  ticks.forEach((f) => f(dt)); requestAnimationFrame(frame);
+}
+function tween(d, e, f, done) {
+  const t0 = T;
+  const g = () => { const p = Math.min(1, (T - t0) / d); f(e(p)); if (p >= 1) { ticks.delete(g); if (done) done(); } };
+  ticks.add(g); g();
+}
+
+/* the shared edge: the same teeth, cut into the main block (out) and the stub (in) */
+const H = 250, TOOTH = 10, TD = 5;
+function teethY() { const a = []; for (let y = 14; y <= H - 14; y += TOOTH) a.push(y); return a; }
+(function () {
+  const ys = teethY(), W1 = 440, W2 = 165;
+  const main = [`0 0`, `${W1} 0`];
+  ys.forEach((y) => { main.push(`${W1} ${y - TD}`, `${W1 - TD} ${y}`, `${W1} ${y + TD}`); });
+  main.push(`${W1} ${H}`, `0 ${H}`);
+  mainP.style.clipPath = `polygon(${main.join(',')})`;
+  /* the stub's box starts 5px left of the edge so its teeth fill the main block's notches */
+  const left = []; ys.slice().reverse().forEach((y) => { left.push(`${TD} ${y + TD}`, `0 ${y}`, `${TD} ${y - TD}`); });
+  stubP.style.clipPath = `polygon(${[`${TD} 0`, `${W2 - 12} 0`, `${W2} 12`, `${W2} ${H}`, `${TD} ${H}`].concat(left).join(',')})`;
+  stubP.style.left = `${W1 - TD - 0.6}px`; stubP.style.width = `${W2}px`;
+})();
+
+function bars(seed) {
+  let x = 0, h = '', r = seed; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  while (x < 112) { const w = rnd() < 0.35 ? 3 : rnd() < 0.5 ? 2 : 1.2; h += `<rect x="${x.toFixed(1)}" y="0" width="${w}" height="46" fill="#0c1300"/>`; x += w + 1.4 + Math.round(rnd() * 2); }
+  $('#tp-bars').innerHTML = h;
+}
+const passes = [
+  { kind: 'Forma launch night', no: '0412', from: 'Doors', to: 'Live', t1: '6:30 pm', t2: '8:00 pm', guest: 'Ana R.', date: 'Fri, Nov 13', where: 'Seattle', host: 'Sera', adm: '01', note: 'Forma goes live at 8. Come early for the first look.' },
+  { kind: 'Qbix studio visit', no: '0413', from: 'Studio', to: 'Lab', t1: '11:00 am', t2: '12:15 pm', guest: 'Jonah P.', date: 'Sat, Nov 14', where: 'Bay Area', host: 'Mika', adm: '01', note: 'Meet the team and watch Strata build a design system.' },
+  { kind: 'Strata preview', no: '0414', from: 'Board', to: 'Code', t1: '3:45 pm', t2: '5:00 pm', guest: 'Rosa D.', date: 'Sat, Nov 21', where: 'Online', host: 'Sera', adm: '01', note: 'Bring a moodboard. Strata turns it into tokens.' },
+];
+let pi = 0;
+function fill(p) {
+  for (const k of ['kind', 'no', 'from', 'to', 't1', 't2', 'guest', 'date', 'where', 'host', 'adm', 'note']) $('#tp-' + k).textContent = k === 'no' ? 'No. ' + p.no : p[k];
+  $('#tp-code').textContent = p.no + ' 2611 ' + p.adm; bars(+p.no * 7 + 3);
+}
+
+/* state */
+const S = { y: spring(0, 150, 19), ty: spring(0, 170, 20), sr: 0, sx: 0, sy: 0, tr: 0, show: 1 };
+let state = 'idle', busy = false, lastIn = -1e9, drag = null, stateAt = 0, prev = '';
+const enterY = () => innerHeight / 2 + 300;
+function apply() {
+  passEl.style.transform = `translateY(${S.y.x.toFixed(2)}px)`;
+  mainP.style.transform = `translateY(${S.ty.x.toFixed(2)}px) rotate(${S.tr.toFixed(3)}deg)`;
+  stubP.style.transform = `translate(${S.sx.toFixed(2)}px,${S.sy.toFixed(2)}px) rotate(${S.sr.toFixed(3)}deg)`;
+  stubP.style.visibility = S.show ? 'visible' : 'hidden';
+}
+ticks.add((dt) => { S.y.step(dt); S.ty.step(dt); apply(); });
+
+function enter() {
+  busy = true; state = 'enter'; fill(passes[pi++ % passes.length]);
+  S.sr = 0; S.sx = 0; S.sy = 0; S.tr = 0; S.show = 1; S.ty.x = S.ty.t = 0;
+  S.y.k = 150; S.y.c = 19; S.y.x = enterY(); S.y.v = 0; S.y.t = 0; if (RM) S.y.x = 0;
+  at(RM ? 0 : 900, () => { state = 'whole'; busy = false; });
+}
+function tear(fromDrag) {
+  if (state !== 'whole') return; busy = true; state = 'tearing';
+  const r0 = S.sr, x0 = S.sx;
+  /* the rip opens from the top of the perforation and runs down to the pivot */
+  tween(fromDrag ? 220 : 520, E.io, (p) => { S.sr = r0 + (6.5 - r0) * p; S.sx = x0 + (3 - x0) * p; }, () => {
+    S.ty.v = -90;
+    tween(RM ? 1 : 900, E.in2, (p) => { S.sr = 6.5 + 22 * p; S.sy = (innerHeight / 2 + 200) * p; S.sx = 3 + (60 + 20 * p) * p; if (p > 0.97) S.show = 0; }, () => { state = 'torn'; busy = false; });
+    tween(260, E.out, (p) => { S.tr = -1.2 * Math.sin(p * Math.PI); });
+  });
+}
+function leave() {
+  if (state !== 'torn') return; busy = true; state = 'leave';
+  S.y.t = -enterY() - 60; S.y.k = 90; S.y.c = 17;
+  at(650, enter);
+}
+function story() {
+  if (T - lastIn < 2500 || busy || drag) return;
+  if (state === 'whole' && T - stateAt > 1500) tear(false);
+  else if (state === 'torn' && T - stateAt > 1500) leave();
+}
+const hint = $('#tp-hint') || {};   // an optional caption line
+ticks.add(() => {
+  if (state !== prev) { prev = state; stateAt = T; if (state === 'whole') hint.textContent = 'Pull the stub right to tear'; if (state === 'torn') hint.textContent = 'Tap for the next pass'; }
+  if (!RM) story();
+});
+
+stubP.addEventListener('pointerdown', (e) => { lastIn = T; if (state !== 'whole') return; drag = { x: e.clientX, moved: false }; stubP.setPointerCapture(e.pointerId); });
+stubP.addEventListener('pointermove', (e) => {
+  if (!drag) return; lastIn = T;
+  const dx = (e.clientX - drag.x) / (window.__tpScale || 1); if (Math.abs(dx) > 3) drag.moved = true;
+  S.sr = Math.max(0, Math.min(7, dx * 0.07)); S.sx = Math.max(0, Math.min(6, dx * 0.05));
+});
+const up = () => {
+  if (!drag) return; lastIn = T; const d = drag; drag = null;
+  if (!d.moved || S.sr > 3.5) tear(d.moved);
+  else { const r0 = S.sr, x0 = S.sx; tween(380, E.out, (p) => { S.sr = r0 * (1 - p); S.sx = x0 * (1 - p); }); }
+};
+stubP.addEventListener('pointerup', up); stubP.addEventListener('pointercancel', up);
+addEventListener('pointerdown', (e) => { lastIn = T; if (!stubP.contains(e.target) && state === 'torn') leave(); });
+enter(); apply(); requestAnimationFrame(frame);
+</script>
+<script>
+  function fit() {
+    const st = document.getElementById('tp-stage');
+    const s = Math.min(innerWidth / 640, (innerHeight - 70) / 300) * 0.96;
+    window.__tpScale = Math.min(s, 1.7);
+    st.style.transform = `translate(-50%,-50%) scale(${window.__tpScale})`;
+  }
+  addEventListener('resize', fit); fit();
+  QM.demo({ kind: 'loop', restart() { lastIn = -1e9; } });
+</script>
+</body>
+</html>

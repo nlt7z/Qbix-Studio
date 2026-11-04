@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hoop toss · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-hoop-upload",
+  "title": "Hoop toss",
+  "group": "lab",
+  "cat": "loading",
+  "order": 100,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "parabola solved to the rim · Verlet net · swish",
+  "summary": "A moodboard file flies along a parabola; for the scripted shot its launch velocity is solved so it passes through the hoop. The net is a Verlet point mesh, drawn in ink on paper, that the file pushes aside as it passes, which gives the swish. A score starts the upload.",
+  "spec": [
+    ["Flight", "gravity 1900 px/s² (scaled), 4 physics sub-steps a frame; the rim ends are 3 px circles with restitution 0.55, the backboard 0.5, the floor 0.42"],
+    ["Aim", "v = ((target − p) ÷ T, (target − p − ½ g T²) ÷ T) with T from 0.78 to 1.1 s by distance, so the arc drops through the rim"],
+    ["Net", "5 rows × 7 points hung from the rim, 5 constraint passes, damping 0.94, a 2% memory of its rest shape; the file is a circle the points cannot enter"],
+    ["Score", "the file crosses the rim line downward within the rim's width: the bar fills over 2.4 s, then it resets"],
+    ["Miss", "if it rests on the floor for 1.1 s it is put back and the status says so"],
+    ["Release", "velocity of the last 90 ms of pointer movement, capped at 2600 px/s"]
+  ],
+  "source": ["Qbix studio library · hoop-upload"],
+  "where": "The upload step of a Qbix design brief: toss in the moodboard.",
+  "rules": [
+    "The scripted shot is solved, not tuned: it works at every size.",
+    "The one lime is the rim, the thing you aim at, with an ink edge so it reads on paper.",
+    "Net strands are drawn as plain 2px ink lines; the file is a white sheet with a folded corner."
+  ],
+  "tags": ["upload", "canvas", "physics", "verlet", "drag", "moodboard"],
+  "shot": 3300
+}
+</script>
+<style data-code>
+/* Hoop upload: one canvas, a title and a status line that slides out of a sleeve */
+.hoop { position: absolute; inset: 0; }
+.hoop canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.hoop-copy { position: absolute; left: clamp(24px, 5vw, 56px); top: clamp(22px, 6vh, 52px); pointer-events: none; max-width: 60%; display: grid; gap: 10px; }
+.hoop-copy .title { font-size: clamp(28px, 4.6vw, 54px); }
+.hoop-st { height: 1.4em; line-height: 1.4em; overflow: hidden; position: relative; font-size: clamp(14px, 2vw, 16px); color: rgba(18, 20, 23, 0.64); font-variant-numeric: tabular-nums; width: min(340px, 58vw); }
+.hoop-st span { position: absolute; left: 0; top: 0; white-space: nowrap; transition: transform 550ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.hoop-st .in { transform: translateY(110%); } .hoop-st .out { transform: translateY(-110%); }
+.hoop-bar { width: min(200px, 42vw); height: 6px; background: rgba(18, 20, 23, 0.14); overflow: hidden; }
+.hoop-bar i { display: block; height: 100%; background: #121417; transform-origin: left; transform: scaleX(0); }
+@media (prefers-reduced-motion: reduce) { .hoop-st span { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="hoop" id="hoop">
+  <canvas aria-label="Toss a file into a hoop to upload it"></canvas>
+  <div class="hoop-copy"><p class="kicker">Qbix Design · Upload</p><h2 class="title">Toss in the moodboard.</h2><div class="hoop-st" id="hoop-st"></div><div class="hoop-bar"><i id="hoop-bar"></i></div></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Hoop upload: throw the file through the rim; a Verlet net swishes and the upload begins. */
+function hoopUpload(root) {
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d'), stEl = root.querySelector('#hoop-st'), barEl = root.querySelector('#hoop-bar');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const INK = '#121417', LIME = '#B8FF00', WHITE = '#ffffff', TINT = 'rgba(18, 20, 23, 0.14)';   // ink and one lime on paper; the floor is a white surface
+  let W, H, dpr, s, hx, hy, rw, R, floorY, start = { x: 0, y: 0 }, plate, g;
+  const ball = { x: 0, y: 0, vx: 0, vy: 0, a: -0.12, w: 0, held: false, sc: 1, live: false };
+  let net = [], links = [];
+  function setText(txt, quick) {
+    const old = [...stEl.querySelectorAll('span')];
+    if (old.length && old[old.length - 1].textContent === txt) return;
+    if (quick && old.length) { old[old.length - 1].textContent = txt; return; }
+    const sp = document.createElement('span'); sp.textContent = txt;
+    if (reduce || !old.length) { old.forEach((o) => o.remove()); stEl.appendChild(sp); return; }
+    sp.className = 'in'; stEl.appendChild(sp); old.forEach((o) => { o.className = 'out'; setTimeout(() => o.remove(), 600); });
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (sp.className === 'in') sp.className = ''; }));
+  }
+  function resize() {
+    const o = root.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = o.width; H = o.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    s = Math.max(0.7, Math.min(1.55, Math.min(W / 420, H / 560)));
+    rw = 44 * s; R = 19 * s; g = 1900 * s;
+    floorY = H - Math.max(56, H * 0.16);
+    const pw = 12 * s, bxRight = Math.min(W - 28 * s, W * 0.5 + 260 * s);
+    plate = { x: bxRight - pw, y: 0, w: pw, h: 118 * s };
+    hx = plate.x - rw - 8 * s; hy = W > H ? H * 0.4 : Math.max(H * 0.36, 170 * s);
+    plate.y = hy - 92 * s;
+    start = { x: Math.max(56 * s, Math.min(W * 0.24, hx - 200 * s)), y: floorY - R };
+    buildNet();
+    if (!ball.live) { ball.x = start.x; ball.y = start.y; }
+  }
+  const NC = 7, NR = 5, rowW = (r) => 1 - 0.36 * (r / (NR - 1));
+  function buildNet() {
+    net = []; links = []; const L = 15 * s;
+    for (let r = 0; r < NR; r++) {
+      const row = [], n = r % 2 ? NC - 1 : NC;
+      for (let i = 0; i < n; i++) { const u = (r % 2 ? i + 0.5 : i) / (NC - 1), x = hx + (u * 2 - 1) * rw * rowW(r), y = hy + r * L; row.push({ x, y, px: x, py: y, rx: (u * 2 - 1) * rowW(r), ry: r * L }); }
+      net.push(row);
+    }
+    for (let r = 1; r < NR; r++) {
+      const a = net[r - 1], b = net[r];
+      if (r % 2) for (let i = 0; i < b.length; i++) { links.push([b[i], a[i]]); links.push([b[i], a[i + 1]]); }
+      else for (let i = 0; i < b.length - 1; i++) { links.push([a[i], b[i]]); links.push([a[i], b[i + 1]]); }
+    }
+    for (const l of links) l.push(Math.hypot(l[0].x - l[1].x, l[0].y - l[1].y));
+  }
+  function stepNet(dt) {   // Verlet: points keep their last move, are pulled by gravity and a little by their rest shape, then the links are relaxed
+    const gg = g * 0.25 * dt * dt;
+    for (let r = 1; r < NR; r++) for (const p of net[r]) {
+      const vx = (p.x - p.px) * 0.94, vy = (p.y - p.py) * 0.94; p.px = p.x; p.py = p.y;
+      const tx = hx + p.rx * rw, ty = hy + p.ry;
+      p.x += vx + (tx - p.x) * 0.02; p.y += vy + gg + (ty - p.y) * 0.02;
+    }
+    for (const p of net[0]) { p.x = hx + p.rx * rw; p.y = hy; }
+    for (let k = 0; k < 5; k++) {
+      for (const [a, b, L] of links) {
+        const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, f = ((d - L) / d) * 0.5, pa = net[0].includes(a), pb = net[0].includes(b);
+        if (!pa) { a.x += dx * f * (pb ? 2 : 1); a.y += dy * f * (pb ? 2 : 1); }
+        if (!pb) { b.x -= dx * f * (pa ? 2 : 1); b.y -= dy * f * (pa ? 2 : 1); }
+      }
+      for (let r = 1; r < NR; r++) for (const p of net[r]) {   // the file is a circle the net cannot enter
+        const dx = p.x - ball.x, dy = p.y - ball.y, d = Math.hypot(dx, dy), m = R * 1.02;
+        if (d < m && d > 0.01 && ball.sc > 0.5) { p.x = ball.x + (dx / d) * m; p.y = ball.y + (dy / d) * m; }
+      }
+    }
+  }
+  let mode = 'ready', prog = 0, doneT = 0, restT = 0, scoredAt = 0, pctShown = false;
+  function bounceCircle(cx, cy, cr, e) {
+    const dx = ball.x - cx, dy = ball.y - cy, d = Math.hypot(dx, dy), m = R + cr;
+    if (d < m && d > 0) { const nx = dx / d, ny = dy / d; ball.x = cx + nx * m; ball.y = cy + ny * m; const vn = ball.vx * nx + ball.vy * ny; if (vn < 0) { ball.vx -= (1 + e) * vn * nx; ball.vy -= (1 + e) * vn * ny; ball.w += (ball.vx * ny - ball.vy * nx) * 0.004; } }
+  }
+  function physics(dt) {
+    if (ball.held || !ball.live) return;
+    const py = ball.y;
+    ball.vy += g * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt; ball.a += ball.w * dt;
+    bounceCircle(hx - rw, hy, 3 * s, 0.55); bounceCircle(hx + rw, hy, 3 * s, 0.55);
+    const cx = Math.max(plate.x, Math.min(ball.x, plate.x + plate.w)), cy = Math.max(plate.y, Math.min(ball.y, plate.y + plate.h));
+    bounceCircle(cx, cy, 0.001, 0.5);
+    if (ball.y > floorY - R) { ball.y = floorY - R; if (ball.vy > 0) { ball.vy *= -0.42; if (Math.abs(ball.vy) < 60) ball.vy = 0; } ball.vx *= 0.985; ball.w = ball.w * 0.8 + (ball.vx / R) * 0.2; }
+    if (ball.y < R) { ball.y = R; ball.vy = Math.abs(ball.vy) * 0.4; }
+    if (ball.x < R) { ball.x = R; ball.vx = Math.abs(ball.vx) * 0.5; }
+    if (ball.x > W - R) { ball.x = W - R; ball.vx = -Math.abs(ball.vx) * 0.5; }
+    if (mode === 'flying' && py < hy && ball.y >= hy && Math.abs(ball.x - hx) < rw - 4 * s && ball.vy > 0) { mode = 'upload'; prog = 0; pctShown = false; scoredAt = performance.now(); setText('Swish. Uploading moodboard.pdf'); }
+  }
+  const easeOut = (u) => 1 - Math.pow(1 - u, 3);
+  let last = performance.now();
+  (function frame(now) {
+    requestAnimationFrame(frame);
+    if (!net.length) return;   // not laid out yet
+    const dt = Math.min(0.033, (now - last) / 1000); last = now;
+    for (let i = 0; i < 4; i++) { physics(dt / 4); stepNet(dt / 4); }
+    if (ball.held) ball.a += (ball.vx * 0.0006 - ball.a) * 0.15;
+    if (mode === 'upload') {
+      prog = Math.min(1, prog + dt / 2.4); barEl.style.transform = `scaleX(${prog})`;
+      if (performance.now() - scoredAt > 700) { setText('Uploading moodboard.pdf ' + Math.round(prog * 100) + '%', pctShown); pctShown = true; }
+      if (prog >= 1) { mode = 'done'; doneT = now; setText('Moodboard uploaded'); }
+    }
+    if (mode === 'done' && now - doneT > 2200) resetBall();
+    if (mode === 'flying' && !ball.held && ball.y >= floorY - R - 1 && Math.abs(ball.vx) < 30) { restT += dt; if (restT > 1.1) { setText('Off the rim. Try again'); resetBall(true); } } else restT = 0;
+    if (ball.sc < 1) ball.sc = Math.min(1, ball.sc + dt * 3);
+    draw();
+  })(last);
+  function resetBall(keepText) {
+    mode = 'ready'; ball.live = false; ball.held = false; ball.x = start.x; ball.y = start.y; ball.vx = ball.vy = 0; ball.w = 0; ball.a = -0.12; ball.sc = reduce ? 1 : 0;
+    barEl.style.transform = 'scaleX(0)'; prog = 0;
+    if (!keepText) setText('Drag the file and let it fly');
+  }
+  function drawFile() {   // a white sheet in a 2px ink frame, its top right corner folded; four swatches on it, a filename under
+    const k = easeOut(ball.sc) * (ball.held ? 1.06 : 1);
+    ctx.save(); ctx.translate(ball.x, ball.y); ctx.rotate(ball.a); ctx.scale(k * s, k * s);
+    const w = 34, h = 44, f = 10;
+    ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2 - f, -h / 2); ctx.lineTo(w / 2, -h / 2 + f); ctx.lineTo(w / 2, h / 2); ctx.lineTo(-w / 2, h / 2); ctx.closePath();
+    ctx.fillStyle = WHITE; ctx.fill(); ctx.lineWidth = 2; ctx.lineJoin = 'miter'; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(w / 2 - f, -h / 2); ctx.lineTo(w / 2 - f, -h / 2 + f); ctx.lineTo(w / 2, -h / 2 + f); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = INK; ctx.fillRect(-11, -11, 10, 8); ctx.fillRect(1, -1, 10, 8);       // the swatches
+    ctx.fillStyle = TINT; ctx.fillRect(1, -11, 10, 8); ctx.fillRect(-11, -1, 10, 8);
+    ctx.fillStyle = INK; ctx.fillRect(-11, 12, 15, 4);
+    ctx.restore();
+  }
+  function drawNet(alpha) {
+    ctx.strokeStyle = `rgba(18,20,23,${alpha})`; ctx.lineWidth = Math.max(1.5, 1.6 * s); ctx.lineCap = 'butt'; ctx.beginPath();
+    for (const [a, b] of links) { ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
+    const lr = net[NR - 1]; ctx.moveTo(lr[0].x, lr[0].y); for (const p of lr) ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = WHITE; ctx.fillRect(0, floorY, W, H - floorY);                         // the floor: a white surface on the paper
+    ctx.fillStyle = INK;
+    ctx.fillRect(plate.x + plate.w - 2, hy - 46 * s, W - plate.x, 9 * s);                  // the wall arm
+    ctx.fillRect(plate.x, plate.y, plate.w, plate.h);                                          // the backboard
+    ctx.fillRect(hx + rw - 2 * s, hy - 2.5 * s, plate.x - (hx + rw) + 2 * s, 5 * s);       // the bracket
+    const rim = (a, b) => {   // the rim: lime with a 2px ink edge, so it reads on paper
+      ctx.lineCap = 'butt';
+      ctx.beginPath(); ctx.ellipse(hx, hy, rw, 6.5 * s, 0, a, b); ctx.lineWidth = 5 * s + 4; ctx.strokeStyle = INK; ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(hx, hy, rw, 6.5 * s, 0, a, b); ctx.lineWidth = 5 * s; ctx.strokeStyle = LIME; ctx.stroke();
+    };
+    rim(Math.PI, Math.PI * 2);                                                                   // the rim, back
+    drawNet(0.3); drawFile(); drawNet(0.8);
+    rim(0, Math.PI);                                                                             // the rim, front
+  }
+  let hist = [];
+  function grab(x, y) {
+    if (mode === 'upload' || mode === 'done') return false;
+    if (Math.hypot(x - ball.x, y - ball.y) > R * 2.2) return false;
+    ball.held = true; ball.live = true; ball.sc = 1; mode = 'flying'; hist = [{ x, y, t: performance.now() }]; ball.ox = ball.x - x; ball.oy = ball.y - y; ball.vx = ball.vy = 0; return true;
+  }
+  function drag(x, y) {
+    if (!ball.held) return; const t = performance.now(), nx = x + ball.ox, ny = y + ball.oy;
+    ball.vx = (nx - ball.x) * 30; ball.x = Math.max(R, Math.min(W - R, nx)); ball.y = Math.min(floorY - R, ny);
+    hist.push({ x, y, t }); while (hist.length > 2 && t - hist[0].t > 90) hist.shift();
+  }
+  function release(vx, vy) {
+    if (!ball.held) return; ball.held = false;
+    if (vx === undefined) { const a = hist[0], b = hist[hist.length - 1], dt = Math.max(16, b.t - a.t) / 1000; vx = (b.x - a.x) / dt; vy = (b.y - a.y) / dt; }
+    const m = Math.hypot(vx, vy), cap = 2600 * s; if (m > cap) { vx *= cap / m; vy *= cap / m; }
+    ball.vx = vx; ball.vy = vy; ball.w = vx * 0.006;
+  }
+  const off = () => root.getBoundingClientRect();
+  cv.addEventListener('pointerdown', (e) => { const o = off(); if (grab(e.clientX - o.left, e.clientY - o.top)) cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => { const o = off(); drag(e.clientX - o.left, e.clientY - o.top); });
+  cv.addEventListener('pointerup', () => release()); cv.addEventListener('pointercancel', () => release());
+  addEventListener('resize', resize);
+  resize(); resetBall(); ball.sc = 1;
+  return {
+    mode: () => mode, held: () => ball.held, ready: () => mode === 'ready' && !ball.held && ball.sc >= 1,
+    ball: () => { const o = off(); return { x: ball.x + o.left, y: ball.y + o.top, s }; },
+    grab: (x, y) => { const o = off(); return grab(x - o.left, y - o.top); }, drag: (x, y) => { const o = off(); drag(x - o.left, y - o.top); },
+    // the solved shot: launch velocity so the arc drops through the middle of the rim
+    shoot() {
+      const tx = hx + 5 * s, ty = hy - 2 * s, x0 = ball.x, y0 = ball.y, T = Math.max(0.78, Math.min(1.1, Math.hypot(tx - x0, ty - y0) / 520 / s));
+      const vx = (tx - x0) / T, vy = (ty - y0 - 0.5 * g * T * T) / T; release(vx, vy); return [vx, vy];
+    },
+    release: () => release(),
+  };
+}
+const hoop = hoopUpload(document.getElementById('hoop'));
+</script>
+<script>
+  /* the ghost picks the file up, winds back, and lets the solved shot go */
+  let lastReal = -1e9, gen = 0;
+  ['pointerdown', 'keydown'].forEach((n) => addEventListener(n, (e) => { if (e.isTrusted) { lastReal = performance.now(); gen++; QM.ghostHide(); if (hoop.held()) hoop.release(); } }, true));
+  const guard = (g) => { if (g !== gen) throw 0; };
+  async function toss(g) {
+    const b = hoop.ball();
+    QM.ghostShow(); QM.ghostAt(innerWidth * 0.5, innerHeight * 0.85);
+    await QM.ghostTo(b.x + 4, b.y + 6, 700); guard(g);
+    if (!hoop.grab(b.x, b.y)) return;
+    await QM.wait(150); guard(g);
+    const x0 = b.x + 4, y0 = b.y + 6, t0 = performance.now();
+    while (performance.now() - t0 < 360) { guard(g); const k = (performance.now() - t0) / 360; const x = x0 - 26 * b.s * k, y = y0 + 4 * b.s * k; QM.ghostAt(x, y); hoop.drag(x - 4 + 0, y - 6); await QM.wait(16); }
+    await QM.wait(90); guard(g);
+    const [vx, vy] = hoop.shoot();
+    await QM.ghostTo(innerWidth * 0.8 - 0 + 0 * vx, innerHeight * 0.9, 600);
+    QM.ghostHide();
+  }
+  async function loop() {
+    for (;;) {
+      await QM.wait(250);
+      if (QM.reduced || document.hidden || performance.now() - lastReal < 2500 || !hoop.ready()) continue;
+      const g = gen;
+      try { await toss(g); } catch (e) { if (hoop.held()) hoop.release(); }
+    }
+  }
+  QM.demo({ kind: 'loop', restart() {} });
+  loop();
+</script>
+</body>
+</html>

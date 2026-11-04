@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en" data-tone="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heat dots · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-heat-word",
+  "title": "Heat dots",
+  "group": "picks",
+  "cat": "brand",
+  "order": 180,
+  "kind": "pointer",
+  "tone": "dark",
+  "line": "dot spring k 240 · c 22 · ripple 1.2 ms a px · heat 110–170 px",
+  "summary": "A field of dots spells QBIX; under the pointer the dots swell, run together and melt into a lime heat map. A press ripples the dots into the next word, IDEA, then BUILD, outward from where it landed. Qbix colours: black ground, the rest dots in the text colour at 34%, and a lime ramp for the heat, dark olive at its edge to a pale lime at its core.",
+  "spec": [
+    ["Grid", "pitch P = clamp(8, 14, width ÷ 84) px; the word is set in Geist 500 on an offscreen mask, sized to 76% of the columns wide and at most 0.86 of the rows high, thickened by a 0.07 em stroke; a dot is lit where the mask is"],
+    ["Dot", "radius 0.34 P at rest, 0 where the word is not; each dot is its own spring, k 240 · c 22 (dt capped at 1/30 s)"],
+    ["Press", "a press picks the next word; every dot wakes d × 1.2 ms after the press (d = its distance from the pointer in px) plus 0–60 ms at random, so the change ripples out from the pointer"],
+    ["Hand", "follows the pointer with 1 − e^(−14 dt); its presence fades in and out with 1 − e^(−7 dt); radius clamp(110, 16 vw, 170) px"],
+    ["Heat", "dots within the radius swell by 1 + 1.5 · e^(−d² ÷ r²), r = 0.55 of the radius; drawn at one third of the size as additive sprites (alpha 0.1) and cut at 52 → 90 of 255, then coloured through a 256-step lime ramp and fed back at full size"],
+    ["Rest dots", "text colour #f4f5f2 at 34%, fading out under the hand so the heat replaces them"],
+    ["Ramp", "four stops: dark olive (0), lime shade #6FAE00 (0.34), lime #B8FF00 (0.62), pale lime (0.9 and up)"],
+    ["Loop", "requestAnimationFrame, stopped in a hidden tab; Canvas 2D at up to 2× pixel ratio"],
+    ["Reduced motion", "a still: the heat held at the centre of the word"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Heat dots (ix-heat-word)", "Idea: bencho.dev heat-word (MIT)"],
+  "where": "A Qbix splash or sign-off: the name and the line (QBIX, IDEA, BUILD, from “Bring the idea. We’ll build the thing.”) spelled in dots that melt into lime under the pointer.",
+  "rules": [
+    "Canvas 2D; the loop stops in a hidden tab.",
+    "The lime is the heat and nothing else; the dots at rest are the text colour.",
+    "A press changes the word, and the change travels outward from where it was pressed.",
+    "Any short word works: the dots are read from the font, not drawn by hand."
+  ],
+  "tags": ["canvas", "pointer", "dots", "heat", "lime"],
+  "shot": 1500
+}
+</script>
+<style data-code>
+/* Heat dots · Idea: bencho.dev heat-word (MIT).
+   O2's roles in qbix colours: black for O2's film dark, the text colour for the rest dots, and a lime ramp for the heat. */
+.hw {
+  --ground: #08090A; --text: #f4f5f2; --muted: rgba(244, 245, 242, 0.64);
+  --duration-base: 200ms; --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  position: fixed; inset: 0 0 var(--bar, 0px) 0; background: var(--ground);
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.hw canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; touch-action: none; }
+.hw-tabs { position: absolute; left: 0; right: 0; bottom: 24px; display: flex; justify-content: center; gap: 20px; pointer-events: none; color: var(--muted); }
+.hw-tabs span { transition: color var(--duration-base) var(--ease-out); }
+.hw-tabs span.on { color: var(--text); }
+@media (max-width: 760px) { .hw-tabs { bottom: 16px; } }
+@media (prefers-reduced-motion: reduce) { .hw-tabs span { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  html:not(.qm-tile) { --bar: 46px; }      /* the detail view's controls bar: the field and its words sit above it */
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="hw">
+  <canvas id="hw-cv" aria-label="A field of dots spelling a word; press to change the word"></canvas>
+  <div class="hw-tabs" id="hw-tabs"></div>
+</div>
+<!-- /code -->
+<div class="qm-ui"><span>Move over the dots · press to change the word</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Idea: bencho.dev heat-word (MIT). A word is read off an offscreen canvas into a grid of dots, each a spring. Near the
+   pointer the dots swell on a gaussian and are drawn, additively and at a third of the size, into a heat map that is
+   cut at a threshold and coloured through a ramp. Canvas 2D. */
+const cv = document.getElementById('hw-cv'), ctx = cv.getContext('2d');
+const WORDS = ['QBIX', 'IDEA', 'BUILD'];
+const FONT = '"Geist", ui-sans-serif, system-ui, sans-serif';
+const GROUND = '#08090A';                     // qbix black (O2's film dark)
+const REST = '244, 245, 242';                 // the qbix text colour: the rest dots, at 0.34
+document.getElementById('hw-tabs').innerHTML = WORDS.map((w) => `<span>${w}</span>`).join('');
+const tabs = [...document.getElementById('hw-tabs').children];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let DPR = 1, vw = 0, vh = 0, cols = 0, rows = 0, P = 10, ox = 0, oy = 0, N = 0;
+let rr, tg, vel, wakeAt, wantR, word = 0;
+const hand = { x: -999, y: -999, tx: -999, ty: -999, on: 0, to: 0 };
+const sprite = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const q = g.createRadialGradient(32, 32, 0, 32, 32, 32); q.addColorStop(0, 'rgba(255,255,255,1)'); q.addColorStop(0.5, 'rgba(255,255,255,.45)'); q.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = q; g.fillRect(0, 0, 64, 64); return c; })();
+const lo = document.createElement('canvas'), lg = lo.getContext('2d', { willReadFrequently: true }), col = document.createElement('canvas'), cg = col.getContext('2d');
+
+/* the lime ramp: dark olive at the edge of the heat, lime shade, the lime, and a pale lime at the core */
+const STOPS = [[0, [62, 96, 0]], [0.34, [111, 174, 0]], [0.62, [184, 255, 0]], [0.9, [236, 255, 170]]];
+const LUT = new Uint8ClampedArray(256 * 3);
+for (let i = 0; i < 256; i++) { const u = i / 255; let k = 0; while (k < STOPS.length - 2 && u > STOPS[k + 1][0]) k++; const [u0, c0] = STOPS[k], [u1, c1] = STOPS[k + 1], f = Math.min(1, Math.max(0, (u - u0) / (u1 - u0))); for (let c = 0; c < 3; c++) LUT[i * 3 + c] = c0[c] + (c1[c] - c0[c]) * f; }
+
+function maskFor(i) {
+  const m = document.createElement('canvas'); m.width = cols; m.height = rows; const g = m.getContext('2d', { willReadFrequently: true });
+  g.fillStyle = '#000'; g.fillRect(0, 0, cols, rows); g.fillStyle = '#fff'; g.strokeStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  let fs = rows;
+  g.font = `500 ${fs}px ${FONT}`; if ('letterSpacing' in g) g.letterSpacing = '0px';
+  const wdt = g.measureText(WORDS[i]).width;
+  fs = Math.min(fs * (cols * 0.76) / wdt, rows * 0.62 / 0.72); g.font = `500 ${fs}px ${FONT}`;
+  g.lineWidth = Math.max(1.2, fs * 0.07); g.lineJoin = 'round';
+  const y = rows / 2 + fs * 0.36; g.fillText(WORDS[i], cols / 2, y); g.strokeText(WORDS[i], cols / 2, y);
+  const d = g.getImageData(0, 0, cols, rows).data, out = new Uint8Array(cols * rows);
+  for (let k = 0; k < cols * rows; k++) out[k] = d[k * 4] > 120 ? 1 : 0;
+  return out;
+}
+const dotX = (k) => ox + (k % cols) * P + P / 2, dotY = (k) => oy + Math.floor(k / cols) * P + P / 2;
+const R0 = () => P * 0.34;
+function setWord(i, from, instant) {
+  word = i; const m = maskFor(i); const now = performance.now();
+  for (let k = 0; k < N; k++) {
+    const lit = m[k] === 1;
+    wantR[k] = lit ? R0() : 0;
+    const d = from ? Math.hypot(dotX(k) - from[0], dotY(k) - from[1]) : 0;
+    wakeAt[k] = instant ? 0 : now + d * 1.2 + Math.random() * 60;
+    if (instant) { tg[k] = wantR[k]; rr[k] = wantR[k]; vel[k] = 0; }
+  }
+  tabs.forEach((t, j) => t.classList.toggle('on', j === i));
+}
+function size() {
+  DPR = Math.min(2, devicePixelRatio || 1); vw = cv.clientWidth; vh = cv.clientHeight; cv.width = vw * DPR; cv.height = vh * DPR;
+  const pad = vw < 700 ? 16 : 56, fw = vw - 2 * pad, fh = vh - 2 * pad - 24;
+  P = Math.max(8, Math.min(14, fw / 84)); cols = Math.floor(fw / P); rows = Math.floor(fh / P); N = cols * rows;
+  ox = (vw - cols * P) / 2; oy = (vh - 24 - rows * P) / 2;
+  rr = new Float32Array(N); tg = new Float32Array(N); vel = new Float32Array(N); wakeAt = new Float64Array(N); wantR = new Float32Array(N);
+  lo.width = Math.ceil(vw / 3); lo.height = Math.ceil(vh / 3); col.width = lo.width; col.height = lo.height;
+  setWord(word, null, true);
+}
+addEventListener('resize', () => { if (N) { size(); if (reduceMotion) still(); } });
+
+const HR = () => Math.min(170, Math.max(110, vw * 0.16));
+const sm = (a, b, v) => { const u = Math.min(1, Math.max(0, (v - a) / (b - a))); return u * u * (3 - 2 * u); };
+function frame(dt) {
+  if (!N) return;
+  dt = Math.min(dt, 1 / 30);
+  const now = performance.now();
+  hand.x += (hand.tx - hand.x) * (1 - Math.exp(-dt * 14)); hand.y += (hand.ty - hand.y) * (1 - Math.exp(-dt * 14)); hand.on += (hand.to - hand.on) * (1 - Math.exp(-dt * 7));
+  for (let k = 0; k < N; k++) {
+    if (now >= wakeAt[k]) tg[k] = wantR[k];
+    vel[k] += (240 * (tg[k] - rr[k]) - 22 * vel[k]) * dt; rr[k] += vel[k] * dt; if (rr[k] < 0) rr[k] = 0;
+  }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = GROUND; ctx.fillRect(0, 0, vw, vh);
+  const Rh = HR(), reach = Rh * 0.55;
+  // rest dots, fading out under the hand
+  for (let k = 0; k < N; k++) {
+    const r = rr[k]; if (r < 0.15) continue;
+    const x = dotX(k), y = dotY(k), m = hand.on * (1 - sm(Rh * 0.55, Rh, Math.hypot(x - hand.x, y - hand.y)));
+    ctx.fillStyle = `rgba(${REST},${(0.34 * (1 - m)).toFixed(3)})`; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+  }
+  if (hand.on > 0.01) {
+    // the heat: dots near the hand swell on a gaussian and run together
+    const x0 = Math.max(0, Math.floor((hand.x - Rh - 24) / 3)), y0 = Math.max(0, Math.floor((hand.y - Rh - 24) / 3)), x1 = Math.min(lo.width, Math.ceil((hand.x + Rh + 24) / 3)), y1 = Math.min(lo.height, Math.ceil((hand.y + Rh + 24) / 3));
+    const w = x1 - x0, h = y1 - y0;
+    if (w > 0 && h > 0) {
+      lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-over'; lg.fillStyle = '#000'; lg.fillRect(0, 0, lo.width, lo.height); lg.globalCompositeOperation = 'lighter';
+      for (let k = 0; k < N; k++) {
+        const r = rr[k]; if (r < 0.3) continue; const x = dotX(k), y = dotY(k), dx = x - hand.x, dy = y - hand.y;
+        if (dx * dx + dy * dy > (Rh + 30) * (Rh + 30)) continue;
+        const sw = r * (1 + 1.5 * hand.on * Math.exp(-(dx * dx + dy * dy) / (reach * reach))) * 3.4 / 3;
+        lg.globalAlpha = 0.1; lg.drawImage(sprite, x / 3 - sw, y / 3 - sw, sw * 2, sw * 2);
+      }
+      lg.globalAlpha = 1;
+      const id = lg.getImageData(x0, y0, w, h), d = id.data;
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+        const o = (j * w + i) * 4, v = d[o];
+        const px = (x0 + i) * 3, py = (y0 + j) * 3, mk = hand.on * (1 - sm(Rh * 0.55, Rh, Math.hypot(px - hand.x, py - hand.y)));
+        const a = sm(52, 90, v) * mk;
+        const li = Math.min(255, (v * 1.1) | 0) * 3;
+        d[o] = LUT[li]; d[o + 1] = LUT[li + 1]; d[o + 2] = LUT[li + 2]; d[o + 3] = a * 255;
+      }
+      cg.putImageData(id, x0, y0);
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(col, x0, y0, w, h, x0 * 3, y0 * 3, w * 3, h * 3);
+      cg.clearRect(x0, y0, w, h);
+    }
+  }
+}
+/* a requestAnimationFrame loop that rests in a hidden tab */
+function loop(fn) {
+  let raf = 0, last = 0;
+  const tick = (t) => { raf = requestAnimationFrame(tick); fn(Math.min(0.1, (t - last) / 1000)); last = t; };
+  const go = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else go(); });
+  go();
+}
+loop(frame);
+
+/* the pointer: heat follows it, a press changes the word and sends the change out from where it landed */
+const at = (x, y) => { const r = cv.getBoundingClientRect(); return [x - r.left, y - r.top]; };
+const heat = {
+  move(cx, cy) { const [x, y] = at(cx, cy); hand.tx = x; hand.ty = y; if (hand.to === 0 && hand.on < 0.02) { hand.x = x; hand.y = y; } hand.to = 1; },
+  leave() { hand.to = 0; },
+  press(cx, cy) { const [x, y] = at(cx, cy); hand.tx = x; hand.ty = y; hand.to = 1; setWord((word + 1) % WORDS.length, [x, y]); },
+};
+cv.addEventListener('pointermove', (e) => heat.move(e.clientX, e.clientY));
+cv.addEventListener('pointerleave', () => heat.leave());
+cv.addEventListener('pointerdown', (e) => heat.press(e.clientX, e.clientY));
+
+/* reduced motion: one still, the heat held at the middle of the word */
+function still() { hand.x = hand.tx = vw / 2; hand.y = hand.ty = vh / 2; hand.on = hand.to = 1; frame(0.016); }
+
+/* the words are set in Geist 500: build the masks once the face is in */
+document.fonts.load('500 64px "Geist"').catch(() => {}).then(() => {
+  size();
+  if (reduceMotion) still();
+});
+</script>
+<script>
+  /* harness glue (pointer kind): the ghost walks the O2 route over the word and presses twice; the viewer's own
+     pointer takes over. A press is a pointerdown for the piece, at the ghost's place. */
+  const L = (fx, fy) => [innerWidth * fx, (innerHeight - (QM.tile ? 0 : 46)) * fy];
+  const ease = QM.bezier(0.65, 0, 0.35, 1);
+  function pressLook() {       // the ghost arrow dips as a hand does on a press
+    const n = document.querySelector('.qm-ghost'); if (!n) return;
+    n.style.transition = 'opacity 240ms var(--ease), scale 110ms var(--ease)'; n.style.scale = '0.86';
+    setTimeout(() => { n.style.scale = '1'; }, 150);
+  }
+  // [ms of travel, destination] and, after it, a pause: the O2 route (400 · 1300 · 1200, wait 300, press, wait 900 · 1100 · 1100, wait 300, press, wait 1300)
+  const ROUTE = [[400, [0.2, 0.5]], [1300, [0.46, 0.46]], [1200, [0.74, 0.56]], [300 + 100 + 900, null, 'press'], [1100, [0.3, 0.5]], [1100, [0.62, 0.44]], [300 + 100 + 1300 + 300, null, 'press']];
+  const CYCLE = ROUTE.reduce((s, r) => s + r[0], 0);
+  let prevU = -1;
+  function walk(t) {
+    const u = (t * 1000) % CYCLE, first = t * 1000 < CYCLE;
+    if (u < prevU) prevU = -1;
+    let from = first ? [0.82, 0.86] : [0.62, 0.44], at0 = 0, pos = null;
+    for (const [ms, to, act] of ROUTE) {
+      if (u < at0 + ms) {
+        if (to) { const k = ease((u - at0) / ms); pos = [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k]; }
+        else pos = from;
+        // the press lands 300 ms into its pause
+        if (act === 'press' && prevU < at0 + 300 && u >= at0 + 300) { const [x, y] = L(from[0], from[1]); heat.press(x, y); pressLook(); }
+        break;
+      }
+      at0 += ms; if (to) from = to;
+    }
+    prevU = u;
+    pos = pos || from;
+    return L(pos[0], pos[1]);
+  }
+  if (reduceMotion) QM.demo({ kind: 'loop', restart() {} });
+  else QM.demo({
+    kind: 'pointer',
+    path: walk,
+    move(x, y) { heat.move(x, y); },
+    leave() { if (!cv.matches(':hover')) heat.leave(); },
+  });
+</script>
+</body>
+</html>

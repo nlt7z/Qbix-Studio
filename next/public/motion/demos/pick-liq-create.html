@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid menu · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-liq-create",
+  "title": "Liquid menu",
+  "group": "picks",
+  "cat": "buttons",
+  "order": 150,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "body k 300 · c 22 · rows k 340, 36 ms apart",
+  "summary": "The New pill sinks on press, then one shape spreads from it on a spring into the create menu while the four items part from the top one after another. The lime of the pill gives way to the white of the menu as it opens. Closing runs it back. Picking an item hands you a note on what it is.",
+  "spec": [
+    ["Press", "the shape scales to 0.94 (120 ms); the menu starts 60 ms after the click"],
+    ["Body", "one spring on progress t: 92 × 36 → 256 × 184 (O2 opens to 224; Practice Website Refresh needs the room), radius 18 → 14, k 300 · c 22, anchored top right"],
+    ["Colour", "the shape mixes from lime to white over the first third of t, and gains a 1px ring as it does"],
+    ["Rows", "each on its own spring k 340 · c 21, starting 40 ms + 36 ms × its index after the body; they begin 4px apart and part to 40px apart; each rises in with the body"],
+    ["Label", "“New” and the plus fade over the first fifth of t"],
+    ["Close", "the same springs the other way; Esc, a click outside, or picking an item"],
+    ["Toast", "opacity and an 8px rise, 200 ms, expo out; held 1.8 s"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Create menu (ix-liq-create)", "Idea: bencho.dev liq-create (MIT)"],
+  "where": "The Briefs list: start a Design service, a Brand upgrade, a Moodboard or a Practice Website Refresh.",
+  "rules": [
+    "The motion starts from a press: the button is the shape the menu is made of.",
+    "The menu is white with a 1px ring; the lime is the one filled primary and it only lives on the pill.",
+    "A real menu button: aria-haspopup, aria-expanded, Esc, and focus-visible rings on the items."
+  ],
+  "tags": ["menu", "spring", "morph", "press", "lime"],
+  "shot": 3000
+}
+</script>
+<style data-code>
+/* Create menu · Idea: bencho.dev liq-create (MIT).
+   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+.cr {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
+  --surface: #ffffff; --surface-muted: #eceef0; --surface-border: rgba(18, 20, 23, 0.14);
+  --row-stripe: color-mix(in srgb, #eceef0 62%, #ffffff); --row-hover: #f6f7f8;
+  --primary: #B8FF00; --on-primary: #0c1300;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative; width: 800px; display: grid; gap: 16px; align-content: start;
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.cr-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.cr-heading { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }
+.cr-meta { margin: 0; font-size: 12px; color: var(--faint); }
+.cr-card { background: var(--surface); border-radius: 14px; padding: 8px 16px 16px; }
+.cr-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cr-table th { text-align: left; font-weight: 500; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--surface-border); white-space: nowrap; }
+.cr-table td { padding: 12px; white-space: nowrap; }
+.cr-table tbody tr:nth-child(even) td { background: var(--row-stripe); }
+.cr-table tbody tr:hover td { background: var(--row-hover); }
+.cr-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.cr-bn { display: flex; align-items: center; gap: 12px; }
+.cr-bn img { width: 36px; height: 26px; object-fit: cover; border-radius: 3px; }
+.cr-bn b { font-weight: 500; }
+.cr-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: rgba(18, 20, 23, 0.08); }
+.cr-chip.live { color: #fff; background: var(--text); }
+.cr-chip.review { color: var(--text); background: rgba(18, 20, 23, 0.14); }
+
+/* the create control: one shape that spreads from a pill into the menu */
+.cr-anchor { position: relative; width: 92px; height: 36px; flex: none; z-index: 5; }
+.cr-shape { position: absolute; top: 0; right: 0; width: 92px; height: 36px; border-radius: 18px; background: var(--primary); overflow: hidden; transform-origin: 100% 0; transition: transform 120ms var(--ease-out); }
+.cr-anchor[data-sink] .cr-shape { transform: scale(0.94); }
+.cr-pill { position: absolute; top: 0; right: 0; z-index: 2; width: 92px; height: 36px; border: 0; background: none; color: var(--on-primary); display: flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-weight: 500; cursor: pointer; }
+.cr-pill:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 18px; }
+.cr-pill:hover, .cr-pill.is-hot { background: color-mix(in oklab, transparent, #000 8%); border-radius: 18px; }
+.cr-anchor[data-open] .cr-pill, .cr-anchor[data-open] .cr-pill.is-hot { pointer-events: none; background: none; }
+.cr-items { position: absolute; top: 0; right: 0; width: 256px; height: 184px; padding: 8px; list-style: none; margin: 0; }
+.cr-item { position: absolute; left: 8px; right: 8px; height: 40px; will-change: transform; }
+.cr-item button { width: 100%; height: 100%; white-space: nowrap; display: flex; align-items: center; gap: 12px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background-color 120ms var(--ease-out); }
+.cr-item button:hover, .cr-item button.is-hot { background: var(--surface-muted); }
+.cr-item button:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+.cr-item svg { color: var(--muted); }
+.cr-toast { position: absolute; left: 50%; bottom: 0; display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--surface-border); transform: translate(-50%, 8px); opacity: 0; pointer-events: none; transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
+.cr-toast[data-on] { opacity: 1; transform: translate(-50%, 0); }
+.cr-toast b { display: block; font-weight: 500; }
+.cr-toast span { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .cr-shape, .cr-toast, .cr-item button { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<div class="cr" id="cr">
+  <div class="cr-head">
+    <div><h1 class="cr-heading">Briefs</h1><p class="cr-meta">5 briefs · 2 live</p></div>
+    <div class="cr-anchor" id="cr-anchor">
+      <div class="cr-shape" id="cr-shape"><ul class="cr-items" id="cr-items"></ul></div>
+      <button class="cr-pill" id="cr-pill" type="button" aria-haspopup="menu" aria-expanded="false"><span id="cr-plus"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></span><span id="cr-lab">New</span></button>
+    </div>
+  </div>
+  <div class="cr-card">
+    <table class="cr-table">
+      <thead><tr><th>Brief</th><th>Service</th><th class="num">Takes</th><th>Updated</th><th>Status</th></tr></thead>
+      <tbody id="cr-rows"></tbody>
+    </table>
+  </div>
+  <div class="cr-toast" id="cr-toast" role="status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><div><b id="cr-tt"></b><span id="cr-td"></span></div></div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Press New · Esc or click away to close</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* One shape spreads from the pill into the menu on a spring; the items part from the top one after another,
+   each on a spring of its own a beat behind the one above it. */
+const ICON = (d) => `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ITEMS = [
+  { k: 'design', icon: 'grid', label: 'Design service', note: 'From $500 · 1 to 3 weeks' },
+  { k: 'brand', icon: 'star', label: 'Brand upgrade', note: '5 to 10 weeks' },
+  { k: 'board', icon: 'image', label: 'Moodboard', note: 'The first step of a Design service' },
+  { k: 'practice', icon: 'panel', label: 'Practice Website Refresh', note: '$600 flat · 7 days' },
+];
+const PATHS = {
+  grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+  star: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/>',
+  image: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+  panel: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/>',
+};
+const BRIEFS = [
+  ['objects', 'Forma', 'Design service', '1 to 3 weeks', 'Nov 2, 2026', 'Live', 'live'],
+  ['block', 'Kova', 'Brand upgrade', '5 to 10 weeks', 'Oct 30, 2026', 'In review', 'review'],
+  ['cross', 'Tidewell Coffee', 'Design service', '1 to 3 weeks', 'Oct 29, 2026', 'Delivered', ''],
+  ['bottle', 'Willow Counseling', 'Practice Website Refresh', '7 days', 'Oct 27, 2026', 'Live', 'live'],
+  ['slices', 'Pennant Studio', 'Brand upgrade', '5 to 10 weeks', 'Oct 21, 2026', 'Delivered', ''],
+];
+document.getElementById('cr-rows').innerHTML = BRIEFS.map((b) => `<tr><td><div class="cr-bn"><img src="../assets/art/${b[0]}.webp" alt=""><b>${b[1]}</b></div></td><td>${b[2]}</td><td class="num">${b[3]}</td><td>${b[4]}</td><td><span class="cr-chip ${b[6]}">${b[5]}</span></td></tr>`).join('');
+
+const $ = (id) => document.getElementById(id);
+const anchor = $('cr-anchor'), shape = $('cr-shape'), list = $('cr-items'), pill = $('cr-pill'), lab = $('cr-lab'), plus = $('cr-plus'), toast = $('cr-toast');
+const RH = 40, PW = 92, PH = 36, MW = 256, MH = 184;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+list.innerHTML = ITEMS.map((it) => `<li class="cr-item" data-k="${it.k}"><button type="button">${ICON(PATHS[it.icon])}<span>${it.label}</span></button></li>`).join('');
+const rows = [...list.children];
+const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+/* springs: the body, and each row a beat behind the one above it */
+const body = { x: 0, v: 0, to: 0 }, rs = ITEMS.map(() => ({ x: 0, v: 0, to: 0, at: 0 }));
+let open = false, raf = 0;
+function tick(now, prev) {
+  const dt = Math.min(0.033, (now - prev) / 1000);
+  let busy = false;
+  const step = (s, k, c) => {
+    s.v += ((s.to - s.x) * k - s.v * c) * dt; s.x += s.v * dt;
+    if (Math.abs(s.to - s.x) < 0.0006 && Math.abs(s.v) < 0.004) { s.x = s.to; s.v = 0; } else busy = true;
+  };
+  step(body, 300, 22);
+  rs.forEach((r) => { if (now >= r.at) step(r, 340, 21); else busy = true; });
+  render();
+  return busy;
+}
+function render() {
+  const t = body.x, mix = clamp(t * 3, 0, 1);
+  shape.style.width = lerp(PW, MW, t) + 'px';
+  shape.style.height = lerp(PH, MH, t) + 'px';
+  shape.style.borderRadius = Math.max(14, lerp(18, 14, clamp(t * 2, 0, 1))) + 'px';
+  shape.style.background = `color-mix(in srgb, var(--primary) ${(1 - mix) * 100}%, var(--surface))`;     // the lime gives way to the white menu
+  shape.style.boxShadow = `0 0 0 1px color-mix(in srgb, var(--surface-border) ${mix * 100}%, transparent)`;
+  lab.style.opacity = plus.style.opacity = clamp(1 - t * 5, 0, 1);
+  pill.style.pointerEvents = t > 0.15 ? 'none' : '';
+  rs.forEach((r, i) => {
+    const y = 8 + i * RH, from = 8 + i * 4;                                        // rows start bunched at the top and part
+    rows[i].style.top = lerp(from, y, r.x) + 'px';
+    rows[i].style.opacity = clamp((r.x - 0.2) / 0.5, 0, 1) * clamp((t - 0.25) / 0.35, 0, 1);
+  });
+}
+function wake() {
+  if (raf) return;
+  let prev = performance.now();
+  const frame = (now) => { const busy = tick(now, prev); prev = now; raf = busy ? requestAnimationFrame(frame) : 0; };
+  raf = requestAnimationFrame(frame);
+}
+function setOpen(v, instant) {
+  if (v === open && !instant) return;
+  open = v;
+  const now = performance.now();
+  body.to = v ? 1 : 0;
+  rs.forEach((r, i) => { r.to = v ? 1 : 0; r.at = v ? now + 40 + i * 36 : now; });
+  anchor.toggleAttribute('data-open', v);
+  pill.setAttribute('aria-expanded', v);
+  if (instant || reduceMotion) { body.x = body.to; body.v = 0; rs.forEach((r) => { r.x = r.to; r.v = 0; }); render(); return; }
+  wake();
+}
+pill.addEventListener('pointerdown', () => anchor.setAttribute('data-sink', ''));
+addEventListener('pointerup', () => anchor.removeAttribute('data-sink'));
+pill.addEventListener('click', () => { anchor.removeAttribute('data-sink'); setTimeout(() => setOpen(true), 60); });   // it sinks, then opens
+document.addEventListener('pointerdown', (e) => { if (open && !shape.contains(e.target)) setOpen(false); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+let toastTimer = 0;
+list.addEventListener('click', (e) => {
+  const li = e.target.closest('.cr-item');
+  if (!li) return;
+  const it = ITEMS.find((x) => x.k === li.dataset.k);
+  setOpen(false);
+  $('cr-tt').textContent = it.label; $('cr-td').textContent = it.note;
+  toast.setAttribute('data-on', '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.removeAttribute('data-on'), 1800);
+});
+render();
+</script>
+<script>
+  /* harness glue: a ghost presses New, looks along the menu, picks one, then opens it again and clicks away */
+  PickGhost.fit(document.getElementById('pk'), 800, 470, { max: 1.5 });
+  const item = (k) => () => document.querySelector(`.cr-item[data-k="${k}"] button`);
+  PickGhost.start({
+    hot: '.cr-item button, .cr-pill',
+    reset() { setOpen(false, true); clearTimeout(toastTimer); toast.removeAttribute('data-on'); anchor.removeAttribute('data-sink'); },
+    async script(g) {
+      await g.wait(900);
+      await g.click('#cr-pill');
+      await g.wait(1300);
+      await g.to(item('brand'), { ms: 420 }); await g.wait(500);
+      await g.to(item('board'), { ms: 360 }); await g.wait(700);
+      await g.click(item('board'));
+      await g.wait(1800);
+      await g.click('#cr-pill');
+      await g.wait(900);
+      await g.to(() => ({ x: innerWidth * 0.3, y: innerHeight * 0.62 }), { ms: 500 });
+      await g.click();                                                 // a click away from the menu folds it
+      await g.wait(1300);
+    },
+    still() { setOpen(true, true); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

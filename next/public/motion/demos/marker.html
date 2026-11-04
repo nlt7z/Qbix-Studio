@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" data-tone="lime">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Highlighter · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "marker",
+  "title": "Highlighter",
+  "group": "type",
+  "cat": "text",
+  "order": 60,
+  "kind": "scroll",
+  "line": "carried by the scroll · ⅓ screen",
+  "tone": "lime",
+  "summary": "A bar slides across a key phrase as you scroll, carrying an ink copy of the words that counter-slides, so the type never moves and each letter turns as the bar reaches it.",
+  "spec": [
+    ["Carried by", "the scroll: a third of a screen (0.32 vh) after the phrase passes 90% down the screen"],
+    ["Easing", "smoothstep x²(3 − 2x) on the scroll progress"],
+    ["Move", "bar translateX (mark − 1) × 101%, copy translateX (1 − mark) × 101%"],
+    ["Back", "scrolling back unmarks it"],
+    ["Near the end", "finishes where the page does if there is less scroll left"],
+    ["Colours", "lime bar on black · ink bar on lime · white bar where the screen's lime is elsewhere"]
+  ],
+  "source": ["components/Marker.tsx", "app/globals.css · MARKER"],
+  "where": "The sign-off's “We’ll build the thing.”, About’s last line, an offer’s key promise.",
+  "rules": [
+    "Keep phrases short: the line does not wrap.",
+    "The copy is aria-hidden and unselectable, so the phrase is read and copied once.",
+    "One marker per screen. It is the screen's one lime when it is lime."
+  ],
+  "tags": ["text", "scroll", "highlight", "lime"]
+}
+</script>
+<style data-code>
+/* The highlighter — components/Marker.tsx, globals.css MARKER */
+.marker {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  clip-path: inset(-0.06em -0.16em -0.1em);   /* hides the bar while it waits off to the left */
+}
+.marker-bar {
+  position: absolute;
+  inset: -0.02em -0.14em -0.06em;
+  overflow: hidden;
+  background: #B8FF00;
+  translate: calc((var(--mark, 1) - 1) * 101%) 0;
+}
+.marker-in {
+  position: absolute;
+  inset: 0;
+  padding: 0.02em 0.14em 0.06em;
+  line-height: inherit;
+  white-space: nowrap;
+  color: #121417;
+  translate: calc((1 - var(--mark, 1)) * 101%) 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* where the screen's one lime is elsewhere, the bar is the page's own ink or paper */
+.marker--ink .marker-bar { background: #121417; }
+.marker--ink .marker-in { color: #B8FF00; }
+.marker--white .marker-bar { background: #f4f5f2; }
+.marker--white .marker-in { color: #121417; }
+</style>
+<style>
+  /* the phrase comes up the screen and the scroll carries the bar across it */
+  .mk-run { padding: 55vh clamp(24px, 6vmin, 72px) 75vh; }
+  .mk { width: min(100%, 880px); margin: 0 auto; display: grid; gap: 26px; }
+  .mk .title { font-size: clamp(36px, 5.6vw, 72px); }
+  .qm-hint { position: fixed; left: clamp(24px, 6vmin, 72px); top: clamp(24px, 6vmin, 56px); }
+</style>
+</head>
+<body>
+<div class="mk-run">
+  <div class="mk">
+    <p class="kicker">Contact</p>
+<!-- code -->
+<h2 class="title">Bring the idea. <span class="marker marker--ink" data-marker>We’ll build the thing.</span></h2>
+<!-- /code -->
+  </div>
+</div>
+<span class="qm-hint">Scroll ↓</span>
+<div class="qm-ui">
+  <span>Bar</span>
+  <button data-v="ink" class="is-on">Ink on lime</button>
+  <button data-v="lime">Lime on black</button>
+  <button data-v="white">White on black</button>
+</div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Every marker on the page, moved by one scroll listener. A marker's bar is carried by the
+   scroll from where the page was when the phrase came up past nine tenths of the screen:
+   a third of a screen more and it's whole. Measured from the scroll, not the phrase's place,
+   so it also plays where the words are pinned while the page scrolls on. */
+const markers = new Map();
+const ease = (x) => x * x * (3 - 2 * x);
+let raf = 0;
+function paint() {
+  raf = 0;
+  const vh = window.innerHeight, y = window.scrollY;
+  const maxScroll = document.documentElement.scrollHeight - vh;
+  const range = vh * 0.32;
+  markers.forEach((m, el) => {
+    const r = el.getBoundingClientRect();
+    if (m.y0 === null) {
+      if (r.top > vh * 0.9 || r.bottom < 0) return el.style.setProperty('--mark', '0');
+      m.y0 = r.top < vh * 0.6 ? y - range : y;   // already well on screen: drawn
+    }
+    const room = Math.max(1, Math.min(range, maxScroll - m.y0));   // near the end, finish where the page does
+    const p = Math.min(1, Math.max(0, (y - m.y0) / room));
+    el.style.setProperty('--mark', ease(p).toFixed(4));
+  });
+}
+const request = () => { if (!raf) raf = requestAnimationFrame(paint); };
+
+function marker(el) {
+  const text = el.textContent;
+  const bar = document.createElement('span');
+  bar.className = 'marker-bar';
+  bar.setAttribute('aria-hidden', 'true');
+  bar.innerHTML = '<span class="marker-in"></span>';
+  bar.firstChild.textContent = text;
+  el.appendChild(bar);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return el.style.setProperty('--mark', '1');
+  el.style.setProperty('--mark', '0');
+  markers.set(el, { y0: null });
+}
+
+document.querySelectorAll('[data-marker]').forEach(marker);
+window.addEventListener('scroll', request, { passive: true });
+window.addEventListener('resize', () => { markers.forEach((m) => (m.y0 = null)); request(); });
+request();
+</script>
+<script>
+  QM.demo({ kind: 'scroll', lead: 600, dur: 3600, hold: 1400, back: 2200 });
+  const mk = document.querySelector('[data-marker]');
+  document.querySelectorAll('[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-v]').forEach((x) => x.classList.toggle('is-on', x === b));
+    const v = b.dataset.v;
+    document.documentElement.dataset.tone = v === 'ink' ? 'lime' : 'dark';
+    mk.classList.toggle('marker--ink', v === 'ink');
+    mk.classList.toggle('marker--white', v === 'white');
+  }));
+</script>
+</body>
+</html>

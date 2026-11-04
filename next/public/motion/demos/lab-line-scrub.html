@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Line morph · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-line-scrub", "title": "Line morph", "group": "lab", "cat": "data", "order": 370,
+  "kind": "pointer", "tone": "paper",
+  "line": "900 ms morph · 220 points · crosshair snaps to the data",
+  "summary": "A line of forma.studio visits, resampled to 220 points with monotone cubic interpolation so it never overshoots. Switching the time range moves every point to its new height, staggered left to right, so the line morphs rather than swaps. Dragging across the chart puts a crosshair on the nearest data point and the big number reads that day.",
+  "spec": [["Resample", "monotone cubic (Fritsch-Carlson) to 220 points"], ["Morph", "900 ms in-out, each point starts up to 35% later than the one before"], ["Crosshair", "snaps to the nearest sample, eases at 1 − e^(−22 dt)"], ["Readout", "counts to the new total over 800 ms; shows the hovered day while scrubbing"], ["Range pill", "indicator slides 500 ms, expo out"], ["Idle", "a ghost scrubs for 4.4 s, then picks the next range"]],
+  "source": ["Qbix studio library · line-scrub"],
+  "where": "A Forma or Practice chapter that reports how a launched site is doing over the week, the month, the year.",
+  "rules": ["One lime: the point the crosshair sits on, framed in ink so it reads on paper.", "No gradients, no glow: the area under the line is one flat step of the foreground, the rules are dotted.", "The range control is a white block with the top right corner cut and an ink block for the range you are on."],
+  "tags": ["canvas", "chart", "drag", "data"]
+}
+</script>
+<style data-code>
+.ls { position: absolute; inset: 0; display: flex; flex-direction: column; padding: clamp(18px, 5vmin, 48px) clamp(18px, 5vmin, 56px) clamp(12px, 3vmin, 28px); user-select: none; }
+.ls-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 14px 24px; }
+.ls-read { display: flex; align-items: baseline; gap: 10px; margin-top: 8px; }
+.ls-val { font: 400 clamp(44px, 7vw, 88px)/.92 Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.ls-unit { font: 12px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+.ls-when { margin: 10px 0 0; font-size: clamp(13px, 1.25vw, 15px); color: rgba(18,20,23,.64); height: 1.3em; }
+.ls-ranges { position: relative; display: flex; gap: 0; background: #ffffff; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.ls-ranges button { position: relative; z-index: 1; appearance: none; border: 0; background: none; color: rgba(18,20,23,.64); font: 500 12px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; padding: 14px clamp(10px, 1.4vw, 16px); cursor: pointer; transition: color .3s; }
+.ls-ranges button.on { color: #f4f5f2; }
+.ls-ind { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: #121417; transition: transform .5s cubic-bezier(.16, 1, .3, 1), width .5s cubic-bezier(.16, 1, .3, 1); }
+.ls-plot { position: relative; flex: 1; min-height: 0; margin-top: clamp(10px, 2.4vmin, 26px); }
+.ls-plot canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+@media (prefers-reduced-motion: reduce) { .ls-ind { transition: none; } }
+</style>
+<style>.qm-stage { display: block; padding: 0; }</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="ls">
+  <div class="ls-top">
+    <div>
+      <p class="kicker">forma.studio visits</p>
+      <div class="ls-read"><span class="ls-val" id="ls-val">0</span><span class="ls-unit">visits</span></div>
+      <p class="ls-when" id="ls-when">Last 30 days</p>
+    </div>
+    <div class="ls-ranges" id="ls-ranges"><div class="ls-ind" id="ls-ind"></div></div>
+  </div>
+  <div class="ls-plot" id="ls-plot"><canvas id="ls-c"></canvas></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const LineScrub = (() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MONO = '"Encode Sans", Geist, sans-serif', FG = '18, 20, 23', LIME = '#B8FF00';
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+  let seed = 7;
+  const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const today = new Date(2026, 9, 27);
+  const daily = [], dates = [];
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i); dates.push(d);
+    const k = 89 - i, wk = d.getDay();
+    let v = 120 + k * 1.6 + 38 * Math.sin(k / 6.5) + rnd() * 46 + (wk === 6 || wk === 0 ? 45 : 0);
+    if (k === 61 || k === 75 || k === 86) v += 150 + rnd() * 50; // launch day, a newsletter, a press mention
+    daily.push(Math.round(v));
+  }
+  const weekly = [], wdates = [];
+  for (let i = 51; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i * 7); wdates.push(d);
+    const k = 51 - i;
+    weekly.push(Math.round(900 + 520 * Math.sin((k - 14) / 52 * Math.PI * 2) + k * 14 + rnd() * 260));
+  }
+  const fmtD = (d) => `${DAY[d.getDay()]}, ${MON[d.getMonth()]} ${d.getDate()}`;
+  const fmtW = (d) => `Week of ${MON[d.getMonth()]} ${d.getDate()}`;
+  const SETS = [
+    { k: '7 days', v: daily.slice(-7), d: dates.slice(-7), f: fmtD, sum: 'Last 7 days' },
+    { k: '30 days', v: daily.slice(-30), d: dates.slice(-30), f: fmtD, sum: 'Last 30 days' },
+    { k: '90 days', v: daily, d: dates, f: fmtD, sum: 'Last 90 days' },
+    { k: '1 year', v: weekly, d: wdates, f: fmtW, sum: 'Last 12 months' },
+  ];
+  // monotone cubic: the line goes through every value and never overshoots between them
+  function mono(ys) {
+    const n = ys.length, d = [], m = new Array(n);
+    for (let i = 0; i < n - 1; i++) d[i] = ys[i + 1] - ys[i];
+    m[0] = d[0]; m[n - 1] = d[n - 2];
+    for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+    for (let i = 0; i < n - 1; i++) {
+      if (d[i] === 0) { m[i] = m[i + 1] = 0; continue; }
+      const a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b;
+      if (s > 9) { const t = 3 / Math.sqrt(s); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]; }
+    }
+    return (x) => { const i = Math.min(n - 2, Math.max(0, Math.floor(x))), t = x - i, t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * ys[i] + (t3 - 2 * t2 + t) * m[i] + (-2 * t3 + 3 * t2) * ys[i + 1] + (t3 - t2) * m[i + 1]; };
+  }
+  SETS.forEach((s) => {
+    s.total = s.v.reduce((a, b) => a + b, 0);
+    const mx = Math.max(...s.v), p = Math.pow(10, Math.floor(Math.log10(mx)));
+    s.step = p * (mx / p > 5 ? 2 : 1) / 2; s.max = Math.ceil(mx * 1.12 / s.step) * s.step;
+    s.f2 = mono(s.v);
+  });
+
+  const ranges = document.getElementById('ls-ranges'), ind = document.getElementById('ls-ind');
+  const btns = SETS.map((s, i) => { const b = document.createElement('button'); b.textContent = s.k; b.onclick = () => setRange(i); ranges.appendChild(b); return b; });
+  const placeInd = () => { const b = btns[cur]; ind.style.width = b.offsetWidth + 'px'; ind.style.transform = `translateX(${b.offsetLeft}px)`; };
+
+  const cv = document.getElementById('ls-c'), ctx = cv.getContext('2d'), wrap = document.getElementById('ls-plot');
+  const N = 220;
+  let W = 0, H = 0, dpr = 1, L = 0, R = 0, T = 0, B = 0;
+  let cur = 1, prev = 1, morphT = 1, morphStart = 0;
+  let fromY = new Float32Array(N), shownY = new Float32Array(N);
+  const targetY = (si) => { const s = SETS[si], out = new Float32Array(N), n = s.v.length; for (let i = 0; i < N; i++) out[i] = B - s.f2(i / (N - 1) * (n - 1)) / s.max * (B - T); return out; };
+  function resize() {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    const r = wrap.getBoundingClientRect(); W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    L = W > 700 ? 44 : 36; R = W; T = 14; B = H - 30;
+    shownY = targetY(cur); fromY = shownY.slice(); morphT = 1; placeInd();
+  }
+  let shownVal = 0, countFrom = 0, countStart = performance.now();
+  function setRange(i) {
+    if (i === cur) return;
+    btns[cur].classList.remove('on'); btns[i].classList.add('on');
+    fromY = shownY.slice(); prev = cur; cur = i; morphStart = performance.now(); morphT = reduce ? 1 : 0;
+    placeInd(); countFrom = shownVal; countStart = performance.now();
+  }
+  btns[cur].classList.add('on');
+  addEventListener('resize', resize);
+
+  const valEl = document.getElementById('ls-val'), whenEl = document.getElementById('ls-when');
+  const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  const ptr = { x: 0, on: false };
+  function move(cx, cy) {
+    const r = cv.getBoundingClientRect();
+    ptr.x = cx - r.left; ptr.on = cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+  }
+  cv.addEventListener('pointermove', (e) => move(e.clientX, e.clientY));
+  cv.addEventListener('pointerdown', (e) => { move(e.clientX, e.clientY); cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerleave', () => { ptr.on = false; });
+
+  let cx = -1, cxShow = 0, last = performance.now();
+  function draw(now, dt) {
+    if (morphT < 1) morphT = clamp((now - morphStart) / 900, 0, 1);
+    const tgt = targetY(cur);
+    for (let i = 0; i < N; i++) shownY[i] = fromY[i] + (tgt[i] - fromY[i]) * ease(clamp(morphT * 1.35 - (i / N) * 0.35, 0, 1));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const s = SETS[cur], ps = SETS[prev], la = ease(morphT), fs = Math.round(clamp(W * 0.011, 11, 13));
+    ctx.font = `400 ${fs}px ${MONO}`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    // value rules are dotted; the two sets of rules swap by sliding as the line morphs
+    for (const [set, a] of [[ps, 1 - la], [s, la]]) {
+      if (a < 0.02) continue;
+      for (let v = set.step; v < set.max; v += set.step) {
+        const y = Math.round(B - v / set.max * (B - T));
+        ctx.fillStyle = `rgba(${FG}, ${0.16 * a})`;
+        for (let x = L; x < R; x += 8) ctx.fillRect(x, y, 2, 2);
+        ctx.fillStyle = `rgba(${FG}, ${0.45 * a})`; ctx.fillText(v >= 1000 ? (v / 1000) + 'k' : String(v), L - 10, y);
+      }
+    }
+    ctx.fillStyle = `rgba(${FG}, .3)`; ctx.fillRect(L, Math.round(B), R - L, 2);
+    ctx.textBaseline = 'alphabetic';
+    for (const [set, a] of [[ps, 1 - la], [s, la]]) {
+      if (a < 0.02) continue; ctx.fillStyle = `rgba(${FG}, ${0.45 * a})`;
+      const n = set.d.length, ticks = W < 500 ? 3 : 5;
+      for (let t = 0; t < ticks; t++) {
+        const i = Math.round(t / (ticks - 1) * (n - 1)), d = set.d[i];
+        ctx.textAlign = t === 0 ? 'left' : t === ticks - 1 ? 'right' : 'center';
+        ctx.fillText(`${MON[d.getMonth()]} ${d.getDate()}`.toUpperCase(), L + i / (n - 1) * (R - L), H - 8);
+      }
+    }
+    const X = (i) => L + i / (N - 1) * (R - L);
+    ctx.beginPath(); ctx.moveTo(X(0), B);
+    for (let i = 0; i < N; i++) ctx.lineTo(X(i), shownY[i]);
+    ctx.lineTo(X(N - 1), B); ctx.closePath(); ctx.fillStyle = `rgba(${FG}, .06)`; ctx.fill();
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) i ? ctx.lineTo(X(i), shownY[i]) : ctx.moveTo(X(i), shownY[i]);
+    ctx.lineWidth = 2; ctx.strokeStyle = `rgb(${FG})`; ctx.lineJoin = 'round'; ctx.stroke();
+
+    let px = null;
+    if (ptr.on) px = ptr.x;
+    if (reduce && px === null) px = (R - L) * 0.7;
+    const active = px !== null && px >= L - 10 && px <= R + 10;
+    cxShow += ((active ? 1 : 0) - cxShow) * (1 - Math.exp(-dt * 14));
+    let readV, readW;
+    if (active) {
+      const n = s.v.length, idx = Math.round(clamp((px - L) / (R - L), 0, 1) * (n - 1)), sx = L + idx / (n - 1) * (R - L);
+      cx = cx < 0 || reduce ? sx : cx + (sx - cx) * (1 - Math.exp(-dt * 22));
+      const ri = Math.round(clamp((cx - L) / (R - L), 0, 1) * (n - 1));
+      readV = s.v[ri]; readW = s.f(s.d[ri]);
+    } else { readV = null; readW = s.sum; }
+    if (cx >= 0 && cxShow > 0.05) {
+      const fi = clamp((cx - L) / (R - L) * (N - 1), 0, N - 1), i0 = Math.floor(fi), fr = fi - i0;
+      const yy = shownY[i0] + ((shownY[Math.min(N - 1, i0 + 1)] ?? shownY[i0]) - shownY[i0]) * fr;
+      // the crosshair is drawn out of the floor up to the point, the lime square sits on it in an ink frame
+      const top = B - (B - yy) * Math.min(1, cxShow * 1.2);
+      ctx.fillStyle = `rgba(${FG}, .5)`; ctx.fillRect(Math.round(cx) - 1, top, 2, B - top);
+      ctx.fillStyle = `rgb(${FG})`; ctx.fillRect(cx - 8, yy - 8, 16, 16);
+      ctx.fillStyle = LIME; ctx.fillRect(cx - 6, yy - 6, 12, 12);
+    }
+    if (readV !== null) { shownVal = readV; valEl.textContent = fmt(readV); }
+    else {
+      const k = reduce ? 1 : ease(clamp((now - countStart) / 800, 0, 1));
+      shownVal = countFrom + (s.total - countFrom) * k; valEl.textContent = fmt(shownVal);
+    }
+    if (whenEl.textContent !== readW) whenEl.textContent = readW;
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(50, now - last) / 1000; last = now;
+    draw(now, dt);
+  }
+  resize(); countFrom = 0; countStart = performance.now();
+  requestAnimationFrame(frame);
+  document.fonts && document.fonts.ready.then(placeInd);
+  return { move, leave() { ptr.on = false; }, setRange, plot: () => cv.getBoundingClientRect(), btn: (i) => btns[i].getBoundingClientRect(), L: () => L };
+})();
+</script>
+<script>
+  // the ghost: scrub the chart, then press the next range, forever
+  const ORDER = [2, 3, 0, 1];
+  const CY = 7.0;
+  let lastCycle = -1, pressed = -1;
+  const ez = QM.bezier(0.65, 0, 0.35, 1);
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y) => LineScrub.move(x, y),
+    leave: () => LineScrub.leave(),
+    path(t) {
+      t = Math.max(0, t);
+      const c = Math.floor(t / CY), u = t - c * CY;
+      const r = LineScrub.plot(), b = LineScrub.btn(ORDER[(c) % 4]), bp = [b.left + b.width * 0.5, b.top + b.height * 0.6];
+      const pb = LineScrub.btn(ORDER[(c + 3) % 4]), prevBtn = c ? [pb.left + pb.width * 0.5, pb.top + pb.height * 0.6] : [innerWidth * 0.8, innerHeight * 0.9];
+      const sweep = (v) => { const s = 0.5 - 0.42 * Math.cos(v * 0.7) + 0.04 * Math.sin(v * 2.1); return [r.left + LineScrub.L() + clamp01(s) * (r.width - LineScrub.L()), r.top + r.height * 0.62 + Math.sin(v * 1.3) * r.height * 0.08]; };
+      const clamp01 = (x) => Math.min(0.98, Math.max(0.02, x));
+      if (u < 0.8) return lerp(prevBtn, sweep(0), ez(u / 0.8));
+      if (u < 5.2) return sweep(u - 0.8);
+      if (u < 6.2) return lerp(sweep(4.4), bp, ez((u - 5.2) / 1.0));
+      if (pressed !== c) { pressed = c; LineScrub.setRange(ORDER[c % 4]); }
+      return bp;
+    },
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flip tiles · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "day-tiles",
+  "title": "Flip tiles",
+  "group": "scroll",
+  "cat": "scroll",
+  "order": 40,
+  "kind": "scroll",
+  "tone": "paper",
+  "line": "7 tiles · rotateX −180° · 1100 ms",
+  "shot": 4150,
+  "summary": "How it works as a week. Seven day tiles flip over one by one as the section scrolls past, each turning the moment its share of the scroll is reached. A step lights when its day turns, and the latest step day wears the lime: it moves on from day 1 to day 3 to day 7, the day the site goes live. Scrolling back turns them back.",
+  "spec": [
+    ["Carried by", "the scroll, linear: 0 when the block's top meets 85% of the screen, 1 when its bottom meets 45%"],
+    ["Turned", "min(7, floor(progress × 7.6)): the last tile turns at 92%"],
+    ["Flip", "rotateX 0 → −180°, 1100 ms, cubic-bezier(0.65, 0, 0.35, 1); perspective 800px on the row; backface hidden"],
+    ["Tile", "3 : 4, 8px apart (4px on phones); front #fbfcfc “Day n”, back #e6e9ec with a bar"],
+    ["Step days", "1, 3 and 7: their backs are ink with the step number"],
+    ["Steps", "colour 700 ms, --ease, when their day has turned"],
+    ["Now", "the latest step day turned is lime, 400 ms; the lime moves on as the next step day flips"],
+    ["Reduced motion", "all seven turned, every step lit; no transition"]
+  ],
+  "source": ["components/offers/DayTiles.tsx", "app/globals.css · Practice: a week of day tiles", "app/globals.css · now (is-now)", "components/offers/PracticeWebsites.tsx · STEPS, --pw-* tokens"],
+  "where": "Practice Website Refresh: How it works.",
+  "rules": [
+    "The tiles flip on thresholds of the scroll, not on a timer: the row is a scroll meter you can read at a glance.",
+    "One lime per screen: only the latest step day is lime; an earlier step day goes back to ink as the next one turns.",
+    "The row is decoration (aria-hidden); the steps under it say the same in words.",
+    "Told apart by surfaces and 8px gaps, not by lines."
+  ],
+  "tags": ["scroll", "flip", "3D", "steps", "lime"]
+}
+</script>
+<style data-code>
+/* "How it works" as a week — app/globals.css (day tiles, now), on the practice page's cool paper (.pw tokens) */
+.pw, .dt {
+  --pw-paper: #f3f4f5;
+  --pw-ink: #121417;
+  --pw-text: #474c52;
+  --pw-mute: #6b7178;
+  --pw-line: rgba(18, 20, 23, 0.12);
+}
+.pw { background: var(--pw-paper); color: var(--pw-ink); }
+.pw-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 32px; }
+.pw-steps li {
+  display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: baseline;
+  font-size: clamp(18px, 1.8vw, 21px); line-height: 1.55; color: var(--pw-text);
+}
+.pw-steps strong { font-weight: 500; color: var(--pw-ink); }
+.pw-step-n { font-size: clamp(36px, 4vw, 52px); line-height: 0.9; letter-spacing: -0.04em; color: var(--pw-ink); }
+
+.dt { display: flex; flex-direction: column; gap: 40px; }
+.dt-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; perspective: 800px; }
+.dt-tile {
+  position: relative; display: block; aspect-ratio: 3 / 4;
+  transform-style: preserve-3d;
+  transition: transform 1100ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.dt-days li.is-turned .dt-tile { transform: rotateX(-180deg); }
+.dt-front, .dt-back {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between;
+  padding: 10px; backface-visibility: hidden;
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.dt-front { background: #fbfcfc; box-shadow: inset 0 0 0 2px var(--pw-line); color: var(--pw-mute); }
+.dt-back { transform: rotateX(180deg); background: #e6e9ec; color: var(--pw-mute); }
+.dt-back b { font: 400 clamp(26px, 4vw, 44px)/1 var(--font-sans); letter-spacing: -0.04em; color: var(--pw-ink); }
+.dt-back i { display: block; height: 3px; width: 40%; background: rgba(18, 20, 23, 0.12); }
+/* a step day is ink */
+.dt-days li.is-step .dt-back { background: #121417; color: rgba(255, 255, 255, 0.6); }
+.dt-days li.is-step .dt-back b { color: #fff; }
+.dt-steps li { color: var(--pw-mute); transition: color 700ms var(--ease); }
+.dt-steps li.is-on { color: var(--pw-text); }
+.dt-steps .pw-step-n { transition: color 700ms var(--ease); color: var(--pw-mute); }
+.dt-steps li.is-on .pw-step-n { color: var(--pw-ink); }
+/* now: the step day the week has most recently reached is lime; the lime moves on as the next one flips
+   (day 1, then 3, then 7, the day it's live) */
+.dt-days li.is-now .dt-back { background: var(--signal); color: rgba(18, 20, 23, 0.7); transition: background 400ms var(--ease); }
+.dt-days li.is-now .dt-back b { color: #121417; }
+@media (max-width: 600px) {
+  .dt-days { gap: 4px; }
+  .dt-front, .dt-back { padding: 5px; font-size: 7px; letter-spacing: 0.06em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dt-tile, .dt-steps li, .dt-steps .pw-step-n { transition: none; }
+}
+</style>
+<style>
+  /* the page round the tiles: the practice page's first screen above, the price below */
+  :root { --col-gap: clamp(12px, 1.6vw, 24px); --span-8: calc((100% - 11 * var(--col-gap)) / 12 * 8 + 7 * var(--col-gap)); }
+  .container { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 32px); }
+  @media (min-width: 901px) { .pw-narrow > * { max-width: var(--span-8); } }
+  .pw-section { padding: clamp(72px, 11vw, 144px) 0; }
+  .pw-hero { min-height: 78vh; display: flex; flex-direction: column; justify-content: center; padding: clamp(40px, 8vw, 96px) 0 clamp(32px, 6vw, 72px); }
+  .pw-eyebrow { display: inline-block; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pw-mute); }
+  .pw-title { margin: 22px 0 30px; font-family: var(--font-sans); font-weight: 400; font-size: clamp(40px, 6.6vw, 96px); line-height: 1.02; letter-spacing: -0.045em; color: var(--pw-ink); max-width: 11em; }
+  .pw-lede { margin: 0; max-width: 30em; font-size: clamp(19px, 2vw, 24px); line-height: 1.55; letter-spacing: -0.01em; color: var(--pw-text); }
+  .pw-h2 { margin: 0 0 clamp(26px, 3.6vw, 44px); font-family: var(--font-sans); font-weight: 400; font-size: clamp(30px, 4.2vw, 54px); line-height: 1.05; letter-spacing: -0.04em; color: var(--pw-ink); }
+  .pw-price { margin: 0 0 12px; font-size: clamp(22px, 2.4vw, 28px); color: var(--pw-ink); }
+  .pw-price-big { display: inline-block; margin-right: 6px; font-size: clamp(72px, 12vw, 144px); line-height: 0.9; letter-spacing: -0.055em; }
+  .pw-price-was { font-size: clamp(30px, 4.6vw, 60px); letter-spacing: -0.04em; color: var(--pw-mute); text-decoration: line-through; text-decoration-thickness: 0.08em; }
+  .pw-tail { padding-bottom: 36vh; }
+  /* the block must fit the screen it is read on: the fill ends when its bottom meets 45%, so a tall block has its
+     tiles above the fold by then. In the 800px tile and short windows it is a little tighter. */
+  html.qm-tile .pw-section { padding: 56px 0; }
+  html.qm-tile .pw-h2 { margin-bottom: 18px; }
+  html.qm-tile .dt { gap: 22px; }
+  html.qm-tile .dt-days { gap: 6px; }
+  html.qm-tile .pw-steps { gap: 10px; }
+  html.qm-tile .pw-steps li { font-size: 15px; line-height: 1.4; grid-template-columns: 48px 1fr; gap: 12px; }
+  html.qm-tile .pw-step-n { font-size: 28px; }
+  @media (max-height: 640px) {
+    .dt { gap: 24px; } .pw-steps { gap: 12px; } .pw-steps li { font-size: 16px; line-height: 1.45; } .pw-step-n { font-size: 30px; }
+  }
+</style>
+</head>
+<body class="pw">
+<main>
+  <section class="pw-hero" data-nav-theme="light">
+    <div class="container pw-narrow">
+      <span class="pw-eyebrow mono">Practice Website Refresh</span>
+      <h1 class="pw-title">A website that feels as calm as your office.</h1>
+      <p class="pw-lede">We rebuild websites for solo practices in one week. Your words, your photos, a clean design that works on any phone. You never have to touch the tech.</p>
+    </div>
+  </section>
+
+  <section class="pw-section" data-nav-theme="light">
+    <div class="container pw-narrow">
+      <h2 class="pw-h2">How it works</h2>
+<!-- code -->
+<div class="dt">
+  <ol class="dt-days" aria-hidden="true">
+    <li class="is-step"><span class="dt-tile"><span class="dt-front mono">Day 1</span><span class="dt-back"><span class="mono">Day 1</span><b>1</b></span></span></li>
+    <li><span class="dt-tile"><span class="dt-front mono">Day 2</span><span class="dt-back"><span class="mono">Day 2</span><i></i></span></span></li>
+    <li class="is-step"><span class="dt-tile"><span class="dt-front mono">Day 3</span><span class="dt-back"><span class="mono">Day 3</span><b>2</b></span></span></li>
+    <li><span class="dt-tile"><span class="dt-front mono">Day 4</span><span class="dt-back"><span class="mono">Day 4</span><i></i></span></span></li>
+    <li><span class="dt-tile"><span class="dt-front mono">Day 5</span><span class="dt-back"><span class="mono">Day 5</span><i></i></span></span></li>
+    <li><span class="dt-tile"><span class="dt-front mono">Day 6</span><span class="dt-back"><span class="mono">Day 6</span><i></i></span></span></li>
+    <li class="is-step"><span class="dt-tile"><span class="dt-front mono">Day 7</span><span class="dt-back"><span class="mono">Day 7</span><b>3</b></span></span></li>
+  </ol>
+  <ol class="pw-steps dt-steps">
+    <li data-day="1"><span class="pw-step-n">1</span><span><strong>Fill out a short questionnaire by email.</strong> It takes about 15 minutes.</span></li>
+    <li data-day="3"><span class="pw-step-n">2</span><span><strong>See your new homepage in 3 days</strong> and tell us what to change.</span></li>
+    <li data-day="7"><span class="pw-step-n">3</span><span><strong>Your full site goes live in 7 days.</strong> We connect your existing domain and keep your email working.</span></li>
+  </ol>
+</div>
+<!-- /code -->
+    </div>
+  </section>
+
+  <section class="pw-section pw-tail" data-nav-theme="light">
+    <div class="container pw-narrow">
+      <h2 class="pw-h2">Price</h2>
+      <p class="pw-price"><span class="pw-price-big">$600</span> <del class="pw-price-was">$800</del> flat.</p>
+    </div>
+  </section>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* "How it works" as a week: seven day tiles flip over one by one as the block scrolls past, and each step lights when its
+   day turns. The count is the scroll itself (framer's useScroll, offset ['start 0.85', 'end 0.45']): a tile flips when the
+   scroll passes its share, and flips back when the scroll goes back. The flip is CSS; this only adds the classes. */
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+
+function dayTiles(root) {
+  const tiles = Array.from(root.querySelectorAll('.dt-days li'));
+  const steps = Array.from(root.querySelectorAll('.dt-steps li'));
+  const days = tiles.length;
+  const stepDays = steps.map((li) => Number(li.dataset.day));
+  let raf = 0;
+
+  /** 0 when the block's top meets 85% of the screen, 1 when its bottom meets 45%. */
+  const progress = () => {
+    const r = root.getBoundingClientRect();
+    const from = r.top + scrollY - innerHeight * 0.85;
+    const to = r.bottom + scrollY - innerHeight * 0.45;
+    return clamp01((scrollY - from) / (to - from));
+  };
+  const paint = () => {
+    raf = 0;
+    const turned = reduced ? days : Math.min(days, Math.floor(progress() * (days + 0.6)));
+    // the latest step day the week has reached: its tile is lime ("now")
+    const now = Math.max(0, ...stepDays.filter((d) => turned >= d));
+    tiles.forEach((li, i) => {
+      li.classList.toggle('is-turned', turned >= i + 1);
+      li.classList.toggle('is-now', i + 1 === now);
+    });
+    steps.forEach((li, i) => li.classList.toggle('is-on', turned >= stepDays[i]));
+  };
+  const request = () => { if (!raf) raf = requestAnimationFrame(paint); };
+  addEventListener('scroll', request, { passive: true });
+  addEventListener('resize', request);
+  paint();
+}
+document.querySelectorAll('.dt').forEach(dayTiles);
+</script>
+<script>
+  QM.demo({ kind: 'scroll', lead: 700, dur: 5600, hold: 1600, back: 2400 });
+</script>
+</body>
+</html>

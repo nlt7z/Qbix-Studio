@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Float to index · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-constellation",
+  "title": "Float to index",
+  "group": "lab",
+  "cat": "images",
+  "order": 830,
+  "kind": "play",
+  "tone": "paper",
+  "line": "Halton scatter · spring lift ×1.7 · FLIP to an index",
+  "summary": "Small pictures float in a lot of paper, all type in the four corners. Hover lifts one on a spring and washes out the rest; one switch flies the same pictures into a plain index with a FLIP.",
+  "spec": [
+    ["Scatter", "Halton sequence (bases 2 and 3) inside an ellipse of 36% × 30% of the frame, then nudged apart until each has 10 px of air"],
+    ["Drift", "each picture circles 6 px, cos(0.25 t + φ), sin(0.21 t + φ), φ = 1.7 per picture"],
+    ["Hover", "spring to 1.7 (stiffness 220, damping 20); the others are desaturated and lightened over 350 ms; the caption appears in the bottom corner"],
+    ["Index", "FLIP: measure, change layout, measure again, animate the difference, 700 ms, cubic-bezier(0.65, 0, 0.35, 1), 18 ms stagger"],
+    ["Story", "hover one, hover another, switch to Index, switch back"],
+    ["Still", "reduced motion: no drift, no animation, the switch cuts"]
+  ],
+  "source": ["Qbix studio library · 13-constellation"],
+  "where": "A work index: a year of launches as a field of pictures, or as a list.",
+  "rules": [
+    "Type only in the corners, at one small size. The middle belongs to the pictures.",
+    "The lime is the selected switch. Nothing dims by opacity: unfocused pictures are desaturated and lightened.",
+    "Positions are deterministic, the same on every visit."
+  ],
+  "tags": ["folio", "hover", "flip", "recipe"],
+  "shot": 1400
+}
+</script>
+<style data-code>
+/* Constellation folio: corners, a field of pictures, an index of the same buttons */
+.cf { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--ground); color: var(--fg); }
+.cf-corner { position: absolute; z-index: 10; font-size: 14px; line-height: 1.4; }
+.cf-tl { top: 18px; left: 18px; } .cf-tr { top: 18px; right: 18px; display: flex; gap: 4px; }
+.cf-bl { bottom: 18px; left: 18px; } .cf-br { bottom: 18px; right: 18px; text-align: right; }
+.cf-tl b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: 18px; letter-spacing: -0.02em; }
+.cf-tl span, .cf-bl span { color: var(--fg2); }
+.cf-tr button { all: unset; cursor: pointer; height: 28px; padding: 0 12px; display: flex; align-items: center; font: 500 12px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+.cf-tr button[aria-pressed='true'] { background: #B8FF00; color: #0c1300; }
+.cf-bl b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: 22px; line-height: 1.1; letter-spacing: -0.02em; min-height: 1.1em; }
+.cf-field { position: absolute; inset: 0; }
+.cf-it { all: unset; position: absolute; left: 0; top: 0; overflow: hidden; cursor: pointer; background: var(--sunk); will-change: transform; transition: filter 350ms var(--ease-out-expo); }
+.cf-it img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cf-it .nm { display: none; }
+.cf-field.dim .cf-it:not(.hot) { filter: grayscale(1) contrast(0.35) brightness(1.7); }
+/* index: the same buttons, as two columns of rows */
+.cf-field.index { inset: 80px 18px 64px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 32px; align-content: start; scrollbar-width: none; }
+.cf-field.index .cf-it { position: relative; display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px; width: auto !important; height: auto !important; background: none; overflow: visible; }
+.cf-field.index .cf-it img { width: 56px; height: 42px; }
+.cf-field.index .cf-it .nm { display: contents; }
+.cf-field.index .cf-it .nm b { font-family: var(--font-headline); font-weight: 400; font-size: clamp(16px, 1.8vw, 22px); letter-spacing: -0.02em; }
+.cf-field.index .cf-it .nm span { color: var(--fg2); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .cfw { width: 100%; height: 100svh; }
+  .cf-field.index .cf-it .nm b { color: var(--fg); }
+  html:not(.qm-tile) .cf-bl, html:not(.qm-tile) .cf-br { bottom: 62px; }
+  html:not(.qm-tile) .cf-field.index { bottom: 100px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="cfw">
+<!-- code -->
+<div class="cf" data-cf>
+  <div class="cf-corner cf-tl"><b>Qbix Work</b><span>Sites, brands and products</span></div>
+  <div class="cf-corner cf-tr"><button data-m="field" aria-pressed="true">Field</button><button data-m="index" aria-pressed="false">Index</button></div>
+  <div class="cf-corner cf-bl" aria-live="polite"><b>&nbsp;</b><span class="cf-cap">Hover a picture</span></div>
+  <div class="cf-corner cf-br mono">12 pieces · 2026</div>
+  <div class="cf-field" role="list"></div>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Hover a picture · switch Field / Index</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+function constellation(root, { reduce = false, base = '../assets/art/' } = {}) {
+  const field = root.querySelector('.cf-field');
+  const capB = root.querySelector('.cf-bl b'), capS = root.querySelector('.cf-cap');
+  const DATA = [
+    ['objects', 1.4, 'Forma', 'Launch site'], ['cross', 1.4, 'Knot stool', 'Product page'], ['block', 1.5, 'Prism block', 'Product page'],
+    ['ring', 1.78, 'Halo lamp', 'Product page'], ['vase', 0.67, 'Dream', 'Concept'], ['calla', 1.5, 'Willow Counseling', 'Practice site'],
+    ['bottle', 0.67, 'Carafe', 'Product page'], ['curves', 0.67, 'Kova', 'App design'], ['ribbon', 1.78, 'Strata', 'Design system'],
+    ['wall', 0.7, 'Kova mark', 'Brand'], ['glass', 1.5, 'Glaze set', 'Product page'], ['container', 1.5, 'Interview Assistant', 'Landing page'],
+  ];
+  const halton = (i, b) => { let f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; };
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const spring = (v) => ({ value: v, target: v, vel: 0, step(dt) { const n = Math.max(1, Math.ceil(dt * 120)), h = dt / n; for (let i = 0; i < n; i++) { this.vel += (-220 * (this.value - this.target) - 20 * this.vel) * h; this.value += this.vel * h; } } });
+  let mode = 'field', frozen = false, hot = null;
+  const items = DATA.map(([f, aspect, name, meta], i) => {
+    const b = document.createElement('button');
+    b.className = 'cf-it'; b.setAttribute('role', 'listitem');
+    b.innerHTML = `<img alt="" src="${base}${f}.webp"><span class="nm"><b>${name}</b><span>${String(i + 1).padStart(2, '0')}</span></span>`;
+    b.setAttribute('aria-label', `${name}, ${meta}`);
+    field.append(b);
+    return { el: b, name, meta, aspect, hx: halton(i + 1, 2), hy: halton(i + 1, 3), phase: i * 1.7, w: 0, h: 0, x: 0, y: 0, s: spring(1) };
+  });
+  function layout() {
+    const r = root.getBoundingClientRect(), W = r.width, H = r.height;
+    const bs = Math.max(48, Math.min(W, H) * 0.17);
+    items.forEach((it, i) => {
+      const area = bs * (0.7 + ((i * 37) % 10) / 12);
+      it.w = area * Math.sqrt(it.aspect); it.h = area / Math.sqrt(it.aspect);
+      const a = it.hx * Math.PI * 2, rr = Math.sqrt(it.hy);
+      it.x = W / 2 + Math.cos(a) * rr * W * 0.36 - it.w / 2;
+      it.y = H / 2 + Math.sin(a) * rr * H * 0.3 - it.h / 2;
+      it.el.style.width = it.w + 'px'; it.el.style.height = it.h + 'px';
+    });
+    const gap = 10, padX = 18, padY = 64;           // a little air around each picture
+    for (let pass = 0; pass < 40; pass++) {
+      let moved = false;
+      for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+        const A = items[i], B = items[j];
+        const ox = Math.min(A.x + A.w, B.x + B.w) - Math.max(A.x, B.x) + gap, oy = Math.min(A.y + A.h, B.y + B.h) - Math.max(A.y, B.y) + gap;
+        if (ox <= 0 || oy <= 0) continue;
+        moved = true;
+        if (ox < oy) { const d = ox / 2 * Math.sign((A.x + A.w / 2) - (B.x + B.w / 2) || 1); A.x += d; B.x -= d; }
+        else { const d = oy / 2 * Math.sign((A.y + A.h / 2) - (B.y + B.h / 2) || 1); A.y += d; B.y -= d; }
+      }
+      items.forEach((it) => { it.x = clamp(it.x, padX, W - it.w - padX); it.y = clamp(it.y, padY, H - it.h - padY); });
+      if (!moved) break;
+    }
+  }
+  function setHot(it) {
+    if (hot === it) return;
+    if (hot) { hot.el.classList.remove('hot'); hot.s.target = 1; }
+    hot = it;
+    field.classList.toggle('dim', !!it && mode === 'field');
+    if (it) { it.el.classList.add('hot'); it.s.target = mode === 'field' ? 1.7 : 1; capB.textContent = it.name; capS.textContent = it.meta; }
+    else { capB.innerHTML = '&nbsp;'; capS.textContent = 'Hover a picture'; }
+  }
+  items.forEach((it) => {
+    it.el.addEventListener('pointerenter', () => setHot(it));
+    it.el.addEventListener('focus', () => setHot(it));
+    it.el.addEventListener('pointerleave', () => setHot(null));
+    it.el.addEventListener('blur', () => setHot(null));
+  });
+  // the one clock: slow drift on small circles, plus the hover spring
+  let raf = 0, last = 0, t = 0;
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60; last = now; t += dt;
+    if (mode !== 'field' || frozen) return;
+    items.forEach((it) => {
+      it.s.step(dt);
+      const d = reduce ? 0 : 6;
+      it.el.style.transform = `translate(${(it.x + Math.cos(t * 0.25 + it.phase) * d).toFixed(1)}px, ${(it.y + Math.sin(t * 0.21 + it.phase) * d).toFixed(1)}px) scale(${it.s.value.toFixed(3)})`;
+      it.el.style.zIndex = it === hot ? 5 : '';
+    });
+  }
+  // field <-> index with FLIP: measure, switch layout, measure, play the difference
+  const btns = Array.from(root.querySelectorAll('.cf-tr button'));
+  function setMode(next) {
+    if (next === mode) return;
+    setHot(null);
+    const first = items.map((it) => it.el.getBoundingClientRect());
+    frozen = true; mode = next;
+    field.classList.toggle('index', next === 'index');
+    items.forEach((it) => { it.el.style.zIndex = ''; it.el.style.transform = next === 'index' ? '' : `translate(${it.x}px, ${it.y}px)`; });
+    const lastR = items.map((it) => it.el.getBoundingClientRect());
+    btns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === next)));
+    if (reduce) { frozen = false; return; }
+    const anims = items.map((it, i) => {
+      const f = first[i], l = lastR[i], end = it.el.style.transform || 'none';
+      const sx = f.width / Math.max(l.width, 1), sy = f.height / Math.max(l.height, 1);
+      return it.el.animate([
+        { transformOrigin: '0 0', transform: `translate(${f.left - l.left}px, ${f.top - l.top}px) ${next === 'index' ? `scale(${sx}, ${sy})` : ''} ${end === 'none' ? '' : end}` },
+        { transformOrigin: '0 0', transform: end }], { duration: 700, delay: i * 18, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'backwards' });
+    });
+    Promise.all(anims.map((a) => a.finished)).then(() => { frozen = false; });
+  }
+  btns.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.m)));
+  new ResizeObserver(() => { if (mode === 'field') layout(); }).observe(root);
+  layout();
+  raf = requestAnimationFrame(frame);
+  return { setMode, setHot: (i) => setHot(i == null ? null : items[i]) };
+}
+</script>
+<script>
+  const cf = constellation(document.querySelector('[data-cf]'), { reduce: QM.reduced });
+  let timers = [];
+  QM.demo({
+    kind: 'play',
+    lead: 400,
+    dur: 8600,
+    hold: 600,
+    reset() { timers.forEach(clearTimeout); timers = []; cf.setHot(null); cf.setMode('field'); },
+    play() {
+      [[500, () => cf.setHot(2)], [1900, () => cf.setHot(7)], [3200, () => cf.setHot(null)],
+       [3800, () => cf.setMode('index')], [7400, () => cf.setMode('field')]].forEach(([t, f]) => timers.push(setTimeout(f, t)));
+    },
+  });
+</script>
+</body>
+</html>

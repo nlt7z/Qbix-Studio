@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live tiles · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-live-tiles",
+  "title": "Live tiles",
+  "group": "picks",
+  "cat": "data",
+  "order": 5,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "a step every 1.1 to 2.1 s · 320 ms count-up · hairlines between",
+  "summary": "Four figures share one board, split by hairlines instead of cards. Each has a sparkline whose line slides one step to the left every second or two while its figure counts up to the new total, both over 320 ms, expo out. The line is ink; the lime is the live fill under it and the Live dot.",
+  "spec": [
+    ["Board", "one white block, radius 14px, four cells split by 1px hairlines (the grid gap over a hairline ground); no card in a card"],
+    ["Step", "each tile on its own clock: every 1.7 s, 1.3 s, 1.1 s and 2.1 s (plus up to 0.4 s of chance)"],
+    ["Slide", "the window of 24 points moves one step left over 320 ms while the newest point grows in from the edge; the dot rides the end of the line"],
+    ["Count", "the figure counts from its old value to the new in whole numbers over 320 ms, expo out; tabular numerals"],
+    ["Line", "2px ink, area under it lime at 40%, dot 10px with a 22px halo"],
+    ["Pause", "the loop runs only while the page is visible; reduced motion shows the figures still"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Live tiles (data-live-tiles)", "Idea: Qbix studio library · live-bento"],
+  "where": "A Today board for Qbix: deploys across live sites, tokens named in Strata, frames rendered for a 30-second launch film, notes taken by the Interview Assistant.",
+  "rules": [
+    "No card in a card: the cells are told apart by hairlines.",
+    "Counts are moments under 320 ms, never a long roll.",
+    "One lime: the fill under the lines and the Live dot are the same job, what is live.",
+    "The loop pauses when the page is hidden."
+  ],
+  "tags": ["dashboard", "sparkline", "counter", "live", "paper"],
+  "shot": 2600
+}
+</script>
+<style data-code>
+/* Live tiles · redrawn for Qbix (Idea: library/demos/live-bento.html).
+   Layout, sizes and motion are the original's; colours are Qbix's: ink lines, one lime. */
+.lt { position: absolute; inset: 0; padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow: hidden; font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg); }
+.lt-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.lt-head h1 { font: 400 28px/1.35 var(--font-sans); letter-spacing: -0.03em; }
+.lt-head .meta { margin-top: 4px; font-size: 12px; color: rgba(18, 20, 23, 0.56); }
+.lt-live { display: inline-flex; align-items: center; gap: 8px; color: var(--fg2); }
+.lt-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); animation: lt-pulse 1.6s cubic-bezier(.65, 0, .35, 1) infinite; }
+@keyframes lt-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.lt-board { flex: 1; min-height: 0; max-height: 560px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: rgba(18, 20, 23, 0.08); border-radius: 14px; overflow: hidden; }
+.lt-tile { background: var(--surface); padding: 24px; display: flex; flex-direction: column; min-width: 0; }
+.lt-lab { color: var(--fg2); }
+.lt-fig { margin-top: 8px; font-size: 28px; letter-spacing: -0.03em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.lt-unit { margin-top: 4px; color: var(--fg2); }
+.lt-spark { position: relative; flex: 1; min-height: 56px; margin-top: 20px; }
+.lt-spark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lt-spark .area { fill: var(--signal); fill-opacity: 0.4; }
+.lt-spark .ln { fill: none; stroke: var(--fg); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.lt-spark .dot { position: absolute; right: 0; width: 10px; height: 10px; margin: -5px -5px 0 0; border-radius: 50%; background: var(--fg); }
+.lt-spark .dot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; background: var(--fg); opacity: 0.16; }
+@media (prefers-reduced-motion: reduce) { .lt-live i { animation: none; } }
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<div class="vp">
+<!-- code -->
+<div class="lt">
+  <div class="lt-head">
+    <div><h1>Today</h1><p class="meta">Qbix · studio and Labs, live</p></div>
+    <span class="lt-live"><i></i>Live</span>
+  </div>
+  <div class="lt-board" id="lt-board"></div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Four counters, each on its own clock</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Live tiles. Four figures, each with a sparkline: every second or two the line slides one step and the
+   figure counts up, both over 320 ms. Each tile keeps its own clock. */
+const bezier = (x1, y1, x2, y2) => {            // a CSS cubic-bezier as a function of progress
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; } return sy(Math.min(1, Math.max(0, t))); };
+};
+const easeOut = bezier(0.16, 1, 0.3, 1);
+const tween = (ms, fn) => new Promise((res) => { const t0 = performance.now(); const f = (now) => { const k = Math.min(1, (now - t0) / ms); fn(easeOut(k)); k < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+const qty = (n) => Math.round(n).toLocaleString('en-US');
+let seed = 7;
+const rnd = () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+
+const N = 24;
+const T = [
+  { k: 'Deploys', v: 1248, step: [3, 9], unit: 'across 6 live sites', every: 1700 },
+  { k: 'Tokens named', v: 4812, step: [12, 34], unit: 'from 9 moodboards in Strata', every: 1300 },
+  { k: 'Frames rendered', v: 18420, step: [40, 110], unit: 'for 30-second launch films', every: 1100 },
+  { k: 'Notes taken', v: 372, step: [1, 4], unit: 'by the Interview Assistant', every: 2100 },
+];
+const board = document.getElementById('lt-board');
+const r = (a, b) => a + rnd() * (b - a);
+const walk = (t, p) => Math.max(t.step[0], Math.min(t.step[1], p + (rnd() - 0.5) * (t.step[1] - t.step[0]) * 0.45));
+T.forEach((t, i) => {
+  t.s = [r(t.step[0], t.step[1])];
+  for (let k = 0; k < N; k++) t.s.push(walk(t, t.s[k]));
+  t.shown = t.v;
+  board.insertAdjacentHTML('beforeend', `<div class="lt-tile"><span class="lt-lab">${t.k}</span><span class="lt-fig">${qty(t.v)}</span><span class="lt-unit">${t.unit}</span>
+    <div class="lt-spark"><svg viewBox="0 0 100 40" preserveAspectRatio="none"><path class="area"/><path class="ln"/></svg><i class="dot"></i></div></div>`);
+  t.el = board.children[i]; t.fig = t.el.querySelector('.lt-fig'); t.area = t.el.querySelector('.area'); t.ln = t.el.querySelector('.ln'); t.dot = t.el.querySelector('.dot'); t.off = 0;
+});
+function draw(t) {                              // a window of N points; t.off, 0 to 1, slides the newest one in
+  const lo = Math.min(...t.s) * 0.8, hi = Math.max(...t.s) * 1.05;
+  const X = (i) => ((i - t.off) / (N - 1)) * 100, Yv = (v) => 38 - (v - lo) / (hi - lo) * 34;
+  let d = '';
+  for (let i = 0; i <= N - 1; i++) d += (i ? 'L' : 'M') + X(i).toFixed(2) + ' ' + Yv(t.s[i]).toFixed(2);
+  const ev = t.s[N - 1] + (t.s[N] - t.s[N - 1]) * t.off;
+  d = d.slice(0, d.lastIndexOf('L')) + 'L' + X(N - 1).toFixed(2) + ' ' + Yv(t.s[N - 1]).toFixed(2);   // the last segment grows toward the new point
+  const ly = Yv(ev);
+  d += 'L100 ' + ly.toFixed(2);
+  t.ln.setAttribute('d', d);
+  t.area.setAttribute('d', d + 'L100 40L' + X(0).toFixed(2) + ' 40Z');
+  t.dot.style.top = (ly / 40 * 100) + '%';
+}
+T.forEach(draw);
+let run = 0;
+async function tick(t, my) {
+  for (;;) {
+    await new Promise((res) => setTimeout(res, t.every + rnd() * 400));
+    if (my !== run) return;
+    while (document.hidden) { await new Promise((res) => setTimeout(res, 400)); if (my !== run) return; }   // the loop pauses off screen
+    const inc = Math.round(t.s[N]), from = t.shown;
+    t.shown += inc;
+    await Promise.all([
+      tween(320, (k) => { t.off = k; draw(t); }),
+      tween(320, (k) => { t.fig.textContent = qty(from + inc * k); }),
+    ]);
+    if (my !== run) return;
+    t.s.shift(); t.s.push(walk(t, t.s[t.s.length - 1])); t.off = 0; draw(t);
+  }
+}
+function start() { run++; if (!matchMedia('(prefers-reduced-motion: reduce)').matches) T.forEach((t) => tick(t, run)); }
+start();
+</script>
+<script>
+  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window ---- */
+  function vpfit() {
+    const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
+      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+    };
+    addEventListener('resize', go); go();
+  }
+  vpfit();
+  QM.demo({ kind: 'loop', restart() { start(); } });
+</script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loader to hero · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-load",
+  "title": "Loader to hero",
+  "group": "lab",
+  "cat": "loading",
+  "order": 840,
+  "kind": "play",
+  "tone": "paper",
+  "line": "real progress · curtain lift 850 ms · picture carried",
+  "summary": "A lime loader counts real work, each picture reporting when it has decoded, then lifts like a curtain on a white work index. Opening a project carries the clicked picture into the next page's hero while the rest is uncovered, not faded.",
+  "spec": [
+    ["Count", "shown eases toward decoded ÷ total, damp λ = 6; never under 1 s, so it never flickers; the bar is scaleX of the same value"],
+    ["Pace", "the jobs run one after another with 60 ms between them, as a slow network would"],
+    ["Lift", "clip-path inset(0 0 0 0) → inset(0 0 100% 0), 850 ms, cubic-bezier(0.65, 0, 0.35, 1); the page underneath rises 24 px in 900 ms, expo out"],
+    ["Carry", "one picture is moved by left, top, width, height (so its crop never stretches), 620 ms, cubic-bezier(0.65, 0, 0.35, 1)"],
+    ["Rest of the page", "the index is covered by a clip, 320 ms ease-in; the detail's lines rise out of sleeves, 80 ms apart"],
+    ["Once", "the loader plays once per visit (sessionStorage, if it is there) and never with reduced motion"]
+  ],
+  "source": ["Qbix studio library · 14-load-and-transition"],
+  "where": "Entering a work index and opening one project: the studio's own first seconds on a page.",
+  "rules": [
+    "Count work that is really done, not a timer.",
+    "The loader is the screen's one lime; the detail's button is the next screen's.",
+    "Move the picture by its rect, not a scale, so the crop holds. Name nothing else that moves."
+  ],
+  "tags": ["loader", "transition", "shared element", "recipe", "work index"],
+  "shot": 7600
+}
+</script>
+<style data-code>
+/* Load and transition: a loader curtain over an index, and a carried picture */
+.ld { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--ground); color: var(--fg); }
+.ld-page { position: absolute; inset: 0; padding: clamp(16px, 3.5vmin, 36px); display: grid; align-content: start; gap: 16px; }
+.ld-page[hidden] { display: none; }
+.ld-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+.ld-head h2 { font-size: clamp(28px, 5vw, 64px); line-height: 0.98; letter-spacing: -0.03em; }
+.ld-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.ld-card { all: unset; box-sizing: border-box; display: grid; gap: 8px; cursor: pointer; }
+.ld-pic { aspect-ratio: 1 / 1; overflow: hidden; background: var(--sunk); clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.ld-pic img, .ld-hero img, .ld-fly img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ld-card .ld-pic img { transition: transform 800ms var(--ease-out-expo); }
+.ld-card:hover .ld-pic img, .ld-card.is-hot .ld-pic img { transform: scale(1.04); }
+.ld-card b { font-family: var(--font-headline); font-weight: 400; font-size: clamp(16px, 2vw, 24px); line-height: 1.1; letter-spacing: -0.02em; }
+.ld-card span { color: var(--fg2); font-size: 13px; }
+/* detail */
+.ld-det { grid-template-columns: 1.25fr 1fr; gap: clamp(16px, 3vw, 36px); height: 100%; align-content: stretch; }
+.ld-hero { overflow: hidden; background: var(--sunk); min-height: 0; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+.ld-side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.ld-side h2 { font-size: clamp(28px, 4.4vw, 56px); line-height: 0.98; letter-spacing: -0.03em; }
+.ld-sleeve { overflow: hidden; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+.ld-sleeve > * { display: block; }
+.ld-back { all: unset; cursor: pointer; font: 12px/16px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg2); }
+.ld-back:hover { color: var(--fg); }
+.ld-fly { position: absolute; z-index: 5; overflow: hidden; pointer-events: none; }
+/* the loader */
+.ld-loader { position: absolute; inset: 0; z-index: 10; background: #B8FF00; color: #0c1300; display: grid; grid-template-rows: auto 1fr auto; padding: clamp(16px, 3.5vmin, 36px); clip-path: inset(0 0 0 0); }
+.ld-loader[hidden] { display: none; }
+.ld-loader .kicker { color: #0c1300; }
+.ld-row { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+.ld-count { font-family: var(--font-headline); font-size: clamp(88px, 24vmin, 260px); line-height: 0.8; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.ld-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #0c1300; transform-origin: 0 50%; transform: scaleX(0); }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .lw { width: 100%; height: 100svh; }
+  html:not(.qm-tile) .ld-page { padding-bottom: 62px; }
+  .ld-note { max-width: 18em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="lw">
+<!-- code -->
+<div class="ld" data-ld>
+  <section class="ld-page ld-index">
+    <div class="ld-head"><h2 class="title">Recent work</h2><span class="tag">3 launches this week</span></div>
+    <div class="ld-grid"></div>
+  </section>
+  <section class="ld-page ld-det" hidden>
+    <div class="ld-hero"><img alt=""></div>
+    <div class="ld-side">
+      <button class="ld-back">← All work</button>
+      <div class="ld-sleeve"><h2 class="title ld-t"></h2></div>
+      <div class="ld-sleeve"><p class="kicker ld-k"></p></div>
+      <div class="ld-sleeve"><p class="lede ld-l"></p></div>
+      <div class="ld-sleeve" style="margin-top:auto"><button class="btn btn-lime cut ld-next"></button></div>
+    </div>
+  </section>
+  <div class="ld-loader" aria-hidden="true">
+    <div class="ld-row"><span class="kicker">Qbix Studio</span><span class="kicker ld-note">Loading 6 pictures</span></div>
+    <span></span>
+    <div class="ld-row"><span class="kicker">Decoded</span><span class="ld-count">0</span></div>
+    <i class="ld-bar"></i>
+  </div>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><button id="replay">Replay the loader</button><span class="qm-sep">/</span><span>Click a project to carry its picture across</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+function loadAndGo(root, { reduce = false, base = '../assets/art/' } = {}) {
+  const P = [
+    ['objects', 'Forma', 'Launch site · live in 2 weeks', 'A ceramics studio with a shop and a waitlist. The moodboard came in on Monday and forma.studio went live two weeks later.'],
+    ['cross', 'Kova', 'Brand upgrade · 3 weeks', 'A money app that wanted to look worth sharing. New type, a tighter palette and a launch page.'],
+    ['calla', 'Willow Counseling', 'Website refresh · live in 7 days', 'A practice site that says who Dana is and how to book. Refreshed for $600 and live in a week.'],
+    ['bottle'], ['block'], ['vase'],
+  ];
+  const $ = (s) => root.querySelector(s);
+  const idx = $('.ld-index'), det = $('.ld-det'), grid = $('.ld-grid'), loader = $('.ld-loader');
+  const countEl = $('.ld-count'), bar = $('.ld-bar'), heroImg = $('.ld-hero img'), hero = $('.ld-hero');
+  const MOVE = 'cubic-bezier(0.65, 0, 0.35, 1)', EXPO = 'cubic-bezier(0.16, 1, 0.3, 1)', IN = 'cubic-bezier(0.5, 0, 0.75, 0)';
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const damp = (a, b, l, dt) => a + (b - a) * (1 - Math.exp(-l * dt));
+  let run = 0, current = -1, busy = false;
+  const src = (i) => `${base}${P[i][0]}.webp`;
+
+  const cards = P.slice(0, 3).map(([f, t, m], i) => {
+    const b = document.createElement('button');
+    b.className = 'ld-card';
+    b.innerHTML = `<div class="ld-pic"><img alt="" src="${src(i)}"></div><b>${t}</b><span>${m}</span>`;
+    b.addEventListener('click', () => open(i));
+    grid.append(b);
+    return b;
+  });
+
+  /* the loader counts real decodes: the number eases toward the true share, never under a second */
+  async function load(my) {
+    loader.hidden = false;
+    loader.getAnimations().forEach((a) => a.cancel());
+    countEl.textContent = '0'; bar.style.transform = 'scaleX(0)';
+    let done = 0, shown = 0;
+    const t0 = performance.now();
+    (async () => { for (let i = 0; i < P.length; i++) { const im = new Image(); im.src = src(i) + '?r=' + t0; await im.decode().catch(() => {}); done++; await wait(160); } })();
+    await new Promise((resolve) => {
+      let last = performance.now();
+      const step = (now) => {
+        if (my !== run) return resolve();
+        const dt = Math.min(0.05, (now - last) / 1000); last = now;
+        shown = damp(shown, done / P.length, 6, dt);
+        const n = Math.min(100, Math.round(shown * 100));
+        countEl.textContent = n;
+        bar.style.transform = `scaleX(${shown.toFixed(4)})`;
+        if (done === P.length && n >= 99 && now - t0 > 1000) { countEl.textContent = 100; bar.style.transform = 'scaleX(1)'; return resolve(); }
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+    if (my !== run) return;
+    await wait(220);
+    idx.animate([{ transform: 'translateY(24px)' }, { transform: 'none' }], { duration: 900, easing: EXPO });
+    await loader.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 100% 0)' }], { duration: 850, easing: MOVE, fill: 'forwards' }).finished;
+    if (my !== run) return;
+    loader.hidden = true;
+    loader.getAnimations().forEach((a) => a.cancel());
+  }
+
+  const rectIn = (el) => { const a = el.getBoundingClientRect(), b = root.getBoundingClientRect(); return { left: a.left - b.left, top: a.top - b.top, width: a.width, height: a.height }; };
+  const css = (r) => ({ left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+  const sleeves = () => det.querySelectorAll('.ld-sleeve > *');
+
+  /* open: the picture is carried by its rect; the index is covered, the lines of the detail rise from sleeves */
+  async function open(i) {
+    if (busy || current >= 0) return;
+    busy = true; current = i;
+    const [f, t, m, lede] = P[i];
+    heroImg.src = src(i);
+    $('.ld-t').textContent = t; $('.ld-k').textContent = m; $('.ld-l').textContent = lede;
+    $('.ld-next').textContent = `Next: ${P[(i + 1) % 3][1]} ↗︎`;
+    const from = rectIn(cards[i].querySelector('.ld-pic'));
+    det.hidden = false;
+    sleeves().forEach((e) => { e.style.transform = 'translateY(115%)'; });
+    hero.style.visibility = 'hidden';
+    const to = rectIn(hero);
+    const fly = document.createElement('div');
+    fly.className = 'ld-fly';
+    fly.innerHTML = `<img alt="" src="${src(i)}">`;
+    Object.assign(fly.style, css(from));
+    root.append(fly);
+    cards[i].style.visibility = 'hidden';
+    const cover = idx.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 100% 0)' }], { duration: reduce ? 1 : 320, easing: IN, fill: 'forwards' });
+    await fly.animate([css(from), css(to)], { duration: reduce ? 1 : 620, easing: MOVE, fill: 'forwards' }).finished;
+    idx.hidden = true; cover.cancel();
+    hero.style.visibility = ''; fly.remove();
+    sleeves().forEach((e, k) => e.animate([{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: reduce ? 1 : 700, delay: reduce ? 0 : k * 80, easing: EXPO, fill: 'backwards' }) && (e.style.transform = ''));
+    busy = false;
+  }
+  async function back() {
+    if (busy || current < 0) return;
+    busy = true;
+    const i = current; current = -1;
+    idx.hidden = false;
+    const to = rectIn(cards[i].querySelector('.ld-pic'));
+    const from = rectIn(hero);
+    const fly = document.createElement('div');
+    fly.className = 'ld-fly';
+    fly.innerHTML = `<img alt="" src="${src(i)}">`;
+    Object.assign(fly.style, css(from));
+    root.append(fly);
+    hero.style.visibility = 'hidden';
+    det.hidden = true;
+    await fly.animate([css(from), css(to)], { duration: reduce ? 1 : 520, easing: MOVE, fill: 'forwards' }).finished;
+    cards[i].style.visibility = ''; fly.remove(); hero.style.visibility = '';
+    busy = false;
+  }
+  $('.ld-back').addEventListener('click', back);
+  $('.ld-next').addEventListener('click', async () => { const n = (current + 1) % 3; await back(); open(n); });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') back(); });
+
+  function reset(showLoader = true) {
+    run++; busy = false; current = -1;
+    root.querySelectorAll('.ld-fly').forEach((e) => e.remove());
+    idx.getAnimations().forEach((a) => a.cancel());
+    idx.hidden = false; det.hidden = true; hero.style.visibility = '';
+    cards.forEach((c) => (c.style.visibility = ''));
+    loader.getAnimations().forEach((a) => a.cancel());
+    loader.hidden = !showLoader || reduce;
+    countEl.textContent = '0'; bar.style.transform = 'scaleX(0)';
+  }
+  async function replay() { reset(true); const my = run; if (!reduce) await load(my); }
+  reset(!reduce);
+  return { reset, replay, open, back, load: () => load(++run), card: (i) => cards[i], get busy() { return busy; } };
+}
+</script>
+<script>
+  const ld = loadAndGo(document.querySelector('[data-ld]'), { reduce: QM.reduced });
+  document.getElementById('replay').addEventListener('click', () => ld.replay());
+  let alive = 0;
+  QM.demo({
+    kind: 'play',
+    lead: 200,
+    dur: 10800,
+    hold: 600,
+    reset() { alive++; ld.reset(true); },
+    async play() {
+      const my = alive;
+      await ld.load();
+      if (my !== alive) return;
+      await QM.wait(1100); if (my !== alive) return;
+      await ld.open(0); if (my !== alive) return;
+      await QM.wait(2600); if (my !== alive) return;
+      await ld.back(); if (my !== alive) return;
+      await QM.wait(900); if (my !== alive) return;
+      await ld.open(1);
+    },
+  });
+</script>
+</body>
+</html>

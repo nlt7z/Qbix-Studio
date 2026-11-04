@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquid toggle · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-liq-toggle",
+  "title": "Liquid toggle",
+  "group": "picks",
+  "cat": "buttons",
+  "order": 140,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "lead drop k 360 · tail k 150 · goo blur 4",
+  "summary": "The drop leads across the track, stretching along its travel, while a smaller drop follows on a slower spring and a goo filter fuses the two into one waisted capsule that settles round. You can drag it or press it. Qbix colours: a lime track when on, an ink drop on it, and a white one on the grey.",
+  "spec": [
+    ["Lead drop", "30 px, spring k 360 · c 24; scaled (1 + min(0.5, |v| ÷ 520), its inverse) along the travel, from its trailing edge"],
+    ["Tail drop", "22 px, spring k 150 · c 17, chasing the lead: the slower spring is what makes the waist"],
+    ["Goo", "feGaussianBlur 4, then feColorMatrix alpha × 22 − 10: the two drops read as one edge"],
+    ["Track", "76 × 40 pill, drops 5 px in; colour 200 ms, cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Press", "a click flips it with a 120 px/s kick; a drag follows the finger and lets go by position plus 0.12 s of velocity"],
+    ["Reduced motion", "the drop is placed, no spring"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Liquid toggle (ix-liq-toggle)", "Idea: bencho.dev liq-toggle (MIT)"],
+  "where": "A project's own switches: whether a Practice Website Refresh goes live by itself, emails Dana, shows the number in the header.",
+  "rules": [
+    "A switch is for a true on or off; lime means on, and only the track carries it.",
+    "A flat drop, no shadow: white on the grey, ink on the lime (white would vanish on it).",
+    "One drop colour per state: the goo filter needs the two drops to be the same colour.",
+    "A real button with role=switch and aria-checked, so keyboard and screen readers get it; focus is a 2px ring."
+  ],
+  "tags": ["toggle", "spring", "goo", "drag", "form"],
+  "shot": 2300
+}
+</script>
+<style data-code>
+/* Liquid toggle · Idea: bencho.dev liq-toggle (MIT).
+   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+.lt {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
+  --surface: #ffffff; --divider: rgba(18, 20, 23, 0.08); --edge: rgba(18, 20, 23, 0.52);
+  --primary: #B8FF00; --on-primary: #0c1300;
+  --radius-lg: 14px; --duration-base: 200ms; --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  width: 640px; display: grid; gap: 16px; align-content: start;
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.lt-heading { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.lt-meta { font-size: 12px; color: var(--faint); }
+.lt-card { background: var(--surface); border-radius: var(--radius-lg); padding: 8px 24px; }
+.lt-setting { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 0; }
+.lt-setting + .lt-setting { border-top: 1px solid var(--divider); }
+.lt-setting b { display: block; font-weight: 500; line-height: 1.6; }
+.lt-setting p { margin: 4px 0 0; color: var(--muted); line-height: 1.6; }
+
+/* a true on/off: the drop crosses the track, stretching along its way, and lands round */
+.sw { position: relative; flex: none; width: 76px; height: 40px; padding: 0; border: 0; border-radius: 999px; background: var(--edge); touch-action: none; cursor: pointer; transition: background-color var(--duration-base) var(--ease-out); }
+.sw[aria-checked='true'] { background: var(--primary); }
+.sw:hover, .sw.is-hot { background: color-mix(in oklab, var(--edge) 88%, #000); }
+.sw[aria-checked='true']:hover, .sw[aria-checked='true'].is-hot { background: color-mix(in oklab, var(--primary) 88%, #000); }
+.sw:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.sw .blobs { position: absolute; inset: 0; pointer-events: none; filter: url(#goo); }
+.sw .drop { position: absolute; top: 50%; left: 0; border-radius: 50%; background: #fff; transition: background-color var(--duration-base) var(--ease-out); }
+.sw[aria-checked='true'] .drop { background: var(--on-primary); }
+.sw .lead { width: 30px; height: 30px; margin-top: -15px; }
+.sw .tail { width: 22px; height: 22px; margin-top: -11px; }
+.goo-defs { position: absolute; width: 0; height: 0; }
+@media (prefers-reduced-motion: reduce) { .sw, .sw .drop { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<svg class="goo-defs" aria-hidden="true"><defs><filter id="goo" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceGraphic" stdDeviation="4" result="s"/><feColorMatrix in="s" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"/></filter></defs></svg>
+<div class="lt">
+  <div><h1 class="lt-heading">Launch settings</h1><p class="lt-meta">Willow Counseling · Practice Website Refresh</p></div>
+  <div class="lt-card">
+    <div class="lt-setting"><div><b id="lt1">Go live when it’s ready</b><p>Otherwise we wait for your yes.</p></div><button class="sw" type="button" role="switch" aria-checked="false" aria-labelledby="lt1" data-k="live"></button></div>
+    <div class="lt-setting"><div><b id="lt2">Email me when a draft arrives</b><p>Sent to dana@willowcounseling.com.</p></div><button class="sw" type="button" role="switch" aria-checked="true" aria-labelledby="lt2" data-k="mail"></button></div>
+    <div class="lt-setting"><div><b id="lt3">Show my number in the header</b><p>Visitors can call from any page.</p></div><button class="sw" type="button" role="switch" aria-checked="false" aria-labelledby="lt3" data-k="call"></button></div>
+  </div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Press a switch, or drag it</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* Two drops on two springs. The lead crosses the track stretched along its travel; the tail follows on a
+   slower spring; the #goo filter (blur, then an alpha threshold) fuses them into one waisted shape. */
+const TRACK = 76, TALL = 40, LEAD = 30, TAIL = 22, PAD = (TALL - LEAD) / 2;
+const OFF = PAD, ON = TRACK - LEAD - PAD;                      // the lead's left edge, off and on
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function liquidToggle(el) {
+  el.insertAdjacentHTML('beforeend', '<span class="blobs"><i class="drop tail"></i><i class="drop lead"></i></span>');
+  const lead = el.querySelector('.lead'), tail = el.querySelector('.tail');
+  const s = { x: 0, v: 0, tx: 0, tv: 0, to: 0, held: null, moved: false, raf: 0 };   // lead: x, v · tail: tx, tv
+  const isOn = () => el.getAttribute('aria-checked') === 'true';
+
+  function draw() {
+    /* the drop lengthens along its travel and thins across it: the area stays */
+    const st = 1 + Math.min(0.5, Math.abs(s.v) / 520);
+    lead.style.transform = `translateX(${s.x}px) scale(${st}, ${1 / st})`;
+    lead.style.transformOrigin = `${s.v >= 0 ? 'right' : 'left'} center`;
+    tail.style.transform = `translateX(${s.tx + (LEAD - TAIL) / 2}px)`;
+  }
+  function wake() {
+    if (s.raf) return;
+    let prev = performance.now();
+    const frame = (now) => {
+      const dt = Math.min(0.033, (now - prev) / 1000);
+      prev = now;
+      if (s.held === null) { s.v += ((s.to - s.x) * 360 - s.v * 24) * dt; s.x += s.v * dt; }      // the lead: stiff
+      s.tv += ((s.x - s.tx) * 150 - s.tv * 17) * dt; s.tx += s.tv * dt;                           // the tail: a beat behind
+      draw();
+      const rest = s.held === null && Math.abs(s.to - s.x) < 0.05 && Math.abs(s.v) < 0.6 && Math.abs(s.x - s.tx) < 0.05 && Math.abs(s.tv) < 0.6;
+      if (rest) { s.x = s.tx = s.to; s.v = s.tv = 0; draw(); s.raf = 0; return; }
+      s.raf = requestAnimationFrame(frame);
+    };
+    s.raf = requestAnimationFrame(frame);
+  }
+  function set(on, instant) {
+    el.setAttribute('aria-checked', on);
+    s.to = on ? ON : OFF;
+    if (instant || reduceMotion) { s.x = s.tx = s.to; s.v = s.tv = 0; draw(); } else wake();
+  }
+
+  el.addEventListener('pointerdown', (e) => {
+    try { el.setPointerCapture(e.pointerId); } catch (_) { /* a scripted pointer */ }
+    s.held = { x0: e.clientX, from: s.x, t: performance.now() };
+    s.moved = false;
+  });
+  el.addEventListener('pointermove', (e) => {
+    const h = s.held;
+    if (!h) return;
+    const k = el.getBoundingClientRect().width / TRACK;              // the page may be scaled
+    const dx = (e.clientX - h.x0) / k;
+    if (Math.abs(dx) > 3) s.moved = true;
+    if (!s.moved) return;
+    const nx = clamp(h.from + dx, OFF, ON), now = performance.now();
+    s.v = ((nx - s.x) / Math.max(0.008, (now - h.t) / 1000)) * 0.6;   // the drop stretches as it is dragged
+    h.t = now; s.x = nx; wake();
+  });
+  el.addEventListener('pointerup', () => {
+    const h = s.held;
+    s.held = null;
+    if (!h) return;
+    if (s.moved) {
+      set(s.x + s.v * 0.12 > (OFF + ON) / 2);                       // where it would land a moment from now
+      el.dataset.dragged = '1';
+      setTimeout(() => delete el.dataset.dragged, 0);
+    }
+  });
+  el.addEventListener('pointercancel', () => { s.held = null; wake(); });
+  el.addEventListener('click', () => {
+    if (el.dataset.dragged) return;
+    set(!isOn());
+    s.v = (isOn() ? 1 : -1) * 120;                                   // a press gives it a kick
+    wake();
+  });
+  set(isOn(), true);
+  return { el, set, isOn };
+}
+const toggles = [...document.querySelectorAll('.sw')].map(liquidToggle);
+</script>
+<script>
+  /* harness glue: a ghost presses the switches; the viewer's own pointer takes over */
+  PickGhost.fit(document.getElementById('pk'), 640, 380, { max: 1.5 });
+  const by = (k) => toggles.find((t) => t.el.dataset.k === k);
+  PickGhost.start({
+    hot: '.sw',
+    reset() { by('live').set(false, true); by('mail').set(true, true); by('call').set(false, true); },
+    async script(g) {
+      await g.wait(900);
+      await g.click('.sw[data-k="live"]'); await g.wait(1500);
+      await g.click('.sw[data-k="call"]'); await g.wait(1300);
+      await g.click('.sw[data-k="mail"]'); await g.wait(1200);
+      await g.click('.sw[data-k="live"]'); await g.wait(1300);
+    },
+    still() { by('live').set(true, true); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

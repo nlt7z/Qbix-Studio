@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dismiss burst · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-dismiss-burst",
+  "title": "Dismiss burst",
+  "group": "lab",
+  "cat": "feedback",
+  "order": 540,
+  "kind": "play",
+  "tone": "paper",
+  "line": "5px grid · scatter from the click · swipe folds",
+  "summary": "A studio notification (a new brief, an approval, a domain, an invoice) is redrawn to an offscreen canvas, sampled on a 5px grid and scattered as flat square particles away from the cross you pressed. A swiped notification turns edge-on around its edge instead, and the rest of the list springs into the gap while a new one is uncovered at the top.",
+  "spec": [
+    ["Burst", "grid 5px (4px on phones), speed 30–180, gravity 150, drag 0.3 per second, life 0.8–1.6 s"],
+    ["Fold", "rotateY 85° around the near edge + 60px slide, 340 ms smoothstep, past 28% of the width"],
+    ["Springs", "list y 240 / 24, scale 260 / 22, swipe return 260 / 26 (stiffness / damping)"],
+    ["Refill", "650 ms after a removal, a new card is uncovered with a clip, never faded"],
+    ["Trigger", "click the cross, or drag a card sideways"]
+  ],
+  "source": ["Qbix studio library · dismiss-burst"],
+  "where": "The activity feed of a Qbix project page: briefs, approvals, domains and invoices clearing one by one.",
+  "rules": [
+    "Particles only shrink. They are never blurred or alpha-faded.",
+    "The cards keep the cut corner and are white on the paper, no shadow.",
+    "The list is told apart by 8px gaps; no rules between rows."
+  ],
+  "tags": ["canvas", "particles", "swipe", "list", "notifications"],
+  "shot": 2000
+}
+</script>
+<style data-code>
+/* Dismiss burst: cards are flat white blocks with the cut corner; the effect canvas sits over everything */
+.db-list { position: relative; perspective: 1000px; }
+.db-card { position: absolute; left: 0; right: 0; top: 0; height: 72px; touch-action: pan-y; cursor: grab; will-change: transform; user-select: none; }
+.db-card.drag { cursor: grabbing; }
+.db-body {
+  --e: 100; --c: 12px;
+  height: 100%; display: grid; grid-template-columns: 40px 1fr auto 32px; align-items: center; gap: 14px; padding: 0 12px 0 16px;
+  background: #ffffff; color: #121417;
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% min(var(--c), calc(var(--e) * 1%)), 100% calc(var(--e) * 1%), 0 calc(var(--e) * 1%));
+}
+.db-ic { width: 40px; height: 40px; display: grid; place-items: center; font: 500 12px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.08em; }
+.db-tt { font-size: 15px; font-weight: 500; letter-spacing: -0.011em; line-height: 1.25; }
+.db-bd { font-size: 13px; line-height: 1.3; color: rgba(18, 20, 23, 0.64); }
+.db-tm { font: 400 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(18, 20, 23, 0.38); }
+.db-x { all: unset; width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer; color: rgba(18, 20, 23, 0.64); }
+.db-x:hover, .db-x.press { background: #121417; color: #ffffff; }
+.db-fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+</style>
+<style>
+  .db { width: min(100%, 520px); display: grid; gap: 18px; }
+  .db .title { font-size: clamp(32px, 4.6vw, 52px); }
+  .db-head { display: grid; gap: 10px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="db">
+    <div class="db-head"><p class="kicker">Qbix · Friday</p><h2 class="title">Four things happened.</h2></div>
+<!-- code -->
+<div class="db-list" id="list"></div>
+<canvas class="db-fx" id="fx" aria-hidden="true"></canvas>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Click the cross, or drag a card left or right</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const list = $('list'), fx = $('fx'), fc = fx.getContext('2d');
+  const LIME = ['#B8FF00', '#0c1300'], TINT = ['#eceef0', '#121417'], INK = ['#121417', '#f4f5f2'];
+  const POOL = [
+    ['NB', LIME, 'New brief from Kova', 'Launch page, two layouts, due Friday', 'now'],
+    ['AP', TINT, 'Homepage approved', 'Dana signed off round 2 for Willow', '2m'],
+    ['DM', INK, 'Domain connected', 'forma.studio is secure and live', '9m'],
+    ['PV', TINT, 'Preview is ready', 'Build 214 passed all 14 checks', '14m'],
+    ['IN', INK, 'Invoice 0042 paid', 'Forma paid $2,250, receipt sent', '31m'],
+    ['RV', TINT, 'Review notes are in', 'Three small changes on the booking page', '1h'],
+  ];
+  const CARD = 72, GAP = 8, SHOW = 4;
+  let pi = 0, cards = [];
+  const X = '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>';
+  function make() {
+    const [k, ic, t, b, tm] = POOL[pi++ % POOL.length];
+    const el = document.createElement('div'); el.className = 'db-card';
+    el.innerHTML = `<div class="db-body"><div class="db-ic" style="background:${ic[0]};color:${ic[1]}">${k}</div><div><div class="db-tt">${t}</div><div class="db-bd">${b}</div></div><div class="db-tm">${tm}</div><button class="db-x" aria-label="Dismiss">${X}</button></div>`;
+    const c = { el, y: { x: 0, v: 0 }, dx: { x: 0, v: 0, t: 0 }, s: { x: 1, v: 0 }, alive: true, enter: 1, ty: 0, ic, k };
+    el._c = c;
+    el.querySelector('.db-x').addEventListener('click', (e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); burst(c, r.left + r.width / 2, r.top + r.height / 2); });
+    bindSwipe(c);
+    return c;
+  }
+  function layout() { let y = 0; for (const c of cards) { c.ty = y; y += CARD + GAP; } list.style.height = (SHOW * (CARD + GAP) - GAP) + 'px'; }
+  function add(top) {
+    const c = make(); list.appendChild(c.el);
+    if (top) { cards.unshift(c); c.y.x = -CARD * 0.6; c.s.x = 0.86; c.enter = 0; } else { cards.push(c); }
+    layout(); if (!top) c.y.x = c.ty;
+    return c;
+  }
+  // particles: the card is drawn to a canvas, sampled on a grid, scattered from the click
+  let parts = [];
+  function burst(c, ox, oy) {
+    if (!c.alive) return; c.alive = false;
+    const body = c.el.querySelector('.db-body'), r = body.getBoundingClientRect();
+    if (!reduce) {
+      const k = 2, cw = Math.ceil(r.width), ch = Math.ceil(r.height);
+      const off = document.createElement('canvas'); off.width = cw * k; off.height = ch * k;
+      const o = off.getContext('2d'); o.scale(k, k);
+      o.fillStyle = '#ffffff'; o.beginPath(); o.moveTo(0, 0); o.lineTo(cw - 12, 0); o.lineTo(cw, 12); o.lineTo(cw, ch); o.lineTo(0, ch); o.closePath(); o.fill();
+      const ic = c.el.querySelector('.db-ic'), ir = ic.getBoundingClientRect();
+      o.fillStyle = c.ic[0]; o.fillRect(ir.left - r.left, ir.top - r.top, ir.width, ir.height);
+      o.fillStyle = c.ic[1]; o.font = "500 12px 'Encode Sans', Geist, sans-serif"; o.textBaseline = 'middle'; o.textAlign = 'center'; o.fillText(c.k, ir.left - r.left + ir.width / 2, ir.top - r.top + ir.height / 2 + 1); o.textAlign = 'left';
+      for (const sel of ['.db-tt', '.db-bd', '.db-tm']) {
+        const e = c.el.querySelector(sel), cs = getComputedStyle(e), er = e.getBoundingClientRect();
+        o.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; o.fillStyle = cs.color; o.textBaseline = 'top'; o.fillText(e.textContent, er.left - r.left, er.top - r.top + 1);
+      }
+      const data = o.getImageData(0, 0, cw * k, ch * k).data, cell = innerWidth < 600 ? 4 : 5;
+      for (let y = 0; y < ch; y += cell) for (let x = 0; x < cw; x += cell) {
+        const i = (Math.floor((y + cell / 2) * k) * cw * k + Math.floor((x + cell / 2) * k)) * 4; if (data[i + 3] < 40) continue;
+        const px = r.left + x, py = r.top + y, dx = px - ox, dy = py - oy, d = Math.hypot(dx, dy) || 1, sp = 30 + Math.random() * 150;
+        parts.push({ x: px, y: py, vx: dx / d * sp + (Math.random() - 0.5) * 90, vy: dy / d * sp * 0.7 - 40 - Math.random() * 90, s: cell, c: `rgb(${data[i]},${data[i + 1]},${data[i + 2]})`, delay: d / 1500, life: 0.8 + Math.random() * 0.8, t: 0 });
+      }
+    }
+    c.el.style.visibility = 'hidden';
+    setTimeout(() => remove(c), reduce ? 0 : 280);
+  }
+  function fold(c, dir) { if (!c.alive) return; c.alive = false; c.foldDir = dir; c.folding = performance.now(); setTimeout(() => remove(c), reduce ? 0 : 360); }
+  function remove(c) {
+    const i = cards.indexOf(c); if (i < 0) return; cards.splice(i, 1);
+    setTimeout(() => c.el.remove(), reduce ? 0 : 900); layout(); refill();
+  }
+  let refillT = null;
+  function refill() { if (refillT) return; refillT = setTimeout(() => { refillT = null; while (cards.length < SHOW) add(true); }, reduce ? 0 : 650); }
+  function bindSwipe(c) {
+    let sx = 0, id = null;
+    c.el.addEventListener('pointerdown', (e) => { if (e.target.closest('.db-x') || !c.alive) return; id = e.pointerId; sx = e.clientX; c.el.setPointerCapture(id); c.el.classList.add('drag'); c.dragging = true; });
+    c.el.addEventListener('pointermove', (e) => { if (e.pointerId !== id) return; c.dx.t = c.dx.x = e.clientX - sx; });
+    const end = (e) => { if (e.pointerId !== id) return; id = null; c.el.classList.remove('drag'); c.dragging = false; if (Math.abs(c.dx.x) > c.el.offsetWidth * 0.28) fold(c, Math.sign(c.dx.x)); else c.dx.t = 0; };
+    c.el.addEventListener('pointerup', end); c.el.addEventListener('pointercancel', end);
+  }
+  let dpr = 1, last = performance.now(), running = false;
+  function resize() { dpr = Math.min(2, devicePixelRatio || 1); fx.width = Math.round(innerWidth * dpr); fx.height = Math.round(innerHeight * dpr); layout(); }
+  const spring = (s, t, k, d, dt) => { s.v += (k * (t - s.x) - d * s.v) * dt; s.x += s.v * dt; };
+  function frame(now) {
+    if (document.hidden) { running = false; return; }
+    const dt = Math.min(0.04, (now - last) / 1000); last = now;
+    for (const c of cards.concat([])) {
+      const el = c.el;
+      if (!(c.alive || c.folding)) continue;
+      if (reduce) { c.y.x = c.ty; c.s.x = 1; if (!c.dragging) c.dx.x = c.dx.t; }
+      else for (let i = 0; i < 3; i++) { spring(c.y, c.ty, 240, 24, dt / 3); spring(c.s, 1, 260, 22, dt / 3); if (!c.dragging) spring(c.dx, c.dx.t, 260, 26, dt / 3); }
+      let tf = `translate(${c.dx.x}px,${c.y.x}px) scale(${c.s.x})`;
+      if (c.alive && c.dragging) tf += ` rotate(${c.dx.x * 0.012}deg)`;
+      if (c.folding) {
+        const u = Math.min(1, (now - c.folding) / 340), e = u * u * (3 - 2 * u);
+        tf = `translate(${c.dx.x + c.foldDir * e * 60}px,${c.y.x}px) rotateY(${c.foldDir * e * 85}deg) scale(${1 - 0.15 * e})`;
+        el.style.transformOrigin = c.foldDir > 0 ? 'right center' : 'left center';
+      }
+      el.style.transform = tf;
+      const body = el.firstChild;
+      if (c.enter < 1) { c.enter = Math.min(1, c.enter + dt * 3.2); const e = 1 - Math.pow(1 - c.enter, 3); body.style.setProperty('--e', (e * 100).toFixed(1)); } else body.style.removeProperty('--e');
+    }
+    fc.setTransform(dpr, 0, 0, dpr, 0, 0); fc.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of parts) {
+      p.t += dt; if (p.t < p.delay) { fc.fillStyle = p.c; fc.fillRect(p.x, p.y, p.s, p.s); continue; }
+      const a = p.t - p.delay; p.vx *= Math.pow(0.3, dt); p.vy = p.vy * Math.pow(0.3, dt) + 150 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+      const k = 1 - a / p.life; if (k <= 0) continue;
+      const sz = p.s * Math.max(0.2, k); fc.fillStyle = p.c; fc.fillRect(p.x + (p.s - sz) / 2, p.y + (p.s - sz) / 2, sz, sz);
+    }
+    parts = parts.filter((p) => p.t < p.delay + p.life);
+    requestAnimationFrame(frame);
+  }
+  function start() { if (!running && !document.hidden) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', start);
+  function boot() { cards.forEach((c) => c.el.remove()); cards = []; parts = []; pi = 0; list.innerHTML = ''; for (let i = 0; i < SHOW; i++) add(false); layout(); for (const c of cards) c.y.x = c.ty; }
+  window.dbApi = { boot, get cards() { return cards; }, burst, fold };
+  addEventListener('resize', resize);
+  resize(); boot(); start();
+})();
+</script>
+<script>
+  (function () {
+    const api = window.dbApi; let run = 0;
+    const G = { x: 0, y: 0 };
+    const ease = QM.easeInOut;
+    const gat = (x, y) => { G.x = x; G.y = y; QM.ghostAt(x, y); };
+    function glide(x, y, ms, cb, ok) {
+      return new Promise((res) => { const x0 = G.x, y0 = G.y, t0 = performance.now();
+        (function s() { if (!ok()) return res(false); const u = Math.min(1, (performance.now() - t0) / ms), e = ease(u); gat(x0 + (x - x0) * e, y0 + (y - y0) * e); if (cb) cb(e); if (u < 1) requestAnimationFrame(s); else res(true); })(); });
+    }
+    async function play() {
+      const my = ++run, ok = () => my === run;
+      gat(innerWidth * 0.75, innerHeight * 0.8); QM.ghostShow();
+      let c = api.cards[0], x = c.el.querySelector('.db-x'), r = x.getBoundingClientRect();
+      if (!(await glide(r.left + r.width * 0.55, r.top + r.height * 0.6, 900, null, ok))) return;
+      await QM.wait(200); x.classList.add('press'); await QM.wait(120); x.classList.remove('press');
+      api.burst(c, r.left + r.width / 2, r.top + r.height / 2);
+      if (!(await glide(innerWidth * 0.62, innerHeight * 0.74, 700, null, ok))) return;
+      await QM.wait(1500); if (!ok()) return;
+      c = api.cards[1]; r = c.el.getBoundingClientRect();
+      if (!(await glide(r.left + r.width * 0.35, r.top + r.height * 0.5, 800, null, ok))) return;
+      await QM.wait(150); c.dragging = true; c.el.classList.add('drag');
+      const x0 = G.x, w = r.width;
+      const done = await glide(x0 + w * 0.42, G.y + 6, 520, (e) => { c.dx.t = c.dx.x = G.x - x0; }, ok);
+      c.dragging = false; c.el.classList.remove('drag');
+      if (!done) { c.dx.t = 0; return; }
+      api.fold(c, 1);
+      await glide(G.x - 30, G.y + 60, 600, null, ok);
+    }
+    const reset = () => { run++; api.boot(); };
+    QM.demo({ kind: 'play', lead: 500, dur: 7600, hold: 500, reset, play });
+  })();
+</script>
+</body>
+</html>

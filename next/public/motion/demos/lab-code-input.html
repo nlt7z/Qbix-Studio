@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code cells · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-code-input",
+  "title": "Code cells",
+  "group": "lab",
+  "cat": "inputs",
+  "order": 80,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "380 ms digits · caret spring k 260 · 460 ms damped shake",
+  "summary": "Six cells and one hidden input. Each digit slides up through a mask in its cell and the ink caret springs from cell to cell. A wrong code shakes the row with a damped sine and flips the white cells to ink; the right one turns them lime, one after another. Left alone it receives a text, mistypes, corrects, and gets in.",
+  "spec": [
+    ["Digit", "translateY 100% → 0 inside the cell, 380 ms, cubic-bezier(0.2, 0.8, 0.2, 1); out 260 ms ease-in"],
+    ["Caret", "x on a spring k 260 · c 26, breathing between entries"],
+    ["Shake", "460 ms, sin(4πp) × 6 px × (1 − p)²"],
+    ["Success", "cells turn lime 60 ms apart and pop to 1.06"],
+    ["Banner", "the text slides down from above the frame, 650 ms, cubic-bezier(0.2, 0.8, 0.2, 1)"]
+  ],
+  "source": ["Qbix studio library · code-input"],
+  "where": "Signing in to a launch site preview or a client portal with a texted code.",
+  "rules": [
+    "Digits are uncovered through the cell, never faded.",
+    "Lime means signed in, and only that; the caret is ink, the one live mark on a white cell.",
+    "One real input underneath, so paste, autofill and the keyboard all work."
+  ],
+  "tags": ["click", "typing", "spring", "form", "shake"],
+  "shot": 5400
+}
+</script>
+<style data-code>
+/* Verification code: white cells, an ink caret, masked digits, lime when you are in */
+.vc-clip { position: absolute; left: 0; right: 0; top: 0; height: 96px; overflow: hidden; }
+.vc-sms { position: absolute; left: 0; right: 0; top: 12px; padding: 12px 16px 13px; background: #121417; color: #f4f5f2; transform: translateY(-130%); transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1); --cut: 12px; }
+@media (prefers-reduced-motion: reduce) { .vc-sms { transition: none; } }
+.vc-sms .a { display: flex; justify-content: space-between; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(244, 245, 242, 0.5); }
+.vc-sms .a b { font-weight: 500; color: #f4f5f2; }
+.vc-sms .m { margin-top: 8px; font-size: 14.5px; line-height: 1.35; }
+.vc-row { position: absolute; left: 0; top: 130px; width: 400px; height: 72px; }
+.vc-box { position: absolute; top: 0; width: 56px; height: 72px; background: #ffffff; overflow: hidden; }
+.vc-box b { position: absolute; inset: 0; display: grid; place-items: center; font: 500 32px/1 'Encode Sans', sans-serif; font-variant-numeric: tabular-nums; }
+.vc-caret { position: absolute; top: 20px; left: 0; width: 3px; height: 32px; background: #121417; }
+.vc-real { position: absolute; inset: 0; opacity: 0; font-size: 16px; border: 0; padding: 0; background: transparent; color: transparent; caret-color: transparent; cursor: text; }
+.vc-help { position: absolute; left: 0; right: 0; top: 226px; height: 22px; overflow: hidden; font-size: 14px; }
+.vc-help > span { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.vc-help svg { width: 16px; height: 16px; }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  #vc-stage { position: absolute; left: 50%; top: 47%; width: 800px; height: 280px; transform-origin: 50% 50%; }
+  .vc-copy { position: absolute; left: 0; top: 40px; width: 340px; display: grid; gap: 14px; }
+  .vc-copy .title { font-size: 56px; }
+  .vc-copy .lede { font-size: 15px; max-width: 22em; }
+  #vc-right { position: absolute; right: 0; top: 0; width: 400px; height: 280px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div id="vc-stage">
+  <div class="vc-copy">
+    <p class="kicker">Sign in · Step 2 of 2</p>
+    <h2 class="title">Enter your code</h2>
+    <p class="lede">We sent six digits to (206) 555 0148. Sign in to see your launch site preview and the review notes for forma.studio.</p>
+  </div>
+  <div id="vc-right">
+<!-- code -->
+<div class="vc-clip"><div class="vc-sms cut" id="vc-sms"><div class="a"><b>Qbix</b><span>now</span></div><div class="m" id="vc-msg">418 207 is your sign in code.</div></div></div>
+<div class="vc-row" id="vc-row"><div class="vc-caret" id="vc-caret"></div><input class="vc-real" id="vc-real" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Six digit code"></div>
+<div class="vc-help" id="vc-help"><span>Didn't get it? Resend in 30 s</span></div>
+<!-- /code -->
+  </div>
+</div>
+<div class="qm-ui"><span>Click a cell and type six digits</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const $ = (s) => document.querySelector(s);
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const row = $('#vc-row'), caret = $('#vc-caret'), real = $('#vc-real'), help = $('#vc-help'), sms = $('#vc-sms');
+let T = 0, lastNow = performance.now();
+const jobs = [], ticks = new Set();
+const at = (ms, fn) => jobs.push({ t: T + ms, fn });
+function frame(now) {
+  const dt = Math.min(64, now - lastNow); lastNow = now; T += dt;
+  for (let i = 0; i < jobs.length; i++) if (jobs[i].t <= T) { const j = jobs.splice(i, 1)[0]; i--; j.fn(); }
+  ticks.forEach((f) => f(dt)); requestAnimationFrame(frame);
+}
+function spring(x, k = 170, c = 24) {
+  return { x, v: 0, t: x, k, c, step(dt) { let s = dt / 1000; const n = Math.max(1, Math.ceil(s / 0.008)); s /= n; for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; } } };
+}
+function tween(d, f, done) {
+  const t0 = T;
+  const g = () => { const p = Math.min(1, (T - t0) / d); f(p); if (p >= 1) { ticks.delete(g); if (done) done(); } };
+  ticks.add(g); g();
+}
+const EZ = 'cubic-bezier(.2,.8,.2,1)';
+
+/* six cells, a wider gap in the middle */
+const X = [0, 1, 2, 3, 4, 5].map((i) => i * 64 + (i > 2 ? 8 : 0)), off = (400 - (X[5] + 56)) / 2;
+const boxes = X.map((x) => { const b = document.createElement('div'); b.className = 'vc-box'; b.style.left = x + off + 'px'; row.insertBefore(b, caret); return b; });
+function setDigits(str, erasing) {
+  for (let i = 0; i < 6; i++) {
+    const want = str[i] || '', b = boxes[i], cur = b.querySelector('b:not(.out)'), have = cur ? cur.textContent : '';
+    if (want === have) continue;
+    if (cur) {
+      cur.classList.add('out');
+      if (RM) cur.remove();
+      else cur.animate([{ transform: 'none' }, { transform: `translateY(${erasing ? 100 : -100}%)` }], { duration: 260, easing: 'ease-in', fill: 'forwards' }).onfinish = () => cur.remove();
+    }
+    if (want) {
+      const n = document.createElement('b'); n.textContent = want; b.appendChild(n);
+      if (!RM) n.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 380, easing: EZ });
+    }
+  }
+  caretTo(str.length);
+}
+
+/* the caret glides between cells and breathes softly while waiting */
+const cx = spring(X[0] + off + 26, 260, 26), caretAlpha = spring(1, 200, 26);
+let caretOn = true, lastMove = 0;
+function caretTo(i) { if (i > 5) { caretAlpha.t = 0; return; } caretAlpha.t = caretOn ? 1 : 0; cx.t = X[i] + off + 26; lastMove = T; }
+ticks.add((dt) => {
+  cx.step(dt); caretAlpha.step(dt);
+  const idle = T - lastMove, breathe = idle > 500 && !RM ? 0.55 + 0.45 * Math.cos(((idle - 500) / 1000) * Math.PI * 1.6) : 1;
+  caret.style.transform = `translateX(${cx.x.toFixed(2)}px)`; caret.style.opacity = (Math.max(0, Math.min(1, caretAlpha.x)) * breathe).toFixed(3);
+});
+
+function say(html) {
+  const old = help.querySelector('span:not(.out)');
+  const n = document.createElement('span'); n.innerHTML = html; help.appendChild(n);
+  if (!old) return; old.classList.add('out');
+  if (RM) { old.remove(); return; }
+  n.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 420, easing: EZ });
+  old.animate([{ transform: 'none' }, { transform: 'translateY(-100%)' }], { duration: 420, easing: EZ, fill: 'forwards' }).onfinish = () => old.remove();
+}
+const resend = () => say("Didn't get it? Resend in 30 s");
+function shake() {
+  if (RM) return;
+  tween(460, (p) => { row.style.transform = `translateX(${(Math.sin(p * Math.PI * 4) * 6 * (1 - p) * (1 - p)).toFixed(2)}px)`; }, () => (row.style.transform = ''));
+}
+function paint(state) {
+  boxes.forEach((b, i) => {
+    const go = () => {
+      b.style.transition = RM ? 'none' : 'background-color .3s ease, color .3s ease, transform .45s cubic-bezier(.3,1.6,.5,1)';
+      b.style.background = state === 'ok' ? '#b8ff00' : state === 'err' ? '#121417' : '';
+      b.style.color = state === 'ok' ? '#0c1300' : state === 'err' ? '#f4f5f2' : '';
+      if (state === 'ok') { b.style.transform = 'scale(1.06)'; at(160, () => (b.style.transform = '')); }
+    };
+    state === 'ok' ? at(i * 60, go) : go();
+  });
+}
+
+let code = '418207', phase = 'typing';
+function check(str) {
+  if (str.length < 6) return; caretAlpha.t = 0;
+  if (str === code) {
+    phase = 'ok'; paint('ok');
+    say('<svg viewBox="0 0 16 16" fill="none" stroke="#121417" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3 3 7-7"/></svg>You\'re in. Opening your preview.');
+    sms.style.transform = 'translateY(-130%)';
+  } else { phase = 'err'; paint('err'); shake(); say("That code didn't match. Try again."); }
+}
+
+/* real typing */
+let lastIn = -1e9;
+real.addEventListener('focus', () => { stopGhost(); caretOn = true; caretTo(Math.min(real.value.length, 5)); });
+real.addEventListener('blur', () => { caretOn = false; caretAlpha.t = 0; });
+real.addEventListener('input', () => {
+  lastIn = T; let v = real.value.replace(/\D/g, '').slice(0, 6);
+  if (phase !== 'typing') { paint(''); resend(); phase = 'typing'; v = v.slice(-1); }
+  real.value = v; setDigits(v); check(v);
+});
+real.addEventListener('pointerdown', () => stopGhost());
+requestAnimationFrame(frame);
+setDigits('');
+</script>
+<script>
+  /* harness glue: a text arrives, a typo shakes, the right code goes lime */
+  let ghost = false;
+  function stopGhost() { lastIn = T; if (ghost) { ghost = false; jobs.length = 0; } }
+  function newCode() { code = String(100000 + Math.floor(Math.random() * 899999)); $('#vc-msg').textContent = code.slice(0, 3) + ' ' + code.slice(3) + ' is your sign in code.'; }
+  function run() {
+    ghost = true; jobs.length = 0; let t = 200; const step = (d, fn) => { t += d; at(t, fn); };
+    real.value = ''; phase = 'typing'; paint(''); setDigits('', true); caretOn = true; caretTo(0);
+    step(0, () => { sms.style.transform = 'none'; });
+    const typo = code.slice(0, 5) + ((+code[5] + 3) % 10);
+    t += 700;
+    for (let i = 1; i <= 6; i++) step(150 + Math.random() * 90 + (i === 4 ? 140 : 0), () => { setDigits(typo.slice(0, i)); if (i === 6) at(220, () => check(typo)); });
+    step(1500, () => {});
+    for (let i = 5; i >= 0; i--) step(55, () => { if (i === 5) { paint(''); resend(); phase = 'typing'; } setDigits(typo.slice(0, i), true); });
+    step(350, () => {});
+    for (let i = 1; i <= 6; i++) step(140 + Math.random() * 70 + (i === 4 ? 120 : 0), () => { setDigits(code.slice(0, i)); if (i === 6) at(240, () => check(code)); });
+    step(2900, () => { for (let i = 5; i >= 0; i--) at((5 - i) * 45, () => setDigits(code.slice(0, i), true)); at(300, () => { paint(''); resend(); phase = 'typing'; caretOn = true; caretTo(0); }); });
+    step(900, () => { newCode(); run(); });
+  }
+  ticks.add(() => { if (!ghost && !RM && T - lastIn > 2500 && document.activeElement !== real) run(); });
+  if (RM) { sms.style.transform = 'none'; setDigits(code); phase = 'ok'; paint('ok'); caretAlpha.x = caretAlpha.t = 0; help.innerHTML = '<span>You\'re in. Opening your preview.</span>'; }
+  function fit() {
+    const st = document.getElementById('vc-stage');
+    const s = Math.min(innerWidth / 840, (innerHeight - 70) / 300) * 0.96;
+    st.style.transform = `translate(-50%,-50%) scale(${Math.min(s, 1.7)})`;
+  }
+  addEventListener('resize', fit); fit();
+  QM.demo({ kind: 'loop', restart() { lastIn = -1e9; } });
+</script>
+</body>
+</html>

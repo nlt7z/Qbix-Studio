@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scroll-lit paragraph · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "showcase-text",
+  "title": "Scroll-lit paragraph",
+  "group": "type",
+  "cat": "text",
+  "order": 70,
+  "kind": "scroll",
+  "tone": "paper",
+  "line": "22% → ink · 0.3 s linear · the scroll's pace",
+  "summary": "A paragraph read at the speed of the scroll: its words light from a faint tint to full ink, one after another, and then the closing phrase is marked, a bar sliding across it. Scrolling back unlights them.",
+  "spec": [
+    ["Progress", "one number from the scroll: 0 → 1 over the chapter's pinned stretch (a phone: as the paragraph passes up the screen)"],
+    ["Words", "the first 80% of the run: n = round(min(1, t / 0.8) × words), the first n lit"],
+    ["Mark", "the last 20%: smoothstep((t − 0.8) / 0.2) drives the marker's --mark"],
+    ["Word", "colour 22% of the ink → the ink, 0.3 s linear"],
+    ["Wide pinned run", "from the chapter's top at 66% of the screen to its top + max(50vh, (height − 100vh) × 0.8)"],
+    ["Phone run", "from the paragraph's top at 85% of the screen to its bottom at 35%"],
+    ["Back", "scrolling back unlights; reduced motion shows it lit"]
+  ],
+  "source": ["components/ShowcaseText.tsx", "components/Marker.tsx (the mark)", "app/story.css · the about paragraph (.showcase .sc-w)", "components/story/Story.tsx · the About chapter"],
+  "where": "The About chapter: “Our story is simple.” and its paragraph, ending on “no idea deserves to be wasted.”",
+  "rules": [
+    "One readable copy is kept for screen readers (visually hidden); the lit words are aria-hidden.",
+    "Positions are measured on resize and after the fonts load; the scroll handler only compares numbers and toggles classes.",
+    "The mark is the page's own ink (an ink bar on paper, a white one on black): this chapter's lime is the idea in its scene.",
+    "The closing phrase is set heavier (600) and is whole from the start; the words before it are what light.",
+    "This lit ink is a colour change, not a fade of the block: the paragraph never moves."
+  ],
+  "tags": ["text", "scroll", "reading", "marker"],
+  "shot": 7600
+}
+</script>
+<style data-code>
+/* The about paragraph, read at the speed of the scroll — app/story.css, components/ShowcaseText.tsx */
+.showcase .sc-w { color: color-mix(in srgb, var(--fg, #121417) 22%, transparent); transition: color 0.3s linear; }
+.showcase .sc-w.on { color: var(--fg, #121417); }
+.showcase .about-hi { color: inherit; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .showcase .sc-w { transition: none; } }
+
+/* the chapter, on a wide screen (app/story.css): tall, with its frame pinned while the scroll plays the words */
+@media (min-width: 900px) and (min-aspect-ratio: 1/1) {
+  .ch { height: 190vh; }
+  .ch-frame { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; place-items: center; }
+}
+
+/* the closing phrase is marked last: Marker's own markup, carried by this progress (--mark, 0 … 1) */
+.marker { position: relative; display: inline-block; white-space: nowrap; clip-path: inset(-0.06em -0.16em -0.1em); }
+.marker-bar { position: absolute; inset: -0.02em -0.14em -0.06em; overflow: hidden; background: #B8FF00; translate: calc((var(--mark, 1) - 1) * 101%) 0; }
+.marker-in { position: absolute; inset: 0; padding: 0.02em 0.14em 0.06em; line-height: inherit; white-space: nowrap; color: #121417; translate: calc((1 - var(--mark, 1)) * 101%) 0; user-select: none; -webkit-user-select: none; }
+/* where the screen's one lime is elsewhere (here, the scene's idea): the page's own ink, an ink bar on paper, a white one on black */
+.marker--ink .marker-bar { background: #121417; }
+.marker--ink .marker-in { color: #f4f5f2; }
+.marker--white .marker-bar { background: #f4f5f2; }
+.marker--white .marker-in { color: #121417; }
+</style>
+<style>
+  /* the page: a phone reads the chapter top to bottom (the paragraph passes up the screen) */
+  .sc-lead { display: none; }
+  .ch { position: relative; padding: 65vh 0 65vh; }
+  .ch-frame { display: block; }
+  .ch-copy { width: min(100% - 2 * clamp(24px, 6vmin, 72px), 680px); margin: 0 auto; display: flex; flex-direction: column; align-items: flex-start; }
+  .ch-copy .kicker { margin: 0 0 18px; }
+  .ch-copy .title { font-size: clamp(30px, 3.4vw, 58px); margin: 0; }
+  .ch-story { margin: 20px 0 0; max-width: 100%; font-size: clamp(18px, 1.45vw, 23px); line-height: 1.6; color: var(--fg); }
+  /* a wide window pins the chapter while the scroll plays it (story.css, wide screens). The site's
+     query is 900px; the library's tile is 800px wide, so it pins from 640px up (the same JS, told so below). */
+  @media (min-width: 640px) and (min-aspect-ratio: 1/1) {
+    .sc-lead { display: block; height: 66vh; }
+    .ch { height: 190vh; padding: 0; }
+    .ch-frame { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; place-items: center; }
+  }
+  .qm-hint { position: fixed; left: clamp(24px, 6vmin, 56px); top: clamp(24px, 6vmin, 56px); }
+</style>
+</head>
+<body>
+<span class="qm-hint">Scroll ↓</span>
+<div class="sc-lead" aria-hidden="true"></div>
+<!-- code -->
+<section class="ch" data-chapter data-tone="paper">
+  <div class="ch-frame">
+    <div class="ch-copy">
+      <p class="kicker">About us</p>
+      <h2 class="title">Our story is simple.</h2>
+      <p class="showcase ch-story" data-accent="no idea deserves to be wasted" data-after=".">AI has lowered the technical barrier, but the fact that anyone can build does not mean anyone can build well. We bring unusually sharp instincts, more than 10 years of training toward the best taste in the industry, real curiosity about new things (which means you get the newest tech), and respect for every idea that comes in. We put weight on early exploration and research, because</p>
+    </div>
+  </div>
+</section>
+<!-- /code -->
+<script src="../kit/stage.js"></script>
+<script>
+  // the library's tile is 800px wide, so the words are pinned from 640px up (the site's query is 900px)
+  document.querySelector('.showcase').dataset.pinned = '(min-width: 640px) and (min-aspect-ratio: 1/1)';
+</script>
+<script data-code>
+/* A paragraph read at the speed of the scroll. Its words light, from a faint tint to full ink, as the
+   reader scrolls through the chapter; the closing phrase is marked last. Progress is one number from
+   the scroll: on a wide screen, where the words are pinned, it runs through the chapter's pinned
+   stretch; on a phone, where they scroll, it runs as the paragraph passes up the screen. */
+const PINNED = '(min-width: 900px) and (min-aspect-ratio: 1/1)';   // story.css: where the words are pinned beside the scene
+function showcase(p, pinned = p.dataset.pinned || PINNED) {
+  const section = p.closest('[data-chapter]');
+  const before = p.textContent.trim();
+  const accent = p.dataset.accent, after = p.dataset.after || '';
+  // one readable copy for screen readers, the lit words aria-hidden
+  const sr = Object.assign(document.createElement('span'), { className: 'sr-only', textContent: `${before} ${accent}${after}` });
+  const lit = document.createElement('span');
+  lit.setAttribute('aria-hidden', 'true');
+  before.split(/\s+/).forEach((w) => {
+    lit.append(Object.assign(document.createElement('span'), { className: 'sc-w', textContent: w }), ' ');
+  });
+  const mark = document.createElement('span');
+  mark.className = `marker sc-mark about-hi ${p.dataset.mark || 'marker--ink'}`;
+  mark.style.setProperty('--mark', '0');
+  mark.append(accent);
+  mark.insertAdjacentHTML('beforeend', '<span class="marker-bar" aria-hidden="true"><span class="marker-in"></span></span>');
+  mark.querySelector('.marker-in').textContent = accent;
+  lit.append(mark, after);
+  p.replaceChildren(sr, lit);
+
+  const spans = Array.from(p.querySelectorAll('.sc-w'));
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    spans.forEach((s) => s.classList.add('on'));
+    mark.style.setProperty('--mark', '1');
+    return;
+  }
+  const wide = matchMedia(pinned);
+  let a = 0, b = 1, shown = -1, raf = 0, last = -1;
+  const measure = () => {
+    const vh = window.innerHeight;
+    if (wide.matches) {
+      // the pinned stretch: from the chapter's top at two thirds of the screen to near the end of its run
+      const top = section.getBoundingClientRect().top + window.scrollY;
+      a = top - vh * 0.66;
+      b = top + Math.max(vh * 0.5, (section.offsetHeight - vh) * 0.8);
+    } else {
+      const top = p.getBoundingClientRect().top + window.scrollY;
+      a = top - vh * 0.85;
+      b = top + p.offsetHeight - vh * 0.35;
+    }
+    last = -1;
+    paint();
+  };
+  const smooth = (x) => x * x * (3 - 2 * x);
+  const paint = () => {
+    raf = 0;
+    const y = window.scrollY;
+    if (y === last) return;
+    last = y;
+    const t = Math.min(1, Math.max(0, (y - a) / Math.max(1, b - a)));
+    // the words in the first 80% of the run, then the mark
+    const n = Math.round(Math.min(1, t / 0.8) * spans.length);
+    if (n !== shown) {
+      spans.forEach((s, i) => s.classList.toggle('on', i < n));
+      shown = n;
+    }
+    mark.style.setProperty('--mark', smooth(Math.min(1, Math.max(0, (t - 0.8) / 0.2))).toFixed(4));
+  };
+  const onScroll = () => { if (!raf) raf = requestAnimationFrame(paint); };
+  measure();
+  document.fonts?.ready.then(measure);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', measure);
+  wide.addEventListener('change', measure);
+}
+
+document.querySelectorAll('.showcase').forEach((p) => showcase(p));
+</script>
+<script>
+  QM.demo({ kind: 'scroll', lead: 800, dur: 6000, hold: 1600, back: 2600 });
+</script>
+</body>
+</html>

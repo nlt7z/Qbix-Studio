@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Picture sentence · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-sentence-hero",
+  "title": "Picture sentence",
+  "group": "lab",
+  "cat": "text",
+  "order": 720,
+  "kind": "hover",
+  "tone": "paper",
+  "line": "objects ×2.3 · scale k 260 · c 17 · caption uncovered",
+  "summary": "The intro is one sentence, and small pictures from the studio's world sit inside it like words. Hover or tap one and it grows out of the line, straightens, and says what it is. The sentence does the job a hero image would.",
+  "spec": [
+    ["Objects", "buttons sized in em (1.28 × 0.86), so they scale with the type and wrap with the words"],
+    ["Open", "scale 1 → 2.3 on a spring k 260 · c 17, rotation to 0° on k 200 · c 20"],
+    ["Caption", "uncovered by clip-path inset(0 0 100% 0) → 0, 300 ms expo out; counter-scaled to stay 11px"],
+    ["Entrance", "words rise through their own sleeves, 28 ms apart; objects are wiped open from the bottom 140 ms apart"],
+    ["Touch", "a tap toggles the same state, one at a time"]
+  ],
+  "source": ["Qbix studio library · 02-sentence-hero", "Qbix studio library/recipes/motion-core.js"],
+  "where": "The opening line of the studio's homepage, in place of a hero picture.",
+  "rules": [
+    "Objects are real buttons inside the heading, sized in em.",
+    "Images are loaded at their enlarged size, so the open state stays sharp.",
+    "The caption is never hover-only: a tap opens it too."
+  ],
+  "tags": ["hover", "type", "spring", "image", "recipe"],
+  "shot": 3600
+}
+</script>
+<style data-code>
+/* Sentence hero: pictures set inline like words */
+.sh2-sentence { margin: 0; max-width: 18ch; font: 400 clamp(32px, min(8.2vw, 12.5vh), 120px)/1.16 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; text-wrap: pretty; }
+.sh2-w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.14em; margin-bottom: -0.14em; }
+.sh2-w > span { display: inline-block; }
+.sh2-obj { position: relative; display: inline-block; width: 1.3em; height: 0.84em; margin: 0 0.06em; vertical-align: -0.06em; transform: rotate(var(--rot, 0deg)); cursor: pointer; border: 0; padding: 0; background: transparent; font: inherit; -webkit-tap-highlight-color: transparent; }
+.sh2-obj.tall { width: 0.66em; height: 1em; vertical-align: -0.16em; }
+.sh2-img { position: absolute; inset: 0; background-size: cover; background-position: center; --cut: 0.16em; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.sh2-tag { position: absolute; left: 50%; top: calc(100% + 0.42em); transform: translateX(-50%); font: 500 11px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: #121417; white-space: nowrap; pointer-events: none; clip-path: inset(0 0 100% 0); transition: clip-path 300ms cubic-bezier(0.16, 1, 0.3, 1); }
+.sh2-obj.open .sh2-tag, .sh2-obj.is-hot .sh2-tag { clip-path: inset(0 0 0 0); }
+</style>
+<style>
+  .qm-stage { justify-items: start; padding: clamp(32px, 8vmin, 96px); padding-bottom: clamp(56px, 10vmin, 110px); }
+  .sh2-wrap { display: grid; gap: 22px; max-width: 100%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="sh2-wrap">
+  <p class="kicker">Qbix · Design and build studio</p>
+<!-- code -->
+<h1 class="sh2-sentence" id="sh2-sentence">
+  <span class="sh2-w"><span>Qbix</span></span> <span class="sh2-w"><span>builds</span></span> <span class="sh2-w"><span>sites</span></span> <span class="sh2-w"><span>for</span></span>
+  <button class="sh2-obj" data-img="../assets/art/calla.webp" style="--rot:-4deg" aria-label="Forma, objects for bright rooms"><span class="sh2-img"></span><span class="sh2-tag">Forma, objects for bright rooms</span></button>
+  <span class="sh2-w"><span>ceramic</span></span> <span class="sh2-w"><span>studios,</span></span>
+  <button class="sh2-obj tall" data-img="../assets/art/curves.webp" style="--rot:3deg" aria-label="Kova, a money app"><span class="sh2-img"></span><span class="sh2-tag">Kova, a money app</span></button>
+  <span class="sh2-w"><span>money</span></span> <span class="sh2-w"><span>apps</span></span> <span class="sh2-w"><span>and</span></span>
+  <button class="sh2-obj tall" data-img="../assets/art/ava.webp" style="--rot:-3deg" aria-label="Dana Reyes, Willow Counseling"><span class="sh2-img"></span><span class="sh2-tag">Dana Reyes, Willow Counseling</span></button>
+  <span class="sh2-w"><span>calm</span></span> <span class="sh2-w"><span>practices.</span></span>
+</h1>
+<!-- /code -->
+  </div>
+<div class="qm-ui"><span>Hover or tap a picture</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const sentence = document.getElementById('sh2-sentence');
+const objs = [...sentence.querySelectorAll('.sh2-obj')];
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ZOOM = 2.3;
+const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+/* images are requested at the enlarged pixel size from the start */
+objs.forEach((o) => { o.querySelector('.sh2-img').style.backgroundImage = `url(${o.dataset.img})`; });
+
+/* entrance: words rise through their sleeves, pictures are wiped open from the bottom */
+if (!RM) {
+  sentence.querySelectorAll('.sh2-w > span').forEach((w, i) => w.animate([{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: 850, delay: i * 28, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
+  objs.forEach((o, i) => o.querySelector('.sh2-img').animate([{ clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 800, delay: 500 + i * 140, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' }));
+}
+
+/* one clock, one pair of springs per object */
+function spring(x, k, c) { return { x, v: 0, t: x, k, c, step(dt) { const n = Math.max(1, Math.ceil(dt / 0.008)); const s = dt / n; for (let i = 0; i < n; i++) { const a = -this.k * (this.x - this.t) - this.c * this.v; this.v += a * s; this.x += this.v * s; } } }; }
+const state = objs.map((o) => {
+  const rot = parseFloat(getComputedStyle(o).getPropertyValue('--rot')) || 0;
+  const st = { el: o, rot, s: spring(1, 260, 17), r: spring(rot, 200, 20), open: false };
+  return st;
+});
+function setOpen(st, open) {
+  st.open = open;
+  st.el.classList.toggle('open', open);
+  st.el.setAttribute('aria-expanded', open);
+  st.s.t = open ? ZOOM : 1; st.r.t = open ? 0 : st.rot;
+  st.el.style.zIndex = open ? 5 : '';
+  if (RM) { st.s.x = st.s.t; st.r.x = st.r.t; }
+}
+state.forEach((st) => {
+  if (canHover) {
+    st.el.addEventListener('pointerenter', () => setOpen(st, true));
+    st.el.addEventListener('pointerleave', () => setOpen(st, false));
+    st.el.addEventListener('focus', () => setOpen(st, true));
+    st.el.addEventListener('blur', () => setOpen(st, false));
+  } else {
+    st.el.addEventListener('click', () => { const next = !st.open; state.forEach((o) => o !== st && o.open && setOpen(o, false)); setOpen(st, next); });
+  }
+});
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min((now - last) / 1000, 1 / 30); last = now;
+  state.forEach((st) => {
+    st.s.step(dt); st.r.step(dt);
+    st.el.style.transform = `rotate(${st.r.x.toFixed(2)}deg) scale(${st.s.x.toFixed(3)})`;
+    st.el.lastElementChild.style.transform = `translateX(-50%) scale(${(1 / st.s.x).toFixed(3)})`;
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+<script>
+  /* the ghost visits each picture in turn; .is-hot opens it the way :hover does */
+  QM.demo({
+    kind: 'hover',
+    targets: '.sh2-obj',
+    dur: 1700,
+    enter(el) { setOpen(state[objs.indexOf(el)], true); },
+    leave(el) { setOpen(state[objs.indexOf(el)], false); },
+  });
+</script>
+</body>
+</html>

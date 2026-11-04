@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magnifying dock · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-dock",
+  "title": "Magnifying dock",
+  "group": "picks",
+  "cat": "buttons",
+  "order": 240,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "spring 260 / 26 · ×1.9 · cosine falloff",
+  "summary": "Tiles magnify by their distance to the cursor, the nearest biggest and each smoothed on a spring every frame, with the dock widening to hold them and the name of the nearest above it on a lime label. Five ways to work with Qbix, then the four Labs products.",
+  "spec": [
+    ["Falloff", "f = max(0, 1 − d / reach), reach = 2.4 tiles; target scale = 1 + 0.9 · (½ − ½ cos(f π)): a cosine, the nearest at ×1.9"],
+    ["Spring", "one per tile: stiffness 260, damping 26, semi-implicit Euler, dt capped at 1/30 s"],
+    ["Layout", "tiles grow upward from the dock's floor (transform-origin 50% 100%) and are pushed apart by what the others gained; the dock's width grows by the sum"],
+    ["Label", "above the nearest tile, its x follows at 16/s and its opacity at 14/s; its y sits 12px over the magnified tile"],
+    ["Size", "tile = (width − 32) / 13, 24 to 78px; the pad is 0.2 of it, the gap 0.16"],
+    ["Pointer", "the whole stage listens; leaving it lets every tile spring back"],
+    ["Reduced motion", "a composed still: the pointer parked just left of the middle, settled"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Magnifying dock (ix-dock)", "Idea: bencho.dev dock (MIT)"],
+  "where": "A product film: the homepage's five ways in and the four Labs products on one shelf.",
+  "rules": [
+    "Scale on hover is allowed here, flat fills only, no shadow.",
+    "One lime: the label of the nearest tile. Tiles are ink and paper.",
+    "Icons at a 1.8 stroke."
+  ],
+  "tags": ["dock", "pointer", "spring", "magnify", "icons"],
+  "shot": 1550
+}
+</script>
+<style data-code>
+/* Magnifying dock. Idea: bencho.dev dock (MIT). */
+.dk-stage { position: fixed; inset: 0; display: grid; place-items: center; touch-action: none; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.dk-kick { position: fixed; left: 24px; top: 24px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg2); }
+.dk { position: relative; display: flex; align-items: flex-end; gap: var(--gap, 12px); padding: var(--pad, 14px); height: calc(var(--base) + var(--pad) * 2); border-radius: calc(var(--base) * 0.46); background: var(--surface); }
+.dk-sep { width: 1px; align-self: center; height: calc(var(--base) * 0.8); background: rgba(18, 20, 23, 0.14); flex: none; margin: 0 2px; }
+.dk-tile { position: relative; flex: none; width: var(--base); height: var(--base); border-radius: calc(var(--base) * 0.26); display: grid; place-items: center; background: #121417; color: #f4f5f2; transform-origin: 50% 100%; will-change: transform; cursor: pointer; border: 0; padding: 0; }
+.dk-tile svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dk-tile.tool { background: var(--sunk); color: var(--fg); }
+.dk-label { position: absolute; left: 0; top: 0; padding: 8px 12px; border-radius: 8px; background: var(--signal); color: var(--on-lime); font-size: 14px; white-space: nowrap; pointer-events: none; opacity: 0; transform: translate(-50%, 0); }
+.dk-label small { color: rgba(12, 19, 0, 0.62); margin-left: 8px; font-size: inherit; }
+</style>
+<style>
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Sweep across the dock</span>
+<main class="qm-stage">
+<!-- code -->
+<div class="dk-kick">Qbix · Design and products</div>
+<div class="dk-stage" id="stage"><div class="dk" id="dock"></div><div class="dk-label" id="label"></div></div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Each tile scales by its distance to the pointer, smoothed by a spring every frame; the dock is as wide as they are. */
+const ICONS = {   // 24 × 24, drawn at a 1.8 stroke
+  pen: '<path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z"/><path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18"/><path d="m2.3 2.3 7.286 7.286"/><circle cx="11" cy="11" r="2"/>',
+  palette: '<path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>',
+  image: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+  leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
+  play: '<path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+  layers: '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>',
+  spade: '<path d="M5 9c-1.5 1.5-3 3.2-3 5.5A5.5 5.5 0 0 0 7.5 20c1.8 0 3-.5 4.5-2 1.5 1.5 2.7 2 4.5 2a5.5 5.5 0 0 0 5.5-5.5c0-2.3-1.5-4-3-5.5l-7-7-7 7Z"/><path d="M12 18v4"/>',
+  wave: '<path d="M2 13a2 2 0 0 0 2-2V7a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0V4a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0v-4a2 2 0 0 1 2-2"/>',
+  chat: '<path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/>',
+};
+const icon = (name, size) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+const $ = (s) => document.querySelector(s);
+const dock = $('#dock'), label = $('#label'), stage = $('#stage');
+const ITEMS = [
+  { n: 'Design service', sub: 'Moodboard to a live domain', ic: 'pen' },
+  { n: 'Brand upgrade', sub: 'Usable to worth sharing', ic: 'palette' },
+  { n: 'Listing Launch Kit', sub: 'Flyer, posts and video', ic: 'image' },
+  { n: 'Practice Website Refresh', sub: 'Calm, in a week', ic: 'leaf' },
+  { n: 'Samples', sub: 'Work for local businesses', ic: 'play' },
+  null,
+  { n: 'Strata', sub: 'Moodboard in, system out', tool: 1, ic: 'layers' },
+  { n: 'AI Bidding', sub: 'Bid, bluff, go all in', tool: 1, ic: 'spade' },
+  { n: 'TTS Editor', sub: 'Shape the voice', tool: 1, ic: 'wave' },
+  { n: 'Interview Assistant', sub: 'Live hints, clean notes', tool: 1, ic: 'chat' },
+];
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tiles = [];
+ITEMS.forEach((it) => {
+  if (!it) { const s = document.createElement('span'); s.className = 'dk-sep'; dock.appendChild(s); return; }
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'dk-tile' + (it.tool ? ' tool' : ''); b.setAttribute('aria-label', it.n);
+  tiles.push({ el: b, it, s: 1, v: 0, cx: 0 }); dock.appendChild(b);
+});
+let base = 64, MAG = 1.9, REACH = 150, baseW = 0;
+function size() {
+  const W = innerWidth; base = Math.max(24, Math.min(78, (W - 32) / 13)); if (W > 1000) base = 78;
+  const root = document.documentElement.style; root.setProperty('--base', base + 'px'); root.setProperty('--pad', Math.round(base * 0.2) + 'px'); root.setProperty('--gap', Math.round(base * 0.16) + 'px');
+  REACH = base * 2.4;
+  tiles.forEach((t) => { t.el.innerHTML = icon(t.it.ic, Math.round(base * 0.44)); });
+  centers();
+  tiles.forEach((t) => { t.cxs = t.bc; });
+}
+function centers() {
+  dock.style.width = ''; baseW = dock.offsetWidth;
+  tiles.forEach((t) => { t.bc = t.el.offsetLeft + t.el.offsetWidth / 2; });
+  dock.style.width = baseW + 'px';
+}
+size(); addEventListener('resize', size);
+
+/* each tile scales by its distance to the pointer, smoothed by a spring each frame */
+let px = -1e4, on = false;
+const lab = { x: 0, y: 0, o: 0 };
+stage.addEventListener('pointermove', (e) => { px = e.clientX; on = true; });
+stage.addEventListener('pointerleave', () => { on = false; });
+stage.addEventListener('pointerdown', (e) => { px = e.clientX; on = true; });
+function frame(dt) {
+  dt = Math.min(dt, 1 / 30);
+  const left = dock.getBoundingClientRect().left;
+  let best = null, bd = 1e9;
+  for (const t of tiles) {
+    const d = Math.abs(px - (left + t.cxs));
+    const f = on ? Math.max(0, 1 - d / REACH) : 0;
+    const target = 1 + (MAG - 1) * (0.5 - 0.5 * Math.cos(f * Math.PI));          // cosine falloff, nearest biggest
+    t.v += (260 * (target - t.s) - 26 * t.v) * dt; t.s += t.v * dt;
+    if (on && d < bd) { bd = d; best = t; }
+  }
+  let cum = 0, total = 0; for (const t of tiles) total += base * (t.s - 1);
+  for (const t of tiles) {
+    const extra = base * (t.s - 1);
+    t.cxs = t.bc + cum + extra / 2;
+    t.el.style.transform = `translateX(${(cum + extra / 2).toFixed(2)}px) scale(${t.s.toFixed(4)})`;
+    cum += extra;
+  }
+  dock.style.width = (baseW + total) + 'px';
+  const hot = on && bd < REACH ? best : null;
+  lab.o += ((hot ? 1 : 0) - lab.o) * Math.min(1, dt * 14);
+  label.style.opacity = lab.o.toFixed(3);
+  if (hot) {
+    label.innerHTML = hot.it.n + '<small>' + hot.it.sub + '</small>';
+    const dr = dock.getBoundingClientRect();
+    const tx = dr.left + hot.cxs; if (!lab.x) lab.x = tx; lab.x += (tx - lab.x) * Math.min(1, dt * 16);
+    lab.y = dr.top + (dr.height - base) / 2 - base * (hot.s - 1) - label.offsetHeight - 12;
+    label.style.transform = `translate(${lab.x}px, ${lab.y}px) translate(-50%, 0)`;
+  }
+}
+tiles.forEach((t) => { t.cxs = t.bc; });
+// frames run while the pointer is on the stage or anything is still settling, then the loop parks
+let raf = 0, last = 0;
+const busy = () => on || lab.o > 0.002 || tiles.some((t) => Math.abs(t.s - 1) > 0.0005 || Math.abs(t.v) > 0.0005);
+function tick(now) { raf = 0; frame((now - last) / 1000); last = now; if (busy()) raf = requestAnimationFrame(tick); }
+const wake = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+['pointermove', 'pointerleave', 'pointerdown'].forEach((t) => stage.addEventListener(t, wake));
+if (still) { px = innerWidth / 2 - baseW * 0.12; on = true; for (let k = 0; k < 60; k++) frame(0.016); }
+const point = (x) => { px = x; on = x >= 0 && x <= innerWidth; wake(); };
+const leave = () => { on = false; wake(); };
+</script>
+<script>
+  /* pointer kind: the ghost comes in at the left, sweeps the whole shelf, comes back to the fourth tile, leaves by the top and goes */
+  const ease = QM.bezier(0.65, 0, 0.35, 1);
+  function route(steps) {
+    const total = steps.reduce((s, k) => s + k[1] + k[2], 0);
+    return (t) => {
+      let u = (t * 1000) % total, from = steps[steps.length - 1][0]();
+      for (const [p, travel, hold] of steps) {
+        const to = p();
+        if (u < travel) { const k = ease(u / travel); return [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k]; }
+        u -= travel;
+        if (u < hold) return to;
+        u -= hold; from = to;
+      }
+      return from;
+    };
+  }
+  const rowY = () => dock.getBoundingClientRect().top + base * 0.9;
+  const L = () => dock.getBoundingClientRect().left;
+  const walk = route([
+    [() => [L() - base * 0.3, rowY()], 450, 0],
+    [() => [L() + tiles[7].bc, rowY()], 2500, 0],
+    [() => [L() + tiles[3].bc, rowY()], 1300, 500],
+    [() => [innerWidth * 0.5, innerHeight * 0.2], 600, 700],
+    [() => [-60, innerHeight * 0.2], 500, 600],
+  ]);
+  QM.demo({
+    kind: 'pointer',
+    path: walk,
+    move(x) { if (!QM.reduced) point(x); },
+    leave() { if (!QM.reduced) leave(); },
+  });
+</script>
+</body>
+</html>

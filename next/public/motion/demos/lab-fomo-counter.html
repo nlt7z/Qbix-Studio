@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avatar counter · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-fomo-counter",
+  "title": "Avatar counter",
+  "group": "lab",
+  "cat": "data",
+  "order": 580,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "digit strips on springs · avatars scale in and out",
+  "summary": "Each digit is a 0 to 9 strip that rolls on a spring in the direction of change. Initial blocks scale in when someone joins, scale out when they leave, and the rest spring into the gap while a +N tile counts the overflow. A line under the row slides up with a small fact each time.",
+  "spec": [
+    ["Digits", "strip of 30 numerals, spring 170 / 19, rolls up or down by the shortest way, wraps after a roll"],
+    ["Avatars", "position spring 260 / 24, scale spring 320 / 22, 5 shown, the rest in a +N tile"],
+    ["Traffic", "a join or a leave every 1.5–3.1 s, 58% joins, between 8 and 21 reviewers"],
+    ["Line", "mask slide up out of a sleeve, 600 ms, the old line leaves upward"],
+    ["Trigger", "always on; click the button to join as You (lime) or leave"]
+  ],
+  "source": ["Qbix studio library · fomo-counter"],
+  "where": "A live site preview: who is reviewing forma.studio right now, and when the review call is.",
+  "rules": [
+    "The numeral is Eurostile, the labels Encode Sans. The digit window clips the strip, nothing is faded.",
+    "'You' is the only lime on the screen; other people are white, mist and ink blocks with the cut corner.",
+    "Blocks scale from their own centre with a spring, never a fade."
+  ],
+  "tags": ["counter", "spring", "live", "avatars"]
+}
+</script>
+<style data-code>
+/* Reviewer counter: a spring-driven numeral, a row of initial blocks */
+.fm { width: min(100%, 720px); display: grid; gap: 22px; --a: clamp(44px, 7.4vw, 60px); }
+.fm-top { display: flex; align-items: flex-end; gap: clamp(16px, 3vw, 32px); }
+.fm-num { display: flex; font-family: 'Eurostile', 'Geist', sans-serif; font-size: clamp(110px, 21vw, 220px); line-height: 1; height: 1em; letter-spacing: -0.03em; color: #121417; overflow: hidden; font-variant-numeric: tabular-nums; }
+.fm-col { height: 1em; overflow: hidden; width: 0.64em; text-align: center; transition: width 400ms cubic-bezier(0.65, 0, 0.35, 1); }
+.fm-strip { will-change: transform; }
+.fm-strip span { display: block; height: 1em; line-height: 1em; }
+.fm-label { padding-bottom: 0.9em; display: grid; gap: 6px; }
+.fm-row { position: relative; height: var(--a); }
+.fm-av { --c: 10px; position: absolute; left: 0; top: 0; width: var(--a); height: var(--a); display: grid; place-items: center; overflow: hidden;
+  font: 500 calc(var(--a) * 0.28) / 1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.08em;
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
+.fm-av.more { background: rgba(18, 20, 23, 0.07); color: rgba(18, 20, 23, 0.64); }
+.fm-av.more i { display: block; font-style: normal; transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1); }
+.fm-foot { position: relative; height: 1.6em; overflow: hidden; font: 400 12px/1.6 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); }
+.fm-foot span { position: absolute; left: 0; top: 0; white-space: nowrap; transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+.fm-foot span.in { transform: translateY(110%); } .fm-foot span.out { transform: translateY(-110%); }
+</style>
+<style>
+  .fm-join { justify-self: start; }
+  .fm-bar { display: flex; align-items: center; gap: 20px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="fm">
+  <p class="kicker">Preview · forma.studio</p>
+  <div class="fm-top">
+    <div class="fm-num" id="num" role="img" aria-label="people reviewing now"></div>
+    <div class="fm-label"><p class="kicker">Reviewing now</p><p class="mono" style="font-size:13px;color:rgba(18,20,23,.5)">Review call Friday, 2 pm</p></div>
+  </div>
+  <div class="fm-row" id="row"></div>
+  <div class="fm-bar"><button class="btn btn-solid cut fm-join" id="join">Join the review</button><div class="fm-foot" id="foot"></div></div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Click to join the review or leave</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const numEl = $('num'), row = $('row'), foot = $('foot'), joinB = $('join');
+  // two digit columns, each a strip 0..9 repeated so a roll can pass the wrap
+  const cols = [];
+  for (let c = 0; c < 2; c++) {
+    const col = document.createElement('div'); col.className = 'fm-col';
+    const strip = document.createElement('div'); strip.className = 'fm-strip';
+    for (let i = -10; i < 20; i++) { const s = document.createElement('span'); s.textContent = ((i % 10) + 10) % 10; strip.appendChild(s); }
+    col.appendChild(strip); numEl.appendChild(col); cols.push({ col, strip, p: 0, v: 0, t: 0 });
+  }
+  const setColWidths = (n) => { cols[0].col.style.width = n >= 10 ? '0.64em' : '0em'; };
+  let count = 12;
+  function setDigits(from, to) {
+    const up = to > from, f = [Math.floor(from / 10) % 10, from % 10], t = [Math.floor(to / 10) % 10, to % 10];
+    for (let i = 0; i < 2; i++) {
+      const c = cols[i]; if (f[i] === t[i]) continue;
+      c.t += up ? ((t[i] - f[i]) + 10) % 10 : -(((f[i] - t[i]) + 10) % 10);
+      if (reduce) c.p = c.t;
+    }
+    setColWidths(to);
+  }
+  const POOL = [['AL', '#ffffff', '#121417'], ['MR', '#dadfd6', '#121417'], ['JK', '#121417', '#f4f5f2'], ['SO', '#ffffff', '#121417'], ['TB', '#dadfd6', '#121417'], ['EP', '#ffffff', '#121417'], ['DW', '#dadfd6', '#121417'], ['CN', '#121417', '#f4f5f2'], ['RV', '#ffffff', '#121417'], ['HG', '#dadfd6', '#121417'], ['LM', '#ffffff', '#121417'], ['QF', '#dadfd6', '#121417']];
+  let pi = 0; const SHOW = 5; let viewers = [], moreEl = null, moreN = 0;
+  function avatar(v) { const el = document.createElement('div'); el.className = 'fm-av'; el.textContent = v[0]; el.style.background = v[1]; el.style.color = v[2]; row.appendChild(el); return el; }
+  function newViewer(you) { const v = you ? ['You', '#B8FF00', '#0c1300'] : POOL[pi++ % POOL.length]; return { el: avatar(v), x: -1, vx: 0, s: reduce ? 1 : 0, vs: 0, ts: 1, you: !!you }; }
+  function layout() {
+    const a = row.getBoundingClientRect().height, g = 8, live = viewers.filter((v) => !v.leaving);
+    live.forEach((v, i) => { if (i < SHOW) { v.tx = i * (a + g); v.ts = 1; } else { v.tx = SHOW * (a + g); v.ts = 0; } });
+    const extra = Math.max(0, count - Math.min(SHOW, live.length));
+    if (!moreEl) { moreEl = document.createElement('div'); moreEl.className = 'fm-av more'; moreEl.innerHTML = '<i></i>'; row.appendChild(moreEl); moreEl._o = { el: moreEl, x: SHOW * (a + g), vx: 0, s: 0, vs: 0, ts: 0, tx: SHOW * (a + g) }; }
+    moreEl._o.tx = Math.min(SHOW, live.length) * (a + g); moreEl._o.ts = extra > 0 ? 1 : 0;
+    if (extra !== moreN) {
+      const i = moreEl.querySelector('i'), down = extra < moreN; moreN = extra;
+      if (reduce) i.textContent = '+' + extra;
+      else { i.style.transition = 'none'; i.style.transform = `translateY(${down ? -100 : 100}%)`; i.textContent = '+' + extra; requestAnimationFrame(() => requestAnimationFrame(() => { i.style.transition = ''; i.style.transform = 'translateY(0)'; })); }
+    }
+  }
+  function join(you) { const v = newViewer(you); viewers.unshift(v); v.x = 0; const old = count; count++; setDigits(old, count); layout(); return v; }
+  function leave(which) {
+    const live = viewers.filter((v) => !v.leaving); if (live.length <= 1) return;
+    const v = which || live[Math.floor(Math.random() * Math.min(SHOW, live.length))]; if (v.you && !which) return;
+    v.leaving = true; v.ts = 0; const old = count; count--; setDigits(old, count); layout();
+    setTimeout(() => { v.el.remove(); viewers = viewers.filter((x) => x !== v); }, reduce ? 0 : 700);
+  }
+  function sayFoot(t) {
+    const old = [...foot.querySelectorAll('span')], sp = document.createElement('span'); sp.textContent = t;
+    if (reduce) { old.forEach((o) => o.remove()); foot.appendChild(sp); return; }
+    sp.className = 'in'; foot.appendChild(sp); old.forEach((o) => { o.className = 'out'; setTimeout(() => o.remove(), 650); });
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (sp.className === 'in') sp.className = ''; }));
+  }
+  let last = performance.now(), running = false;
+  const sp = (o, k, vk, target, K, C, dt) => { o[vk] += (K * (target - o[k]) - C * o[vk]) * dt; o[k] += o[vk] * dt; };
+  function frame(now) {
+    if (document.hidden) { running = false; return; }
+    const dt = Math.min(0.04, (now - last) / 1000); last = now;
+    for (const c of cols) {
+      if (reduce) c.p = c.t; else for (let i = 0; i < 3; i++) sp(c, 'p', 'v', c.t, 170, 19, dt / 3);
+      if (Math.abs(c.p - c.t) < 0.001 && Math.abs(c.v) < 0.01) { const k = Math.floor(c.t / 10) * 10; c.p -= k; c.t -= k; }
+      c.strip.style.transform = `translateY(${-(c.p + 10)}em)`;
+    }
+    for (const v of viewers.concat(moreEl ? [moreEl._o] : [])) {
+      if (reduce) { v.x = v.tx; v.s = v.ts; } else for (let i = 0; i < 3; i++) { sp(v, 'x', 'vx', v.tx, 260, 24, dt / 3); sp(v, 's', 'vs', v.ts, 320, 22, dt / 3); }
+      v.el.style.transform = `translateX(${v.x}px) scale(${Math.max(0, v.s)})`;
+    }
+    requestAnimationFrame(frame);
+  }
+  function start() { if (!running && !document.hidden) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', start);
+  const FACTS = ['3 review notes today', '2 pages approved this hour', 'Review call starts at 2 pm'];
+  function tick() {
+    const lo = 8, hi = 21; let r = Math.random(); if (count <= lo) r = 0; if (count >= hi) r = 1;
+    if (r < 0.58) { join(false); if (Math.random() < 0.3 && count < hi) setTimeout(() => join(false), reduce ? 0 : 260); } else leave();
+    if (Math.random() < 0.25) sayFoot(FACTS[Math.floor(Math.random() * FACTS.length)]);
+    setTimeout(tick, (reduce ? 3600 : 1500) + Math.random() * (reduce ? 2000 : 1600));
+  }
+  let youIn = null;
+  function toggle() {
+    if (youIn && !youIn.leaving) { leave(youIn); youIn = null; sayFoot('Tap to join the review'); setLabel('Join the review'); }
+    else { youIn = join(true); sayFoot('You joined the review'); setLabel('Leave'); }
+  }
+  function setLabel(t) { joinB.textContent = t; }
+  joinB.addEventListener('click', toggle);
+  addEventListener('resize', layout);
+  const start12 = 12; count = 0;
+  for (let i = 0; i < start12; i++) viewers.push(newViewer(false));
+  count = start12; cols[0].t = cols[0].p = 1; cols[1].t = cols[1].p = 2; setColWidths(count);
+  layout(); for (const v of viewers) v.x = v.tx;
+  viewers.forEach((v, i) => { v.s = 0; setTimeout(() => { v.vs = reduce ? 0 : 4; }, i * 70); });
+  if (moreEl) moreEl._o.x = moreEl._o.tx;
+  sayFoot(FACTS[0]);
+  setTimeout(tick, reduce ? 2000 : 700); start();
+  window.fmApi = { toggle };
+})();
+</script>
+<script>
+  (async function () {
+    QM.demo({ kind: 'loop' });
+    if (QM.reduced) return;
+    const b = document.getElementById('join'), at = (e) => { const r = e.getBoundingClientRect(); return [r.left + r.width * 0.55, r.top + r.height * 0.6]; };
+    for (;;) {
+      await QM.wait(2600);
+      QM.ghostAt(innerWidth * 0.8, innerHeight * 0.45); QM.ghostShow();
+      await QM.ghostTo(...at(b), 900); await QM.wait(220);
+      b.classList.add('is-press'); await QM.wait(130); b.classList.remove('is-press'); window.fmApi.toggle();
+      await QM.ghostTo(innerWidth * 0.8, innerHeight * 0.5, 700); await QM.wait(3200);
+      await QM.ghostTo(...at(b), 800); await QM.wait(200);
+      window.fmApi.toggle(); await QM.ghostTo(innerWidth * 0.82, innerHeight * 0.6, 700); QM.ghostHide();
+      await QM.wait(4000);
+    }
+  })();
+</script>
+<style>.btn.is-press { transform: translateY(2px); }</style>
+</body>
+</html>

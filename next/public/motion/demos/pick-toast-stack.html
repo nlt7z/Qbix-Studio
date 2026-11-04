@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toast stack · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-toast-stack",
+  "title": "Toast stack",
+  "group": "picks",
+  "cat": "feedback",
+  "order": 50,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "one spring · k 380 · c 30 · point to fan it out",
+  "summary": "Three notices stacked with a sliver of the two behind; point at them and they fan out into a list on one spring. Dismiss one and it slides away while a new one rises in from below; Retry turns the failed deploy into a live one, in place. The Retry key is the one lime on the screen.",
+  "spec": [
+    ["Spring", "every toast, every property: k 380 · c 30 (a damping ratio of 0.77, a hint of give), stepped each frame"],
+    ["Stack", "front toast at the middle of the frame; each one behind sits 12px higher and 5% smaller, hung from its top edge, one tone sunk further"],
+    ["List", "front at the bottom, the rest above it at 10px; y = H − toast − k × (toast + 10)"],
+    ["Hover", "the frame is the list's own size, so pointing at it is pointing at the list; it opens and closes with a pointer over / out containment test"],
+    ["Dismiss", "slides to x = 420 on the same spring while it fades; the next one rises from 30px below, in front; always three"],
+    ["Retry", "the toast's content is swapped in place: the failed deploy becomes Deploy complete"],
+    ["Reduced motion", "springs jump to their targets"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Toast stack (ix-toast-stack)", "Idea: bencho.dev toast-stack (MIT)"],
+  "where": "A Forma launch's status in the Design service: homepage approved, pages built, a deploy to retry, the film ready.",
+  "rules": [
+    "White with a 1px ring, no shadow; the icons are ink.",
+    "An error stays until someone acts on it: it has Retry and a dismiss key.",
+    "The lime is the Retry key, the action waiting for you.",
+    "Hovering the frame is hovering the list."
+  ],
+  "tags": ["toast", "notification", "spring", "stack", "hover"],
+  "shot": 2600
+}
+</script>
+<style data-code>
+/* Toast stack · idea: bencho.dev toast-stack (MIT), redrawn for Qbix.
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+.pk {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 40px;
+  --radius-sm: 8px; --radius-lg: 14px;
+  --duration-fast: 120ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --muted: var(--fg2); --surface-muted: var(--sunk);
+  font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
+}
+.ts { display: flex; align-items: center; justify-content: center; gap: var(--space-8); }
+.card { width: 420px; max-width: 100%; background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-6); display: grid; gap: var(--space-3); }
+.card h1 { font: 400 20px/1.35 var(--font-sans); letter-spacing: -0.02em; }
+.q { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: var(--space-3); height: 56px; }
+.q .th { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--fg) center / cover; }
+.q b { display: block; font-weight: 500; }
+.q .m { display: block; font-size: 12px; color: rgba(18, 20, 23, .56); }
+.q .p { text-align: right; font-variant-numeric: tabular-nums; }
+.chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px var(--space-2); border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: rgba(18, 20, 23, .08); }
+.chip.on { color: var(--ground); background: var(--fg); }
+.frame { position: relative; width: 360px; max-width: 100%; height: 244px; flex: 0 0 auto; touch-action: manipulation; }
+.toast { position: absolute; left: 0; right: 0; top: 0; height: 72px; will-change: transform; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--surface); border-radius: var(--radius-sm); box-shadow: 0 0 0 1px rgba(18, 20, 23, .13); color: var(--fg); }
+.toast .ic { flex: 0 0 auto; display: grid; place-items: center; height: 36px; color: var(--fg); }
+.toast .tx { flex: 1; min-width: 0; display: grid; }
+.toast .tx b { font-weight: 500; }
+.toast .tx span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.toast .acts { display: flex; align-items: center; gap: var(--space-1); }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 var(--space-3); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.btn:hover, .btn.is-hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.btn.quiet { width: 32px; padding: 0; background: transparent; color: var(--fg); }
+.btn.quiet:hover, .btn.quiet.is-hover { background: var(--surface-muted); }
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+  .page { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
+</style>
+</head>
+<body>
+<div class="vp"><div class="page">
+<!-- code -->
+<div class="ts pk">
+  <div class="card">
+    <h1>Forma launch</h1>
+    <div class="q"><span class="th" style="background-image:url(../assets/art/cross.webp)"></span><div><b>Homepage</b><span class="m">Designed and signed off</span></div><div class="p"><div>1 page</div><span class="chip">Done</span></div></div>
+    <div class="q"><span class="th" style="background-image:url(../assets/art/ring.webp)"></span><div><b>Domain</b><span class="m">forma.studio, connected</span></div><div class="p"><div>1 domain</div><span class="chip">Done</span></div></div>
+    <div class="q"><span class="th" style="background-image:url(../assets/art/objects.webp);background-position:38% 60%"></span><div><b>Launch film</b><span class="m">Rendering the last cut</span></div><div class="p"><div>0:30</div><span class="chip on">Rendering</span></div></div>
+  </div>
+  <div class="frame" id="frame" aria-live="polite"></div>
+</div>
+<!-- /code -->
+</div></div>
+<div class="qm-ui"><span>Point at the stack · Retry the deploy · dismiss one</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Toast stack. Idea: bencho.dev toast-stack (MIT).
+   One spring, three places: a toast's place is worked out from how far back it is and whether the stack is
+   open, and every property of every toast springs there. Opening, closing, one leaving and the next arriving
+   are all the same move. */
+const frame = document.getElementById('frame');
+const H = 244, TH = 72, SHOWN = 3;
+const P = {   // 24px outline icons, round caps
+  check: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+  alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+  play: '<circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+};
+const icon = (n, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const POOL = [
+  { t: 'Homepage approved', b: 'Forma, desktop and phone', i: 'check' },
+  { t: 'Pages built', b: 'Five pages for forma.studio', i: 'grid' },
+  { t: 'Deploy failed', b: 'Stopped at the form', i: 'alert', bad: true, retry: true },
+  { t: 'Film ready', b: '30 seconds for forma.studio', i: 'play' },
+  { t: 'Brief received', b: 'Willow Counseling sent a brief', i: 'check' },
+  { t: 'Review due Friday', b: 'Kova, round 2, three comments', i: 'clock' },
+];
+const FIXED = { t: 'Deploy complete', b: 'forma.studio is live', i: 'check' };
+
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const K = 380, C = 30;                                      // the one spring
+const sp = (x) => ({ x, v: 0, t: x });
+const step = (s, dt) => { if (still) { s.x = s.t; s.v = 0; return; } s.v += (K * (s.t - s.x) - C * s.v) * dt; s.x += s.v * dt; };
+let open = false, nextPool = 3, uid = 0, items = [], age = 0;
+
+function make(def, startBelow) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.setAttribute('role', 'status');
+  const o = { def: { ...def }, el, y: sp(startBelow ? H + 30 : 0), x: sp(0), s: sp(1), tone: sp(0), id: uid++, gone: false, born: age };
+  o.draw = () => {
+    const d = o.def;
+    el.innerHTML = `<span class="ic">${icon(d.i)}</span><div class="tx"><b>${d.t}</b><span>${d.b}</span></div>
+      <div class="acts">${d.retry ? '<button type="button" class="btn" data-act="retry">Retry</button>' : ''}<button type="button" class="btn quiet" data-act="x" aria-label="Dismiss">${icon('x', 16)}</button></div>`;
+  };
+  o.draw();
+  el.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-act]');
+    if (!a) return;
+    if (a.dataset.act === 'x') dismiss(o);
+    else { o.def = { ...FIXED }; o.draw(); }                // the failed deploy becomes the deploy complete, in place
+  });
+  frame.appendChild(el);
+  return o;
+}
+function build() {                                          // index 0 is the front (the newest)
+  frame.innerHTML = ''; items = []; nextPool = 3; age = 0; open = false;
+  items = [POOL[2], POOL[1], POOL[0]].map((d) => make(d, false));
+  items.forEach((o, k) => { o.y.x = H + 30; o.y.v = 0; o.kickAt = k * 90; });   // they rise in, one after another
+}
+/* where the k-th toast belongs */
+function place(k) {
+  if (open) return { y: H - TH - k * (TH + 10), s: 1, tone: 0 };
+  const c0 = H / 2 - 24;
+  return { y: c0 - k * 12, s: 1 - k * 0.05, tone: Math.min(1, k) };
+}
+function dismiss(o) {
+  if (o.gone) return;
+  o.gone = true; o.x.t = 420; o.tone.t = 0;
+  setTimeout(() => { o.el.remove(); items = items.filter((i) => i !== o); }, still ? 0 : 420);
+  const n = make(POOL[nextPool++ % POOL.length], true);     // always three: the next one rises in at the front
+  n.y.x = H + 30;
+  items.unshift(n);
+}
+const live = () => items.filter((o) => !o.gone);
+const setOpen = (v) => { open = v; };
+/* the frame is the list's own size: over / out with a containment test, so the list never slides out from under the pointer */
+frame.addEventListener('pointerover', () => setOpen(true));
+frame.addEventListener('pointerout', (e) => { if (!e.relatedTarget || !frame.contains(e.relatedTarget)) setOpen(false); });
+frame.addEventListener('pointerdown', () => setOpen(true));
+frame.addEventListener('focusin', () => setOpen(true));
+frame.addEventListener('focusout', (e) => { if (!frame.contains(e.relatedTarget)) setOpen(false); });
+
+let prev = performance.now();
+function loop(now) {
+  const dt = Math.min(0.033, (now - prev) / 1000); prev = now;
+  age += dt * 1000;
+  live().forEach((o, k) => {
+    if (o.kickAt != null) {
+      if (age - o.born < 200 + o.kickAt) { o.el.style.transform = `translate3d(0, ${H + 30}px, 0)`; return; }
+      delete o.kickAt;
+    }
+    const p = place(Math.min(k, SHOWN - 1 + (k >= SHOWN ? 1 : 0)));
+    o.y.t = k >= SHOWN ? place(SHOWN - 1).y - 12 : p.y;
+    o.s.t = k >= SHOWN ? 0.8 : p.s;
+    o.tone.t = k >= SHOWN ? 1 : p.tone;
+  });
+  items.forEach((o) => {
+    if (o.kickAt != null) return;
+    step(o.y, dt); step(o.x, dt); step(o.s, dt); step(o.tone, dt);
+    o.el.style.transform = `translate3d(${o.x.x.toFixed(1)}px, ${o.y.x.toFixed(1)}px, 0) scale(${o.s.x.toFixed(4)})`;
+    o.el.style.transformOrigin = '50% 0';
+    const t = Math.max(0, Math.min(1, o.tone.x));
+    o.el.style.background = `color-mix(in srgb, var(--sunk) ${(t * 100).toFixed(0)}%, var(--surface))`;
+    o.el.style.zIndex = 50 - items.indexOf(o) + (o.gone ? 60 : 0);
+    o.el.children[0].style.opacity = o.el.children[1].style.opacity = o.el.children[2].style.opacity = (1 - t).toFixed(3);
+    o.el.style.opacity = o.gone ? Math.max(0, 1 - o.x.x / 380).toFixed(3) : 1;
+  });
+  requestAnimationFrame(loop);
+}
+build();
+requestAnimationFrame(loop);
+</script>
+<script>
+  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window; a ghost hand plays it; real input takes over ---- */
+  const ABORT = { abort: true };
+  function vpfit() {
+    const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
+      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+    };
+    addEventListener('resize', go); go();
+  }
+  const hand = (() => {
+    let x = innerWidth * 0.82, y = innerHeight * 0.86, held = null, over = null, gen = 0;
+    const ease = QM.bezier(0.65, 0, 0.35, 1);
+    const under = () => held || document.elementFromPoint(x, y) || document.body;
+    const pe = (type, el, buttons, rel) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, pointerType: 'mouse', isPrimary: true, clientX: x, clientY: y, button: 0, buttons, relatedTarget: rel || null }));
+    const chain = (el) => { const s = []; for (let n = el; n; n = n.parentElement) s.push(n); return s; };
+    function hover(el) {
+      if (el === over) return;
+      const old = over;
+      over = el;
+      const keep = new Set(chain(el));
+      chain(old).forEach((n) => { if (!keep.has(n)) n.classList.remove('is-hover'); });
+      chain(el).forEach((n) => n.classList.add('is-hover'));
+      if (old) pe('pointerout', old, 0, el);
+      pe('pointerover', el, 0, old);
+    }
+    const api = {
+      cancel() { gen++; },
+      async wait(ms) { const my = gen; await QM.wait(ms); if (my !== gen) throw ABORT; },
+      async to(tx, ty, ms = 700) {
+        const my = gen, x0 = x, y0 = y, t0 = performance.now();
+        QM.ghostShow();
+        if (Math.hypot(tx - x0, ty - y0) < 1) { await Promise.resolve(); if (my !== gen) throw ABORT; return; }
+        for (;;) {
+          await new Promise(requestAnimationFrame);
+          if (my !== gen) throw ABORT;
+          const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+          x = x0 + (tx - x0) * k; y = y0 + (ty - y0) * k;
+          QM.ghostAt(x, y);
+          const el = under(); hover(el); pe('pointermove', el, held ? 1 : 0);
+          if (p >= 1) return;
+        }
+      },
+      at(el, ms, fx = 0.5, fy = 0.5) { const r = el.getBoundingClientRect(); return api.to(r.left + r.width * fx, r.top + r.height * fy, ms); },
+      down() { held = under(); pe('pointerdown', held, 1); },
+      up() { const el = held || under(); pe('pointerup', el, 0); held = null; },
+      release() { if (held) api.up(); },
+      async click(el, ms = 700) {
+        await api.at(el, ms); await api.wait(90);
+        api.down(); await api.wait(70); const t = held; api.up();
+        t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y }));
+      },
+    };
+    return api;
+  })();
+
+  async function story() {
+    const r = frame.getBoundingClientRect();
+    await hand.wait(1000);                                                              // they rise in
+    await hand.to(r.left + r.width * 0.55, r.top + r.height * 0.78, 700);               // point at the stack: it fans out
+    await hand.wait(1500);
+    await hand.click(frame.querySelector('[data-act="retry"]'), 800);                   // Retry: the deploy goes through, in place
+    await hand.wait(1500);
+    await hand.click(live()[0].el.querySelector('[data-act="x"]'), 600);                // dismiss the front one: a new one rises in
+    await hand.wait(1400);
+    await hand.to(r.left - 130 * (r.width / 360), r.top + r.height * 0.5, 700);         // leave: it gathers back up
+    await hand.wait(1500);
+  }
+  let paused = false, running = false, lastReal = -1e9;
+  function cancelStory() { hand.cancel(); QM.ghostHide(); hand.release(); running = false; }
+  if (!QM.tile) {
+    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) cancelStory(); } };
+    ['pointerdown', 'pointermove', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+  }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancelStory(); } });
+  (async function idle() {
+    for (;;) {
+      await QM.wait(250);
+      if (QM.reduced || paused || document.hidden || (!QM.tile && performance.now() - lastReal < 2500)) continue;
+      running = true;
+      try { build(); await story(); } catch (e) { if (e !== ABORT) throw e; }
+      if (running) { QM.ghostHide(); hand.release(); }
+      running = false;
+    }
+  })();
+  vpfit();
+  QM.demo({ kind: 'loop', restart() { paused = false; lastReal = -1e9; if (running) cancelStory(); } });
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en" data-tone="lime">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice wave · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-voice-wave",
+  "title": "Voice wave",
+  "group": "lab",
+  "cat": "inputs",
+  "order": 80,
+  "kind": "loop",
+  "tone": "lime",
+  "line": "live bars · resampled to a fixed count · drag to seek",
+  "summary": "While recording, volume bars grow live from a synthesized voice signal and scroll left. On stop, every sample is resampled to a fixed number of bars, which ease together into a playable waveform. Dragging the waveform seeks, and the bars near the pointer swell.",
+  "spec": [
+    ["Sampling", "one sample every 75 ms; each bar grows over 220 ms (cubic out) as it is born"],
+    ["Stop", "the samples are bucketed to one bar per 7 px (6 under 420 px), keeping each bucket's peak; each bar eases from its live x and height to its final ones over 650 ms (cubic in-out), 6 ms apart"],
+    ["Play", "progress runs at 1 ÷ duration; bars left of the playhead are ink, the rest a tone down"],
+    ["Seek", "pointer x ÷ width sets progress; bars within 3.2 pitches of the playhead swell up to 35%"],
+    ["Icons", "mic, stop, play, pause slide up through a masked button (450 ms, back ease)"],
+    ["Limit", "recording stops itself at 14 s"]
+  ],
+  "source": ["Qbix studio library · voice-wave"],
+  "where": "A voice-note panel on the Design service brief: tell the designer what the homepage needs.",
+  "rules": [
+    "The lime is the ground of the panel; the bars and the button are ink on it.",
+    "The final waveform always has the same number of bars, so a 3 s and a 12 s note both fill the strip.",
+    "Bars are butt-ended rectangles, never rounded."
+  ],
+  "tags": ["audio", "canvas", "waveform", "click", "drag"],
+  "shot": 3600
+}
+</script>
+<style data-code>
+/* Voice note: title, a waveform strip, and a record button that is a masked slot of icons */
+.vn { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px; }
+.vn h2 { font: 400 clamp(30px, 5.4vw, 60px)/1.04 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; text-align: center; color: #0c1300; }
+.vn .sub { margin: 10px 0 0; color: rgba(12, 19, 0, 0.66); font-size: clamp(14px, 2vw, 17px); text-align: center; }
+.vn canvas { width: min(620px, 88vw); height: clamp(90px, 22vh, 150px); margin: clamp(18px, 4.5vh, 40px) 0 clamp(14px, 3.5vh, 30px); display: block; touch-action: none; }
+.vn-ctrl { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; width: min(620px, 88vw); gap: 16px; }
+.vn-side { font: 400 13px/1 'Encode Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(12, 19, 0, 0.66); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vn-l { justify-self: end; }
+.vn-r { justify-self: start; color: #0c1300; }
+.vn button { font: inherit; border: 0; background: none; padding: 0; cursor: pointer; color: inherit; }
+#vn-main { width: 64px; height: 64px; background: #0c1300; --cut: 14px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); overflow: hidden; transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+#vn-main:active, #vn-main.pressed { transform: translateY(2px); }
+#vn-main svg { width: 100%; height: 100%; display: block; }
+#vn-main .ic { transition: transform 450ms cubic-bezier(0.22, 1.2, 0.36, 1); }
+#vn-main .ic.hide { transform: translateY(34px); }
+#vn-redo { font: 500 13px/1 'Encode Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 0; color: #0c1300; box-shadow: inset 0 -2px 0 #0c1300; transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+#vn-redo.hide { transform: translateX(120%); visibility: hidden; pointer-events: none; transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 400ms; }
+.vn-l { display: grid; justify-items: end; overflow: hidden; padding: 2px 0; }
+.vn-l > * { grid-area: 1 / 1; }
+@media (prefers-reduced-motion: reduce) { #vn-main .ic, #vn-redo { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="vn" id="vn">
+  <p class="kicker">Qbix Design · Voice note</p>
+  <h2 style="margin-top:12px">Voice note for the designer.</h2>
+  <p class="sub">Say what the homepage needs to do.</p>
+  <canvas id="vn-wave" aria-label="Waveform"></canvas>
+  <div class="vn-ctrl">
+    <div class="vn-side vn-l"><button id="vn-redo" class="hide">Record again</button><span id="vn-state"></span></div>
+    <button id="vn-main" aria-label="Record">
+      <svg viewBox="-16 -16 32 32">
+        <g class="ic" id="icMic"><rect x="-4" y="-11" width="8" height="15" fill="#B8FF00"/><path d="M-8 -2V4H8V-2M-1 4V11H1V4" stroke="#B8FF00" stroke-width="2" fill="none"/></g>
+        <g class="ic hide" id="icStop"><rect x="-7" y="-7" width="14" height="14" fill="#B8FF00"/></g>
+        <g class="ic hide" id="icPlay"><path d="M-5 -9 L9 0 L-5 9Z" fill="#B8FF00"/></g>
+        <g class="ic hide" id="icPause"><rect x="-7" y="-8" width="5" height="16" fill="#B8FF00"/><rect x="2" y="-8" width="5" height="16" fill="#B8FF00"/></g>
+      </svg>
+    </button>
+    <div class="vn-side vn-r" id="vn-time">0:00</div>
+  </div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Voice note: record bars live, resample to a fixed count on stop, seek by dragging. */
+function voiceNote(root) {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
+  const mainB = root.querySelector('#vn-main'), redo = root.querySelector('#vn-redo'), timeEl = root.querySelector('#vn-time'), stateEl = root.querySelector('#vn-state');
+  const ic = { mic: root.querySelector('#icMic'), stop: root.querySelector('#icStop'), play: root.querySelector('#icPlay'), pause: root.querySelector('#icPause') };
+  const INK = '#0c1300', INK_DIM = 'rgba(12,19,0,0.3)';
+  let dpr = 1, CW = 0, CH = 0, pitch = 7, bw = 3.6;
+  function resize() {
+    dpr = Math.min(2, devicePixelRatio || 1); const r = cv.getBoundingClientRect(); CW = r.width; CH = r.height;
+    cv.width = Math.round(CW * dpr); cv.height = Math.round(CH * dpr);
+    pitch = CW < 420 ? 6 : 7; bw = pitch * 0.52;
+    if (mode === 'review' || mode === 'play') layoutFinal(false);
+  }
+  // synthetic speech: seeded words, each a swell with a flutter inside
+  let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  const words = []; (() => { let t = 0.12; while (t < 60) { const d = 0.16 + rnd() * 0.42; words.push([t, t + d, 0.45 + rnd() * 0.55, rnd() * 6]); t += d + 0.05 + rnd() * 0.22 + (rnd() < 0.18 ? 0.35 : 0); } })();
+  function amp(t) {
+    for (const w of words) { if (t < w[0]) break; if (t <= w[1]) { const u = (t - w[0]) / (w[1] - w[0]); return Math.min(1, 0.06 + w[2] * Math.pow(Math.sin(Math.PI * u), 0.7) * (0.62 + 0.38 * Math.abs(Math.sin(t * 15 + w[3])))); } }
+    return 0.05 + 0.04 * Math.abs(Math.sin(t * 23));
+  }
+  let mode = 'idle', recT0 = 0, recDur = 0, samples = [], bars = [], collapseT = 0, prog = 0, scrub = false;
+  const STEP = 0.075, now = () => performance.now() / 1000;
+  const fmt = (s) => { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const showIcon = (n) => { for (const k in ic) ic[k].classList.toggle('hide', k !== n); };
+  function setMode(m) {
+    mode = m;
+    if (m === 'idle') { showIcon('mic'); redo.classList.add('hide'); stateEl.textContent = 'Tap to record'; samples = []; bars = []; timeEl.textContent = '0:00'; mainB.setAttribute('aria-label', 'Record'); }
+    if (m === 'rec') { showIcon('stop'); redo.classList.add('hide'); stateEl.textContent = 'Recording'; recT0 = now(); samples = []; mainB.setAttribute('aria-label', 'Stop'); }
+    if (m === 'review') { showIcon('play'); redo.classList.remove('hide'); stateEl.textContent = ''; mainB.setAttribute('aria-label', 'Play'); }
+    if (m === 'play') { showIcon('pause'); redo.classList.remove('hide'); stateEl.textContent = ''; if (prog >= 0.999) prog = 0; mainB.setAttribute('aria-label', 'Pause'); }
+  }
+  const liveX = (i, n) => { const cap = Math.floor(CW / pitch) - 1, off = Math.max(0, n - cap); return (i - off) * pitch + pitch / 2; };
+  function layoutFinal(animate) {   // one bar per bucket of samples, keeping the peak
+    const M = Math.max(8, Math.floor(CW / pitch)), n = samples.length, nf = recDur / STEP, out = [];
+    for (let j = 0; j < M; j++) {
+      const a = Math.floor((j * n) / M), b = Math.max(a + 1, Math.floor(((j + 1) * n) / M));
+      let m = 0, sx = 0;
+      for (let i = a; i < b && i < n; i++) { m = Math.max(m, samples[i]); sx += liveX(i, nf); }
+      const fx = sx / Math.max(1, Math.min(b, n) - a);
+      out.push({ x0: animate ? fx : j * pitch + pitch / 2, h0: m, x1: j * pitch + pitch / 2, h1: Math.max(0.08, m), d: j * 0.006 });
+    }
+    bars = out; collapseT = animate ? now() : -9;
+  }
+  function stopRec() {
+    recDur = Math.max(0.6, now() - recT0);
+    if (samples.length < 4) { setMode('idle'); return; }
+    layoutFinal(!reduce); prog = 0; setMode('review'); timeEl.textContent = fmt(recDur);
+  }
+  function press() {
+    mainB.classList.add('pressed'); setTimeout(() => mainB.classList.remove('pressed'), 140);
+    if (mode === 'idle') setMode('rec'); else if (mode === 'rec') stopRec(); else if (mode === 'review') setMode('play'); else if (mode === 'play') setMode('review');
+  }
+  const ease = (u) => { u = Math.min(1, Math.max(0, u)); return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+  const bar = (x, h, mid) => ctx.rect(x - bw / 2, mid - h / 2, bw, h);
+  function draw(t) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, CW, CH);
+    const mid = CH / 2, maxH = CH - 4;
+    if (mode === 'idle') {
+      ctx.fillStyle = INK_DIM; ctx.beginPath();
+      for (let j = 0; j < Math.floor(CW / pitch); j++) bar(j * pitch + pitch / 2, reduce ? 2 : 2 + 1.5 * Math.sin(t * 2 + j * 0.35), mid);
+      ctx.fill(); return;
+    }
+    if (mode === 'rec') {
+      const n = samples.length, nf = (t - recT0) / STEP, cap = Math.floor(CW / pitch);
+      ctx.fillStyle = INK; ctx.beginPath();
+      for (let i = Math.max(0, n - cap - 2); i < n; i++) {
+        const age = t - recT0 - i * STEP, g = reduce ? 1 : Math.min(1, age / 0.22), gg = 1 - Math.pow(1 - g, 3), x = liveX(i, nf);
+        if (x < -pitch) continue;
+        bar(x, Math.max(2, samples[i] * maxH * gg), mid);
+      }
+      ctx.fill();
+      const lx = liveX(n, nf);
+      if (lx < CW) { ctx.fillStyle = INK_DIM; ctx.beginPath(); for (let x = lx + pitch; x < CW; x += pitch) bar(x, 2, mid); ctx.fill(); }
+      return;
+    }
+    const px = prog * CW, ct = t - collapseT, done = [], todo = [];
+    for (const b of bars) {
+      const e = ease((ct - b.d) / 0.65), x = b.x0 + (b.x1 - b.x0) * e;
+      let h = (b.h0 + (b.h1 - b.h0) * e) * maxH;
+      if (scrub) { const d = (x - px) / (pitch * 3.2); h *= 1 + 0.35 * Math.exp(-d * d); }
+      h = Math.min(CH, Math.max(2, h));
+      (x <= px ? done : todo).push([x, h]);
+    }
+    ctx.fillStyle = INK; ctx.beginPath(); for (const [x, h] of done) bar(x, h, mid); ctx.fill();
+    ctx.fillStyle = INK_DIM; ctx.beginPath(); for (const [x, h] of todo) bar(x, h, mid); ctx.fill();
+    if (prog > 0 || scrub) { ctx.fillStyle = INK; ctx.fillRect(px - 1, 0, 2, CH); }   // the playhead
+  }
+  let last = now();
+  (function frame() {
+    requestAnimationFrame(frame);
+    const t = now(), dt = Math.min(0.05, t - last); last = t;
+    if (mode === 'rec') { const el = t - recT0; while (samples.length * STEP < el) samples.push(amp(samples.length * STEP)); timeEl.textContent = fmt(el); if (el > 14) stopRec(); }
+    if (mode === 'play' && !scrub) { prog += dt / recDur; if (prog >= 1) { prog = 1; setMode('review'); } }
+    if (mode === 'review' || mode === 'play') timeEl.textContent = fmt(prog * recDur) + ' / ' + fmt(recDur);
+    draw(t);
+  })();
+  mainB.addEventListener('click', () => { if (!api.scripted) press(); });
+  redo.addEventListener('click', () => { prog = 0; setMode('idle'); });
+  const scrubTo = (x) => { prog = Math.min(1, Math.max(0, x / CW)); };
+  cv.addEventListener('pointerdown', (e) => { if (mode !== 'review' && mode !== 'play') return; scrub = true; cv.setPointerCapture(e.pointerId); scrubTo(e.clientX - cv.getBoundingClientRect().left); });
+  cv.addEventListener('pointermove', (e) => { cv.style.cursor = mode === 'review' || mode === 'play' ? 'ew-resize' : 'default'; if (scrub) scrubTo(e.clientX - cv.getBoundingClientRect().left); });
+  const endScrub = () => { scrub = false; };
+  cv.addEventListener('pointerup', endScrub); cv.addEventListener('pointercancel', endScrub);
+  addEventListener('resize', resize);
+  setMode('idle'); resize();
+  if (reduce) { for (let i = 0; i < 90; i++) samples.push(amp(i * STEP)); recDur = 90 * STEP; layoutFinal(false); prog = 0.42; setMode('review'); }
+  const api = {
+    press, redo: () => redo.click(), get mode() { return mode; }, get prog() { return prog; }, set prog(v) { prog = v; },
+    set scrub(v) { scrub = v; }, get samples() { return samples.length; },
+    btn: () => mainB, redoBtn: () => redo, canvas: () => cv, scripted: false,
+  };
+  return api;
+}
+const vn = voiceNote(document.getElementById('vn'));
+</script>
+<script>
+  /* the ghost's story: tap record, talk for 3.6 s, stop, play, seek along the wave, record again */
+  let gen = 0, lastReal = -1e9;
+  ['pointerdown', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, (e) => { if (e.isTrusted) { lastReal = performance.now(); gen++; QM.ghostHide(); vn.scripted = false; vn.scrub = false; } }, true));
+  const ctr = (el, fx = 0.55, fy = 0.6) => { const r = el.getBoundingClientRect(); return [r.left + r.width * fx, r.top + r.height * fy]; };
+  const guard = (g) => { if (g !== gen) throw 0; };
+  async function glide(x, y, ms, g) { QM.ghostShow(); const ok = await QM.ghostTo(x, y, ms, QM.tokenless); guard(g); }
+  async function script(g) {
+    vn.scripted = true; QM.ghostShow();
+    if (vn.mode === 'rec') { await QM.ghostTo(...ctr(vn.btn()), 700); guard(g); vn.press(); await QM.wait(900); guard(g); }
+    if (vn.mode === 'review' || vn.mode === 'play') { await QM.ghostTo(...ctr(vn.redoBtn()), 800); guard(g); vn.redo(); await QM.wait(700); guard(g); }
+    await QM.ghostTo(...ctr(vn.btn()), 700); guard(g); await QM.wait(150); vn.press();
+    await QM.wait(3600); guard(g);
+    await QM.ghostTo(...ctr(vn.btn()), 300); guard(g); vn.press();
+    await QM.wait(1300); guard(g); vn.press(); await QM.wait(1700); guard(g);
+    const cvr = vn.canvas().getBoundingClientRect(), y = cvr.top + cvr.height * 0.55;
+    await QM.ghostTo(cvr.left + vn.prog * cvr.width, y, 700); guard(g);
+    vn.scrub = true;
+    for (const u of [0.78, 0.35, 0.6]) {
+      const x0 = cvr.left + vn.prog * cvr.width, tx = cvr.left + u * cvr.width, t0 = performance.now();
+      while (performance.now() - t0 < 900) { guard(g); const k = Math.min(1, (performance.now() - t0) / 900), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, x = x0 + (tx - x0) * e; QM.ghostAt(x, y); vn.prog = (x - cvr.left) / cvr.width; await QM.wait(16); }
+      await QM.wait(200);
+    }
+    vn.scrub = false;
+    await QM.ghostTo(innerWidth * 0.8, innerHeight * 0.9, 700); guard(g);
+    while (vn.mode === 'play') { await QM.wait(200); guard(g); }
+    await QM.wait(1400); guard(g);
+    vn.scripted = false;
+  }
+  async function idleLoop() {
+    for (;;) {
+      await QM.wait(300);
+      if (QM.reduced || document.hidden || performance.now() - lastReal < 2500) continue;
+      const g = gen;
+      try { await script(g); } catch (e) { /* real input took over */ }
+      vn.scripted = false;
+    }
+  }
+  QM.demo({ kind: 'loop', restart() {} });
+  idleLoop();
+</script>
+</body>
+</html>

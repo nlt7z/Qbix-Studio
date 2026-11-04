@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinetic grid · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-kinetic-grow",
+  "title": "Kinetic grid",
+  "group": "lab",
+  "cat": "text",
+  "order": 620,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "950 ms beat · in-out cubic · fixed total",
+  "summary": "A word is stretched into a grid of its own letters. Row heights and column widths are shared out by a beat-eased wave with a fixed total, so letters squeeze each other but always fill the frame.",
+  "spec": [
+    ["Beat", "950 ms, the wave steps a quarter turn per beat, eased in-out cubic"],
+    ["Rows", "2 (3 when the frame is tall), heights 1 + 0.55 sin(phase / 2 + row 2.1), shared out of a fixed total"],
+    ["Columns", "each letter's ink width × (1 + 0.68 sin(phase − letter 1.05 + row 1.4)), shared out of a fixed total"],
+    ["Draw", "canvas measures each letter's real ink bounds, setTransform scales the glyph into its cell"],
+    ["Gap", "1.2% of the short side, never under 3px"],
+    ["Still", "reduced motion draws the phase at 1.3 s and holds"]
+  ],
+  "source": ["Qbix studio library · kinetic-grow"],
+  "where": "A status word on a Design service page: the BUILD frame a founder shares when the week is done.",
+  "rules": [
+    "The cells always add up to the frame: grow one letter and the others give way.",
+    "Measure ink bounds (actualBoundingBox), not advance widths, so letters touch the cell edge.",
+    "Wait for the headline font before measuring."
+  ],
+  "tags": ["text", "canvas", "loop", "build"],
+  "shot": 1500
+}
+</script>
+<style data-code>
+/* Kinetic grow: a canvas fills its box with the word; the wave only changes the split */
+.kgrow { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 16px; width: 100%; height: 100%; }
+.kgrow canvas { display: block; width: 100%; height: 100%; color: var(--fg); }
+.kgrow-cap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.kgrow-cap .tag.is-live { background: #B8FF00; color: #0c1300; }
+</style>
+<style>
+  .qm-stage { padding: clamp(20px, 4.5vmin, 48px); }
+  .qm-stage > .kgrow { height: min(100%, calc(100svh - clamp(40px, 9vmin, 96px) - 46px)); min-height: 280px; }
+  html.qm-tile .qm-stage > .kgrow { height: calc(100svh - clamp(40px, 9vmin, 96px)); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="kgrow" data-kgrow="BUILD">
+  <canvas aria-label="The word BUILD, stretching and squashing"></canvas>
+  <div class="kgrow-cap">
+    <span class="kicker">Design service · Week 01</span>
+    <span class="tag is-live">Shipped in 7 days</span>
+  </div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Kinetic grow · a fixed total, shared by a wave</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+function kineticGrow(box, { beatLen = 0.95, font = '400 200px Eurostile, Geist, sans-serif', still = false } = {}) {
+  const cv = box.querySelector('canvas');
+  const ctx = cv.getContext('2d');
+  const WORD = box.dataset.kgrow;
+  let W = 0, H = 0, dpr = 1, rows = 2, glyphs = [], raf = 0, t0 = performance.now(), paused = 0;
+
+  function measure() {
+    ctx.font = font;
+    glyphs = WORD.split('').map((ch) => {
+      const m = ctx.measureText(ch);
+      return { ch, l: m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent };
+    });
+  }
+  function size() {
+    const r = cv.getBoundingClientRect();
+    W = r.width; H = r.height;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    rows = H / W > 0.62 ? 3 : 2;
+    measure();
+  }
+  // a beat clock: each beat the wave steps a quarter turn, eased in and out, so the type pulses
+  const io = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const beat = (t) => { const b = t / beatLen; return Math.floor(b) + io(b - Math.floor(b)); };
+
+  function draw(t) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = getComputedStyle(cv).color;
+    ctx.font = font;
+    const gap = Math.max(3, Math.min(W, H) * 0.012);
+    const ph = beat(t) * (Math.PI / 2);
+    const rw = [];
+    for (let r = 0; r < rows; r++) rw.push(1 + 0.55 * Math.sin(ph * 0.5 + r * 2.1));
+    const rsum = rw.reduce((a, b) => a + b, 0);
+    let y = 0;
+    for (let r = 0; r < rows; r++) {
+      const rh = (H - gap * (rows - 1)) * (rw[r] / rsum);
+      // a wave runs along the row: wide letters squat, narrow ones stand tall
+      const ws = glyphs.map((g, i) => (g.l + g.r) * (1 + 0.68 * Math.sin(ph - i * 1.05 + r * 1.4)));
+      const wsum = ws.reduce((a, b) => a + b, 0);
+      let x = 0;
+      glyphs.forEach((g, i) => {
+        const cw = (W - gap * (glyphs.length - 1)) * (ws[i] / wsum);
+        const sx = cw / (g.l + g.r), sy = rh / (g.a + g.d);
+        ctx.setTransform(sx * dpr, 0, 0, sy * dpr, (x + g.l * sx) * dpr, (y + g.a * sy) * dpr);
+        ctx.fillText(g.ch, 0, 0);
+        x += cw + gap;
+      });
+      y += rh + gap;
+    }
+  }
+  function frame(now) { raf = requestAnimationFrame(frame); draw((now - t0) / 1000); }
+  function start() {
+    if (still) { draw(1.3); return; }
+    if (!raf) { t0 = performance.now() - paused * 1000; raf = requestAnimationFrame(frame); }
+  }
+  function stop() { if (raf) { cancelAnimationFrame(raf); raf = 0; paused = (performance.now() - t0) / 1000; } }
+  document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+  new ResizeObserver(() => { size(); if (still) draw(1.3); }).observe(cv);
+  size();
+  start();
+  if (document.fonts) document.fonts.load(font).catch(() => {}).then(() => { measure(); if (still) draw(1.3); });
+  return { restart() { t0 = performance.now(); paused = 0; } };
+}
+</script>
+<script>
+  const kg = kineticGrow(document.querySelector('[data-kgrow]'), { still: QM.reduced });
+  QM.demo({ kind: 'loop', restart: () => kg.restart() });
+</script>
+</body>
+</html>

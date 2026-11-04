@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cloth carousel · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-flag-carousel",
+  "title": "Cloth carousel",
+  "group": "lab",
+  "cat": "images",
+  "order": 80,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "WebGL cloth · 2 traveling waves · drag + snap",
+  "summary": "Each flag is a WebGL mesh. The vertex shader runs two traveling sine waves to ripple the cloth and uses the wave slope for the normals and shading. Dragging has inertia and snaps to the nearest flag; the faster the row moves, the more wind there is. Every flag has the qbix cut corner at the top right.",
+  "spec": [
+    ["Mesh", "44 × 26 quads a flag, texture painted once on a canvas"],
+    ["Waves", "sin(7x − φ) + 0.38 sin(13x − 1.65φ), enveloped toward the free edge"],
+    ["Wind", "phase speed 2.3 + 2.4 × wind; amplitude 8% + 6% × wind of the flag height"],
+    ["Carousel", "spring k 60, damping 13 toward the snapped slot; a fling of 300 px/s moves one more"],
+    ["Trigger", "drag and release; the ghost hand drags and flings every few seconds"]
+  ],
+  "source": ["Qbix studio library · flag-carousel"],
+  "where": "Launch banners for the studio's own work: the flags a launch day can fly.",
+  "rules": [
+    "Flat colour on the cloth; the only shading is the wave's own light.",
+    "One lime flag, the studio's; the rest are white and paper, drawn in ink.",
+    "The caption slides through a mask when the centred flag changes."
+  ],
+  "tags": ["webgl", "drag", "inertia", "cloth"],
+  "shot": 3200
+}
+</script>
+<style data-code>
+.fc { position: absolute; inset: 0; cursor: grab; touch-action: none; }
+.fc.drag { cursor: grabbing; }
+.fc canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.fc-head { position: absolute; left: clamp(16px, 4.5vmin, 52px); top: clamp(14px, 4vmin, 44px); pointer-events: none; }
+.fc-head h1 { font: 400 clamp(28px, 4.6vw, 56px)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; margin-top: 8px; }
+.fc-cap { position: absolute; left: 0; top: 0; height: 1.6em; overflow: hidden; pointer-events: none; min-width: 60vw; font: 400 12px/1.6 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.fc-cap span { position: absolute; left: 0; top: 0; white-space: nowrap; }
+.fc-cap b { font-weight: 500; color: #121417; }
+.fc-cap i { color: rgba(18,20,23,.64); }
+.fc-cap span.in { animation: fc-in .45s cubic-bezier(.16, 1, .3, 1) .2s both; }
+.fc-cap span.out { animation: fc-out .22s cubic-bezier(.5, 0, .75, 0) both; }
+@keyframes fc-in { from { transform: translateY(105%); } to { transform: none; } }
+@keyframes fc-out { to { transform: translateY(-105%); } }
+</style>
+</head>
+<body>
+<main class="qm-stage" style="padding:0">
+<!-- code -->
+<div class="fc" id="fc">
+  <canvas id="gl"></canvas><canvas id="ov"></canvas>
+  <div class="fc-head"><p class="kicker">Launch day · Banners</p><h1>Drag to browse.</h1></div>
+  <div class="fc-cap" id="cap"></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const flags = (() => {
+  // the idle hand: the page that hosts this can draw a pointer by filling in these three
+  const hand = { show() {}, hide() {}, at(x, y) {} };
+  const glc = document.getElementById('gl'), ov = document.getElementById('ov'), octx = ov.getContext('2d');
+  const capEl = document.getElementById('cap'), host = document.getElementById('fc');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const BANNERS = [
+    { bg: '#ffffff', fg: '#121417', name: 'Forma', sub: 'The shop is live' },
+    { bg: '#f3f4f5', fg: '#121417', name: 'Strata', sub: 'Public beta' },
+    { bg: '#B8FF00', fg: '#0c1300', name: 'Qbix', sub: 'Studio flag' },
+    { bg: '#ffffff', fg: '#121417', name: 'Kova', sub: 'The app is live' },
+    { bg: '#f3f4f5', fg: '#121417', name: 'Qbix Labs', sub: 'Three tools, one door' },
+    { bg: '#ffffff', fg: '#121417', name: 'Willow Counseling', sub: 'The site is live' }
+  ];
+  const K = BANNERS.length, TW = 768, TH = 512;
+  const SERIF = (s) => `400 ${s}px Eurostile, Geist, sans-serif`, SANS = (s) => `500 ${s}px Geist, Arial, sans-serif`;
+  // banner art, painted once per flag; the top right corner is cut
+  function paint(i) {
+    const b = BANNERS[i], c = document.createElement('canvas'); c.width = TW; c.height = TH;
+    const x = c.getContext('2d'), w = TW, h = TH;
+    x.fillStyle = b.bg; x.fillRect(0, 0, w, h);
+    x.fillStyle = b.fg; x.textBaseline = 'alphabetic';
+    if (i === 0) { x.font = SERIF(h * .3); x.fillText('Forma', w * .1, h * .5); x.font = SANS(h * .07); x.fillText('Objects for bright rooms.', w * .1, h * .67); x.lineWidth = h * .035; x.strokeStyle = b.fg; x.beginPath(); x.arc(w * .78, h * .7, h * .12, 0, Math.PI * 2); x.stroke(); }   // a halo
+    else if (i === 1) { x.font = SERIF(h * .26); x.fillText('Strata', w * .1, h * .36); x.font = SANS(h * .065); x.fillText('Moodboard in, system out.', w * .1, h * .5); for (let k = 0; k < 4; k++) x.fillRect(w * .1, h * (.62 + k * .075), w * (.8 - k * .17), h * .045); }   // four strata
+    else if (i === 2) { x.font = SERIF(h * .36); x.textAlign = 'center'; x.fillText('qbix', w * .47, h * .6); x.font = SANS(h * .065); x.fillText('Design by Qbix', w * .47, h * .78); }
+    else if (i === 3) { x.fillStyle = '#B8FF00'; x.fillRect(w * .1, h * .14, h * .3, h * .3); x.fillStyle = b.fg; x.font = SERIF(h * .3); x.textAlign = 'center'; x.fillText('k', w * .1 + h * .15, h * .4); x.textAlign = 'left'; x.font = SERIF(h * .2); x.fillText('Kova', w * .1, h * .7); x.font = SANS(h * .065); x.fillText('The app is live.', w * .1, h * .83); }
+    else if (i === 4) { x.font = SERIF(h * .22); x.fillText('Qbix', w * .1, h * .4); x.fillText('Labs', w * .1, h * .64); for (let k = 0; k < 3; k++) x.fillRect(w * .1 + k * h * .11, h * .76, h * .07, h * .07); }   // three tools
+    else { x.font = SERIF(h * .2); x.fillText('Willow', w * .1, h * .38); x.fillText('Counseling', w * .1, h * .6); x.font = SANS(h * .065); x.fillText('A calm practice, online.', w * .1, h * .78); x.fillRect(w * .1, h * .86, w * .14, h * .035); }
+    // the cut corner, top right (alpha is discarded in the shader)
+    x.globalCompositeOperation = 'destination-out'; x.beginPath(); x.moveTo(w * .86, -1); x.lineTo(w + 1, -1); x.lineTo(w + 1, h * .14); x.closePath(); x.fill();
+    return c;
+  }
+  // WebGL cloth
+  const gl = glc.getContext('webgl', { antialias: true, alpha: true, premultipliedAlpha: false });
+  const GX = 44, GY = 26;
+  let prog, nIdx, textures = [], U = {};
+  const VS = `
+attribute vec2 a_uv;
+uniform vec2 u_res, u_org, u_size, u_cam;
+uniform float u_ph, u_amp, u_seed;
+varying vec2 v_uv; varying float v_light;
+float zf(vec2 q){
+  float env = pow(q.x, 1.15);
+  return u_amp * env * (sin(q.x * 7.0 - u_ph + q.y * 1.3 + u_seed) + 0.38 * sin(q.x * 13.0 - u_ph * 1.65 + q.y * 3.1 + u_seed * 2.0));
+}
+void main(){
+  vec2 q = a_uv; float z = zf(q), e = 0.004;
+  float du = (zf(q + vec2(e, 0.0)) - z) / (e * u_size.x);
+  float dv = (zf(q + vec2(0.0, e)) - z) / (e * u_size.y);
+  vec3 n = normalize(vec3(-du, -dv, 1.0));
+  vec3 L = normalize(vec3(-0.55, -0.5, 0.75));
+  v_light = dot(n, L) - L.z;
+  float x = q.x * u_size.x * (1.0 - 0.045 * q.x * u_amp / (u_size.y * 0.08));
+  float y = q.y * u_size.y + q.x * q.x * u_size.y * 0.035 + 0.018 * u_size.y * q.x * sin(q.x * 6.0 - u_ph * 0.8);
+  vec2 p = u_org + vec2(x, y);
+  p = u_cam + (p - u_cam) * (1400.0 / (1400.0 - z));
+  v_uv = q;
+  gl_Position = vec4(p.x / u_res.x * 2.0 - 1.0, 1.0 - p.y / u_res.y * 2.0, 0.0, 1.0);
+}`;
+  const FS = `
+precision mediump float;
+uniform sampler2D u_tex; varying vec2 v_uv; varying float v_light;
+void main(){
+  vec4 c = texture2D(u_tex, v_uv);
+  if (c.a < 0.5) discard;
+  float s = clamp(1.0 + v_light * 1.25, 0.62, 1.22);
+  gl_FragColor = vec4(c.rgb * s, 1.0);
+}`;
+  function initGL() {
+    if (!gl) return false;
+    const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; };
+    prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false;
+    gl.useProgram(prog);
+    const uv = [], idx = [];
+    for (let j = 0; j <= GY; j++) for (let i = 0; i <= GX; i++) uv.push(i / GX, j / GY);
+    for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) { const a = j * (GX + 1) + i, b = a + 1, c = a + GX + 1, d = c + 1; idx.push(a, b, c, b, d, c); }
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(idx), gl.STATIC_DRAW);
+    nIdx = idx.length;
+    const loc = gl.getAttribLocation(prog, 'a_uv'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ['u_res', 'u_org', 'u_size', 'u_cam', 'u_ph', 'u_amp', 'u_seed', 'u_tex'].forEach((n) => (U[n] = gl.getUniformLocation(prog, n)));
+    return true;
+  }
+  const glOK = initGL();
+  function uploadTextures() {
+    const arts = BANNERS.map((b, i) => paint(i));
+    if (!glOK) { textures = arts; return; }
+    textures.forEach((t) => gl.deleteTexture(t));
+    textures = arts.map((c) => {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+      [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]].forEach(([a, b]) => gl.texParameteri(gl.TEXTURE_2D, a, b));
+      return t;
+    });
+  }
+  uploadTextures();
+  if (document.fonts) document.fonts.load('400 100px Eurostile').then(uploadTextures, () => {});
+  // layout and carousel state
+  let W, H, dpr, bw, bh, gap, top0;
+  function resize() {
+    dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    [glc, ov].forEach((c) => { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); });
+    bw = Math.min(W * 0.62, (H * 0.5) * 1.5, 580); bh = bw / 1.5; gap = bw * 1.16;
+    top0 = Math.max(Math.min(140, H * 0.26), H * 0.5 - bh * 0.55);
+  }
+  resize();
+  let gapPrev = gap, scroll = 0, vel = 0, target = 0, dragging = false, lastX = 0, lastT = 0, wind = 0, ph = 0;
+  addEventListener('resize', () => { const i = Math.round(scroll / gapPrev); resize(); scroll = i * gap; target = scroll; gapPrev = gap; });
+  function down(x) { dragging = true; lastX = x; lastT = performance.now(); vel = 0; host.classList.add('drag'); }
+  function move(x) {
+    if (!dragging) return;
+    const now = performance.now(), dt = Math.max(1, now - lastT) / 1000, dx = x - lastX;
+    scroll -= dx; vel = vel * 0.6 + (-dx / dt) * 0.4; lastX = x; lastT = now; target = scroll;
+  }
+  function up() {
+    if (!dragging) return; dragging = false; host.classList.remove('drag');
+    target = Math.round((scroll + vel * 0.32) / gap) * gap;
+    if (target === Math.round(scroll / gap) * gap && Math.abs(vel) > 300) target += Math.sign(vel) * gap;
+  }
+  let lastReal = -1e9;
+  const ghost = { on: false, t: 0, wait: 0.8, x: 0, y: 0, x0: 0, x1: 0 };
+  function ghostEnd() { if (ghost.on) { ghost.on = false; up(); } }
+  addEventListener('pointerdown', (e) => { lastReal = performance.now(); ghostEnd(); hand.hide(); down(e.clientX); });
+  addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || dragging) { lastReal = performance.now(); } if (!ghost.on) move(e.clientX); });
+  addEventListener('pointerup', () => { lastReal = performance.now(); up(); });
+  addEventListener('pointercancel', up);
+  // the ghost: a short drag and fling every few seconds
+  function stepGhost(dt) {
+    if (!ghost.on) {
+      ghost.wait -= dt;
+      if (ghost.wait <= 0) {
+        ghost.on = true; ghost.t = 0; ghost.x0 = W * 0.5 + bw * 0.35; ghost.x1 = ghost.x0 - Math.min(W * 0.5, bw * 0.7);
+        ghost.y = top0 + bh * 0.62; ghost.x = ghost.x0; down(ghost.x);
+      }
+      return;
+    }
+    ghost.t += dt;
+    const u = Math.min(1, ghost.t / 0.55), e = u * u * (3 - 2 * u);
+    ghost.x = ghost.x0 + (ghost.x1 - ghost.x0) * e; move(ghost.x);
+    if (u >= 1) { ghost.on = false; up(); ghost.wait = 2.6; }
+  }
+  let capIdx = -1;
+  function setCap(i) {
+    if (i === capIdx) return;
+    const old = capEl.querySelector('span.in');
+    if (old) { if (performance.now() - old._t < 260) old.remove(); else { old.className = 'out'; setTimeout(() => old.remove(), 240); } }
+    const s = document.createElement('span'); s.className = 'in'; s._t = performance.now();
+    s.innerHTML = `<b>${BANNERS[i].name}</b> <i>&nbsp;${BANNERS[i].sub}</i>`;
+    capEl.appendChild(s); capIdx = i;
+  }
+  let last = performance.now();
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.04, (now - last) / 1000) || 0.016; last = now;
+    const idle = now - lastReal > 2500 && !reduce;
+    if (idle) { stepGhost(dt); hand.show(); if (ghost.x) hand.at(ghost.x, ghost.y); } else { if (ghost.on) ghostEnd(); hand.hide(); }
+    let speed = 0;
+    if (!dragging) {
+      const prev = scroll;
+      vel += ((target - scroll) * 60 - vel * 13) * dt; scroll += vel * dt;
+      speed = Math.abs(scroll - prev) / dt;
+    } else speed = Math.abs(vel);
+    wind += (Math.min(1.6, speed / (gap * 1.2)) - wind) * Math.min(1, dt * 3);
+    ph += dt * (reduce ? 1.2 : 2.3 + wind * 2.4);
+    const amp = bh * (reduce ? 0.04 : 0.08 + wind * 0.06);
+    const cx = W / 2;
+    setCap(((Math.round(scroll / gap) % K) + K) % K);
+    const items = [];
+    const first = Math.floor((scroll - W) / gap) - 1, lastI = Math.ceil((scroll + W) / gap) + 1;
+    for (let n = first; n <= lastI; n++) {
+      const d = (n * gap - scroll) / gap, s = 1 - 0.16 * Math.min(1, Math.abs(d));
+      const w = bw * s, h = bh * s, ox = cx - bw * 0.5 + n * gap - scroll + (bw - w) * 0.1, oy = top0 + (bh - h) * 0.5;
+      if (ox > W + 40 || ox + w * 1.1 < -40) continue;
+      items.push({ i: ((n % K) + K) % K, n, d, w, h, ox, oy });
+    }
+    items.sort((a, b) => Math.abs(b.d) - Math.abs(a.d));
+    if (glOK) {
+      gl.viewport(0, 0, glc.width, glc.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.uniform2f(U.u_res, W, H); gl.uniform2f(U.u_cam, cx, top0 + bh * 0.5); gl.uniform1f(U.u_ph, ph); gl.uniform1i(U.u_tex, 0);
+      for (const it of items) {
+        gl.bindTexture(gl.TEXTURE_2D, textures[it.i]);
+        gl.uniform2f(U.u_org, it.ox, it.oy); gl.uniform2f(U.u_size, it.w, it.h);
+        gl.uniform1f(U.u_amp, amp * (it.w / bw)); gl.uniform1f(U.u_seed, it.n * 1.7);
+        gl.drawElements(gl.TRIANGLES, nIdx, gl.UNSIGNED_SHORT, 0);
+      }
+    }
+    // poles and caption
+    octx.setTransform(dpr, 0, 0, dpr, 0, 0); octx.clearRect(0, 0, W, H);
+    for (const it of items) {
+      if (!glOK) octx.drawImage(textures[it.i], it.ox, it.oy, it.w, it.h);
+      const pw = Math.max(3, it.w * 0.014);
+      octx.fillStyle = '#121417';
+      octx.fillRect(it.ox - pw, it.oy - it.h * 0.08, pw, H - (it.oy - it.h * 0.08));
+    }
+    capEl.style.transform = `translate(${cx - bw * 0.5 + 4}px, ${top0 + bh + Math.max(18, bh * 0.12)}px)`;
+  }
+  requestAnimationFrame(frame);
+  return { hand };
+})();
+</script>
+<script>
+  flags.hand.show = () => QM.ghostShow();
+  flags.hand.hide = () => QM.ghostHide();
+  flags.hand.at = (x, y) => QM.ghostAt(x, y);
+  QM.demo({ kind: 'loop', restart() {} });
+</script>
+</body>
+</html>

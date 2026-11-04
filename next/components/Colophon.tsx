@@ -43,6 +43,7 @@ const COLUMNS: { title: string; items: Item[] }[] = [
     title: 'Studio',
     items: [
       { label: 'About', href: '/#about' },
+      { label: 'Motion', href: '/motion' },
       { label: 'Careers' },
     ],
   },

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Six small moments · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-rc-micro", "title": "Six small moments", "group": "lab", "cat": "buttons", "order": 780,
+  "kind": "loop", "tone": "paper",
+  "line": "reels · magnet · send · toasts · dots · skeleton",
+  "summary": "Six small app-grade interactions on six flat panels, each playing by itself and each answering the real pointer. Digits roll on reels, a button leans toward the pointer, one control goes from Send to a spinner to a drawn tick, toasts spring in and stack, a field of dots swells under the pointer, and shapes wipe into real content.",
+  "spec": [["Reels", "each digit on its own reel, 700 ms + 60 ms a digit, expo out, only changed digits roll"], ["Magnet", "button follows at 0.35, label at 0.45 of that; spring 200 / 16; reach 140px"], ["Send", "width 380 ms ease-move to a 48px square, spinner 1.1 s, tick drawn 420 ms"], ["Toasts", "spring in 480 ms, older ones step back 10px and 6% in scale, leave downward after 2.6 s"], ["Dots", "14px grid, radius 1 → 4.2px by Gaussian distance (σ 70px)"], ["Skeleton", "flat blocks with a sweeping band, then a left to right wipe into content, 70 ms apart"]],
+  "source": ["Qbix studio library · 08-micro-kit"],
+  "where": "Product moments across the studio's builds: an order count, a booking button, a send state, a saved palette, an activity feed that loads.",
+  "rules": ["Panels are flat surfaces 8px apart with the top right corner cut; nothing is boxed inside a panel.", "No gradients and no opacity fades: the spotlight is dots, the skeleton is a sweeping flat band, toasts leave by sliding out of the panel.", "Lime is the one button, Book a call.", "A reduced-motion viewer gets every state at rest."],
+  "tags": ["micro", "buttons", "toast", "recipe"]
+}
+</script>
+<style data-code>
+.mm { position: absolute; inset: 8px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; }
+@media (max-width: 560px) { .mm { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); } }
+.mm-panel { position: relative; overflow: hidden; background: #ffffff; color: #121417; display: grid; grid-template-rows: auto 1fr; padding: 16px 18px;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.mm-panel h2 { margin: 0; font: 11px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; font-weight: 400; color: rgba(18,20,23,.64); }
+.mm-panel h2 b { font-weight: 400; color: rgba(18,20,23,.38); }
+.mm-s { display: grid; place-items: center; position: relative; min-height: 0; }
+.mm-btn { height: 48px; padding: 0 24px; border: 0; cursor: pointer; font: 500 15px/1 Geist, sans-serif; white-space: nowrap; touch-action: manipulation;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.mm-lime { background: #B8FF00; color: #0c1300; }
+.mm-solid { background: #121417; color: #f3f4f5; }
+.mm-quiet { background: none; color: #121417; padding: 0 4px; height: 32px; clip-path: none; }
+
+/* 1. rolling number */
+.mm-ticker { font: 400 clamp(36px, 5.4vw, 64px)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; display: flex; font-variant-numeric: tabular-nums; }
+.mm-ticker .col { height: 1em; overflow: hidden; display: inline-block; }
+.mm-ticker .reel { display: flex; flex-direction: column; }
+.mm-ticker .reel span { height: 1em; display: block; text-align: center; }
+.mm-ticker .sep { width: .28em; text-align: center; }
+.mm-tw { display: grid; gap: 6px; justify-items: center; }
+/* 3. send, wait, done */
+.mm-send { position: relative; display: grid; place-items: center; min-width: 48px; overflow: hidden; }
+.mm-send svg { width: 22px; height: 22px; display: none; }
+.mm-send.loading svg.spin, .mm-send.done svg.tick { display: block; }
+.mm-send.loading .lbl, .mm-send.done .lbl { display: none; }
+.mm-send svg.spin { animation: mm-spin .8s linear infinite; }
+@keyframes mm-spin { to { transform: rotate(360deg); } }
+.mm-send svg.tick path { stroke-dasharray: 24; stroke-dashoffset: 24; }
+.mm-send.done svg.tick path { animation: mm-draw .42s .05s cubic-bezier(.16, 1, .3, 1) forwards; }
+@keyframes mm-draw { to { stroke-dashoffset: 0; } }
+.mm-status { color: rgba(18,20,23,.64); font-size: 13px; min-height: 1.4em; margin-top: 10px; text-align: center; }
+/* 4. toasts */
+.mm-toasts { position: absolute; left: 0; right: 0; bottom: 12px; display: grid; justify-items: center; pointer-events: none; }
+.mm-toast { grid-area: 1 / 1; background: #121417; color: #f3f4f5; padding: 10px 16px; font-size: 14px; will-change: transform;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+/* 5. dots */
+.mm-dots { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mm-copy { position: relative; font: 400 clamp(20px, 2.4vw, 28px)/1.1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; text-align: center; max-width: 11ch; pointer-events: none; background: #ffffff; padding: 8px 12px; }
+/* 6. skeleton, then content */
+.mm-feed { width: 100%; max-width: 260px; display: grid; gap: 10px; }
+.mm-item { display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; }
+.mm-item .av { width: 36px; height: 36px; background: #eceef0; display: grid; place-items: center; font: 500 11px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; }
+.mm-item b { display: block; font-weight: 500; font-size: 14px; line-height: 1.25; }
+.mm-item span { color: rgba(18,20,23,.64); font-size: 12px; }
+.sk { position: relative; overflow: hidden; background: #eceef0; }
+.sk::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: #ffffff; animation: mm-sweep 1.3s linear infinite; }
+@keyframes mm-sweep { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+.mm-lines { display: grid; gap: 7px; }
+.mm-lines .sk { height: 9px; }
+.mm-lines .sk:last-child { width: 60%; }
+.mm-item.wipe { animation: mm-wipe .5s cubic-bezier(.16, 1, .3, 1) both; animation-delay: calc(var(--i) * 70ms); }
+@keyframes mm-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) { .sk::after, .mm-send svg.spin, .mm-item.wipe { animation: none; } }
+</style>
+<style>.qm-stage { display: block; padding: 0; }</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="mm">
+  <div class="mm-panel"><h2>01 <b>Rolling number</b></h2>
+    <div class="mm-s"><div class="mm-tw"><div class="mm-ticker" id="mm-ticker" aria-live="polite"></div><button class="mm-btn mm-quiet" id="mm-bump">Add an order</button></div></div></div>
+  <div class="mm-panel" id="mm-magpanel"><h2>02 <b>Magnetic button</b></h2>
+    <div class="mm-s"><button class="mm-btn mm-lime" id="mm-mag"><span style="display:inline-block">Book a call</span></button></div></div>
+  <div class="mm-panel"><h2>03 <b>Send, wait, done</b></h2>
+    <div class="mm-s"><div>
+      <button class="mm-btn mm-solid mm-send" id="mm-send" aria-live="polite"><span class="lbl">Send brief</span>
+        <svg class="spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.6" stroke-dasharray="40 100"/></svg>
+        <svg class="tick" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.6"/></svg></button>
+      <div class="mm-status" id="mm-status"></div></div></div></div>
+  <div class="mm-panel"><h2>04 <b>Toast stack</b></h2>
+    <div class="mm-s" style="align-items:start;padding-top:14px"><button class="mm-btn mm-solid" id="mm-save">Save palette</button></div>
+    <div class="mm-toasts" id="mm-toasts" aria-live="polite"></div></div>
+  <div class="mm-panel" id="mm-spotpanel"><h2>05 <b>Dots under the pointer</b></h2>
+    <div class="mm-s"><canvas class="mm-dots" id="mm-dots"></canvas><p class="mm-copy">Move across this panel</p></div></div>
+  <div class="mm-panel"><h2>06 <b>Skeleton to content</b></h2>
+    <div class="mm-s"><div class="mm-feed" id="mm-feed"></div></div></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const Micro = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EXPO = 'cubic-bezier(.16,1,.3,1)';
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const real = { t: -1e9 };
+  addEventListener('pointermove', (e) => { if (e.isTrusted) real.t = performance.now(); }, { passive: true });
+  const isIdle = () => performance.now() - real.t > 3000;
+  const timers = [];
+  const every = (ms, f, first = 0) => { const a = setTimeout(f, first); const b = setInterval(f, ms); timers.push(a, b); };
+
+  /* 1. rolling number: every digit on its own reel; only the changed ones roll */
+  const ticker = document.getElementById('mm-ticker');
+  let value = 12480;
+  function renderTicker(v, animate) {
+    const s = v.toLocaleString('en-US');
+    if (ticker.dataset.len !== String(s.length)) {
+      ticker.innerHTML = '';
+      for (const ch of s) {
+        if (ch === ',') { const sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = ','; ticker.append(sep); continue; }
+        const col = document.createElement('span'); col.className = 'col';
+        const reel = document.createElement('span'); reel.className = 'reel';
+        for (let d = 0; d <= 9; d++) { const x = document.createElement('span'); x.textContent = d; reel.append(x); }
+        col.append(reel); ticker.append(col);
+      }
+      ticker.dataset.len = s.length;
+    }
+    const reels = ticker.querySelectorAll('.reel');
+    let k = 0;
+    for (const ch of s) {
+      if (ch === ',') continue;
+      const reel = reels[k++], to = `translateY(${-+ch}em)`;
+      if (animate && !reduced && reel.style.transform !== to) reel.animate([{ transform: reel.style.transform || 'translateY(0)' }, { transform: to }], { duration: 700 + k * 60, easing: EXPO });
+      reel.style.transform = to;
+    }
+    ticker.setAttribute('aria-label', s + ' orders');
+  }
+  renderTicker(value, false);
+  const bump = () => { value += 137; renderTicker(value, true); };
+  document.getElementById('mm-bump').addEventListener('click', bump);
+
+  /* 2. magnetic button: the button and its label follow by different amounts */
+  const mp = document.getElementById('mm-magpanel'), mag = document.getElementById('mm-mag'), lab = mag.firstElementChild;
+  const mx = { x: 0, v: 0 }, my = { x: 0, v: 0 };
+  const mpt = { x: 0, y: 0, inside: false };
+  mp.addEventListener('pointermove', (e) => { const r = mp.getBoundingClientRect(); mpt.x = e.clientX - r.left; mpt.y = e.clientY - r.top; mpt.inside = true; });
+  mp.addEventListener('pointerleave', () => { mpt.inside = false; });
+  const spring = (s, target, dt) => { s.v += (200 * (target - s.x) - 16 * s.v) * dt; s.x += s.v * dt; };
+
+  /* 3. send, wait, done: the control keeps its place across the three states */
+  const send = document.getElementById('mm-send'), status = document.getElementById('mm-status');
+  let busy = false;
+  async function doSend() {
+    if (busy) return; busy = true;
+    const w0 = send.offsetWidth;
+    send.classList.add('loading'); send.style.width = w0 + 'px'; status.textContent = 'Sending';
+    if (!reduced) await send.animate([{ width: w0 + 'px' }, { width: '48px' }], { duration: 380, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' }).finished;
+    send.style.width = '48px';
+    await wait(1100);
+    send.classList.remove('loading'); send.classList.add('done'); status.textContent = 'Sent. We reply within a day.';
+    await wait(2200);
+    send.classList.remove('done'); send.getAnimations().forEach((a) => a.cancel()); send.style.width = ''; status.textContent = '';
+    busy = false;
+  }
+  send.addEventListener('click', doSend);
+
+  /* 4. toast stack: spring in, older ones step back, leave by sliding out of the panel */
+  const toasts = document.getElementById('mm-toasts'), live = [];
+  let n = 0;
+  const layoutToasts = () => live.forEach((t, i) => {
+    const depth = live.length - 1 - i;
+    t.el.style.zIndex = 10 - depth;
+    t.el.animate([{}, { transform: `translateY(${-Math.min(depth, 2) * 9}px) scale(${1 - Math.min(depth, 3) * 0.06})` }], { duration: reduced ? 1 : 380, easing: 'cubic-bezier(.34,1.4,.64,1)', fill: 'forwards' });
+  });
+  function save() {
+    const el = document.createElement('div'); el.className = 'mm-toast'; el.textContent = `Palette ${++n} saved`;
+    toasts.append(el);
+    const t = { el }; live.push(t);
+    if (!reduced) el.animate([{ transform: 'translateY(70px) scale(.94)' }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.34,1.4,.64,1)' });
+    layoutToasts();
+    setTimeout(() => {
+      const i = live.indexOf(t); if (i < 0) return; live.splice(i, 1);
+      el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(70px)' }], { duration: 300, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' }).finished.then(() => el.remove());
+      layoutToasts();
+    }, 2600);
+  }
+  document.getElementById('mm-save').addEventListener('click', save);
+
+  /* 5. dots under the pointer: the spotlight as a field of dots that swell */
+  const sp = document.getElementById('mm-spotpanel'), dc = document.getElementById('mm-dots'), dg = dc.getContext('2d');
+  const spt = { x: -999, y: -999, inside: false };
+  sp.addEventListener('pointermove', (e) => { const r = sp.getBoundingClientRect(); spt.x = e.clientX - r.left; spt.y = e.clientY - r.top; spt.inside = true; });
+  sp.addEventListener('pointerleave', () => { spt.inside = false; spt.x = spt.y = -999; });
+  const paintDots = (px, py) => {
+    const r = sp.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+    if (dc.width !== Math.round(r.width * dpr) || dc.height !== Math.round(r.height * dpr)) { dc.width = Math.round(r.width * dpr); dc.height = Math.round(r.height * dpr); }
+    dg.setTransform(dpr, 0, 0, dpr, 0, 0); dg.clearRect(0, 0, r.width, r.height);
+    dg.fillStyle = '#121417';
+    const G = 14, s2 = 2 * 70 * 70;
+    dg.beginPath();
+    for (let y = G / 2; y < r.height; y += G) for (let x = G / 2; x < r.width; x += G) {
+      const d2 = (x - px) * (x - px) + (y - py) * (y - py), rad = 1 + 3.2 * Math.exp(-d2 / s2);
+      dg.moveTo(x + rad, y); dg.arc(x, y, rad, 0, Math.PI * 2);
+    }
+    dg.fill();
+  };
+
+  /* 6. skeleton to content: flat shapes with a sweeping band, then a wipe into the real thing */
+  const feed = document.getElementById('mm-feed');
+  const PEOPLE = [['MR', 'Mara', 'approved the homepage'], ['TH', 'Theo', 'deployed forma.studio'], ['AN', 'Ana', 'shared the palette']];
+  const skeleton = () => { feed.innerHTML = PEOPLE.map(() => '<div class="mm-item"><div class="av sk"></div><div class="mm-lines"><div class="sk"></div><div class="sk"></div></div></div>').join(''); };
+  const content = () => { feed.innerHTML = PEOPLE.map(([a, w, t], i) => `<div class="mm-item wipe" style="--i:${i}"><div class="av">${a}</div><div><b>${w}</b><span>${t}</span></div></div>`).join(''); };
+  function cycle() { skeleton(); setTimeout(content, 1600); }
+
+  let raf = 0, last = performance.now();
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const idle = isIdle();
+    // magnet: with no real pointer a ghost pointer circles the button
+    const br = mag.getBoundingClientRect(), pr = mp.getBoundingClientRect();
+    const cx = pr.width / 2, cy = pr.height / 2 + 12;
+    let px = mpt.x, py = mpt.y, ins = mpt.inside;
+    if (idle) { const a = now / 1100; px = cx + Math.cos(a) * 90; py = cy + Math.sin(a * 1.3) * 34; ins = true; }
+    const bx = br.left - pr.left + br.width / 2 - mx.x, by = br.top - pr.top + br.height / 2 - my.x;
+    const dx = px - bx, dy = py - by, d = Math.hypot(dx, dy), k = ins && d < 140 ? 1 - d / 140 : 0;
+    if (!reduced) {
+      spring(mx, dx * 0.35 * k, dt); spring(my, dy * 0.35 * k, dt);
+      mag.style.transform = `translate(${mx.x.toFixed(2)}px, ${my.x.toFixed(2)}px)`;
+      lab.style.transform = `translate(${(mx.x * 0.45).toFixed(2)}px, ${(my.x * 0.45).toFixed(2)}px)`;
+    }
+    // dots
+    const sr = sp.getBoundingClientRect();
+    if (idle || !spt.inside) paintDots(sr.width * (0.5 + 0.36 * Math.sin(now / 1700)), sr.height * (0.55 + 0.25 * Math.sin(now / 1100 + 1)));
+    else paintDots(spt.x, spt.y);
+  }
+  function start() {
+    timers.splice(0).forEach((t) => { clearTimeout(t); clearInterval(t); });
+    cycle();
+    if (reduced) { content(); return; }
+    every(3200, () => { if (isIdle()) bump(); }, 1400);
+    every(7600, () => { if (isIdle()) doSend(); }, 2600);
+    every(2300, () => { if (isIdle()) save(); }, 900);
+    every(7000, cycle, 7000);
+    if (!raf) raf = requestAnimationFrame(frame);
+  }
+  if (reduced) { content(); paintDots(60, 60); }
+  return { start };
+})();
+</script>
+<script>
+  QM.demo({ kind: 'loop', restart: () => Micro.start() });
+  Micro.start();
+</script>
+</body>
+</html>

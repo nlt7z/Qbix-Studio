@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board drag · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-pipeline",
+  "title": "Board drag",
+  "group": "picks",
+  "cat": "cards",
+  "order": 10,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "drag a card · totals recount in 320 ms · 200 ms settle",
+  "summary": "Briefs sit in four stage columns, each with its count and its total in whole dollars. Take a card and the column under it sinks into a recessed block; let go and the card settles into its new place from where you dropped it, and the totals of the two columns it touched recount. Hover is a colour block. The one lime is the primary action.",
+  "spec": [
+    ["Board", "four columns of 12px padding and a 12px gap, 14px radius; white cards of 16px padding, 14px radius, no shadow"],
+    ["Drag", "pointer events; the card follows the hand 1:1 (translate), no easing, above everything (z-index 5)"],
+    ["Drop target", "the column under the pointer takes a recessed block (--sunk), 120 ms; the column the card came from does not"],
+    ["Settle", "the card is re-parented, then moves from where it was dropped to its slot over 200 ms, cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Totals", "the two columns touched count from the old sum to the new, in whole dollars, over 320 ms, expo out; the counts change at once"],
+    ["Hover", "a colour block in 120 ms; never a lift"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Pipeline (crm-pipeline)"],
+  "where": "The studio's own board of briefs: Willow Counseling's Practice Website Refresh, a Design service for Tidewell Coffee, Forma on its way to live.",
+  "rules": [
+    "Whole-dollar totals in tabular numerals.",
+    "Hover is a colour block; the drop target is a recessed block, no outline.",
+    "One filled primary, and it is the lime: Start a brief.",
+    "touch-action: none on the cards, so a finger drags instead of scrolling."
+  ],
+  "tags": ["board", "drag", "totals", "recount", "paper"],
+  "shot": 3000
+}
+</script>
+<style data-code>
+/* Brief pipeline · redrawn for Qbix.
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+.pk {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --radius-sm: 8px; --radius-lg: 14px;
+  --duration-fast: 120ms; --duration-base: 200ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --muted: var(--fg2); --surface-muted: var(--sunk); --row-hover: color-mix(in srgb, var(--fg) 3.5%, var(--surface));
+  font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
+}
+.stage { display: flex; flex-direction: column; gap: var(--space-5); }
+.top { display: flex; align-items: center; justify-content: space-between; }
+.top h1 { font: 400 28px/1.35 var(--font-sans); letter-spacing: -0.03em; }
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.btn-primary:hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.btn-primary:active { background: color-mix(in oklab, var(--signal) 78%, #000); }
+.board { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); height: 470px; }
+.col { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); transition: background-color var(--duration-fast) var(--ease-out); }
+.col.is-drop { background: var(--surface-muted); }
+.ch { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); padding: var(--space-1) var(--space-1) var(--space-2); }
+.ch .nm { font-weight: 500; display: flex; align-items: center; gap: var(--space-2); }
+.ch .n { color: var(--muted); font-weight: 400; }
+.ch .tot { color: var(--muted); font-variant-numeric: tabular-nums; }
+.deal { background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-4); display: grid; gap: var(--space-2); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; position: relative; transition: background-color var(--duration-fast) var(--ease-out); }
+.deal:hover, .deal.is-hover { background: var(--row-hover); }
+.deal.is-drag { z-index: 5; cursor: grabbing; transition: none; }
+.deal.is-fly { transition: transform var(--duration-base) var(--ease-out); }
+.who { display: flex; align-items: center; gap: var(--space-2); font-weight: 500; }
+.gm { display: inline-flex; width: 28px; height: 28px; border-radius: 6px; overflow: hidden; flex: none; background: var(--fg) center / cover; }
+.deal .t { color: var(--muted); line-height: 1.35; }
+.deal .v { font-size: 16px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; margin-top: var(--space-1); }
+.deal .o { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .col, .deal, .deal.is-fly { transition: none; } }
+</style>
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .fit { position: absolute; transform-origin: 50% 50%; }
+  .fit > .stage { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="fit" id="fit">
+<!-- code -->
+<div class="pk stage" id="stage">
+  <div class="top"><h1>Briefs</h1><button type="button" class="btn-primary">Start a brief ↗&#xFE0E;</button></div>
+  <div class="board" id="board"></div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Drag a card to another column</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Brief pipeline. A card is moved with pointer events and follows the hand exactly; the column under the
+   pointer is recessed; on drop the card is re-parented and released from where it was dropped (a FLIP),
+   and the totals of the two columns recount in whole dollars. */
+const $ = (s) => document.querySelector(s);
+const STAGES = ['Brief', 'Design', 'Build', 'Live'];
+const DEALS = [   // [client, what, dollars, time, stage, picture]
+  ['Willow Counseling', 'Practice Website Refresh', 600, '7 days', 0, 'bottle'],
+  ['Pinewood Tea', 'Design service', 1500, '1 to 3 weeks', 0, 'calla'],
+  ['Tidewell Coffee', 'Design service', 500, '1 to 3 weeks', 1, 'cross'],
+  ['Kova', 'Brand upgrade', 8000, '5 to 10 weeks', 1, 'block'],
+  ['Forma', 'Design service', 2400, '1 to 3 weeks', 2, 'objects'],
+  ['Orchard & Oak', 'Brand upgrade', 5500, '5 to 10 weeks', 2, 'slices'],
+  ['Sage Counseling', 'Practice Website Refresh', 600, '7 days', 3, 'vase'],
+  ['Juniper Yoga', 'Design service', 900, '1 to 3 weeks', 3, 'wall'],
+];
+const board = $('#board');
+board.innerHTML = STAGES.map((s, i) => `<div class="col" data-s="${i}"><div class="ch"><span class="nm">${s}<span class="n"></span></span><span class="tot"></span></div></div>`).join('');
+const cols = [...board.children];
+const shown = [0, 0, 0, 0];
+const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
+const easeOut = (k) => (k >= 1 ? 1 : 1 - Math.pow(2, -10 * k));   // expo out
+const card = ([name, what, v, time, , pic]) => {
+  const e = document.createElement('div');
+  e.className = 'deal';
+  e.dataset.v = v;
+  e.innerHTML = `<span class="who"><span class="gm" style="background-image:url(../assets/art/${pic}.webp)"></span>${name}</span><span class="t">${what}</span><span class="v">${money(v)}</span><span class="o">${time}</span>`;
+  return e;
+};
+const sum = (c) => [...c.querySelectorAll('.deal')].reduce((a, d) => a + +d.dataset.v, 0);
+
+/* the totals count from what they showed to what they are, in whole dollars */
+async function recount(animate) {
+  await Promise.all(cols.map(async (c, i) => {
+    const to = sum(c), from = shown[i];
+    shown[i] = to;
+    c.querySelector('.n').textContent = c.querySelectorAll('.deal').length;
+    const el = c.querySelector('.tot');
+    if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = money(to); return; }
+    const t0 = performance.now();
+    await new Promise((res) => {
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / 320);
+        el.textContent = money(from + (to - from) * easeOut(k));
+        k < 1 ? requestAnimationFrame(step) : res();
+      };
+      requestAnimationFrame(step);
+    });
+  }));
+}
+function build() {
+  cols.forEach((c) => c.querySelectorAll('.deal').forEach((d) => d.remove()));
+  DEALS.forEach((d) => cols[d[4]].appendChild(card(d)));
+  shown.fill(0);
+  recount(false);
+}
+build();
+
+/* the drag */
+let drag = null;
+const scale = () => $('#stage').getBoundingClientRect().width / $('#stage').offsetWidth || 1;   // the page may draw the piece scaled
+const colAt = (x) => cols.find((c) => { const r = c.getBoundingClientRect(); return x >= r.left && x < r.right; });
+board.addEventListener('pointerdown', (e) => {
+  const it = e.target.closest('.deal');
+  if (!it || drag) return;
+  drag = { it, x: e.clientX, y: e.clientY, from: it.parentElement };
+  it.classList.add('is-drag');
+  it.classList.remove('is-fly');
+  it.style.transform = '';
+});
+window.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const k = scale();
+  drag.it.style.transform = `translate(${(e.clientX - drag.x) / k}px, ${(e.clientY - drag.y) / k}px)`;
+  const c = colAt(e.clientX);
+  cols.forEach((x) => x.classList.toggle('is-drop', x === c && c !== drag.from));
+});
+function drop(e) {
+  if (!drag) return;
+  const { it, from } = drag;
+  drag = null;
+  const c = colAt(e.clientX) || from, k = scale();
+  cols.forEach((x) => x.classList.remove('is-drop'));
+  const a = it.getBoundingClientRect();                       // where it was let go
+  if (c !== from) c.appendChild(it);                          // its new place in the document
+  it.style.transition = 'none';
+  it.style.transform = 'none';
+  const b = it.getBoundingClientRect();                       // where that is
+  it.style.transform = `translate(${(a.left - b.left) / k}px, ${(a.top - b.top) / k}px)`;
+  void it.offsetWidth;                                        // start from there…
+  it.classList.remove('is-drag');
+  it.classList.add('is-fly');
+  it.style.transition = '';
+  it.style.transform = 'none';                                // …and settle
+  setTimeout(() => it.classList.remove('is-fly'), 260);
+  recount(true);
+}
+window.addEventListener('pointerup', drop);
+window.addEventListener('pointercancel', drop);
+</script>
+<script>
+  /* ---- harness glue: the piece scaled to the window as the original was, a ghost hand that plays it, real input that takes over ---- */
+  const ABORT = { abort: true };
+  function fit(el, W, H, pad) {
+    const ui = document.querySelector('.qm-ui');
+    const go = () => {
+      const bar = QM.tile || !ui ? 0 : 46;
+      const k = Math.min((innerWidth - 2 * pad) / W, (innerHeight - bar - 2 * pad) / H);
+      Object.assign(el.style, { width: W + 'px', height: H + 'px', left: innerWidth / 2 + 'px', top: (innerHeight - bar) / 2 + 'px', transform: `translate(-50%, -50%) scale(${k})` });
+    };
+    addEventListener('resize', go); go();
+  }
+  const hand = (() => {
+    let x = innerWidth * 0.82, y = innerHeight * 0.86, held = null, over = null, gen = 0;
+    const ease = QM.bezier(0.65, 0, 0.35, 1);
+    const under = () => held || document.elementFromPoint(x, y) || document.body;
+    const ev = (type, el, buttons) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, composed: true, pointerId: 7, pointerType: 'mouse', isPrimary: true, clientX: x, clientY: y, button: 0, buttons }));
+    const chain = (el) => { const s = []; for (let n = el; n; n = n.parentElement) s.push(n); return s; };
+    function hover(el) {
+      if (el === over) return;
+      const keep = new Set(chain(el));
+      chain(over).forEach((n) => { if (!keep.has(n)) n.classList.remove('is-hover'); });
+      chain(el).forEach((n) => n.classList.add('is-hover'));
+      over = el;
+    }
+    const api = {
+      cancel() { gen++; },
+      async wait(ms) { const my = gen; await QM.wait(ms); if (my !== gen) throw ABORT; },
+      async to(tx, ty, ms = 700) {
+        const my = gen, x0 = x, y0 = y, t0 = performance.now();
+        QM.ghostShow();
+        if (Math.hypot(tx - x0, ty - y0) < 1) { await Promise.resolve(); if (my !== gen) throw ABORT; return; }
+        for (;;) {
+          await new Promise(requestAnimationFrame);
+          if (my !== gen) throw ABORT;
+          const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+          x = x0 + (tx - x0) * k; y = y0 + (ty - y0) * k;
+          QM.ghostAt(x, y);
+          const el = under(); hover(el); ev('pointermove', el, held ? 1 : 0);
+          if (p >= 1) return;
+        }
+      },
+      at(el, ms, fx = 0.5, fy = 0.5) { const r = el.getBoundingClientRect(); return api.to(r.left + r.width * fx, r.top + r.height * fy, ms); },
+      down() { held = under(); ev('pointerdown', held, 1); },
+      up() { const el = held || under(); ev('pointerup', el, 0); held = null; },
+      release() { if (held) api.up(); },
+      async drag(el, target, { ms = 900, y: fy = 0.3, fx = 0.5, grab = 0.4 } = {}) {
+        await api.at(el, 700, 0.5, grab); await api.wait(140);
+        api.down();
+        const r = target.getBoundingClientRect();
+        await api.to(r.left + r.width * fx, r.top + r.height * fy, ms);
+        await api.wait(140);
+        api.up();
+      },
+    };
+    return api;
+  })();
+
+  async function story() {
+    await hand.wait(800);
+    const d = cols[2].querySelector('.deal');
+    await hand.drag(d, cols[3], { ms: 1000, y: 0.3 });
+    await hand.wait(2600);
+    const d2 = cols[0].querySelector('.deal');
+    await hand.drag(d2, cols[1], { ms: 800, y: 0.3 });
+    await hand.wait(2200);
+  }
+  let paused = false, running = false, lastReal = -1e9;
+  function cancelStory() { hand.cancel(); QM.ghostHide(); hand.release(); running = false; }
+  if (!QM.tile) {
+    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) cancelStory(); } };
+    ['pointerdown', 'pointermove', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+  }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancelStory(); } });
+  (async function idle() {
+    for (;;) {
+      await QM.wait(250);
+      if (QM.reduced || paused || document.hidden || (!QM.tile && performance.now() - lastReal < 2500)) continue;
+      running = true;
+      try { build(); await story(); } catch (e) { if (e !== ABORT) throw e; }
+      if (running) { QM.ghostHide(); hand.release(); }
+      running = false;
+    }
+  })();
+  fit(document.getElementById('fit'), 1100, 580, 24);
+  QM.demo({ kind: 'loop', restart() { paused = false; lastReal = -1e9; if (running) cancelStory(); } });
+</script>
+</body>
+</html>

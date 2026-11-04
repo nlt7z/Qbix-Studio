@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookmark pop · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-like",
+  "title": "Bookmark pop",
+  "group": "picks",
+  "cat": "buttons",
+  "order": 160,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "pop 560 ms · wheels 320 ms, 40 ms a place · hover 120 ms",
+  "summary": "Pressing a project's bookmark pops once: a ring and a spray of flecks leave the icon while the glyph overshoots and fills, and the count rolls only the digits that change, a beat apart, like an odometer. 1,299 to 1,300 turns three wheels. Qbix colours: the lime is the pop, a soft lime tint holds the shortlisted button, and the glyph and count are ink.",
+  "spec": [
+    ["Pop", "the glyph scales 0.4 → 1.35 (at 50%) → 1 in 320 ms, cubic-bezier(0.34, 1.26, 0.64, 1); only on the way in, never on release"],
+    ["Ring", "a circle r 4 → 20 px, stroke 12 → 1.5, opacity 1 → 0, 560 ms, cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Flecks", "14: seven round the icon twice, r 2.8 at 28 px and r 2 at 34 px (the second turn 0.32 rad apart); out from 12 px at scale 0.4, full size at 55%, on to +6 px at 0.2 and gone; 560 ms, 60 ms late, expo out; removed at 800 ms"],
+    ["Wheels", "one per digit; only a changed digit turns: the new one comes in from 100% below (up) or above (down) while the old one leaves the other way, 320 ms expo out, 40 ms per place, the ones first"],
+    ["Count", "tabular figures, 20 px wheels clipped to their own height; the comma stays still"],
+    ["Hover", "a colour block on the row and on the button, 120 ms expo out"],
+    ["Rows", "36 px picture (radius 8), 16 px gap, 12 px / 8 px padding; the button is 36 px tall, radius 8, 1px edge"],
+    ["Reduced motion", "no pop, no wheels turning: the first project is shown shortlisted"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Shortlist (ix-like)", "Idea: bencho.dev like (MIT)"],
+  "where": "Qbix's work list: bookmark the projects you want to see next, and see how many others have shortlisted each.",
+  "rules": [
+    "The pop is a moment, spent once on the way in; letting go only rolls the count back.",
+    "Hover is a colour block (paper on white); shortlisted is a soft lime tint with ink; the lime itself is only the pop.",
+    "Only the digits that change turn, the ones first; the comma and the digits that stay do not move.",
+    "A real button with aria-pressed and a label that names the project; focus is a 2px ink ring."
+  ],
+  "tags": ["list", "odometer", "pop", "button", "lime"],
+  "shot": 4500
+}
+</script>
+<style data-code>
+/* Work shortlist · Idea: bencho.dev like (MIT).
+   O2's roles in qbix colours: ink on paper, and one lime, spent on the pop. Radii, spacing and type are the O2 library's own. */
+.sl {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
+  --surface: #ffffff; --surface-muted: #f3f4f5; --divider: rgba(18, 20, 23, 0.08); --secondary-border: rgba(18, 20, 23, 0.38);
+  --selected: #e4ff9e; --on-selected: #0c1300;                                       /* O2's soft green block: a soft lime tint, with the ink that goes on lime */
+  --pop: #B8FF00; --pop-soft: #cfff4d; --pop-ink: #121417; --pop-grey: rgba(18, 20, 23, 0.38);   /* the one lime: the ring and its flecks */
+  --radius-sm: 8px; --radius-lg: 14px; --duration-fast: 120ms; --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  display: grid; gap: 16px; align-content: start; width: 640px; max-width: 100%;
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.sl-heading { margin: 0; font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.sl-meta { margin: 0; font-size: 12px; color: var(--faint); }
+.sl-card { background: var(--surface); border-radius: var(--radius-lg); padding: 8px 20px; }
+.sl-row { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 16px; padding: 12px 8px; margin: 0 -8px; transition: background-color var(--duration-fast) var(--ease-out); }
+.sl-row:hover, .sl-row.is-hot, .sl-row:has(.sl-bm.is-hot) { background: var(--surface-muted); }
+.sl-row + .sl-row { border-top: 1px solid var(--divider); }
+.sl-pic { width: 36px; height: 36px; border-radius: var(--radius-sm); object-fit: cover; }
+.sl-name { font-weight: 500; }
+.sl-note { color: var(--muted); }
+
+/* the shortlist button: a bookmark and an odometer count */
+.sl-bm { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--secondary-border); background: var(--surface); color: var(--text); font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.sl-bm:hover, .sl-bm.is-hot { background: var(--surface-muted); }
+.sl-bm[aria-pressed="true"] { background: var(--selected); color: var(--on-selected); border-color: transparent; }
+.sl-bm:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.sl-ico { position: relative; width: 18px; height: 18px; display: grid; place-items: center; }
+.sl-ico svg.glyph { grid-area: 1 / 1; }
+.sl-ico svg.fx { position: absolute; left: 50%; top: 50%; width: 80px; height: 80px; margin: -40px 0 0 -40px; overflow: visible; pointer-events: none; }
+.sl-count { display: inline-flex; height: 20px; line-height: 20px; }
+.sl-wheel { position: relative; display: inline-block; height: 20px; overflow: hidden; min-width: 1ch; }
+.sl-wheel .d { display: block; height: 20px; }
+.sl-wheel .d.out { position: absolute; left: 0; top: 0; }
+.sl-comma { display: inline-block; height: 20px; }
+@media (prefers-reduced-motion: reduce) { .sl-row, .sl-bm { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<div class="sl">
+  <div><h1 class="sl-heading">Work</h1><p class="sl-meta">Qbix · 5 projects</p></div>
+  <div class="sl-card" id="sl-list"></div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Press a bookmark to shortlist a project, again to let it go</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* Idea: bencho.dev like (MIT). The count is a row of wheels, one per digit: only the digits that change turn, the
+   ones first, a beat apart (1,299 to 1,300 turns three). A press also pops once: a ring and a spray of flecks leave
+   the icon, and the glyph overshoots as it fills. */
+const WORK = [
+  { n: 'Forma · Launch site', t: 'Design service · 3 weeks · forma.studio', c: 1299, pic: 'vase' },
+  { n: 'Kova · Brand upgrade', t: 'Money app · 8 weeks · Merged into the repo', c: 2406, pic: 'ring' },
+  { n: 'Willow Counseling · Website', t: 'Practice Website Refresh · Live in 7 days', c: 318, pic: 'calla' },
+  { n: 'Strata · Design system', t: 'Qbix Labs · Tokens, components and code', c: 87, pic: 'cross' },
+  { n: 'Juniper Yoga · Launch site', t: 'Design service · 2 weeks · Moodboard to domain', c: 604, pic: 'block' },
+];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const list = document.getElementById('sl-list');
+const state = WORK.map((s) => ({ ...s, base: s.c, on: false }));
+list.innerHTML = state.map((s, i) => `
+  <div class="sl-row" data-i="${i}">
+    <img class="sl-pic" src="../assets/art/${s.pic}.webp" alt="" width="36" height="36" draggable="false">
+    <div><div class="sl-name">${s.n}</div><div class="sl-note">${s.t}</div></div>
+    <button class="sl-bm" type="button" aria-pressed="false" aria-label="Shortlist ${s.n}"><span class="sl-ico"><svg class="glyph"></svg></span><span class="sl-count"></span></button>
+  </div>`).join('');
+
+/* a Lucide bookmark, outlined, or filled once it is shortlisted */
+const BOOKMARK = 'm19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z';
+const glyph = (on) => `<svg class="glyph" width="18" height="18" viewBox="0 0 24 24" fill="${on ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${BOOKMARK}"/></svg>`;
+const fmt = (n) => n.toLocaleString('en-US');
+const EXPO = 'cubic-bezier(.16,1,.3,1)';
+
+function wheelsFor(el, value, up, animate) {
+  const chars = fmt(value).split('');
+  const prev = el._chars || [];
+  const want = chars.map((c, i) => ({ c, place: chars.length - 1 - i }));
+  el.innerHTML = '';
+  want.forEach(({ c, place }) => {
+    if (c === ',') { const s = document.createElement('span'); s.className = 'sl-comma'; s.textContent = ','; el.appendChild(s); return; }
+    const w = document.createElement('span'); w.className = 'sl-wheel';
+    const old = prev.find((p) => p.place === place);
+    const d = document.createElement('span'); d.className = 'd'; d.textContent = c; w.appendChild(d);
+    if (animate && old && old.c !== c) {
+      const o = document.createElement('span'); o.className = 'd out'; o.textContent = old.c; w.appendChild(o);
+      const opt = { duration: 320, easing: EXPO, delay: place * 40, fill: 'backwards' };
+      d.animate([{ transform: `translateY(${up ? 100 : -100}%)`, opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], opt);
+      o.animate([{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(${up ? -100 : 100}%)`, opacity: 0 }], { ...opt, fill: 'forwards' }).onfinish = () => o.remove();
+    } else if (animate && !old) {
+      d.animate([{ transform: `translateY(${up ? 100 : -100}%)`, opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: 320, easing: EXPO, delay: place * 40, fill: 'backwards' });
+    }
+    el.appendChild(w);
+  });
+  el._chars = want.filter((w) => w.c !== ',');
+}
+
+/* the pop: a ring that opens and thins, and two turns of flecks */
+function fleck(ico) {
+  if (reduceMotion) return;
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'fx'); svg.setAttribute('viewBox', '-40 -40 80 80');
+  const cols = ['var(--pop)', 'var(--pop-ink)', 'var(--pop-soft)', 'var(--pop-ink)', 'var(--pop-grey)', 'var(--pop)', 'var(--pop-soft)'];
+  const ring = document.createElementNS(NS, 'circle');
+  ring.style.fill = 'none'; ring.style.stroke = 'var(--pop)';
+  svg.appendChild(ring);
+  ring.animate([{ r: '4px', strokeWidth: 12, opacity: 1 }, { r: '20px', strokeWidth: 1.5, opacity: 0 }], { duration: 560, easing: EXPO, fill: 'forwards' });
+  for (let k = 0; k < 7; k++) for (let j = 0; j < 2; j++) {
+    const a = (k / 7) * Math.PI * 2 - Math.PI / 2 + (j ? 0.16 : -0.16), d = j ? 34 : 28;
+    const c = document.createElementNS(NS, 'circle'); c.setAttribute('r', j ? 2 : 2.8); c.style.fill = cols[(k + j * 3) % cols.length];
+    svg.appendChild(c);
+    c.animate([
+      { transform: `translate(${Math.cos(a) * 12}px, ${Math.sin(a) * 12}px) scale(.4)`, opacity: 1 },
+      { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px) scale(1)`, opacity: 1, offset: 0.55 },
+      { transform: `translate(${Math.cos(a) * (d + 6)}px, ${Math.sin(a) * (d + 6)}px) scale(.2)`, opacity: 0 },
+    ], { duration: 560, delay: 60, easing: EXPO, fill: 'both' });
+  }
+  ico.appendChild(svg); setTimeout(() => svg.remove(), 800);
+}
+
+function paint(i, animate, up) {
+  const row = list.children[i], s = state[i], b = row.querySelector('.sl-bm');
+  b.setAttribute('aria-pressed', s.on);
+  const ico = row.querySelector('.sl-ico'); ico.querySelector('.glyph').outerHTML = glyph(s.on);
+  wheelsFor(row.querySelector('.sl-count'), s.base + (s.on ? 1 : 0), up, animate);
+}
+function press(i) {
+  const s = state[i]; s.on = !s.on;
+  paint(i, !reduceMotion, s.on);
+  const ico = list.children[i].querySelector('.sl-ico');
+  if (s.on && !reduceMotion) {
+    fleck(ico);
+    ico.querySelector('.glyph').animate([{ transform: 'scale(.4)' }, { transform: 'scale(1.35)', offset: 0.5 }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(.34,1.26,.64,1)' });
+  }
+}
+list.addEventListener('click', (e) => { const b = e.target.closest('.sl-bm'); if (b) press(+b.closest('.sl-row').dataset.i); });
+const resetAll = () => { state.forEach((s, i) => { s.on = false; paint(i, false); }); };
+resetAll();
+if (reduceMotion) { state[0].on = true; paint(0, false); }
+</script>
+<script>
+  /* harness glue: a ghost shortlists projects; the viewer's own pointer takes over */
+  PickGhost.fit(document.getElementById('pk'), 640, 440, { max: 1.5 });
+  PickGhost.start({
+    hot: '.sl-bm, .sl-row',
+    reset() { resetAll(); },
+    async script(g) {
+      await g.wait(900);
+      await g.click('.sl-row[data-i="0"] .sl-bm'); await g.wait(1700);
+      await g.click('.sl-row[data-i="2"] .sl-bm'); await g.wait(1500);
+      await g.click('.sl-row[data-i="0"] .sl-bm'); await g.wait(1300);
+      await g.click('.sl-row[data-i="1"] .sl-bm'); await g.wait(1500);
+    },
+    still() { state[0].on = true; paint(0, false); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

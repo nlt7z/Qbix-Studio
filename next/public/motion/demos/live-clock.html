@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticking clock · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "live-clock",
+  "title": "Ticking clock",
+  "group": "type",
+  "cat": "data",
+  "order": 100,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "Pacific time · ticks each second",
+  "summary": "A small caps label over one 40px line: the time where the studio works, hours and minutes, the seconds a step dimmer, the zone small. It ticks once a second and nothing animates: the numbers change in place, tabular so the line never shifts.",
+  "spec": [
+    ["Time", "Intl.DateTimeFormat('en-US', America/Los_Angeles, 12 hour, short zone name)"],
+    ["Tick", "setInterval 1000 ms, started once mounted"],
+    ["Line", "label 12 / 16px caps, 0.12em · 14px gap · time on one 40px line"],
+    ["Type", "hours:minutes Eurostile 30px −0.02em · seconds 30px, dimmed · AM/PM and zone Encode Sans 12px, 0.12em, 10px in"],
+    ["Motion", "none: a text swap each second (tabular figures keep the width still)"],
+    ["Before mount", "a neutral placeholder, --:--, so the first paint matches the server's"]
+  ],
+  "source": ["components/hero/StudioTime.tsx", "app/story.css · the hero chapter (.ch-band .studio-*)"],
+  "where": "The hero's band, bottom left: “Seattle, WA · San Francisco Bay Area” over the studio's time.",
+  "rules": [
+    "Nothing animates. A clock that slides or fades each second is noise; the swap is the feedback.",
+    "Tabular figures, always. The width of the line must not change when a 1 becomes an 8.",
+    "The seconds are the same size and dimmer: the minute is the unit that matters.",
+    "role=\"timer\" with a label that names the time once. No aria-live: a screen reader must not read every second.",
+    "Laid out like the marquee beside it: a small label over one line of the same height, so neither side outweighs the other."
+  ],
+  "tags": ["text", "live", "clock", "loop"]
+}
+</script>
+<style data-code>
+/* The studio clock — components/hero/StudioTime.tsx, app/story.css (.ch-band .studio-*) */
+.studio { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; min-width: 0; }
+.studio-label {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12px; line-height: 16px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--fg2, rgba(18, 20, 23, 0.64));
+}
+.studio-time {
+  height: 40px; margin: 0;
+  display: flex; align-items: center; gap: 2px;
+  line-height: 1;
+  color: var(--fg, #121417);
+}
+.studio-hm, .studio-s {
+  font-family: var(--font-headline, 'Eurostile', sans-serif);
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;   /* the width stays put as the digits change */
+}
+.studio-hm { letter-spacing: -0.02em; }
+.studio-s { color: var(--fg2, rgba(18, 20, 23, 0.64)); }
+.studio-ampm { margin-left: 10px; font-size: 12px; letter-spacing: 0.12em; color: var(--fg2, rgba(18, 20, 23, 0.64)); }
+</style>
+<style>
+  /* the site's band is 30px; the library draws it larger so it fills a tile */
+  .lc { width: min(100%, 980px); }
+  .lc .studio { gap: clamp(14px, 3.4vmin, 30px); }
+  .lc .studio-label { font-size: clamp(11px, 2.3vmin, 20px); line-height: 1.4; }
+  .lc .studio-time { height: auto; gap: 0.04em; font-size: clamp(64px, min(15vw, 26vh), 230px); }
+  .lc .studio-hm, .lc .studio-s { font-size: 1em; }
+  .lc .studio-ampm { margin-left: 0.14em; font-size: clamp(12px, 0.12em, 28px); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="lc">
+<!-- code -->
+<div class="studio">
+  <span class="studio-label mono">Seattle, WA · San Francisco Bay Area</span>
+  <span class="studio-time" role="timer" aria-label="Studio time">
+    <span class="studio-hm">--:--</span><span class="studio-s"></span><span class="studio-ampm mono"></span>
+  </span>
+</div>
+<!-- /code -->
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Where the studio works and what time it is there: Pacific time, ticking each second.
+   Building a DateTimeFormat costs far more than using one, so it is made once. */
+const TZ = 'America/Los_Angeles';
+const clockFormat = new Intl.DateTimeFormat('en-US', {
+  timeZone: TZ, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true, timeZoneName: 'short',
+});
+
+function studioClock(root) {
+  const timer = root.querySelector('.studio-time');
+  const hm = root.querySelector('.studio-hm');
+  const s = root.querySelector('.studio-s');
+  const ampm = root.querySelector('.studio-ampm');
+  const tick = () => {
+    const parts = clockFormat.formatToParts(new Date());
+    const get = (t) => parts.find((p) => p.type === t)?.value ?? '';
+    hm.textContent = `${get('hour')}:${get('minute')}`;
+    s.textContent = `:${get('second')}`;
+    ampm.textContent = `${get('dayPeriod')} ${get('timeZoneName')}`;
+    timer.setAttribute('aria-label', `Studio time ${hm.textContent} ${ampm.textContent}`);
+  };
+  tick();
+  return window.setInterval(tick, 1000);
+}
+
+studioClock(document.querySelector('.studio'));
+</script>
+<script>
+  QM.demo({ kind: 'loop' });
+</script>
+</body>
+</html>

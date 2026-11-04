@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Words light as you read · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-lit-words",
+  "title": "Words light as you read",
+  "group": "picks",
+  "cat": "text",
+  "order": 36,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "one progress value · 5.6 s a pass · faint to ink",
+  "summary": "A paragraph lights word by word on one virtual progress value, from faint to ink, with a word count and a track under it. The wheel or a touch drives it; left alone it reads itself in 5.6 seconds, holds, and starts over. The paragraph is Qbix's own About us.",
+  "spec": [
+    ["Progress", "one number p, 0..1: the wheel moves it by deltaY / 1600, a touch by dy / 600; there is no scroll stage, nothing is pinned"],
+    ["Head", "head = p × (N + 3) words; word i has k = clamp(head − i, 0, 1), so three words are lighting at once"],
+    ["Colour", "each word mixes ink in by k over a faint ink-over-ground: --k is the only thing that changes on it"],
+    ["Track", "a 2px line filled to p, no transition; the count reads “6 of 53 words” (a word counts when k reaches 1)"],
+    ["By itself", "5.6 s × (1 − p) linear to the end, 1.8 s hold, then 560 ms back to the start; after the viewer's last wheel or touch it waits 4 s before it takes over again"],
+    ["Reduced motion", "every word lit, and the wheel still moves it"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Words light as you read (land-lit-words)", "Idea: Qbix studio library · lit-words"],
+  "where": "The About us chapter: “We bring unusually sharp instincts…”, read at the speed of the scroll. Any paragraph a page wants read in order.",
+  "rules": [
+    "Virtual progress, no scroll stage: the paragraph never moves.",
+    "Word-level colour only: faint to ink, never size, weight or position.",
+    "Display type for the paragraph. Where the screen's lime is elsewhere, the highlight is the page's own ink."
+  ],
+  "tags": ["type", "words", "wheel", "progress", "landing"],
+  "shot": 3400
+}
+</script>
+<style data-code>
+/* Words light as you read. Idea: Qbix studio library · lit-words */
+:root { --gutter: clamp(24px, 6vw, 96px); }
+.lw-chapter { position: fixed; inset: 0; display: grid; align-content: center; gap: 24px; padding: 40px var(--gutter); font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.lw-num { color: var(--fg2); font-weight: 500; }
+.lw-read { margin: 0; max-width: 26em; font-family: var(--font-headline); font-weight: 400; font-size: clamp(22px, calc(8px + 2.3vw), 42px); letter-spacing: -0.02em; line-height: 1.28; text-wrap: pretty; }
+.lw-w { color: color-mix(in srgb, var(--fg) calc(var(--k, 0) * 100%), color-mix(in srgb, var(--fg) 26%, var(--ground))); }
+.lw-foot { display: flex; align-items: center; gap: 16px; max-width: 26em; }
+.lw-track { flex: 1; height: 2px; background: rgba(18, 20, 23, 0.09); }
+.lw-track > i { display: block; height: 100%; background: var(--fg); width: calc(var(--p, 0) * 100%); }
+.lw-meta { min-width: 6.5em; text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--fg2); }
+</style>
+<style>
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Scroll the wheel, or watch it read</span>
+<main class="qm-stage">
+<!-- code -->
+<div class="lw-chapter">
+  <span class="lw-num">03 About us</span>
+  <p class="lw-read" id="read"></p>
+  <div class="lw-foot"><div class="lw-track" id="track"><i></i></div><span class="lw-meta" id="count"></span></div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const text = 'We bring unusually sharp instincts, more than 10 years of training toward the best taste in the industry, real curiosity about new things (which means you get the newest tech), and respect for every idea that comes in. We put weight on early exploration and research, because no idea deserves to be wasted.';
+const words = text.split(' ');
+const read = document.getElementById('read'), track = document.getElementById('track'), count = document.getElementById('count');
+read.innerHTML = words.map((w) => `<span class="lw-w">${w}</span>`).join(' ');
+const ws = [...read.querySelectorAll('.lw-w')], N = ws.length;
+let p = 0;
+function set(v) {                                        // one virtual progress value drives every word
+  p = Math.max(0, Math.min(1, v));
+  track.style.setProperty('--p', p);
+  const head = p * (N + 3);
+  let lit = 0;
+  ws.forEach((w, i) => { const k = Math.max(0, Math.min(1, head - i)); if (k >= 1) lit++; w.style.setProperty('--k', k.toFixed(3)); });
+  count.textContent = `${lit} of ${N} words`;
+}
+let userAt = -1e9;
+addEventListener('wheel', (e) => { userAt = performance.now(); set(p + e.deltaY / 1600); }, { passive: true });
+let ty = null;
+addEventListener('touchstart', (e) => { ty = e.touches[0].clientY; userAt = performance.now(); }, { passive: true });
+addEventListener('touchmove', (e) => { const y = e.touches[0].clientY; set(p + (ty - y) / 600); ty = y; userAt = performance.now(); }, { passive: true });
+set(0);
+</script>
+<script>
+  /* loop kind: left alone it reads itself, holds, and starts over; the viewer's wheel or touch takes it over for 4 s at a time */
+  const still = QM.reduced;
+  const bezier = QM.bezier;
+  const linear = (x) => x, inOut = bezier(0.65, 0, 0.35, 1);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let run = 0;
+  const tween = (ms, fn, ease, my) => new Promise((res) => {
+    if (ms <= 0) return res();
+    const t0 = performance.now();
+    const f = (now) => { if (my !== run) return res(); const q = Math.min(1, (now - t0) / ms); fn(ease(q)); if (q < 1) requestAnimationFrame(f); else res(); };
+    requestAnimationFrame(f);
+  });
+  const quiet = () => performance.now() - userAt > 4000;
+  async function play(my) {
+    for (;;) {
+      const from = p;
+      await tween(5600 * (1 - from), (k) => { if (quiet()) set(from + (1 - from) * k); }, linear, my);
+      if (my !== run) return;
+      await sleep(1800); if (my !== run) return;
+      if (quiet()) { await tween(560, (k) => set(1 - k), inOut, my); if (my !== run) return; await sleep(300); }
+      else await sleep(1500);
+      if (my !== run) return;
+    }
+  }
+  function begin() { run++; userAt = -1e9; if (still) return set(1); set(0); play(run); }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') run++; });
+  begin();
+  QM.demo({ kind: 'loop', restart: begin });
+</script>
+</body>
+</html>

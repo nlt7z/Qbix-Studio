@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watching eyes · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-eye-tracker",
+  "title": "Watching eyes",
+  "group": "picks",
+  "cat": "cursor",
+  "order": 220,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "yaw and pitch springs · 130 / 15 · blinks when you come near",
+  "summary": "Two eyes on a flat lime board block turn with a spring to follow the cursor, narrowing as they turn away, and blink when the cursor comes near. The block leans a few pixels toward the pointer too. It is AI Bidding's table block: the model reads your hand.",
+  "spec": [
+    ["Aim", "from the board's centre: angle a = atan2(dy, dx), m = min(1, d / max(board width, 240)); yaw = cos a · m · 1.05, pitch = sin a · m · 0.62"],
+    ["Springs", "yaw and pitch: stiffness 130, damping 15, semi-implicit Euler, dt capped at 1/30 s"],
+    ["Eyes", "each eye sits on a sphere of radius 92 at ±0.46 rad from the middle; its width = 30 · max(0.22, cos lon · cos lat), height 62 · (0.7 + 0.3 · front)"],
+    ["Tilt", "each eye rotates (−yaw · 8 ± 4)°; the whole block shifts yaw · 6 and pitch · 6 px"],
+    ["Blink", "200 ms, down to 6% and back; at random every 2.4 to 5 s, and once when the cursor comes within 0.75 board widths (it re-arms beyond 1.6)"],
+    ["Leave", "the pointer leaving the window turns the eyes back to the middle"],
+    ["Reduced motion", "drawn once, eyes front, no loop"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Watching board (ix-eye-tracker)", "Idea: bencho.dev eye-tracker (MIT)"],
+  "where": "Qbix Labs: AI Bidding, where the model reads your hand. Any landing block that should notice a visitor.",
+  "rules": [
+    "Flat fills, one lime: the board. Landing display type for the one line.",
+    "No new character: the eyes sit on a board block, not on a mascot.",
+    "Hover motion on a landing page only. Springs, no easing curves."
+  ],
+  "tags": ["pointer", "eyes", "spring", "blink", "landing"],
+  "shot": 3600
+}
+</script>
+<style data-code>
+/* Watching board. Idea: bencho.dev eye-tracker (MIT). */
+.eye-page { position: fixed; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 40px; padding: 40px clamp(24px, 6vw, 96px); font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.eye-copy { display: grid; gap: 20px; justify-items: start; }
+.eye-copy h1 { font-family: var(--font-headline); font-weight: 400; font-size: clamp(36px, calc(17.6px + 5vw), 56px); letter-spacing: -0.03em; line-height: 1.15; }
+.eye-copy p { color: var(--fg2); font-size: 16px; max-width: 30em; line-height: 1.35; }
+.eye-btn { height: 40px; padding: 0 20px; border: 1px solid transparent; border-radius: 8px; background: var(--fg); color: #fff; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.eye-btn:hover { background: color-mix(in oklab, var(--fg) 82%, #fff); }
+.eye-btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.eye-stage { display: grid; place-items: center; min-height: 0; }
+.eye-board { width: min(100%, 420px, 58vh); aspect-ratio: 1; }
+.eye-board svg { width: 100%; height: 100%; overflow: visible; }
+.eye { fill: #0c1300; }
+@media (max-width: 760px) {
+  .eye-page { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 16px; padding: 20px 16px; align-items: center; }
+  .eye-stage { order: -1; }
+  .eye-board { width: min(100%, 300px, 46vh); }
+  .eye-copy { gap: 12px; }
+  .eye-copy h1 { font-size: clamp(28px, calc(18.4px + 2.6vw), 42px); }
+  .eye-copy p { font-size: 14px; }
+}
+@media (max-height: 620px) and (max-width: 760px) { .eye-copy p { display: none; } }
+</style>
+<style>
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Move the pointer around the block</span>
+<main class="qm-stage">
+<!-- code -->
+<div class="eye-page">
+  <section class="eye-copy">
+    <h1>The model reads your hand.</h1>
+    <p>Blind auctions as a game. Bid, bluff, or go all in, while the model reads your hand.</p>
+    <button class="eye-btn" type="button">Place a bid</button>
+  </section>
+  <section class="eye-stage">
+    <div class="eye-board" id="board">
+      <svg viewBox="0 0 320 320" role="img" aria-label="A lime board block with two eyes that follow the cursor">
+        <rect id="body" width="320" height="320" rx="64" fill="#B8FF00"/>
+        <g fill="none" stroke="#0c1300" stroke-opacity=".28" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M28 76 H96 L120 52 H196"/><path d="M292 96 H236 L214 118 H176"/>
+          <path d="M28 244 H88 L112 268 H190"/><path d="M292 236 H240 L222 254 H168"/>
+          <path d="M52 28 V60"/><path d="M268 28 V70"/><path d="M60 292 V262"/><path d="M262 292 V268"/>
+        </g>
+        <g fill="#0c1300" fill-opacity=".34">
+          <circle cx="28" cy="76" r="6"/><circle cx="196" cy="52" r="6"/><circle cx="292" cy="96" r="6"/><circle cx="176" cy="118" r="6"/>
+          <circle cx="28" cy="244" r="6"/><circle cx="190" cy="268" r="6"/><circle cx="292" cy="236" r="6"/><circle cx="168" cy="254" r="6"/>
+        </g>
+        <g fill="#0c1300" fill-opacity=".16">
+          <rect x="36" y="112" width="34" height="22" rx="4"/><rect x="250" y="168" width="34" height="22" rx="4"/><rect x="40" y="190" width="22" height="34" rx="4"/><rect x="262" y="212" width="22" height="22" rx="4"/>
+        </g>
+        <g id="eyes">
+          <rect class="eye" id="eL" rx="14"/><rect class="eye" id="eR" rx="14"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Two eyes on a board block. Yaw and pitch are springs; the eyes sit on a sphere, so they narrow as they turn away. */
+const $ = (id) => document.getElementById(id);
+const board = $('board'), eL = $('eL'), eR = $('eR');
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const S = (x = 0) => ({ x, v: 0, to: x });
+const yaw = S(), pitch = S(), blink = S(1);
+const stepS = (s, dt, k, c) => { s.v += (k * (s.to - s.x) - c * s.v) * dt; s.x += s.v * dt; };
+const R = 92, GAP = 0.46, EW = 30, EH = 62;
+let seen = false, blinkT = -1, raf = 0, last = 0;
+
+function look(x, y) {
+  const b = board.getBoundingClientRect();
+  const dx = x - (b.left + b.width / 2), dy = y - (b.top + b.height / 2);
+  const d = Math.hypot(dx, dy), reach = Math.max(b.width, 240);
+  const m = Math.min(1, d / reach);
+  const a = Math.atan2(dy, dx);
+  yaw.to = Math.cos(a) * m * 1.05; pitch.to = Math.sin(a) * m * 0.62;
+  if (d < b.width * 0.75 && !seen) { seen = true; blinkT = 0; }          // it notices you coming near: one blink
+  else if (d > b.width * 1.6) seen = false;
+  wake();
+}
+function away() { yaw.to = 0; pitch.to = 0; seen = false; wake(); }
+addEventListener('pointermove', (e) => look(e.clientX, e.clientY), { passive: true });
+document.documentElement.addEventListener('mouseleave', away);
+
+function draw() {
+  const cy = 160 - 4;
+  for (const [el, sign] of [[eL, -1], [eR, 1]]) {
+    const lon = sign * GAP + yaw.x, lat = pitch.x;
+    const z = Math.cos(lon) * Math.cos(lat);
+    const x = 160 + R * Math.sin(lon) * Math.cos(lat), y = cy + R * Math.sin(lat) * 0.9;
+    const w = EW * Math.max(0.22, z), h = EH * (0.7 + 0.3 * Math.max(0, z)) * Math.max(0.06, blink.x);
+    el.setAttribute('x', (x - w / 2).toFixed(2)); el.setAttribute('y', (y - h / 2).toFixed(2));
+    el.setAttribute('width', w.toFixed(2)); el.setAttribute('height', h.toFixed(2));
+    el.setAttribute('rx', Math.min(w, h) / 2.2);
+    el.setAttribute('transform', `rotate(${(-yaw.x * 8 + sign * 4).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})`);
+  }
+  board.firstElementChild.style.transform = `translate(${(yaw.x * 6).toFixed(1)}px, ${(pitch.x * 6).toFixed(1)}px)`;
+}
+// frames run while the eyes are turning or blinking, then the loop parks; a timer starts the random blinks
+const settled = () => blinkT < 0 && [yaw, pitch].every((s) => Math.abs(s.to - s.x) < 0.0005 && Math.abs(s.v) < 0.001);
+function tick(now) {
+  raf = 0;
+  const dt = Math.min((now - last) / 1000, 1 / 30); last = now;
+  stepS(yaw, dt, 130, 15); stepS(pitch, dt, 130, 15);
+  if (blinkT >= 0) { blinkT += dt; const u = blinkT / 0.2; blink.x = u < 0.5 ? 1 - u * 2 * 0.94 : Math.min(1, 0.06 + (u - 0.5) * 2 * 0.94); if (u >= 1) { blinkT = -1; blink.x = 1; } }
+  draw();
+  if (!settled()) raf = requestAnimationFrame(tick);
+}
+function wake() { if (!still && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
+function blinkLater(ms) { setTimeout(() => { blinkT = 0; wake(); blinkLater((2.4 + Math.random() * 2.6) * 1000); }, ms); }
+if (!still) blinkLater(2200);
+draw();
+</script>
+<script>
+  /* pointer kind: the ghost comes in from the right, crosses, goes round the back of the block and ends close to it */
+  const ease = QM.bezier(0.65, 0, 0.35, 1);
+  function route(steps) {
+    const total = steps.reduce((s, k) => s + k[1] + k[2], 0);
+    return (t) => {
+      let u = (t * 1000) % total, from = steps[steps.length - 1][0]();
+      for (const [p, travel, hold] of steps) {
+        const to = p();
+        if (u < travel) { const k = ease(u / travel); return [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k]; }
+        u -= travel;
+        if (u < hold) return to;
+        u -= hold; from = to;
+      }
+      return from;
+    };
+  }
+  const at = (fx, fy) => () => { const b = board.getBoundingClientRect(); return [b.left + b.width / 2 + b.width * fx, b.top + b.height / 2 + b.height * fy]; };
+  const walk = route([[at(1.6, -0.5), 300, 0], [at(0.6, -0.1), 900, 500], [at(-0.8, 0.6), 1300, 400], [at(-0.5, -0.9), 1000, 300], [at(0.05, 0.1), 1000, 900]]);
+  QM.demo({
+    kind: 'pointer',
+    path: walk,
+    move(x, y) { if (!QM.reduced) look(x, y); },
+    leave() { if (!QM.reduced) away(); },
+  });
+</script>
+</body>
+</html>

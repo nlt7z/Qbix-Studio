@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page fold · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-folding-bill",
+  "title": "Page fold",
+  "group": "picks",
+  "cat": "cards",
+  "order": 210,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "grab a corner · spring 150 · critical damping",
+  "summary": "A printed invoice you grab by any corner and fold. The crease and the mirrored back of the page are computed live on Canvas 2D, with the print showing through the folded tip, and the corner springs flat when it is let go.",
+  "spec": [
+    ["Fold", "the corner c0 is carried to p; the crease passes through their midpoint M, its normal n = (p − c0) / |p − c0|"],
+    ["Front", "the sheet kept where (X − M) · n ≥ 0, cut from the sheet's four corners; the folded tip is the other side, reflected: X′ = X − 2((X − M) · n) n"],
+    ["Back", "the flap is the page's back: a flat tone with the print showing through, mirrored, at 9%; shaded by one linear gradient from the crease"],
+    ["Grab", "the nearest corner within 70 units of the pointer, anywhere on the stage; the grab keeps its offset"],
+    ["Reach", "the corner stays within 0.92 × the sheet's diagonal of where it started"],
+    ["Release", "a spring to the corner: stiffness 150, damping 2√150 × 1.02 (critical), semi-implicit Euler, dt capped at 1/30 s, until it is within 0.3 and slower than 4"],
+    ["Depth", "a soft shadow under the sheet (blur 36, offset 14, 16%) and a smaller one under the tip (blur 18, offset 6, 22%)"],
+    ["Scale", "the sheet is drawn once at 2×, then stamped; it fits the stage at up to 1.25×"],
+    ["Reduced motion", "a composed still: the bottom right corner held folded, no spring"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Folding PO (ix-folding-bill)", "Idea: bencho.dev folding-bill (MIT)"],
+  "where": "The Practice Website Refresh: the invoice for Willow Counseling, flat price and a deposit. Any printed sheet worth holding: a proposal, a receipt, a price list.",
+  "rules": [
+    "Film depth allowed: a soft shadow under the sheet and under the fold. No outlines.",
+    "The sheet is baked once and stamped, so folding costs a clip, not a redraw of the text.",
+    "The physics is the release only: the corner follows the pointer 1:1 while held.",
+    "Real figures on the page: the invoice adds up."
+  ],
+  "tags": ["fold", "paper", "canvas", "drag", "spring"],
+  "shot": 3400
+}
+</script>
+<style data-code>
+/* Folding invoice. Idea: bencho.dev folding-bill (MIT). The sheet and its fold are drawn on one canvas. */
+.fb-canvas { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: default; }
+.fb-canvas.grab { cursor: grab; }
+.fb-canvas.grabbing { cursor: grabbing; }
+.fb-cap { position: fixed; left: 0; right: 0; bottom: 20px; margin: 0; text-align: center; color: var(--fg2); font-size: 14px; line-height: 1.5; letter-spacing: 0; pointer-events: none; }
+</style>
+<style>
+  .qm-hint { display: none; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<canvas class="fb-canvas" id="cv" aria-label="An invoice you can fold by a corner"></canvas>
+<p class="fb-cap">Drag a corner to fold the page</p>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const W = 440, H = 560;
+const C = [[0, 0], [W, 0], [W, H], [0, H]];
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FONT = '"Geist", ui-sans-serif, system-ui, sans-serif';
+const root = getComputedStyle(document.documentElement);
+const css = (n) => root.getPropertyValue(n).trim();
+const money = (n) => (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/* the Qbix wordmark, in lime on an ink tile */
+const WORDMARK = new Path2D('M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z');
+let DPR = 1, vw = 0, vh = 0, s = 1, ox = 0, oy = 0, dirty = true;
+function size() {
+  DPR = Math.min(2, devicePixelRatio || 1); vw = innerWidth; vh = innerHeight;
+  cv.width = vw * DPR; cv.height = vh * DPR;
+  s = Math.min((vw - 40) / W, (vh - 96) / H, 1.25); ox = (vw - W * s) / 2; oy = (vh - H * s) / 2 - 8;
+  wake();
+}
+addEventListener('resize', size);
+
+/* the printed invoice, in sheet coordinates */
+const lines = [['Practice Website Refresh', 1, 800], ['Exclusive offer', 1, -200], ['Deposit received', 1, -300]];
+function print(g) {
+  const ink = css('--fg'), mute = css('--fg2'), rule = css('--fg4');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = '#121417'; g.fillRect(36, 34, 78, 32);
+  g.save(); g.translate(36 + (78 - 46) / 2, 34 + (32 - 17) / 2); g.scale(17 / 342, 17 / 342); g.fillStyle = '#B8FF00'; g.fill(WORDMARK); g.restore();
+  g.fillStyle = ink; g.textBaseline = 'alphabetic';
+  g.font = `400 28px ${FONT}`; g.fillText('Invoice', 36, 112);
+  g.font = `400 15px ${FONT}`; g.fillStyle = mute; g.fillText('INV-2026-0418', 36, 136);
+  g.textAlign = 'right'; g.fillText('Issued Nov 3, 2026', W - 36, 112); g.fillText('Live by Nov 10, 2026', W - 36, 136); g.textAlign = 'left';
+  const col = (x, label, a, b) => { g.font = `500 12px ${FONT}`; g.fillStyle = mute; g.fillText(label, x, 190); g.font = `400 15px ${FONT}`; g.fillStyle = ink; g.fillText(a, x, 214); g.fillStyle = mute; g.fillText(b, x, 234); };
+  col(36, 'BILL TO', 'Willow Counseling', 'Dana Reyes, LMFT');
+  col(246, 'FROM', 'Qbix', 'Seattle, WA');
+  g.fillStyle = rule; g.fillRect(36, 270, W - 72, 1);
+  g.font = `500 12px ${FONT}`; g.fillStyle = mute; g.fillText('ITEM', 36, 296); g.textAlign = 'right'; g.fillText('QTY', 262, 296); g.fillText('UNIT', 330, 296); g.fillText('AMOUNT', W - 36, 296); g.textAlign = 'left';
+  let y = 328, total = 0;
+  for (const [d, q, u] of lines) {
+    g.font = `400 14px ${FONT}`; g.fillStyle = ink; g.fillText(d, 36, y);
+    g.textAlign = 'right'; g.fillText(String(q), 262, y); g.fillText(money(u), 330, y); g.fillText(money(q * u), W - 36, y); g.textAlign = 'left';
+    total += q * u; y += 34;
+  }
+  g.fillStyle = rule; g.fillRect(36, y - 14, W - 72, 1);
+  g.font = `500 15px ${FONT}`; g.fillStyle = mute; g.fillText('Total due', 36, y + 32);
+  g.font = `400 34px ${FONT}`; g.fillStyle = ink; g.textAlign = 'right'; g.fillText(money(total), W - 36, y + 36); g.textAlign = 'left';
+  g.fillStyle = rule; g.fillRect(36, H - 84, 190, 1);
+  g.font = `400 14px ${FONT}`; g.fillStyle = mute; g.fillText('Approved by Dana Reyes', 36, H - 62);
+  g.fillText('Flat price · Live in 7 days', 36, H - 38);
+}
+const sheet = document.createElement('canvas');   // the print is drawn once, then reused
+function bake() { sheet.width = W * 2; sheet.height = H * 2; const g = sheet.getContext('2d'); g.scale(2, 2); print(g); }
+const stamp = (g) => g.drawImage(sheet, 0, 0, W, H);
+
+/* a polygon cut by the half plane (X - M) . n >= 0 (keep = 1) or <= 0 (keep = -1) */
+function cut(poly, M, n, keep) {
+  const out = [], f = (p) => keep * ((p[0] - M[0]) * n[0] + (p[1] - M[1]) * n[1]);
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length], fa = f(a), fb = f(b);
+    if (fa >= 0) out.push(a);
+    if ((fa >= 0) !== (fb >= 0)) { const t = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+  }
+  return out;
+}
+const path = (g, poly) => { g.beginPath(); poly.forEach((p, i) => (i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath(); };
+
+/* the fold: the corner c0 is carried to p; the crease is where they meet halfway */
+const grip = { k: -1, x: 0, y: 0, vx: 0, vy: 0, held: false, ax: 0, ay: 0 };   // p is the corner's current place
+function draw() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, vw, vh);
+  ctx.save(); ctx.translate(ox, oy); ctx.scale(s, s);
+  const c0 = grip.k >= 0 ? C[grip.k] : null;
+  let d = 0, n = [1, 0], M = [0, 0];
+  if (c0) { const dx = grip.x - c0[0], dy = grip.y - c0[1]; d = Math.hypot(dx, dy); if (d > 0.5) { n = [dx / d, dy / d]; M = [(c0[0] + grip.x) / 2, (c0[1] + grip.y) / 2]; } }
+  const shadow = (blur, oy2, a) => { ctx.shadowColor = `rgba(18,20,23,${a})`; ctx.shadowBlur = blur * s; ctx.shadowOffsetY = oy2 * s; };
+  if (d < 0.8) {
+    shadow(36, 14, .16); path(ctx, C); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
+    stamp(ctx);
+  } else {
+    const front = cut(C, M, n, 1), flap = cut(C, M, n, -1);
+    shadow(36, 14, .16); path(ctx, front); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.save(); path(ctx, front); ctx.clip(); stamp(ctx);
+    const g1 = ctx.createLinearGradient(M[0], M[1], M[0] + n[0] * 70, M[1] + n[1] * 70);   // the flap's shade on the page under it
+    g1.addColorStop(0, 'rgba(18,20,23,.12)'); g1.addColorStop(1, 'rgba(18,20,23,0)');
+    ctx.fillStyle = g1; ctx.fillRect(-W, -H, W * 3, H * 3); ctx.restore();
+    // the back of the page: the flap reflected across the crease
+    const refl = flap.map((p) => { const k = 2 * ((p[0] - M[0]) * n[0] + (p[1] - M[1]) * n[1]); return [p[0] - k * n[0], p[1] - k * n[1]]; });
+    shadow(18, 6, .22); path(ctx, refl); ctx.fillStyle = '#f7f8f9'; ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.save(); path(ctx, refl); ctx.clip();
+    const a = 1 - 2 * n[0] * n[0], b = -2 * n[0] * n[1], dd = 1 - 2 * n[1] * n[1], mn = M[0] * n[0] + M[1] * n[1];
+    ctx.save(); ctx.transform(a, b, b, dd, 2 * mn * n[0], 2 * mn * n[1]); ctx.globalAlpha = .09; stamp(ctx); ctx.restore();   // the print shows through, mirrored
+    const g2 = ctx.createLinearGradient(M[0], M[1], M[0] - n[0] * 90, M[1] - n[1] * 90);
+    g2.addColorStop(0, 'rgba(18,20,23,.07)'); g2.addColorStop(.5, 'rgba(18,20,23,.03)'); g2.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g2; ctx.fillRect(-W, -H, W * 3, H * 3); ctx.restore();
+  }
+  ctx.restore();
+}
+
+/* spring the corner home when it is let go: semi-implicit Euler, critical damping */
+const K = 150, Cd = 2 * Math.sqrt(K) * 1.02;
+let raf = 0, last = 0;
+function tick(now) {
+  raf = 0;
+  const dt = Math.min(1 / 30, (now - last) / 1000); last = now;
+  if (grip.k >= 0 && !grip.held) {
+    const c0 = C[grip.k];
+    grip.vx += (K * (c0[0] - grip.x) - Cd * grip.vx) * dt; grip.vy += (K * (c0[1] - grip.y) - Cd * grip.vy) * dt;
+    grip.x += grip.vx * dt; grip.y += grip.vy * dt;
+    if (Math.hypot(grip.x - c0[0], grip.y - c0[1]) < 0.3 && Math.hypot(grip.vx, grip.vy) < 4) { grip.k = -1; }
+    dirty = true;
+  }
+  if (dirty) { draw(); dirty = false; }
+  if (grip.k >= 0 && !grip.held) raf = requestAnimationFrame(tick);
+}
+function wake() { dirty = true; if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
+
+const toSheet = (e) => [(e.clientX - ox) / s, (e.clientY - oy) / s];
+const nearest = (p) => { let best = -1, bd = 70; C.forEach((c, i) => { const d = Math.hypot(c[0] - p[0], c[1] - p[1]); if (d < bd) { bd = d; best = i; } }); return best; };
+const limit = (k, p) => {   // keep the fold inside the sheet's reach
+  const c0 = C[k], dx = p[0] - c0[0], dy = p[1] - c0[1], d = Math.hypot(dx, dy), max = Math.hypot(W, H) * 0.92;
+  return d > max ? [c0[0] + dx / d * max, c0[1] + dy / d * max] : p;
+};
+cv.addEventListener('pointerdown', (e) => {
+  const p = toSheet(e), k = nearest(p); if (k < 0) return;
+  try { cv.setPointerCapture(e.pointerId); } catch (_) { /* a scripted press has no pointer to capture */ }
+  grip.k = k; grip.held = true; grip.vx = grip.vy = 0;
+  const c0 = C[k]; grip.ax = p[0] - c0[0]; grip.ay = p[1] - c0[1]; grip.x = c0[0]; grip.y = c0[1];
+  cv.className = 'fb-canvas grabbing'; wake();
+});
+cv.addEventListener('pointermove', (e) => {
+  const p = toSheet(e);
+  if (grip.held) { const q = limit(grip.k, [p[0] - grip.ax, p[1] - grip.ay]); grip.x = q[0]; grip.y = q[1]; wake(); }
+  else cv.className = nearest(p) >= 0 ? 'fb-canvas grab' : 'fb-canvas';
+});
+const release = () => { if (!grip.held) return; grip.held = false; cv.className = 'fb-canvas'; if (still) { grip.k = -1; } wake(); };
+cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
+
+size();
+// the print needs the fonts in: bake again when they have loaded
+Promise.all([document.fonts.load('400 28px Geist'), document.fonts.load('500 12px Geist')]).catch(() => {}).then(() => { bake(); wake(); });
+bake();
+if (still) { grip.k = 2; grip.x = W * 0.52; grip.y = H * 0.56; grip.held = true; wake(); }
+</script>
+<script src="../assets/picks/p3-ghost.js"></script>
+<script>
+  /* loop kind: the ghost takes the bottom right corner in, lets go, then the top left one */
+  const pt = (x, y) => () => ({ x: ox + x * s, y: oy + y * s });
+  PickGhost.start({
+    reset: () => { grip.held = false; grip.k = -1; cv.className = 'fb-canvas'; wake(); },
+    still: () => { grip.k = 2; grip.x = W * 0.52; grip.y = H * 0.56; grip.held = true; wake(); },
+    async script(g) {
+      await g.to(pt(W + 18, H + 18), { ms: 500 });
+      await g.down();
+      await g.to(pt(W * 0.62, H * 0.6), { ms: 900 });
+      await g.to(pt(W * 0.46, H * 0.72), { ms: 800 });
+      await g.wait(900);
+      await g.up();
+      await g.wait(1300);
+      await g.to(pt(-18, -18), { ms: 700 });
+      await g.down();
+      await g.to(pt(W * 0.4, H * 0.3), { ms: 1000 });
+      await g.wait(800);
+      await g.up();
+      await g.wait(1400);
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

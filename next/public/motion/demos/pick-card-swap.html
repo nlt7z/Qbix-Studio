@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card flick · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-card-swap",
+  "title": "Card flick",
+  "group": "picks",
+  "cat": "cards",
+  "order": 250,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "press or fling · 640 ms · skewY 6°",
+  "summary": "A stack of five Qbix services and products in perspective, each a step darker than the one before it. Press the front card or fling it and it goes straight to the back with inertia while the others step forward; drag it slowly and let go beyond 70px and it goes the same way. The lime chip is handed on to whichever card is in front.",
+  "spec": [
+    ["Stack", "card k sits at translate3d(k · 34px, −k · 26px, −k · 70px) skewY(6deg), under perspective 900px from 40% 70%"],
+    ["Depth", "from offset, skew and grey steps, never a shadow: white at the front, then #f7f8f9, #eceef0, #e1e3e6, #d4d7da"],
+    ["Move", "640 ms expo out on transform and on the grey step; the price (or the status) and the facts fade in 400 ms once a card is in front"],
+    ["Drag", "the front card follows through a rubber, 170 · tanh(d / 170), and turns x · 0.05°"],
+    ["Send", "released after a press (< 6px), beyond 70px, or flung (> 500px/s and > 24px) it goes to the back; anything else springs back"],
+    ["Fling", "carries on for 260 ms: v is capped at 1800px/s and decays by 0.003^dt"],
+    ["Focus", "only the front card takes the pointer; the dots show which card it is"],
+    ["Reduced motion", "no inertia, no easing: the card goes at once"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Offer deck (ix-card-swap)", "Idea: bencho.dev card-swap (MIT)"],
+  "where": "Qbix's services and products in one stack: the Design service ($500 and up), the Brand upgrade, the Practice Website Refresh ($600 flat), Strata (live) and the Interview Assistant (soon).",
+  "rules": [
+    "Landing: no shadows. Depth comes from offset, skew and grey steps.",
+    "Physics only from a press or a drag; nothing moves on its own.",
+    "One lime: the chip on the front card.",
+    "Eurostile for the one display line.",
+    "A price only where the site states one; a product says Live or Soon."
+  ],
+  "tags": ["cards", "stack", "fling", "drag", "perspective"],
+  "shot": 5000
+}
+</script>
+<style data-code>
+/* Offer deck. Idea: bencho.dev card-swap (MIT). Five cards in perspective; the front one is the only one that moves. */
+.cs { position: relative; width: 760px; height: 520px; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.cs-copy { position: absolute; left: 0; top: 74px; width: 290px; display: grid; gap: 16px; }
+.cs-copy h1 { margin: 0; font-family: var(--font-headline); font-weight: 400; font-size: 44px; line-height: 1.04; letter-spacing: -0.03em; }
+.cs-copy p { margin: 0; color: var(--fg2); font-size: 16px; line-height: 1.5; }
+.cs-row { display: flex; align-items: center; gap: 12px; color: var(--fg2); }
+.cs-row img { display: block; width: 36px; height: 26px; border-radius: 4px; object-fit: cover; }
+.cs-dots { display: flex; gap: 8px; }
+.cs-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(18, 20, 23, 0.14); transition: background-color 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cs-dots i.on { background: var(--fg); }
+.cs-persp { position: absolute; left: 330px; top: 0; width: 430px; height: 520px; perspective: 900px; perspective-origin: 40% 70%; touch-action: none; }
+.cs-stage { position: absolute; left: 60px; top: 190px; width: 260px; height: 270px; }
+.cs-card { position: absolute; left: 0; top: 0; width: 260px; height: 270px; border-radius: 14px; padding: 20px; display: grid; grid-template-rows: auto 1fr auto; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none; transition: transform 640ms cubic-bezier(0.16, 1, 0.3, 1), background-color 640ms cubic-bezier(0.16, 1, 0.3, 1); backface-visibility: hidden; }
+.cs-card.drag { transition: none; cursor: grabbing; }
+.cs-card:not([data-front]) { pointer-events: none; }
+.cs-card .sel { display: flex; align-items: center; gap: 12px; }
+.cs-card .sel img { display: block; width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
+.cs-card .sel b { display: block; font-weight: 500; font-size: 16px; letter-spacing: -0.01em; }
+.cs-card .sel > div { display: grid; justify-items: start; gap: 4px; }
+.cs-card .price { align-self: center; font-size: 44px; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.cs-card .price small { font-size: 14px; color: var(--fg2); letter-spacing: 0; margin-left: 8px; }
+.cs-card dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
+.cs-card dt { color: var(--fg2); }
+.cs-card dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.cs-card .price, .cs-card dl { transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cs-card:not([data-front]) .price, .cs-card:not([data-front]) dl { opacity: 0; }
+.cs-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--fg2); background: rgba(18, 20, 23, 0.07); transition: background-color 200ms cubic-bezier(0.16, 1, 0.3, 1), color 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.cs-card[data-front] .cs-chip { color: var(--on-lime); background: var(--signal); }
+@media (prefers-reduced-motion: reduce) { .cs-card { transition: none; } }
+</style>
+<style>
+  .cs-fit { position: fixed; z-index: 1; }
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Press or flick the front card</span>
+<main class="qm-stage">
+<div class="cs-fit" id="fit">
+<!-- code -->
+<div class="cs" id="design">
+  <div class="cs-copy">
+    <div class="cs-row"><img src="../assets/art/objects.webp" alt=""><span>Qbix · Five ways in</span></div>
+    <h1>Services and products.</h1>
+    <p>Flick the front card to the back.</p>
+    <div class="cs-dots" id="dots"></div>
+  </div>
+  <div class="cs-persp" id="persp"><div class="cs-stage" id="stage"></div></div>
+</div>
+<!-- /code -->
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* The five: a price only where the site states one (the Design service, the Practice Website Refresh);
+   the Brand upgrade says how long it takes, a product says Live or Soon. */
+const OFFERS = [
+  { s: 'Design service', big: '$500', small: 'and up', rows: [['Made for', 'Founders'], ['Ready in', '1 to 3 weeks']], tag: 'Start a brief', img: '../assets/art/calla.webp' },
+  { s: 'Brand upgrade', big: '5–10', small: 'weeks', rows: [['Made for', 'Growing teams'], ['Works in', 'Your repo']], tag: 'Start a brief', img: '../assets/art/ring.webp' },
+  { s: 'Practice Website Refresh', big: '$600', small: 'flat', rows: [['Made for', 'Solo practices'], ['Ready in', '7 days']], tag: 'Exclusive offer', img: '../assets/art/bottle.webp' },
+  { s: 'Strata', big: 'Live', small: 'now', rows: [['In', 'A moodboard'], ['Out', 'A design system']], tag: 'Qbix Labs', img: '../assets/art/cross.webp' },
+  { s: 'Interview Assistant', big: 'Soon', small: 'on the way', rows: [['Live', 'Hints and questions'], ['After', 'Clean notes']], tag: 'Qbix Labs', img: '../assets/art/sam.webp', pos: '22% 40%' },
+];
+const $ = (s) => document.querySelector(s);
+const wrap = $('#design');
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const STEP_X = 34, STEP_Y = 26, STEP_Z = 70;
+const slot = (k) => `translate3d(${k * STEP_X}px, ${-k * STEP_Y}px, ${-k * STEP_Z}px) skewY(6deg)`;
+/* depth from offset, scale and grey steps: the front is white, each one behind a step darker */
+const GREYS = ['#ffffff', '#f7f8f9', '#eceef0', '#e1e3e6', '#d4d7da'];
+const stage = $('#stage');
+let order = OFFERS.map((_, i) => i);
+const els = OFFERS.map((o, i) => {
+  const e = document.createElement('div'); e.className = 'cs-card';
+  e.innerHTML = `<div class="sel"><img src="${o.img}" alt=""${o.pos ? ` style="object-position:${o.pos}"` : ''}><div><b>${o.s}</b><span class="cs-chip">${o.tag}</span></div></div>
+    <div class="price">${o.big}<small>${o.small}</small></div>
+    <dl>${o.rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+  stage.appendChild(e); return e;
+});
+const dots = $('#dots'); dots.innerHTML = OFFERS.map(() => '<i></i>').join('');
+function apply() {
+  els.forEach((e, i) => {
+    const k = order.indexOf(i); e.style.zIndex = OFFERS.length - k; e.style.background = GREYS[Math.min(k, GREYS.length - 1)];
+    e.style.transform = slot(k); k === 0 ? e.setAttribute('data-front', '') : e.removeAttribute('data-front');
+  });
+  [...dots.children].forEach((d, j) => d.classList.toggle('on', j === order[0]));
+}
+function send() { order = [...order.slice(1), order[0]]; apply(); }
+
+/* the front card is the only thing that moves; the window hears the gesture so it can't be lost off the edge */
+let drag = null, flying = false, gen = 0;
+const rub = (d) => 170 * Math.tanh(d / 170);
+const k0 = () => +wrap.dataset.k || 1;
+function grab(e) {
+  if (flying || drag || e.button > 0) return;
+  const el = els[order[0]]; if (!el.contains(e.target)) return;
+  drag = { el, id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, dy: 0, t: performance.now(), trail: [[performance.now(), 0, 0]] };
+  el.classList.add('drag');
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+}
+function put(el, x, y) { el.style.transform = `${slot(0)} translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${(x * 0.05).toFixed(2)}deg)`; }
+function move(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  drag.dx = (e.clientX - drag.x) / k0(); drag.dy = (e.clientY - drag.y) / k0();
+  const now = performance.now(); drag.trail.push([now, drag.dx, drag.dy]); while (drag.trail.length > 2 && now - drag.trail[0][0] > 120) drag.trail.shift();
+  put(drag.el, rub(drag.dx), rub(drag.dy));
+}
+async function up(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const my = gen;
+  window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+  const d = drag; drag = null;
+  const far = Math.hypot(d.dx, d.dy), a = d.trail[0], b = d.trail[d.trail.length - 1];
+  const dtm = Math.max(16, b[0] - a[0]); let vx = (b[1] - a[1]) / dtm * 1000, vy = (b[2] - a[2]) / dtm * 1000;
+  const speed = Math.hypot(vx, vy);
+  if (e.type === 'pointercancel' || !(far < 6 || far > 70 || (speed > 500 && far > 24))) { d.el.classList.remove('drag'); apply(); return; }
+  if (speed > 500 && far >= 6 && !still) {              // a fling carries on with inertia before it goes behind the others
+    flying = true; let x = rub(d.dx), y = rub(d.dy), t0 = performance.now(), last = t0;
+    vx = Math.max(-1800, Math.min(1800, vx)); vy = Math.max(-1800, Math.min(1800, vy));
+    await new Promise((res) => { const f = (now) => { const dt = Math.min(0.033, (now - last) / 1000); last = now; x += vx * dt; y += vy * dt; vx *= Math.pow(0.003, dt); vy *= Math.pow(0.003, dt); put(d.el, x, y); (now - t0 > 260) ? res() : requestAnimationFrame(f); }; requestAnimationFrame(f); });
+    flying = false;
+    if (my !== gen) return;                              // the deck was put back while it was flying
+  }
+  d.el.classList.remove('drag'); send();
+}
+/* back to the start, whatever was in the air */
+function rewind() {
+  gen++; flying = false;
+  if (drag) { drag.el.classList.remove('drag'); drag = null; }
+  window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+  order = OFFERS.map((_, i) => i); apply();
+}
+stage.addEventListener('pointerdown', grab);
+apply();
+</script>
+<script src="../assets/picks/p3-ghost.js"></script>
+<script>
+  /* loop kind: the ghost flicks the front card, presses the next, and carries the third slowly: three ways to send a card back */
+  PickGhost.fit($('#fit'), 760, 520, { max: 1.4 });
+  const lin = (x) => x;
+  PickGhost.start({
+    reset: rewind,
+    still: rewind,
+    async script(g) {
+      await g.wait(500);
+      for (let n = 0; n < 3; n++) {
+        await g.to(() => els[order[0]], { ms: n ? 420 : 640, fx: 0.5, fy: 0.55 });
+        await g.wait(220); await g.down();
+        const p = g.at(els[order[0]], { fx: 0.5, fy: 0.55 });          // where the press landed: the card has not moved yet
+        if (n === 0) await g.to({ x: p.x - 120, y: p.y + 40 }, { ms: 170, ease: lin });     // a flick
+        else if (n === 1) await g.wait(90);                                                 // a press
+        else { await g.to({ x: p.x - 60, y: p.y + 110 }, { ms: 700 }); await g.wait(150); } // a slow carry
+        await g.up();
+        await g.wait(n === 0 ? 1100 : 900);
+      }
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

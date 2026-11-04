@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Odometer · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "odometer",
+  "title": "Odometer",
+  "group": "type",
+  "cat": "data",
+  "order": 90,
+  "kind": "play",
+  "tone": "paper",
+  "line": "1250 ms · expo out · 70 ms a digit",
+  "summary": "A price rolls into place like a mechanical counter: each digit is a 0–9 strip inside its own mask, turning to its value, one digit after the next. The digits are drawn by CSS, so the page text is only the price.",
+  "spec": [
+    ["Duration", "1250 ms a digit"],
+    ["Easing", "cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Stagger", "80 ms delay, then 70 ms a digit (symbols such as $ do not count)"],
+    ["Move", "strip translateY 0 → −n × 10% of its own height (ten lines of 1.05em, so a digit is 1.05em)"],
+    ["Mask", "each cell is 1.05em tall, overflow hidden, as wide as its final digit"],
+    ["Trigger", "in view, once (margin −15% 0)"],
+    ["Prices", "from $500, 1 to 3 weeks (Design service) · $600 / $800, flat (Practice Website Refresh) · from $5,000, 5 to 10 weeks (Brand upgrade), from lib/data.ts"]
+  ],
+  "source": ["components/offers/Odometer.tsx", "components/offers/OfferPrice.tsx", "app/globals.css · .odo-* and EXCLUSIVE-OFFER PRICING (.odo-strip::before)", "lib/data.ts · services, PRICES"],
+  "where": "The practice page's price, and the Design service figure on /start (1 to 3 weeks).",
+  "rules": [
+    "The digits are generated (.odo-strip::before), never written into the page: copy and paste, reader mode and search snippets see only the price.",
+    "The ghost digit sizes the cell. A cell wider than its digit lets the strip's wider digits show at the edge.",
+    "The regular price sits beside it struck through, and the lime tag is the screen's one lime: an offer is neither an action nor a live state, so it is a tag, not a button.",
+    "Screen readers get the plain value from a visually hidden copy; the rolling strips are aria-hidden."
+  ],
+  "tags": ["text", "number", "price", "mask", "in view"]
+}
+</script>
+<style data-code>
+/* Odometer — components/offers/Odometer.tsx, app/globals.css .odo-* */
+.odo { display: inline-flex; line-height: 1; }
+.odo-row { display: inline-flex; }
+.odo-cell { position: relative; display: inline-block; height: 1.05em; overflow: hidden; }
+.odo-ghost { display: block; height: 1.05em; line-height: 1.05; visibility: hidden; }   /* sizes the cell to its digit */
+.odo-strip {
+  position: absolute; left: 0; top: 0;
+  display: flex; flex-direction: column;
+  transform: translateY(0);
+  transition: transform 1250ms cubic-bezier(0.16, 1, 0.3, 1) var(--at, 0ms);
+}
+/* the digits are generated, so the page's text is only the price */
+.odo-strip::before { content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9'; display: block; white-space: pre; line-height: 1.05; }
+.odo-ch { line-height: 1.05; }
+.odo.is-in .odo-strip { transform: translateY(var(--to)); }   /* −n × 10% of the strip */
+@media (prefers-reduced-motion: reduce) {
+  .odo-strip { transform: translateY(var(--to)); transition: none; }
+}
+
+/* The price around it — app/globals.css · EXCLUSIVE-OFFER PRICING */
+.offer-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px; }
+.offer-price-big {
+  font-family: var(--font-headline, 'Eurostile', sans-serif);
+  font-size: clamp(64px, 11vw, 124px);
+  line-height: 0.9; letter-spacing: -0.04em;
+  color: var(--fg, #121417);
+}
+.was-price {
+  color: var(--fg3, rgba(18, 20, 23, 0.38));
+  font-weight: 400;
+  text-decoration: line-through;
+  text-decoration-thickness: 0.08em;
+}
+.offer-price-was { font-family: var(--font-headline, 'Eurostile', sans-serif); font-size: clamp(28px, 4.4vw, 52px); letter-spacing: -0.03em; }
+.offer-price-unit { font-size: 18px; color: var(--fg2, rgba(18, 20, 23, 0.64)); }
+.offer-price-note { margin: 16px 0 0; font-size: 17px; color: var(--fg2, rgba(18, 20, 23, 0.64)); }
+.offer-price-note strong { color: var(--fg, #121417); font-weight: 500; }
+/* a tag, an outline by default; lime beside the price, where it is the screen's one lime */
+.offer-badge {
+  display: inline-flex; align-items: center; height: 24px; padding: 0 8px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap;
+  vertical-align: middle;
+  color: currentColor; box-shadow: inset 0 0 0 1px currentColor;
+}
+.offer-price .offer-badge { align-self: baseline; background: #B8FF00; color: #121417; box-shadow: none; }
+.offer-price-note .offer-badge { margin-left: 4px; }
+</style>
+<style>
+  .od { --big: clamp(88px, min(21vw, 34vh), 250px); width: min(100%, 1180px); display: grid; gap: clamp(12px, 3vmin, 28px); }
+  /* the library draws the price larger so it fills a tile; the site's own sizes are the clamps in the code */
+  .od .offer-price { gap: 0.06em clamp(12px, 2vw, 24px); }
+  .od .offer-price-big { font-size: var(--big); }
+  .od .offer-price-was { font-size: calc(var(--big) * 0.4); }
+  .od .offer-price-unit { font-size: clamp(16px, 2.4vmin, 22px); }
+  .od .offer-price-note { margin: 0; font-size: clamp(15px, 2.6vmin, 20px); }
+  .od .offer-h2 { margin: 0; font-family: var(--font-headline); font-weight: 400; font-size: clamp(28px, 4vw, 46px); letter-spacing: -0.025em; }
+  .odo.is-reset .odo-strip { transition: none; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="od">
+    <h2 class="offer-h2">Price</h2>
+<!-- code -->
+<div class="offer-price">
+  <span class="offer-price-unit">from</span>
+  <span class="odo offer-price-big" data-odo="$500"></span>
+  <span class="offer-price-unit">1 to 3 weeks</span>
+  <span class="offer-badge mono">Design service</span>
+</div>
+<p class="offer-price-note">
+  Practice Website Refresh: <strong>$600</strong> <del class="was-price" aria-label="Regular price $800">$800</del>
+  <span class="offer-badge mono">Exclusive offer</span>
+</p>
+<!-- /code -->
+  </div>
+  <div class="qm-ui" id="ui">
+    <span>Price</span>
+    <button data-p="design" class="is-on">Design $500</button>
+    <button data-p="practice">Practice $600</button>
+    <button data-p="brand">Brand $5,000</button>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* An odometer: each digit is a 0–9 strip in its own mask, turning to its value when scrolled
+   into view. A visually hidden copy carries the plain value for screen readers. */
+function odometer(el, value) {
+  const sr = Object.assign(document.createElement('span'), { className: 'sr-only', textContent: value });
+  const row = Object.assign(document.createElement('span'), { className: 'odo-row' });
+  row.setAttribute('aria-hidden', 'true');
+  let d = 0;
+  for (const ch of value) {
+    if (!/\d/.test(ch)) {
+      row.append(Object.assign(document.createElement('span'), { className: 'odo-ch', textContent: ch }));
+      continue;
+    }
+    const cell = Object.assign(document.createElement('span'), { className: 'odo-cell' });
+    const strip = Object.assign(document.createElement('span'), { className: 'odo-strip' });
+    strip.style.setProperty('--to', `${-Number(ch) * 10}%`);
+    strip.style.setProperty('--at', `${80 + d++ * 70}ms`);   // 80 ms, then 70 ms a digit
+    cell.append(Object.assign(document.createElement('span'), { className: 'odo-ghost', textContent: ch }), strip);
+    row.append(cell);
+  }
+  el.replaceChildren(sr, row);
+}
+
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    e.target.classList.add('is-in');
+    io.unobserve(e.target);
+  }
+}, { rootMargin: '-15% 0px' });
+
+document.querySelectorAll('[data-odo]').forEach((el) => {
+  odometer(el, el.dataset.odo);
+  io.observe(el);
+});
+</script>
+<script>
+  io.disconnect();
+  const row = document.querySelector('.offer-price');
+  const note = document.querySelector('.offer-price-note');
+  let odo = document.querySelector('[data-odo]');
+  const PRICES = {   // lib/data.ts · services, PRICES
+    design: { pre: 'from', now: '$500', was: '', unit: '1 to 3 weeks', badge: 'Design service', note: true },
+    practice: { pre: '', now: '$600', was: '$800', unit: 'flat, in 7 days', badge: 'Exclusive offer', note: false },
+    brand: { pre: 'from', now: '$5,000', was: '', unit: '5 to 10 weeks', badge: 'Brand upgrade', note: false },
+  };
+  // the price row is drawn again for each: a regular price only where there is one
+  const show = (k) => {
+    const p = PRICES[k];
+    row.innerHTML =
+      (p.pre ? `<span class="offer-price-unit">${p.pre}</span>` : '') +
+      `<span class="odo offer-price-big" data-odo="${p.now}"></span>` +
+      (p.was ? `<del class="was-price offer-price-was" aria-label="Regular price ${p.was}">${p.was}</del>` : '') +
+      `<span class="offer-price-unit">${p.unit}</span>` +
+      `<span class="offer-badge mono">${p.badge}</span>`;
+    odo = row.querySelector('[data-odo]');
+    odometer(odo, p.now);
+    note.style.display = p.note ? '' : 'none';
+  };
+  const reset = () => {
+    odo.classList.add('is-reset');
+    odo.classList.remove('is-in');
+    void odo.offsetWidth;
+    odo.classList.remove('is-reset');
+  };
+  QM.demo({
+    kind: 'play',
+    dur: 1250 + 80 + 70 * 2,
+    hold: 2000,
+    reset,
+    play: () => odo.classList.add('is-in'),
+  });
+  document.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-p]').forEach((x) => x.classList.toggle('is-on', x === b));
+    show(b.dataset.p);
+    reset();
+    requestAnimationFrame(() => requestAnimationFrame(() => odo.classList.add('is-in')));
+  }));
+</script>
+</body>
+</html>

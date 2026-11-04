@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code ripple · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-one-time-code",
+  "title": "Code ripple",
+  "group": "picks",
+  "cat": "inputs",
+  "order": 130,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "frame spring k 520 · c 28 · 60 ms ripple · 200 ms digits",
+  "summary": "Six cells that are one input: digits rise into place while a focus frame slides between the cells on a spring. A full code ripples the cells lime one by one, then the card gives way to the welcome line. A code of one repeated digit shivers, turns the cells ink and drains.",
+  "spec": [
+    ["Digit", "translateY 14px → 0 with a fade, 200 ms, cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Frame", "one element, x on a spring k 520 · c 28, to the next empty cell (the last cell for a full code); a 1.5px ink edge and a 3px halo"],
+    ["Ripple", "cells go lime 60 ms apart and lift 6px and back (320 ms, expo out); the page change waits 700 ms after the last"],
+    ["Page change", "the card fades out in 120 ms (ease in), the welcome fades in and rises 6px in 200 ms (expo out)"],
+    ["Wrong", "cells turn ink and shake ±7 px (360 ms, 20 ms apart); at 700 ms the digits fade; at 950 ms it is empty and the field is focused again"],
+    ["Bar", "width 0 → 100% in 1400 ms, cubic-bezier(0.65, 0, 0.35, 1)"],
+    ["Wrong code", "any code of one repeated digit, as a demo; a real one asks the server"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Sign-in code (ix-one-time-code)", "Idea: bencho.dev one-time-code (MIT)"],
+  "where": "Signing in to a Practice Website Refresh or a Listing Launch Kit with a code sent to your email.",
+  "rules": [
+    "One real input underneath, so paste, autofill (autocomplete=one-time-code) and the keyboard all work.",
+    "Lime means in, and only that: the cells and the bar carry it; the frame is ink.",
+    "Errors stay with role=alert and the field takes focus back.",
+    "A page change fades out, then the next rises 6px."
+  ],
+  "tags": ["input", "otp", "spring", "form", "lime"],
+  "shot": 3400
+}
+</script>
+<style data-code>
+/* Sign-in code · Idea: bencho.dev one-time-code (MIT).
+   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+.otp {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
+  --surface: #ffffff; --surface-muted: #eceef0; --track: rgba(18, 20, 23, 0.08); --edge: rgba(18, 20, 23, 0.52);
+  --primary: #B8FF00; --on-primary: #0c1300;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  display: grid; gap: 24px; width: 440px; padding: 40px 40px 32px; background: var(--surface); border-radius: 14px;
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.otp-view { display: grid; gap: 24px; }
+.otp-view[hidden] { display: none; }
+.otp-who { display: flex; align-items: center; gap: 12px; }
+.otp-logo { display: block; height: 24px; width: auto; }
+.otp-title { font-family: inherit; font-size: 20px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.35; }   /* O2's titles are Geist */
+.otp-body { margin: 8px 0 0; line-height: 1.6; color: var(--muted); }
+.otp-cells { position: relative; height: 60px; width: 372px; margin: 0 auto; }
+.otp-cell { position: absolute; top: 0; width: 52px; height: 60px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface); display: grid; place-items: center; overflow: hidden; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
+.otp-cell.ok { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+.otp-cell.no { background: var(--text); color: #fff; border-color: transparent; }
+.otp-cell span { display: block; }
+.otp-caret { position: absolute; top: 0; left: 0; width: 52px; height: 60px; border-radius: 8px; border: 1.5px solid var(--text); box-shadow: 0 0 0 3px rgba(18, 20, 23, 0.14); pointer-events: none; opacity: 0; transition: opacity 120ms var(--ease-out); }
+.otp-cells[data-focus] .otp-caret { opacity: 1; }
+.otp-code { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; font-size: 16px; cursor: text; }
+.otp-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.otp-meta { font-size: 12px; color: var(--faint); }
+.otp-err { min-height: 1.5em; color: var(--text); }
+.otp-btn { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--text); font: inherit; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms var(--ease-out); }
+.otp-btn:hover, .otp-btn.is-hot { background: var(--surface-muted); }
+.otp-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.otp-hello { display: flex; align-items: center; gap: 12px; }
+.otp-hello img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; object-position: 50% 30%; }
+.otp-hello .otp-meta { color: var(--muted); }
+.otp-track { height: 6px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.otp-track i { display: block; height: 100%; width: var(--p, 0%); background: var(--primary); border-radius: inherit; }
+@media (prefers-reduced-motion: reduce) { .otp-cell, .otp-caret, .otp-btn { transition: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<section class="otp" id="otp">
+  <div class="otp-view" id="otp-v1">
+    <div class="otp-who"><svg class="otp-logo" viewBox="0 0 918 342" role="img" aria-label="Qbix"><path fill="currentColor" d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></svg></div>
+    <div>
+      <h1 class="otp-title">Check your email</h1>
+      <p class="otp-body">We sent a six-digit code to dana@willowcounseling.com.</p>
+    </div>
+    <div class="otp-cells" id="otp-cells"><div class="otp-caret" id="otp-caret"></div><input class="otp-code" id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Six-digit code"></div>
+    <div class="otp-err" id="otp-err" role="alert"></div>
+    <div class="otp-foot"><span class="otp-meta" id="otp-exp">The code expires in 10 minutes</span><button class="otp-btn" id="otp-resend" type="button">Resend code</button></div>
+  </div>
+  <div class="otp-view" id="otp-v2" hidden>
+    <div class="otp-hello"><img src="../assets/art/you.webp" alt=""><div><div class="otp-title">Welcome back, Dana</div><div class="otp-meta">Opening your Practice Website Refresh</div></div></div>
+    <div class="otp-track"><i id="otp-bar"></i></div>
+  </div>
+</section>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Click the cells and type six digits · 111111 is wrong</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* Six cells that are one input. Digits rise into place; a focus frame slides between the cells on a spring;
+   a full code ripples the cells lime, and the card gives way to the welcome. */
+const $ = (id) => document.getElementById(id);
+const cellsEl = $('otp-cells'), input = $('otp-code'), caretEl = $('otp-caret'), errEl = $('otp-err');
+const v1 = $('otp-v1'), v2 = $('otp-v2'), bar = $('otp-bar');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const N = 6, CW = 52, G = 8, xOf = (i) => i * (CW + G) + (i >= 3 ? 8 : 0);          // a wider gap in the middle
+const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const cells = Array.from({ length: N }, (_, i) => {
+  const c = document.createElement('div');
+  c.className = 'otp-cell'; c.style.left = xOf(i) + 'px';
+  cellsEl.insertBefore(c, caretEl);
+  return c;
+});
+let phase = 'type', shown = '', timers = [];
+const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
+
+/* the frame: x on a spring, to the next empty cell */
+const caret = { x: 0, v: 0 };
+let raf = 0;
+function wake() {
+  if (raf) return;
+  let prev = performance.now();
+  const f = (now) => {
+    const dt = Math.min(0.033, (now - prev) / 1000); prev = now;
+    const to = xOf(Math.min(input.value.length, N - 1));
+    caret.v += ((to - caret.x) * 520 - caret.v * 28) * dt; caret.x += caret.v * dt;
+    caretEl.style.transform = `translateX(${caret.x}px)`;
+    if (Math.abs(to - caret.x) < 0.05 && Math.abs(caret.v) < 0.5) { caret.x = to; caret.v = 0; caretEl.style.transform = `translateX(${to}px)`; raf = 0; return; }
+    raf = requestAnimationFrame(f);
+  };
+  raf = requestAnimationFrame(f);
+}
+function render() {
+  const v = input.value;
+  cells.forEach((c, i) => {
+    const ch = v[i] || '', had = shown[i] || '';
+    if (ch === had) return;
+    c.innerHTML = ch ? `<span>${ch}</span>` : '';
+    if (ch && !reduceMotion) c.firstChild.animate([{ transform: 'translateY(14px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 200, easing: OUT });
+  });
+  shown = v; wake();
+}
+function reset(full) {
+  timers.forEach(clearTimeout); timers = [];
+  phase = 'type'; input.value = ''; input.disabled = false; shown = ''; errEl.textContent = '';
+  cells.forEach((c) => { c.className = 'otp-cell'; c.innerHTML = ''; });
+  caret.x = 0; caretEl.style.transform = 'translateX(0)';
+  if (full) {
+    [v1, v2].forEach((v) => v.getAnimations().forEach((a) => a.cancel()));        // the page change leaves its last frame held
+    v1.hidden = false; v2.hidden = true;
+    bar.style.transition = 'none'; bar.style.setProperty('--p', '0%');
+  }
+}
+function ok() {
+  phase = 'ok'; input.blur(); input.disabled = true; cellsEl.removeAttribute('data-focus');
+  cells.forEach((c, i) => later(() => {                          // the ripple: lime, one by one, each lifting a little
+    c.classList.add('ok');
+    if (!reduceMotion) c.animate([{ transform: 'none' }, { transform: 'translateY(-6px)', offset: 0.4 }, { transform: 'none' }], { duration: 320, easing: OUT });
+  }, i * 60));
+  later(async () => {                                              // the card gives way to the welcome line
+    if (!reduceMotion) await v1.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'cubic-bezier(0.7, 0, 0.84, 0)', fill: 'forwards' }).finished;
+    v1.hidden = true; v2.hidden = false;
+    if (!reduceMotion) v2.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: OUT });
+    bar.style.transition = reduceMotion ? 'none' : 'width 1400ms cubic-bezier(0.65, 0, 0.35, 1)';
+    bar.style.setProperty('--p', '100%');
+  }, N * 60 + 700);
+}
+function no() {
+  phase = 'no'; errEl.textContent = 'That code did not match. Try again.';
+  cells.forEach((c, i) => {
+    c.classList.add('no');
+    if (!reduceMotion) c.animate([{ transform: 'none' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'none' }], { duration: 360, delay: i * 20, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' });
+  });
+  later(() => { cells.forEach((c) => { if (c.firstChild) c.firstChild.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }); }); }, 700);
+  later(() => { const e = errEl.textContent; reset(); errEl.textContent = e; input.focus(); }, 950);
+}
+input.addEventListener('input', () => {
+  if (phase !== 'type') return;
+  input.value = input.value.replace(/\D/g, '').slice(0, N);
+  render();
+  if (input.value.length === N) {
+    const v = input.value;
+    phase = 'check';
+    later(() => (/^(\d)\1+$/.test(v) ? no() : ok()), 260);       // any one repeated digit is wrong, for the demo
+  }
+});
+input.addEventListener('focus', () => { cellsEl.setAttribute('data-focus', ''); wake(); });
+input.addEventListener('blur', () => { if (phase === 'type') cellsEl.removeAttribute('data-focus'); });
+input.addEventListener('keydown', () => { if (phase === 'type') errEl.textContent = ''; });
+cellsEl.addEventListener('pointerdown', () => input.focus({ preventScroll: true }));
+$('otp-resend').addEventListener('click', () => { $('otp-exp').textContent = 'A new code is on its way'; });
+reset(true);
+</script>
+<script>
+  /* harness glue: a ghost types the code; on every other pass, a wrong one first */
+  PickGhost.fit(document.getElementById('pk'), 440, 420, { max: 1.5 });
+  let round = 0;
+  PickGhost.start({
+    hot: '.otp-btn',
+    reset() { reset(true); $('otp-exp').textContent = 'The code expires in 10 minutes'; },
+    async script(g) {
+      const wrong = round++ % 2 === 1;
+      await g.wait(1200);
+      await g.click('#otp-cells', { ms: 650 });
+      await g.wait(500);
+      await g.type('#otp-code', wrong ? '111111' : '482915', 190);
+      await g.wait(wrong ? 2600 : 4200);
+    },
+    still() { input.value = '482915'; render(); cells.forEach((c) => c.classList.add('ok')); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Print to video · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<link rel="stylesheet" href="../scenes/scenes.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "listing-story",
+  "title": "Print to video",
+  "group": "scenes",
+  "cat": "scenes",
+  "order": 50,
+  "kind": "states",
+  "tone": "paper",
+  "n": 3,
+  "line": "3 states · 270vh · scroll",
+  "summary": "The Listing Launch Kit for 1428 Alder Street: one flyer and everything made from it. The flyer prints, front and back, from photographs; the pictures on it are cropped into five posts; then the posts fold away and a phone rises with the 30-second video, its pictures wiping through as its captions type.",
+  "spec": [
+    [
+      "States",
+      "3: Print flyer · Five social posts · A 30-second video"
+    ],
+    [
+      "Beats",
+      "0 → 1, beats 0.00 – 0.76: the flyer prints, front then back, its parts set in · 1 → 2, 1.00 – 1.96: the back folds around its two pictures, which go down into the feed; two crops lift out of the front’s photo; the last post comes in · 2 → 3, 2.00 – 2.98: the posts fold, the phone rises, the video plays"
+    ],
+    [
+      "Easing",
+      "E.out for what prints and opens (13), E.in for folds (9), E.move (6), E.lin for jumps (6), E.soft (3)"
+    ],
+    [
+      "Chapter",
+      "270vh pinned: 110vh, then 80vh a move"
+    ],
+    [
+      "Drawn at",
+      "720 × 560 in its own px, zoomed to its box"
+    ],
+    [
+      "Trigger",
+      "The scroll is the playhead (lib/scene/driver.ts); the shown time chases it, 1 − e^(−6.5 dt)"
+    ],
+    [
+      "Variants",
+      "Photographs (the homepage: the house and its kitchen; the neighborhood a contour map, In Escrow the house in dots, the video’s last shot a field of ridges) or Drawings"
+    ]
+  ],
+  "source": [
+    "components/scenes/Listing.tsx · ListingStory",
+    "app/scenes-listing.css",
+    "components/scene/pictures.tsx · Pictures",
+    "components/scene/Generative.tsx",
+    "components/story/Story.tsx · Chapter",
+    "components/scene/Scene.tsx · Scene",
+    "lib/scene/timeline.ts · Timeline",
+    "lib/scene/driver.ts · playScene"
+  ],
+  "where": "Business homepage, the Listing kit chapter: paper, the scene on the right of its words, the three steps listed beside it.",
+  "rules": [
+    "Everything printed or posted is ink on paper, in either tone.",
+    "One lime a state, handed on as the story moves: the flyer’s tag, the Just Listed post’s tag (the flyer’s is reprinted in ink first), the video’s running time.",
+    "Every crop of the house is the same crop of the same photograph: the photograph is laid in the drawing’s own units.",
+    "Time is in beats: state k is settled at beat k, each move in the middle of its stretch, so every state holds a while"
+  ],
+  "tags": [
+    "scene",
+    "scroll",
+    "flyer",
+    "posts",
+    "video",
+    "photograph",
+    "generative"
+  ],
+  "bundle": {
+    "files": [
+      "components/scenes/Listing.tsx",
+      "app/scenes-listing.css",
+      "components/scene/pictures.tsx",
+      "components/scene/Generative.tsx",
+      "app/scenes.css",
+      "components/scene/Scene.tsx",
+      "components/scene/kit.tsx",
+      "lib/scene/timeline.ts",
+      "lib/scene/driver.ts"
+    ]
+  },
+  "shot": 9700
+}
+</script>
+<style>
+  /* demo only: the scene fills the stage at its own proportions; its caption sits in the corner */
+  :root { --pad: clamp(12px, 3vmin, 40px); --bar: 0px; }
+  html:not(.qm-tile) body.has-ui { --bar: 46px; }
+  .qm-stage { padding: var(--pad); place-items: start center; }
+  .qms { width: 100%; height: calc(100svh - 2 * var(--pad) - var(--bar)); display: grid; grid-template-rows: minmax(0, 1fr) 24px; gap: 4px; }
+  .qms-box { min-width: 0; min-height: 0; }
+  .qms-cap { display: flex; align-items: center; gap: 10px; color: var(--fg3); white-space: nowrap; }
+  .qms-cap .qms-n { color: var(--fg); }
+</style>
+</head>
+<body class="has-ui">
+<main class="qm-stage">
+  <section class="qms" id="ch" data-chapter data-tone="paper" data-step="0">
+    <div class="qms-box" id="scene"></div>
+    <p class="kicker qms-cap" id="cap" aria-live="polite"><span class="qms-n">01 / 03</span><span>Print flyer</span></p>
+  </section>
+  <div class="qm-ui" id="ui">
+    <span>Pictures</span>
+    <button type="button" data-v="1" class="is-on">Photographs</button>
+    <button type="button" data-v="0">Drawings</button>
+    <span class="qm-sep">the business homepage shows photographs</span>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../scenes/scenes.js"></script>
+<script>
+  /* The real scene (the site's own component, bundled in ../scenes/scenes.js). The site's driver, which plays it
+     with the scroll, is replaced by the harness: it hands the timeline over here. */
+  let STEPS = [["Print flyer"],["Five social posts"],["A 30-second video"]];
+  const n = STEPS.length;
+  let at = 0, step = -1, started = false;
+
+  const section = document.getElementById('ch');
+  const box = document.getElementById('scene');
+  const cap = document.getElementById('cap');
+  const el = (tag, cls, text) => Object.assign(document.createElement(tag), { className: cls, textContent: text });
+  let tl = null, mounted = null;
+  const mount = (props) => {
+    mounted?.unmount();
+    mounted = QMScenes.mount('listing-story', box, props);
+  };
+
+  function label(s) {
+    step = s;
+    section.dataset.step = String(s);                                       // the chapter's lit step, as the driver sets it
+    section.dispatchEvent(new CustomEvent('scene:step', { detail: s }));
+    const [name, tag] = STEPS[s];
+    cap.replaceChildren(el('span', 'qms-n', `${String(s + 1).padStart(2, '0')} / ${String(n).padStart(2, '0')}`), el('span', '', name));
+    if (tag) cap.append(el('span', 'tag qms-tag' + (tag === 'Live' ? ' is-live' : ''), tag));
+  }
+  function seek(t) {
+    at = t;
+    if (!tl) return;
+    tl.seek(QM.reduced ? (t > 0 ? Math.max(1, Math.round(t)) : 0) : t);      // reduced motion: a still per state, as the driver
+    const s = Math.max(0, Math.min(n - 1, Math.round(t) - 1));
+    if (s !== step) label(s);
+  }
+
+  window.QMSceneReady = (timeline) => {
+    tl = timeline;
+    step = -1;
+    seek(at);
+    if (started) return;
+    started = true;
+    QM.demo({ kind: 'states', n, seek, dwell: 2600, first: 3000, hold: 3200 });
+  };
+
+  /* Photographs or drawings: the site shows photographs on the business homepage (components/scene/pictures.tsx) */
+  document.querySelectorAll('#ui [data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('#ui [data-v]').forEach((x) => x.classList.toggle('is-on', x === b));
+    mount({ pictures: b.dataset.v === '1' });
+  }));
+  mount();
+</script>
+</body>
+</html>

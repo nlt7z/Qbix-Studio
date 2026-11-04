@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Four loaders · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-loaders",
+  "title": "Four loaders",
+  "group": "lab",
+  "cat": "loading",
+  "order": 560,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "hop · draw · swap · flip, each its own loop",
+  "summary": "Four small loops for four design and build waits. An ink block jumps on lime while the moodboard is read, stretches in the air, lands with a squash and a blink. A page with a cut corner is drawn with stroke-dashoffset as it is built. Two squares swap corners while changes save. A brand book flips its pages in 3D and counts them.",
+  "spec": [
+    ["Hop", "0.95 s a hop on canvas: 20% crouch, 60% flight (stretch 1.26 → 1.04 → 1.14), 20% landing wobble"],
+    ["Page", "3.2 s, stroke-dashoffset draw 0 → 40%, the two cards scaleY on a back easing, wipe out"],
+    ["Swap", "2.8 s, two squares trade corners with a 90° turn, easing cubic-bezier(0.7, 0, 0.3, 1)"],
+    ["Flip", "3 pages, 2.4 s each, 0.8 s apart, rotateY 0 → −180° around the spine; the count advances per flip"],
+    ["Trigger", "always on, paused when the tab is hidden"]
+  ],
+  "source": ["Qbix studio library · loaders"],
+  "where": "Waits in a Qbix build: a moodboard being read, a page being built, a save, a brand book opening.",
+  "rules": [
+    "Each loader is one flat shape language: blocks with the cut corner, bars, paper pages. No rounded blobs, no gradients.",
+    "Only the hopping tile is lime; the other three tiles are white on the paper ground.",
+    "Pages are told apart by light tints, not shadows."
+  ],
+  "tags": ["loading", "canvas", "css keyframes", "svg", "moodboard", "build"],
+  "shot": 1700
+}
+</script>
+<style data-code>
+/* Four loaders: each in a flat tile that is its own container (cqmin sizes everything).
+   One tile is lime, the others white on the paper ground; the corner is cut, top right. */
+.ld-sheet { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; min-height: 0; }
+.ld-tile { --c: 14px; position: relative; overflow: hidden; container-type: size; display: grid; place-items: center; clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
+.t1 { background: #B8FF00; color: #0c1300; }
+.t2, .t3, .t4 { background: #ffffff; color: rgba(18, 20, 23, 0.64); }
+.ld-count { color: rgba(18, 20, 23, 0.38); }
+.ld-cap { position: absolute; left: 16px; bottom: 12px; font: 400 11px/1.4 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
+.ld-blob { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* page: a wireframe drawn on its grid, its two cards pop up last */
+.ld-page { width: 56cqmin; height: 56cqmin; margin-top: -8cqmin; overflow: visible; }
+.ld-page path { fill: none; stroke: #121417; stroke-width: 3.2; stroke-linecap: square; stroke-linejoin: miter; stroke-dasharray: var(--L) var(--L); animation: ld-draw 3.2s cubic-bezier(0.6, 0, 0.3, 1) infinite; }
+.ld-page .blk { fill: #121417; transform-box: fill-box; transform-origin: center bottom; animation: ld-win 3.2s cubic-bezier(0.3, 1.5, 0.5, 1) infinite; }
+@keyframes ld-draw { 0% { stroke-dashoffset: var(--L); } 40% { stroke-dashoffset: 0; } 72% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: calc(var(--L) * -1); } }
+@keyframes ld-win { 0%, 34% { transform: scaleY(0); } 44%, 72% { transform: scaleY(1); } 82%, 100% { transform: scaleY(0); } }
+/* swap */
+.ld-swap { position: relative; width: 34cqmin; height: 34cqmin; margin-top: -8cqmin; }
+.ld-sq { position: absolute; left: 0; top: 0; width: 44%; height: 44%; animation: ld-orbit 2.8s infinite; }
+.ld-sq.a { background: #121417; }
+.ld-sq.b { background: #ffffff; box-shadow: inset 0 0 0 2px #121417; animation-delay: -1.4s; }
+@keyframes ld-orbit {
+  0% { transform: translate(0, 0) rotate(0); animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1); }
+  18%, 25% { transform: translate(127%, 0) rotate(90deg); animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1); }
+  43%, 50% { transform: translate(127%, 127%) rotate(180deg); animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1); }
+  68%, 75% { transform: translate(0, 127%) rotate(270deg); animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1); }
+  93%, 100% { transform: translate(0, 0) rotate(360deg); }
+}
+/* brand book */
+.ld-book { position: relative; width: 62cqmin; height: 40cqmin; margin-top: -10cqmin; perspective: 320cqmin; }
+.ld-cover { position: absolute; inset: -3cqmin; background: #121417; }
+.ld-pg { position: absolute; top: 0; width: 50%; height: 100%; background: #f3f4f5; }
+.ld-pg.l { left: 0; } .ld-pg.r { right: 0; }
+.ld-lines { position: absolute; left: 14%; right: 14%; top: 16%; bottom: 16%; display: flex; flex-direction: column; justify-content: space-between; }
+.ld-lines i { display: block; height: 1.4cqmin; background: rgba(18, 20, 23, 0.14); }
+.ld-lines.short { right: 34%; }
+.ld-flip { position: absolute; right: 0; top: 0; width: 50%; height: 100%; transform-origin: left center; transform-style: preserve-3d; animation: ld-flip 2.4s cubic-bezier(0.45, 0, 0.25, 1) infinite; }
+.ld-flip .f, .ld-flip .bk { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #f3f4f5; }
+.ld-flip .bk { transform: rotateY(180deg); }
+.ld-flip .f { animation: ld-shadeF 2.4s cubic-bezier(0.45, 0, 0.25, 1) infinite; }
+.ld-flip .bk { animation: ld-shadeB 2.4s cubic-bezier(0.45, 0, 0.25, 1) infinite; }
+.ld-flip.p2, .ld-flip.p2 .f, .ld-flip.p2 .bk { animation-delay: -0.8s; }
+.ld-flip.p3, .ld-flip.p3 .f, .ld-flip.p3 .bk { animation-delay: -1.6s; }
+@keyframes ld-shadeF { 0% { background: #f3f4f5; } 27%, 100% { background: #dcdfe2; } }
+@keyframes ld-shadeB { 0%, 27% { background: #dcdfe2; } 55%, 100% { background: #f3f4f5; } }
+@keyframes ld-flip { 0% { transform: rotateY(0) translateZ(0.1px); } 55%, 100% { transform: rotateY(-180deg) translateZ(0.1px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ld-page path, .ld-page .blk, .ld-sq, .ld-flip, .ld-flip .f, .ld-flip .bk { animation: none; }
+  .ld-page path { stroke-dashoffset: 0; } .ld-sq.b { transform: translate(127%, 127%); } .ld-flip { transform: rotateY(-30deg); }
+}
+</style>
+<style>
+  .qm-stage.ld { display: grid; grid-template-rows: auto 1fr; gap: 14px; place-items: stretch; padding: clamp(16px, 3.4vmin, 32px); }
+  .ld-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .ld-head h2 { font-size: clamp(20px, 2.6vw, 30px); letter-spacing: -0.02em; }
+  body.paused * { animation-play-state: paused !important; }
+</style>
+</head>
+<body>
+<main class="qm-stage ld">
+  <div class="ld-head"><p class="kicker">Qbix · Four waits</p><h2>Loading, on purpose.</h2></div>
+<!-- code -->
+<div class="ld-sheet">
+  <div class="ld-tile t1"><canvas class="ld-blob" id="blob"></canvas><div class="ld-cap">Reading the moodboard</div></div>
+  <div class="ld-tile t2">
+    <svg class="ld-page" viewBox="0 0 100 100" aria-hidden="true"><path id="hp" d="M18 88 V20 H70 L82 32 V88 M18 32 H82 M26 44 H56 M26 52 H46 M26 60 H36"/><rect class="blk" x="26" y="68" width="22" height="14"/><rect class="blk" x="52" y="68" width="22" height="14"/></svg>
+    <div class="ld-cap">Building your page</div>
+  </div>
+  <div class="ld-tile t3"><div class="ld-swap"><div class="ld-sq a"></div><div class="ld-sq b"></div></div><div class="ld-cap">Saving changes</div></div>
+  <div class="ld-tile t4">
+    <div class="ld-book" id="book"><div class="ld-cover"></div><div class="ld-pg l"><div class="ld-lines"></div></div><div class="ld-pg r"><div class="ld-lines short"></div></div></div>
+    <div class="ld-cap">Opening the brand book<br><span class="ld-count" id="count">Page 12 of 48</span></div>
+  </div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Just watch</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // six light lines in a page (the flip pages carry them front and back)
+  const lines = (n = 6) => '<i></i>'.repeat(n);
+  document.querySelectorAll('.ld-lines').forEach((l) => { l.innerHTML = lines(); });
+  const book = document.getElementById('book');
+  ['p1', 'p2', 'p3'].forEach((p) => {
+    const f = document.createElement('div'); f.className = 'ld-flip ' + p;
+    f.innerHTML = `<div class="f"><div class="ld-lines short">${lines()}</div></div><div class="bk"><div class="ld-lines">${lines()}</div></div>`;
+    book.appendChild(f);
+  });
+  const hp = document.getElementById('hp'); hp.style.setProperty('--L', Math.ceil(hp.getTotalLength()) + 1);
+  // the page count follows the page flips
+  let pg = 12; const countEl = document.getElementById('count');
+  ['p1', 'p2', 'p3'].forEach((p) => document.querySelector('.ld-flip.' + p).addEventListener('animationiteration', () => { pg = pg >= 48 ? 1 : pg + 1; countEl.textContent = 'Page ' + pg + ' of 48'; }));
+  // the block: stretch in the air, squash on landing, one blink
+  const cv = document.getElementById('blob'), ctx = cv.getContext('2d');
+  const INK = '#0c1300', LIME = '#B8FF00', DIM = '#8fc900';
+  let W = 0, H = 0, dpr = 1, U = 1;
+  function resize() { const r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); U = Math.min(W, H) / 220; }
+  const sm = (u) => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
+  const lerp = (a, b, u) => a + (b - a) * u;
+  const P = 0.95; // seconds a hop
+  function state(u) {
+    let sx = 1, sy = 1, lift = 0, lean = 0, closed = 0, travel = 0;
+    if (u < 0.2) { const k = sm(u / 0.2); sy = 1 - 0.24 * k; sx = 1 + 0.16 * k; }
+    else if (u < 0.8) {
+      const p = (u - 0.2) / 0.6; lift = 4 * p * (1 - p); travel = sm(p);
+      const st = p < 0.5 ? lerp(1.26, 1.04, sm(p / 0.5)) : lerp(1.04, 1.14, sm((p - 0.5) / 0.5)); sy = st; sx = 1 / Math.sqrt(st);
+      if (p < 0.12) { const k = sm(p / 0.12); sy = lerp(0.76, st, k); sx = lerp(1.16, sx, k); }
+      lean = p < 0.5 ? 0.16 : 0.16 - 0.3 * (p - 0.5);
+    } else { const q = (u - 0.8) / 0.2; travel = 1; const d = Math.exp(-q * 5) * Math.cos(q * 11); sy = 1 - 0.3 * d; sx = 1 + 0.22 * d; closed = q < 0.45 ? 1 : 0; lean = -0.06 * d; }
+    return { sx, sy, lift, lean, closed, travel };
+  }
+  function draw(t) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const hop = t / P, n = Math.floor(hop), u = hop - n;
+    const s = reduce ? { sx: 1, sy: 1, lift: 0, lean: 0, closed: 0, travel: 0 } : state(u);
+    const base = H * 0.6, cx = W / 2, gap = 62 * U, off = s.travel * gap;
+    for (let i = -3; i <= 3; i++) {                                       // stones scroll past; the block stays centred
+      const x = cx + i * gap - off, w = 34 * U, h = 9 * U;
+      const on = (i === 0 && s.travel < 0.5) || (i === 1 && s.travel >= 0.5);
+      const edge = Math.min(1, Math.max(0, (Math.min(x, W - x) - 20 * U) / (40 * U))); if (edge <= 0) continue;
+      ctx.fillStyle = on ? INK : DIM; ctx.fillRect(x - w / 2, base, w, h);
+    }
+    const bw = 44 * U, bh = 40 * U, y = base - s.lift * 46 * U, c = 11 * U;
+    ctx.save(); ctx.translate(cx, y); ctx.transform(1, 0, -s.lean, 1, 0, 0); ctx.scale(s.sx, s.sy);
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(-bw / 2, -bh); ctx.lineTo(bw / 2 - c, -bh); ctx.lineTo(bw / 2, -bh + c); ctx.lineTo(bw / 2, 0); ctx.lineTo(-bw / 2, 0); ctx.closePath(); ctx.fill();
+    const ey = -bh * 0.55;
+    for (const x of [-9 * U, 7 * U]) {
+      ctx.fillStyle = LIME;
+      if (s.closed) ctx.fillRect(x - 4 * U, ey + 2 * U, 8 * U, 2 * U); else ctx.fillRect(x - 3.5 * U, ey - 5 * U - (s.lift > 0.1 ? 1.4 * U : 0), 7 * U, 10 * U);
+    }
+    ctx.restore();
+  }
+  let clock = 0, last = performance.now(), running = false;
+  function frame(now) { if (document.hidden) { running = false; return; } clock += Math.min(0.05, (now - last) / 1000); last = now; draw(clock); requestAnimationFrame(frame); }
+  function start() { if (!running && !document.hidden) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', () => { document.body.classList.toggle('paused', document.hidden); start(); });
+  addEventListener('resize', () => { resize(); if (reduce) draw(0); });
+  resize(); if (reduce) draw(0); else start();
+})();
+</script>
+<script>QM.demo({ kind: 'loop' });</script>
+</body>
+</html>

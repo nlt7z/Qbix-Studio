@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skeleton rows · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pick-stock-sellers",
+  "title": "Skeleton rows",
+  "group": "picks",
+  "cat": "loading",
+  "order": 38,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "digits roll 320 ms · a build lands every 520 ms · skeleton pulse 1.6 s",
+  "summary": "Each project sits as a pulsing skeleton until its figures land, one row at a time. The live page count rolls up digit by digit and the total above the table rolls with it, together with the count of sites that are live. A project with no pages yet reads In design, never 0. Press Get live builds and the board blanks and lands again, a little higher. Qbix colours: ink on paper, with the lime on the button alone.",
+  "spec": [
+    ["Landing", "skeletons for 500 ms, then a build every 520 ms; a refresh blanks the board for 400 ms, then lands a build every 380 ms"],
+    ["Roll", "every digit is a strip 0 to 9 that slides translateY(−1.4em × digit) over 320 ms, cubic-bezier(0.16, 1, 0.3, 1); a comma holds still"],
+    ["New length", "a figure that gains a digit (a total, or 9 pages becoming 12) restarts every digit at 0 with no transition, then rolls"],
+    ["Total", "20 px, −0.02em: the sum of the pages landed so far, and how many sites are live; both roll"],
+    ["Skeleton", "a 72 × 14 px pill, 8 px radius, pulsing opacity 1 to 0.55 every 1.6 s, cubic-bezier(0.65, 0, 0.35, 1)"],
+    ["None", "In design, in words, in the muted ink: never 0"],
+    ["Grid", "columns 36 px · 1fr · 120 px · 150 px, 16 px apart; rows 56 px with a 1 px hairline between; the caption row 36 px"],
+    ["Box", "760 × 600, scaled to the stage at 94%; card radius 14 px; the button 36 px tall, 8 px radius, hover 88% lime over black"],
+    ["Reduced motion", "the figures are placed: no roll, no pulse"]
+  ],
+  "source": ["motion.ui.o2tech.ai · Stock across sellers (bom-stock-sellers)", "Idea: Qbix studio library · fomo-counter"],
+  "where": "Qbix's build board: the live page counts land project by project as the table refreshes and the total rolls with them. The same board fits any list whose figures arrive one at a time and add up.",
+  "rules": [
+    "A skeleton while a row's figures are pending; the total adds up only what has landed, never a guess ahead of it.",
+    "Digits roll over 320 ms, the total with them; the comma stays put.",
+    "Tabular figures, so the columns hold still while the digits slide.",
+    "A project with no pages says In design in words, never 0.",
+    "One lime, on Get live builds; the pictures carry the projects' colour and the figures stay ink."
+  ],
+  "tags": ["table", "odometer", "skeleton", "count", "live", "paper"],
+  "shot": 4500
+}
+</script>
+<style data-code>
+/* Pages across builds · Idea: Qbix studio library · fomo-counter
+   O2's roles in qbix colours: ink on paper, one lime (the button). Radii, spacing, type and timings are the O2 library's own. */
+.lb {
+  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.6);
+  --surface: #ffffff; --divider: rgba(18, 20, 23, 0.08); --track: rgba(18, 20, 23, 0.1);
+  --primary: #B8FF00; --on-primary: #0c1300;
+  --radius-sm: 8px; --radius-lg: 14px;
+  --duration-fast: 120ms; --duration-slower: 320ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  display: grid; grid-template-rows: auto 1fr; gap: 16px; width: 760px; height: 600px;   /* the board's design size */
+  font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
+}
+.lb-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.lb-heading { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.lb-meta { font-size: 12px; color: var(--faint); }
+.lb-card { background: var(--surface); border-radius: var(--radius-lg); padding: 20px 24px; }
+
+/* the one lime: Get live builds */
+.lb-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 16px; border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--primary); color: var(--on-primary); font-family: inherit; font-size: 14px; font-weight: 500; letter-spacing: 0; white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.lb-btn:hover, .lb-btn.is-hot { background: color-mix(in oklab, var(--primary) 88%, #000); }
+.lb-btn:active { background: color-mix(in oklab, var(--primary) 78%, #000); }
+.lb-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.lb-btn svg { display: block; flex: none; }
+
+/* the total: two odometers and the words between them */
+.lb-total { display: flex; align-items: baseline; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--divider); font-size: 20px; letter-spacing: -0.02em; }
+.lb-lbl { color: var(--muted); }
+.lb-roll { display: inline-flex; font-variant-numeric: tabular-nums; }
+.lb-roll .c { height: 1.4em; line-height: 1.4em; overflow: hidden; display: inline-block; }
+.lb-roll .s { display: block; transition: transform var(--duration-slower) var(--ease-out); }
+.lb-roll .s i { display: block; height: 1.4em; font-style: normal; }
+.lb-roll.still .s { transition: none; }
+
+/* the table: a picture, the project, its build time, its live pages */
+.lb-cap, .lb-row { display: grid; grid-template-columns: 36px 1fr 120px 150px; column-gap: 16px; align-items: center; }
+.lb-cap { height: 36px; color: var(--muted); font-weight: 500; }
+.lb-row { height: 56px; }
+.lb-row + .lb-row { border-top: 1px solid var(--divider); }
+.lb-cap .r, .lb-row .r { justify-self: end; text-align: right; }
+.lb-mark { display: block; width: 36px; height: 36px; max-width: none; object-fit: cover; }
+.lb-name { font-weight: 500; }
+.lb-no { margin-right: 12px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lb-price { font-variant-numeric: tabular-nums; }
+.lb-none { color: var(--muted); }
+.lb-skel { width: 72px; height: 14px; border-radius: var(--radius-sm); background: var(--track); animation: lb-pulse 1.6s var(--ease-in-out) infinite; }
+@keyframes lb-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .lb-roll .s, .lb-btn { transition: none; } .lb-skel { animation: none; } }
+</style>
+<style>
+  .qm-stage { padding: 0; }
+  .pk { position: absolute; transform-origin: 50% 50%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="pk" id="pk">
+<!-- code -->
+<div class="lb">
+  <div class="lb-head">
+    <div><h1 class="lb-heading">Live builds</h1><p class="lb-meta">Qbix · Sites and apps · 7 projects</p></div>
+    <button class="lb-btn" id="lb-live" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Get live builds</button>
+  </div>
+  <div class="lb-card">
+    <div class="lb-total"><span class="lb-roll" id="lb-tot"></span><span class="lb-lbl">pages live across</span><span class="lb-roll" id="lb-cnt"></span><span class="lb-lbl" id="lb-unit">sites</span></div>
+    <div class="lb-cap"><span></span><span>Project</span><span class="r">Build time</span><span class="r">Pages live</span></div>
+    <div id="lb-rows"></div>
+  </div>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Press Get live builds</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../assets/picks/p2-ghost.js"></script>
+<script data-code>
+/* Pages across builds · Idea: Qbix studio library · fomo-counter
+   Every figure is an odometer: each digit a strip 0 to 9 that slides, a comma holding still.
+   A project is a skeleton until its figures land; the total is the sum of what has landed. */
+const BUILDS = [   // est: how long the build took; a: the pages live on the first load; b: after Get live builds
+  { no: '01', name: 'Forma launch site',         img: 'vase',    est: '3 weeks', a: 12, b: 14 },
+  { no: '02', name: 'Kova brand upgrade',        img: 'ring',    est: '8 weeks', a: 24, b: 27 },
+  { no: '03', name: 'Willow Counseling site',    img: 'calla',   est: '7 days',  a: 5,  b: 5 },
+  { no: '04', name: 'Strata marketing site',     img: 'cross',   est: '4 weeks', a: 18, b: 21 },
+  { no: '05', name: 'Juniper Yoga launch site',  img: 'block',   est: '2 weeks', a: 9,  b: 12 },
+  { no: '06', name: 'Pennant Studio portfolio',  img: 'objects', est: '10 days', a: 7,  b: 7 },
+  { no: '07', name: 'Tidewell Coffee site',      img: 'slices',  est: '1 week',  a: 0,  b: 0 },
+];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (id) => document.getElementById(id);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const fmt = (n) => n.toLocaleString('en-US');
+
+/* odometer: each digit is a strip 0 to 9 that slides; a comma holds still */
+function roll(el, text) {
+  if (el._s == null || el._s.length !== text.length) {      // a new length starts every digit at 0, then rolls
+    el.classList.add('still');
+    el.innerHTML = [...text].map((ch) => /\d/.test(ch)
+      ? `<span class="c"><span class="s">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<i>${d}</i>`).join('')}</span></span>`
+      : `<span class="c">${ch}</span>`).join('');
+    void el.offsetWidth;                                     // commit the zeros before the roll
+    el.classList.remove('still');
+  }
+  const digits = [...text].filter((c) => /\d/.test(c));
+  el.querySelectorAll('.s').forEach((n, i) => { n.style.transform = `translateY(${-1.4 * +digits[i]}em)`; });
+  el._s = text;
+  el.setAttribute('role', 'img');
+  el.setAttribute('aria-label', text);
+}
+
+const rows = $('lb-rows');
+rows.innerHTML = BUILDS.map((x, i) => `<div class="lb-row" data-i="${i}">
+  <img class="lb-mark" src="../assets/art/${x.img}.webp" alt=""${x.pos ? ` style="object-position:${x.pos}"` : ''}>
+  <span class="lb-name"><span class="lb-no">Build ${x.no}</span>${x.name}</span>
+  <span class="r lb-price"></span><span class="r lb-stock"></span></div>`).join('');
+const rowEl = [...rows.children];
+const land = {};                                              // what has landed, by project: null while pending
+
+function totals() {
+  let t = 0, n = 0;
+  BUILDS.forEach((x, i) => { if (land[i] != null) { t += land[i]; if (land[i] > 0) n++; } });
+  roll($('lb-tot'), fmt(t));
+  roll($('lb-cnt'), String(n));
+  $('lb-unit').textContent = n === 1 ? 'site' : 'sites';
+}
+function skeleton(i) {
+  const r = rowEl[i]; land[i] = null;
+  r.querySelector('.lb-price').innerHTML = '<div class="lb-skel"></div>';
+  r.querySelector('.lb-stock').innerHTML = '<div class="lb-skel"></div>';
+}
+function show(i, pages, first) {
+  const r = rowEl[i], x = BUILDS[i];
+  const pr = r.querySelector('.lb-price'), st = r.querySelector('.lb-stock');
+  pr.textContent = x.est;
+  if (pages === 0) { st.innerHTML = '<span class="lb-none">In design</span>'; land[i] = 0; return; }
+  let rl = st.querySelector('.lb-roll');
+  if (!rl) { st.innerHTML = '<span class="lb-roll"></span>'; rl = st.querySelector('.lb-roll'); roll(rl, fmt(first ? pages : 0)); if (!first) void rl.offsetWidth; }
+  roll(rl, fmt(pages)); land[i] = pages;
+}
+function blank() { BUILDS.forEach((x, i) => skeleton(i)); totals(); }
+function settle(key) { BUILDS.forEach((x, i) => show(i, x[key], true)); totals(); }   // every figure placed at once
+
+/* a pass: skeletons, then the builds land one after another; a new pass cancels the one before it */
+let pass = 0;
+async function fetchAll(key, lead, step) {
+  const my = ++pass;
+  BUILDS.forEach((x, i) => { if (key === 'a' || x.a) skeleton(i); });   // a project with no pages keeps its words
+  totals();
+  await wait(lead); if (my !== pass) return;
+  for (let i = 0; i < BUILDS.length; i++) {
+    show(i, BUILDS[i][key]); totals();
+    await wait(step); if (my !== pass) return;
+  }
+}
+$('lb-live').addEventListener('click', () => { if (reduce) settle('b'); else fetchAll('b', 400, 380); });
+if (reduce) settle('b'); else fetchAll('a', 500, 520);
+</script>
+<script>
+  /* harness glue: a ghost presses Get live builds; the page's own handler does the refreshing */
+  PickGhost.fit(document.getElementById('pk'), 760, 600);
+  PickGhost.start({
+    hot: '#lb-live',
+    reset() { pass++; blank(); },
+    async script(g) {
+      fetchAll('a', 500, 520);                                    // the first landing
+      await g.wait(500 + BUILDS.length * 520 + 700);
+      await g.click('#lb-live');                                      // blanks and lands again (the button's own handler)
+      await g.wait(400 + BUILDS.length * 380 + 1800 + 600);          // the landing, a hold, the gap before the next loop
+    },
+    still() { settle('b'); },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

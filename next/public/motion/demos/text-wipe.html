@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text wipe · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "text-wipe",
+  "title": "Text wipe",
+  "group": "type",
+  "cat": "text",
+  "order": 40,
+  "kind": "play",
+  "tone": "paper",
+  "line": "600 ms · expo out · 0.15 s a line",
+  "summary": "A solid bar sweeps across a line left to right, then collapses toward the right edge and hands off to the words it was covering. The line is clipped shut from the right and opens; the bar rides inside the same clip, so what reads is a bar of colour crossing and uncovering the type.",
+  "spec": [
+    ["Duration", "600 ms the clip, 600 ms the bar"],
+    ["Easing", "clip cubic-bezier(0.16, 1, 0.3, 1) · bar ease-in-out cubic-bezier(0.42, 0, 0.58, 1)"],
+    ["Stagger", "0.15 s × the line's index (plus an optional delay)"],
+    ["Move", "line clip-path inset(0 100% 0 0) → inset(0 0 0 0) · bar scaleX 1 → 0, origin right"],
+    ["Bar timing", "starts halfway through the clip (delay + duration / 2)"],
+    ["Bar colour", "the page's ink on paper (the default here) · the chalk on black"],
+    ["Trigger", "in view, once (margin 0 0 −4% 0)"]
+  ],
+  "source": ["components/Reveal.tsx · Wipe", "components/StrataIntro.tsx · pd-title-line", "app/globals.css · PRODUCT INTRO"],
+  "where": "/products/strata: the hero's two title lines, and the “Everything a system needs.” heading on the paper panel.",
+  "rules": [
+    "No fade, no blur: the line is covered, then uncovered. The bar is the only thing that is ever seen moving.",
+    "The bar is a solid of the page's own ink (or paper): never lime. The screen's lime belongs to the button.",
+    "The clip is the line box, so keep line-height at 1 or more and let a title be display: block; a wipe on an inline run breaks across lines.",
+    "Lines go together when they are one thought: the stagger is 0.15 s, not more."
+  ],
+  "tags": ["text", "entrance", "clip", "bar", "in view"],
+  "shot": 1300
+}
+</script>
+<style data-code>
+/* Wipe — components/Reveal.tsx · Wipe.
+   The line is clipped shut from the right and opens left to right; a solid bar rides inside the
+   same clip and collapses toward the right edge from halfway through. */
+.wipe {
+  --wipe-dur: 600ms;
+  --wipe-at: 0ms;                      /* set per line: delay + index × 150 ms */
+  position: relative;
+  display: block;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--wipe-dur) cubic-bezier(0.16, 1, 0.3, 1) var(--wipe-at);
+}
+.wipe::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 5;
+  pointer-events: none;
+  background: var(--wipe-color, #121417);
+  transform-origin: right center;
+  transition: transform var(--wipe-dur) cubic-bezier(0.42, 0, 0.58, 1) calc(var(--wipe-at) + var(--wipe-dur) / 2);
+}
+.wipe.is-in { clip-path: inset(0 0 0 0); }
+.wipe.is-in::after { transform: scaleX(0); }
+@media (prefers-reduced-motion: reduce) {
+  .wipe { clip-path: none; transition: none; }
+  .wipe::after { display: none; }
+}
+
+/* Strata's title — app/globals.css · PRODUCT INTRO */
+.pd-title {
+  margin: 0;
+  font-size: clamp(42px, 6vw, 84px);
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  max-width: 980px;
+}
+.pd-signal { color: inherit; }   /* was the one lime word; lime now marks only the button, so it reads in the title's own ink */
+</style>
+<style>
+  .tw { width: min(100%, 980px); display: grid; gap: clamp(14px, 3vmin, 26px); justify-items: start; }
+  /* the library draws the title larger so it fills a tile */
+  .tw .pd-title { font-size: clamp(36px, min(8vw, 13vh), 110px); }
+  .wipe.is-reset, .wipe.is-reset::after { transition: none; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="tw">
+    <p class="kicker" id="kicker">Qbix Labs · Strata · Live</p>
+<!-- code -->
+<h1 class="pd-title">
+  <span class="wipe" data-index="0">One image in.</span>
+  <span class="wipe" data-index="1">A working <span class="pd-signal">system</span> out.</span>
+</h1>
+<!-- /code -->
+  </div>
+  <div class="qm-ui" id="ui">
+    <span>Bar</span>
+    <button data-v="paper" class="is-on">On paper</button>
+    <button data-v="black">On black</button>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Every .wipe opens once, when it comes into view. A line's start is its index × 150 ms
+   (plus data-delay), so consecutive lines read as consecutive wipes. */
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (!e.isIntersecting) continue;
+    e.target.classList.add('is-in');
+    io.unobserve(e.target);
+  }
+}, { rootMargin: '0px 0px -4% 0px' });
+
+function wipe(el) {
+  const at = Number(el.dataset.delay || 0) + Number(el.dataset.index || 0) * 150;
+  el.style.setProperty('--wipe-at', `${at}ms`);
+  io.observe(el);
+}
+document.querySelectorAll('.wipe').forEach(wipe);
+</script>
+<script>
+  io.disconnect();
+  const title = document.querySelector('.pd-title');
+  const kicker = document.getElementById('kicker');
+  const lines = () => Array.from(document.querySelectorAll('.wipe'));
+  const VARIANTS = {
+    // the library's default: Strata's hero title on paper, the bar in the page's ink
+    paper: {
+      tone: 'paper', color: '#121417', kicker: 'Qbix Labs · Strata · Live', tag: 'h1',
+      lines: ['One image in.', 'A working <span class="pd-signal">system</span> out.'], delay: 0,
+    },
+    // the site's other use: a heading on a panel, here on black with the chalk bar
+    black: {
+      tone: 'dark', color: '#f7f8f8', kicker: 'FIG 02 · What you get', tag: 'h1',
+      lines: ['Everything a system needs.'], delay: 100,
+    },
+  };
+  let variant = 'paper';
+  const build = (v) => {
+    const o = VARIANTS[v];
+    document.documentElement.dataset.tone = o.tone;
+    kicker.textContent = o.kicker;
+    title.innerHTML = o.lines.map((t, i) => `<span class="wipe" data-index="${i}" data-delay="${o.delay}">${t}</span>`).join('\n');
+    title.style.setProperty('--wipe-color', o.color);
+    lines().forEach((el) => el.style.setProperty('--wipe-at', `${o.delay + Number(el.dataset.index) * 150}ms`));
+  };
+  const reset = () => {
+    lines().forEach((el) => { el.classList.add('is-reset'); el.classList.remove('is-in'); });
+    void title.offsetWidth;
+    lines().forEach((el) => el.classList.remove('is-reset'));
+  };
+  const play = () => lines().forEach((el) => el.classList.add('is-in'));
+  build(variant);
+  QM.demo({ kind: 'play', dur: 1100, hold: 1900, reset, play });
+  document.querySelectorAll('[data-v]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-v]').forEach((x) => x.classList.toggle('is-on', x === b));
+    variant = b.dataset.v;
+    build(variant);
+    reset();
+    requestAnimationFrame(() => requestAnimationFrame(play));
+  }));
+</script>
+</body>
+</html>

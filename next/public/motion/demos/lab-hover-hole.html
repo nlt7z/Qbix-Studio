@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en" data-tone="lime">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peek holes · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-hover-hole",
+  "title": "Peek holes",
+  "group": "lab",
+  "cat": "cursor",
+  "order": 30,
+  "kind": "pointer",
+  "tone": "lime",
+  "line": "5 holes · grows still, shrinks fast · spring 90 / 13",
+  "summary": "A full-bleed lime panel sits over a white one carrying a render of objects. The lime has five round holes cut out of it: a main one that follows the pointer and four small ones trailing behind. The holes grow while the pointer rests and shrink when it moves fast, the radius on a spring.",
+  "spec": [
+    ["Mask", "five hard-edged radial holes combined with mask-composite: intersect"],
+    ["Follow", "1 − e^(−22 dt); the four followers lag at 16, 13, 10 and 7 per second, at 0.62, 0.42, 0.28, 0.18 of the radius"],
+    ["Radius", "from 7vmin up to 24% of the diagonal as the pointer calms (speed under 90 px/s for 1.5 s)"],
+    ["Spring", "stiffness 90, damping 13, with a slow breath while it rests"],
+    ["Trigger", "the pointer anywhere on the panel"]
+  ],
+  "source": ["Qbix studio library · hover-hole"],
+  "where": "The sign-off panel of the home page, or any lime chapter that has a second scene underneath it.",
+  "rules": [
+    "The hole edge is hard, never feathered: the lime is cut, not melted.",
+    "The panel under the lime is white with a render, so the cut reads as a different chapter, not a lighter tint.",
+    "Hold still to look inside; moving fast closes it."
+  ],
+  "tags": ["mask", "reveal", "pointer", "lime"],
+  "shot": 3600
+}
+</script>
+<style data-code>
+.hh { position: absolute; inset: 0; overflow: hidden; background: #f3f4f5; }
+.hh-below { position: absolute; inset: 0; color: #121417; }
+.hh-below img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hh-below .say { position: absolute; left: clamp(18px, 5vw, 64px); bottom: clamp(18px, 6vh, 56px); }
+.hh-below .say h2 { font-family: Eurostile, Geist, sans-serif; font-weight: 400; font-size: clamp(44px, 9vw, 132px); line-height: .92; letter-spacing: -.03em; }
+.hh-below .say p { margin-top: .7em; font-size: clamp(13px, 1.5vw, 18px); }
+.hh-below .tagbar { display: inline-block; background: #121417; color: #f4f5f2; padding: 6px 10px; }
+.hh-top { position: absolute; inset: 0; background: #B8FF00; color: #0c1300; display: flex; flex-direction: column; justify-content: space-between;
+  padding: clamp(20px, 6vmin, 64px); -webkit-mask-composite: source-in; mask-composite: intersect; }
+.hh-top .kick { font: 400 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.hh-top h1 { font-family: Eurostile, Geist, sans-serif; font-weight: 400; font-size: clamp(38px, 7.6vw, 112px); line-height: .98; letter-spacing: -.03em; max-width: 12ch; }
+.hh-top .hint { font: 400 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<main class="qm-stage" style="padding:0">
+<!-- code -->
+<div class="hh">
+  <div class="hh-below" aria-hidden="true">
+    <img src="../assets/art/objects.webp" alt="">
+    <div class="say"><h2>Look closer.</h2><p><span class="tagbar">Speckled stoneware, glazed in small batches</span></p></div>
+  </div>
+  <div class="hh-top" id="top">
+    <p class="kick">Forma · forma.studio</p>
+    <h1>Ceramic objects, made by hand</h1>
+    <p class="hint">Hold still to look inside</p>
+  </div>
+</div>
+<!-- /code -->
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const holeApi = (() => {
+  const top = document.getElementById('top');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W = innerWidth, H = innerHeight;
+  addEventListener('resize', () => { W = innerWidth; H = innerHeight; });
+  const ptr = { x: W * 0.55, y: H * 0.45, inside: true };
+  // hole: a main blob plus a short trail of followers
+  const trail = [0.62, 0.42, 0.28, 0.18].map((s) => ({ x: ptr.x, y: ptr.y, s }));
+  let hx = ptr.x, hy = ptr.y, px0 = ptr.x, py0 = ptr.y;
+  let speed = 0, calm = 0.2, r = 0, rv = 0;
+  // hard edge: the lime is cut, not feathered
+  const maskFor = (x, y, rad) => `radial-gradient(circle ${Math.max(0.1, rad).toFixed(1)}px at ${x.toFixed(1)}px ${y.toFixed(1)}px, transparent ${Math.max(0, rad - 1).toFixed(1)}px, #000 ${rad.toFixed(1)}px)`;
+  let last = performance.now();
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.25, (now - last) / 1000) || 0.016; last = now;
+    const k = 1 - Math.exp(-dt * 22);
+    hx += (ptr.x - hx) * k; hy += (ptr.y - hy) * k;
+    const v = Math.hypot(hx - px0, hy - py0) / dt; px0 = hx; py0 = hy;
+    speed += (v - speed) * (1 - Math.exp(-dt * 8));
+    if (speed < 90) calm = Math.min(1, calm + dt / 1.5);
+    else calm = Math.max(0, calm - dt * speed / 420);
+    const mn = Math.min(W, H), rMin = Math.max(24, mn * 0.07), rMax = Math.hypot(W, H) * 0.24;
+    const c = calm * calm * (3 - 2 * calm);
+    let target = ptr.inside ? rMin + (rMax - rMin) * c : 0;
+    if (reduce) target = ptr.inside ? mn * 0.26 : 0;
+    const breathe = reduce ? 0 : Math.sin(now / 520) * mn * 0.008 * c;
+    for (let n = 0, h = dt / 5; n < 5; n++) { rv += ((target + breathe - r) * 90 - rv * 13) * h; r += rv * h; }
+    if (r < 0) { r = 0; rv = 0; }
+    let lx = hx, ly = hy;
+    trail.forEach((p, i) => {
+      const kk = 1 - Math.exp(-dt * (16 - i * 3));
+      p.x += (lx - p.x) * kk; p.y += (ly - p.y) * kk; lx = p.x; ly = p.y;
+    });
+    const masks = [maskFor(hx, hy, r)];
+    trail.forEach((p) => masks.push(maskFor(p.x, p.y, r * p.s)));
+    const m = masks.join(',');
+    top.style.webkitMaskImage = m; top.style.maskImage = m;
+  }
+  requestAnimationFrame(frame);
+  return {
+    move(x, y) { ptr.x = x; ptr.y = y; ptr.inside = true; },
+    leave() { ptr.inside = false; }
+  };
+})();
+document.addEventListener('pointermove', (e) => holeApi.move(e.clientX, e.clientY));
+document.documentElement.addEventListener('pointerleave', () => holeApi.leave());
+</script>
+<script>
+  /* ghost: travel quickly between spots, then rest so the hole can grow */
+  const SPOTS = [[0.3, 0.36], [0.72, 0.3], [0.62, 0.7], [0.24, 0.66], [0.5, 0.5]];
+  const MOVE = 0.7, REST = 2.6;
+  const ease = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+  QM.demo({ kind: 'pointer',
+    move: (x, y) => holeApi.move(x, y),
+    leave: () => holeApi.leave(),
+    path: (t) => {
+      const per = MOVE + REST, k = Math.floor(t / per), u = Math.min(1, (t - k * per) / MOVE);
+      const a = SPOTS[k % SPOTS.length], b = SPOTS[(k + 1) % SPOTS.length], e = ease(u);
+      const dx = b[0] - a[0], dy = b[1] - a[1], arc = Math.sin(u * Math.PI) * 0.12;
+      return [innerWidth * (a[0] + dx * e - dy * arc), innerHeight * (a[1] + dy * e + dx * arc)];
+    } });
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text morph · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lab-text-morph",
+  "title": "Text morph",
+  "group": "lab",
+  "cat": "text",
+  "order": 630,
+  "kind": "play",
+  "tone": "paper",
+  "line": "950 ms slide · shared letters travel",
+  "summary": "One word turns into the next. Letters the two words share keep their body and slide to their new place; the rest drop under a sleeve or rise out of it, so nothing fades.",
+  "spec": [
+    ["Layout", "canvas measureText on each prefix gives every letter's x, so kerning survives"],
+    ["Shared letters", "WAAPI translate to the new x, 950 ms, cubic-bezier(0.65, 0, 0.35, 1)"],
+    ["Leaving", "translateY 0 → 110% under the sleeve, 420 ms, 25 ms a letter, ease-in"],
+    ["Entering", "translateY 110% → 0 out of the sleeve, 700 ms, after 330 ms, 55 ms a letter, expo out"],
+    ["Steps", "a lime block slides under the current word's label, 800 ms"],
+    ["Trigger", "click, tap or Space; on its own every 2.7 s until touched"]
+  ],
+  "source": ["Qbix studio library · text-morph"],
+  "where": "The status line of a Design service project page: Brief, Build, Live on the client's page.",
+  "rules": [
+    "Match letters by closest x so the same glyph is reused, never swapped.",
+    "A sleeve (overflow hidden) covers entries and exits: no opacity, no scale-fade.",
+    "Ignore input while a morph is under way."
+  ],
+  "tags": ["text", "morph", "click", "status"]
+}
+</script>
+<style data-code>
+/* Text morph: letters positioned by measured prefix widths, sleeved */
+.morph { position: relative; width: 100%; }
+.morph-word { position: relative; height: calc(var(--fs, 120px) * 1.22); overflow: hidden; }
+.morph-g {
+  position: absolute; left: 50%; top: 0;
+  font-family: 'Eurostile', 'Geist', sans-serif; font-weight: 400; font-synthesis-weight: none;
+  letter-spacing: -0.03em; line-height: 1.04; white-space: pre; will-change: transform;
+}
+.morph-steps { position: relative; display: flex; justify-content: center; gap: clamp(8px, 2vw, 16px); margin-top: 16px; }
+.morph-steps span { position: relative; z-index: 1; padding: 0 16px; height: 32px; display: flex; align-items: center; font: 500 12px/1 'Encode Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+.morph-steps span.on { color: #0c1300; }
+.morph-steps .block { position: absolute; left: 0; top: 0; height: 32px; background: #B8FF00; transition: transform 800ms cubic-bezier(0.65, 0, 0.35, 1), width 800ms cubic-bezier(0.65, 0, 0.35, 1); }
+</style>
+<style>
+  .tm { width: min(100%, 1100px); height: calc(100svh - clamp(48px, 12vmin, 144px)); min-height: 300px; display: grid; grid-template-rows: auto 1fr auto; }
+  .tm-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .tm-mid { align-self: center; }
+  .qm-stage { cursor: pointer; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="tm">
+    <div class="tm-row"><span class="kicker">Forma · forma.studio</span><span class="tag">Build status</span></div>
+    <div class="tm-mid">
+<!-- code -->
+<div class="morph" data-morph="Brief,Build,Live">
+  <div class="morph-word" aria-hidden="true"></div>
+  <div class="morph-steps"></div>
+  <p class="sr-only" aria-live="polite"></p>
+</div>
+<!-- /code -->
+    </div>
+    <div class="tm-row"><span class="kicker">5 pages · 12 components · 1 domain</span><span class="kicker">Qbix Design service</span></div>
+  </div>
+  <div class="qm-ui"><span>Click, tap or Space to switch word</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+function textMorph(root, { reduce = false, hold = 2700 } = {}) {
+  const WORDS = root.dataset.morph.split(',');
+  const wordEl = root.querySelector('.morph-word');
+  const stepsEl = root.querySelector('.morph-steps');
+  const sr = root.querySelector('.sr-only');
+  const mctx = document.createElement('canvas').getContext('2d');
+  const FAM = "Eurostile, Geist, sans-serif";
+  const OUT = 'cubic-bezier(0.5, 0, 0.75, 0)', IN = 'cubic-bezier(0.16, 1, 0.3, 1)', MOVE = 'cubic-bezier(0.65, 0, 0.35, 1)';
+  let fs = 100, idx = 0, glyphs = [], busyUntil = 0, timer = 0;
+
+  stepsEl.innerHTML = WORDS.map((w) => `<span>${w}</span>`).join('') + '<i class="block"></i>';
+  const spans = Array.from(stepsEl.querySelectorAll('span'));
+  const block = stepsEl.querySelector('.block');
+
+  function fit() {
+    mctx.font = `100px ${FAM}`;
+    const widest = Math.max(...WORDS.map((w) => mctx.measureText(w).width)) / 100;
+    fs = Math.min((root.clientWidth * 0.86) / widest, window.innerHeight * 0.32, 220);
+    root.style.setProperty('--fs', fs + 'px');
+    wordEl.style.fontSize = fs + 'px';
+  }
+  // where each letter sits, from the font itself (prefix widths keep the kerning)
+  function layout(word) {
+    mctx.font = `${fs}px ${FAM}`;
+    mctx.fontKerning = 'normal';
+    const total = mctx.measureText(word).width;
+    return word.split('').map((ch, i) => ({ ch, x: mctx.measureText(word.slice(0, i)).width - total / 2 }));
+  }
+  const tf = (x, y = 0) => `translate(${x.toFixed(2)}px, ${y}%)`;
+  function make(ch, x, y = 0) {
+    const el = document.createElement('span');
+    el.className = 'morph-g';
+    el.textContent = ch;
+    el.style.transform = tf(x, y);
+    wordEl.appendChild(el);
+    return { ch, x, el };
+  }
+  function setSteps() {
+    spans.forEach((s, i) => s.classList.toggle('on', i === idx));
+    const c = spans[idx];
+    block.style.width = c.offsetWidth + 'px';
+    block.style.transform = `translateX(${c.offsetLeft}px)`;
+    sr.textContent = 'Status: ' + WORDS[idx];
+  }
+  function place(i = idx) {
+    idx = i;
+    wordEl.innerHTML = '';
+    glyphs = layout(WORDS[idx]).map((p) => make(p.ch, p.x));
+    setSteps();
+  }
+  function morph(nextIdx) {
+    const now = performance.now();
+    if (now < busyUntil) return;
+    idx = nextIdx;
+    const target = layout(WORDS[idx]);
+    const pool = glyphs.slice(), next = [], entering = [];
+    target.forEach((p) => {
+      // a letter both words share keeps its body and slides to its new place
+      let best = -1, bd = 1e9;
+      pool.forEach((g, k) => { if (g && g.ch === p.ch && Math.abs(g.x - p.x) < bd) { bd = Math.abs(g.x - p.x); best = k; } });
+      if (best >= 0) {
+        const g = pool[best]; pool[best] = null;
+        const from = getComputedStyle(g.el).transform;
+        g.el.getAnimations().forEach((a) => a.cancel());
+        g.el.style.transform = tf(p.x);
+        if (!reduce) g.el.animate([{ transform: from }, { transform: tf(p.x) }], { duration: 950, easing: MOVE });
+        g.x = p.x;
+        next.push(g);
+      } else entering.push(p);
+    });
+    pool.forEach((g, k) => {
+      if (!g) return;
+      if (reduce) { g.el.remove(); return; }
+      const a = g.el.animate([{ transform: tf(g.x, 0) }, { transform: tf(g.x, 110) }], { duration: 420, delay: k * 25, easing: OUT, fill: 'forwards' });
+      a.onfinish = () => g.el.remove();
+    });
+    entering.forEach((p, n) => {
+      const g = make(p.ch, p.x);
+      if (!reduce) g.el.animate([{ transform: tf(p.x, 110) }, { transform: tf(p.x, 0) }], { duration: 700, delay: 330 + n * 55, easing: IN, fill: 'backwards' });
+      next.push(g);
+    });
+    glyphs = next;
+    busyUntil = now + 420;
+    setSteps();
+  }
+  const advance = () => morph((idx + 1) % WORDS.length);
+  root.__advance = advance;
+  window.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') advance(); });
+  window.addEventListener('pointerdown', advance);
+  window.addEventListener('resize', () => { fit(); place(); });
+  fit(); place();
+  if (document.fonts) document.fonts.load(`100px ${FAM}`).catch(() => {}).then(() => { fit(); place(idx); });
+  return { advance, place, fit };
+}
+</script>
+<script>
+  const root = document.querySelector('[data-morph]');
+  const tm = textMorph(root, { reduce: QM.reduced });
+  let timers = [];
+  QM.demo({
+    kind: 'play',
+    lead: 500,
+    dur: 6500,
+    hold: 900,
+    reset() { timers.forEach(clearTimeout); timers = []; tm.fit(); tm.place(0); },
+    play() { [300, 3000, 5700].forEach((t) => timers.push(setTimeout(tm.advance, t))); },
+  });
+</script>
+</body>
+</html>
