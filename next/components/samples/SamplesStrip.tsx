@@ -4,7 +4,7 @@ import SampleCard from './SampleCard';
 import { SAMPLES_LEDE, STRIP_SAMPLES } from '@/lib/samples';
 import '@/app/samples.css';
 
-/** Six samples on /business, one from each group, after the offers; all of them are on /samples. */
+/** Six samples on /business, one from each group, right after the hero; all of them are on /samples. */
 export default function SamplesStrip() {
   return (
     <section id="samples" className="smp-strip" data-nav-theme="dark" data-tone="dark" aria-labelledby="smp-strip-title">

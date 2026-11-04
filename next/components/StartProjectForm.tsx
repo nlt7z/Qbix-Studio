@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
 import SplitText from '@/components/SplitText';
+import NotchField from '@/components/NotchField';
+import BriefButton from '@/components/BriefButton';
+import { useReducedMotionSafe } from '@/components/useReducedMotionSafe';
+import '@/app/start-form.css';
 
 /** How far the brief has got (for the meter beside the form). */
 export type BriefDraft = {
@@ -29,11 +33,17 @@ const TIMELINES = ['ASAP', 'In 2 – 4 weeks', '1 – 3 months', 'Flexible / exp
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 /**
  * The full-page project intake form. Richer than the quick ContactModal —
  * project type, budget, and timeline on top of the core name/email/brief — and
  * posts to the same /api/contact endpoint with the extra fields plus a source
  * tag so submissions can be told apart.
+ *
+ * Each field's label sits inside it and rises onto its edge (NotchField); the
+ * send button plays the send through (BriefButton), so the sending lasts long
+ * enough to read and the done state shows before the thank-you replaces the form.
  */
 export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft) => void } = {}) {
   const [name, setName] = useState('');
@@ -45,6 +55,9 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
   const [brief, setBrief] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  // the thank-you, once the button has shown the brief is in
+  const [thanked, setThanked] = useState(false);
+  const reduced = useReducedMotionSafe();
 
   // Tell the 3D brief what has been filled in so far.
   useEffect(() => {
@@ -69,7 +82,7 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
     setStatus('sending');
     setErrorMsg('');
     try {
-      const res = await fetch('/api/contact', {
+      const [res] = await Promise.all([fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -82,16 +95,17 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
           timeline,
           source: 'start-page',
         }),
-      });
+      }), wait(reduced ? 0 : 900)]);
       if (!res.ok) throw new Error(`Status ${res.status}`);
       setStatus('sent');
+      setTimeout(() => setThanked(true), reduced ? 0 : 1400);
     } catch (err) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');
     }
   };
 
-  if (status === 'sent') {
+  if (status === 'sent' && thanked) {
     const first = name.trim().split(' ')[0];
     return (
       <div className="contact-form-success start-success">
@@ -100,7 +114,7 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
         </div>
         <h3>Brief received.</h3>
         <p>
-          Thanks{first ? `, ${first}` : ''} — we&rsquo;ll reply from {CONTACT_EMAIL} within
+          Thanks{first ? `, ${first}` : ''}. We&rsquo;ll reply from {CONTACT_EMAIL} within
           24&nbsp;hours.
         </p>
         <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="btn btn-secondary btn-lg split-cta">
@@ -113,9 +127,9 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
   return (
     <form className="contact-form start-form" onSubmit={submit}>
       <div className="start-form-row">
-        <label className="contact-field">
-          <span className="contact-field-label">Name</span>
+        <NotchField id="sp-name" label="Name" filled={name.length > 0}>
           <input
+            id="sp-name"
             type="text"
             name="name"
             required
@@ -124,10 +138,10 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
             placeholder="Your name"
             autoComplete="name"
           />
-        </label>
-        <label className="contact-field">
-          <span className="contact-field-label">Email</span>
+        </NotchField>
+        <NotchField id="sp-email" label="Email" filled={email.length > 0}>
           <input
+            id="sp-email"
             type="email"
             name="email"
             required
@@ -136,14 +150,12 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
             placeholder="you@company.com"
             autoComplete="email"
           />
-        </label>
+        </NotchField>
       </div>
 
-      <label className="contact-field">
-        <span className="contact-field-label">
-          Company / product <span className="contact-field-opt">— optional</span>
-        </span>
+      <NotchField id="sp-company" label="Company or product (optional)" filled={company.length > 0}>
         <input
+          id="sp-company"
           type="text"
           name="company"
           value={company}
@@ -151,12 +163,10 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
           placeholder="Where you're building, or a link"
           autoComplete="organization"
         />
-      </label>
+      </NotchField>
 
       <fieldset className="start-fieldset">
-        <legend className="contact-field-label">
-          What are you building? <span className="contact-field-opt">— pick any</span>
-        </legend>
+        <legend className="start-legend">What are you building? Pick any.</legend>
         <div className="start-chips">
           {PROJECT_TYPES.map((t) => {
             const on = types.includes(t);
@@ -176,53 +186,38 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
       </fieldset>
 
       <div className="start-form-row">
-        <label className="contact-field">
-          <span className="contact-field-label">Budget</span>
-          <div className="start-select-wrap">
-            <select
-              className="start-select"
-              name="budget"
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-            >
-              <option value="">Select a range…</option>
-              {BUDGETS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-            <span className="start-select-caret" aria-hidden>
-              ▾
-            </span>
-          </div>
-        </label>
-        <label className="contact-field">
-          <span className="contact-field-label">Timeline</span>
-          <div className="start-select-wrap">
-            <select
-              className="start-select"
-              name="timeline"
-              value={timeline}
-              onChange={(e) => setTimeline(e.target.value)}
-            >
-              <option value="">When do you need it…</option>
-              {TIMELINES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            <span className="start-select-caret" aria-hidden>
-              ▾
-            </span>
-          </div>
-        </label>
+        <NotchField id="sp-budget" label="Budget" filled={budget !== ''}>
+          <select id="sp-budget" className="start-select" name="budget" value={budget} onChange={(e) => setBudget(e.target.value)}>
+            {/* nothing chosen: the label sits in the field */}
+            <option value="" disabled hidden />
+            {BUDGETS.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+          <span className="start-select-caret" aria-hidden>
+            ▾
+          </span>
+        </NotchField>
+        <NotchField id="sp-timeline" label="Timeline" filled={timeline !== ''}>
+          <select id="sp-timeline" className="start-select" name="timeline" value={timeline} onChange={(e) => setTimeline(e.target.value)}>
+            <option value="" disabled hidden />
+            {TIMELINES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <span className="start-select-caret" aria-hidden>
+            ▾
+          </span>
+        </NotchField>
       </div>
 
-      <label className="contact-field">
-        <span className="contact-field-label">Brief</span>
+      <NotchField id="sp-brief" label="Brief" filled={brief.length > 0} tall>
         <textarea
+          id="sp-brief"
           name="brief"
           required
           rows={6}
@@ -230,19 +225,17 @@ export default function StartProjectForm({ onDraft }: { onDraft?: (d: BriefDraft
           onChange={(e) => setBrief(e.target.value)}
           placeholder="What are you trying to build? Stage, goals, links, anything we should know."
         />
-      </label>
+      </NotchField>
 
       {status === 'error' && (
         <p className="contact-form-error">
-          Send failed — {errorMsg}. Email us directly at{' '}
+          Send failed ({errorMsg}). Email us directly at{' '}
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
         </p>
       )}
 
       <div className="contact-form-actions">
-        <button type="submit" className="btn btn-primary btn-lg split-cta" disabled={status === 'sending'}>
-          <SplitText text={status === 'sending' ? 'Sending…' : 'Send brief'} arrow />
-        </button>
+        <BriefButton phase={status === 'sending' ? 'sending' : status === 'sent' ? 'sent' : 'idle'} label="Send brief" done="Brief sent" />
         <a
           href={BOOKING_URL}
           target="_blank"

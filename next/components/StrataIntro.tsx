@@ -7,6 +7,7 @@ import SplitText from '@/components/SplitText';
 import KitTour from '@/components/offers/KitTour';
 import { StrataHero, StrataTour } from '@/components/scenes/Strata';
 import Marker from '@/components/Marker';
+import StrataRun from '@/components/StrataRun';
 
 const STRATA_URL = 'https://stratadesign.app';
 
@@ -149,6 +150,26 @@ export default function StrataIntro() {
               </RevealItem>
             ))}
           </Stagger>
+        </div>
+      </section>
+
+      {/* 3b — one run on the image the tour reads, played step by step */}
+      <section id="run" className="pd-run section-pad" data-nav-theme="dark">
+        <div className="container pd-run-grid">
+          <header className="section-head pd-run-head">
+            <div>
+              <Reveal as="span" className="eyebrow" speed="fast">
+                One run, step by step
+              </Reveal>
+              <Words as="h2" className="pd-h2" text="Watch it work." />
+              <Reveal as="p" className="pd-run-lede" speed="base" delay={0.2}>
+                One image in, a system out, in five steps. Press a step to jump to it.
+              </Reveal>
+            </div>
+          </header>
+          <Reveal speed="slow" delay={0.1}>
+            <StrataRun />
+          </Reveal>
         </div>
       </section>
 

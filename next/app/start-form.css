@@ -1,0 +1,101 @@
+/* =============================================================================
+   /start FORM — the fields with their labels inside (NotchField.tsx) and the
+   send button that plays the send through (BriefButton.tsx). A field is a
+   filled block, as before; its edge is drawn only while you're in it, white,
+   with a notch under the risen label. The screen's one lime stays the button.
+   ============================================================================= */
+.start-form.contact-form { gap: 28px; }
+.start-form .start-form-row { gap: 28px 14px; }
+
+/* --- a field --------------------------------------------------------------- */
+.nfield { position: relative; height: 52px; background: var(--bg-2); }
+.nfield--tall { height: auto; }
+.nfield-edge { position: absolute; inset: 0; z-index: 2; overflow: visible; pointer-events: none; }
+.nfield-edge path { fill: none; stroke: transparent; stroke-width: 1.5; transition: stroke 120ms var(--ease-out-expo); }
+.nfield[data-focus] .nfield-edge path { stroke: var(--ink); }
+/* the two strokes that close the notch slide apart from its middle as the label rises */
+.nfield-edge .nfield-gap { stroke-dasharray: 1 2; stroke-dashoffset: 0; transition: stroke 120ms var(--ease-out-expo), stroke-dashoffset 320ms var(--ease-out-expo); }
+.nfield[data-up] .nfield-edge .nfield-gap { stroke-dashoffset: -1; }
+
+/* the label: in the field, centred on its first line; risen, centred on the top edge at 12px */
+.nfield-label {
+  position: absolute;
+  z-index: 3;
+  left: 14px;
+  top: 26px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--text-2);
+  white-space: pre;
+  pointer-events: none;
+  transform-origin: left center;
+  transform: translateY(-50%);
+  transition: transform 320ms var(--ease-out-expo), color 120ms var(--ease-out-expo);
+}
+.nfield[data-up] .nfield-label { transform: translateY(-50%) translateY(-26px) scale(0.8); }
+.nfield[data-focus] .nfield-label { color: var(--ink); }
+.nfield-label span { display: inline-block; }
+/* as the field takes focus each letter hops, 18ms after the one before */
+.nfield[data-focus] .nfield-label span { animation: nfield-hop 320ms var(--ease-out-expo) both; animation-delay: calc(var(--i) * 18ms); }
+@keyframes nfield-hop { 40% { transform: translateY(-3px); } }
+
+/* the control fills the field, so the whole block takes the click */
+.nfield input,
+.nfield select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  outline: none;
+}
+.nfield textarea {
+  display: block;
+  width: 100%;
+  min-height: 148px;
+  padding: 16px 14px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+}
+.nfield .start-select,
+.nfield .start-select:focus { padding: 0 34px 0 14px; background: transparent; border: 0; }
+.nfield .start-select-caret { right: 14px; z-index: 1; }
+/* a hint only once the label has made room for it */
+.nfield input::placeholder,
+.nfield textarea::placeholder { color: transparent; transition: color 200ms var(--ease-out-expo); }
+.nfield[data-focus] input::placeholder,
+.nfield[data-focus] textarea::placeholder { color: var(--text-3); }
+
+.start-legend { padding: 0; font-size: 15px; line-height: 1.4; color: var(--text-2); }
+
+/* --- the send button ------------------------------------------------------- */
+/* its own share of the row, whatever width the button has at the moment */
+.bbtn-wrap { flex: 1 1 240px; min-width: 0; }
+.bbtn { position: relative; display: block; padding: 0; overflow: hidden; }
+.contact-form-actions .bbtn:disabled { opacity: 1; cursor: progress; }
+.bbtn-ly { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; white-space: nowrap; }
+.bbtn-bar { position: relative; width: 28px; height: 4px; overflow: hidden; background: rgba(15, 26, 0, 0.24); }
+.bbtn-bar i { position: absolute; inset: 0; background: currentColor; transform-origin: left center; transform: scaleX(0); }
+.bbtn-tick { width: 20px; height: 20px; }
+.bbtn-tick path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: square; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nfield-edge path,
+  .nfield-edge .nfield-gap,
+  .nfield-label,
+  .nfield input::placeholder,
+  .nfield textarea::placeholder { transition: none; }
+  .nfield[data-focus] .nfield-label span { animation: none; }
+}

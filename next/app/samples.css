@@ -1,6 +1,6 @@
 /* =============================================================================
-   SAMPLES — the free sample videos: the page at /samples, and the strip of six
-   on /business (components/samples). A card is the sample's cover at 9:16 with
+   SAMPLES — the free sample videos: the page at /samples, the strip of six
+   on /business and the agents' ones on /listing-kit (components/samples). A card is the sample's cover at 9:16 with
    who it was made for under it; while its preview plays, the video rises into
    the cover (SampleCard.tsx). No outlines, shadows or tags: the covers carry
    the colour, on the page's black.
@@ -11,17 +11,86 @@
 }
 
 /* --- the words ------------------------------------------------------------- */
-.smp-title {
+.smp-eyebrow { margin: 0 0 clamp(16px, 2vw, 24px); font-size: 16px; line-height: 1.4; color: var(--text-2); }
+
+/* The sentence, with a cover set in it before each kind of business (SamplesSentence.tsx). The covers
+   are buttons sized in em, so they scale with the type and wrap with the words. */
+.smp-sentence {
+  margin: 0;
+  max-width: 22ch;
   font-family: var(--font-headline);
   font-weight: 400;
-  font-size: clamp(56px, 9vw, 132px);
-  line-height: 0.95;
-  letter-spacing: -0.035em;
+  font-size: clamp(34px, min(6vw, 9.5vh), 88px);
+  line-height: 1.16;
+  letter-spacing: -0.03em;
   color: var(--ink);
+  text-wrap: pretty;
 }
+/* each word rises through its own sleeve, 28ms after the one before */
+.smp-w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.14em; margin-bottom: -0.14em; }
+.smp-w > span { display: inline-block; animation: smp-rise 850ms var(--ease-out-expo) backwards; animation-delay: calc(var(--i) * 28ms); }
+@keyframes smp-rise { from { transform: translateY(115%); } }
+.smp-pic {
+  position: relative;
+  display: inline-block;
+  width: 0.62em;
+  height: 1em;
+  margin: 0 0.04em;
+  padding: 0;
+  border: 0;
+  vertical-align: -0.16em;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.smp-pic-img {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg-card);
+  --cut: 0.14em;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  /* the covers open from the bottom once the words are up, 140ms apart */
+  animation: smp-wipe 800ms var(--ease-out-expo) backwards;
+  animation-delay: calc(500ms + var(--j) * 140ms);
+}
+@keyframes smp-wipe { from { clip-path: polygon(0 100%, 100% 100%, 100% 100%, 100% 100%, 0 100%); } }
+.smp-pic-img img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+/* whose it is, under the open cover; the cover's scale is undone on it, so it stays 13px */
+.smp-pic-tag {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 0.08em);
+  padding: 5px 8px;
+  /* on the page's black: it lands on the big words below */
+  background: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+  transform-origin: 50% 0;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 300ms var(--ease-out-expo);
+}
+.smp-pic[data-open] .smp-pic-tag { clip-path: inset(0); }
+.smp-pic:focus-visible { outline: none; }
+.smp-pic:focus-visible .smp-pic-img { outline: 2px solid var(--ink); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .smp-w > span,
+  .smp-pic-img { animation: none; }
+  .smp-pic-tag { transition: none; }
+}
+
 .smp-lede { margin: 24px 0 0; max-width: 34em; font-size: clamp(17px, 1.4vw, 21px); line-height: 1.55; color: var(--text); }
 /* how the cards work, said for the device in hand */
 .smp-hint { margin: 12px 0 0; font-size: 15px; line-height: 1.5; color: var(--text-2); }
+.smp-sentence + .smp-hint { margin-top: clamp(28px, 3.4vw, 44px); }
 .smp-hint > span { display: none; }
 @media (hover: hover) and (pointer: fine) { .smp-hint > .smp-hint-hover { display: inline; } }
 @media (hover: none), (pointer: coarse) { .smp-hint > .smp-hint-touch { display: inline; } }
@@ -101,6 +170,10 @@
 .smp-strip .smp-lede { margin-top: 20px; }
 @media (min-width: 1100px) { .smp-grid--strip { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .smp-strip-foot { margin-top: clamp(36px, 4.5vw, 56px); }
+
+/* --- the agents' samples on /listing-kit, under the hero -------------------- */
+.lk-samples { margin-top: clamp(8px, 1.5vw, 16px); }
+.lk-samples-all { margin-top: clamp(36px, 4.5vw, 56px); }
 
 @media (prefers-reduced-motion: reduce) {
   .smp-video,

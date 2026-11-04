@@ -274,6 +274,9 @@ function StudioChapters() {
 function OfferChapters() {
   return (
     <>
+      {/* First, the work: six samples, one from each kind of business; all of them on /samples. */}
+      <SamplesStrip />
+
       {/* The flyer for 1428 Alder Street, then its five posts beside it, then its video. */}
       <Chapter
         id="services"
@@ -329,9 +332,6 @@ function OfferChapters() {
           </>
         }
       />
-
-      {/* Six samples, one from each kind of business; all of them on /samples. */}
-      <SamplesStrip />
     </>
   );
 }

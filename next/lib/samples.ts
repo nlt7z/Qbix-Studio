@@ -1,5 +1,6 @@
 /**
- * The samples shown on /samples (and six of them on /business), in Sera's order (Nov 3).
+ * The samples shown on /samples (six of them on /business, the real estate ones on
+ * /listing-kit), in Sera's order (Nov 3).
  * Each sample is static, in public/samples/<slug>/: its page is /samples/<slug>, thumb.webp its
  * cover at 540x960 and preview.mp4 the first seconds of its video, small, for the cards.
  * The name, the town and the line are the sample page's own words; nothing is added.
@@ -62,6 +63,9 @@ export const SAMPLE_GROUPS: SampleGroup[] = [
 const STRIP_SLUGS = ['justin-allen', 'nip-tuck', 'bridal-veil-lakes', 'hemphill-tree-farm', 'family-loyalty', 'leftover-treasures'];
 const bySlug = new Map(SAMPLE_GROUPS.flatMap((g) => g.samples).map((s) => [s.slug, s]));
 export const STRIP_SAMPLES: Sample[] = STRIP_SLUGS.map((slug) => bySlug.get(slug)!);
+
+/** On /listing-kit: the ones made for agents. */
+export const LISTING_SAMPLES: Sample[] = SAMPLE_GROUPS.find((g) => g.title === 'Real estate')!.samples;
 
 /** The honest line under the title, on /samples and on the strip. */
 export const SAMPLES_LEDE = 'Short videos and posters we made for local businesses.';

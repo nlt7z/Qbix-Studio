@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CHECKOUT, PRICES } from '@/lib/data';
 import { Reveal, Words } from '@/components/Reveal';
 import CheckoutButton, { CheckoutNote } from './CheckoutButton';
@@ -10,6 +11,10 @@ import HourRail from './HourRail';
 import Odometer from './Odometer';
 import AboutPhoto from './AboutPhoto';
 import Marker from '@/components/Marker';
+import SampleCard from '@/components/samples/SampleCard';
+import SplitText from '@/components/SplitText';
+import { LISTING_SAMPLES } from '@/lib/samples';
+import '@/app/samples.css';
 
 const KIT = PRICES.listingKit;
 const VIDEO = PRICES.listingVideo;
@@ -78,6 +83,28 @@ export default function ListingKit() {
               <CheckoutNote />
             </Reveal>
           </div>
+        </div>
+      </section>
+
+      {/* First, the work: what we made for agents; the rest is on /samples. */}
+      <section id="samples" className="offer-section" data-nav-theme="dark">
+        <div className="container offer-narrow">
+          <Words as="h2" className="offer-h2" text="Samples" />
+          <div className="offer-prose">
+            <Reveal as="p" speed="base">
+              Listing videos and posters we made for agents in Gig Harbor.
+            </Reveal>
+          </div>
+          <ul className="smp-grid lk-samples">
+            {LISTING_SAMPLES.map((s) => (
+              <li key={s.slug}>
+                <SampleCard sample={s} />
+              </li>
+            ))}
+          </ul>
+          <Link href="/samples" className="btn btn-white btn-lg split-cta cut lk-samples-all">
+            <SplitText text="See all samples" arrow />
+          </Link>
         </div>
       </section>
 

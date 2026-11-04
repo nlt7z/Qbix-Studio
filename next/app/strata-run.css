@@ -1,0 +1,61 @@
+/* =============================================================================
+   STRATA — one run, played (components/StrataRun.tsx), after What you get: the
+   words on the left, the player on the right in a raised block. The marks on
+   the rail are ink, never colour; the one lime is the Play key.
+   ============================================================================= */
+.pd-run { padding-bottom: clamp(32px, 4vw, 64px); }
+.pd-run-grid { display: grid; gap: clamp(32px, 5vw, 64px); }
+@media (min-width: 960px) {
+  .pd-run-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 560px); align-items: center; column-gap: clamp(32px, 6vw, 96px); }
+}
+.pd-run-head { margin-bottom: 0; }
+.pd-run-head > div { flex: 1 1 auto; }
+.pd-run-lede { margin: 20px 0 0; max-width: 30em; font-size: clamp(16px, 1.3vw, 19px); line-height: 1.55; color: var(--text); }
+
+.srun {
+  display: grid;
+  gap: 24px;
+  padding: 32px 24px 24px;
+  background: var(--bg-card);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.srun-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.srun-title { margin: 0; font-size: 20px; line-height: 1.35; letter-spacing: -0.02em; color: var(--ink); }
+.srun-meta { margin: 0; color: var(--text-2); }
+.srun-play { flex: none; height: 40px; min-width: 0; padding: 0 16px; gap: 8px; font-size: 14px; font-weight: 500; }
+
+/* the rail: the current step a bar that fills, the rest 14px blocks, 8px apart (placed by the springs) */
+.srun-rail { position: relative; height: 28px; }
+.srun-mark { position: absolute; top: 7px; left: 0; width: 14px; height: 14px; padding: 0; border: 0; overflow: hidden; background: rgba(247, 248, 248, 0.16); cursor: pointer; }
+.srun-mark i { position: absolute; inset: 0; background: var(--ink); transform: scaleX(0); transform-origin: left center; }
+.srun-mark.is-done { background: var(--ink); }
+.srun-mark:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.srun-now { display: grid; gap: 4px; min-height: 64px; }
+.srun-big { margin: 0; font-size: 28px; line-height: 1.15; letter-spacing: -0.03em; color: var(--ink); }
+.srun-live { margin: 0; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+.srun-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.srun-row {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--text-2);
+  transition: background-color 200ms var(--ease-out-expo), color 200ms var(--ease-out-expo);
+}
+.srun-row.is-on { background: #232528; color: var(--ink); }
+.srun-row.is-done { color: var(--ink); }
+.srun-res { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.srun-ic { display: grid; place-items: center; width: 24px; color: var(--ink); }
+.srun-dot { display: block; width: 6px; height: 6px; background: rgba(247, 248, 248, 0.24); }
+.srun-row.is-on .srun-dot { background: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .srun-row { transition: none; }
+}

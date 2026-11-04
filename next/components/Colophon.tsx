@@ -27,6 +27,7 @@ const COLUMNS: { title: string; items: Item[] }[] = [
     items: [
       ...services.map((s) => ({ label: s.title, href: '/start' })),
       ...offers.map((o) => ({ label: o.title, href: o.href })),
+      { label: 'Samples', href: '/samples' },
     ],
   },
   {

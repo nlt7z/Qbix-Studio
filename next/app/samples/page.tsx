@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Colophon from '@/components/Colophon';
 import SampleCard from '@/components/samples/SampleCard';
-import { SAMPLE_GROUPS, SAMPLES_LEDE } from '@/lib/samples';
+import SamplesSentence from '@/components/samples/SamplesSentence';
+import { SAMPLE_GROUPS } from '@/lib/samples';
 import '@/app/samples.css';
 
 const SITE_URL = 'https://qbix.space';
@@ -37,8 +38,8 @@ export default function SamplesPage() {
     <>
       <main className="smp" data-nav-theme="dark">
         <header className="container smp-head">
-          <h1 className="smp-title">Samples</h1>
-          <p className="smp-lede">{SAMPLES_LEDE}</p>
+          <p className="smp-eyebrow">Samples</p>
+          <SamplesSentence />
           <p className="smp-hint">
             <span className="smp-hint-hover">Hover over a sample to play it. Click to open it.</span>
             <span className="smp-hint-touch">Tap a sample to play it. Tap again to open it.</span>
