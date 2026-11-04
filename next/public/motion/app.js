@@ -162,7 +162,7 @@
     });
     const go = () => {
       $$('.hw > span', h).forEach((s, i) => play(s, [{ transform: 'translateY(108%)' }, { transform: 'none' }], { duration: 900, delay: 80 + i * 55 }));
-      [$('.hero-line'), $('.hero-lede'), $('.hero-keys'), $('#toolbar')].forEach((el, i) => el && play(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: 380 + i * 70 }));
+      [$('.hero-line'), $('.hero-lede'), $('.hero-cta'), $('#toolbar')].forEach((el, i) => el && play(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: 380 + i * 70 }));
     };
     (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(go));
   })();
@@ -186,7 +186,10 @@
      show the live piece while hovered) */
   let sheetOpen = false;
   const scaleObs = new ResizeObserver((entries) => {
-    for (const e of entries) e.target.style.setProperty('--s', String(e.contentRect.width / 800));
+    for (const e of entries) {
+      e.target.style.setProperty('--s', String(e.contentRect.width / 800));
+      if (e.target.id === 'stage-frame') zoomStage();
+    }
   });
   scaleObs.observe($('#stage-frame'));
   let playing = null;
@@ -268,7 +271,7 @@
   const FREE_PER_CAT = 3;
   const free = new Set();
   (() => { const n = {}; items.forEach((it) => { n[it.cat] = (n[it.cat] || 0) + 1; if (n[it.cat] <= FREE_PER_CAT) free.add(it.id); }); })();
-  const locked = (id) => C.on && !C.user && !free.has(id);
+  const locked = (id) => C.full && !C.user && !free.has(id);
   function filter() {
     const words = searchWords();
     let shown = 0;
@@ -336,7 +339,7 @@
   // saving and liking: an account's, kept by the server; opened from disk, saves stay in this browser
   async function toggleSave(key) {
     if (!key) return;
-    if (C.on && !C.user) return openAuth('save', () => toggleSave(key));
+    if (C.on && !C.user) return openAuth('save', () => { if (!saved.has(key)) toggleSave(key); });   // signed in, it may be saved already
     const on = !saved.has(key);
     if (on) saved.add(key); else saved.delete(key);
     paintSaved();
@@ -354,7 +357,7 @@
   }
   async function toggleLike(key) {
     if (!key) return;
-    if (!C.on) return;
+    if (!C.full) return;
     if (!C.user) return openAuth('like', () => toggleLike(key));
     const on = !liked.has(key);
     if (on) liked.add(key); else liked.delete(key);
@@ -379,15 +382,22 @@
 
   /* =============================================================================
      SERVED — tools/serve.py films pieces and keeps the community on this Mac
-     (accounts, likes, saves, remixes); opened from disk, none of that shows
+     (accounts, likes, saves, remixes). The static copy on qbix.space has the
+     site's accounts only (window.QM_API, set by tools/site.py): join, sign in,
+     save, and copy code once signed in. Opened from disk, none of that shows.
+     C.on: there are accounts. C.full: the whole community (likes, remixes,
+     the community page, the pieces kept for members). C.off: there should be
+     accounts but they are not open yet (the site answered 'accounts-off').
      ============================================================================= */
   let canEdit = false;
   const served = /^https?:$/.test(location.protocol);
   const toast = $('#toast');
-  const C = { on: false, user: null, members: 0, likes: {}, saves: {}, top: [], remixes: [] };
+  const C = { on: false, full: false, off: false, user: null, members: 0, likes: {}, saves: {}, top: [], remixes: [] };
   let liked = new Set();
+  // the local server answers at /api/…; the site at window.QM_API (/api/motion/…)
+  const API = window.QM_STATIC ? window.QM_API || '' : '/api';
   async function api(path, body) {
-    const r = await fetch(path, body === undefined
+    const r = await fetch(path.replace(/^\/api/, API), body === undefined
       ? { headers: { 'X-QM': '1' }, cache: 'no-store' }
       : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-QM': '1' }, body: JSON.stringify(body) });
     let j = {};
@@ -396,27 +406,33 @@
     return j;
   }
 
-  // the static copy on qbix.space has no server to ask (tools/site.py sets QM_STATIC)
   if (served && !window.QM_STATIC) {
     fetch('/api/ping', { headers: { 'X-QM': '1' }, cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
         if (!j) return;
         canEdit = !!j.export;
-        if (j.community) C.on = true;   // then filming waits for an admin to sign in
+        if (j.community) C.on = C.full = true;   // then filming waits for an admin to sign in
         paintExport();
-        if (j.community) bootCommunity();
+        if (j.community) bootAccounts();
       })
       .catch(() => {});
+  } else if (served && API) {
+    // qbix.space: the site's accounts. The gate is soft, as on this Mac: the demo pages themselves
+    // hold the code (anyone can open one alone), so this asks people to join rather than hiding it.
+    C.on = true;
+    bootAccounts();
   }
 
   /* =============================================================================
      COMMUNITY — join, sign in, the nav's avatar, the community and bench pages
      ============================================================================= */
-  async function bootCommunity() {
-    C.on = true;
-    root.classList.add('has-community');
-    $$('[data-needs-community]').forEach((el) => (el.hidden = false));
+  async function bootAccounts() {
+    root.classList.add('has-accounts');
+    root.classList.toggle('has-community', C.full);
+    $$('[data-needs-accounts]').forEach((el) => (el.hidden = false));
+    if (C.full) $$('[data-needs-community]').forEach((el) => (el.hidden = false));
+    $('#auth-note').textContent = C.full ? 'Accounts live on this Mac, in the library\'s own folder.' : 'Your account is kept by qbix.space. We never send email.';
     await refreshMe();
     await refreshCommunity();
     route();
@@ -424,6 +440,7 @@
   async function refreshMe() {
     try {
       const j = await api('/api/me');
+      C.off = false;
       C.user = j.user || null;
       liked = new Set(j.liked || []);
       if (C.user) {
@@ -439,12 +456,14 @@
       }
     } catch (e) {
       C.user = null;
+      C.off = e.status === 503;   // the site's store is not set up yet: joining opens soon
     }
     paintAuth();
     paintSaved();
     renderBench();
   }
   async function refreshCommunity() {
+    if (!C.full) return;
     try {
       const j = await api('/api/community');
       Object.assign(C, { members: j.members || 0, likes: j.likes || {}, saves: j.saves || {}, top: j.top || [], remixes: j.remixes || [] });
@@ -466,13 +485,14 @@
     paintExport();
     $$('[data-join]').forEach((b) => (b.hidden = !C.on || !!u));
     $$('[data-signed-out]').forEach((el) => (el.hidden = !!u));
+    $$('[data-signed-in]').forEach((el) => (el.hidden = !u));
     $('#me').hidden = !u;
     if (u) {
       $('#me-avatar').textContent = u.initials || (u.name || '?').slice(0, 1).toUpperCase();
       $('#me-name').textContent = u.name;
       $('#me-handle').textContent = `@${u.handle}${u.admin ? ' · admin, can film' : ''}`;
     }
-    $('[data-remix-publish]').textContent = u || !C.on ? 'Publish remix' : 'Join to publish';
+    $('[data-remix-publish]').textContent = !C.full ? 'Copy code' : u ? 'Publish remix' : 'Join to publish';
     if (cur) setTab(tabOn);
     filter();
   }
@@ -482,6 +502,7 @@
   const authForm = $('#auth-form');
   let authMode = 'join', authThen = null, authBack = null;
   const WHY = {
+    hero: 'Join for free to copy any piece\'s code and keep a bench of the ones you like.',
     save: 'Join for free to save pieces to your bench.',
     like: 'Join for free to like pieces and remixes.',
     code: 'Join for free to get the full code and the prompt for Claude.',
@@ -502,11 +523,17 @@
     if (!C.on) return;
     authThen = then || null;
     authBack = document.activeElement;
-    $('#auth-why').textContent = WHY[why] || 'Like and save pieces, publish remixes and get the full code.';
+    $('#auth-why').textContent = WHY[why] || (C.full ? 'Like and save pieces, publish remixes and get the full code.' : 'Copy any piece\'s code and keep a bench of the ones you like.');
     setAuthMode(authMode);
+    // the site's accounts not open yet: say so, with no form to fill
+    auth.classList.toggle('is-off', C.off);
+    if (C.off) {
+      $('#auth-title').textContent = 'Joining opens soon';
+      $('#auth-why').textContent = 'Accounts for Qbix Motion are almost ready. Until then every piece plays here, with the first lines of its code.';
+    }
     auth.hidden = false;
     play($('.auth-card', auth), [{ opacity: 0, transform: 'translateY(12px) scale(0.98)' }, { opacity: 1, transform: 'none' }], { duration: 360 });
-    setTimeout(() => (authMode === 'join' ? authForm.name : authForm.email).focus(), 30);
+    setTimeout(() => (C.off ? $('.auth-ok', auth) : authMode === 'join' ? authForm.name : authForm.email).focus(), 30);
   }
   function closeAuth() {
     auth.hidden = true;
@@ -514,7 +541,7 @@
     if (authBack && authBack.focus) authBack.focus({ preventScroll: true });
   }
   $('.auth-mode').addEventListener('click', (e) => { const b = e.target.closest('[data-mode]'); if (b) setAuthMode(b.dataset.mode); });
-  $('[data-auth-close]', auth).addEventListener('click', closeAuth);
+  $$('[data-auth-close]', auth).forEach((b) => b.addEventListener('click', closeAuth));
   auth.addEventListener('click', (e) => { if (e.target === auth) closeAuth(); });
   authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -535,6 +562,7 @@
       showToast(authMode === 'join' ? `Welcome to Qbix Motion, ${j.user.name}.` : `Welcome back, ${j.user.name}.`, { ms: 2600 });
       if (then) then();
     } catch (x) {
+      if (x.status === 503) { C.off = true; openAuth('', authThen); return; }
       err.textContent = x.message;
     } finally {
       go.disabled = false;
@@ -557,7 +585,7 @@
   // the pages: the library, the community, your bench
   let page = 'library';
   function setPage(p) {
-    if (p === 'community' && !C.on) p = 'library';
+    if (p === 'community' && !C.full) p = 'library';
     const moved = p !== page;
     page = p;
     root.dataset.page = p;
@@ -587,7 +615,7 @@
     if (empty) $(empty).hidden = !!grid.children.length;
   }
   function renderCommunity() {
-    if (!C.on) return;
+    if (!C.full) return;
     $('#community-line').textContent = 'What members like, save and remix. Accounts and remixes are kept on this Mac.';
     fillGrid($('#top-grid'), C.top, '#top-empty');
     fillGrid($('#remix-grid'), C.remixes.map((r) => r.rid), '#remix-empty');
@@ -677,17 +705,42 @@
     }
     return out + esc(src.slice(i));
   }
+  // one block a line, so each gets its number (app.css counts them); a comment that runs over
+  // several lines is closed at each line's end and opened again on the next
+  function numbered(src) {
+    let open = false;
+    const lines = highlight(src.replace(/\n$/, '')).split('\n').map((line) => {
+      const out = `${open ? '<span class="c">' : ''}${line}`;
+      open = (open ? 1 : 0) + (line.match(/<span class="c">/g) || []).length - (line.match(/<\/span>/g) || []).length > 0;
+      return `<span class="l">${out}${open ? '</span>' : ''}</span>`;
+    });
+    codeEl.parentElement.style.setProperty('--ln', `${String(lines.length).length}ch`);
+    return lines.join('');
+  }
   // signed out, the code shows its first lines and the way in
   function setTab(i) {
     tabOn = i;
     $$('button', tabsEl).forEach((t, j) => { t.classList.toggle('is-on', j === i); t.setAttribute('aria-selected', String(j === i)); });
     const text = tabs[i] ? tabs[i].text : '';
     const g = gated();
-    codeEl.innerHTML = highlight(g ? text.split('\n').slice(0, GATE_LINES).join('\n') : text);
+    codeEl.innerHTML = numbered(g ? text.split('\n').slice(0, GATE_LINES).join('\n') : text);
     $('#code-wrap').classList.toggle('is-gated', g);
     $('#code-gate').hidden = !g;
     $('#code').scrollTop = 0;
+    $('#code').scrollLeft = 0;
   }
+  // the side's panes: the code (the default), the tweaks, what the piece is
+  const tabTweak = $('#info-tabs [data-pane="tweak"]');
+  let pane = 'code';
+  function setPane(p) {
+    if (p === 'tweak' && tabTweak.hidden) p = 'code';
+    pane = p;
+    $$('#info-tabs [data-pane]').forEach((b) => { const on = b.dataset.pane === p; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', String(on)); });
+    $('#pane-code').hidden = p !== 'code';
+    $('#tweak').hidden = p !== 'tweak';
+    $('#pane-about').hidden = p !== 'about';
+  }
+  $('#info-tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-pane]'); if (b) setPane(b.dataset.pane); });
   function setTabs(code, tuned, keep) {
     const c = code || {};
     tabs = c.files
@@ -715,8 +768,18 @@
       scrub.appendChild(t);
     }
   }
+  // 素材放大: on a wide screen the piece is drawn on a page the stage's size over z, then scaled up
+  // by z to fill it (app.css #stage-view). z is the stage's width over 800 (the size every piece is
+  // made for), at least 1 and at most 1.35, so the page it gets is never narrower than 800.
+  const ZOOM_BASE = 800, ZOOM_MAX = 1.35;
+  function zoomStage() {
+    const w = frame.clientWidth;
+    const z = innerWidth > 960 && w ? Math.min(ZOOM_MAX, Math.max(1, w / ZOOM_BASE)) : 1;
+    frame.style.setProperty('--z', z.toFixed(3));
+  }
   function setPause(p) {
     paused = p;
+    $('.stage', sheet).classList.toggle('is-paused', p);
     $('[data-pause]', sheet).classList.toggle('is-on', p);
     $('[data-replay]', sheet).classList.toggle('is-on', !p);
   }
@@ -735,6 +798,7 @@
       ? ['<b>Remix</b>', `by ${esc(r.author ? r.author.name : 'a member')}`, esc(dateOf(r.created))].filter(Boolean).join(' · ')
       : [`<b>${esc(catName(it))}</b>`, esc(ORIGIN[originOf(it)]), esc(kind)].filter(Boolean).join(' · ');
     $('#sheet-title').textContent = r ? r.title : it.title;
+    $('#info-lede').textContent = r ? (r.note || `A remix of ${it.title}.`) : (it.line || '');
     $('#info-summary').innerHTML = r
       ? `${esc(r.note || 'A remix.')} <a class="info-base" href="#/${esc(it.id)}">A remix of ${esc(it.title)}</a>`
       : esc(it.summary || '');
@@ -752,6 +816,12 @@
     $('[data-open]', sheet).href = it.demo;
     $('#stage-how').textContent = HOW[it.kind] || '';
     setPause(false);
+    zoomStage();
+    // the controls show for a moment on opening, then wait for the pointer
+    const st = $('.stage', sheet);
+    st.classList.add('is-fresh');
+    clearTimeout(st._fresh);
+    st._fresh = setTimeout(() => st.classList.remove('is-fresh'), 2400);
     scrub.hidden = !(it.kind === 'states' || it.kind === 'scroll');
     scrub.style.setProperty('--v', '0');
     $$('.scrub-tick', scrub).forEach((t) => t.remove());
@@ -770,11 +840,12 @@
     $('[data-save]', sheet).setAttribute('aria-label', `Save ${r ? r.title : it.title}`);
     $('[data-like]', sheet).setAttribute('aria-label', `Like ${r ? r.title : it.title}`);
     paintSaved();
-    $('#info').scrollTop = 0;
+    $$('.pane', sheet).forEach((el) => (el.scrollTop = 0));
+    sheet.scrollTop = 0;
     document.title = `${r ? r.title : it.title} · Qbix Motion`;
-    if (r) { tw = null; $('#tweak').hidden = true; } else loadTweak(it);
+    if (r) { tw = null; tabTweak.hidden = true; setPane(pane); } else loadTweak(it);
     // what members made from it
-    const rs = !r && C.on ? C.remixes.filter((x) => x.base === it.id) : [];
+    const rs = !r && C.full ? C.remixes.filter((x) => x.base === it.id) : [];
     $('#info-remixes-sec').hidden = !rs.length;
     $('#info-remixes-n').textContent = rs.length || '';
     $('#info-remixes').innerHTML = rs.map((x) => `<li><a href="#/r/${esc(x.rid)}"><span class="avatar">${esc(x.author ? x.author.initials : '?')}</span><span class="rx-t"><b>${esc(x.title)}</b><span>by ${esc(x.author ? x.author.name : 'a member')}${x.created ? ` · ${esc(dateOf(x.created))}` : ''}</span></span>${C.likes[x.rid] ? `<span class="rx-n">${HEART}${C.likes[x.rid]}</span>` : ''}</a></li>`).join('');
@@ -850,6 +921,7 @@
     if (push) history.pushState(null, '', location.pathname + location.search);
     const back = cardsFor(curKey()).find((x) => x.offsetParent !== null && !x.hidden);
     curRemix = null;
+    stage.classList.remove('is-live');   // a visible frame inside the hidden sheet would still take the page's clicks
     setTimeout(() => {
       if (sheetOpen) return;
       stage.removeAttribute('srcdoc');
@@ -950,28 +1022,28 @@
 
   // copying: the button turns lime for a moment
   async function copy(text, btn, done) {
+    let ok = true;
     try { await navigator.clipboard.writeText(text); } catch (e) {
       const ta = Object.assign(document.createElement('textarea'), { value: text });
       ta.style.cssText = 'position:fixed;opacity:0';
       document.body.appendChild(ta);
       ta.select();
-      document.execCommand('copy');
+      try { ok = document.execCommand('copy'); } catch (x) { ok = false; }
       ta.remove();
     }
-    const was = btn.dataset.was || (btn.dataset.was = btn.textContent);
-    btn.textContent = done;
+    if (!ok) { showToast('The browser kept the clipboard closed. Press Copy again.', { ms: 3000 }); return; }
+    const l = $('.lbl', btn) || btn;
+    const was = l.dataset.was || (l.dataset.was = l.textContent);
+    l.textContent = done;
     btn.classList.add('is-done');
     clearTimeout(btn._t);
-    btn._t = setTimeout(() => { btn.textContent = was; btn.classList.remove('is-done'); }, 1500);
+    btn._t = setTimeout(() => { l.textContent = was; btn.classList.remove('is-done'); }, 1500);
   }
-  $('[data-copy]', sheet).addEventListener('click', (e) => {
-    if (gated()) return openAuth('code');
-    if (tabs[tabOn]) copy(tabs[tabOn].text, e.currentTarget, 'Copied');
-  });
-  $('[data-prompt]', sheet).addEventListener('click', (e) => {
-    if (gated()) return openAuth('code');
-    if (cur) copy(promptText(), e.currentTarget, 'Prompt copied');
-  });
+  // signed out, Copy asks you to join or sign in first, then copies what you asked for
+  const copyCode = () => { if (tabs[tabOn]) copy(tabs[tabOn].text, $('[data-copy]', sheet), 'Copied'); };
+  const copyPrompt = () => { if (cur) copy(promptText(), $('[data-prompt]', sheet), 'Prompt copied'); };
+  $('[data-copy]', sheet).addEventListener('click', () => (gated() ? openAuth('code', copyCode) : copyCode()));
+  $('[data-prompt]', sheet).addEventListener('click', () => (gated() ? openAuth('code', copyPrompt) : copyPrompt()));
   // the prompt for Claude, with what was tuned
   function promptText() {
     let t = cur.prompt || '';
@@ -1033,7 +1105,8 @@
   async function loadTweak(it) {
     tw = null;
     twBody.textContent = '';
-    $('#tweak').hidden = true;
+    tabTweak.hidden = true;
+    setPane(pane);
     $('[data-tweak-reset]').hidden = true;
     if (!served || !window.QMTweak) return;
     try {
@@ -1041,12 +1114,12 @@
       if (cur !== it || curRemix) return;
       tw = t;
       renderTweak();
-      $('#tweak').hidden = !tw.params.length;
+      tabTweak.hidden = !tw.params.length;
       if (wantTweak && tw.params.length) {
         wantTweak = false;
-        $('#tweak').scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
-        play($('#tweak'), [{ backgroundColor: 'color-mix(in srgb, var(--lime) 28%, transparent)' }, { backgroundColor: 'transparent' }], { duration: 1200, fill: 'none' });
-      }
+        setPane('tweak');
+        if (innerWidth <= 960) $('#info-tabs').scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+      } else setPane(pane);
     } catch (e) { /* the demo could not be read: no tweaks for it */ }
   }
   function renderTweak() {
@@ -1168,7 +1241,7 @@
     $('#remix-name').value = rx.name || (from ? `${from.title}, again` : `${it.title}, remixed`);
     $('#remix-note').value = rx.note;
     $('#remix-frame').dataset.tone = it.tone || 'dark';
-    $('[data-remix-publish]').textContent = !C.on ? 'Copy code' : C.user ? 'Publish remix' : 'Join to publish';
+    $('[data-remix-publish]').textContent = !C.full ? 'Copy code' : C.user ? 'Publish remix' : 'Join to publish';
     setPart(rx.part);
     renderRx();
     rxEl.classList.add('is-open');
@@ -1214,8 +1287,11 @@
   $('[data-remix-close]').addEventListener('click', closeEditor);
   async function publish() {
     if (!rx) return;
-    // with no accounts (the static copy on qbix.space), the remix is yours to copy
-    if (!C.on) return copy(`${rx.code.html}\n\n<style>\n${rx.code.css}\n</style>\n\n<script>\n${rx.code.js}\n</script>\n`, $('[data-remix-publish]'), 'Copied');
+    // with no community (the static copy on qbix.space), the remix is yours to copy, signed in
+    if (!C.full) {
+      if (gated()) return openAuth('code', publish);
+      return copy(`${rx.code.html}\n\n<style>\n${rx.code.css}\n</style>\n\n<script>\n${rx.code.js}\n</script>\n`, $('[data-remix-publish]'), 'Copied');
+    }
     if (!C.user) return openAuth('remix', publish);
     const btn = $('[data-remix-publish]');
     const title = $('#remix-name').value.trim() || `${rx.it.title}, remixed`;
@@ -1269,7 +1345,9 @@
     const join = e.target.closest('[data-join]');
     if (join) { e.preventDefault(); authMode = 'join'; openAuth(join.dataset.why || ''); return; }
     const signin = e.target.closest('[data-signin]');
-    if (signin) { e.preventDefault(); authMode = 'signin'; openAuth('more'); return; }
+    if (signin) { e.preventDefault(); authMode = 'signin'; openAuth(signin.dataset.why || 'more'); return; }
+    const browse = e.target.closest('[data-browse]');
+    if (browse) { e.preventDefault(); scrollTo({ top: $('#toolbar').offsetTop - 64, behavior: reduced ? 'auto' : 'smooth' }); return; }
     const ex = e.target.closest('.act--export');
     if (ex) {
       e.preventDefault();
@@ -1293,7 +1371,7 @@
   function route() {
     const h = location.hash;
     let m;
-    if ((m = h.match(/^#\/r\/(r-[a-z0-9]+)$/))) { if (C.on) openRemix(m[1], false); return; }
+    if ((m = h.match(/^#\/r\/(r-[a-z0-9]+)$/))) { if (C.full) openRemix(m[1], false); return; }
     if ((m = h.match(/^#\/(.+)$/)) && byId.has(m[1])) { open(m[1], false); return; }
     closeEditor();
     close(false);

@@ -19,3 +19,13 @@ glass.webp     https://unsplash.com/photos/sof4ZmR007I
 house.webp     https://unsplash.com/photos/4vioYQ9Nn9Y
 kitchen.webp   https://unsplash.com/photos/K-ndOjMfxKs
 office.webp    https://unsplash.com/photos/SRZcOAERBUQ
+
+AI Bidding's lots and rooms (public/art/bid/), from the game's own set (Kimoji Studio), Unsplash License:
+camera.webp        https://unsplash.com/photos/vintage-silver-canon-rangefinder-camera-SXjTAlW1kLc
+watch.webp         https://unsplash.com/photos/a-hanging-silver-pocket-watch-on-a-black-background-pmPpEV_axqo
+chalice.webp       https://unsplash.com/photos/ornate-gold-goblet-on-white-surface-8yeyzVfMv0M
+crown.webp         https://unsplash.com/photos/a-royal-golden-crown-displayed-in-a-case-HBlXJVCtM2E
+room-bar.webp      https://unsplash.com/photos/elegant-home-bar-with-illuminated-bottles-and-city-skyline-cPG9VtIJHec
+room-marble.webp   https://unsplash.com/photos/modern-bar-with-marble-counter-and-stools-xdXjX_ACpw0
+room-curtain.webp  https://unsplash.com/photos/a-white-rectangular-object-on-a-white-surface-XUpJJ1HggjI
+room-redroom.webp  https://unsplash.com/photos/modern-red-room-with-tables-and-chairs-alJhZXtv-XE

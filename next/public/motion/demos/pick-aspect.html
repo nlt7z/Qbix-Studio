@@ -131,7 +131,7 @@ paint();
 <script src="../assets/picks/p3-ghost.js"></script>
 <script>
   /* loop kind: the ghost picks the landscape crop, then the portrait one, then back to the square */
-  PickGhost.fit($('#fit'), 360, 560, { max: 1.4 });
+  PickGhost.fit($('#fit'), 360, 560, { max: 1.4, gutter: 48 });
   PickGhost.start({
     hot: '.asp-pick',
     reset: () => { token++; at = 1; cur = { w: SHAPES[1].w, h: SHAPES[1].h }; [...picks.children].forEach((b, j) => b.setAttribute('aria-checked', j === 1)); paint(); },

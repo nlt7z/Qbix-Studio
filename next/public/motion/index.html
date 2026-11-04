@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <base href="/motion/">
-<script>window.QM_STATIC = true;   // no local server here: no accounts, no filming</script>
+<script>window.QM_STATIC = true; window.QM_API = '/api/motion';   // no local server: the site's accounts, no community, no filming</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Qbix Motion</title>
 <meta name="description" content="Every motion on qbix.space, live, with its timing, the file it lives in and the code to copy.">
@@ -44,7 +44,7 @@
       <div class="me-menu" id="me-menu" role="menu" hidden>
         <p class="me-who"><b id="me-name"></b><span id="me-handle"></span></p>
         <a href="#bench" role="menuitem">Your bench</a>
-        <a href="#community" role="menuitem">Community</a>
+        <a href="#community" role="menuitem" data-needs-community hidden>Community</a>
         <button type="button" role="menuitem" data-signout>Sign out</button>
       </div>
     </div>
@@ -56,16 +56,12 @@
     <section class="hero">
       <p class="hero-line" id="hero-count"></p>
       <h1 class="hero-title">Motion you can <span class="hl">remix</span>.</h1>
-      <p class="hero-lede">Every piece Qbix moves with, from the mark and the loaders to buttons, cards and scenes. Save it to your bench, tune the details or remix the code.</p>
-      <div class="hero-cta" data-needs-community hidden>
-        <button class="btn btn-solid btn-lg" type="button" data-join>Join for free</button>
+      <p class="hero-lede">Every piece Qbix moves with, from <b>the mark and the loaders</b> to <b>buttons, cards and scenes</b>. Open one live, tune it and take its code.</p>
+      <div class="hero-cta">
+        <button class="btn btn-solid btn-xl" type="button" data-join data-why="hero" hidden>Join for free</button>
+        <a class="btn btn-solid btn-xl" href="#bench" data-signed-in hidden>Your bench</a>
+        <a class="btn btn-xl" href="#all" data-browse>Browse motion</a>
       </div>
-      <ul class="hero-keys" aria-label="Shortcuts">
-        <li><kbd>/</kbd> search</li>
-        <li><kbd>S</kbd> save the open piece</li>
-        <li><kbd>←</kbd><kbd>→</kbd> previous, next</li>
-        <li><kbd>Esc</kbd> close</li>
-      </ul>
     </section>
 
     <div class="toolbar" id="toolbar">
@@ -114,7 +110,7 @@
       <div class="page-head">
         <h1 class="page-title">Your bench</h1>
         <p class="page-line" id="bench-line">The pieces you saved and the remixes you made.</p>
-        <div class="page-cta" data-signed-out data-needs-community hidden><button class="btn btn-solid" type="button" data-join data-why="bench">Join for free to keep a bench</button></div>
+        <div class="page-cta" data-signed-out data-needs-accounts hidden><button class="btn btn-solid" type="button" data-join data-why="bench">Join for free to keep a bench</button></div>
       </div>
       <h2 class="page-sub">Saved</h2>
       <div class="grid" id="bench-grid"></div>
@@ -199,67 +195,85 @@
   <div class="sheet-body">
     <div class="stage">
       <div class="stage-frame" id="stage-frame"><iframe id="stage-view" title="Live demo"></iframe></div>
+      <!-- on a wide screen these float on the stage's lower edge (shown on hover, on focus, while
+           paused and just after opening); on a phone they sit under it -->
       <div class="stage-ctl">
-        <div class="seg">
-          <button type="button" data-replay>Replay</button>
-          <button type="button" data-pause>Pause</button>
+        <div class="ctl-main">
+          <div class="seg">
+            <button type="button" data-replay>Replay</button>
+            <button type="button" data-pause>Pause</button>
+          </div>
+          <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Scrub the motion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+            <div class="scrub-rail"><i class="scrub-fill"></i></div>
+            <b class="scrub-knob"></b>
+          </div>
+          <span class="stage-how" id="stage-how"></span>
         </div>
-        <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Scrub the motion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
-          <div class="scrub-rail"><i class="scrub-fill"></i></div>
-          <b class="scrub-knob"></b>
-        </div>
-        <span class="stage-how" id="stage-how"></span>
         <a class="stage-open" data-open target="_blank" rel="noopener">Open alone ↗︎</a>
       </div>
     </div>
+    <!-- the piece's side: its name and actions, then its code (or its tweaks, or what it is) -->
     <aside class="info" id="info">
-      <p class="info-kicker" id="info-kicker"></p>
-      <h2 class="info-title" id="sheet-title"></h2>
-      <p class="info-summary" id="info-summary"></p>
-      <div class="info-acts" id="info-acts">
-        <button class="pill" type="button" data-like aria-pressed="false"><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2 10.1 2 6.1A3.1 3.1 0 0 1 8 4.6a3.1 3.1 0 0 1 6 1.5c0 4-6 7.5-6 7.5Z"/></svg><span class="lbl">Like</span><b data-like-n></b></button>
-        <button class="pill" type="button" data-save aria-pressed="false"><span class="mark" aria-hidden="true"><svg viewBox="0 0 12 16"><path d="M1.5 1.5H10.5V14.3L6 10.9L1.5 14.3Z"/></svg></span><span class="lbl">Save</span></button>
-        <button class="pill" type="button" data-remix><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="3.5" r="1.6"/><circle cx="12" cy="3.5" r="1.6"/><circle cx="8" cy="12.5" r="1.6"/><path d="M4 5.1v1.4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5.1M8 8.5v2.4"/></svg><span class="lbl">Remix</span></button>
-        <button class="pill" type="button" data-share><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.6 9.4 9.4 6.6M7.3 4.5l1-1a2.6 2.6 0 0 1 3.7 3.7l-1 1M8.7 11.5l-1 1A2.6 2.6 0 0 1 4 8.8l1-1"/></svg><span class="lbl">Share</span></button>
-        <button class="pill pill--danger" type="button" data-remix-delete hidden><span class="lbl">Delete remix</span></button>
-      </div>
-      <section class="info-sec tweak" id="tweak" hidden>
-        <div class="code-head">
-          <h3>Tweak</h3>
-          <button class="link-btn" type="button" data-tweak-reset hidden>Reset</button>
+      <header class="info-head">
+        <p class="info-kicker" id="info-kicker"></p>
+        <h2 class="info-title" id="sheet-title"></h2>
+        <p class="info-lede" id="info-lede"></p>
+        <div class="info-acts" id="info-acts">
+          <button class="act-btn" type="button" data-save aria-pressed="false"><span class="mark" aria-hidden="true"><svg viewBox="0 0 12 16"><path d="M1.5 1.5H10.5V14.3L6 10.9L1.5 14.3Z"/></svg></span><span class="lbl">Save</span></button>
+          <button class="act-btn" type="button" data-like aria-pressed="false"><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2 10.1 2 6.1A3.1 3.1 0 0 1 8 4.6a3.1 3.1 0 0 1 6 1.5c0 4-6 7.5-6 7.5Z"/></svg><span class="lbl">Like</span><b data-like-n></b></button>
+          <button class="act-btn" type="button" data-remix><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="3.5" r="1.6"/><circle cx="12" cy="3.5" r="1.6"/><circle cx="8" cy="12.5" r="1.6"/><path d="M4 5.1v1.4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5.1M8 8.5v2.4"/></svg><span class="lbl">Remix</span></button>
+          <button class="act-btn" type="button" data-share><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.6 9.4 9.4 6.6M7.3 4.5l1-1a2.6 2.6 0 0 1 3.7 3.7l-1 1M8.7 11.5l-1 1A2.6 2.6 0 0 1 4 8.8l1-1"/></svg><span class="lbl">Share</span></button>
+          <button class="act-btn act-btn--danger" type="button" data-remix-delete hidden><span class="lbl">Delete remix</span></button>
         </div>
-        <div class="tweak-body" id="tweak-body"></div>
-      </section>
-      <section class="info-sec" id="info-remixes-sec" hidden>
-        <h3>Remixes <span class="info-n" id="info-remixes-n"></span></h3>
-        <ul class="rx-list" id="info-remixes"></ul>
-      </section>
-      <dl class="spec" id="info-spec"></dl>
-      <section class="info-sec">
-        <h3 id="info-where-k">On qbix.space</h3>
-        <p class="info-where" id="info-where"></p>
-        <ul class="src" id="info-src"></ul>
-      </section>
-      <section class="info-sec" id="info-keep-sec">
-        <h3>Keep</h3>
-        <ul class="keep" id="info-keep"></ul>
-      </section>
-      <section class="info-sec">
+      </header>
+      <div class="seg info-tabs" id="info-tabs" role="tablist" aria-label="Show">
+        <button type="button" role="tab" data-pane="code" class="is-on" aria-selected="true" aria-controls="pane-code">Code</button>
+        <button type="button" role="tab" data-pane="tweak" aria-selected="false" aria-controls="tweak" hidden>Tweak</button>
+        <button type="button" role="tab" data-pane="about" aria-selected="false" aria-controls="pane-about">About</button>
+      </div>
+      <section class="pane pane--code" id="pane-code" role="tabpanel" aria-label="Code">
         <div class="code-head">
-          <h3>Code</h3>
-          <div class="seg seg--tabs" id="code-tabs" role="tablist"></div>
+          <div class="seg seg--tabs" id="code-tabs" role="tablist" aria-label="Files"></div>
+          <div class="code-acts">
+            <button class="btn btn-quiet btn-sm" type="button" data-prompt><span class="lbl">Copy prompt</span></button>
+            <button class="btn btn-solid btn-sm" type="button" data-copy><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><rect x="5.25" y="5.25" width="8.5" height="8.5" rx="1.75"/><path d="M10.75 5.25V3.5A1.25 1.25 0 0 0 9.5 2.25h-6A1.25 1.25 0 0 0 2.25 3.5v6a1.25 1.25 0 0 0 1.25 1.25h1.75"/></svg><span class="lbl">Copy code</span></button>
+          </div>
         </div>
         <div class="code-wrap" id="code-wrap">
           <pre class="code" id="code" tabindex="0"><code></code></pre>
           <div class="code-gate" id="code-gate" hidden>
-            <p><b>Join for free to get the full code.</b> Members copy every file, the prompt for Claude and their tuned versions.</p>
-            <button class="btn btn-solid" type="button" data-join data-why="code">Join for free</button>
+            <p class="code-gate-t">Sign in to copy the code</p>
+            <p class="code-gate-l">Members copy every file and the prompt for Claude, and keep a bench of the pieces they save. It's free.</p>
+            <div class="code-gate-acts">
+              <button class="btn btn-solid" type="button" data-join data-why="code">Join for free</button>
+              <button class="btn" type="button" data-signin data-why="code">Sign in</button>
+            </div>
           </div>
         </div>
-        <div class="code-acts">
-          <button class="btn btn-solid" type="button" data-copy>Copy code</button>
-          <button class="btn" type="button" data-prompt>Copy prompt</button>
+      </section>
+      <section class="pane tweak" id="tweak" role="tabpanel" aria-label="Tweak" hidden>
+        <div class="pane-head">
+          <p>Change the details and watch the piece follow. The code follows too.</p>
+          <button class="link-btn" type="button" data-tweak-reset hidden>Reset</button>
         </div>
+        <div class="tweak-body" id="tweak-body"></div>
+      </section>
+      <section class="pane" id="pane-about" role="tabpanel" aria-label="About" hidden>
+        <p class="info-summary" id="info-summary"></p>
+        <section class="info-sec" id="info-remixes-sec" hidden>
+          <h3>Remixes <span class="info-n" id="info-remixes-n"></span></h3>
+          <ul class="rx-list" id="info-remixes"></ul>
+        </section>
+        <dl class="spec" id="info-spec"></dl>
+        <section class="info-sec">
+          <h3 id="info-where-k">On qbix.space</h3>
+          <p class="info-where" id="info-where"></p>
+          <ul class="src" id="info-src"></ul>
+        </section>
+        <section class="info-sec" id="info-keep-sec">
+          <h3>Keep</h3>
+          <ul class="keep" id="info-keep"></ul>
+        </section>
       </section>
     </aside>
   </div>
@@ -310,7 +324,8 @@
     <label class="field"><span>Password</span><input name="password" type="password" autocomplete="new-password" minlength="8" required><em class="field-hint" data-only="join">8 characters or more</em></label>
     <p class="auth-err" id="auth-err" role="alert"></p>
     <button class="btn btn-solid btn-lg auth-go" type="submit">Join for free</button>
-    <p class="auth-note">Accounts live on this Mac, in the library's own folder.</p>
+    <button class="btn btn-solid btn-lg auth-ok" type="button" data-auth-close>Back to the motion</button>
+    <p class="auth-note" id="auth-note">Accounts live on this Mac, in the library's own folder.</p>
   </form>
 </div>
 

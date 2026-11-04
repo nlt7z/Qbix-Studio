@@ -178,7 +178,7 @@ apply();
 <script src="../assets/picks/p3-ghost.js"></script>
 <script>
   /* loop kind: the ghost flicks the front card, presses the next, and carries the third slowly: three ways to send a card back */
-  PickGhost.fit($('#fit'), 760, 520, { max: 1.4 });
+  PickGhost.fit($('#fit'), 760, 520, { max: 1.4, gutter: 48 });
   const lin = (x) => x;
   PickGhost.start({
     reset: rewind,

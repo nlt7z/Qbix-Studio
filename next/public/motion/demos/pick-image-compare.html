@@ -175,7 +175,7 @@ draw();
 <script src="../assets/picks/p3-ghost.js"></script>
 <script>
   /* loop kind: the ghost drags the line as the library's own preview does: a slow pull, a push, a flick right; a pull, a flick left */
-  PickGhost.fit($('fit'), 760, 556, { max: 1.5 });
+  PickGhost.fit($('fit'), 760, 556, { max: 1.5, gutter: 48 });
   const X = (f) => () => { const r = frame.getBoundingClientRect(); return { x: r.left + r.width * f, y: r.top + r.height * 0.55 }; };
   const lin = (x) => x;
   PickGhost.start({

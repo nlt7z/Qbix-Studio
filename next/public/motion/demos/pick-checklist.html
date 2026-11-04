@@ -125,7 +125,7 @@ reset(still ? 5 : 2);
 <script src="../assets/picks/p3-ghost.js"></script>
 <script>
   /* loop kind: the ghost ticks three, takes one back and ticks it again, then the last two: the button wakes */
-  PickGhost.fit($('#fit'), 520, 590, { max: 1.5 });
+  PickGhost.fit($('#fit'), 520, 590, { max: 1.5, gutter: 48 });
   PickGhost.start({
     hot: '.ck-item',
     reset: () => reset(2),

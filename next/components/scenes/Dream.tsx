@@ -3,7 +3,7 @@
 import '@/app/scenes-dream.css';
 import Scene from '@/components/scene/Scene';
 import { A, T, Lock } from '@/components/scene/kit';
-import { BidTable } from '@/components/scenes/BidKing';
+import { BidScreen, playBid } from '@/components/scenes/BidScreen';
 import { E } from '@/lib/scene/timeline';
 
 /**
@@ -16,7 +16,8 @@ import { E } from '@/lib/scene/timeline';
  *     pulled down into it, frosted as they pass behind its glass bar; the
  *     thought's trail goes in, and it travels up out of the window and then
  *     tucks its edge under the bar's corner: pinned, the lime glowing through
- *     the glass. The thing it became: Bid King's table, drawn (for AI teams),
+ *     the glass. The thing it became: AI Bidding's game screen, drawn (for AI
+ *     teams; once the idea is pinned its menu comes in and a house is picked),
  *     or the practice's calm homepage, its office photographed, the shade
  *     over it lifting once the idea is pinned (for business).
  * The ideas float inside the window's span, so each falls straight into it;
@@ -118,7 +119,7 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
       label={
         biz
           ? 'Ideas as chat bubbles, one of them lime: a site as calm as my office? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over the calm counseling homepage it became'
-          : 'Ideas as chat bubbles, one of them lime: what if poker had an AI that bluffs? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over Bid King, the blind auction game it became'
+          : 'Ideas as chat bubbles, one of them lime: what if poker had an AI that bluffs? Then a window rises, the other ideas are pulled down into it, and the lime one pins to its corner over AI Bidding, the auction game it became'
       }
       build={(q, tl) => {
         /* the bubbles' edges, sized to their words */
@@ -172,8 +173,9 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
           if (lime.style.zIndex !== z) lime.style.zIndex = z;
         });
 
-        /* pinned: the shade over the practice's office lifts */
+        /* pinned: the shade over the practice's office lifts; or the game's menu comes in and a house is picked */
         if (biz) tl.from(q('pg.shade'), { clip: [0, 0, 0, 0] }).to(q('pg.shade'), { clip: [0, 0, 100, 0] }, 1.79, 0.16, E.soft);
+        else playBid(q, tl, 'dream.bid', 1.66);
       }}
     >
       {/* --- the ideas (under the window: they're pulled down into it) --- */}
@@ -238,9 +240,9 @@ export default function Dream({ biz = false }: { biz?: boolean }) {
             </div>
           ) : (
             <div className="win-body dream-bid-body">
-              {/* the screen's lime is the idea pinned over it: the table's bid is chalk */}
+              {/* the screen's lime is the idea pinned over it; the game keeps its own rose */}
               <div className="dream-bid">
-                <BidTable k="dream.bid" lime={false} />
+                <BidScreen k="dream.bid" />
               </div>
             </div>
           )}
