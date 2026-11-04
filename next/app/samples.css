@@ -1,0 +1,108 @@
+/* =============================================================================
+   SAMPLES — the free sample videos: the page at /samples, and the strip of six
+   on /business (components/samples). A card is the sample's cover at 9:16 with
+   who it was made for under it; while its preview plays, the video rises into
+   the cover (SampleCard.tsx). No outlines, shadows or tags: the covers carry
+   the colour, on the page's black.
+   ============================================================================= */
+.smp {
+  padding: clamp(128px, 18vh, 200px) 0 clamp(96px, 12vw, 168px);
+  background: var(--bg);
+}
+
+/* --- the words ------------------------------------------------------------- */
+.smp-title {
+  font-family: var(--font-headline);
+  font-weight: 400;
+  font-size: clamp(56px, 9vw, 132px);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+.smp-lede { margin: 24px 0 0; max-width: 34em; font-size: clamp(17px, 1.4vw, 21px); line-height: 1.55; color: var(--text); }
+/* how the cards work, said for the device in hand */
+.smp-hint { margin: 12px 0 0; font-size: 15px; line-height: 1.5; color: var(--text-2); }
+.smp-hint > span { display: none; }
+@media (hover: hover) and (pointer: fine) { .smp-hint > .smp-hint-hover { display: inline; } }
+@media (hover: none), (pointer: coarse) { .smp-hint > .smp-hint-touch { display: inline; } }
+@media (prefers-reduced-motion: reduce) {
+  .smp-hint > span { display: none !important; }
+  .smp-hint > .smp-hint-still { display: inline !important; }
+}
+
+/* --- the groups: a heading, then the cards (beside it on wide screens) ------ */
+.smp-group { margin-top: clamp(72px, 9vw, 128px); }
+.smp-group-head { display: flex; align-items: baseline; gap: 14px; margin: 0 0 clamp(20px, 2.4vw, 28px); }
+.smp-group-n { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.smp-group-title {
+  font-family: var(--font-headline);
+  font-weight: 400;
+  font-size: clamp(26px, 2.6vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+@media (min-width: 1200px) {
+  .smp-group {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--col-gap);
+    align-items: start;
+  }
+  .smp-group-head { grid-column: 1 / span 4; flex-direction: column; gap: 10px; position: sticky; top: 112px; margin: 0; }
+  .smp-group > .smp-grid { grid-column: 5 / -1; }
+}
+
+/* --- the grid -------------------------------------------------------------- */
+.smp-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(28px, 3vw, 40px) var(--col-gap);
+}
+.smp-grid > li { min-width: 0; }
+@media (min-width: 640px) { .smp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* --- a card ---------------------------------------------------------------- */
+.smp-card { display: flex; flex-direction: column; gap: 14px; color: inherit; -webkit-tap-highlight-color: transparent; }
+.smp-media { position: relative; display: block; aspect-ratio: 9 / 16; overflow: hidden; background: var(--bg-card); }
+/* taps and clicks land on the link itself (a tapped video would take the focus and stop itself) */
+.smp-media img,
+.smp-video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+/* the preview rises into the cover once it has frames, and sinks back when it stops */
+.smp-video { clip-path: inset(100% 0 0 0); transition: clip-path 560ms var(--ease-out-expo); }
+.smp-card[data-live] .smp-video { clip-path: inset(0); }
+.smp-text { display: grid; gap: 2px; min-width: 0; }
+.smp-name { font-size: 16px; font-weight: 500; line-height: 1.35; color: var(--ink); }
+.smp-arrow { display: inline-block; margin-left: 6px; color: var(--text-2); transition: translate 260ms var(--ease), color 260ms var(--ease); }
+.smp-card:hover .smp-arrow,
+.smp-card:focus-visible .smp-arrow,
+.smp-card[data-on] .smp-arrow { translate: 2px -2px; color: var(--ink); }
+.smp-town,
+.smp-line { font-size: 14px; line-height: 1.45; }
+.smp-town { color: var(--text-2); }
+.smp-line { color: var(--text); }
+.smp-card:focus-visible { outline: none; }
+.smp-card:focus-visible .smp-media { outline: 2px solid var(--ink); outline-offset: 4px; }
+
+/* --- the strip on /business: six across on a wide screen ------------------- */
+.smp-strip { padding: clamp(80px, 11vw, 160px) 0; background: var(--bg); color: var(--text); }
+.smp-strip-head { max-width: 40em; margin-bottom: clamp(32px, 4vw, 48px); }
+.smp-strip-title {
+  font-family: var(--font-headline);
+  font-weight: 400;
+  font-size: clamp(34px, 3.4vw, 58px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.smp-strip .smp-lede { margin-top: 20px; }
+@media (min-width: 1100px) { .smp-grid--strip { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.smp-strip-foot { margin-top: clamp(36px, 4.5vw, 56px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .smp-video,
+  .smp-arrow { transition: none; }
+}

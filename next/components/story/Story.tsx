@@ -14,6 +14,7 @@ import { Contours, Ridges } from '@/components/scene/Generative';
 import Marker from '@/components/Marker';
 import ShowcaseText from '@/components/ShowcaseText';
 import SplitText from '@/components/SplitText';
+import SamplesStrip from '@/components/samples/SamplesStrip';
 import { useAudience } from '@/components/Audience';
 import { useContactModal } from '@/components/ContactModalProvider';
 import { CONTACT_EMAIL, PRICES, offers, services } from '@/lib/data';
@@ -328,6 +329,9 @@ function OfferChapters() {
           </>
         }
       />
+
+      {/* Six samples, one from each kind of business; all of them on /samples. */}
+      <SamplesStrip />
     </>
   );
 }

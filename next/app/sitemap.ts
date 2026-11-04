@@ -15,7 +15,8 @@ const HOME_UPDATED = new Date('2026-10-19');     // homepage: flat scenes
 const CONTENT_UPDATED = new Date('2026-05-20');  // studio / services / work / labs copy
 const STRATA_UPDATED = new Date('2026-10-19');   // Strata product intro page
 const OFFERS_UPDATED = new Date('2026-10-19');   // fixed-price offer pages
-const BUSINESS_UPDATED = new Date('2026-10-19'); // homepage in its local-business mode
+const BUSINESS_UPDATED = new Date('2026-11-03'); // homepage in its local-business mode (the samples strip)
+const SAMPLES_UPDATED = new Date('2026-11-03');  // the samples page
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -25,6 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/products/strata`,  lastModified: STRATA_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/listing-kit`,       lastModified: OFFERS_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/practice-websites`, lastModified: OFFERS_UPDATED,  changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_URL}/samples`,           lastModified: SAMPLES_UPDATED, changeFrequency: 'monthly', priority: 0.7 },
   ];
 
   return staticRoutes;
