@@ -20,21 +20,6 @@ const nextConfig = {
       { source: '/motion', destination: '/motion/index.html' },
     ];
   },
-
-  // Permanent redirects for routes that have been removed, so old links and
-  // search-index entries land somewhere live instead of 404ing.
-  async redirects() {
-    return [
-      { source: '/studio', destination: '/', permanent: true },
-      { source: '/studio/:path*', destination: '/', permanent: true },
-      { source: '/work/:path*', destination: '/', permanent: true },
-      { source: '/labs/:path*', destination: '/', permanent: true },
-      { source: '/games', destination: '/', permanent: true },
-      { source: '/games/:path*', destination: '/', permanent: true },
-      { source: '/press', destination: '/', permanent: true },
-      { source: '/services/:path*', destination: '/#services', permanent: true },
-    ];
-  },
 };
 
 export default nextConfig;
