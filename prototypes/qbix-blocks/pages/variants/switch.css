@@ -1,0 +1,26 @@
+/* =============================================================================
+   QBIX · BLOCKS, the ways the sections switch colour, 2 to 5 (switch.js says what
+   each does; 1, the cover, is block.css's stack). Everything here waits for
+   html.sw-live, which switch.js sets only with full motion: without it the page
+   keeps the plain cut (blocks inset, their corners cut, 8px between them).
+   ============================================================================= */
+
+/* 2 to 5: the blocks go full width and touch; the switch is drawn, so it needs no gap or corner */
+html.sw-live:not([data-switch='1']):not([data-switch='14']) .blocks { padding: 0; gap: 0; }
+html.sw-live:not([data-switch='1']):not([data-switch='14']) .blocks > .block { clip-path: none; margin-top: -1px; } /* 1px over: no seam */
+html.sw-live:not([data-switch='1']):not([data-switch='14']) .blocks > .block:first-child { margin-top: 0; }
+html.sw-live:not([data-switch='1']):not([data-switch='14']) .nav { left: 0; right: 0; }
+
+/* 2 · 整页渐变: one ground for the whole page, set by the scroll; every block's words take its tone
+   (switch.js writes the two tones' inks under html[data-sw-tone]) */
+html.sw-live[data-switch='2'] body { background: var(--sw-ground, #ffffff); }
+html.sw-live[data-switch='2'] .blocks > .block { background: transparent; }
+
+/* 3, 4, 5: a cover of the tone before over the top of the block that switches, opened by the scroll */
+html.sw-live[data-switch='3'] .blocks > .block,
+html.sw-live[data-switch='4'] .blocks > .block,
+html.sw-live[data-switch='5'] .blocks > .block,
+html.sw-live[data-switch='14'] .blocks > .block { isolation: isolate; }
+.sw-cover { position: absolute; z-index: 3; left: 0; top: 0; width: 100%; pointer-events: none; background: var(--sw-prev); }
+html.sw-live[data-switch='5'] .sw-cover { display: grid; align-content: start; overflow: hidden; background: none; }
+.sw-sq { display: block; background: var(--sw-prev); }

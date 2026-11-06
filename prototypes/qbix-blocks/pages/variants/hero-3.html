@@ -1,0 +1,80 @@
+<style>
+  /* Hero 3 · on the dark, as qbix.space's own hero: the words on the left, the glass cube on the right
+     (its core lime, the block's one point), and under the words the studio band, Pacific time ticking */
+  .hv3 .in {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    column-gap: clamp(24px, 4vw, calc(80px * var(--u)));
+    padding-top: calc(var(--nav) + clamp(20px, 4vh, calc(64px * var(--u))));
+    padding-bottom: clamp(28px, 4.4vh, calc(52px * var(--u)));
+  }
+  .hv3-say { align-self: center; display: grid; gap: clamp(22px, 3.4vh, calc(40px * var(--u))); min-width: 0; }
+  .hv3-h { margin: 0 0 0 -0.04em; }
+  .hv3-lede { color: var(--fg); font-size: clamp(18px, 1.5vw, calc(23px * var(--u))); max-width: 26em; }
+  .hv3-cube { grid-column: 2; grid-row: 1 / span 2; position: relative; min-height: 0; }
+  .hv3-cube .scene { height: 100%; min-height: 360px; }
+  /* the band: where the studio works, and the time there */
+  .hv3-band { grid-column: 1; align-self: end; display: grid; gap: 8px; padding-top: clamp(28px, 4vh, 48px); }
+  .hv3-place { margin: 0; font-size: calc(15px * var(--u)); color: var(--fg2); }
+  .hv3-time { margin: 0; display: flex; align-items: baseline; gap: 0.06em; font: 500 clamp(30px, 2.8vw, calc(46px * var(--u)))/1 var(--font-sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .hv3-time .s { color: var(--fg2); }
+  .hv3-time .z { margin-left: 0.5em; font-size: calc(15px * var(--u)); font-weight: 500; letter-spacing: 0; color: var(--fg2); }
+  @media (max-width: 899px) {
+    .hv3 .in { min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; row-gap: 28px; }
+    .hv3-cube { grid-column: 1; grid-row: 1; height: min(78vw, 460px); }
+    .hv3-cube .scene { min-height: 0; }
+    .hv3-band { grid-column: 1; padding-top: 4px; }
+  }
+</style>
+<section class="block block--flat hv3" data-tone="black" id="top" data-slot="hero">
+  <div class="in">
+    <div class="hv3-say">
+      <h1 class="display hv3-h" data-fit="0.97" data-max="150" data-min="30" data-rise data-aud-only="ai">
+        <span class="line">We build the</span>
+        <span class="line"><span class="mark" data-wipe style="--wd: .6s">coolest</span> things.</span>
+      </h1>
+      <h1 class="display hv3-h" data-fit="0.97" data-max="150" data-min="30" data-rise data-aud-only="biz" hidden>
+        <span class="line">Look as good</span>
+        <span class="line">as <span class="mark" data-wipe style="--wd: .6s">your work.</span></span>
+      </h1>
+      <p class="lede hv3-lede" data-up data-aud-only="ai">Qbix never writes off a small idea.<br>We’re a sharp team that moves fast, from sketch to shipped product.</p>
+      <p class="lede hv3-lede" data-up data-aud-only="biz" hidden>Fixed-price design for local businesses, ready in days.<br>A listing kit for real estate agents and a calm website for solo practices.</p>
+      <div class="acts" data-up style="--ud: 140ms">
+        <a class="btn" href="start.html" data-aud-only="ai">Start a brief ↗︎</a>
+        <a class="btn" href="listing-kit.html" data-aud-only="biz" hidden>See the kit ↗︎</a>
+        <a class="link" href="samples.html">See samples</a>
+      </div>
+    </div>
+
+    <!-- the qbix cube: eight pieces of frosted glass round a lime core, gathering in -->
+    <div class="hv3-cube" data-chapter><div class="scene" data-scene="glass-cube" data-tone="dark"></div></div>
+
+    <!-- where and when the studio works -->
+    <div class="hv3-band" data-up style="--ud: 260ms">
+      <p class="hv3-place">Seattle, WA · San Francisco Bay Area</p>
+      <p class="hv3-time" id="hv3-time" role="timer" aria-label="Studio time"><span class="hm">--:--</span><span class="s"></span><span class="z"></span></p>
+    </div>
+  </div>
+</section>
+<script>
+  /* the studio's time, Pacific, each second (as components/hero/StudioTime.tsx) */
+  (() => {
+    const el = document.getElementById('hv3-time');
+    if (!el) return;
+    const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true, timeZoneName: 'short' });
+    const [hm, s, z] = ['.hm', '.s', '.z'].map((c) => el.querySelector(c));
+    const tick = () => {
+      if (!el.isConnected) return clearInterval(id);
+      const parts = fmt.formatToParts(new Date());
+      const get = (t) => parts.find((p) => p.type === t)?.value ?? '';
+      hm.textContent = `${get('hour')}:${get('minute')}`;
+      s.textContent = `:${get('second')}`;
+      z.textContent = `${get('dayPeriod')} ${get('timeZoneName')}`;
+      el.setAttribute('aria-label', `Studio time ${hm.textContent} ${z.textContent}`);
+    };
+    const id = setInterval(tick, 1000);
+    tick();
+  })();
+</script>

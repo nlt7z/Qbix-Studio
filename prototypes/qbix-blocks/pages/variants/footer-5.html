@@ -1,0 +1,92 @@
+<style>
+  /* Footer 5 · 联系为主: the way to reach us is the footer. The email is the giant line, fitted to the
+     width; a click copies it and says so. Then a call, Seattle's own time, and the sitemap, small. White,
+     the lime only under the email when it's pointed at, and the i's dot. */
+  .fv5 .in { padding-top: clamp(72px, 9vw, calc(128px * var(--u))); padding-bottom: clamp(24px, 3vw, calc(36px * var(--u))); }
+  .fv5-k { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin: 0; font-size: calc(16px * var(--u)); font-weight: 500; }
+  .fv5-k output { font-weight: 400; color: var(--fg2); }
+  .fv5-mail {
+    display: block; width: 100%; margin: clamp(14px, 1.6vw, 22px) 0 0 -0.04em; padding: 0; border: 0; background: none; color: var(--fg);
+    font-family: var(--font-headline); font-weight: 400; letter-spacing: -0.045em; line-height: 0.96; text-align: left; cursor: copy;
+  }
+  .fv5-mail .line { background: linear-gradient(var(--lime), var(--lime)) no-repeat 0 96% / 0% 0.07em; transition: background-size 0.6s var(--e-out); padding-bottom: 0.06em; }
+  .fv5-mail:hover .line, .fv5-mail:focus-visible .line { background-size: 100% 0.07em; }
+  .fv5-mail:focus-visible { outline-offset: 8px; }
+  .fv5-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px 40px; margin-top: clamp(28px, 3.4vw, 52px); }
+  .fv5-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+  .fv5-acts .link { font-size: calc(17px * var(--u)); }
+  .fv5-where { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0; font-size: calc(16px * var(--u)); color: var(--fg2); }
+  .fv5-where b { font-weight: 500; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .fv5-low { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 32px clamp(32px, 5vw, 96px); margin-top: clamp(64px, 8vw, calc(120px * var(--u))); }
+  .fv5-logo { display: block; width: clamp(96px, 8vw, calc(130px * var(--u))); color: var(--fg); }
+  .fv5-logo svg { display: block; width: 100%; height: auto; }
+  .fv5-logo path { fill: currentColor; }
+  .fv5-logo .dot { fill: var(--lime); }
+  .fv5-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px clamp(20px, 2.6vw, 40px); }
+  .fv5-map h2 { margin: 0 0 10px; font-size: calc(13px * var(--u)); font-weight: 500; color: var(--fg2); }
+  .fv5-map ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .fv5-map a { font-size: calc(14.5px * var(--u)); font-weight: 500; text-decoration: none; }
+  .fv5-map a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+  .fv5-fine { margin: clamp(28px, 3vw, 40px) 0 0; font-size: calc(13.5px * var(--u)); color: var(--fg2); }
+  @media (max-width: 760px) {
+    .fv5-low { grid-template-columns: minmax(0, 1fr); }
+    .fv5-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+<footer class="block foot fv5" data-tone="white" data-slot="footer">
+  <div class="in">
+    <p class="fv5-k">Reach us directly <output class="fv5-said" aria-live="polite">Click the address to copy it.</output></p>
+    <button class="fv5-mail" type="button" data-fit data-max="200" data-min="28" aria-label="Copy contact@qbix.space"><span class="line">contact@qbix.space</span></button>
+    <div class="fv5-row">
+      <div class="fv5-acts">
+        <a class="btn" href="https://cal.com/qbix-studio/30min">Book a call ↗︎</a>
+        <a class="link" href="start.html">Start a project</a>
+        <a class="link" href="mailto:contact@qbix.space">Open in your mail</a>
+      </div>
+      <p class="fv5-where"><span>Seattle <b class="fv5-time">&nbsp;</b></span><span>Remote, worldwide</span></p>
+    </div>
+    <div class="fv5-low">
+      <a class="fv5-logo" href="home.html" aria-label="Qbix, home">
+        <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/><path class="dot" d="M583.5 0H616.5V34H583.5Z"/></svg>
+      </a>
+      <nav class="fv5-map" aria-label="Sitemap">
+        <div><h2>Studio</h2><ul><li><a href="home.html#services">Services</a></li><li><a href="strata.html">Products</a></li><li><a href="home.html#about">About us</a></li><li><a href="https://qbix.space/motion">Motion</a></li></ul></div>
+        <div><h2>For business</h2><ul><li><a href="listing-kit.html">Listing Launch Kit</a></li><li><a href="https://qbix.space/practice-websites">Practice Website Refresh</a></li><li><a href="samples.html">Samples</a></li></ul></div>
+        <div><h2>Contact</h2><ul><li><a href="mailto:contact@qbix.space">contact@qbix.space</a></li><li><a href="https://cal.com/qbix-studio/30min">Book a call</a></li><li><a href="start.html">Start a project</a></li></ul></div>
+      </nav>
+    </div>
+    <p class="fv5-fine">© 2026 Qbix · Seattle, Washington</p>
+  </div>
+</footer>
+<script>
+  /* The address copies on a click and says so; Seattle's time is read from the clock, to the minute. */
+  (window.BlocksAfter = window.BlocksAfter || []).push(() => {
+    const mail = document.querySelector('.fv5-mail');
+    const said = document.querySelector('.fv5-said');
+    const time = document.querySelector('.fv5-time');
+    if (!mail) return;
+    const EMAIL = 'contact@qbix.space';
+    const first = said.textContent;
+    let back = 0;
+    const tell = (t) => {
+      said.textContent = t;
+      clearTimeout(back);
+      back = setTimeout(() => (said.textContent = first), 2400);
+    };
+    mail.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(EMAIL);
+        tell('Copied. Paste it into your mail.');
+      } catch {
+        // no clipboard here (an old browser, or no permission): open the mail app instead
+        location.href = `mailto:${EMAIL}`;
+      }
+    });
+    const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' });
+    const tickClock = () => {
+      time.textContent = fmt.format(new Date());
+      setTimeout(tickClock, 60000 - (Date.now() % 60000) + 50);
+    };
+    tickClock();
+  });
+</script>

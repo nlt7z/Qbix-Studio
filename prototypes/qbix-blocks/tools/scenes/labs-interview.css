@@ -1,0 +1,47 @@
+/* The Interview Assistant, drawn (the prototype's fourth Labs window, labs.tsx): the call's last minute
+   as two voices along a ruler, what was just said, and the assistant beside it. Every colour is the
+   chapter's tone's own (scene vars); the one lime is the newest hint and its moment. */
+.scn .iv-who { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.scn .iv-who i { margin-left: 8px; font-style: normal; font-weight: 400; color: var(--fg2); }
+.scn .iv-mono { display: grid; place-items: center; width: 32px; height: 32px; background: var(--fg); color: var(--win); font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; }
+.scn .iv-bars { display: inline-flex; align-items: center; gap: 2px; height: 12px; }
+.scn .iv-bars i { width: 2px; background: var(--fg); }
+.scn .iv-rec { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 12px; color: var(--fg2); white-space: nowrap; }
+.scn .iv-rec b { font: 400 12px ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace; color: var(--fg); }
+.scn .iv-call svg, .scn .iv-live svg { display: block; overflow: visible; }
+.scn .iv-tick { stroke: var(--line2); stroke-width: 1; }
+.scn .iv-ruler { fill: var(--fg3); font: 400 10.5px ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace; }
+.scn .iv-k { fill: var(--fg2); font-size: 12px; font-weight: 500; }
+.scn .iv-floor { stroke: var(--line); stroke-width: 1; }
+.scn .iv-you, .scn .iv-sam, .scn .iv-said-v { fill: none; stroke-width: 2; }
+.scn .iv-you { stroke: var(--fg3); }
+.scn .iv-sam { stroke: var(--fg3); }
+.scn .iv-said-v { stroke: var(--fg); }
+.scn .iv-now { stroke: var(--fg); stroke-width: 1; }
+.scn .iv-now-k { fill: var(--fg); font-size: 10.5px; font-weight: 600; }
+.scn .iv-m { background: var(--fg); }
+.scn .iv-mk { background: var(--lime); }
+.scn .iv-said { display: grid; gap: 8px; }
+.scn .iv-said-k { font: 400 11px ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace; color: var(--fg3); }
+.scn .iv-q { font-size: 18px; letter-spacing: -0.01em; color: var(--fg2); white-space: nowrap; }
+.scn .iv-a { font-size: 25px; font-weight: 500; letter-spacing: -0.02em; color: var(--fg); }
+.scn .iv-ul { position: absolute; bottom: 0; height: 2px; background: var(--fg); }
+.scn .iv-side { background: var(--sunk); }
+.scn .iv-side-k { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; }
+.scn .iv-side-k span { font-weight: 400; color: var(--fg3); }
+.scn .iv-card { background: var(--win); box-shadow: inset 0 0 0 1px var(--line); }
+.scn .iv-note { background: none; box-shadow: inset 0 0 0 1px var(--line2); }
+.scn .iv-hint { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 14px; font-size: 15.5px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; color: var(--fg); }
+.scn .iv-hint > span { display: inline-flex; align-items: center; gap: 8px; }
+.scn .iv-hint em { font: 400 11px ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace; font-style: normal; color: var(--fg3); }
+.scn .iv-hint .ico { color: var(--fg2); }
+.scn .iv-cur { background: var(--lime); overflow: hidden; }
+.scn .iv-cur-ink { position: absolute; left: 0; top: 0; width: 100%; }
+.scn .iv-hint--ink { position: absolute; left: 0; width: 100%; color: var(--ink); }
+.scn .iv-hint--ink em { color: rgba(18, 20, 23, 0.55); }
+.scn .iv-cov-k { font-size: 12px; color: var(--fg2); }
+.scn .iv-cov { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500; }
+.scn .iv-meter { position: relative; display: flex; gap: 3px; }
+.scn .iv-meter i { width: 22px; height: 6px; background: var(--fg4); }
+.scn .iv-meter i.on, .scn .iv-meter b { background: var(--fg); }
+.scn .iv-meter b { position: absolute; top: 0; height: 6px; }

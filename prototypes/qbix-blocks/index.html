@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qbix Blocks</title>
+<link rel="stylesheet" href="pages/block.css">
+<style>
+  .hub .in { padding-top: clamp(56px, 9vw, 120px); }
+  .hub .lede { margin-top: 24px; }
+  .hub .rows { margin-top: clamp(32px, 5vw, 64px); }
+  .hub h2 { margin-top: clamp(56px, 7vw, 96px); }
+  .tones { display: inline-flex; gap: 3px; }
+  .tones i { width: 18px; height: 18px; }
+  .tones .w { background: #fff; box-shadow: inset 0 0 0 1px rgba(15, 26, 0, 0.18); }
+  .tones .b { background: var(--ink); }
+  .opt { display: grid; grid-template-columns: minmax(0, 8em) minmax(0, 1fr); gap: 8px 24px; margin-top: clamp(24px, 3vw, 40px); }
+  .opt-k { font-weight: 600; padding-top: 12px; }
+  .opt-n { display: flex; flex-wrap: wrap; gap: 4px; }
+  .opt-n a { display: grid; gap: 2px; padding: 12px 14px; background: var(--soft); color: var(--fg); text-decoration: none; font-size: 15px; font-weight: 500; }
+  .opt-n a small { font-weight: 400; color: var(--fg2); font-size: 13px; }
+  .opt-n a:hover { background: var(--soft2); }
+  @media (max-width: 700px) { .opt { grid-template-columns: 1fr; } .opt-k { padding-top: 0; } }
+</style>
+</head>
+<body data-tone="white">
+<main class="blocks">
+  <section class="block block--flat hub" data-tone="white">
+    <div class="in">
+      <h1 class="h1">Qbix Blocks</h1>
+      <p class="lede">参考 wise.com：白底为主，深色只在关键位置出现，深色是 lime 自己的黑，lime 只做点缀。首页加四个二级页，只在本地。色条是首页从上到下的色块顺序。</p>
+      <ul class="rows">
+        <li><a class="row" href="pages/home.html"><span class="row-t">首页</span><span class="row-d">For AI teams / For business 两种模式，首屏的选择器直接给出价格和工期</span><span class="row-e tones"><i class="w"></i><i class="w"></i><i class="b"></i><i class="w"></i><i class="w"></i><i class="w"></i><i class="b"></i><i class="b"></i></span></a></li>
+        <li><a class="row" href="pages/strata.html"><span class="row-t">Strata</span><span class="row-d">产品页，产品影片是深色块</span><span class="row-e">↗︎</span></a></li>
+        <li><a class="row" href="pages/listing-kit.html"><span class="row-t">Listing Launch Kit</span><span class="row-d">优惠页，价格选择器，样片和价格是深色块</span><span class="row-e">↗︎</span></a></li>
+        <li><a class="row" href="pages/samples.html"><span class="row-t">Samples</span><span class="row-d">作品页，每类一块</span><span class="row-e">↗︎</span></a></li>
+        <li><a class="row" href="pages/start.html"><span class="row-t">Start a project</span><span class="row-d">表单页</span><span class="row-e">↗︎</span></a></li>
+      </ul>
+
+      <h2 class="h3">方案</h2>
+      <p class="lede">已选定：Hero 2、Footer 2、切换 1+4（进入深色用斜切擦除，回到白色用覆盖），页面默认就是这一套。左下角的「方案」还能切到其他几个对比，选择会带到其他页面。</p>
+      <div class="opt">
+        <span class="opt-k">Hero（首页）</span>
+        <div class="opt-n">
+          <a href="pages/home.html?hero=1">1<small>换算器 · Wise 首页式</small></a>
+          <a href="pages/home.html?hero=2">2 · 选定<small>居中大画面 · Wise Platform 式</small></a>
+          <a href="pages/home.html?hero=3">3<small>黑底方块 · 现网站式</small></a>
+          <a href="pages/home.html?hero=4">4<small>键帽字标 · 旧 landing 式</small></a>
+          <a href="pages/home.html?hero=5">5<small>二选一 · AI teams / business</small></a>
+        </div>
+        <span class="opt-k">Footer</span>
+        <div class="opt-n">
+          <a href="pages/home.html?footer=1#contact">1<small>字标 · 现版</small></a>
+          <a href="pages/home.html?footer=2#contact">2 · 选定<small>浅色多栏 · Wise 式</small></a>
+          <a href="pages/home.html?footer=3#contact">3<small>幕布揭开</small></a>
+          <a href="pages/home.html?footer=4#contact">4<small>字标互动</small></a>
+          <a href="pages/home.html?footer=5#contact">5<small>联系为主</small></a>
+        </div>
+        <span class="opt-k">切换背景色</span>
+        <div class="opt-n">
+          <a href="pages/home.html?switch=1">1<small>覆盖</small></a>
+          <a href="pages/home.html?switch=2">2<small>整页渐变</small></a>
+          <a href="pages/home.html?switch=3">3<small>卡片展开</small></a>
+          <a href="pages/home.html?switch=4">4<small>斜切擦除</small></a>
+          <a href="pages/home.html?switch=5">5<small>方块翻转</small></a>
+          <a href="pages/home.html?switch=14">1+4 · 选定<small>进深色斜切，回白色覆盖</small></a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="pages/block.js"></script>
+</body>
+</html>

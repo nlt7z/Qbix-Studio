@@ -1,0 +1,92 @@
+<style>
+  /* Hero 5 · two ways in: For AI teams on white, For business on the dark, side by side under the nav.
+     The half you point at (or focus) widens; the seam is the dark half's cut corner, at the site's 45°.
+     Choosing a half sets the page to that audience and takes you on down to it. */
+  .hv5 .in { max-width: none; padding: calc(var(--nav) + 4px) 0 0; }
+  .hv5-split { display: flex; gap: var(--gap); min-height: calc(100vh - var(--nav) - 4px); }
+  .hv5-half {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    align-content: end;
+    gap: clamp(18px, 2.6vh, calc(30px * var(--u)));
+    padding: clamp(28px, 4.2vw, calc(76px * var(--u)));
+    background: var(--bg);
+    color: var(--fg);
+    cursor: pointer;
+    transition: flex-grow 0.75s var(--e-out);
+  }
+  .hv5-biz { clip-path: polygon(var(--cut) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut)); }
+  .hv5-split[data-lean='ai'] .hv5-ai, .hv5-split[data-lean='biz'] .hv5-biz { flex-grow: 1.6; }
+  .hv5-k { margin: 0; display: flex; align-items: center; gap: 10px; font-size: calc(16px * var(--u)); font-weight: 500; }
+  /* the chosen half's label is in full ink; no dot before it (a status dot is not the qbix way) */
+  .hv5-k { color: var(--fg2); }
+  html[data-aud='ai'] .hv5-ai .hv5-k, html[data-aud='biz'] .hv5-biz .hv5-k { color: var(--fg); }
+  .hv5-h { margin: 0 0 0 -0.04em; }
+  .hv5-lede { color: var(--fg2); font-size: clamp(17px, 1.3vw, calc(21px * var(--u))); max-width: 26em; }
+  .hv5-ai .hv5-lede { color: var(--fg2); }
+  .hv5-half .acts { margin-top: 4px; }
+  @media (max-width: 899px) {
+    .hv5-split { flex-direction: column; min-height: 0; }
+    .hv5-half { min-height: 62vh; padding: 28px var(--gut) 32px; transition: none; }
+    .hv5-split[data-lean] .hv5-half { flex-grow: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hv5-half { transition: none; } }
+</style>
+<section class="block block--flat hv5" data-tone="white" id="top" data-slot="hero">
+  <div class="in">
+    <div class="hv5-split" role="group" aria-label="Who this page is for">
+      <div class="hv5-half hv5-ai" data-half="ai">
+        <p class="hv5-k">For AI teams</p>
+        <h1 class="display hv5-h" data-fit="0.74" data-max="140" data-min="28" data-rise>
+          <span class="line">We build the</span>
+          <span class="line"><span class="mark" data-wipe style="--wd: .7s">coolest</span> things.</span>
+        </h1>
+        <p class="lede hv5-lede" data-up>Qbix never writes off a small idea. We’re a sharp team that moves fast, from sketch to shipped product.</p>
+        <div class="acts" data-up style="--ud: 120ms"><a class="btn" href="home.html" data-set-aud="ai">See the studio ↓</a></div>
+      </div>
+      <div class="hv5-half hv5-biz" data-tone="black" data-half="biz">
+        <p class="hv5-k">For business</p>
+        <h2 class="display hv5-h" data-fit="0.74" data-max="140" data-min="28" data-rise>
+          <span class="line">Look as good</span>
+          <span class="line">as <span class="mark" data-wipe style="--wd: .8s">your work.</span></span>
+        </h2>
+        <p class="lede hv5-lede" data-up>Fixed-price design for local businesses, ready in days. A listing kit for real estate agents and a calm website for solo practices.</p>
+        <div class="acts" data-up style="--ud: 120ms"><a class="btn" href="home.html?for=business" data-set-aud="biz">See the offers ↓</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  /* the half you point at or focus widens; a click anywhere in a half chooses it: the page's audience is
+     set (block.js's data-set-aud), then the page moves on to its first block under this one */
+  (window.BlocksAfter = window.BlocksAfter || []).push((B) => {
+    const split = document.querySelector('.hv5-split');
+    if (!split) return;
+    const halves = [...split.querySelectorAll('.hv5-half')];
+    const lean = (side) => (side ? (split.dataset.lean = side) : delete split.dataset.lean);
+    halves.forEach((h) => {
+      if (B.canHover) {
+        h.addEventListener('pointerenter', () => lean(h.dataset.half));
+        h.addEventListener('pointerleave', () => lean(null));
+      }
+      h.addEventListener('focusin', () => lean(h.dataset.half));
+      h.addEventListener('focusout', () => lean(null));
+      // the whole half is the choice; its button is the keyboard's way in
+      h.addEventListener('click', (e) => {
+        if (!e.target.closest('a')) h.querySelector('[data-set-aud]').click();
+      });
+    });
+    split.addEventListener('click', (e) => {
+      if (!e.target.closest('[data-set-aud]')) return;
+      // block.js has set the audience and asked for the top; go on to the first block after the hero
+      setTimeout(() => {
+        const hero = split.closest('[data-slot="hero"]');
+        let next = hero && hero.nextElementSibling;
+        while (next && (next.hidden || !next.classList.contains('block'))) next = next.nextElementSibling;
+        if (next) scrollTo({ top: next.getBoundingClientRect().top + scrollY - 0, behavior: B.reduced ? 'auto' : 'smooth' });
+      }, 40);
+    });
+  });
+</script>

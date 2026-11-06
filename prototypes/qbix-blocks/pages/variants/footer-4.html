@@ -1,0 +1,116 @@
+<style>
+  /* Footer 4 · 字标互动: the giant wordmark, cut by the window's foot as in footer 1, but its four letters
+     answer the pointer: each rises toward it and leans its way, on a spring with a little weight (a slight
+     overshoot). On a touch screen they rise one after another as the footer comes into view. Still under
+     reduced motion. Only the footer's own edge crops them, so a letter can rise and lean past its box. */
+  .fv4 { overflow: clip; } /* the footer's own edge crops the word (and keeps its hidden part out of the page's height) */
+  .fv4 .in { padding-bottom: 0; }
+  .fv4-top { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 40px clamp(24px, 3vw, 48px); }
+  .fv4-say { margin: 0; font: 400 clamp(26px, 2.4vw, calc(38px * var(--u)))/1.08 var(--font-headline); letter-spacing: -0.025em; max-width: 13em; }
+  .fv4-top h2 { margin: 0 0 16px; font-size: calc(15px * var(--u)); font-weight: 500; color: var(--fg2); }
+  .fv4-top ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .fv4-top a { font-weight: 500; text-decoration: none; }
+  .fv4-top a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+  .fv4-mark { position: relative; margin-top: clamp(72px, 10vw, calc(150px * var(--u))); height: clamp(96px, 21vw, calc(300px * var(--u))); color: var(--fg); touch-action: pan-y; }
+  .fv4-mark svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .fv4-mark path { fill: currentColor; }
+  .fv4-mark .dot { fill: var(--lime); }
+  .fv4-l { transform-box: view-box; will-change: transform; }
+  .fv4-fine { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; margin: 28px 0 0; font-size: calc(14px * var(--u)); color: var(--fg2); }
+  @media (max-width: 899px) { .fv4-top { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fv4-say { grid-column: 1 / -1; } }
+</style>
+<footer class="block foot fv4" data-tone="black" data-slot="footer">
+  <div class="in">
+    <div class="fv4-top">
+      <p class="fv4-say">Where the coolest people build the coolest ideas.</p>
+      <div><h2>Studio</h2><ul><li><a href="home.html#services">Services</a></li><li><a href="strata.html">Products</a></li><li><a href="home.html#about">About us</a></li><li><a href="https://qbix.space/motion">Motion</a></li></ul></div>
+      <div><h2>For business</h2><ul><li><a href="listing-kit.html">Listing Launch Kit</a></li><li><a href="https://qbix.space/practice-websites">Practice Website Refresh</a></li><li><a href="samples.html">Samples</a></li></ul></div>
+      <div><h2>Contact</h2><ul><li><a href="mailto:contact@qbix.space">contact@qbix.space</a></li><li><a href="https://cal.com/qbix-studio/30min">Book a call</a></li><li><a href="start.html">Start a project</a></li></ul></div>
+    </div>
+    <p class="fv4-fine"><span>© 2026 Qbix</span><span>Seattle, Washington · Remote, worldwide</span></p>
+    <div class="fv4-mark" aria-hidden="true">
+      <svg viewBox="0 0 918 342">
+        <g class="fv4-l" style="transform-origin: 120px 264px"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5Z"/></g>
+        <g class="fv4-l" style="transform-origin: 374px 264px"><path d="M280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5Z"/></g>
+        <g class="fv4-l" style="transform-origin: 600px 264px"><path d="M583.5 77H616.5V264H583.5Z"/><path class="dot" d="M583.5 0H616.5V34H583.5Z"/></g>
+        <g class="fv4-l" style="transform-origin: 813.75px 264px"><path d="M709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5Z"/><path d="M875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96Z"/><path d="M875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></g>
+      </svg>
+    </div>
+  </div>
+</footer>
+<script>
+  /* The letters: each a spring (rise in the drawing's units, lean in degrees) chasing a target set by the
+     pointer: closer letters rise more and lean toward it. One frame loop, only while something moves. */
+  (window.BlocksAfter = window.BlocksAfter || []).push((B) => {
+    const mark = document.querySelector('.fv4-mark');
+    if (!mark || B.reduced) return;
+    const svg = mark.querySelector('svg');
+    const CX = [120, 374, 600, 813.75]; // each letter's middle, in the drawing's units (918 wide)
+    const letters = [...mark.querySelectorAll('.fv4-l')].map((el, i) => ({ el, cx: CX[i], y: 0, vy: 0, r: 0, vr: 0, ty: 0, tr: 0 }));
+    const K = 150; // stiffness
+    const D = 15; // damping: a little under critical, so a letter lands with weight
+    const RISE = 64; // the most a letter rises, in the drawing's units
+    const LEAN = 9; // the most it leans, in degrees
+    const REACH = 190; // how far along the word the pointer's pull carries
+    let raf = 0;
+    let last = 0;
+    const tick = (now) => {
+      raf = 0;
+      const dt = Math.min(0.032, (now - (last || now - 16)) / 1000);
+      last = now;
+      let moving = false;
+      for (const l of letters) {
+        l.vy += (K * (l.ty - l.y) - D * l.vy) * dt;
+        l.y += l.vy * dt;
+        l.vr += (K * (l.tr - l.r) - D * l.vr) * dt;
+        l.r += l.vr * dt;
+        if (Math.abs(l.ty - l.y) > 0.05 || Math.abs(l.vy) > 0.05 || Math.abs(l.tr - l.r) > 0.01 || Math.abs(l.vr) > 0.01) moving = true;
+        else {
+          l.y = l.ty;
+          l.r = l.tr;
+          l.vy = l.vr = 0;
+        }
+        l.el.style.transform = `translateY(${l.y.toFixed(2)}px) rotate(${l.r.toFixed(3)}deg)`;
+      }
+      if (moving) raf = requestAnimationFrame(tick);
+      else last = 0;
+    };
+    const go = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    const aim = (clientX, clientY) => {
+      const box = svg.getBoundingClientRect();
+      const u = box.width / 918; // px a unit
+      const px = (clientX - box.left) / u;
+      // the pull fades as the pointer moves up, away from the word
+      const lift = Math.max(0, Math.min(1, 1 - (box.top - clientY) / (box.height * 1.6)));
+      for (const l of letters) {
+        const dx = px - l.cx;
+        const k = Math.exp(-((dx / REACH) ** 2)) * lift;
+        l.ty = -RISE * k;
+        l.tr = Math.max(-1, Math.min(1, dx / REACH)) * LEAN * k;
+      }
+      go();
+    };
+    const rest = () => {
+      letters.forEach((l) => (l.ty = l.tr = 0));
+      go();
+    };
+    const foot = mark.closest('footer');
+    if (B.canHover) {
+      foot.addEventListener('pointermove', (e) => aim(e.clientX, e.clientY));
+      foot.addEventListener('pointerleave', rest);
+    } else {
+      // touch: as the word comes into view, the letters rise one after another, then settle
+      let timers = [];
+      new IntersectionObserver(([en]) => {
+        if (!en.isIntersecting) return;
+        timers.forEach(clearTimeout);
+        timers = letters.flatMap((l, i) => [
+          setTimeout(() => ((l.ty = -RISE * 0.8), (l.tr = (i - 1.5) * 2), go()), i * 140),
+          setTimeout(() => ((l.ty = 0), (l.tr = 0), go()), i * 140 + 420),
+        ]);
+      }, { threshold: 0.6 }).observe(mark);
+    }
+  });
+</script>

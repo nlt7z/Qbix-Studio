@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qbix Blocks · Strata</title>
+<link rel="stylesheet" href="../scenes/scenes.css">
+<link rel="stylesheet" href="block.css">
+<link rel="stylesheet" href="variants/switch.css">
+<style>
+  /* the hero: the claim across the page, then the words beside Strata itself */
+  .hero .in { padding-top: calc(var(--nav) + clamp(24px, 5vh, calc(72px * var(--u)))); padding-bottom: clamp(48px, 6vw, calc(96px * var(--u))); }
+  .hero-h { margin: 0 0 0 -0.045em; }
+  .hero-row { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, calc(96px * var(--u))); align-items: center; margin-top: clamp(24px, 4vh, calc(52px * var(--u))); }
+  .hero-say { display: grid; gap: clamp(24px, 3.2vh, calc(36px * var(--u))); align-content: start; }
+  .hero-say .lede { color: var(--fg); font-size: var(--t-s); }
+  .hero-scene { height: min(52vh, calc(540px * var(--u))); min-height: 280px; }
+  .facts { display: grid; grid-template-columns: repeat(2, auto); justify-content: start; gap: 12px clamp(28px, 3.4vw, calc(52px * var(--u))); margin: 0; }
+  .facts dt { font-size: var(--t-s); color: var(--fg2); }
+  .facts dd { margin: 6px 0 0; font-weight: 500; }
+  @media (max-width: 899px) {
+    .hero-row { grid-template-columns: 1fr; }
+    .hero-scene { height: auto; aspect-ratio: 4 / 3; min-height: 0; }
+  }
+
+  /* on a phone a long fitted line breaks in two, so the type stays big */
+  @media (max-width: 600px) { [data-fit] .ph { display: block; width: max-content; } }
+
+  /* the tour: the lit step's note under the list */
+  .ch-copy .notes { min-height: 4.6em; }
+
+  /* what you get: four outputs in a row, held apart by space alone */
+  .outs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(36px, 4vw, calc(64px * var(--u))) clamp(24px, 3vw, calc(48px * var(--u))); margin: clamp(56px, 7vw, calc(112px * var(--u))) 0 0; padding: 0; list-style: none; counter-reset: o; }
+  .outs li { display: grid; gap: 14px; align-content: start; }
+  .outs li::before { counter-increment: o; content: counter(o, decimal-leading-zero); font-size: var(--t-s); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--fg2); }
+  .outs .h3 { font-size: var(--t-m); }
+  .outs p { margin: 0; color: var(--fg2); max-width: 22em; text-wrap: pretty; }
+  @media (max-width: 1100px) { .outs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .outs { grid-template-columns: 1fr; } }
+
+  /* watch it work: Strata's own film in a plain window, the window a link to it */
+  .film { display: block; margin-top: clamp(40px, 5vw, calc(72px * var(--u))); background: var(--soft); color: inherit; text-decoration: none; clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%); }
+  .film-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 46px; padding: 0 20px; font-size: var(--t-s); color: var(--fg2); }
+  .film-dots { display: flex; gap: 7px; }
+  .film-dots i { width: 9px; height: 9px; background: var(--soft2); }
+  .film-addr { color: var(--fg); font-weight: 500; }
+  .film-go { justify-self: end; display: flex; gap: 10px; align-items: center; }
+  .film-go b { color: var(--fg); font-weight: 500; }
+  .film-box { position: relative; display: block; aspect-ratio: 1600 / 750; background: var(--ink); overflow: hidden; }
+  .film-box video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .film:hover .film-go b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+  @media (max-width: 600px) { .film-bar { grid-template-columns: auto 1fr; } .film-addr { justify-self: end; } .film-go { display: none; } }
+
+  /* the sign-off: the line fitted across the block */
+  .sign .in { padding-block: clamp(120px, 16vw, calc(220px * var(--u))) clamp(88px, 10vw, calc(150px * var(--u))); }
+  .sign-h { margin: clamp(18px, 2.6vw, calc(32px * var(--u))) 0 0 -0.045em; }
+  .sign .acts { margin-top: clamp(36px, 4.4vw, calc(64px * var(--u))); }
+</style>
+</head>
+<body data-tone="white">
+
+<header class="nav" data-tone="white">
+  <a class="nav-logo" href="home.html" aria-label="Qbix, home">
+    <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></svg>
+  </a>
+  <nav class="nav-mid" aria-label="Main">
+    <span class="aud" aria-label="Who it's for">
+      <a href="home.html" aria-current="true">AI teams</a>
+      <a href="home.html?for=business">Business</a>
+    </span>
+    <ul class="nav-links">
+      <li class="nav-has-sub">
+        <button type="button" class="nav-sub-btn" aria-expanded="false" aria-controls="nav-sub">Services<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5"/></svg></button>
+        <div class="nav-sub" id="nav-sub">
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For AI teams</p>
+            <a href="home.html#services"><b>Design service</b><span>From moodboard to a live domain. From $500.</span></a>
+            <a href="home.html#brand"><b>Brand upgrade</b><span>From usable to worth sharing. From $5,000.</span></a>
+          </div>
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For business</p>
+            <a href="listing-kit.html"><b>Listing Launch Kit</b><span>Ready to share in 48 hours. $99 per listing.</span></a>
+            <a href="https://qbix.space/practice-websites"><b>Practice Website Refresh</b><span>A calm website, live in 7 days. $600 flat.</span></a>
+            <a href="samples.html"><b>Samples</b><span>Short videos and posters we made for local businesses.</span></a>
+          </div>
+        </div>
+      </li>
+      <li><a href="strata.html" aria-current="page">Products</a></li>
+      <li><a href="home.html#about">About</a></li>
+    </ul>
+  </nav>
+  <div class="nav-end">
+    <a class="btn btn--line btn--s" href="start.html">Start a project ↗︎</a>
+  </div>
+</header>
+
+<main class="blocks" data-stack>
+
+  <!-- 01 · white: the claim, then Strata itself, its film in a window and two of its tokens -->
+  <section class="block block--flat hero" data-tone="white" data-chapter id="top">
+    <div class="in">
+      <h1 class="display hero-h" data-fit data-max="150" data-min="30" data-rise>
+        <span class="line">One image in.</span>
+        <span class="line"><span class="ph">A working</span> <span class="ph"><span class="mark" data-wipe style="--wd: .7s">system</span> out.</span></span>
+      </h1>
+      <div class="hero-row">
+        <div class="hero-say">
+          <p class="kicker" data-up>Strata <span>· A Qbix Labs product, live at stratadesign.app</span></p>
+          <p class="lede" data-up>Strata turns a moodboard into a design system you can actually ship: tokens, components, and code, ready to hand to AI or your library.</p>
+          <div class="acts" data-up style="--ud: 120ms">
+            <a class="btn" href="https://stratadesign.app" target="_blank" rel="noopener noreferrer">Open Strata ↗︎</a>
+            <a class="link" href="#how">How it works</a>
+          </div>
+          <dl class="facts" data-up style="--ud: 200ms">
+            <div><dt>Input</dt><dd>Any image or moodboard</dd></div>
+            <div><dt>Output</dt><dd>Tokens, components, code</dd></div>
+          </dl>
+        </div>
+        <div class="scene hero-scene" data-scene="strata-hero" data-tone="paper"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 · black: how it works, an image read, drafted into a system, shipped as code -->
+  <section class="block chapter" id="how" data-tone="black" data-chapter data-steps data-side="right" style="--moves: 2">
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">How it works</p>
+        <h2 class="h2" data-rise>Drop in an image. <span class="mark" data-wipe>Ship a system.</span></h2>
+        <ol class="steps"><li>Read the image.</li><li>Draft the system.</li><li>Ship the code.</li></ol>
+        <div class="notes">
+          <p>Drop in a moodboard, a screenshot, a photo. Strata pulls color, type, spacing, and mood out of it: <b>taste becomes measurements.</b></p>
+          <p>Tokens first, then components: buttons, cards, forms <b>drawn from the same measurements,</b> not lifted from a template.</p>
+          <p>Export CSS variables, Tailwind config, and component code. <b>Hand it to your library, or straight to AI.</b></p>
+        </div>
+      </div>
+      <div class="ch-run"><div class="scene" data-scene="strata-tour" data-tone="dark"></div></div>
+    </div>
+  </section>
+
+  <!-- 03 · white: what comes out -->
+  <section class="block" id="outputs" data-tone="white">
+    <div class="in">
+      <div class="head">
+        <p class="kicker">What you get</p>
+        <h2 class="h1" data-rise>Everything a <span class="mark" data-wipe>system</span> needs.</h2>
+      </div>
+      <ol class="outs" data-up>
+        <li><h3 class="h3">Design tokens</h3><p>Color, type, spacing, and radius as named scales, as CSS variables ready to theme.</p></li>
+        <li><h3 class="h3">Component library</h3><p>Buttons, cards, forms, and nav drafted inside your system, not on top of one.</p></li>
+        <li><h3 class="h3">Code export</h3><p>Copy CSS, Tailwind config, or component code straight into the repo.</p></li>
+        <li><h3 class="h3">AI handoff</h3><p>A prompt-ready spec of the whole system, so the model builds in your language.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 04 · black: Strata's own film, in a plain window -->
+  <section class="block" id="run" data-tone="black">
+    <div class="in">
+      <div class="head head--split">
+        <h2 class="h1" data-rise>Watch it <span class="mark" data-wipe>work.</span></h2>
+        <p class="lede" data-up>Strata itself, live at stratadesign.app. One image in, a working system out.</p>
+      </div>
+      <a class="film" href="https://stratadesign.app" target="_blank" rel="noopener noreferrer" aria-label="Open Strata at stratadesign.app" data-up>
+        <span class="film-bar" aria-hidden="true">
+          <span class="film-dots"><i></i><i></i><i></i></span>
+          <span class="film-addr">stratadesign.app</span>
+          <span class="film-go"><b>Live</b> ↗︎</span>
+        </span>
+        <span class="film-box">
+          <video src="../assets/site/previews/strata.mp4" poster="../assets/site/previews/strata.jpg" muted loop playsinline preload="none"></video>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <!-- 05 · white: the sign-off -->
+  <section class="block sign" id="contact" data-tone="white">
+    <div class="in">
+      <p class="kicker">Your next product already has a moodboard.</p>
+      <h2 class="display sign-h" data-fit="0.97" data-max="150" data-min="30" data-rise>
+        <span class="line"><span class="ph">Feed it to</span> <span class="ph"><span class="mark" data-wipe style="--wd: .7s">Strata.</span></span></span>
+      </h2>
+      <div class="acts">
+        <a class="btn" href="https://stratadesign.app" target="_blank" rel="noopener noreferrer">Open Strata ↗︎</a>
+        <a class="link" href="home.html#products">All products</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- the foot (option 2, after Wise's): the sitemap in columns, a sage band with the logo and the ways to reach us, the small print -->
+  <style>
+    /* Footer 2 · 浅色多栏, after wise.com's footer: white, information first. The link columns, then the
+       logo with the ways to reach us in one sage tile, then the small print. Quiet; the i's dot is the lime. */
+    .fv2 .in { padding-top: clamp(72px, 9vw, calc(128px * var(--u))); padding-bottom: clamp(24px, 3vw, calc(36px * var(--u))); }
+    .fv2-top { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 3fr); gap: clamp(40px, 5vw, calc(96px * var(--u))); align-items: start; }
+    .fv2-say { margin: 0; font: 400 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.025em; max-width: 12em; text-wrap: balance; }
+    .fv2-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px clamp(20px, 2.4vw, 40px); }
+    .fv2-cols h2 { margin: 0 0 16px; font-size: var(--t-s); font-weight: 500; color: var(--fg2); }
+    .fv2-cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+    .fv2-cols li { font-size: var(--t-s); font-weight: 500; line-height: 1.3; }
+    .fv2-cols a { text-decoration: none; }
+    .fv2-cols a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-cols .st { margin-left: 0.5em; font-size: var(--t-s); font-weight: 400; color: var(--fg3); }
+    .fv2-tile { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px 40px; margin-top: clamp(56px, 7vw, calc(104px * var(--u))); padding: clamp(22px, 2.6vw, calc(36px * var(--u))) clamp(22px, 2.6vw, calc(40px * var(--u))); background: var(--soft);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%); }
+    .fv2-logo { display: block; width: clamp(104px, 9vw, calc(150px * var(--u))); color: var(--fg); }
+    .fv2-logo svg { display: block; width: 100%; height: auto; }
+    .fv2-logo path { fill: currentColor; }
+    .fv2-logo .dot { fill: var(--lime); }
+    .fv2-reach { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+    .fv2-reach a:not(.btn) { font-weight: 500; text-decoration: none; }
+    .fv2-reach a:not(.btn):hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-fine { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 28px; margin: clamp(22px, 2.4vw, 32px) 0 0; font-size: var(--t-s); color: var(--fg2); }
+    @media (max-width: 1100px) { .fv2-top { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 760px) { .fv2-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fv2-reach { gap: 12px 22px; } }
+  </style>
+  <footer class="block foot fv2" data-tone="white" data-slot="footer">
+    <div class="in">
+      <div class="fv2-top">
+        <p class="fv2-say">Where the coolest people build the coolest ideas.</p>
+        <nav class="fv2-cols" aria-label="Sitemap">
+          <div><h2>Studio</h2><ul><li><a href="home.html#services">Services</a></li><li><a href="strata.html">Products</a></li><li><a href="home.html#about">About us</a></li><li><a href="https://qbix.space/motion">Motion</a></li></ul></div>
+          <div><h2>Products</h2><ul><li><a href="strata.html">Strata</a><span class="st">Live</span></li><li>AI Bidding<span class="st">Live</span></li><li>TTS Editor<span class="st">Soon</span></li><li>Interview Assistant<span class="st">Soon</span></li></ul></div>
+          <div><h2>For business</h2><ul><li><a href="listing-kit.html">Listing Launch Kit</a></li><li><a href="https://qbix.space/practice-websites">Practice Website Refresh</a></li><li><a href="samples.html">Samples</a></li></ul></div>
+          <div><h2>Contact</h2><ul><li><a href="mailto:contact@qbix.space">contact@qbix.space</a></li><li><a href="https://cal.com/qbix-studio/30min">Book a call</a></li><li><a href="start.html">Start a project</a></li></ul></div>
+        </nav>
+      </div>
+      <div class="fv2-tile">
+        <a class="fv2-logo" href="home.html" aria-label="Qbix, home">
+          <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/><path class="dot" d="M583.5 0H616.5V34H583.5Z"/></svg>
+        </a>
+        <div class="fv2-reach">
+          <a href="mailto:contact@qbix.space">contact@qbix.space</a>
+          <a href="https://cal.com/qbix-studio/30min">Book a call</a>
+          <a class="btn btn--s" href="start.html">Start a project ↗︎</a>
+        </div>
+      </div>
+      <p class="fv2-fine"><span>© 2026 Qbix</span><span>Seattle, Washington · Remote, worldwide</span></p>
+    </div>
+  </footer>
+</main>
+
+<script src="../scenes/scenes.js"></script>
+<script src="variants/variants.js"></script>
+<script src="block.js"></script>
+<script src="variants/switch.js"></script>
+<script>
+  /* the film plays, muted and looped, only while its window is in view; with reduced motion the still stays */
+  (() => {
+    const box = document.querySelector('.film-box');
+    const v = box?.querySelector('video');
+    if (!v || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) v.play().catch(() => {});
+      else v.pause();
+    }, { threshold: 0.3 }).observe(box);
+  })();
+</script>
+</body>
+</html>

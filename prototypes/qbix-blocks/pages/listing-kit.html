@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qbix Blocks · Listing Launch Kit</title>
+<link rel="stylesheet" href="../scenes/scenes.css">
+<link rel="stylesheet" href="block.css">
+<link rel="stylesheet" href="variants/switch.css">
+<style>
+  /* the hero: the headline and its lede on the left, the converter beside them (Wise's own hero) */
+  .lk-hero .in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, calc(500px * var(--u))); align-items: center; gap: clamp(32px, 5vw, calc(96px * var(--u))); min-height: min(100vh, calc(980px * var(--u))); padding-top: calc(var(--nav) + clamp(28px, 6vh, calc(80px * var(--u)))); padding-bottom: clamp(48px, 7vh, calc(96px * var(--u))); }
+  .lk-hero-say { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(24px, 3.4vh, calc(40px * var(--u))); align-content: center; min-width: 0; }
+  .lk-hero-say > * { min-width: 0; } /* a fitted headline must not size its own column */
+  .lk-hero-say .display { margin-left: -0.04em; }
+  .lk-hero-say .lede { color: var(--fg); font-size: var(--t-s); max-width: 26em; }
+  .conv-foot a { color: var(--fg); }
+  @media (max-width: 899px) { .lk-hero .in { grid-template-columns: minmax(0, 1fr); min-height: 0; } }
+
+  /* the samples: the words on the left, the two films standing on the right */
+  .lk-samples .in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; gap: clamp(36px, 5vw, calc(96px * var(--u))); }
+  .lk-samples-say { display: grid; gap: clamp(24px, 3vw, calc(40px * var(--u))); }
+  .lk-samples-say .lede { max-width: 24em; }
+  .lk-cards { display: grid; grid-template-columns: repeat(2, minmax(0, calc(300px * var(--u)))); justify-content: end; gap: 8px; }
+  @media (max-width: 899px) { .lk-samples .in { grid-template-columns: 1fr; } .lk-cards { justify-content: start; } }
+
+  /* the tour: five stops, so the fifth row and note light too */
+  [data-steps][data-step='4'] .steps li:nth-child(5) { color: var(--fg); }
+  [data-step='4'] .notes > :nth-child(5) { visibility: visible; }
+  .lk-tour .notes { min-height: 3.2em; }
+  .lk-cap { display: none; }
+  @media (max-width: 899px), (max-height: 559px) {
+    .lk-tour .ch-run .scene { position: relative; top: auto; height: min(50vh, calc((100vw - 2 * var(--gap) - 2 * var(--gut)) * 0.9)); }
+    .lk-stage { position: sticky; top: calc(var(--nav) + 12px); }
+    .lk-cap { display: grid; margin-top: 14px; font-size: var(--t-s); font-weight: 500; }
+    .lk-cap > p { grid-area: 1 / 1; margin: 0; visibility: hidden; }
+    .lk-cap b { margin-right: 12px; font-weight: 500; color: var(--fg2); font-variant-numeric: tabular-nums; }
+    .lk-tour:not([data-step]) .lk-cap > :nth-child(1),
+    .lk-tour[data-step='0'] .lk-cap > :nth-child(1), .lk-tour[data-step='1'] .lk-cap > :nth-child(2),
+    .lk-tour[data-step='2'] .lk-cap > :nth-child(3), .lk-tour[data-step='3'] .lk-cap > :nth-child(4),
+    .lk-tour[data-step='4'] .lk-cap > :nth-child(5) { visibility: visible; }
+  }
+
+  /* how it works: three big numbered rows */
+  .lk-how-head { display: grid; gap: clamp(20px, 2.4vw, calc(32px * var(--u))); }
+  .lk-how-head .lede { max-width: 38em; }
+  .how { list-style: none; margin: clamp(64px, 8vw, calc(120px * var(--u))) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px clamp(24px, 3vw, calc(56px * var(--u))); counter-reset: h; }
+  .how li { display: grid; gap: clamp(16px, 2vw, calc(28px * var(--u))); align-content: start; }
+  .how li::before { counter-increment: h; content: counter(h, decimal-leading-zero); font: 400 var(--t-l)/0.8 var(--font-headline); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+  .how p { margin: 0; max-width: 14em; font: 400 var(--t-m)/1.2 var(--font-headline); letter-spacing: -0.025em; text-wrap: balance; }
+  @media (max-width: 760px) { .how { grid-template-columns: 1fr; } }
+
+  /* questions, and who answers them */
+  .lk-q .in { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); grid-template-areas: 'h faq' 'about faq'; grid-template-rows: auto 1fr; gap: clamp(28px, 4vw, calc(56px * var(--u))) clamp(36px, 5vw, calc(96px * var(--u))); align-items: start; }
+  .lk-q .in > h2 { grid-area: h; }
+  .lk-q .faq { grid-area: faq; }
+  .lk-q-about { grid-area: about; display: grid; gap: 12px; max-width: 26em; }
+  .lk-q-about .body { font-size: var(--t-s); }
+  @media (max-width: 899px) { .lk-q .in { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'h' 'faq' 'about'; grid-template-rows: none; } .lk-q-about { margin-top: 24px; } }
+
+  /* in the stack, the next block slides over a block's foot first: these feet are kept empty and
+     tall, so the steps, the refund answer and the sample names stay in view while it comes */
+  @media (min-width: 900px) and (min-height: 560px) {
+    .lk-samples .in { padding-bottom: clamp(120px, 22vh, calc(240px * var(--u))); }
+    .lk-how .in, .lk-q .in { padding-bottom: clamp(140px, 32vh, calc(340px * var(--u))); }
+  }
+
+  /* the sign-off: the price as the floor word, the kit at a glance beside it */
+  .lk-sign .in { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, calc(72px * var(--u))); min-height: 100vh; padding-block: calc(var(--nav) + 32px) 56px; }
+  .lk-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.16em; margin: 18px 0 0; font: 400 var(--t-xl-fit, var(--t-xl))/0.84 var(--font-headline); letter-spacing: -0.055em; font-variant-numeric: tabular-nums; }
+  .lk-price del { font-size: var(--t-m); letter-spacing: -0.03em; }
+  .lk-price-u { font: 500 var(--t-s)/1.2 var(--font-sans); letter-spacing: -0.01em; color: var(--fg2); }
+  .lk-sign-video { margin: clamp(20px, 2.4vw, calc(32px * var(--u))) 0 0; font-size: var(--t-s); color: var(--fg2); }
+  .lk-sign-video b { color: var(--fg); font-weight: 600; }
+  .lk-sign .acts { margin-top: clamp(28px, 3.4vw, calc(44px * var(--u))); }
+  .lk-sign-note { margin: 18px 0 0; font-size: var(--t-s); color: var(--fg2); }
+  .lk-sign-note a { color: var(--fg); }
+  .lk-kit { position: relative; height: min(64vh, calc(580px * var(--u))); }
+  @media (max-width: 899px) { .lk-sign .in { grid-template-columns: 1fr; min-height: 0; } .lk-kit { height: 92vw; } }
+</style>
+</head>
+<body data-tone="white">
+
+<header class="nav" data-tone="white">
+  <a class="nav-logo" href="home.html" aria-label="Qbix, home">
+    <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></svg>
+  </a>
+  <nav class="nav-mid" aria-label="Main">
+    <span class="aud" aria-label="Who it's for">
+      <a href="home.html">AI teams</a>
+      <a href="home.html?for=business" aria-current="true">Business</a>
+    </span>
+    <ul class="nav-links">
+      <li class="nav-has-sub" data-current>
+        <button type="button" class="nav-sub-btn" aria-expanded="false" aria-controls="nav-sub">Services<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5"/></svg></button>
+        <div class="nav-sub" id="nav-sub">
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For AI teams</p>
+            <a href="home.html#services"><b>Design service</b><span>From moodboard to a live domain. From $500.</span></a>
+            <a href="home.html#brand"><b>Brand upgrade</b><span>From usable to worth sharing. From $5,000.</span></a>
+          </div>
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For business</p>
+            <a href="listing-kit.html"><b>Listing Launch Kit</b><span>Ready to share in 48 hours. $99 per listing.</span></a>
+            <a href="https://qbix.space/practice-websites"><b>Practice Website Refresh</b><span>A calm website, live in 7 days. $600 flat.</span></a>
+            <a href="samples.html"><b>Samples</b><span>Short videos and posters we made for local businesses.</span></a>
+          </div>
+        </div>
+      </li>
+      <li><a href="strata.html">Products</a></li>
+      <li><a href="home.html#about">About</a></li>
+    </ul>
+  </nav>
+  <div class="nav-end">
+    <a class="btn btn--line btn--s" href="start.html">Start a project ↗︎</a>
+  </div>
+</header>
+
+<main class="blocks" data-stack>
+
+  <!-- 01 · white: the promise, and what each option costs (the converter) -->
+  <section class="block block--flat lk-hero" data-tone="white" id="top">
+    <div class="in">
+      <div class="lk-hero-say">
+        <p class="kicker">Listing Launch Kit <span>· Real estate agents, per listing</span></p>
+        <h1 class="display" data-fit data-max="150" data-min="30" data-rise>
+          <span class="line">Your listing,</span>
+          <span class="line">ready to share</span>
+          <span class="line">in <span class="mark" data-wipe style="--wd: .75s">48 hours.</span></span>
+        </h1>
+        <p class="lede" data-up>A print flyer, five social posts, and a 30-second video for one property. Made by a designer, delivered as files you own.</p>
+        <ul class="points" data-up style="--ud: 120ms">
+          <li>Drafts in 48 hours</li>
+          <li>No visit to the house</li>
+          <li>One round of changes</li>
+        </ul>
+      </div>
+
+      <div data-up style="--ud: 200ms"><div class="conv" data-tone="black" data-conv>
+        <script type="application/json">[
+          { "k": "kit", "tlabel": "Ready in", "time": "48 <small>hours</small>", "price": "$99 <del aria-label=\"Regular price $249\">$249</del>",
+            "get": "<b>Print flyer, 5 social posts, 30-second video,</b> editable copies, and one round of changes.",
+            "href": "https://buy.stripe.com/14AfZ946b4J11o04zi6Vq00", "act": "Start my listing kit, $99" },
+          { "k": "video", "tlabel": "Length", "time": "30 <small>seconds</small>", "price": "$49 <del aria-label=\"Regular price $99\">$99</del>",
+            "get": "<b>Just the video.</b> Vertical, built from your listing photos, with music and captions. Ready for Reels, TikTok, and YouTube Shorts.",
+            "href": "https://buy.stripe.com/5kQbIT1Y31wP5Eg3ve6Vq01", "act": "Just the video, $49" }
+        ]</script>
+        <p class="conv-q" id="conv-q">Exclusive offer. What do you need?</p>
+        <div class="conv-opts" role="radiogroup" aria-labelledby="conv-q">
+          <button type="button" class="conv-opt" role="radio" data-k="kit">The full kit<small>Flyer, five posts and a video</small></button>
+          <button type="button" class="conv-opt" role="radio" data-k="video">Just the video<small>30 seconds, vertical</small></button>
+        </div>
+        <dl class="conv-out">
+          <div class="conv-cell"><dt data-f="tlabel">Ready in</dt><dd><span class="sw" data-f="time"></span></dd></div>
+          <div class="conv-cell"><dt>Per listing</dt><dd><span class="sw" data-f="price"></span></dd></div>
+        </dl>
+        <p class="conv-get" data-f="get" aria-live="polite"></p>
+        <a class="btn btn--wide" data-f="href" href="https://buy.stripe.com/14AfZ946b4J11o04zi6Vq00">Start my listing kit, $99 ↗︎</a>
+        <p class="conv-foot">Secure checkout through Stripe. Questions first? Email <a href="mailto:contact@qbix.space">contact@qbix.space</a></p>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 02 · black: the work first, the two listings we made for agents -->
+  <section class="block lk-samples" id="samples" data-tone="black">
+    <div class="in">
+      <div class="lk-samples-say">
+        <p class="kicker">Samples</p>
+        <h2 class="h2" data-rise>Listing videos and posters we made for agents in <span class="mark" data-wipe>Gig Harbor.</span></h2>
+        <div class="acts"><a class="btn btn--2" href="samples.html">See all samples ↗︎</a></div>
+      </div>
+      <div class="lk-cards">
+        <a class="vcard" href="../samples/justin-allen/index.html"><span class="vcard-media"><img src="../samples/justin-allen/thumb.webp" alt="" loading="lazy" width="540" height="960"><video src="../samples/justin-allen/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Justin Allen</span><span class="vcard-line">Gig Harbor · A listing, cut for Reels</span></span></a>
+        <a class="vcard" href="../samples/chris-conroy/index.html"><span class="vcard-media"><img src="../samples/chris-conroy/thumb.webp" alt="" loading="lazy" width="540" height="960"><video src="../samples/chris-conroy/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Chris Conroy, Ensemble</span><span class="vcard-line">Gig Harbor · Waterfront on Lay Inlet</span></span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 · white: what you get, 1428 Alder Street's kit one piece at a time -->
+  <section class="block chapter lk-tour" id="what" data-tone="white" data-chapter data-steps data-side="left" style="--moves: 4">
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">Listing Launch Kit <span>· For one property</span></p>
+        <h2 class="h2" data-rise>What you get.</h2>
+        <ol class="steps">
+          <li>Print flyer</li>
+          <li>5 social posts</li>
+          <li>30-second video</li>
+          <li>Editable copies</li>
+          <li>One round of changes</li>
+        </ol>
+        <div class="notes">
+          <p>8.5 x 11 PDF, front and back, with your brokerage name and DRE number.</p>
+          <p>Just Listed, Open House, a feature detail, the neighborhood, and In Escrow. Sized for Instagram feed and Stories.</p>
+          <p>Vertical, built from your listing photos, with music and captions. Ready for Reels, TikTok, and YouTube Shorts.</p>
+          <p>A Canva link, so you can change the price or open house date yourself.</p>
+          <p>Ask for changes once, then get your final files.</p>
+        </div>
+        <div class="acts"><a class="btn" href="https://buy.stripe.com/14AfZ946b4J11o04zi6Vq00">Start my listing kit, $99 ↗︎</a></div>
+      </div>
+      <div class="ch-run">
+        <div class="lk-stage">
+          <div class="scene" data-scene="listing-tour" data-tone="paper"></div>
+          <div class="lk-cap" aria-hidden="true">
+            <p><b>01 / 05</b>Print flyer</p>
+            <p><b>02 / 05</b>5 social posts</p>
+            <p><b>03 / 05</b>30-second video</p>
+            <p><b>04 / 05</b>Editable copies</p>
+            <p><b>05 / 05</b>One round of changes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 · black: why it matters, and the three steps -->
+  <section class="block lk-how" id="how" data-tone="black">
+    <div class="in">
+      <div class="lk-how-head">
+        <p class="kicker">How it works</p>
+        <h2 class="h1" data-rise>Send us the listing link and <span class="mark" data-wipe>we will do the rest.</span></h2>
+        <p class="lede" data-up>Most listings look like every other house on the street. A clean flyer and a short video give yours something people remember.</p>
+      </div>
+      <ol class="how">
+        <li data-up><p>Pay and send your listing link, plus your logo if you have one.</p></li>
+        <li data-up style="--ud: 80ms"><p>Get drafts in 48 hours.</p></li>
+        <li data-up style="--ud: 160ms"><p>Ask for changes once, then get your final files.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 05 · white: questions, and who answers them -->
+  <section class="block lk-q" id="questions" data-tone="white">
+    <div class="in">
+      <h2 class="h1" data-rise>Questions.</h2>
+      <div class="lk-q-about" data-up>
+        <p class="kicker">About us</p>
+        <p class="body">We’re Sera and the Qbix team, a small design studio in Seattle. We design software for a living and make marketing for local agents on the side.</p>
+      </div>
+      <div class="faq">
+        <details><summary>Do you need to visit the house?</summary><p>No. Everything comes from your listing photos and details.</p></details>
+        <details><summary>Can it match my brand?</summary><p>Yes. Send your logo and colors, or we will match your brokerage style.</p></details>
+        <details><summary>Who owns the files?</summary><p>You do.</p></details>
+        <details open><summary>What if I don’t like the drafts?</summary><p>Tell us what feels off and we will redo them. If they still don’t work for you, <span class="mark" data-wipe>we refund you in full</span>.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 · black: the price as the last word, the kit at a glance beside it -->
+  <section class="block lk-sign" id="price" data-tone="black">
+    <div class="in">
+      <div>
+        <p class="kicker">Price <span>· Exclusive offer</span></p>
+        <p class="lk-price" data-up><span>$99</span><del aria-label="Regular price $249">$249</del><span class="lk-price-u">per listing</span></p>
+        <p class="lk-sign-video">Just the video: <b>$49</b> <del aria-label="Regular price $99">$99</del></p>
+        <div class="acts">
+          <a class="btn" href="https://buy.stripe.com/14AfZ946b4J11o04zi6Vq00">Start my listing kit, $99 ↗︎</a>
+          <a class="link" href="https://buy.stripe.com/5kQbIT1Y31wP5Eg3ve6Vq01">Just the video, $49</a>
+        </div>
+        <p class="lk-sign-note">Secure checkout through Stripe. Questions first? Email <a class="link" href="mailto:contact@qbix.space">contact@qbix.space</a></p>
+      </div>
+      <div class="lk-kit" data-chapter><div class="scene" data-scene="listing-hero" data-tone="dark" style="height: 100%"></div></div>
+    </div>
+  </section>
+
+  <!-- the foot (option 2, after Wise's): the sitemap in columns, a sage band with the logo and the ways to reach us, the small print -->
+  <style>
+    /* Footer 2 · 浅色多栏, after wise.com's footer: white, information first. The link columns, then the
+       logo with the ways to reach us in one sage tile, then the small print. Quiet; the i's dot is the lime. */
+    .fv2 .in { padding-top: clamp(72px, 9vw, calc(128px * var(--u))); padding-bottom: clamp(24px, 3vw, calc(36px * var(--u))); }
+    .fv2-top { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 3fr); gap: clamp(40px, 5vw, calc(96px * var(--u))); align-items: start; }
+    .fv2-say { margin: 0; font: 400 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.025em; max-width: 12em; text-wrap: balance; }
+    .fv2-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px clamp(20px, 2.4vw, 40px); }
+    .fv2-cols h2 { margin: 0 0 16px; font-size: var(--t-s); font-weight: 500; color: var(--fg2); }
+    .fv2-cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+    .fv2-cols li { font-size: var(--t-s); font-weight: 500; line-height: 1.3; }
+    .fv2-cols a { text-decoration: none; }
+    .fv2-cols a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-cols .st { margin-left: 0.5em; font-size: var(--t-s); font-weight: 400; color: var(--fg3); }
+    .fv2-tile { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px 40px; margin-top: clamp(56px, 7vw, calc(104px * var(--u))); padding: clamp(22px, 2.6vw, calc(36px * var(--u))) clamp(22px, 2.6vw, calc(40px * var(--u))); background: var(--soft);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%); }
+    .fv2-logo { display: block; width: clamp(104px, 9vw, calc(150px * var(--u))); color: var(--fg); }
+    .fv2-logo svg { display: block; width: 100%; height: auto; }
+    .fv2-logo path { fill: currentColor; }
+    .fv2-logo .dot { fill: var(--lime); }
+    .fv2-reach { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+    .fv2-reach a:not(.btn) { font-weight: 500; text-decoration: none; }
+    .fv2-reach a:not(.btn):hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-fine { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 28px; margin: clamp(22px, 2.4vw, 32px) 0 0; font-size: var(--t-s); color: var(--fg2); }
+    @media (max-width: 1100px) { .fv2-top { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 760px) { .fv2-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fv2-reach { gap: 12px 22px; } }
+  </style>
+  <footer class="block foot fv2" data-tone="white" data-slot="footer">
+    <div class="in">
+      <div class="fv2-top">
+        <p class="fv2-say">Where the coolest people build the coolest ideas.</p>
+        <nav class="fv2-cols" aria-label="Sitemap">
+          <div><h2>Studio</h2><ul><li><a href="home.html#services">Services</a></li><li><a href="strata.html">Products</a></li><li><a href="home.html#about">About us</a></li><li><a href="https://qbix.space/motion">Motion</a></li></ul></div>
+          <div><h2>Products</h2><ul><li><a href="strata.html">Strata</a><span class="st">Live</span></li><li>AI Bidding<span class="st">Live</span></li><li>TTS Editor<span class="st">Soon</span></li><li>Interview Assistant<span class="st">Soon</span></li></ul></div>
+          <div><h2>For business</h2><ul><li><a href="listing-kit.html">Listing Launch Kit</a></li><li><a href="https://qbix.space/practice-websites">Practice Website Refresh</a></li><li><a href="samples.html">Samples</a></li></ul></div>
+          <div><h2>Contact</h2><ul><li><a href="mailto:contact@qbix.space">contact@qbix.space</a></li><li><a href="https://cal.com/qbix-studio/30min">Book a call</a></li><li><a href="start.html">Start a project</a></li></ul></div>
+        </nav>
+      </div>
+      <div class="fv2-tile">
+        <a class="fv2-logo" href="home.html" aria-label="Qbix, home">
+          <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/><path class="dot" d="M583.5 0H616.5V34H583.5Z"/></svg>
+        </a>
+        <div class="fv2-reach">
+          <a href="mailto:contact@qbix.space">contact@qbix.space</a>
+          <a href="https://cal.com/qbix-studio/30min">Book a call</a>
+          <a class="btn btn--s" href="start.html">Start a project ↗︎</a>
+        </div>
+      </div>
+      <p class="fv2-fine"><span>© 2026 Qbix</span><span>Seattle, Washington · Remote, worldwide</span></p>
+    </div>
+  </footer>
+</main>
+
+<script src="../scenes/scenes.js"></script>
+<script src="variants/variants.js"></script>
+<script src="block.js"></script>
+<script src="variants/switch.js"></script>
+</body>
+</html>

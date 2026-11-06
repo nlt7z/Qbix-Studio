@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qbix Blocks · Start a project</title>
+<link rel="stylesheet" href="../scenes/scenes.css">
+<link rel="stylesheet" href="block.css">
+<link rel="stylesheet" href="variants/switch.css">
+<style>
+  /* the hero, on white: the headline across the page, then the words and the cube beside the form */
+  .hero .in { padding-top: calc(var(--nav) + clamp(24px, 5.5vh, calc(76px * var(--u)))); padding-bottom: clamp(48px, 7vw, calc(112px * var(--u))); }
+  .hero .kicker { margin-bottom: clamp(14px, 2vh, calc(22px * var(--u))); }
+  .hero-h { margin: 0 0 0 -0.045em; }
+  .hero-row { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, calc(700px * var(--u))); gap: clamp(32px, 5vw, calc(104px * var(--u))); align-items: start; margin-top: clamp(28px, 4.5vh, calc(60px * var(--u))); }
+  .hero-say { position: sticky; top: calc(var(--nav) + 28px); align-self: start; display: grid; gap: clamp(24px, 3.5vh, calc(40px * var(--u))); }
+  .hero-say .lede { color: var(--fg); font-size: var(--t-s); max-width: 24em; }
+  .hero-cube { position: relative; width: min(100%, calc(440px * var(--u))); height: min(40vh, calc(400px * var(--u))); margin-left: -12px; }
+  .meter { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; width: min(100%, calc(420px * var(--u))); font-size: var(--t-s); font-weight: 500; }
+  .meter-bar { position: relative; height: 6px; background: var(--soft2); overflow: hidden; }
+  .meter-bar i { position: absolute; inset: 0; background: var(--fg); transform-origin: 0 50%; transform: scaleX(0); transition: transform 0.6s var(--e-out); }
+  .meter-n { font-variant-numeric: tabular-nums; color: var(--fg2); min-width: 3.2em; text-align: right; }
+  @media (max-width: 899px) {
+    .hero-row { grid-template-columns: 1fr; }
+    .hero-say { position: static; }
+    .hero-cube, .meter { display: none; }
+  }
+
+  /* the brief: a sage panel with the site's cut corner, its fields white on it */
+  .brief {
+    --soft: #ffffff;
+    --soft2: #f8f9f5;
+    display: grid;
+    gap: clamp(28px, 3.4vw, calc(44px * var(--u)));
+    padding: clamp(22px, 3.2vw, calc(48px * var(--u)));
+    background: var(--tint);
+    color: var(--fg);
+    clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 0 100%);
+  }
+  .brief-head { display: grid; gap: 8px; }
+  .brief-head .h3 { max-width: 14em; }
+  .brief .fields { row-gap: clamp(22px, 2.4vw, calc(30px * var(--u))); column-gap: 8px; }
+  .brief fieldset.field > legend { margin-bottom: 10px; }
+  .brief .choices span { font-size: var(--t-s); padding: 12px 15px; }
+  .brief .field textarea { min-height: 200px; }
+  .brief-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
+  .brief-sent { margin: 0; max-width: 36em; font-weight: 500; }
+  .brief-sent:empty { display: none; }
+  /* the cut corner clips an outline drawn outside the button, so its focus ring sits inside */
+  .btn:focus-visible { outline: 2px solid currentColor; outline-offset: -6px; }
+
+  /* what happens next: three big numbers */
+  .next { list-style: none; margin: clamp(48px, 6vw, calc(96px * var(--u))) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(40px, 4vw, calc(64px * var(--u))) clamp(24px, 3vw, calc(48px * var(--u))); }
+  .next li { display: grid; gap: 18px; align-content: start; }
+  .next-n { font: 400 var(--t-l)/0.86 var(--font-headline); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+  .next .h4 { margin-top: 10px; }
+  .next p { margin: 0; color: var(--fg2); max-width: 22em; text-wrap: pretty; }
+  @media (max-width: 899px) { .next { grid-template-columns: 1fr; } }
+
+  /* reach us directly: two big lines, the highlighter wipes under the one pointed at */
+  .reach-big { display: grid; justify-items: start; gap: clamp(6px, 1vw, calc(14px * var(--u))); margin: clamp(28px, 3.4vw, calc(48px * var(--u))) 0 clamp(28px, 3.4vw, calc(48px * var(--u))) -0.04em; }
+  .reach-big a {
+    font: 400 var(--t-l)/1.04 var(--font-headline);
+    letter-spacing: -0.04em;
+    text-decoration: none;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    padding: 0 0.06em;
+    margin: 0 -0.06em;
+    background: linear-gradient(var(--lime), var(--lime)) no-repeat 0 98% / 0% 0.07em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    transition: background-size 0.5s var(--e-out);
+  }
+  .reach-big a:hover, .reach-big a:focus-visible { background-size: 100% 0.07em; }
+  .reach-foot { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0; color: var(--fg2); font-size: var(--t-s); }
+  .reach-foot b { color: var(--fg); font-weight: 500; }
+</style>
+</head>
+<body data-tone="white" data-dock="off">
+
+<header class="nav" data-tone="white">
+  <a class="nav-logo" href="home.html" aria-label="Qbix, home">
+    <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></svg>
+  </a>
+  <nav class="nav-mid" aria-label="Main">
+    <span class="aud" aria-label="Who it's for">
+      <a href="home.html">AI teams</a>
+      <a href="home.html?for=business">Business</a>
+    </span>
+    <ul class="nav-links">
+      <li class="nav-has-sub">
+        <button type="button" class="nav-sub-btn" aria-expanded="false" aria-controls="nav-sub">Services<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5"/></svg></button>
+        <div class="nav-sub" id="nav-sub">
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For AI teams</p>
+            <a href="home.html#services"><b>Design service</b><span>From moodboard to a live domain. From $500.</span></a>
+            <a href="home.html#brand"><b>Brand upgrade</b><span>From usable to worth sharing. From $5,000.</span></a>
+          </div>
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For business</p>
+            <a href="listing-kit.html"><b>Listing Launch Kit</b><span>Ready to share in 48 hours. $99 per listing.</span></a>
+            <a href="https://qbix.space/practice-websites"><b>Practice Website Refresh</b><span>A calm website, live in 7 days. $600 flat.</span></a>
+            <a href="samples.html"><b>Samples</b><span>Short videos and posters we made for local businesses.</span></a>
+          </div>
+        </div>
+      </li>
+      <li><a href="strata.html">Products</a></li>
+      <li><a href="home.html#about">About</a></li>
+    </ul>
+  </nav>
+  <div class="nav-end">
+    <a class="btn btn--line btn--s" href="start.html">Start a project ↗︎</a>
+  </div>
+</header>
+
+<main class="blocks" data-stack>
+
+  <!-- 01 · white: the headline across the page, the words and the cube beside the brief -->
+  <section class="block block--flat hero" data-tone="white" id="top">
+    <div class="in">
+      <p class="kicker">Start a project</p>
+      <h1 class="display hero-h" data-fit data-max="150" data-min="30" data-rise>
+        <span class="line">Tell us what</span>
+        <span class="line">you’re building.</span>
+      </h1>
+      <div class="hero-row">
+        <div class="hero-say">
+          <p class="lede" data-up>A few details (project type, budget, timeline), so our first reply is already useful. We read every brief and answer <span class="mark" data-wipe style="--wd: .9s">within 24 hours.</span></p>
+          <!-- the qbix cube, its core lime on the white -->
+          <div class="hero-cube" data-chapter><div class="scene" data-scene="glass-cube" style="height: 100%; min-height: 0" data-tone="paper"></div></div>
+          <div class="meter" aria-hidden="true">
+            <span>Your brief</span>
+            <span class="meter-bar"><i></i></span>
+            <span class="meter-n">0 / 7</span>
+          </div>
+        </div>
+
+        <div data-up style="--ud: 160ms">
+          <form class="brief" id="brief" data-tone="white" aria-labelledby="brief-t">
+            <div class="brief-head">
+              <h2 class="h3" id="brief-t">Your brief</h2>
+            </div>
+            <div class="fields">
+              <div class="field">
+                <label for="sp-name">Name</label>
+                <input id="sp-name" type="text" name="name" required placeholder="Your name" autocomplete="name">
+              </div>
+              <div class="field">
+                <label for="sp-email">Email</label>
+                <input id="sp-email" type="email" name="email" required placeholder="you@company.com" autocomplete="email">
+              </div>
+              <div class="field field--wide">
+                <label for="sp-company">Company or product (optional)</label>
+                <input id="sp-company" type="text" name="company" placeholder="Where you're building, or a link" autocomplete="organization">
+              </div>
+              <fieldset class="field field--wide">
+                <legend>What are you building? Pick any.</legend>
+                <div class="choices">
+                  <label><input type="checkbox" name="type" value="AI product"><span>AI product</span></label>
+                  <label><input type="checkbox" name="type" value="SaaS / web app"><span>SaaS / web app</span></label>
+                  <label><input type="checkbox" name="type" value="Marketing site"><span>Marketing site</span></label>
+                  <label><input type="checkbox" name="type" value="Brand / identity"><span>Brand / identity</span></label>
+                  <label><input type="checkbox" name="type" value="Design service"><span>Design service</span></label>
+                  <label><input type="checkbox" name="type" value="Something else"><span>Something else</span></label>
+                </div>
+              </fieldset>
+              <fieldset class="field field--wide">
+                <legend>Budget</legend>
+                <div class="choices">
+                  <label><input type="radio" name="budget" value="Not sure yet"><span>Not sure yet</span></label>
+                  <label><input type="radio" name="budget" value="Under $5k"><span>Under $5k</span></label>
+                  <label><input type="radio" name="budget" value="$5k to $20k"><span>$5k to $20k</span></label>
+                  <label><input type="radio" name="budget" value="$20k to $50k"><span>$20k to $50k</span></label>
+                  <label><input type="radio" name="budget" value="$50k+"><span>$50k+</span></label>
+                </div>
+              </fieldset>
+              <fieldset class="field field--wide">
+                <legend>Timeline</legend>
+                <div class="choices">
+                  <label><input type="radio" name="timeline" value="ASAP"><span>ASAP</span></label>
+                  <label><input type="radio" name="timeline" value="In 2 to 4 weeks"><span>In 2 to 4 weeks</span></label>
+                  <label><input type="radio" name="timeline" value="1 to 3 months"><span>1 to 3 months</span></label>
+                  <label><input type="radio" name="timeline" value="Flexible / exploring"><span>Flexible / exploring</span></label>
+                </div>
+              </fieldset>
+              <div class="field field--wide">
+                <label for="sp-brief">Brief</label>
+                <textarea id="sp-brief" name="brief" required rows="6" placeholder="What are you trying to build? Stage, goals, links, anything we should know."></textarea>
+              </div>
+            </div>
+            <div class="brief-acts">
+              <button class="btn btn--2" type="submit">Send brief ↗︎</button>
+              <a class="link" href="https://cal.com/qbix-studio/30min" target="_blank" rel="noreferrer">Or book a 30-min call ↗︎</a>
+            </div>
+            <p class="brief-sent" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 · black: what happens next, three big numbers -->
+  <section class="block" data-tone="black">
+    <div class="in">
+      <h2 class="h1" data-rise>What happens <span class="mark" data-wipe>next.</span></h2>
+      <ol class="next">
+        <li data-up>
+          <span class="next-n">01</span>
+          <h3 class="h4">We read every brief</h3>
+          <p>We read what you send, not a sales desk. Expect a reply within 24 hours.</p>
+        </li>
+        <li data-up style="--ud: 120ms">
+          <span class="next-n">02</span>
+          <h3 class="h4">A short scoping call</h3>
+          <p>If it’s a fit, we hop on a 30-minute call to pressure-test scope, goals, and constraints.</p>
+        </li>
+        <li data-up style="--ud: 240ms">
+          <span class="next-n">03</span>
+          <h3 class="h4">A fixed proposal</h3>
+          <p>You get a clear proposal (scope, price, and timeline) with no agency overhead or hand-off PDFs.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 03 · white: reach us directly, two big lines -->
+  <section class="block" id="reach" data-tone="white">
+    <div class="in">
+      <p class="kicker">Reach us directly</p>
+      <div class="reach-big">
+        <a href="mailto:contact@qbix.space">contact@qbix.space</a>
+        <a href="https://cal.com/qbix-studio/30min" target="_blank" rel="noreferrer">Book a 30-min intro call ↗︎</a>
+      </div>
+      <p class="reach-foot"><span><b>Remote, worldwide</b></span><span>Based in Seattle, Washington</span></p>
+    </div>
+  </section>
+
+  <!-- the foot (option 2, after Wise's): the sitemap in columns, a sage band with the logo and the ways to reach us, the small print -->
+  <style>
+    /* Footer 2 · 浅色多栏, after wise.com's footer: white, information first. The link columns, then the
+       logo with the ways to reach us in one sage tile, then the small print. Quiet; the i's dot is the lime. */
+    .fv2 .in { padding-top: clamp(72px, 9vw, calc(128px * var(--u))); padding-bottom: clamp(24px, 3vw, calc(36px * var(--u))); }
+    .fv2-top { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 3fr); gap: clamp(40px, 5vw, calc(96px * var(--u))); align-items: start; }
+    .fv2-say { margin: 0; font: 400 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.025em; max-width: 12em; text-wrap: balance; }
+    .fv2-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px clamp(20px, 2.4vw, 40px); }
+    .fv2-cols h2 { margin: 0 0 16px; font-size: var(--t-s); font-weight: 500; color: var(--fg2); }
+    .fv2-cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+    .fv2-cols li { font-size: var(--t-s); font-weight: 500; line-height: 1.3; }
+    .fv2-cols a { text-decoration: none; }
+    .fv2-cols a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-cols .st { margin-left: 0.5em; font-size: var(--t-s); font-weight: 400; color: var(--fg3); }
+    .fv2-tile { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px 40px; margin-top: clamp(56px, 7vw, calc(104px * var(--u))); padding: clamp(22px, 2.6vw, calc(36px * var(--u))) clamp(22px, 2.6vw, calc(40px * var(--u))); background: var(--soft);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%); }
+    .fv2-logo { display: block; width: clamp(104px, 9vw, calc(150px * var(--u))); color: var(--fg); }
+    .fv2-logo svg { display: block; width: 100%; height: auto; }
+    .fv2-logo path { fill: currentColor; }
+    .fv2-logo .dot { fill: var(--lime); }
+    .fv2-reach { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+    .fv2-reach a:not(.btn) { font-weight: 500; text-decoration: none; }
+    .fv2-reach a:not(.btn):hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-fine { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 28px; margin: clamp(22px, 2.4vw, 32px) 0 0; font-size: var(--t-s); color: var(--fg2); }
+    @media (max-width: 1100px) { .fv2-top { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 760px) { .fv2-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fv2-reach { gap: 12px 22px; } }
+  </style>
+  <footer class="block foot fv2" data-tone="white" data-slot="footer">
+    <div class="in">
+      <div class="fv2-top">
+        <p class="fv2-say">Where the coolest people build the coolest ideas.</p>
+        <nav class="fv2-cols" aria-label="Sitemap">
+          <div><h2>Studio</h2><ul><li><a href="home.html#services">Services</a></li><li><a href="strata.html">Products</a></li><li><a href="home.html#about">About us</a></li><li><a href="https://qbix.space/motion">Motion</a></li></ul></div>
+          <div><h2>Products</h2><ul><li><a href="strata.html">Strata</a><span class="st">Live</span></li><li>AI Bidding<span class="st">Live</span></li><li>TTS Editor<span class="st">Soon</span></li><li>Interview Assistant<span class="st">Soon</span></li></ul></div>
+          <div><h2>For business</h2><ul><li><a href="listing-kit.html">Listing Launch Kit</a></li><li><a href="https://qbix.space/practice-websites">Practice Website Refresh</a></li><li><a href="samples.html">Samples</a></li></ul></div>
+          <div><h2>Contact</h2><ul><li><a href="mailto:contact@qbix.space">contact@qbix.space</a></li><li><a href="https://cal.com/qbix-studio/30min">Book a call</a></li><li><a href="start.html">Start a project</a></li></ul></div>
+        </nav>
+      </div>
+      <div class="fv2-tile">
+        <a class="fv2-logo" href="home.html" aria-label="Qbix, home">
+          <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/><path class="dot" d="M583.5 0H616.5V34H583.5Z"/></svg>
+        </a>
+        <div class="fv2-reach">
+          <a href="mailto:contact@qbix.space">contact@qbix.space</a>
+          <a href="https://cal.com/qbix-studio/30min">Book a call</a>
+          <a class="btn btn--s" href="start.html">Start a project ↗︎</a>
+        </div>
+      </div>
+      <p class="fv2-fine"><span>© 2026 Qbix</span><span>Seattle, Washington · Remote, worldwide</span></p>
+    </div>
+  </footer>
+</main>
+
+<script src="../scenes/scenes.js"></script>
+<script src="variants/variants.js"></script>
+<script src="block.js"></script>
+<script src="variants/switch.js"></script>
+<script>
+  /* The brief. The prototype has no API: sending opens a mail to contact@qbix.space with
+     the brief written out, and says so under the button. The meter beside the form fills
+     as the brief does (seven parts, as the site's). */
+  (() => {
+    const form = document.getElementById('brief');
+    const bar = document.querySelector('.meter-bar i');
+    const n = document.querySelector('.meter-n');
+    const sent = form.querySelector('.brief-sent');
+    const v = (name) => form.elements[name].value.trim();
+    const picked = (name) => [...form.querySelectorAll(`input[name="${name}"]:checked`)].map((i) => i.value);
+    const parts = () =>
+      [v('name'), /\S+@\S+\.\S+/.test(v('email')), v('company'), picked('type').length, picked('budget').length, picked('timeline').length, v('brief')].filter(Boolean).length;
+    const meter = () => {
+      const k = parts();
+      bar.style.transform = `scaleX(${k / 7})`;
+      n.textContent = `${k} / 7`;
+    };
+    form.addEventListener('input', meter);
+    form.addEventListener('change', meter);
+    meter();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+      const name = v('name');
+      const company = v('company');
+      const lines = [`Name: ${name}`, `Email: ${v('email')}`];
+      if (company) lines.push(`Company or product: ${company}`);
+      if (picked('type').length) lines.push(`Building: ${picked('type').join(', ')}`);
+      if (picked('budget').length) lines.push(`Budget: ${picked('budget')[0]}`);
+      if (picked('timeline').length) lines.push(`Timeline: ${picked('timeline')[0]}`);
+      lines.push('', 'Brief:', v('brief'));
+      const subject = `Project brief from ${name}${company ? ` (${company})` : ''}`;
+      location.href = `mailto:contact@qbix.space?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
+      const first = name.split(/\s+/)[0];
+      sent.textContent = `Thanks, ${first}. Your mail app has the brief, addressed to contact@qbix.space. Send it and we’ll reply within 24 hours.`;
+    });
+  })();
+</script>
+</body>
+</html>

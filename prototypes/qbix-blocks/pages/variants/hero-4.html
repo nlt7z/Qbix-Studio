@@ -1,0 +1,175 @@
+<style>
+  /* Hero 4 · the keys, after the older landing's loading screen: the brand's own keycaps type out
+     Q B I X big; each one is a key you can press (or type: q, b, i, x), and each says one thing Qbix
+     does. The keycaps are photographs (the lime in them is the block's point); shown no bigger than
+     they were made (262px) so they stay sharp. */
+  .hv4 .in {
+    min-height: 100vh;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: clamp(22px, 3.6vh, calc(44px * var(--u)));
+    text-align: center;
+    padding-top: calc(var(--nav) + clamp(20px, 4vh, calc(56px * var(--u))));
+    padding-bottom: clamp(32px, 5vh, calc(64px * var(--u)));
+  }
+  .hv4-h { margin: 0; max-width: 13em; font-size: clamp(42px, 5.4vw, calc(92px * var(--u))); }
+  .hv4-keys { --kh: clamp(84px, min(15.5vw, 27vh), 262px); display: flex; gap: calc(var(--kh) * 0.035); }
+  .hv4-key {
+    position: relative;
+    appearance: none;
+    border: 0;
+    padding: 0;
+    background: none;
+    height: var(--kh);
+    width: calc(var(--kh) * var(--w) / 262);
+    overflow: hidden; /* the sleeve the keys rise out of, and sink into when pressed */
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hv4-key img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; transition: translate 0.18s var(--e-out); }
+  .js .hv4:not(.is-up) .hv4-key img { translate: 0 110%; }
+  .hv4.is-up .hv4-key img { transition: translate 0.9s var(--e-out) var(--r, 0s); }
+  .hv4.is-up.is-ready .hv4-key img { transition: translate 0.18s var(--e-out); }
+  @media (hover: hover) { .hv4.is-ready .hv4-key:hover img { translate: 0 3%; } }
+  .hv4.is-ready .hv4-key.is-down img { translate: 0 7%; transition-duration: 0.07s; }
+  .hv4-key:focus-visible { outline: 2px solid var(--fg); outline-offset: 6px; }
+  /* what the pressed key stands for */
+  .hv4-read { display: grid; justify-items: center; gap: 10px; min-height: 5.6em; max-width: 36em; }
+  .hv4-read-k { font: 400 clamp(26px, 2.5vw, calc(40px * var(--u)))/1.1 var(--font-headline); letter-spacing: -0.025em; }
+  .hv4-read-v { margin: 0; color: var(--fg2); font-size: clamp(17px, 1.3vw, calc(20px * var(--u))); text-wrap: balance; }
+  .hv4-hint { margin: 0; color: var(--fg3); font-size: calc(14px * var(--u)); }
+  /* the readout's lines swap in sleeves (block.js swap) but wrap, unlike a single-line sleeve */
+  .hv4-read .sw { display: block; position: relative; width: 100%; overflow: hidden; padding-bottom: 0.12em; margin-bottom: -0.12em; }
+  .hv4-read .sw > span { display: block; white-space: normal; text-wrap: balance; }
+  .hv4-read .sw > span + span { position: absolute; left: 0; right: 0; top: 0; }
+  .hv4-read .sw > span[data-aud-only] { position: static; }
+  .hv4 .acts { justify-content: center; }
+  @media (prefers-reduced-motion: reduce) { .js .hv4 .hv4-key img { translate: none !important; transition: none !important; } }
+</style>
+<section class="block block--flat hv4" data-tone="white" id="top" data-slot="hero">
+  <div class="in">
+    <h1 class="h1 hv4-h" data-rise data-aud-only="ai">We build the <span class="mark" data-wipe style="--wd: .5s">coolest</span> things.</h1>
+    <h1 class="h1 hv4-h" data-rise data-aud-only="biz" hidden>Look as good as <span class="mark" data-wipe style="--wd: .5s">your work.</span></h1>
+
+    <div class="hv4-keys" role="group" aria-label="Q, B, I, X: press a key to read what it stands for">
+      <button type="button" class="hv4-key" data-key="q" style="--w: 234; --r: 0s"><img src="../assets/keys/key-q.webp" alt="Q" width="234" height="262" draggable="false"></button>
+      <button type="button" class="hv4-key" data-key="b" style="--w: 228; --r: .09s"><img src="../assets/keys/key-b.webp" alt="B" width="228" height="262" draggable="false"></button>
+      <button type="button" class="hv4-key" data-key="i" style="--w: 223; --r: .18s"><img src="../assets/keys/key-i.webp" alt="I" width="223" height="262" draggable="false"></button>
+      <button type="button" class="hv4-key" data-key="x" style="--w: 220; --r: .27s"><img src="../assets/keys/key-x.webp" alt="X" width="220" height="262" draggable="false"></button>
+    </div>
+
+    <div class="hv4-read" aria-live="polite">
+      <span class="hv4-read-k sw"><span data-aud-only="ai">Qbix never writes off a small idea.</span><span data-aud-only="biz" hidden>Fixed-price design for local businesses, ready in days.</span></span>
+      <p class="hv4-read-v sw"><span data-aud-only="ai">We’re a sharp team that moves fast, from sketch to shipped product.</span><span data-aud-only="biz" hidden>A listing kit for real estate agents and a calm website for solo practices.</span></p>
+      <p class="hv4-hint">Press a key, or type q, b, i or x.</p>
+    </div>
+
+    <div class="acts" data-up style="--ud: 160ms">
+      <a class="btn hv4-go" href="start.html">Start a project ↗︎</a>
+      <a class="link" href="samples.html">See samples</a>
+    </div>
+  </div>
+</section>
+<script>
+  /* Q B I X rise out of their sleeves one after another, then each is pressed once, like typing the name
+     (as the loading screen did). Then they are keys: point, tap, click or type one and it goes down,
+     and the line under them says what it stands for, the button with it. */
+  (window.BlocksAfter = window.BlocksAfter || []).push((B) => {
+    const hero = document.querySelector('.hv4');
+    if (!hero) return;
+    const keys = [...hero.querySelectorAll('.hv4-key')];
+    const k = hero.querySelector('.hv4-read-k');
+    const v = hero.querySelector('.hv4-read-v');
+    const go = hero.querySelector('.hv4-go');
+    // what each key stands for, for each audience (the site's own words and prices), and the opening lines
+    const LINES = {
+      ai: {
+        q: ['Design service', 'From moodboard to a live domain. From $500, in 1 to 3 weeks.', 'start.html', 'Start a brief'],
+        b: ['Brand upgrade', 'From usable to worth sharing. From $5,000, in 5 to 10 weeks.', 'start.html', 'Start a brief'],
+        i: ['Qbix Labs', 'Qbix also builds products. Two are live, two are on the way.', 'strata.html', 'Explore Strata'],
+        x: ['A reply within 24 hours', 'We read what you send, not a sales desk.', 'start.html', 'Tell us your idea'],
+      },
+      biz: {
+        q: ['Listing Launch Kit', 'A print flyer, five social posts, and a 30-second video. $99 per listing, ready in 48 hours.', 'listing-kit.html', 'See the kit'],
+        b: ['Practice Website Refresh', 'A calm, clean website for your practice. $600 flat, live in 7 days.', 'https://qbix.space/practice-websites', 'See the refresh'],
+        i: ['Samples', 'Short videos and posters we made for local businesses.', 'samples.html', 'See samples'],
+        x: ['Files you own', 'Made by a designer, delivered as files you own.', 'listing-kit.html', 'See the kit'],
+      },
+    };
+    const OPEN = {
+      ai: ['Qbix never writes off a small idea.', 'We’re a sharp team that moves fast, from sketch to shipped product.'],
+      biz: ['Fixed-price design for local businesses, ready in days.', 'A listing kit for real estate agents and a calm website for solo practices.'],
+    };
+    const aud = () => (document.documentElement.dataset.aud === 'biz' ? 'biz' : 'ai');
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    // the sleeves hold one line each once the keys are in use (the two audiences' openings until then)
+    const one = (el) => {
+      if (el.children.length < 2) return;
+      const shown = [...el.children].find((c) => !c.hidden) || el.firstElementChild;
+      shown.removeAttribute('data-aud-only');
+      el.replaceChildren(shown);
+    };
+    let act = 'Start a project';
+    const relabel = (text) => {
+      if (text === act) return;
+      act = text;
+      go.removeAttribute('data-split');
+      go.removeAttribute('aria-label');
+      go.textContent = `${text} ↗︎`;
+      B.watch(go.parentElement);
+    };
+    const say = (title, line, href, label) => {
+      one(k);
+      one(v);
+      B.swap(k, esc(title));
+      B.swap(v, esc(line));
+      go.href = href;
+      relabel(label);
+    };
+    const show = (key) => say(...LINES[aud()][key]);
+    const down = (el) => el.classList.add('is-down');
+    const up = (el) => el.classList.remove('is-down');
+    keys.forEach((el) => {
+      el.addEventListener('pointerdown', () => down(el));
+      el.addEventListener('pointerup', () => up(el));
+      el.addEventListener('pointerleave', () => up(el));
+      el.addEventListener('click', () => show(el.dataset.key));
+      el.addEventListener('keydown', (e) => (e.key === ' ' || e.key === 'Enter') && down(el));
+      el.addEventListener('keyup', () => up(el));
+      el.addEventListener('blur', () => up(el));
+    });
+    // type the name on the keyboard: q, b, i, x press their keys (not while typing into a field)
+    const inField = (t) => t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
+    addEventListener('keydown', (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || inField(e.target) || !hero.isConnected) return;
+      const el = keys.find((x) => x.dataset.key === (e.key || '').toLowerCase());
+      if (!el || hero.getBoundingClientRect().bottom < 0) return;
+      down(el);
+      if (!e.repeat) show(el.dataset.key);
+    });
+    addEventListener('keyup', (e) => {
+      const el = keys.find((x) => x.dataset.key === (e.key || '').toLowerCase());
+      if (el) up(el);
+    });
+    // the audience switch puts the opening lines back
+    new MutationObserver(() => {
+      if (k.children.length > 1) return; // still the two openings: they follow the switch themselves
+      say(...OPEN[aud()], 'start.html', 'Start a project');
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-aud'] });
+    // the entrance: the keys rise one after another, then the name is typed once
+    if (B.reduced) {
+      hero.classList.add('is-up', 'is-ready');
+      return;
+    }
+    requestAnimationFrame(() => {
+      hero.classList.add('is-up');
+      const rise = 1200;
+      setTimeout(() => hero.classList.add('is-ready'), rise);
+      keys.forEach((el, i) => {
+        setTimeout(() => down(el), rise + 60 + i * 150);
+        setTimeout(() => up(el), rise + 60 + i * 150 + 110);
+      });
+    });
+  });
+</script>

@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qbix Blocks · Samples</title>
+<meta name="description" content="Short videos and posters we made for local businesses: real estate, remodels, wedding venues, Christmas tree farms, estate sales and auctions.">
+<link rel="stylesheet" href="block.css">
+<link rel="stylesheet" href="variants/switch.css">
+<style>
+  /* ---- the hero: one sentence, a sample's cover set in it before each kind of business ---- */
+  .hero .in { padding-top: calc(var(--nav) + clamp(28px, 6vh, calc(84px * var(--u)))); padding-bottom: clamp(64px, 8vw, calc(120px * var(--u))); }
+  .smp-h { margin: clamp(18px, 2.4vh, calc(28px * var(--u))) 0 0; font-size: var(--t-l); line-height: 1.1; letter-spacing: -0.04em; text-wrap: pretty; max-width: 21em; }
+  .cov {
+    position: relative;
+    display: inline-block;
+    width: 0.62em;
+    height: 1em;
+    margin: 0 0.04em;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    vertical-align: -0.17em;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    transform: rotate(var(--tilt));
+    transition: transform 0.6s cubic-bezier(0.34, 1.45, 0.5, 1);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cov[aria-expanded='true'] { z-index: 5; transform: rotate(0deg) scale(2.3); }
+  .nb { white-space: nowrap; }
+  .cov-img { position: absolute; inset: 0; overflow: hidden; background: var(--soft); clip-path: polygon(0 0, calc(100% - 0.14em) 0, 100% 0.14em, 100% 100%, 0 100%); }
+  .cov-img img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  /* the covers open from the bottom once the words are up */
+  .js .smp-h .cov-img img { transform: translateY(101%); transition: transform 0.85s var(--e-out) calc(520ms + var(--j) * 120ms); }
+  .js .smp-h.is-in .cov-img img { transform: none; }
+  /* whose it is, under the open cover, from its left edge (a cover can open at a line's start); the
+     cover's scale is undone on it, so it reads at 13px */
+  .cov-tag {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 0.06em);
+    padding: 5px 8px;
+    background: var(--fg);
+    color: var(--bg);
+    font: 500 var(--t-s)/1.3 var(--font-sans);
+    letter-spacing: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    transform: scale(0.4348);
+    transform-origin: 0 0;
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.3s var(--e-out);
+  }
+  .cov[aria-expanded='true'] .cov-tag { clip-path: inset(0); }
+  .cov:focus-visible { outline: none; }
+  .cov:focus-visible .cov-img { outline: 2px solid var(--fg); outline-offset: 2px; }
+
+  /* how the cards work, said for the device in hand */
+  .hint { margin: clamp(28px, 4vh, calc(48px * var(--u))) 0 0; font-size: var(--t-s); color: var(--fg2); }
+  .hint > span { display: none; }
+  @media (hover: hover) and (pointer: fine) { .hint > .hint-hover { display: inline; } }
+  @media (hover: none), (pointer: coarse) { .hint > .hint-touch { display: inline; } }
+  @media (prefers-reduced-motion: reduce) {
+    .hint > span { display: none !important; }
+    .hint > .hint-still { display: inline !important; }
+    .cov, .cov-tag { transition: none; }
+  }
+
+  /* the six kinds, to jump to */
+  .jump { display: flex; flex-wrap: wrap; gap: 10px clamp(18px, 2.4vw, calc(34px * var(--u))); margin-top: clamp(20px, 3vh, calc(32px * var(--u))); }
+  .jump a { font-size: var(--t-s); font-weight: 500; text-decoration: none; color: var(--fg); }
+  .jump a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.28em; }
+  .jump sup { margin-left: 3px; font-size: var(--t-s); font-weight: 500; color: var(--fg2); font-variant-numeric: tabular-nums; }
+
+  /* ---- a group: its name big on the left, its cards on the right ---- */
+  .grp-in { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(28px, 4vw, calc(72px * var(--u))); align-items: start; }
+  .grp-head { display: grid; gap: 14px; align-content: start; }
+  .grp-n { margin: 0; font: 500 var(--t-s)/1 var(--font-sans); color: var(--fg2); }
+  .grp-title { margin: 0; font: 400 var(--t-l)/1 var(--font-headline); letter-spacing: -0.035em; font-synthesis-weight: none; text-wrap: balance; }
+  .grp-count { margin: 6px 0 0; font-size: var(--t-s); color: var(--fg2); }
+  .grp-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(28px, 3vw, calc(44px * var(--u))) 8px; }
+  .grp-cards > li { min-width: 0; }
+  @media (min-width: 900px) and (min-height: 560px) { .grp-head { position: sticky; top: calc(var(--nav) + 40px); } }
+  @media (max-width: 899px) {
+    .grp-in { grid-template-columns: 1fr; }
+    .grp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  /* a card: the cover, then who it was made for; its preview rises into the cover while it plays */
+  .grp .vcard-media video { opacity: 1; clip-path: inset(100% 0 0 0); transition: clip-path 0.5s var(--e-out); }
+  .grp .vcard.is-playing .vcard-media video { clip-path: inset(0); }
+  .grp .vcard-media { outline-offset: 4px; }
+  .grp .vcard:focus-visible { outline: none; }
+  .grp .vcard:focus-visible .vcard-media { outline: 2px solid var(--fg); }
+  .grp .vcard-t { gap: 3px; }
+  /* the arrow is glued to the name's last word (a no-break space), so it never sits alone on a line */
+  .grp .vcard-name::after { content: '\a0\2197\FE0E'; position: relative; left: 0; top: 0; color: var(--fg2); transition: left 0.26s var(--e), top 0.26s var(--e), color 0.26s var(--e); }
+  .grp .vcard:hover .vcard-name::after, .grp .vcard.is-playing .vcard-name::after { left: 2px; top: -2px; color: var(--fg); }
+  .grp .vcard-line { color: var(--fg); }
+  .vcard-town { font-size: var(--t-s); line-height: 1.4; color: var(--fg2); }
+
+  /* ---- the sign-off: an invitation, and the kit's price as a figure ---- */
+  .sign-in { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(40px, 5vw, calc(96px * var(--u))); align-items: end; }
+  .sign-in .head { max-width: 44rem; }
+  .sign-in .acts { margin-top: clamp(32px, 4vw, calc(52px * var(--u))); }
+  .sign .figs { grid-template-columns: 1fr; gap: clamp(32px, 4vw, calc(48px * var(--u))); }
+  @media (max-width: 899px) { .sign-in { grid-template-columns: 1fr; align-items: start; } }
+</style>
+</head>
+<body data-tone="white">
+
+<header class="nav" data-tone="white">
+  <a class="nav-logo" href="home.html" aria-label="Qbix, home">
+    <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></svg>
+  </a>
+  <nav class="nav-mid" aria-label="Main">
+    <span class="aud" aria-label="Who it's for">
+      <a href="home.html">AI teams</a>
+      <a href="home.html?for=business" aria-current="true">Business</a>
+    </span>
+    <ul class="nav-links">
+      <li class="nav-has-sub" data-current>
+        <button type="button" class="nav-sub-btn" aria-expanded="false" aria-controls="nav-sub">Services<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5"/></svg></button>
+        <div class="nav-sub" id="nav-sub">
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For AI teams</p>
+            <a href="home.html#services"><b>Design service</b><span>From moodboard to a live domain. From $500.</span></a>
+            <a href="home.html#brand"><b>Brand upgrade</b><span>From usable to worth sharing. From $5,000.</span></a>
+          </div>
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For business</p>
+            <a href="listing-kit.html"><b>Listing Launch Kit</b><span>Ready to share in 48 hours. $99 per listing.</span></a>
+            <a href="https://qbix.space/practice-websites"><b>Practice Website Refresh</b><span>A calm website, live in 7 days. $600 flat.</span></a>
+            <a href="samples.html"><b>Samples</b><span>Short videos and posters we made for local businesses.</span></a>
+          </div>
+        </div>
+      </li>
+      <li><a href="strata.html">Products</a></li>
+      <li><a href="home.html#about">About</a></li>
+    </ul>
+  </nav>
+  <div class="nav-end">
+    <a class="btn btn--line btn--s" href="start.html">Start a project ↗︎</a>
+  </div>
+</header>
+
+<main class="blocks" data-stack>
+
+  <!-- 00 · the hero, white: the sentence, with a sample's cover before each kind of business -->
+  <section class="block block--flat hero" data-tone="white" id="top">
+    <div class="in">
+      <p class="kicker">Samples</p>
+      <h1 class="h1 smp-h" data-rise>Short videos and posters for <span class="nb"><button type="button" class="cov keep" style="--j: 0; --tilt: -4deg" aria-expanded="false" aria-label="Justin Allen, Gig Harbor"><span class="cov-img"><img src="../samples/justin-allen/thumb.webp" alt="" width="540" height="960" decoding="async" draggable="false"></span><span class="cov-tag" aria-hidden="true">Justin Allen, Gig Harbor</span></button> realtors,</span> <span class="nb"><button type="button" class="cov keep" style="--j: 1; --tilt: 3deg" aria-expanded="false" aria-label="Nip Tuck Remodeling, Woodinville"><span class="cov-img"><img src="../samples/nip-tuck/thumb.webp" alt="" width="540" height="960" decoding="async" draggable="false"></span><span class="cov-tag" aria-hidden="true">Nip Tuck Remodeling, Woodinville</span></button> remodelers,</span> <span class="nb"><button type="button" class="cov keep" style="--j: 2; --tilt: -3deg" aria-expanded="false" aria-label="Bridal Veil Lakes, Columbia River Gorge"><span class="cov-img"><img src="../samples/bridal-veil-lakes/thumb.webp" alt="" width="540" height="960" decoding="async" draggable="false"></span><span class="cov-tag" aria-hidden="true">Bridal Veil Lakes, Columbia River Gorge</span></button> wedding</span> venues, <span class="nb"><button type="button" class="cov keep" style="--j: 3; --tilt: 4deg" aria-expanded="false" aria-label="Hemphill Farms, Oregon City"><span class="cov-img"><img src="../samples/hemphill-tree-farm/thumb.webp" alt="" width="540" height="960" decoding="async" draggable="false"></span><span class="cov-tag" aria-hidden="true">Hemphill Farms, Oregon City</span></button> tree</span> farms, <span class="nb"><button type="button" class="cov keep" style="--j: 4; --tilt: -2deg" aria-expanded="false" aria-label="Family Loyalty Estate Sales, Winston"><span class="cov-img"><img src="../samples/family-loyalty/thumb.webp" alt="" width="540" height="960" decoding="async" draggable="false"></span><span class="cov-tag" aria-hidden="true">Family Loyalty Estate Sales, Winston</span></button> estate</span> sales and <span class="nb"><button type="button" class="cov keep" style="--j: 5; --tilt: 3deg" aria-expanded="false" aria-label="Leftover Treasures, Fresno"><span class="cov-img"><img src="../samples/leftover-treasures/thumb.webp" alt="" width="540" height="960" decoding="async" draggable="false"></span><span class="cov-tag" aria-hidden="true">Leftover Treasures, Fresno</span></button> auctions.</span></h1>
+      <p class="hint" data-up>
+        <span class="hint-hover">Hover over a sample to play it. Click to open it.</span>
+        <span class="hint-touch">Tap a sample to play it. Tap again to open it.</span>
+        <span class="hint-still">Open a sample to watch it.</span>
+      </p>
+      <nav class="jump" aria-label="Kinds of business" data-up style="--ud: 120ms">
+        <a href="#real-estate">Real estate<sup>2</sup></a>
+        <a href="#remodels">Remodels and custom homes<sup>6</sup></a>
+        <a href="#wedding-venues">Wedding venues<sup>3</sup></a>
+        <a href="#tree-farms">Christmas tree farms<sup>4</sup></a>
+        <a href="#estate-sales">Estate sales<sup>2</sup></a>
+        <a href="#auctions">Auctions<sup>1</sup></a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- 01 · black: real estate -->
+  <section class="block grp" id="real-estate" data-tone="black" aria-labelledby="g1">
+    <div class="in grp-in">
+      <header class="grp-head">
+        <p class="grp-n num" aria-hidden="true">01</p>
+        <h2 class="grp-title" id="g1" data-rise>Real estate</h2>
+        <p class="grp-count">2 samples</p>
+      </header>
+      <ul class="grp-cards">
+        <li><a class="vcard" data-wired="1" href="../samples/justin-allen/index.html"><span class="vcard-media"><img src="../samples/justin-allen/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/justin-allen/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Justin Allen</span><span class="vcard-line">A listing, cut for Reels</span><span class="vcard-town">Gig Harbor</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/chris-conroy/index.html"><span class="vcard-media"><img src="../samples/chris-conroy/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/chris-conroy/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Chris Conroy, Ensemble</span><span class="vcard-line">Waterfront on Lay Inlet</span><span class="vcard-town">Gig Harbor</span></span></a></li>
+      </ul>
+    </div>
+  </section>
+  <!-- 02 · white: remodels and custom homes -->
+  <section class="block grp" id="remodels" data-tone="white" aria-labelledby="g2">
+    <div class="in grp-in">
+      <header class="grp-head">
+        <p class="grp-n num" aria-hidden="true">02</p>
+        <h2 class="grp-title" id="g2" data-rise>Remodels and custom homes</h2>
+        <p class="grp-count">6 samples</p>
+      </header>
+      <ul class="grp-cards">
+        <li><a class="vcard" data-wired="1" href="../samples/nip-tuck/index.html"><span class="vcard-media"><img src="../samples/nip-tuck/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/nip-tuck/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Nip Tuck Remodeling</span><span class="vcard-line">On the 2026 Remodeled Homes Tour</span><span class="vcard-town">Woodinville</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/kim-west-designs/index.html"><span class="vcard-media"><img src="../samples/kim-west-designs/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/kim-west-designs/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">West Designs</span><span class="vcard-line">A Zellige master bath</span><span class="vcard-town">Sacramento</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/ko-construction/index.html"><span class="vcard-media"><img src="../samples/ko-construction/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/ko-construction/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">KO Construction</span><span class="vcard-line">A primary suite on the water</span><span class="vcard-town">Lake Tapps</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/marin-kitchen-works/index.html"><span class="vcard-media"><img src="../samples/marin-kitchen-works/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/marin-kitchen-works/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Marin Kitchen Works</span><span class="vcard-line">Bel Marin Breeze, before and after</span><span class="vcard-town">Novato</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/edge-homes/index.html"><span class="vcard-media"><img src="../samples/edge-homes/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/edge-homes/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Edge Homes NW</span><span class="vcard-line">The home Spokane voted for</span><span class="vcard-town">Spokane</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/epic-design-build/index.html"><span class="vcard-media"><img src="../samples/epic-design-build/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/epic-design-build/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Epic Design Build</span><span class="vcard-line">Custom homes, from drawing to design</span><span class="vcard-town">Altadena</span></span></a></li>
+      </ul>
+    </div>
+  </section>
+  <!-- 03 · black: wedding venues -->
+  <section class="block grp" id="wedding-venues" data-tone="black" aria-labelledby="g3">
+    <div class="in grp-in">
+      <header class="grp-head">
+        <p class="grp-n num" aria-hidden="true">03</p>
+        <h2 class="grp-title" id="g3" data-rise>Wedding venues</h2>
+        <p class="grp-count">3 samples</p>
+      </header>
+      <ul class="grp-cards">
+        <li><a class="vcard" data-wired="1" href="../samples/bridal-veil-lakes/index.html"><span class="vcard-media"><img src="../samples/bridal-veil-lakes/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/bridal-veil-lakes/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Bridal Veil Lakes</span><span class="vcard-line">A spring-fed lake in old-growth forest</span><span class="vcard-town">Columbia River Gorge</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/mt-view-orchards/index.html"><span class="vcard-media"><img src="../samples/mt-view-orchards/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/mt-view-orchards/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Mt. View Orchards Weddings</span><span class="vcard-line">An orchard wedding, now booking 2027</span><span class="vcard-town">Mt. Hood</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/rustic-meadows/index.html"><span class="vcard-media"><img src="../samples/rustic-meadows/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/rustic-meadows/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Rustic Meadows</span><span class="vcard-line">Married in the meadow</span><span class="vcard-town">Cheney</span></span></a></li>
+      </ul>
+    </div>
+  </section>
+  <!-- 04 · white: christmas tree farms -->
+  <section class="block grp" id="tree-farms" data-tone="white" aria-labelledby="g4">
+    <div class="in grp-in">
+      <header class="grp-head">
+        <p class="grp-n num" aria-hidden="true">04</p>
+        <h2 class="grp-title" id="g4" data-rise>Christmas tree farms</h2>
+        <p class="grp-count">4 samples</p>
+      </header>
+      <ul class="grp-cards">
+        <li><a class="vcard" data-wired="1" href="../samples/hemphill-tree-farm/index.html"><span class="vcard-media"><img src="../samples/hemphill-tree-farm/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/hemphill-tree-farm/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Hemphill Farms</span><span class="vcard-line">Opening day, Friday, November 27</span><span class="vcard-town">Oregon City</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/alpine-meadows-tree-farm/index.html"><span class="vcard-media"><img src="../samples/alpine-meadows-tree-farm/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/alpine-meadows-tree-farm/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Alpine Meadows Christmas Tree Farm</span><span class="vcard-line">Opening Weekend, Nov 27 and 28</span><span class="vcard-town">Deming</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/mcburney-tree-farm/index.html"><span class="vcard-media"><img src="../samples/mcburney-tree-farm/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/mcburney-tree-farm/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">McBurney Tree Farm</span><span class="vcard-line">Reserve your tree now</span><span class="vcard-town">Grass Valley</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/shining-star-tree-farm/index.html"><span class="vcard-media"><img src="../samples/shining-star-tree-farm/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/shining-star-tree-farm/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Shining Star Tree Farm + Venue</span><span class="vcard-line">Choose and Cut, November 27 to December 6</span><span class="vcard-town">Eatonville</span></span></a></li>
+      </ul>
+    </div>
+  </section>
+  <!-- 05 · black: estate sales -->
+  <section class="block grp" id="estate-sales" data-tone="black" aria-labelledby="g5">
+    <div class="in grp-in">
+      <header class="grp-head">
+        <p class="grp-n num" aria-hidden="true">05</p>
+        <h2 class="grp-title" id="g5" data-rise>Estate sales</h2>
+        <p class="grp-count">2 samples</p>
+      </header>
+      <ul class="grp-cards">
+        <li><a class="vcard" data-wired="1" href="../samples/family-loyalty/index.html"><span class="vcard-media"><img src="../samples/family-loyalty/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/family-loyalty/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Family Loyalty Estate Sales</span><span class="vcard-line">The Lookingglass Estate sale</span><span class="vcard-town">Winston</span></span></a></li>
+        <li><a class="vcard" data-wired="1" href="../samples/teresas-estate-sales/index.html"><span class="vcard-media"><img src="../samples/teresas-estate-sales/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/teresas-estate-sales/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Teresa’s Estate Sales</span><span class="vcard-line">The Pickers Delight sale</span><span class="vcard-town">Menifee</span></span></a></li>
+      </ul>
+    </div>
+  </section>
+  <!-- 06 · white: auctions -->
+  <section class="block grp" id="auctions" data-tone="white" aria-labelledby="g6">
+    <div class="in grp-in">
+      <header class="grp-head">
+        <p class="grp-n num" aria-hidden="true">06</p>
+        <h2 class="grp-title" id="g6" data-rise>Auctions</h2>
+        <p class="grp-count">1 sample</p>
+      </header>
+      <ul class="grp-cards">
+        <li><a class="vcard" data-wired="1" href="../samples/leftover-treasures/index.html"><span class="vcard-media"><img src="../samples/leftover-treasures/thumb.webp" alt="" loading="lazy" decoding="async" width="540" height="960"><video src="../samples/leftover-treasures/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Leftover Treasures</span><span class="vcard-line">Three auctions in one week</span><span class="vcard-town">Fresno</span></span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 07 · black: the sign-off, the listing kit and a brief -->
+  <section class="block sign" id="contact" data-tone="black">
+    <div class="in sign-in">
+      <div>
+        <div class="head">
+          <p class="kicker">For local business</p>
+          <h2 class="h1" data-rise>Look as good as <span class="mark" data-wipe>your work.</span></h2>
+          <p class="lede" data-up>Fixed-price design for local businesses, ready in days. A listing kit for real estate agents and a calm website for solo practices.</p>
+        </div>
+        <div class="acts">
+          <a class="btn" href="listing-kit.html">See the listing kit ↗︎</a>
+          <a class="btn btn--2" href="start.html">Start a brief ↗︎</a>
+        </div>
+      </div>
+      <dl class="figs">
+        <div class="fig"><dt>$99</dt><dd>A print flyer, five social posts, and a 30-second video for one property. Regular $249.</dd></div>
+        <div class="fig"><dt>48 hours</dt><dd>From your listing link to drafts you can share.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- the foot (option 2, after Wise's): the sitemap in columns, a sage band with the logo and the ways to reach us, the small print -->
+  <style>
+    /* Footer 2 · 浅色多栏, after wise.com's footer: white, information first. The link columns, then the
+       logo with the ways to reach us in one sage tile, then the small print. Quiet; the i's dot is the lime. */
+    .fv2 .in { padding-top: clamp(72px, 9vw, calc(128px * var(--u))); padding-bottom: clamp(24px, 3vw, calc(36px * var(--u))); }
+    .fv2-top { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 3fr); gap: clamp(40px, 5vw, calc(96px * var(--u))); align-items: start; }
+    .fv2-say { margin: 0; font: 400 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.025em; max-width: 12em; text-wrap: balance; }
+    .fv2-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px clamp(20px, 2.4vw, 40px); }
+    .fv2-cols h2 { margin: 0 0 16px; font-size: var(--t-s); font-weight: 500; color: var(--fg2); }
+    .fv2-cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+    .fv2-cols li { font-size: var(--t-s); font-weight: 500; line-height: 1.3; }
+    .fv2-cols a { text-decoration: none; }
+    .fv2-cols a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-cols .st { margin-left: 0.5em; font-size: var(--t-s); font-weight: 400; color: var(--fg3); }
+    .fv2-tile { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px 40px; margin-top: clamp(56px, 7vw, calc(104px * var(--u))); padding: clamp(22px, 2.6vw, calc(36px * var(--u))) clamp(22px, 2.6vw, calc(40px * var(--u))); background: var(--soft);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%); }
+    .fv2-logo { display: block; width: clamp(104px, 9vw, calc(150px * var(--u))); color: var(--fg); }
+    .fv2-logo svg { display: block; width: 100%; height: auto; }
+    .fv2-logo path { fill: currentColor; }
+    .fv2-logo .dot { fill: var(--lime); }
+    .fv2-reach { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+    .fv2-reach a:not(.btn) { font-weight: 500; text-decoration: none; }
+    .fv2-reach a:not(.btn):hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-fine { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 28px; margin: clamp(22px, 2.4vw, 32px) 0 0; font-size: var(--t-s); color: var(--fg2); }
+    @media (max-width: 1100px) { .fv2-top { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 760px) { .fv2-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fv2-reach { gap: 12px 22px; } }
+  </style>
+  <footer class="block foot fv2" data-tone="white" data-slot="footer">
+    <div class="in">
+      <div class="fv2-top">
+        <p class="fv2-say">Where the coolest people build the coolest ideas.</p>
+        <nav class="fv2-cols" aria-label="Sitemap">
+          <div><h2>Studio</h2><ul><li><a href="home.html#services">Services</a></li><li><a href="strata.html">Products</a></li><li><a href="home.html#about">About us</a></li><li><a href="https://qbix.space/motion">Motion</a></li></ul></div>
+          <div><h2>Products</h2><ul><li><a href="strata.html">Strata</a><span class="st">Live</span></li><li>AI Bidding<span class="st">Live</span></li><li>TTS Editor<span class="st">Soon</span></li><li>Interview Assistant<span class="st">Soon</span></li></ul></div>
+          <div><h2>For business</h2><ul><li><a href="listing-kit.html">Listing Launch Kit</a></li><li><a href="https://qbix.space/practice-websites">Practice Website Refresh</a></li><li><a href="samples.html">Samples</a></li></ul></div>
+          <div><h2>Contact</h2><ul><li><a href="mailto:contact@qbix.space">contact@qbix.space</a></li><li><a href="https://cal.com/qbix-studio/30min">Book a call</a></li><li><a href="start.html">Start a project</a></li></ul></div>
+        </nav>
+      </div>
+      <div class="fv2-tile">
+        <a class="fv2-logo" href="home.html" aria-label="Qbix, home">
+          <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/><path class="dot" d="M583.5 0H616.5V34H583.5Z"/></svg>
+        </a>
+        <div class="fv2-reach">
+          <a href="mailto:contact@qbix.space">contact@qbix.space</a>
+          <a href="https://cal.com/qbix-studio/30min">Book a call</a>
+          <a class="btn btn--s" href="start.html">Start a project ↗︎</a>
+        </div>
+      </div>
+      <p class="fv2-fine"><span>© 2026 Qbix</span><span>Seattle, Washington · Remote, worldwide</span></p>
+    </div>
+  </footer>
+</main>
+
+<script src="variants/variants.js"></script>
+<script src="block.js"></script>
+<script src="variants/switch.js"></script>
+<script>
+  /* The covers in the sentence: pointed at or focused, one grows out of the line and says whose it is;
+     on a touch screen a tap opens it and a second tap closes it. */
+  (() => {
+    const covers = [...document.querySelectorAll('.cov')];
+    const open = (c, on) => {
+      if (on) covers.forEach((o) => o !== c && o.setAttribute('aria-expanded', 'false'));
+      c.setAttribute('aria-expanded', String(on));
+    };
+    covers.forEach((c) => {
+      let touch = false;
+      c.addEventListener('pointerenter', (e) => {
+        touch = e.pointerType !== 'mouse';
+        if (!touch) open(c, true);
+      });
+      c.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && open(c, false));
+      c.addEventListener('click', () => touch && open(c, c.getAttribute('aria-expanded') !== 'true'));
+      c.addEventListener('focus', () => !touch && open(c, true));
+      c.addEventListener('blur', () => open(c, false));
+    });
+  })();
+
+  /* The cards, as the site's SampleCard: pointed at (or tapped once on a phone) one plays its preview
+     in place, muted and looped; a click (or a second tap) opens the sample. One plays at a time, only
+     while it is on screen, and none with reduced motion. (data-wired keeps block.js's own wiring off.) */
+  (() => {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cards = [...document.querySelectorAll('.grp .vcard')];
+    let playing = null;
+    const stop = (card) => {
+      card.querySelector('video').pause();
+      card.classList.remove('is-playing');
+      if (playing === card) playing = null;
+    };
+    const start = (card) => {
+      if (reduced || playing === card) return;
+      if (playing) stop(playing);
+      playing = card;
+      const v = card.querySelector('video');
+      v.muted = true;
+      v.currentTime = 0;
+      card.classList.add('is-playing');
+      v.play().catch((err) => { if (err?.name !== 'AbortError') stop(card); });
+    };
+    cards.forEach((card) => {
+      let ptr = '';
+      card.addEventListener('pointerdown', (e) => (ptr = e.pointerType));
+      card.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && start(card));
+      card.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && stop(card));
+      card.addEventListener('focus', () => ptr !== 'touch' && start(card));
+      card.addEventListener('blur', () => stop(card));
+      card.addEventListener('click', (e) => {
+        // a mouse or a key opens it at once; the first tap plays it and the second opens it
+        if (ptr !== 'touch' || reduced || playing === card) return;
+        e.preventDefault();
+        start(card);
+      });
+    });
+    const io = new IntersectionObserver((es) => es.forEach((en) => en.target === playing && en.intersectionRatio < 0.5 && stop(en.target)), { threshold: [0, 0.5] });
+    cards.forEach((c) => io.observe(c));
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!-- Hero 1 · 换算器 (the converter hero, Wise's homepage). Its styles stay in home.html (.hero, .hero-grid, .hero-say). -->
+<section class="block block--flat hero" data-tone="white" id="top" data-slot="hero">
+    <div class="in">
+      <div class="hero-grid">
+        <div class="hero-say">
+          <h1 class="display hero-h" data-fit data-max="168" data-min="30" data-rise data-aud-only="ai">
+            <span class="line">We build the</span>
+            <span class="line"><span class="mark" data-wipe style="--wd: .7s">coolest</span> things.</span>
+          </h1>
+          <h1 class="display hero-h" data-fit data-max="168" data-min="30" data-rise data-aud-only="biz" hidden>
+            <span class="line">Look as good</span>
+            <span class="line">as <span class="mark" data-wipe style="--wd: .7s">your work.</span></span>
+          </h1>
+          <p class="lede" data-up data-aud-only="ai">Qbix never writes off a small idea. We’re a sharp team that moves fast, from sketch to shipped product.</p>
+          <p class="lede" data-up data-aud-only="biz" hidden>Fixed-price design for local businesses, ready in days. A listing kit for real estate agents and a calm website for solo practices.</p>
+          <ul class="points" data-up style="--ud: 120ms" data-aud-only="ai">
+            <li>A reply within 24 hours</li>
+            <li>Live on your domain in 1 to 3 weeks</li>
+            <li>Code merged straight into your repo</li>
+          </ul>
+          <ul class="points" data-up style="--ud: 120ms" data-aud-only="biz" hidden>
+            <li>Drafts in 48 hours</li>
+            <li>Your site live in 7 days</li>
+            <li>Files you own</li>
+          </ul>
+        </div>
+
+        <div data-up style="--ud: 200ms"><!-- the reveal's mask on a wrapper, so the converter keeps its own cut corner -->
+        <div class="conv" data-tone="black" data-conv>
+          <script type="application/json">[
+            { "k": "web", "time": "1 to 3 <small>weeks</small>", "plabel": "Starts at", "price": "$500",
+              "get": "<b>Moodboard, design and code, live on your domain.</b> We design it, write the code, and ship it ready for business.",
+              "href": "start.html", "act": "Start a brief" },
+            { "k": "redesign", "time": "5 to 10 <small>weeks</small>", "plabel": "Starts at", "price": "$5,000",
+              "get": "<b>From usable to worth sharing.</b> We iterate round by round and merge code straight into your repo.",
+              "href": "start.html", "act": "Start a brief" },
+            { "k": "kit", "time": "48 <small>hours</small>", "plabel": "Per listing", "price": "$99 <del>$249</del>",
+              "get": "<b>A print flyer, five social posts, and a 30-second video</b> for one property. Made by a designer, delivered as files you own.",
+              "href": "listing-kit.html", "act": "See the kit" },
+            { "k": "practice", "time": "7 <small>days</small>", "plabel": "Flat", "price": "$600 <del>$800</del>",
+              "get": "<b>A calm, clean website for your practice,</b> rebuilt in one week. Your words, your photos, and it works on any phone.",
+              "href": "https://qbix.space/practice-websites", "act": "See the refresh" }
+          ]</script>
+          <p class="conv-q" id="conv-q">What do you need?</p>
+          <div class="conv-opts" role="radiogroup" aria-labelledby="conv-q">
+            <button type="button" class="conv-opt" role="radio" data-k="web" data-aud-only="ai">A launch site<small>Design service</small></button>
+            <button type="button" class="conv-opt" role="radio" data-k="redesign" data-aud-only="ai">A brand upgrade<small>For a product that runs</small></button>
+            <button type="button" class="conv-opt" role="radio" data-k="kit" data-aud-only="biz" hidden>A listing kit<small>For one property</small></button>
+            <button type="button" class="conv-opt" role="radio" data-k="practice" data-aud-only="biz" hidden>A practice website<small>For solo practices</small></button>
+          </div>
+          <dl class="conv-out">
+            <div class="conv-cell"><dt>Ready in</dt><dd><span class="sw" data-f="time"></span></dd></div>
+            <div class="conv-cell"><dt data-f="plabel">Starts at</dt><dd><span class="sw" data-f="price"></span></dd></div>
+          </dl>
+          <p class="conv-get" data-f="get" aria-live="polite"></p>
+          <a class="btn btn--wide" data-f="href" href="start.html">Start a brief ↗︎</a>
+          <p class="conv-foot">We read what you send and reply within 24 hours.</p>
+        </div>
+        </div>
+      </div>
+    </div>
+  </section>

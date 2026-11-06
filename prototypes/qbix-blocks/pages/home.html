@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en" data-aud="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qbix Blocks · Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- AI Bidding's screen (in the Labs scene) sets its HUD and its neon word in these two -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,700;1,800&family=WindSong:wght@500&display=swap">
+<link rel="stylesheet" href="../scenes/scenes.css">
+<link rel="stylesheet" href="block.css">
+<link rel="stylesheet" href="variants/switch.css">
+<style>
+  /* the hero, after Wise's: the headline and the words on the left, the converter on the right */
+  .hero .in { padding-top: calc(var(--nav) + clamp(28px, 6.5vh, calc(96px * var(--u)))); padding-bottom: clamp(48px, 7vw, calc(112px * var(--u))); }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, calc(500px * var(--u))); gap: clamp(32px, 5vw, calc(104px * var(--u))); align-items: start; }
+  .hero-say { display: grid; gap: clamp(24px, 3.6vh, calc(44px * var(--u))); min-width: 0; }
+  .hero-h { margin: 0 0 0 -0.04em; }
+  .hero-say .lede { color: var(--fg); font-size: var(--t-s); max-width: 26em; }
+  @media (max-width: 899px) { .hero-grid { grid-template-columns: minmax(0, 1fr); } }
+
+  /* the products chapter: the state after a name, the lit one's note under the list */
+  .steps .state { color: inherit; font-weight: 400; }
+  .ch-list-foot { display: grid; gap: 22px; }
+
+  /* the samples, on black, as a reel that runs off the right edge */
+  .reel-wrap { margin-top: clamp(40px, 5vw, calc(72px * var(--u))); margin-right: calc(-1 * var(--gut)); }
+  .samples-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px 40px; }
+  .samples-head .h2 { max-width: 12em; }
+
+  /* the other audience, in rows */
+  .cross .rows { margin-top: clamp(40px, 5vw, calc(72px * var(--u))); }
+  .cross .acts { margin-top: clamp(32px, 4vw, calc(56px * var(--u))); }
+
+  /* the sign-off: the words and the glass cube, on the dark */
+  .sign .in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, calc(72px * var(--u))); min-height: 100vh; padding-block: calc(var(--nav) + 32px) 48px; }
+  .sign .h1 { max-width: 9em; }
+  .sign .acts { margin-top: clamp(32px, 4vw, calc(56px * var(--u))); }
+  .sign-mail { font: 500 var(--t-s)/1 var(--font-sans); }
+  .sign-cube { position: relative; height: min(66vh, calc(600px * var(--u))); }
+  @media (max-width: 899px) { .sign .in { grid-template-columns: 1fr; min-height: 0; } .sign-cube { height: 56vw; order: -1; } }
+</style>
+</head>
+<body data-tone="white">
+
+<header class="nav" data-tone="white">
+  <a class="nav-logo" href="home.html" aria-label="Qbix, home">
+    <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></svg>
+  </a>
+  <nav class="nav-mid" aria-label="Main">
+    <span class="aud" role="radiogroup" aria-label="Who this page is for">
+      <button type="button" role="radio" data-a="ai" aria-checked="true">AI teams</button>
+      <button type="button" role="radio" data-a="biz" aria-checked="false">Business</button>
+    </span>
+    <ul class="nav-links">
+      <li class="nav-has-sub">
+        <button type="button" class="nav-sub-btn" aria-expanded="false" aria-controls="nav-sub">Services<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5"/></svg></button>
+        <div class="nav-sub" id="nav-sub">
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For AI teams</p>
+            <a href="home.html#services"><b>Design service</b><span>From moodboard to a live domain. From $500.</span></a>
+            <a href="home.html#brand"><b>Brand upgrade</b><span>From usable to worth sharing. From $5,000.</span></a>
+          </div>
+          <div class="nav-sub-col">
+            <p class="nav-sub-k">For business</p>
+            <a href="listing-kit.html"><b>Listing Launch Kit</b><span>Ready to share in 48 hours. $99 per listing.</span></a>
+            <a href="https://qbix.space/practice-websites"><b>Practice Website Refresh</b><span>A calm website, live in 7 days. $600 flat.</span></a>
+            <a href="samples.html"><b>Samples</b><span>Short videos and posters we made for local businesses.</span></a>
+          </div>
+        </div>
+      </li>
+      <li><a href="strata.html">Products</a></li>
+      <li><a href="home.html#about">About</a></li>
+    </ul>
+  </nav>
+  <div class="nav-end">
+    <a class="btn btn--line btn--s" href="start.html">Start a project ↗︎</a>
+  </div>
+</header>
+
+<main class="blocks" data-stack>
+
+  <!-- 01 · the hero, white: the headline across the page, the converter beside the words -->
+  <style>
+    /* Hero 2 · centred, after wise.com/platform: the claim in the middle, one line under it, one button,
+       then a big inset card with the thing itself playing in it and the converter floating over it */
+    .hv2 .in { padding-top: calc(var(--nav) + clamp(28px, 7vh, calc(96px * var(--u)))); padding-bottom: clamp(8px, 1.4vw, calc(20px * var(--u))); }
+    .hv2-say { display: grid; justify-items: center; text-align: center; }
+    .hv2-h { width: 100%; margin: 0; }
+    .hv2-h .line { margin-inline: auto; }
+    .hv2-lede { margin-top: clamp(18px, 2.6vh, calc(30px * var(--u))); max-width: 31em; color: var(--fg); font-size: var(--t-s); }
+    .hv2-acts { justify-content: center; margin-top: clamp(22px, 3.2vh, calc(36px * var(--u))); }
+
+    /* the card: the sage, the site's cut corner; the thing on the left, the converter floating on the right */
+    .hv2-wrap { margin-top: clamp(36px, 6vh, calc(72px * var(--u))); }
+    .hv2-card { --g: 0; transform: scale(calc(0.92 + 0.08 * var(--g))); transform-origin: 50% 0; }
+    @media (prefers-reduced-motion: reduce) { .hv2-card { transform: none; } }
+    .hv2-card {
+      position: relative;
+      height: clamp(480px, 66vh, calc(720px * var(--u)));
+      background: var(--tint);
+      clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+    }
+    .hv2-stage { position: absolute; left: clamp(16px, 2.6vw, calc(44px * var(--u))); top: clamp(16px, 2.6vw, calc(44px * var(--u))); bottom: clamp(16px, 2.6vw, calc(44px * var(--u))); right: calc(min(40%, calc(470px * var(--u))) + clamp(40px, 5vw, calc(88px * var(--u)))); }
+    .hv2-stage .scene { height: 100%; min-height: 0; }
+    .hv2-float { position: absolute; right: clamp(16px, 2.6vw, calc(44px * var(--u))); top: 50%; translate: 0 -50%; width: min(40%, calc(470px * var(--u))); }
+    @media (max-width: 899px) {
+      .hv2-card { height: auto; display: grid; gap: 8px; padding: 12px; clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 0 100%); }
+      .hv2-stage { position: relative; inset: auto; height: min(70vw, 420px); }
+      .hv2-float { position: relative; inset: auto; translate: none; width: 100%; }
+    }
+  </style>
+  <section class="block block--flat hv2" data-tone="white" id="top" data-slot="hero">
+    <div class="in">
+      <div class="hv2-say">
+        <h1 class="display hv2-h" data-fit="0.92" data-max="150" data-min="30" data-rise data-aud-only="ai">
+          <span class="line">We build the</span>
+          <span class="line"><span class="mark" data-wipe style="--wd: .7s">coolest</span> things.</span>
+        </h1>
+        <h1 class="display hv2-h" data-fit="0.92" data-max="150" data-min="30" data-rise data-aud-only="biz" hidden>
+          <span class="line">Look as good</span>
+          <span class="line">as <span class="mark" data-wipe style="--wd: .7s">your work.</span></span>
+        </h1>
+        <p class="lede hv2-lede" data-up data-aud-only="ai">Qbix never writes off a small idea. We’re a sharp team that moves fast, from sketch to shipped product.</p>
+        <p class="lede hv2-lede" data-up data-aud-only="biz" hidden>Fixed-price design for local businesses, ready in days. A listing kit for real estate agents and a calm website for solo practices.</p>
+      </div>
+
+      <!-- the reveal's mask on a wrapper, so the card keeps its own cut corner -->
+      <div class="hv2-wrap" data-up style="--ud: 220ms">
+        <div class="hv2-card">
+          <!-- the thing itself, drawing itself in: Strata for AI teams, a listing's kit for business -->
+          <div class="hv2-stage" data-chapter>
+            <div class="scene" data-scene="strata-hero" data-tone="paper" data-aud-only="ai"></div>
+            <div class="scene" data-scene="listing-hero" data-tone="paper" data-aud-only="biz" hidden></div>
+          </div>
+          <!-- the converter, floating over the card the way Wise floats its own over a photograph -->
+          <div class="hv2-float">
+            <div class="conv" data-tone="black" data-conv>
+              <script type="application/json">[
+                { "k": "web", "time": "1 to 3 <small>weeks</small>", "plabel": "Starts at", "price": "$500",
+                  "get": "<b>Moodboard, design and code, live on your domain.</b> We design it, write the code, and ship it ready for business.",
+                  "href": "start.html", "act": "Start a brief" },
+                { "k": "redesign", "time": "5 to 10 <small>weeks</small>", "plabel": "Starts at", "price": "$5,000",
+                  "get": "<b>From usable to worth sharing.</b> We iterate round by round and merge code straight into your repo.",
+                  "href": "start.html", "act": "Start a brief" },
+                { "k": "kit", "time": "48 <small>hours</small>", "plabel": "Per listing", "price": "$99 <del>$249</del>",
+                  "get": "<b>A print flyer, five social posts, and a 30-second video</b> for one property. Made by a designer, delivered as files you own.",
+                  "href": "listing-kit.html", "act": "See the kit" },
+                { "k": "practice", "time": "7 <small>days</small>", "plabel": "Flat", "price": "$600 <del>$800</del>",
+                  "get": "<b>A calm, clean website for your practice,</b> rebuilt in one week. Your words, your photos, and it works on any phone.",
+                  "href": "https://qbix.space/practice-websites", "act": "See the refresh" }
+              ]</script>
+              <p class="conv-q" id="conv-q">What do you need?</p>
+              <div class="conv-opts" role="radiogroup" aria-labelledby="conv-q">
+                <button type="button" class="conv-opt" role="radio" data-k="web" data-aud-only="ai">A launch site<small>Design service</small></button>
+                <button type="button" class="conv-opt" role="radio" data-k="redesign" data-aud-only="ai">A brand upgrade<small>For a product that runs</small></button>
+                <button type="button" class="conv-opt" role="radio" data-k="kit" data-aud-only="biz" hidden>A listing kit<small>For one property</small></button>
+                <button type="button" class="conv-opt" role="radio" data-k="practice" data-aud-only="biz" hidden>A practice website<small>For solo practices</small></button>
+              </div>
+              <dl class="conv-out">
+                <div class="conv-cell"><dt>Ready in</dt><dd><span class="sw" data-f="time"></span></dd></div>
+                <div class="conv-cell"><dt data-f="plabel">Starts at</dt><dd><span class="sw" data-f="price"></span></dd></div>
+              </dl>
+              <p class="conv-get" data-f="get" aria-live="polite"></p>
+              <a class="btn btn--wide" data-f="href" href="start.html">Start a brief ↗︎</a>
+              <p class="conv-foot">We read what you send and reply within 24 hours.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script>
+    /* the hero's card grows to its full size as the page scrolls into it (scrubbed, no timer) */
+    (window.BlocksAfter = window.BlocksAfter || []).push((B) => {
+      const card = document.querySelector('.hv2-card');
+      if (!card || B.reduced) return;
+      let raf = 0;
+      const set = () => {
+        raf = 0;
+        const r = card.getBoundingClientRect();
+        const g = Math.min(1, Math.max(0, (innerHeight - r.top) / (innerHeight * 0.9)));
+        card.style.setProperty('--g', (g * g * (3 - 2 * g)).toFixed(3));
+      };
+      addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(set); }, { passive: true });
+      addEventListener('resize', set);
+      set();
+    });
+  </script>
+
+  <!-- ===== for AI teams ===== -->
+
+  <!-- 02 · black: the design service, the Forma moodboard becoming its site -->
+  <section class="block chapter" id="services" data-tone="black" data-chapter data-steps data-side="right" style="--moves: 2" data-aud-only="ai">
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">Design service <span>· Founders, launch sites, brand</span></p>
+        <h2 class="h2" data-rise>From moodboard to a <span class="mark" data-wipe>live domain.</span></h2>
+        <ol class="steps"><li>Moodboard</li><li>Design and code</li><li>Live on your domain</li></ol>
+        <div class="acts">
+          <a class="btn" href="start.html">Start a brief ↗︎</a>
+          <dl class="meta"><div><dt>Starts at</dt><dd>$500</dd></div><div><dt>Takes</dt><dd>1 to 3 weeks</dd></div></dl>
+        </div>
+      </div>
+      <div class="ch-run"><div class="scene" data-scene="forma" data-tone="dark"></div></div>
+    </div>
+  </section>
+
+  <!-- 03 · white: the brand upgrade, Kova's layers lifted, coloured and pressed back -->
+  <section class="block chapter" id="brand" data-tone="white" data-chapter data-steps data-side="left" style="--moves: 2" data-aud-only="ai">
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">Brand upgrade <span>· Growing teams, 1 to 100</span></p>
+        <h2 class="h2" data-rise>From usable to <span class="mark" data-wipe>worth sharing.</span></h2>
+        <ol class="steps"><li>The grid</li><li>Color and type</li><li>The mark</li></ol>
+        <div class="acts">
+          <a class="btn" href="start.html">Start a brief ↗︎</a>
+          <dl class="meta"><div><dt>Starts at</dt><dd>$5,000</dd></div><div><dt>Takes</dt><dd>5 to 10 weeks</dd></div></dl>
+        </div>
+      </div>
+      <div class="ch-run"><div class="scene" data-scene="kova" data-tone="paper"></div></div>
+    </div>
+  </section>
+
+  <!-- 04 · black: Qbix Labs, the four products one after another -->
+  <section class="block chapter" id="products" data-tone="black" data-chapter data-steps data-side="right" style="--moves: 3" data-aud-only="ai">
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">Qbix Labs <span>· Two live, two on the way</span></p>
+        <h2 class="h2" data-rise>Things we’ve <span class="mark" data-wipe>shipped.</span></h2>
+        <ol class="steps">
+          <li><span>Strata<span class="state">Live</span></span></li>
+          <li><span>AI Bidding<span class="state">Live</span></span></li>
+          <li><span>TTS Editor<span class="state">Soon</span></span></li>
+          <li><span>Interview Assistant<span class="state">Soon</span></span></li>
+        </ol>
+        <div class="ch-list-foot">
+          <div class="notes">
+            <p><b>Strata.</b> A moodboard in, a working design system out: tokens, components, and code.</p>
+            <p><b>AI Bidding.</b> Blind boxes, sealed bids, one clue a round. Work your way up from flea markets to the Devil’s Auction.</p>
+            <p><b>TTS Editor.</b> Shape pitch, pauses, and emotion, and edit the script until the voice is right.</p>
+            <p><b>Interview Assistant.</b> Live hints, follow-up questions, and clean notes, so you stay in the conversation.</p>
+          </div>
+          <div class="acts"><a class="btn" href="strata.html">Explore Strata ↗︎</a></div>
+        </div>
+      </div>
+      <div class="ch-run"><div class="scene" data-scene="labs" data-tone="dark"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== for business ===== -->
+
+  <!-- 02 · black: the work first, six samples, one from each kind of business -->
+  <section class="block" id="work" data-tone="black" data-aud-only="biz" hidden>
+    <div class="in">
+      <div class="samples-head">
+        <h2 class="h2" data-rise>Short videos and posters we made for <span class="mark" data-wipe>local businesses.</span></h2>
+        <a class="btn btn--2" href="samples.html">See all samples ↗︎</a>
+      </div>
+      <div class="reel-wrap">
+        <div class="reel">
+          <a class="vcard" href="../samples/justin-allen/index.html"><span class="vcard-media"><img src="../samples/justin-allen/thumb.webp" alt="" loading="lazy" width="540" height="960"><video src="../samples/justin-allen/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Justin Allen</span><span class="vcard-line">Gig Harbor · A listing, cut for Reels</span></span></a>
+          <a class="vcard" href="../samples/nip-tuck/index.html"><span class="vcard-media"><img src="../samples/nip-tuck/thumb.webp" alt="" loading="lazy" width="540" height="960"><video src="../samples/nip-tuck/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Nip Tuck Remodeling</span><span class="vcard-line">Woodinville · On the 2026 Remodeled Homes Tour</span></span></a>
+          <a class="vcard" href="../samples/bridal-veil-lakes/index.html"><span class="vcard-media"><img src="../samples/bridal-veil-lakes/thumb.webp" alt="" loading="lazy" width="540" height="960"><video src="../samples/bridal-veil-lakes/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Bridal Veil Lakes</span><span class="vcard-line">Columbia River Gorge · A spring-fed lake in old-growth forest</span></span></a>
+          <a class="vcard" href="../samples/hemphill-tree-farm/index.html"><span class="vcard-media"><img src="../samples/hemphill-tree-farm/thumb.webp" alt="" loading="lazy" width="540" height="960"><video src="../samples/hemphill-tree-farm/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Hemphill Farms</span><span class="vcard-line">Oregon City · Opening day, Friday, November 27</span></span></a>
+          <a class="vcard" href="../samples/family-loyalty/index.html"><span class="vcard-media"><img src="../samples/family-loyalty/thumb.webp" alt="" loading="lazy" width="540" height="960"><video src="../samples/family-loyalty/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Family Loyalty Estate Sales</span><span class="vcard-line">Winston · The Lookingglass Estate sale</span></span></a>
+          <a class="vcard" href="../samples/leftover-treasures/index.html"><span class="vcard-media"><img src="../samples/leftover-treasures/thumb.webp" alt="" loading="lazy" width="540" height="960"><video src="../samples/leftover-treasures/preview.mp4" muted loop playsinline preload="none"></video></span><span class="vcard-t"><span class="vcard-name">Leftover Treasures</span><span class="vcard-line">Fresno · Three auctions in one week</span></span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 · white: the listing kit, 1428 Alder Street's flyer, posts and video -->
+  <section class="block chapter" id="services-biz" data-tone="white" data-chapter data-steps data-side="right" style="--moves: 2" data-aud-only="biz" hidden>
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">Listing Launch Kit <span>· Real estate agents, per listing</span></p>
+        <h2 class="h2" data-rise>Your listing, ready to share in <span class="mark" data-wipe>48 hours.</span></h2>
+        <ol class="steps"><li>Print flyer</li><li>Five social posts</li><li>A 30-second video</li></ol>
+        <div class="acts">
+          <a class="btn" href="listing-kit.html">See the kit ↗︎</a>
+          <dl class="meta"><div><dt>Per listing</dt><dd>$99 <del>$249</del></dd></div><div><dt>Takes</dt><dd>48 hours</dd></div></dl>
+        </div>
+      </div>
+      <div class="ch-run"><div class="scene" data-scene="listing-story" data-tone="paper"></div></div>
+    </div>
+  </section>
+
+  <!-- 04 · black: the practice refresh, a questionnaire becoming a calm homepage -->
+  <section class="block chapter" data-tone="black" data-chapter data-steps data-side="left" style="--moves: 2" data-aud-only="biz" hidden>
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">Practice Website Refresh <span>· Solo practices, therapists</span></p>
+        <h2 class="h2" data-rise>A website that feels as <span class="mark" data-wipe>calm</span> as your office.</h2>
+        <ol class="steps"><li>A short questionnaire</li><li>Your new homepage in 3 days</li><li>Live in 7 days</li></ol>
+        <div class="acts">
+          <a class="btn" href="https://qbix.space/practice-websites">See the refresh ↗︎</a>
+          <dl class="meta"><div><dt>Flat</dt><dd>$600 <del>$800</del></dd></div><div><dt>Takes</dt><dd>7 days</dd></div></dl>
+        </div>
+      </div>
+      <div class="ch-run"><div class="scene" data-scene="practice-story" data-tone="dark"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== both ===== -->
+
+  <!-- 05 · white: about us, ideas as bubbles, then one of them built -->
+  <section class="block chapter" id="about" data-tone="white" data-chapter data-side="left" style="--moves: 1" data-aud-only="ai">
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">About us</p>
+        <h2 class="h2" data-rise>Our story is simple.</h2>
+        <p class="lede" data-up>Anyone can build now; not everyone builds well. We bring 10 years of training, because <b>no idea deserves to be wasted.</b></p>
+      </div>
+      <div class="ch-run"><div class="scene" data-scene="dream" data-tone="paper" data-props='{"biz": false}'></div></div>
+    </div>
+  </section>
+  <section class="block chapter" id="about-biz" data-tone="white" data-chapter data-side="left" style="--moves: 1" data-aud-only="biz" hidden>
+    <div class="ch-frame">
+      <div class="ch-copy">
+        <p class="kicker">About us</p>
+        <h2 class="h2" data-rise>Our story is simple.</h2>
+        <p class="lede" data-up>Anyone can build now; not everyone builds well. We bring 10 years of training, because <b>no idea deserves to be wasted.</b></p>
+      </div>
+      <div class="ch-run"><div class="scene" data-scene="dream" data-tone="paper" data-props='{"biz": true}'></div></div>
+    </div>
+  </section>
+
+  <!-- 06 · black: the other side of Qbix, after Wise's "Built for business too" -->
+  <section class="block cross" data-tone="black" data-aud-only="ai">
+    <div class="in">
+      <div class="head head--split">
+        <h2 class="h1" data-rise>Built for <span class="mark" data-wipe>local business</span> too.</h2>
+        <p class="lede" data-up>Fixed-price design for local businesses, ready in days. A listing kit for real estate agents and a calm website for solo practices.</p>
+      </div>
+      <ul class="rows">
+        <li><a class="row" href="listing-kit.html"><span class="row-t">Listing Launch Kit</span><span class="row-d">A flyer, five posts and a 30-second video, in 48 hours.</span><span class="row-e">$99<del>$249</del></span></a></li>
+        <li><a class="row" href="https://qbix.space/practice-websites"><span class="row-t">Practice Website Refresh</span><span class="row-d">A calm website for your practice, live in 7 days.</span><span class="row-e">$600<del>$800</del></span></a></li>
+        <li><a class="row" href="samples.html"><span class="row-t">Samples</span><span class="row-d">Videos and posters we made for local businesses.</span><span class="row-e">↗︎</span></a></li>
+      </ul>
+      <div class="acts"><a class="btn btn--2" href="?for=business" data-set-aud="biz">See Qbix for business ↗︎</a></div>
+    </div>
+  </section>
+  <section class="block cross" data-tone="black" data-aud-only="biz" hidden>
+    <div class="in">
+      <div class="head head--split">
+        <h2 class="h1" data-rise>Built for <span class="mark" data-wipe>product teams</span> too.</h2>
+        <p class="lede" data-up>Qbix never writes off a small idea. We’re a sharp team that moves fast, from sketch to shipped product.</p>
+      </div>
+      <ul class="rows">
+        <li><a class="row" href="start.html"><span class="row-t">Design service</span><span class="row-d">From moodboard to a live domain in 1 to 3 weeks.</span><span class="row-e"><small class="state">from</small> $500</span></a></li>
+        <li><a class="row" href="start.html"><span class="row-t">Brand upgrade</span><span class="row-d">From usable to worth sharing, merged into your repo.</span><span class="row-e"><small class="state">from</small> $5,000</span></a></li>
+        <li><a class="row" href="strata.html"><span class="row-t">Strata</span><span class="row-d">A moodboard in, a working design system out.</span><span class="row-e">Live ↗︎</span></a></li>
+      </ul>
+      <div class="acts"><a class="btn btn--2" href="home.html" data-set-aud="ai">See Qbix for AI teams ↗︎</a></div>
+    </div>
+  </section>
+
+  <!-- 07 · white: the sign-off, the glass cube, its core lime -->
+  <section class="block sign" id="contact" data-tone="white">
+    <div class="in">
+      <div>
+        <p class="kicker">Contact</p>
+        <h2 class="h1" data-rise style="margin-top: 22px">Bring the idea. We’ll build the thing.</h2>
+        <div class="acts">
+          <a class="btn" href="start.html">Tell us your idea ↗︎</a>
+          <a class="link sign-mail" href="mailto:contact@qbix.space">contact@qbix.space</a>
+        </div>
+      </div>
+      <div class="sign-cube" data-chapter><div class="scene" data-scene="glass-cube" style="height: 100%" data-tone="paper"></div></div>
+    </div>
+  </section>
+
+  <!-- the foot (option 2, after Wise's): the sitemap in columns, a sage band with the logo and the ways to reach us, the small print -->
+  <style>
+    /* Footer 2 · 浅色多栏, after wise.com's footer: white, information first. The link columns, then the
+       logo with the ways to reach us in one sage tile, then the small print. Quiet; the i's dot is the lime. */
+    .fv2 .in { padding-top: clamp(72px, 9vw, calc(128px * var(--u))); padding-bottom: clamp(24px, 3vw, calc(36px * var(--u))); }
+    .fv2-top { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 3fr); gap: clamp(40px, 5vw, calc(96px * var(--u))); align-items: start; }
+    .fv2-say { margin: 0; font: 400 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.025em; max-width: 12em; text-wrap: balance; }
+    .fv2-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 36px clamp(20px, 2.4vw, 40px); }
+    .fv2-cols h2 { margin: 0 0 16px; font-size: var(--t-s); font-weight: 500; color: var(--fg2); }
+    .fv2-cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+    .fv2-cols li { font-size: var(--t-s); font-weight: 500; line-height: 1.3; }
+    .fv2-cols a { text-decoration: none; }
+    .fv2-cols a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-cols .st { margin-left: 0.5em; font-size: var(--t-s); font-weight: 400; color: var(--fg3); }
+    .fv2-tile { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px 40px; margin-top: clamp(56px, 7vw, calc(104px * var(--u))); padding: clamp(22px, 2.6vw, calc(36px * var(--u))) clamp(22px, 2.6vw, calc(40px * var(--u))); background: var(--soft);
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%); }
+    .fv2-logo { display: block; width: clamp(104px, 9vw, calc(150px * var(--u))); color: var(--fg); }
+    .fv2-logo svg { display: block; width: 100%; height: auto; }
+    .fv2-logo path { fill: currentColor; }
+    .fv2-logo .dot { fill: var(--lime); }
+    .fv2-reach { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; }
+    .fv2-reach a:not(.btn) { font-weight: 500; text-decoration: none; }
+    .fv2-reach a:not(.btn):hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.25em; }
+    .fv2-fine { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 28px; margin: clamp(22px, 2.4vw, 32px) 0 0; font-size: var(--t-s); color: var(--fg2); }
+    @media (max-width: 1100px) { .fv2-top { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 760px) { .fv2-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fv2-reach { gap: 12px 22px; } }
+  </style>
+  <footer class="block foot fv2" data-tone="white" data-slot="footer">
+    <div class="in">
+      <div class="fv2-top">
+        <p class="fv2-say">Where the coolest people build the coolest ideas.</p>
+        <nav class="fv2-cols" aria-label="Sitemap">
+          <div><h2>Studio</h2><ul><li><a href="home.html#services">Services</a></li><li><a href="strata.html">Products</a></li><li><a href="home.html#about">About us</a></li><li><a href="https://qbix.space/motion">Motion</a></li></ul></div>
+          <div><h2>Products</h2><ul><li><a href="strata.html">Strata</a><span class="st">Live</span></li><li>AI Bidding<span class="st">Live</span></li><li>TTS Editor<span class="st">Soon</span></li><li>Interview Assistant<span class="st">Soon</span></li></ul></div>
+          <div><h2>For business</h2><ul><li><a href="listing-kit.html">Listing Launch Kit</a></li><li><a href="https://qbix.space/practice-websites">Practice Website Refresh</a></li><li><a href="samples.html">Samples</a></li></ul></div>
+          <div><h2>Contact</h2><ul><li><a href="mailto:contact@qbix.space">contact@qbix.space</a></li><li><a href="https://cal.com/qbix-studio/30min">Book a call</a></li><li><a href="start.html">Start a project</a></li></ul></div>
+        </nav>
+      </div>
+      <div class="fv2-tile">
+        <a class="fv2-logo" href="home.html" aria-label="Qbix, home">
+          <svg viewBox="0 0 918 342" aria-hidden="true"><path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/><path class="dot" d="M583.5 0H616.5V34H583.5Z"/></svg>
+        </a>
+        <div class="fv2-reach">
+          <a href="mailto:contact@qbix.space">contact@qbix.space</a>
+          <a href="https://cal.com/qbix-studio/30min">Book a call</a>
+          <a class="btn btn--s" href="start.html">Start a project ↗︎</a>
+        </div>
+      </div>
+      <p class="fv2-fine"><span>© 2026 Qbix</span><span>Seattle, Washington · Remote, worldwide</span></p>
+    </div>
+  </footer>
+</main>
+
+<script src="../scenes/scenes.js"></script>
+<script src="variants/variants.js"></script>
+<script src="block.js"></script>
+<script src="variants/switch.js"></script>
+</body>
+</html>
