@@ -25,6 +25,7 @@
   const ORIGIN = { site: 'qbix.space', lab: 'Lab', picks: 'Picks', studio: 'Studio' };
   const MARK = '<span class="mark" aria-hidden="true"><svg viewBox="0 0 12 16"><path d="M1.5 1.5H10.5V14.3L6 10.9L1.5 14.3Z"/></svg></span>';
   const FILM = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.75" y="3.25" width="9.5" height="9.5" rx="2"/><path d="M11.25 6.5 14.25 4.75v6.5L11.25 9.5"/></svg>';
+  const EXPORT = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 10.25V2.25M5 5.25l3-3 3 3M2.75 9.25v3.5c0 .55.45 1 1 1h8.5c.55 0 1-.45 1-1v-3.5"/></svg>';
   const HEART = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2 10.1 2 6.1A3.1 3.1 0 0 1 8 4.6a3.1 3.1 0 0 1 6 1.5c0 4-6 7.5-6 7.5Z"/></svg>';
   const FORK = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="3.5" r="1.6"/><circle cx="12" cy="3.5" r="1.6"/><circle cx="8" cy="12.5" r="1.6"/><path d="M4 5.1v1.4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5.1M8 8.5v2.4"/></svg>';
   const SLIDERS = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h6M11.5 4.5h2M2.5 11.5h2M7.5 11.5h6"/><circle cx="10" cy="4.5" r="1.5"/><circle cx="6" cy="11.5" r="1.5"/></svg>';
@@ -120,8 +121,7 @@
         <h3 class="card-title">${esc(title)}</h3>
         <p class="card-line"><span class="card-cat">${esc(r ? 'Remix' : catName(it))}</span>${line ? ` · ${esc(line)}` : ''}</p>
         <div class="card-side">
-          <button class="act like" type="button" aria-pressed="false" aria-label="Like ${esc(title)}" title="Like">${HEART}<b class="like-n"></b></button>
-          ${r ? '' : `<button class="act act--export" type="button" aria-label="Export ${esc(title)} as a video" title="Export video">${FILM}<b class="dl-n"></b></button>`}
+          ${r ? '' : `<button class="act act--export" type="button" aria-haspopup="menu" aria-label="Export ${esc(title)} as a video" title="Export video">${EXPORT}<b class="dl-n"></b></button>`}
         </div>
       </div>`;
   }
@@ -144,7 +144,11 @@
   $('#groups').appendChild(sec);
   const cards = $$('.card');
   const cardOf = (id) => cards.find((c) => c.dataset.id === id);
-  $('#built').textContent = LIB.built;
+  // back to top: a button that floats in the corner once the page is scrolled past the hero
+  const toTop = $('#to-top');
+  const paintTop = () => { const on = scrollY > innerHeight * 0.9 && !sheetOpen; if (toTop.hidden === on) toTop.hidden = !on; };
+  addEventListener('scroll', paintTop, { passive: true });
+  toTop.addEventListener('click', (e) => { e.preventDefault(); scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); });
 
   (function heroIn() {
     const h = $('.hero-title');
@@ -172,6 +176,23 @@
         h.append(w);
       }
     });
+    h.setAttribute('aria-label', h.textContent.replace(/\s+/g, ' ').trim());
+    const sleeve = (el) => {
+      [...el.childNodes].forEach((n) => {
+        if (n.nodeType === 1) return sleeve(n);
+        if (n.nodeType !== 3 || !n.textContent) return;
+        const frag = document.createDocumentFragment();
+        [...n.textContent].forEach((ch) => {
+          const c = document.createElement('span');
+          c.className = 'hc';
+          c.setAttribute('aria-hidden', 'true');
+          c.innerHTML = `<span>${esc(ch)}</span><span>${esc(ch)}</span>`;
+          frag.append(c);
+        });
+        n.replaceWith(frag);
+      });
+    };
+    $$('.hw > span', h).forEach((s) => { sleeve(s); $$('.hc', s).forEach((c, i) => c.style.setProperty('--i', i)); });
     const go = () => {
       $$('.hw > span', h).forEach((s, i) => play(s, [{ transform: 'translateY(108%)' }, { transform: 'none' }], { duration: 900, delay: 80 + i * 55 }));
       [$('.hero-line'), $('.hero-lede'), $('.hero-cta'), $('#toolbar')].forEach((el, i) => el && play(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: 380 + i * 70 }));
@@ -276,8 +297,6 @@
     const has = new Set();
     cards.forEach((c) => { if (matches(c.dataset.id, words)) { has.add(c.dataset.cat); if (c.dataset.fresh) has.add('new'); } });
     $$('#view button[data-view]').forEach((b) => b.classList.toggle('is-empty', b.dataset.view !== 'all' && !has.has(b.dataset.view)));
-    $('#hero-count').textContent = 'Qbix Motion';
-    $('#foot-count').textContent = 'Qbix Motion';
   }
   // signed out (with accounts), each category shows its first three pieces, then "Sign in to view more"
   const FREE_PER_CAT = 3;
@@ -291,7 +310,7 @@
     cards.forEach((c) => {
       const id = c.dataset.id;
       const inView = (view === 'all' || c.dataset.cat === view || (view === 'new' && !!c.dataset.fresh)) && matches(id, words);
-      const ok = inView && !locked(id);
+      const ok = inView && (!locked(id) || (view === 'new' && !!c.dataset.fresh));
       if (inView && !ok) more.push(byId.get(id));
       c.hidden = !ok;
       if (ok) shown++;
@@ -306,6 +325,7 @@
     const cat = catOf.get(view);
     $('#toolbar-count').textContent = words.length ? `Matches for “${findEl.value.trim()}”${cat ? ` in ${cat.title}` : ''}` : '';
     counts();
+    if (swipeEl) syncDeck();
   }
   const ink = $('.seg-ink');
   let inkPlaced = false;
@@ -683,19 +703,169 @@
   }
   $('#export-state').addEventListener('click', (e) => { if (e.target.closest('a[download]') && cur) countDownload(cur.id); });
   // from a piece's icon: the default film, its progress in the toast
-  async function quickFilm(id) {
+  async function quickFilm(id, fmt = '16x9') {
     const it = byId.get(id);
     if (!it || !root.classList.contains('can-edit')) return;
-    const say = (state, p) => showToast(state === 'queued' ? `Waiting to film “${it.title}”` : `Filming “${it.title}” · ${Math.round(p * 100)}%`);
+    const say = (state, p) => showToast(state === 'queued' ? `Waiting to film “${it.title}”` : `Filming “${it.title}” · ${FORMAT_NAME[fmt]} · ${Math.round(p * 100)}%`);
     try {
-      const url = await film(id, '16x9', 10, say);
-      download(url, fileName(it, '16x9', 10));
+      const url = await film(id, fmt, 10, say);
+      download(url, fileName(it, fmt, 10));
       countDownload(id);
-      showToast(`Saved “${it.title}” · 16:9 · 10 s`, { ms: 3200 });
+      showToast(`Saved “${it.title}” · ${FORMAT_NAME[fmt]} · 10 s`, { ms: 3200 });
     } catch (err) {
       showToast(`Could not film “${it.title}”: ${err.message || err}`, { ms: 5000 });
     }
   }
+
+  // the card's export icon: a small menu of the three formats (each a 10 s film of the motion alone)
+  const fmtMenu = document.createElement('div');
+  fmtMenu.className = 'fmt-menu';
+  fmtMenu.setAttribute('role', 'menu');
+  fmtMenu.hidden = true;
+  fmtMenu.innerHTML = ['16x9', '1x1', '9x16'].map((f) => `<button type="button" role="menuitem" data-film-format="${f}"><i class="fmt-shape fmt-${f}" aria-hidden="true"></i>${FORMAT_NAME[f]}</button>`).join('');
+  document.body.appendChild(fmtMenu);
+  function openFmtMenu(btn) {
+    const id = btn.closest('.card').dataset.id;
+    if (!fmtMenu.hidden && fmtMenu.dataset.id === id) return closeFmtMenu();
+    fmtMenu.dataset.id = id;
+    fmtMenu.hidden = false;
+    const r = btn.getBoundingClientRect(), w = fmtMenu.offsetWidth, h = fmtMenu.offsetHeight;
+    const below = r.bottom + 6 + h < innerHeight;
+    fmtMenu.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, r.right - w))}px`;
+    fmtMenu.style.top = `${below ? r.bottom + 6 : r.top - h - 6}px`;
+    btn.setAttribute('aria-expanded', 'true');
+    play(fmtMenu, [{ clipPath: below ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)' }, { clipPath: 'inset(0)' }], { duration: 260 });
+  }
+  function closeFmtMenu() {
+    if (fmtMenu.hidden) return;
+    fmtMenu.hidden = true;
+    $$('.act--export[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+  }
+  addEventListener('scroll', closeFmtMenu, { passive: true });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFmtMenu(); });
+
+  /* =============================================================================
+     SWIPE — one piece at a time, like Hinge: drag right to save, left to pass
+     (Yuan: "再出一个模式,就是可以和hinge一样左右滑选"). It walks the pieces the strip and the
+     search show now, in the grid's order.
+     ============================================================================= */
+  const MODE_KEY = 'qbix-motion.mode';
+  var swipeEl = $('#swipe'), deckEl = $('#swipe-deck');
+  // var, not let: filter() (above) calls syncDeck() before this part of the file has run
+  var mode = store.get(MODE_KEY) === 'swipe' ? 'swipe' : 'grid';
+  var deck = [], at = 0, deckSig = '';
+  function shownIds() { return cards.filter((c) => !c.hidden && c.closest('#all')).map((c) => c.dataset.id); }
+  function swipeCard(it) {
+    const el = document.createElement('article');
+    el.className = 'sw-card';
+    el.dataset.id = it.id;
+    el.innerHTML = `
+      <div class="sw-view" data-tone="${esc(it.tone || 'dark')}">
+        ${it.thumb ? `<img src="${esc(it.thumb)}" alt="" decoding="async">` : ''}
+        ${it.preview ? `<video src="${esc(it.preview)}" muted loop playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>` : ''}
+        <b class="sw-stamp sw-stamp--keep">Save</b><b class="sw-stamp sw-stamp--pass">Pass</b>
+      </div>
+      <div class="sw-info">
+        <p class="sw-cat">${esc(catName(it))}</p>
+        <h3 class="sw-title">${esc(it.title)}</h3>
+        <p class="sw-line">${esc(it.line || '')}</p>
+      </div>`;
+    return el;
+  }
+  function paintDeck() {
+    deckEl.textContent = '';
+    const left = deck.slice(at, at + 2);
+    $('#swipe-end').hidden = !!left.length;
+    $$('[data-swipe]', swipeEl).forEach((b) => (b.disabled = !left.length));
+    left.reverse().forEach((id, i, all) => {
+      const el = swipeCard(byId.get(id));
+      if (i < all.length - 1) el.classList.add('is-next');
+      el.classList.toggle('is-saved', saved.has(id));
+      deckEl.appendChild(el);
+    });
+    const top = deckEl.lastElementChild;
+    if (top) {
+      const v = $('video', top);
+      if (v && !reduced) v.play().catch(() => {});
+      play(top, [{ transform: 'translateY(10px) scale(0.97)' }, { transform: 'none' }], { duration: 420 });
+    }
+  }
+  function syncDeck(force) {
+    const ids = shownIds(), sig = ids.join(' ');
+    if (!force && sig === deckSig) return;
+    deckSig = sig;
+    deck = ids;
+    at = 0;
+    if (mode === 'swipe') paintDeck();
+  }
+  function setMode(m) {
+    mode = m === 'swipe' ? 'swipe' : 'grid';
+    store.set(MODE_KEY, mode);
+    root.dataset.mode = mode;
+    $$('#mode [data-mode]').forEach((b) => { const on = b.dataset.mode === mode; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', String(on)); });
+    swipeEl.hidden = mode !== 'swipe';
+    if (mode === 'swipe') { if (playing) stopPreview(playing); syncDeck(true); }
+  }
+  // the card leaves to one side, then the save (right) or nothing (left) happens
+  function decide(dir) {
+    const top = deckEl.lastElementChild;
+    if (!top || top.classList.contains('is-gone')) return;
+    const id = top.dataset.id;
+    top.classList.add('is-gone');
+    const w = deckEl.offsetWidth;
+    const from = top.style.transform || 'none';
+    const fly = top.animate([{ transform: from }, { transform: `translate(${dir * w * 1.25}px, 40px) rotate(${dir * 16}deg)` }], { duration: reduced ? 1 : 360, easing: 'cubic-bezier(0.55, 0, 0.75, 0.2)', fill: 'forwards' });
+    fly.onfinish = () => { at++; paintDeck(); };
+    if (dir > 0 && !saved.has(id)) toggleSave(id);
+  }
+  let drag = null;
+  deckEl.addEventListener('pointerdown', (e) => {
+    const top = deckEl.lastElementChild;
+    if (!top || !top.contains(e.target) || e.button !== 0) return;
+    drag = { el: top, x: e.clientX, y: e.clientY, dx: 0, t: performance.now(), moved: false };
+    top.setPointerCapture(e.pointerId);
+    top.classList.add('is-drag');
+  });
+  deckEl.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    drag.dx = e.clientX - drag.x;
+    const dy = (e.clientY - drag.y) * 0.25;
+    if (Math.abs(drag.dx) > 4) drag.moved = true;
+    drag.el.style.transform = `translate(${drag.dx}px, ${dy}px) rotate(${drag.dx * 0.05}deg)`;
+    drag.el.style.setProperty('--keep', String(Math.max(0, Math.min(1, drag.dx / 120))));
+    drag.el.style.setProperty('--pass', String(Math.max(0, Math.min(1, -drag.dx / 120))));
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    const { el, dx, t, moved } = drag;
+    drag = null;
+    el.classList.remove('is-drag');
+    const v = dx / Math.max(1, performance.now() - t);
+    if (!moved) { el.style.transform = ''; return open(el.dataset.id, true); }
+    if (Math.abs(dx) > 110 || Math.abs(v) > 0.6) return decide(dx > 0 ? 1 : -1);
+    el.style.transform = '';
+    el.style.setProperty('--keep', '0');
+    el.style.setProperty('--pass', '0');
+  };
+  deckEl.addEventListener('pointerup', endDrag);
+  deckEl.addEventListener('pointercancel', endDrag);
+  swipeEl.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-swipe]');
+    if (b) {
+      if (b.dataset.swipe === 'open') { const top = deckEl.lastElementChild; if (top) open(top.dataset.id, true); }
+      else decide(b.dataset.swipe === 'right' ? 1 : -1);
+      return;
+    }
+    if (e.target.closest('[data-swipe-again]')) { at = 0; paintDeck(); }
+  });
+  addEventListener('keydown', (e) => {
+    if (mode !== 'swipe' || sheetOpen || page !== 'library' || e.target.closest('input, textarea, [contenteditable]') || e.metaKey || e.ctrlKey) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); decide(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); decide(-1); }
+    else if (e.key === 'ArrowUp') { const top = deckEl.lastElementChild; if (top) { e.preventDefault(); open(top.dataset.id, true); } }
+  });
+  $('#mode').addEventListener('click', (e) => { const b = e.target.closest('[data-mode]'); if (b) setMode(b.dataset.mode); });
+  setMode(mode);
 
   /* =============================================================================
      THE SHEET
@@ -1373,12 +1543,21 @@
     if (signin) { e.preventDefault(); authMode = 'signin'; openAuth(signin.dataset.why || 'more'); return; }
     const browse = e.target.closest('[data-browse]');
     if (browse) { e.preventDefault(); scrollTo({ top: $('#toolbar').offsetTop - 64, behavior: reduced ? 'auto' : 'smooth' }); return; }
+    const fm = e.target.closest('[data-film-format]');
+    if (fm) {
+      e.preventDefault();
+      const id = fmtMenu.dataset.id;
+      closeFmtMenu();
+      quickFilm(id, fm.dataset.filmFormat);
+      return;
+    }
     const ex = e.target.closest('.act--export');
     if (ex) {
       e.preventDefault();
-      quickFilm(ex.closest('.card').dataset.id);
+      openFmtMenu(ex);
       return;
     }
+    if (!e.target.closest('.fmt-menu')) closeFmtMenu();
     const to = e.target.closest('[data-view-to]');
     if (to) {
       e.preventDefault();
@@ -1423,7 +1602,6 @@
     else if (e.key === 'ArrowRight') go(1);
     else if (e.key === 'ArrowLeft') go(-1);
     else if (e.key.toLowerCase() === 's' && !e.metaKey && !e.ctrlKey) toggleSave(curKey());
-    else if (e.key.toLowerCase() === 'l' && !e.metaKey && !e.ctrlKey) toggleLike(curKey());
   });
 
   (function floor() {

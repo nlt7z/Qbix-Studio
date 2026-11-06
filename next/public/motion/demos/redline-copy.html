@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redline · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "redline-copy", "title": "Redline", "group": "studio", "added": "2026-11-06", "cat": "text", "order": 20,
+  "kind": "play", "tone": "paper", "shot": 5900,
+  "line": "360 ms strike · 420 ms rise · 500 ms close · 2 edits",
+  "summary": "A review round on a page's copy. An ink line is drawn through a phrase and a change bar draws in the margin; the replacement rises out of a sleeve just above it, then drops into the line while the struck words close up and leave and the sentence's width glides to the new phrase. Two edits, one after the other, and a lime Approved tag slides out from under the card.",
+  "spec": [
+    ["Strike", "an ink 2px line drawn left to right through the phrase, 360 ms, expo out; a 3px change bar draws down the margin with it"],
+    ["Rise", "the replacement rises out of a sleeve directly above the phrase, 420 ms, expo out, 140 ms after the strike lands"],
+    ["Close", "the struck words retreat behind a clip from the right, 400 ms, the slot's width glides to the new phrase, 500 ms, both on the move curve"],
+    ["Drop", "the replacement moves down one line into the slot, 400 ms on the move curve, 140 ms after the width starts to glide"],
+    ["Counter", "the edit count rolls in its sleeve, 300 ms, expo out"],
+    ["Approved", "a lime tag slides up from behind the card's top edge, 520 ms, expo out, 210 ms after the last edit lands"],
+    ["Scrub", "one function of time draws every frame, so the detail view's scrubber steps through both edits"],
+    ["Reduced motion", "the edited copy and the Approved tag, nothing moves"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-06"],
+  "where": "A review round on a client's launch page: the moment a copy change is accepted and the page is signed off.",
+  "rules": [
+    "Words move, nothing fades: the strike is drawn, the replacement is uncovered by its sleeve, the old words retreat behind a clip.",
+    "The sentence closes up as one: the text after the phrase follows the slot's width, so there is never a gap or a jump.",
+    "The lime appears once, on Approved. Changed words keep only an ink tint.",
+    "A change bar marks every edited line until the round is signed off."
+  ],
+  "tags": ["text", "copy", "review", "strike", "sleeve", "approval", "scrub"],
+  "deps": []
+}
+</script>
+<style data-code>
+/* Redline. One function of time, redlineRender(t), draws every frame. */
+.rl-wrap { --pad: min(4.4vw, 52px); position: relative; width: min(72vw, 880px); }
+.rl { --cut: 16px; position: relative; z-index: 2; width: 100%; background: var(--surface, #fff); color: var(--fg, #121417); padding: var(--pad); padding-top: min(3.8vw, 44px); }
+.rl-row { position: relative; margin: 0; padding-top: 1.35em; font: 400 min(3.4vw, 28px)/1.2 Geist, system-ui, sans-serif; letter-spacing: -0.011em; white-space: nowrap; }
+.rl-row.h { font: 400 min(4.7vw, 60px)/1.2 'Eurostile', Geist, sans-serif; font-synthesis-weight: none; letter-spacing: -0.02em; padding-top: 1.3em; }
+.rl-row.h .rl-bar { top: 1.3em; }
+.rl-bar { position: absolute; left: calc(var(--pad) * -1); top: 1.35em; height: 1.2em; width: 3px; background: #121417; transform: scaleY(0); transform-origin: 50% 0; }
+/* the slot: the phrase's place in the line. Its width is set from the phrase showing. */
+.rl-slot { position: relative; display: inline-block; vertical-align: top; height: 1.2em; }
+.rl-old, .rl-sleeve { position: absolute; left: 0; top: 0; }
+.rl-old { right: 0; bottom: 0; }
+.rl-old > span { position: absolute; left: 0; top: 0; line-height: 1.2em; }
+.rl-strike { position: absolute; left: 0; top: 0.62em; height: max(2px, 0.06em); width: 0; background: #121417; }
+/* the sleeve sits one line above the slot; the new words rise inside it, then it drops into the line */
+.rl-sleeve { top: -1.2em; height: 1.2em; overflow: hidden; }
+.rl-sleeve > span { position: absolute; left: 0; top: 0; line-height: 1.2em; background: rgba(18, 20, 23, 0.07); transform: translateY(calc(100% + 2px)); }
+.rl-foot { margin-top: min(2.4vw, 28px); display: flex; align-items: center; gap: 12px; font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); font-variant-numeric: tabular-nums; }
+.rl-num { display: inline-block; vertical-align: bottom; height: 16px; overflow: hidden; }
+.rl-num i { display: block; font-style: normal; height: 16px; }
+.rl-ok { position: absolute; z-index: 1; right: calc(var(--pad) + 8px); bottom: 100%; height: 32px; padding: 0 14px; display: flex; align-items: center; background: #B8FF00; color: #0c1300; font: 500 13px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; transform: translateY(calc(100% + 2px)); }
+</style>
+<style>
+  .rlw { padding-top: 32px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="rlw">
+<!-- code -->
+<div class="rl-wrap">
+<section class="rl cut" id="rl" aria-label="Review round 2">
+  <p class="kicker">Review round 2 · Forma launch page</p>
+  <p class="rl-row h" data-edit>Ceramics for <span class="rl-slot"><span class="rl-old" aria-hidden="true"><span>every day</span><i class="rl-strike"></i></span><span class="rl-sleeve" aria-hidden="true"><span>slow mornings</span></span><span class="sr-only">slow mornings</span></span>.<i class="rl-bar"></i></p>
+  <p class="rl-row" data-edit>Thrown by hand in <span class="rl-slot"><span class="rl-old" aria-hidden="true"><span>small batches</span><i class="rl-strike"></i></span><span class="rl-sleeve" aria-hidden="true"><span>batches of 12</span></span><span class="sr-only">batches of 12</span></span>.<i class="rl-bar"></i></p>
+  <p class="rl-row">Ships in 3 to 5 days. Free returns.</p>
+  <div class="rl-foot"><span>Edits</span><span><span class="rl-num" id="rl-num"><i>0</i><i>1</i><i>2</i></span> / 2</span></div>
+</section>
+  <span class="rl-ok" id="rl-ok">Approved</span>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Redline</span><span class="qm-sep">/</span><span>Scrub to step through the edits</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Two edits, each on the same clock: strike, rise, close and drop, count. S is when the edit starts. */
+const RL_EDITS = [600, 2700];
+const RL_OK = 4700, RL_END = 5300;
+
+const rlRows = [...document.querySelectorAll('[data-edit]')];
+const rlParts = rlRows.map((row) => ({
+  row, slot: row.querySelector('.rl-slot'), old: row.querySelector('.rl-old'), oldT: row.querySelector('.rl-old > span'),
+  strike: row.querySelector('.rl-strike'), sleeve: row.querySelector('.rl-sleeve'), newT: row.querySelector('.rl-sleeve > span'), bar: row.querySelector('.rl-bar'),
+}));
+
+const rlClamp = (x) => Math.min(1, Math.max(0, x));
+function rlBez(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; } return sy(rlClamp(t)); };
+}
+const rlOut = rlBez(0.16, 1, 0.3, 1), rlMove = rlBez(0.65, 0, 0.35, 1);
+
+function redlineRender(t) {
+  // read first: the two widths of each slot (the phrases are absolutely placed, so they keep their own width)
+  const m = rlParts.map((p) => [p.oldT.offsetWidth, p.newT.offsetWidth]);
+  let count = 0;
+  rlParts.forEach((p, i) => {
+    const [wo, wn] = m[i], s = RL_EDITS[i];
+    const strike = rlOut(rlClamp((t - s) / 360));
+    const bar = rlOut(rlClamp((t - s) / 300));
+    const rise = rlOut(rlClamp((t - (s + 500)) / 420));
+    const glide = rlMove(rlClamp((t - (s + 1250)) / 500));
+    const retreat = rlMove(rlClamp((t - (s + 1250)) / 400));
+    const drop = rlMove(rlClamp((t - (s + 1390)) / 400));
+    count += rlOut(rlClamp((t - (s + 1790)) / 300));
+    p.slot.style.width = (wo + (wn - wo) * glide).toFixed(2) + 'px';
+    p.strike.style.width = (wo * strike).toFixed(2) + 'px';
+    p.old.style.clipPath = `inset(0 ${((retreat) * 100).toFixed(2)}% 0 0)`;
+    p.sleeve.style.width = wn + 'px';
+    p.sleeve.style.transform = `translateY(${(drop * 1.2).toFixed(4)}em)`;
+    p.newT.style.transform = `translateY(calc(${((1 - rise) * 100).toFixed(2)}% + ${((1 - rise) * 2).toFixed(2)}px))`;
+    p.newT.style.width = wn + 'px';
+    p.bar.style.transform = `scaleY(${bar})`;
+  });
+  const num = document.getElementById('rl-num');
+  [...num.children].forEach((c) => { c.style.transform = `translateY(${(-count * 100).toFixed(2)}%)`; });
+  document.getElementById('rl-ok').style.transform = `translateY(calc(${((1 - rlOut(rlClamp((t - RL_OK) / 520))) * 100).toFixed(2)}% + ${((1 - rlOut(rlClamp((t - RL_OK) / 520))) * 2).toFixed(2)}px))`;
+}
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let raf = 0;
+  const still = () => redlineRender(RL_END + 1);
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+  function reset() { stop(); if (reduced) still(); else redlineRender(0); }
+  function play() {
+    stop();
+    if (reduced) return still();
+    const t0 = performance.now();
+    const step = (now) => { const t = now - t0; redlineRender(Math.min(t, RL_END + 1)); if (t < RL_END + 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+  }
+  QM.demo({
+    kind: 'play', lead: 500, dur: RL_END, hold: 2600, reset, play,
+    seekPlay(v) { stop(); redlineRender(QM.clamp01(v) * RL_END); },
+  });
+  if (document.fonts) document.fonts.ready.then(() => { if (!raf) reset(); });
+  reset();
+})();
+</script>
+</body>
+</html>

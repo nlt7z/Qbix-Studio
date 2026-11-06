@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scope stretch · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "scope-stretch",
+  "title": "Scope stretch",
+  "group": "studio",
+  "added": "2026-11-06",
+  "cat": "data",
+  "order": 20,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "5 to 10 weeks · 50 px a week · drag the handle",
+  "summary": "A Brand upgrade for Kova laid out as four phase blocks on a week ruler. Drag the square handle at the row's end to set the total, from 5 to 10 whole weeks: the blocks stretch in proportion, each block's week count rolls, the ruler's ticks switch on up to the row's end, and the live date rolls with the total. At 10 weeks Launch takes the lime.",
+  "spec": [
+    ["Scale", "1 week = 50 px, always; the row is its weeks, the ruler's ticks stay on the week"],
+    ["Total", "the handle's x from the row's left, in weeks, rounded to a whole week between 5 and 10"],
+    ["Chase", "the shown total follows the target, 1 − e^(−9 dt); block widths are interpolated between the two week tables around it"],
+    ["Counts", "each phase's whole weeks (5: 1 · 2 · 1 · 1, 10: 2 · 3 · 3 · 2) roll up or down in their own sleeves, 260 ms expo out"],
+    ["Ruler", "ticks up to the row's end are ink, the ones beyond are 14% ink; labels follow"],
+    ["Lime", "at 10 weeks a lime layer is uncovered across Launch from the left, 420 ms expo out; at 9 it is covered again, 240 ms ease-in"],
+    ["Input", "the ghost holds the handle and drags it between 5 and 10; a real pointer drags it too (or presses on the row to jump, or the arrow keys step a week); a held handle sits 2 px down. The script resumes when the pointer leaves"],
+    ["Reduced motion", "total, blocks and ruler jump to the new week"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-06"],
+  "where": "The Brand upgrade page's pricing step, where a growing team picks 5 to 10 weeks and sees the four phases and the launch date answer.",
+  "rules": [
+    "The unit never changes: 1 week is 50 px at every total. The row grows, the scale does not.",
+    "Phases keep their order and only trade weeks; the counts always add up to the total.",
+    "The lime is Launch at 10 weeks and nothing else. The handle is ink.",
+    "Vertical names keep one-week blocks readable at 42 px.", "Price does not move with weeks here: Brand upgrade is from $5,000 at every total."
+  ],
+  "tags": ["scope", "handle", "ruler", "timeline", "pricing", "data", "drag"],
+  "shot": 4200
+}
+</script>
+<style data-code>
+/* Scope stretch. Tokens: --fill, --fg, --signal, --on-lime, the qbix easings. 1 week = 50 px. */
+.sc { position: relative; width: 600px; padding: 28px 28px 26px; background: #fff; user-select: none; touch-action: none; --cut: 16px; }
+.sc-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.sc-k { font: 500 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+.sc-big { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; font: 400 92px/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; color: #121417; }
+.sc-big small { font: 400 26px/1 Eurostile, Geist, sans-serif; letter-spacing: -.02em; color: rgba(18, 20, 23, .64); }
+.sc-live { text-align: right; font: 500 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+.sc-live .sc-roll { display: grid; justify-items: end; width: 124px; transition: none; height: 38px; margin-top: 10px; font: 400 32px/38px Eurostile, Geist, sans-serif; letter-spacing: -.02em; text-transform: none; color: #121417; }
+
+/* the row: the phases are its weeks, 8 px apart; the handle stands 8 px past the end */
+.sc-row { position: relative; height: 144px; margin-top: 24px; cursor: pointer; outline: none; }
+.sc-row:focus-visible .sc-handle { outline: 2px solid #121417; outline-offset: 3px; }
+.sc-rail { position: absolute; left: 0; top: 0; width: 500px; height: 144px; background: rgba(18, 20, 23, .035); }
+.sc-ph { position: absolute; top: 0; height: 144px; background: rgba(18, 20, 23, .09); overflow: hidden; }
+.sc-ph::before { content: ''; position: absolute; inset: 0; background: #B8FF00; clip-path: inset(0 100% 0 0); transition: clip-path 240ms cubic-bezier(.5, 0, .75, 0); }
+.sc-ph.is-lime::before { clip-path: inset(0); transition: clip-path 420ms cubic-bezier(.16, 1, .3, 1); }
+.sc-n { position: absolute; left: 10px; top: 8px; height: 40px; font: 400 40px/40px Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; color: #121417; }
+.sc-name { position: absolute; left: 10px; bottom: 10px; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font: 500 12px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #121417; }
+.sc-handle {
+  position: absolute; left: 0; top: 54px; width: 36px; height: 36px; background: #121417; cursor: ew-resize; --cut: 10px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); will-change: transform;
+}
+.sc-handle i { position: absolute; top: 10px; width: 2px; height: 16px; background: #f3f4f5; }
+.sc-handle i:nth-child(1) { left: 12px; } .sc-handle i:nth-child(2) { left: 19px; }
+.sc-handle .sc-in { position: absolute; inset: 0; }
+.sc-handle .sc-in { transition: transform 120ms cubic-bezier(.4, 0, .2, 1); }
+.sc-handle.is-press .sc-in { transform: translateY(2px); }
+
+/* the ruler: a tick a week, ink where the row is, faint beyond; labels follow */
+.sc-ruler { position: relative; height: 38px; margin-top: 12px; }
+.sc-tk { position: absolute; top: 0; width: 38px; margin-left: -19px; text-align: center; }
+.sc-tk::before { content: ''; display: block; width: 2px; height: 8px; margin: 0 auto 6px; background: rgba(18, 20, 23, .14); transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.sc-tk b { display: block; font: 500 12px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; color: rgba(18, 20, 23, .38); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.sc-tk.is-on::before { background: #121417; }
+.sc-tk.is-on b { color: #121417; }
+
+/* a number that rolls: the sleeve clips, the old leaves, the new enters, the sleeve's width glides */
+.sc-roll { display: inline-grid; overflow: hidden; vertical-align: top; transition: width 260ms cubic-bezier(.16, 1, .3, 1); }
+.sc-roll > span { grid-area: 1 / 1; width: max-content; }
+.sc-big .sc-roll { height: 92px; }
+.sc-n .sc-roll { height: 40px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-ph::before, .sc-tk::before, .sc-tk b, .sc-roll { transition: none !important; }
+}
+</style>
+<style>
+  .fit { width: 600px; transform: scale(var(--s, 1)); transform-origin: center; display: grid; gap: 14px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Brand upgrade · Scope</p>
+<!-- code -->
+  <div class="sc cut" id="sc">
+    <div class="sc-head">
+      <div>
+        <div class="sc-k">Kova · Brand upgrade · from $5,000</div>
+        <div class="sc-big"><span class="sc-roll" id="sc-total"></span><small>weeks</small></div>
+      </div>
+      <div class="sc-live">Live on<br><span class="sc-roll" id="sc-date" data-fixed></span></div>
+    </div>
+    <div class="sc-row" id="sc-row" role="slider" tabindex="0" aria-label="Weeks" aria-valuemin="5" aria-valuemax="10" aria-valuenow="7">
+      <div class="sc-rail"></div>
+      <div class="sc-handle" id="sc-handle"><div class="sc-in"><i></i><i></i></div></div>
+    </div>
+    <div class="sc-ruler" id="sc-ruler" aria-hidden="true"></div>
+  </div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Drag the square to stretch the scope, or press on the row</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Scope stretch. One number drives everything: the shown total chases the target, and widths, counts, ruler and lime are read from it. */
+const Scope = (() => {
+  const sc = document.getElementById('sc'), row = document.getElementById('sc-row'), handle = document.getElementById('sc-handle');
+  const ruler = document.getElementById('sc-ruler');
+  const U = 50, GAP = 8, MIN = 5, MAX = 10;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NAMES = ['Discovery', 'Identity', 'Website', 'Launch'];
+  const WEEKS = { 5: [1, 2, 1, 1], 6: [1, 2, 2, 1], 7: [2, 2, 2, 1], 8: [2, 3, 2, 1], 9: [2, 3, 3, 1], 10: [2, 3, 3, 2] };
+  const START = new Date(2026, 10, 9); // Kova starts Monday 9 Nov
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dateOf = (w) => { const d = new Date(START.getTime() + w * 7 * 864e5); return d.getDate() + ' ' + MON[d.getMonth()]; };
+
+  const EXPO = 'cubic-bezier(.16, 1, .3, 1)';
+  function roll(slot, text, instant) {
+    const old = slot.lastElementChild;
+    if (old && old.textContent === text) return;
+    const n = document.createElement('span'); n.textContent = text; slot.appendChild(n);
+    const w = n.offsetWidth;
+    if (!old || instant || still) { if (!slot.hasAttribute('data-fixed')) slot.style.width = w + 'px'; if (old) slot.removeChild(old); return; }
+    const dir = parseFloat(text) >= parseFloat(old.textContent) ? 1 : -1;
+    if (!slot.hasAttribute('data-fixed')) slot.style.width = w + 'px';
+    old.animate([{ transform: 'none' }, { transform: `translateY(${-110 * dir}%)` }], { duration: 260, easing: EXPO, fill: 'forwards' }).onfinish = () => old.remove();
+    n.animate([{ transform: `translateY(${110 * dir}%)` }, { transform: 'none' }], { duration: 260, easing: EXPO });
+  }
+
+  // the phase blocks and the ruler
+  const ph = NAMES.map((name) => {
+    const el = document.createElement('div'); el.className = 'sc-ph';
+    el.innerHTML = '<span class="sc-n"><span class="sc-roll"></span></span><span class="sc-name">' + name + '</span>';
+    row.insertBefore(el, handle);
+    return { el, slot: el.querySelector('.sc-roll'), shown: '' };
+  });
+  const ticks = [];
+  for (let i = 1; i <= MAX; i++) {
+    const t = document.createElement('div'); t.className = 'sc-tk'; t.style.left = i * U - GAP / 2 + 'px';
+    t.innerHTML = '<b>' + i + '</b>'; ruler.appendChild(t); ticks.push(t);
+  }
+  const tot = document.getElementById('sc-total'), date = document.getElementById('sc-date');
+
+  let target = 7, shown = 7, last = 0, raf = 0, down = false;
+  function draw(w, instant) {
+    const lo = Math.max(MIN, Math.min(MAX - 1, Math.floor(w))), f = Math.min(1, Math.max(0, w - lo));
+    let x = 0;
+    ph.forEach((p, i) => {
+      const wk = WEEKS[lo][i] + (WEEKS[lo + 1][i] - WEEKS[lo][i]) * f;
+      const wd = Math.max(1, wk * U - GAP);
+      p.el.style.transform = `translateX(${x.toFixed(2)}px)`; p.el.style.width = wd.toFixed(2) + 'px';
+      x += wk * U;
+    });
+    handle.style.transform = `translateX(${x.toFixed(2)}px)`;
+    const wr = Math.round(w), t = WEEKS[wr];
+    ph.forEach((p, i) => roll(p.slot, String(t[i]), instant));
+    roll(tot, String(wr), instant); roll(date, dateOf(wr), instant);
+    ticks.forEach((tk, i) => tk.classList.toggle('is-on', i + 1 <= w + 0.02));
+    ph[3].el.classList.toggle('is-lime', wr >= MAX);
+    row.setAttribute('aria-valuenow', wr);
+  }
+  function frame(now) {
+    raf = 0;
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000)); last = now;
+    let nx = shown + (target - shown) * (1 - Math.exp(-9 * dt));
+    if (still || Math.abs(target - nx) < 0.002) nx = target;
+    if (nx !== shown) { shown = nx; draw(shown); }
+    if (shown !== target) raf = requestAnimationFrame(frame);
+  }
+  function set(w) {
+    w = Math.max(MIN, Math.min(MAX, Math.round(w)));
+    if (w === target) return;
+    target = w;
+    if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
+  }
+  // The handle's left edge is the row's end: weeks = (pointer x - row left - grab offset) / 50.
+  // The ghost holds the handle by its middle (OFF 18); the viewer holds it where they grabbed it.
+  const OFF = 18;
+  let grab = OFF;
+  const scale = () => row.getBoundingClientRect().width / row.offsetWidth;
+  function move(cx, cy, ghost) {
+    const r = row.getBoundingClientRect();
+    if (ghost) hold(true);
+    set((cx - r.left - (ghost ? OFF : grab) * scale()) / scale() / U);
+  }
+  function hold(on) { handle.classList.toggle('is-press', on); }
+  function release() { down = false; hold(false); }
+  row.addEventListener('pointerdown', (e) => {
+    down = true; hold(true);
+    const h = handle.getBoundingClientRect();
+    // on the handle: keep where it was grabbed; on the row: the handle's middle comes to the pointer
+    grab = e.clientX >= h.left && e.clientX <= h.right ? (e.clientX - h.left) / scale() : OFF;
+    try { row.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointer */ }
+    move(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  row.addEventListener('pointermove', (e) => { if (down) move(e.clientX, e.clientY); });
+  row.addEventListener('pointerup', release);
+  row.addEventListener('pointercancel', release);
+  row.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { set(target + 1); e.preventDefault(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { set(target - 1); e.preventDefault(); }
+  });
+  draw(shown, true);
+  return { move, release, row, sc, handle, U, MIN, MAX, get shown() { return shown; } };
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+
+  // the ghost drags the handle: out to 10 and a dwell, back to 5 and a dwell, then to the middle
+  const ez = QM.bezier(0.65, 0, 0.35, 1);
+  const LEGS = [ // [weeks the ghost holds, travel s, dwell s]
+    [7, 0, 0.6], [10.2, 2.2, 1.9], [5.1, 3.4, 1.4], [8.4, 2.4, 0.8], [6.2, 1.8, 0.8], [9.6, 2.2, 1.6], [7, 2.6, 1.2],
+  ];
+  const PERIOD = LEGS.reduce((s, l) => s + l[1] + l[2], 0);
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y, ghost) => { if (ghost) Scope.move(x, y, true); },
+    leave: () => Scope.release(),
+    path(t) {
+      const r = Scope.row.getBoundingClientRect(), k = r.width / Scope.row.offsetWidth;
+      let u = Math.max(0, t) % PERIOD, w = LEGS[LEGS.length - 1][0];
+      let prev = w;
+      for (const [to, tr, dw] of LEGS) {
+        if (u < tr) { w = prev + (to - prev) * ez(u / tr); break; }
+        u -= tr;
+        if (u < dw) { w = to; break; }
+        u -= dw; prev = to;
+      }
+      // the ghost holds the handle: x from the row's left, y on the handle's face
+      return [r.left + (w * Scope.U + 18) * k, r.top + 80 * k];
+    },
+  });
+</script>
+</body>
+</html>

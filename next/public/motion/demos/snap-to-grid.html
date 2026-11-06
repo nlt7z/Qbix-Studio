@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snap to grid · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "snap-to-grid",
+  "title": "Snap to grid",
+  "group": "studio",
+  "added": "2026-11-06",
+  "cat": "cursor",
+  "order": 10,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "chase 12/s · snap 240 ms · 2 px press",
+  "summary": "A pricing card follows the pointer on a 12 column artboard. A pale block trails the pointer loosely; the lime card itself only ever stands on a column and an 8 px row, and glides to the nearest slot with a 2 px press at each snap. The columns it covers deepen, and its foot reads the slot: x, y and column count, each number rolling.",
+  "spec": [
+    ["Grid", "12 columns of 38 px with 8 px gutters, 24 px margins; rows of 8 px, the card between y 40 and 192. Columns are tints, never lines"],
+    ["Loose block", "chases the pointer, 1 − e^(−12 dt), centred on it"],
+    ["Snap", "the card's left edge to the nearest column, its top to the nearest 8 px row; glide 240 ms, expo out"],
+    ["Press", "each time the slot changes the card sits 2 px down and back, 220 ms"],
+    ["Columns", "the 4 covered columns deepen from 5% to 13% ink, 160 ms; their numbers turn to ink"],
+    ["Readout", "x, y and col in the card's foot; a changed number leaves up or down and the next enters, 260 ms expo out, the sleeve's width gliding"],
+    ["Input", "the ghost pointer drives the tile; a real pointer anywhere in the sheet drives the card, and the script resumes when it leaves"],
+    ["Reduced motion", "no loose block; the card jumps from slot to slot"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-06"],
+  "where": "The layout step of a Design service: placing the pricing card on the launch page's grid, where every edge has to land on a column.",
+  "rules": [
+    "The loose block and the snapped card are two things. The pointer never moves the card directly.",
+    "Snap on the loose block's edges, not the pointer's, so the card settles a beat after the hand.",
+    "Columns are tints. No guide lines, no borders.",
+    "The lime is the card: the one thing being placed."
+  ],
+  "tags": ["grid", "snap", "layout", "cursor", "drag", "readout"],
+  "shot": 3300
+}
+</script>
+<style data-code>
+/* Snap to grid. A card that follows the pointer loosely and stands only on the grid. Tokens: --fill, --fg, --signal, --on-lime. */
+.sn { position: relative; width: 592px; height: 340px; background: #fff; overflow: hidden; user-select: none; touch-action: none; --cut: 16px; }
+.sn-head { position: absolute; left: 24px; right: 24px; top: 10px; display: flex; justify-content: space-between; font: 500 11px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+
+/* twelve column tints under the head strip: 38 wide, 46 apart; the ones the card covers deepen */
+.sn-col { position: absolute; top: 36px; bottom: 0; width: 38px; background: rgba(18, 20, 23, .05); transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.sn-col.is-cov { background: rgba(18, 20, 23, .13); }
+.sn-col b { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; font: 500 11px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; color: rgba(18, 20, 23, .38); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.sn-col.is-cov b { color: #121417; }
+
+/* the loose block: where the hand is; the card is where the grid says */
+.sn-loose, .sn-card { position: absolute; left: 0; top: 0; width: 176px; height: 112px; }
+.sn-loose { background: rgba(18, 20, 23, .1); --cut: 12px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); will-change: transform; }
+.sn-card { transition: transform 240ms cubic-bezier(.16, 1, .3, 1); will-change: transform; }
+.sn-body {
+  position: absolute; inset: 0; padding: 14px 14px 12px; display: flex; flex-direction: column; justify-content: space-between;
+  background: #B8FF00; color: #0c1300; --cut: 12px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+}
+.sn-body.is-press { animation: sn-press 220ms cubic-bezier(.22, 1, .36, 1); }
+@keyframes sn-press { 0% { transform: none; } 35% { transform: translateY(2px); } 100% { transform: none; } }
+.sn-k { font: 500 11px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(12, 19, 0, .66); }
+.sn-p { font: 400 40px/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; }
+.sn-p small { font: 500 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; text-transform: uppercase; margin-right: 6px; color: rgba(12, 19, 0, .66); }
+.sn-read { display: flex; gap: 0; white-space: pre; font: 500 11px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+
+/* a number that rolls: the sleeve clips, the old leaves, the new enters, the sleeve's width glides */
+.sn-roll { display: inline-grid; overflow: hidden; height: 14px; vertical-align: top; transition: width 260ms cubic-bezier(.16, 1, .3, 1); }
+.sn-roll > span { grid-area: 1 / 1; width: max-content; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sn-card, .sn-col, .sn-col b, .sn-roll { transition: none !important; }
+  .sn-body.is-press { animation: none; }
+  .sn-loose { display: none; }
+}
+</style>
+<style>
+  .fit { width: 592px; transform: scale(var(--s, 1)); transform-origin: center; display: grid; gap: 14px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Design service · Layout</p>
+<!-- code -->
+  <div class="sn" id="sn" aria-label="Artboard with a 12 column grid">
+    <div class="sn-head" aria-hidden="true"><span>Forma · Pricing</span><span>12 col · 8 px row</span></div>
+    <div id="sn-cols" aria-hidden="true"></div>
+    <div class="sn-loose" id="sn-loose" aria-hidden="true"></div>
+    <div class="sn-card" id="sn-card">
+      <div class="sn-body" id="sn-body">
+        <span class="sn-k">Design service</span>
+        <span class="sn-p"><small>From</small>$500</span>
+        <span class="sn-read" aria-live="off">x <span class="sn-roll" id="r-x"></span> · y <span class="sn-roll" id="r-y"></span> · <span class="sn-roll" id="r-c"></span> col</span>
+      </div>
+    </div>
+  </div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Move across the artboard</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Snap to grid. Two boxes: the loose one chases the pointer, the card stands on the nearest column and row. */
+const Snap = (() => {
+  const art = document.getElementById('sn'), cols = document.getElementById('sn-cols');
+  const loose = document.getElementById('sn-loose'), card = document.getElementById('sn-card'), body = document.getElementById('sn-body');
+  const W = 592, MX = 24, COL = 38, GUT = 8, PITCH = COL + GUT, N = 12, SPAN = 4, ROW = 8;
+  const CW = SPAN * COL + (SPAN - 1) * GUT, CH = 112, YMIN = 40, YMAX = 192;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const colEls = [];
+  for (let i = 0; i < N; i++) {
+    const c = document.createElement('div');
+    c.className = 'sn-col'; c.style.left = MX + i * PITCH + 'px';
+    c.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b>';
+    cols.appendChild(c); colEls.push(c);
+  }
+
+  // roll a number to a new one: old leaves up (or down when the number fell), new enters from the other side
+  const EXPO = 'cubic-bezier(.16, 1, .3, 1)';
+  function roll(slot, text, instant) {
+    const old = slot.lastElementChild;
+    if (old && old.textContent === text) return;
+    const n = document.createElement('span'); n.textContent = text; slot.appendChild(n);
+    const w = n.offsetWidth;
+    if (!old || instant || still) { slot.style.width = w + 'px'; if (old) slot.removeChild(old); return; }
+    const dir = Number(text) >= Number(old.textContent) ? 1 : -1;
+    slot.style.width = w + 'px';
+    old.animate([{ transform: 'none' }, { transform: `translateY(${-110 * dir}%)` }], { duration: 260, easing: EXPO, fill: 'forwards' }).onfinish = () => old.remove();
+    n.animate([{ transform: `translateY(${110 * dir}%)` }, { transform: 'none' }], { duration: 260, easing: EXPO });
+  }
+
+  let col = 3, y = 96, pX = 0, pY = 0, inside = false;
+  let lx = MX + col * PITCH, ly = y, last = 0;
+  function put(c, r, instant) {
+    const x = MX + c * PITCH;
+    card.style.transform = `translate(${x}px, ${r}px)`;
+    colEls.forEach((e, i) => e.classList.toggle('is-cov', i >= c && i < c + SPAN));
+    roll(document.getElementById('r-x'), String(x), instant);
+    roll(document.getElementById('r-y'), String(r), instant);
+    roll(document.getElementById('r-c'), String(SPAN), true);
+  }
+  function press() { body.classList.remove('is-press'); void body.offsetWidth; body.classList.add('is-press'); }
+  function snap() {
+    const c = Math.max(0, Math.min(N - SPAN, Math.round((lx - MX) / PITCH)));
+    const r = Math.max(YMIN, Math.min(YMAX, Math.round(ly / ROW) * ROW));
+    if (c === col && r === y) return;
+    col = c; y = r; put(c, r); if (!still) press();
+  }
+  // pointer in client px -> artboard px (the sheet may be scaled)
+  function move(cx, cy) {
+    const r = art.getBoundingClientRect(), k = r.width / W;
+    pX = (cx - r.left) / k; pY = (cy - r.top) / k; inside = true;
+    if (still) { lx = pX - CW / 2; ly = pY - CH / 2; snap(); }
+  }
+  function leave() { inside = false; }
+  function frame(now) {
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000)); last = now;
+    if (!still) {
+      const tx = inside ? pX - CW / 2 : MX + col * PITCH, ty = inside ? pY - CH / 2 : y;
+      const a = 1 - Math.exp(-12 * dt);
+      lx += (tx - lx) * a; ly += (ty - ly) * a;
+      loose.style.transform = `translate(${lx.toFixed(2)}px, ${ly.toFixed(2)}px)`;
+      if (inside) snap();
+    }
+    requestAnimationFrame(frame);
+  }
+  put(col, y, true);
+  loose.style.transform = `translate(${lx}px, ${ly}px)`;
+  requestAnimationFrame(frame);
+  return { move, leave, art, W, MX, PITCH, CW, CH, YMIN, YMAX };
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+
+  // a real pointer anywhere in the sheet drives the card (the harness hands over from the ghost)
+  addEventListener('pointermove', (e) => Snap.move(e.clientX, e.clientY), { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => Snap.leave());
+
+  // the ghost's hand: stop to stop across the grid, a dwell on each so every snap is seen
+  const ez = QM.bezier(0.65, 0, 0.35, 1);
+  const STOPS = [ // artboard px of the card's centre, [x, y]
+    [150, 110], [330, 90], [470, 180], [250, 215], [90, 170], [210, 70], [400, 140], [520, 80],
+  ];
+  const TRAVEL = 1.15, DWELL = 0.75, STEP = TRAVEL + DWELL, PERIOD = STOPS.length * STEP;
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y, ghost) => { if (ghost) Snap.move(x, y); },
+    leave: () => Snap.leave(),
+    path(t) {
+      const r = Snap.art.getBoundingClientRect(), k = r.width / Snap.W;
+      const u = (Math.max(0, t) % PERIOD) / STEP, i = Math.floor(u), f = u - i;
+      const a = STOPS[(i + STOPS.length - 1) % STOPS.length], b = STOPS[i];
+      const p = ez(Math.min(1, f * STEP / TRAVEL));
+      // a small wander while it waits, so the loose block is never dead still
+      const wob = f * STEP > TRAVEL ? Math.sin((f * STEP - TRAVEL) * 5) * 3 : 0;
+      return [r.left + (a[0] + (b[0] - a[0]) * p + wob) * k, r.top + (a[1] + (b[1] - a[1]) * p + wob * 0.6) * k];
+    },
+  });
+</script>
+</body>
+</html>

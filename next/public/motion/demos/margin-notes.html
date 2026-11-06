@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Margin notes · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "margin-notes", "title": "Margin notes", "group": "studio", "added": "2026-11-06", "cat": "scroll", "order": 80,
+  "kind": "scroll", "tone": "paper", "shot": 1700,
+  "line": "620 ms wipe · 700 ms note · one line at a time",
+  "summary": "A case study in a narrow column with a wide right margin. As an annotated phrase scrolls into the reading band, a lime bar wipes across it and its note slides out from the column's edge on the same line. When the line moves past, the bar leaves to the right and the note folds back in.",
+  "spec": [
+    ["Band", "a phrase is read while its middle sits between 12% and 76% of the screen's height; one at a time, the one nearest 42% wins"],
+    ["Highlight", "a lime bar uncovered left to right, clip-path inset(0 100% 0 0) → inset(0), 620 ms expo out"],
+    ["Note", "translateX(−101%) → 0 behind the column's edge, 700 ms expo out, 140 ms after the bar"],
+    ["Number", "Encode Sans, in the note's head: the note and its phrase share a number"],
+    ["Leave", "bar exits to the right 420 ms on the move curve; the note folds back 380 ms ease-in"],
+    ["Trigger", "the real scroll, one rAF-throttled listener; notes are placed on their phrase's first line"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-06"],
+  "where": "A case study's body copy: the reasoning behind each decision sits in the margin, beside the sentence it explains.",
+  "rules": [
+    "Phrases stay short and on one line, so the bar is a clean rectangle.",
+    "One phrase at a time: the bar is the page's one lime.",
+    "Notes are placed from the phrase and pushed down so two never touch; the margin clips them at the column's edge.",
+    "Nothing fades: bars and notes are uncovered and covered.",
+    "Under reduced motion every phrase is marked and every note is out."
+  ],
+  "tags": ["scroll", "case study", "annotation", "highlight", "margin"]
+}
+</script>
+<style data-code>
+/* Margin notes. Lime #B8FF00, ink #121417, paper #f3f4f5; the qbix easings. */
+.mn { --col: 18em; --pad: 2.2em; font-size: clamp(14px, 2vw, 24px); }
+.mn-sheet { position: relative; width: 37.4em; max-width: 100%; margin: 0 auto; padding: 2.4em var(--pad) 3em; background: #fff; }
+.mn-top { display: grid; gap: .9em; margin-bottom: 3em; }
+.mn-kick { margin: 0; font: 400 .72em/1.4 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+.mn-title { font-family: 'Eurostile', Geist, sans-serif; font-weight: 400; font-synthesis-weight: none; font-size: 2.5em; line-height: 1.04; letter-spacing: -.03em; color: #121417; }
+.mn-col { width: var(--col); }
+.mn-col p { margin: 0 0 9em; font: 400 1em/1.62 Geist, system-ui, sans-serif; letter-spacing: -.011em; color: #121417; }
+.mn-col p:last-child { margin-bottom: 0; }
+
+/* the phrase: a lime bar uncovered from the left, ink type on it */
+.mn-hl { position: relative; display: inline-block; white-space: nowrap; z-index: 0; }
+.mn-hl::before { content: ''; position: absolute; inset: .06em -.14em -.02em; z-index: -1; background: #B8FF00; clip-path: inset(0 100% 0 0); transition: clip-path 620ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.mn-hl.is-on::before { clip-path: inset(0); }
+.mn-hl.is-past::before { clip-path: inset(0 0 0 100%); transition: clip-path 420ms var(--ease-move, cubic-bezier(.65, 0, .35, 1)); }
+
+/* the margin: starts at the column's edge and hides what is still tucked behind it */
+.mn-margin { position: absolute; top: 0; bottom: 0; left: calc(var(--pad) + var(--col) + .7em); right: 0; overflow: hidden; pointer-events: none; }
+.mn-note { position: absolute; left: 0; width: 14.6em; padding: .75em .95em .9em; background: #f3f4f5; color: #121417; transform: translateX(-101%); transition: transform 380ms var(--ease-in, cubic-bezier(.5, 0, .75, 0)); clip-path: polygon(0 0, calc(100% - .7em) 0, 100% .7em, 100% 100%, 0 100%); }
+.mn-note.is-on { transform: none; transition: transform 700ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)) 140ms; }
+.mn-note b { display: block; margin-bottom: .45em; font: 500 .7em/1 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; color: rgba(18, 20, 23, .64); }
+.mn-note span { display: block; font: 500 .94em/1.32 Geist, system-ui, sans-serif; letter-spacing: -.011em; text-wrap: balance; }
+
+/* the page's end */
+.mn-next { margin-top: 7em; display: flex; justify-content: space-between; font: 400 .72em/1.4 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-hl::before, .mn-note { transition: none !important; }
+}
+</style>
+<style>
+  .mn-wrap { padding: clamp(16px, 4vmin, 48px) clamp(12px, 4vw, 48px) clamp(24px, 8vmin, 80px); }
+  .qm-hint { position: fixed; right: clamp(16px, 3vw, 28px); top: clamp(12px, 2.4vmin, 24px); z-index: 5; }
+</style>
+</head>
+<body>
+<div class="mn-wrap">
+<!-- code -->
+<div class="mn" id="mn">
+  <article class="mn-sheet">
+    <header class="mn-top">
+      <p class="mn-kick">Case study · Willow Counseling</p>
+      <h2 class="mn-title">A quiet site for a quiet room.</h2>
+    </header>
+    <div class="mn-col">
+      <p>Willow Counseling is Dana Reyes’s practice in Seattle. Its old home page had nine blocks and no next step. We kept four and moved <span class="mn-hl" data-note="0">booking above the fold</span>, where a new client already looks.</p>
+      <p>The old palette was grey on grey. We chose a <span class="mn-hl" data-note="1">calmer palette</span> of warm paper and deep green ink, and held every pair at 7 to 1.</p>
+      <p>Type runs on <span class="mn-hl" data-note="2">one type scale</span>: five sizes on one 8px grid. Dana adds a service page herself and it still looks like the rest.</p>
+      <p>Review took two rounds. The site went <span class="mn-hl" data-note="3">live in seven days</span>, and new bookings went from 3 to 11 a month.</p>
+    </div>
+    <div class="mn-next"><span>Practice Website Refresh</span><span>Next · Forma</span></div>
+    <div class="mn-margin" aria-label="Notes">
+      <aside class="mn-note" data-note="0"><b>01</b><span>Booking moved above the fold</span></aside>
+      <aside class="mn-note" data-note="1"><b>02</b><span>Calmer palette, same contrast</span></aside>
+      <aside class="mn-note" data-note="2"><b>03</b><span>Five sizes on one 8px grid</span></aside>
+      <aside class="mn-note" data-note="3"><b>04</b><span>Live in 7 days, on her own domain</span></aside>
+    </div>
+  </article>
+</div>
+<!-- /code -->
+</div>
+<span class="qm-hint">Scroll ↓</span>
+<div class="qm-ui"><span>Scroll the page</span><span class="qm-sep">/</span><span>One note lives while its line is being read</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Margin notes. Each phrase has a number; its bar and its note switch together.
+   The band is where the eye is: from 12% to 76% of the screen, and one phrase at a time (the
+   one already read stays until it leaves the band, else the one nearest 42%). A phrase above
+   the band has been read (its bar leaves to the right); one below it waits at the left. */
+const mnSheet = document.querySelector('.mn-sheet');
+const mnMargin = mnSheet.querySelector('.mn-margin');
+const mnItems = [...mnSheet.querySelectorAll('.mn-hl')].map((hl) => ({
+  hl, note: mnSheet.querySelector(`.mn-note[data-note="${hl.dataset.note}"]`), state: 'wait',
+}));
+function mnPlace() {   // notes at their phrase's height, pushed down so two never touch
+  const top = mnMargin.getBoundingClientRect().top;
+  let floor = 0;
+  mnItems.forEach((it) => {
+    const r = it.hl.getClientRects()[0];
+    const y = Math.max(r.top - top - it.hl.offsetHeight * 0.2, floor);
+    it.note.style.top = y + 'px';
+    floor = y + it.note.offsetHeight + 8;
+  });
+}
+let mnRaf = 0, mnLive = -1;
+function mnPaint() {
+  mnRaf = 0;
+  const vh = innerHeight;
+  const mid = mnItems.map((it) => { const r = it.hl.getBoundingClientRect(); return (r.top + r.bottom) / 2 / vh; });
+  const inBand = (i) => mid[i] > 0.12 && mid[i] < 0.76;
+  if (mnLive < 0 || !inBand(mnLive)) {
+    mnLive = -1;
+    let best = 9;
+    mid.forEach((m, i) => { if (inBand(i) && Math.abs(m - 0.42) < best) { best = Math.abs(m - 0.42); mnLive = i; } });
+  }
+  mnItems.forEach((it, i) => {
+    const state = i === mnLive ? 'on' : mid[i] < 0.42 ? 'past' : 'wait';
+    if (state === it.state) return;
+    it.state = state;
+    it.hl.classList.toggle('is-on', state === 'on');
+    it.hl.classList.toggle('is-past', state === 'past');
+    it.note.classList.toggle('is-on', state === 'on');
+  });
+}
+const mnAsk = () => { if (!mnRaf) mnRaf = requestAnimationFrame(mnPaint); };
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  mnItems.forEach((it) => { it.hl.classList.add('is-on'); it.note.classList.add('is-on'); });
+} else {
+  addEventListener('scroll', mnAsk, { passive: true });
+  addEventListener('resize', () => { mnPlace(); mnAsk(); });
+}
+mnPlace();
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) mnAsk();
+</script>
+<script>
+  // the notes are placed once the fonts are in
+  if (document.fonts) document.fonts.ready.then(() => { mnPlace(); if (!QM.reduced) mnAsk(); });
+  QM.demo({
+    kind: 'scroll', lead: 1500, dur: 6800, hold: 1400, back: 2400, pause: 1100,
+    // one stop a phrase: the page pauses where each one is read
+    get stops() {
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      return mnItems.map((it) => Math.min(1, Math.max(0, (it.hl.getBoundingClientRect().top + scrollY - innerHeight * 0.42) / max)));
+    },
+  });
+</script>
+</body>
+</html>

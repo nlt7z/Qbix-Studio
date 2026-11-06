@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kerning pass · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "kerning-pass", "title": "Kerning pass", "group": "studio", "added": "2026-11-06", "cat": "text", "order": 10,
+  "kind": "play", "tone": "paper", "shot": 2100,
+  "line": "10 pairs · 360 ms a step · 420 ms close · expo out",
+  "summary": "A headline set loose, its letter gaps uneven. An ink caret steps pair by pair; at each pair the gap closes while a small tag over it shows the kern value, uncovered by a clip and clipped away again. When the last pair is done a lime bar wipes in under the line: Kerned.",
+  "spec": [
+    ["Step", "360 ms a pair, the caret hops 240 ms on the move curve"],
+    ["Close", "the gap eases to 0 in 420 ms, expo out; every letter after it slides with it"],
+    ["Tag", "uncovered upward by clip-path 180 ms, held, clipped away upward 100 ms; the value is the kern in 1/1000 em (−96, +44, …)"],
+    ["Caret", "a 3px ink bar the height of the capitals, clipped in and out; it hops between gap centres, measured live"],
+    ["End", "the lime bar wipes left to right under the line, 620 ms, expo out; the counter reads 10 / 10 pairs"],
+    ["Scrub", "one function of time draws every frame, so the detail view's scrubber steps through the pairs"],
+    ["Reduced motion", "the kerned line and the lime bar, nothing moves"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-06"],
+  "where": "A Brand upgrade case study's Type step: the moment a loose headline becomes the one the studio sets.",
+  "rules": [
+    "The line is set per letter only for the demo; in production kern with font-kerning and, for the few pairs a face gets wrong, a measured letter-spacing.",
+    "Nothing fades: the caret and the tags are uncovered by clips, the lime by a wipe.",
+    "The lime appears once, at the end, and says the job is done.",
+    "The tag's value is the correction: a gap that was too wide reads negative, one that was too tight reads positive."
+  ],
+  "tags": ["type", "kerning", "caret", "tag", "wipe", "scrub"],
+  "deps": []
+}
+</script>
+<style data-code>
+/* Kerning pass. One function of time, kernRender(t), draws every frame. */
+.kp { --cut: 16px; position: relative; width: min(74vw, 900px); background: var(--surface, #fff); color: var(--fg, #121417); padding: min(4.4vw, 56px); padding-top: min(4vw, 48px); display: grid; gap: min(3.2vw, 40px); }
+.kp-line { position: relative; margin: 0; padding-top: min(1.2vw, 14px); font-family: 'Eurostile', Geist, sans-serif; font-weight: 400; font-synthesis-weight: none; font-size: min(11.6vw, 140px); line-height: 1; letter-spacing: -0.02em; white-space: pre; }
+.kp-ch { display: inline-block; }
+.kp-caret { position: absolute; left: 0; top: 0; width: 3px; margin-left: -1.5px; background: #121417; clip-path: inset(100% 0 0 0); pointer-events: none; }
+.kp-tag { position: absolute; left: 0; top: 0; z-index: 2; height: 24px; padding: 0 8px; display: flex; align-items: center; transform: translateX(-50%); background: #121417; color: #f3f4f5; font: 500 13px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; white-space: nowrap; clip-path: inset(100% 0 0 0); pointer-events: none; }
+.kp-track { position: relative; display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 20px; background: rgba(18, 20, 23, 0.05); font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); font-variant-numeric: tabular-nums; }
+.kp-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #B8FF00; color: #0c1300; clip-path: inset(0 100% 0 0); }
+.kp-done b { font: 500 17px/1 Geist, system-ui, sans-serif; letter-spacing: -0.011em; text-transform: none; }
+</style>
+<style>
+  .kpw { display: grid; justify-items: center; }
+  .kp .kicker { margin-bottom: -4px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="kpw">
+<!-- code -->
+<section class="kp cut" id="kp" aria-label="Kerning pass">
+  <p class="kicker">Brand upgrade · Type</p>
+  <h2 class="kp-line" id="kp-line" data-text="Type that fits."></h2>
+  <div class="kp-track" id="kp-track">
+    <span>Kerning</span><span><span id="kp-n">0</span> / 10 pairs</span>
+    <div class="kp-done" id="kp-done"><b>Kerned</b><span>10 / 10 pairs</span></div>
+  </div>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Kerning pass</span><span class="qm-sep">/</span><span>Scrub to step through the pairs</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* The line is built per letter. PAIRS: [index of the letter after the gap, its kern in 1/1000 em].
+   Loose state: the gap is wider by -kern/1000 em (a negative kern means "pull in"). */
+const KP_PAIRS = [[1, -96], [2, 44], [3, -60], [6, 52], [7, -72], [8, 40], [11, -84], [12, 48], [13, -64], [14, 56]];
+const KP_STRIDE = 360, KP_T0 = 700, KP_CLOSE = 420, KP_HOP = 240;
+const KP_WIPE = KP_T0 + (KP_PAIRS.length - 1) * KP_STRIDE + 700;   // when the lime starts
+const KP_END = KP_WIPE + 620;
+
+const kpLine = document.getElementById('kp-line');
+const kpCh = [...kpLine.dataset.text].map((c) => { const s = document.createElement('span'); s.className = 'kp-ch'; s.textContent = c; kpLine.append(s); return s; });
+kpLine.setAttribute('aria-label', kpLine.dataset.text);
+kpCh.forEach((s) => s.setAttribute('aria-hidden', 'true'));
+const kpCaret = document.createElement('i'); kpCaret.className = 'kp-caret'; kpCaret.setAttribute('aria-hidden', 'true'); kpLine.append(kpCaret);
+const kpTags = KP_PAIRS.map(([, v]) => { const t = document.createElement('span'); t.className = 'kp-tag'; t.setAttribute('aria-hidden', 'true'); t.textContent = (v > 0 ? '+' : '−') + Math.abs(v); kpLine.append(t); return t; });
+
+const kpClamp = (x) => Math.min(1, Math.max(0, x));
+function kpBez(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; } return sy(kpClamp(t)); };
+}
+const kpOut = kpBez(0.16, 1, 0.3, 1), kpMove = kpBez(0.65, 0, 0.35, 1), kpIn = kpBez(0.5, 0, 0.75, 0);
+
+function kernRender(t) {
+  // 1. the gaps
+  KP_PAIRS.forEach(([i, v], k) => {
+    const c = kpOut(kpClamp((t - (KP_T0 + k * KP_STRIDE)) / KP_CLOSE));
+    kpCh[i].style.marginLeft = ((-v / 1000) * (1 - c)).toFixed(4) + 'em';
+  });
+  // 2. live gap centres
+  const base = kpLine.getBoundingClientRect(), r = kpCh.map((s) => s.getBoundingClientRect());
+  const mid = KP_PAIRS.map(([i]) => (r[i - 1].right + r[i].left) / 2 - base.left);
+  const capTop = r[0].height * 0.2, capH = r[0].height * 0.72;
+  // 3. the caret hops between centres
+  let k = -1;
+  KP_PAIRS.forEach((_, j) => { if (t >= KP_T0 + j * KP_STRIDE - KP_HOP) k = j; });
+  let x = 0, show = 0;
+  if (k >= 0) {
+    const h = kpMove(kpClamp((t - (KP_T0 + k * KP_STRIDE - KP_HOP)) / KP_HOP));
+    x = k === 0 ? mid[0] : mid[k - 1] + (mid[k] - mid[k - 1]) * h;
+    show = k === 0 ? kpOut(kpClamp((t - (KP_T0 - KP_HOP)) / 200)) : 1;
+    if (t > KP_WIPE - 400) show = 1 - kpIn(kpClamp((t - (KP_WIPE - 400)) / 200));
+  }
+  const cTop = (r[0].top - base.top) + capTop;
+  kpCaret.style.cssText = `left:${x.toFixed(2)}px;top:${cTop.toFixed(1)}px;height:${capH.toFixed(1)}px;clip-path:inset(${((1 - show) * 100).toFixed(1)}% 0 0 0)`;
+  // 4. the tags: up into view, held, up and away
+  kpTags.forEach((tag, j) => {
+    const s = KP_T0 + j * KP_STRIDE;
+    const a = kpOut(kpClamp((t - s) / 180)), b = kpIn(kpClamp((t - (s + 260)) / 100));
+    tag.style.left = mid[j].toFixed(2) + 'px';
+    tag.style.top = (cTop - 34).toFixed(1) + 'px';
+    tag.style.clipPath = b > 0 ? `inset(0 0 ${(b * 100).toFixed(1)}% 0)` : `inset(${((1 - a) * 100).toFixed(1)}% 0 0 0)`;
+  });
+  // 5. the counter and the lime
+  let n = 0; KP_PAIRS.forEach((_, j) => { if (t >= KP_T0 + j * KP_STRIDE) n = j + 1; });
+  document.getElementById('kp-n').textContent = n;
+  const w = kpOut(kpClamp((t - KP_WIPE) / 620));
+  document.getElementById('kp-done').style.clipPath = `inset(0 ${((1 - w) * 100).toFixed(2)}% 0 0)`;
+}
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let raf = 0;
+  const still = () => kernRender(KP_END + 1);
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+  function reset() { stop(); if (reduced) still(); else kernRender(0); }
+  function play() {
+    stop();
+    if (reduced) return still();
+    const t0 = performance.now();
+    const step = (now) => { const t = now - t0; kernRender(Math.min(t, KP_END + 1)); if (t < KP_END + 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+  }
+  QM.demo({
+    kind: 'play', lead: 500, dur: KP_END, hold: 2400, reset, play,
+    seekPlay(v) { stop(); kernRender(QM.clamp01(v) * KP_END); },
+  });
+  if (document.fonts) document.fonts.ready.then(() => { if (!raf) reset(); });
+  reset();
+})();
+</script>
+</body>
+</html>

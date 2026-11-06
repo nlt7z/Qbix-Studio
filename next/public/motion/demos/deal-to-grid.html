@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deal to grid · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "deal-to-grid", "title": "Deal to grid", "group": "studio", "added": "2026-11-06", "cat": "cards", "order": 70,
+  "kind": "play", "tone": "paper", "shot": 3600,
+  "line": "780 ms move · 60 ms a card · 9 cards",
+  "summary": "Nine moodboard cards sit in a turned pile on a white board. They deal out one by one, each gliding to its slot and turning straight, 60 ms apart. When the last one lands the kicker rolls from Dealing to 9 references and a lime Ready for review tag slides up out of its sleeve.",
+  "spec": [
+    ["Move", "translate + rotate from the pile to the slot, 780 ms, cubic-bezier(0.65, 0, 0.35, 1)"],
+    ["Stagger", "60 ms a card, top of the pile first, 1.26 s for nine"],
+    ["Pile", "every card at the board's centre, offset 3 to 6px, turned between −7° and 7°"],
+    ["Kicker", "two lines in one sleeve, translateY 110% → 0, 520 ms expo out, 1.0 s in"],
+    ["Tag", "slides up out of its sleeve, 560 ms expo out, 150 ms after the kicker"],
+    ["Slots", "9 tinted rectangles under the pile, so the grid is there before the cards are"],
+    ["Gather", "the same move backwards, last card first, 40 ms apart"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-06"],
+  "where": "A Strata moodboard step or a case study's references block: the board a client sees dealt out before the design starts.",
+  "rules": [
+    "The pile's offsets are measured from the slots, so the layout can change and the deal still lands.",
+    "A card on its way sits above the board; it drops back once it has landed.",
+    "Nothing fades: cards move, the kicker and the tag are uncovered.",
+    "The tag is the one lime on the screen.",
+    "Under reduced motion the board is simply dealt."
+  ],
+  "tags": ["cards", "moodboard", "stagger", "deal", "grid"]
+}
+</script>
+<style data-code>
+/* Deal to grid. Tokens: --ease-move, --ease-out-expo; lime #B8FF00, ink #121417. */
+.dg { --W: min(72vw, 98vh); width: var(--W); font-size: calc(var(--W) / 49); }
+
+/* head: the kicker in a sleeve, the tag in another */
+.dg-head { display: flex; align-items: center; justify-content: space-between; height: 2.667em; margin-bottom: 1.1em; }
+.dg-ksl, .dg-tsl { display: grid; overflow: hidden; }
+.dg-ksl { height: 1.34em; }
+.dg-k { grid-area: 1 / 1; margin: 0; font: 400 1em/1.34 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); white-space: nowrap; transition: transform 520ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.dg-k.a { transform: translateY(-110%); transition-delay: 1000ms; }
+.dg-k.b { transition-delay: 1000ms; }
+.dg-tag { display: inline-flex; align-items: center; height: 2.667em; padding: 0 1.2em; background: #B8FF00; color: #0c1300; font: 400 1em/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; clip-path: polygon(0 0, calc(100% - .667em) 0, 100% .667em, 100% 100%, 0 100%); transition: transform 560ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)) 1150ms; }
+
+/* the board: a white surface, nine tinted slots, nine cards */
+.dg-board { --pad: 2.2em; --gap: .75em; position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); padding: var(--pad); background: #fff; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+.dg-cell { position: relative; aspect-ratio: 3 / 2; background: rgba(18, 20, 23, .05); }
+.dg-card { position: absolute; inset: 0; overflow: hidden; background: #eceef0; transition: transform 780ms var(--ease-move, cubic-bezier(.65, 0, .35, 1)) var(--d, 0ms); will-change: transform; }
+.dg-card img { width: 100%; height: 100%; object-fit: cover; }
+.dg-card .n { position: absolute; left: 0; bottom: 0; display: grid; place-items: center; min-width: 2.6em; height: 2em; padding: 0 .5em; background: #fff; color: #121417; font: 500 .85em/1 'Encode Sans', Geist, sans-serif; font-style: normal; letter-spacing: .08em; }
+
+/* the two swatch cards and the type card */
+.dg-sw { display: flex; height: 100%; }
+.dg-sw b { flex: var(--f, 1); }
+.dg-type { position: absolute; inset: 0; padding: .8em 1em; background: #eceef0; }
+.dg-type .aa { font: 400 5.2em/1 'Eurostile', Geist, sans-serif; letter-spacing: -.03em; color: #121417; }
+.dg-type .nm { position: absolute; right: 1em; top: 1em; font: 400 .85em/1 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+
+/* the pile: every card at the board's centre (offsets set from the slots) */
+.dg.is-pile .dg-card { transform: translate(var(--tx), var(--ty)) rotate(var(--r)); z-index: calc(20 - var(--i)); }
+.dg.is-pile .dg-k.a { transform: none; transition-delay: 0ms; }
+.dg.is-pile .dg-k.b { transform: translateY(110%); transition-delay: 0ms; }
+.dg.is-pile .dg-tag { transform: translateY(110%); transition-delay: 0ms; }
+.dg.is-reset *, .dg.is-reset { transition: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-card, .dg-k, .dg-tag { transition: none !important; }
+}
+</style>
+<style>
+  .qm-stage { padding-top: clamp(16px, 4vmin, 48px); padding-bottom: clamp(16px, 4vmin, 48px); }
+  html:not(.qm-tile) body:has(.qm-ui) .qm-stage { padding-bottom: calc(clamp(16px, 4vmin, 48px) + 46px); }
+  .dg-board { cursor: pointer; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="dg" id="dg">
+  <div class="dg-head">
+    <div class="dg-ksl" aria-live="polite">
+      <p class="dg-k a">Moodboard · Forma · Dealing</p>
+      <p class="dg-k b">Moodboard · Forma · 9 references</p>
+    </div>
+    <div class="dg-tsl"><span class="dg-tag">Ready for review</span></div>
+  </div>
+  <div class="dg-board" id="dg-board">
+    <div class="dg-cell"><div class="dg-card"><img src="../assets/art/cross.webp" alt=""><i class="n">01</i></div></div>
+    <div class="dg-cell"><div class="dg-card"><img src="../assets/art/block.webp" alt="" style="object-position:70% 50%"><i class="n">02</i></div></div>
+    <div class="dg-cell"><div class="dg-card"><div class="dg-sw" aria-hidden="true"><b style="background:#e9e2d6;--f:3"></b><b style="background:#cdbfa9;--f:2"></b><b style="background:#9a8670;--f:2"></b><b style="background:#121417;--f:1"></b></div><i class="n">03</i></div></div>
+    <div class="dg-cell"><div class="dg-card"><div class="dg-type"><span class="aa">Aa</span><span class="nm">Eurostile</span></div><i class="n">04</i></div></div>
+    <div class="dg-cell"><div class="dg-card"><img src="../assets/art/objects.webp" alt=""><i class="n">05</i></div></div>
+    <div class="dg-cell"><div class="dg-card"><img src="../assets/art/calla.webp" alt=""><i class="n">06</i></div></div>
+    <div class="dg-cell"><div class="dg-card"><img src="../assets/art/vase.webp" alt="" style="object-position:50% 38%"><i class="n">07</i></div></div>
+    <div class="dg-cell"><div class="dg-card"><div class="dg-sw" aria-hidden="true"><b style="background:#dfe5e0;--f:2"></b><b style="background:#b9c4bb;--f:3"></b><b style="background:#6f7d74;--f:2"></b><b style="background:#121417;--f:1"></b></div><i class="n">08</i></div></div>
+    <div class="dg-cell"><div class="dg-card"><img src="../assets/art/ring.webp" alt=""><i class="n">09</i></div></div>
+  </div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><button id="again">Deal again</button><span class="qm-sep">/</span><button id="gather">Gather</button><span class="qm-sep">/</span><span>Click the board</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Deal to grid. The pile is each card's way back to the board's centre, measured from its slot.
+   is-pile on .dg = gathered; without it = dealt. Delays are set per direction. */
+const dg = document.getElementById('dg');
+const dgBoard = document.getElementById('dg-board');
+const dgCards = [...dgBoard.querySelectorAll('.dg-card')];
+const dgJit = [[0, 0, -3], [-5, 3, 4], [4, -3, -6], [-3, 5, 2], [6, 2, 7], [-6, -4, -4], [3, 6, 5], [-4, -6, -7], [5, -2, 3]];
+let dgTimers = [];
+function dgMeasure() {
+  const bw = dgBoard.clientWidth, bh = dgBoard.clientHeight;
+  dgCards.forEach((card, i) => {
+    const cell = card.parentElement;
+    const [jx, jy, r] = dgJit[i];
+    card.style.setProperty('--i', i);
+    card.style.setProperty('--tx', (bw / 2 - (cell.offsetLeft + cell.offsetWidth / 2) + jx) + 'px');
+    card.style.setProperty('--ty', (bh / 2 - (cell.offsetTop + cell.offsetHeight / 2) + jy) + 'px');
+    card.style.setProperty('--r', r + 'deg');
+  });
+}
+function dgClear() { dgTimers.forEach(clearTimeout); dgTimers = []; dgCards.forEach((c) => (c.style.zIndex = '')); }
+// a card on its way rides above the board, then drops back
+function dgFly(i, at) {
+  dgTimers.push(setTimeout(() => (dgCards[i].style.zIndex = 40), at));
+  dgTimers.push(setTimeout(() => (dgCards[i].style.zIndex = ''), at + 780));
+}
+function dgDeal() {
+  dgClear();
+  dgCards.forEach((c, i) => { c.style.setProperty('--d', i * 60 + 'ms'); dgFly(i, i * 60); });
+  dg.classList.remove('is-pile');
+}
+function dgGather() {
+  dgClear();
+  dgCards.forEach((c, i) => { c.style.setProperty('--d', (8 - i) * 40 + 'ms'); dgFly(i, (8 - i) * 40); });
+  dg.classList.add('is-pile');
+}
+function dgRest() {   // the pile, instantly
+  dgClear();
+  dg.classList.add('is-reset', 'is-pile');
+  void dg.offsetWidth;
+  dg.classList.remove('is-reset');
+}
+addEventListener('resize', dgMeasure);
+dgMeasure();
+</script>
+<script>
+(() => {
+  const reduced = QM.reduced;
+  const redo = () => { dgRest(); requestAnimationFrame(() => requestAnimationFrame(dgDeal)); };
+  dgBoard.addEventListener('click', () => (dg.classList.contains('is-pile') ? dgDeal() : dgGather()));
+  document.getElementById('again').addEventListener('click', redo);
+  document.getElementById('gather').addEventListener('click', dgGather);
+  if (reduced) { dg.classList.remove('is-pile'); return QM.demo({ kind: 'play', dur: 0, hold: 60000, reset() {}, play() {} }); }
+  QM.demo({ kind: 'play', lead: 900, dur: 2400, hold: 2300, reset: () => { dgMeasure(); dgRest(); }, play: dgDeal });
+})();
+</script>
+</body>
+</html>

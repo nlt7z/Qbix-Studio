@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cube field · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "cube-field", "title": "Cube field", "group": "studio", "added": "2026-11-06", "cat": "backgrounds", "order": 20,
+  "kind": "loop", "tone": "paper", "shot": 6200,
+  "line": "isometric 2:1 · noise heights · 1 lime top",
+  "summary": "An isometric field of small cubes on paper: white tops, light ink-tint sides, ink edges. Their heights rise and fall slowly on 3D noise. One cube top turns lime, a wipe along its edge, and hops to a neighbour every 1.1 s, leaving by the same wipe. Cubes near the pointer rise a little more, and an idle pointer drifts by itself.",
+  "spec": [
+    ["Projection", "2:1 isometric: x = (i − j) · a, y = (i + j) · a / 2 − z; a = width / 18, 20 to 56 px; painter's order by i + j"],
+    ["Cube", "inset 0.1 of its cell on each side, so paper shows between: top #fff, left rgb(225, 226, 227), right rgb(206, 208, 210), edges rgba(18, 20, 23, 0.3) at 1 px"],
+    ["Height", "z = a · (0.18 + 1.9 · u^2.6), u = 0.5 + 0.62 · (0.7 · noise3(0.09i, 0.09j, 0.08t) + 0.3 · noise3(0.21i + 9, 0.21j, 0.13t))"],
+    ["Pointer", "+1.1 a · exp(−d² / 2σ²), σ = 4.2 a, the pointer chased at 1 − e^(−8 dt); after 3 s idle a virtual one drifts"],
+    ["Lime top", "one cell at a time: enters 420 ms expo out and leaves 420 ms ease-in, a wipe along the top's u axis, the cube lifting 0.9 a and settling over 600 ms; a hop every 1.1 s toward a roaming waypoint"],
+    ["Canvas", "sized at devicePixelRatio (to 3), redrawn each frame; paused off screen and in a hidden tab; one still frame for reduced motion"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-06"],
+  "where": "Behind the hero of a Qbix launch page or the studio's About chapter: the build as a field of blocks, with the headline on a white block at the side.",
+  "rules": [
+    "One lime top on the whole field: the single signal. Cubes are white, tint and ink, never lime sides.",
+    "Cubes are never faded: the lime is uncovered along the top, the height is geometry.",
+    "Nothing is under the headline: the words stand on a white block that covers the field.",
+    "Redraw only while it is seen and the tab is open; reduced motion draws one still frame."
+  ],
+  "tags": ["canvas", "isometric", "noise", "cubes", "pointer", "background"],
+  "deps": ["noise"]
+}
+</script>
+<style data-code>
+/* Cube field: a canvas field behind a white block that carries the words. Tokens: --paper, --ink, the cut corner. */
+.cf { position: relative; width: 100%; height: 100%; background: #f3f4f5; overflow: hidden; }
+.cf-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cf-block {
+  position: absolute; left: clamp(20px, 6%, 64px); top: 50%; translate: 0 -50%;
+  width: clamp(250px, 38%, 440px); padding: 30px 30px 28px; background: #fff; color: #121417;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+.cf-block .kicker { margin: 0 0 18px; font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+.cf-block h2 { margin: 0; font: 400 clamp(26px, 3.3vw, 46px)/1.04 Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; text-wrap: balance; }
+.cf-block .meta { margin: 22px 0 0; font: 11px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+</style>
+<style>
+  .qm-stage { padding: 0; display: block; }
+  .cf { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="cf" id="cf">
+  <canvas class="cf-canvas" id="cf-canvas" aria-hidden="true"></canvas>
+  <div class="cf-block">
+    <p class="kicker">Qbix · Studio</p>
+    <h2>Design and build, one block at a time.</h2>
+    <p class="meta">Seattle · SF Bay Area</p>
+  </div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Move over the field</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script src="../kit/noise.js"></script>
+<script data-code>
+/* Cube field. Isometric 2:1: screen x = (i − j) · a, y = (i + j) · a / 2 − z. Cells are drawn back to front (i + j
+   ascending), each as a top, a left face and a right face down to the floor, so nearer cubes cover farther ones.
+   cubeField(canvas) draws a frame by itself while it is on screen and the tab is open. */
+function cubeField(cv, { seed = 7, speed = 0.08 } = {}) {
+  const g = cv.getContext('2d');
+  const noise = QMNoise.noise3(seed);                       // lib/noise.ts
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mixInk = (a) => `rgb(${[243, 244, 245].map((c, i) => Math.round(c + ([18, 20, 23][i] - c) * a)).join(',')})`;
+  const TOP = '#ffffff', LEFT = mixInk(0.08), RIGHT = mixInk(0.16), EDGE = 'rgba(18,20,23,.3)', LIME = '#B8FF00';
+  const GAP = 0.1, SPAN = 1 - 2 * GAP;
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  const outExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x));
+  const inCubic = (x) => x * x * x;
+  const inOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+  let W = 0, H = 0, dpr = 1, a = 24, ox = 0, oy = 0;
+  let seen = false, raf = 0, last = 0, started = performance.now();
+  // the pointer: real while it is moving, a drifting virtual one after 3 s idle; both chased
+  const ptr = { x: 0, y: 0, tx: 0, ty: 0, k: 0, tk: 0, real: -1e9 };
+  // the lime top: a walker hopping from cell to cell toward a roaming waypoint
+  const lime = { cur: null, prev: null, goal: null, nextHop: 0 };
+  let rs = 12345;
+  const rnd = () => (rs = (rs * 16807) % 2147483647) / 2147483647;
+
+  function size() {
+    const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+    if (!w || !h || (w === W && h === H)) return;
+    W = cv.width = w; H = cv.height = h;
+    a = Math.min(56, Math.max(20, Math.round(cv.clientWidth / 18)));
+    ox = cv.clientWidth * 0.6; oy = cv.clientHeight * 0.34;
+    lime.goal = null;
+    wake();
+  }
+  const P = (i, j, u, v, z) => [ox + (i + u - j - v) * a, oy + (i + u + j + v) * a * 0.5 - z];
+  const toCell = (x, y) => [Math.floor(((y - oy) / (a * 0.5) + (x - ox) / a) / 2), Math.floor(((y - oy) / (a * 0.5) - (x - ox) / a) / 2)];
+  const height = (i, j, t) => {
+    const n = noise(i * 0.09, j * 0.09, t * speed) * 0.7 + noise(i * 0.21 + 9, j * 0.21, t * speed * 1.6) * 0.3;
+    const u = clamp(0.5 + 0.62 * n);
+    return a * (0.18 + 1.9 * Math.pow(u, 2.6));
+  };
+
+  function walk(now) {
+    const cw = cv.clientWidth, ch = cv.clientHeight;
+    if (!lime.cur) {
+      const c = toCell(cw * 0.72, ch * 0.55);
+      lime.cur = { i: c[0], j: c[1], t0: now };
+      lime.nextHop = now + 1100;
+    }
+    if (now < lime.nextHop) return;
+    lime.nextHop = now + 1100;
+    let c = lime.cur;
+    if (!lime.goal || (lime.goal[0] === c.i && lime.goal[1] === c.j)) {
+      const g2 = toCell(cw * (0.5 + 0.42 * rnd()), ch * (0.25 + 0.6 * rnd()));
+      lime.goal = g2;
+    }
+    const di = lime.goal[0] - c.i, dj = lime.goal[1] - c.j;
+    const stepI = Math.abs(di) > Math.abs(dj) || (Math.abs(di) === Math.abs(dj) && rnd() < 0.5);
+    lime.prev = Object.assign(c, { t1: now });
+    lime.cur = { i: c.i + (stepI ? Math.sign(di) : 0), j: c.j + (stepI ? 0 : Math.sign(dj)), t0: now };
+  }
+
+  function frame(now) {
+    raf = 0;
+    if (!seen || document.hidden || !W) return;
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+    last = now;
+    const t = calm ? 2.4 : (now - started) / 1000;
+    const cw = cv.clientWidth, ch = cv.clientHeight;
+
+    // pointer: real, else the drifting one
+    if (!calm) {
+      if (now - ptr.real < 3000) ptr.tk = 1;
+      else { ptr.tx = cw * (0.62 + 0.22 * Math.sin(t * 0.5)); ptr.ty = ch * (0.5 + 0.24 * Math.sin(t * 0.83 + 1)); ptr.tk = 0.85; }
+      if (!ptr.on) { ptr.on = true; ptr.x = ptr.tx; ptr.y = ptr.ty; }
+      const f = 1 - Math.exp(-dt * 8);
+      ptr.x += (ptr.tx - ptr.x) * f; ptr.y += (ptr.ty - ptr.y) * f; ptr.k += (ptr.tk - ptr.k) * f;
+      walk(now);
+    } else if (!lime.cur) {
+      const c = toCell(cw * 0.7, ch * 0.5);
+      lime.cur = { i: c[0], j: c[1], t0: -1e9 };
+    }
+    const lift = (c, up) => (c ? a * 0.9 * (up ? outExpo(clamp((now - c.t0) / 600)) : 1 - inOut(clamp((now - c.t1) / 600))) : 0);
+    if (lime.prev && now - lime.prev.t1 > 600) lime.prev = null;
+
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, cw, ch);
+    g.lineWidth = 1;
+    g.lineJoin = 'miter';
+
+    const zMax = a * 3.2;
+    const s0 = Math.floor(-oy / (a * 0.5)) - 2, s1 = Math.ceil((ch + zMax - oy) / (a * 0.5));
+    const d0 = Math.floor(-ox / a) - 1, d1 = Math.ceil((cw - ox) / a) + 1;
+    const sig2 = 2 * Math.pow(a * 4.2, 2);
+    for (let s = s0; s <= s1; s++) {
+      for (let d = d0; d <= d1; d++) {
+        if (((s + d) & 1) !== 0) continue;                  // i and j are whole numbers
+        const i = (s + d) / 2, j = (s - d) / 2;
+        let z = height(i, j, t);
+        if (ptr.k > 0.001) {
+          const cx = ox + d * a, cy = oy + (s + 1) * a * 0.5;
+          z += a * 1.1 * ptr.k * Math.exp(-((cx - ptr.x) ** 2 + (cy - ptr.y) ** 2) / sig2);
+        }
+        const isCur = lime.cur && lime.cur.i === i && lime.cur.j === j;
+        const isPrev = lime.prev && lime.prev.i === i && lime.prev.j === j;
+        if (isCur) z += lift(lime.cur, true);
+        else if (isPrev) z += lift(lime.prev, false);
+        const a0 = GAP, a1 = 1 - GAP;
+        const t0 = P(i, j, a0, a0, z), t1 = P(i, j, a1, a0, z), t2 = P(i, j, a1, a1, z), t3 = P(i, j, a0, a1, z);
+        const b2 = P(i, j, a1, a1, 0), b3 = P(i, j, a0, a1, 0), b1 = P(i, j, a1, a0, 0);
+        g.fillStyle = LEFT;
+        g.beginPath(); g.moveTo(t3[0], t3[1]); g.lineTo(t2[0], t2[1]); g.lineTo(b2[0], b2[1]); g.lineTo(b3[0], b3[1]); g.closePath(); g.fill();
+        g.fillStyle = RIGHT;
+        g.beginPath(); g.moveTo(t2[0], t2[1]); g.lineTo(t1[0], t1[1]); g.lineTo(b1[0], b1[1]); g.lineTo(b2[0], b2[1]); g.closePath(); g.fill();
+        g.fillStyle = TOP;
+        g.beginPath(); g.moveTo(t0[0], t0[1]); g.lineTo(t1[0], t1[1]); g.lineTo(t2[0], t2[1]); g.lineTo(t3[0], t3[1]); g.closePath(); g.fill();
+        // the lime top: a strip of the top along its u axis, uncovered on the way in and out
+        if (isCur || isPrev) {
+          let lo = 0, hi = 1;
+          if (isCur) hi = calm ? 1 : outExpo(clamp((now - lime.cur.t0) / 420));
+          if (isPrev) lo = inCubic(clamp((now - lime.prev.t1) / 420));
+          if (isCur && isPrev) lo = 0;
+          if (hi > lo) {
+            const u0 = a0 + SPAN * lo, u1 = a0 + SPAN * hi;
+            const l0 = P(i, j, u0, a0, z), l1 = P(i, j, u1, a0, z), l2 = P(i, j, u1, a1, z), l3 = P(i, j, u0, a1, z);
+            g.fillStyle = LIME;
+            g.beginPath(); g.moveTo(l0[0], l0[1]); g.lineTo(l1[0], l1[1]); g.lineTo(l2[0], l2[1]); g.lineTo(l3[0], l3[1]); g.closePath(); g.fill();
+          }
+        }
+        g.strokeStyle = EDGE;
+        g.beginPath();
+        g.moveTo(t0[0], t0[1]); g.lineTo(t1[0], t1[1]); g.lineTo(t2[0], t2[1]); g.lineTo(t3[0], t3[1]); g.closePath();
+        g.moveTo(t3[0], t3[1]); g.lineTo(b3[0], b3[1]); g.lineTo(b2[0], b2[1]); g.lineTo(b1[0], b1[1]); g.lineTo(t1[0], t1[1]);
+        g.moveTo(t2[0], t2[1]); g.lineTo(b2[0], b2[1]);
+        g.stroke();
+      }
+    }
+    if (!calm) raf = requestAnimationFrame(frame);
+  }
+  function wake() { if (!raf && seen) raf = requestAnimationFrame(frame); }
+
+  // real pointer: it takes over, and after 3 s of rest the script drifts again
+  const onMove = (e) => {
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    const r = cv.getBoundingClientRect();
+    ptr.tx = e.clientX - r.left; ptr.ty = e.clientY - r.top;
+    if (now() - ptr.real > 3000) { ptr.x = ptr.tx; ptr.y = ptr.ty; }
+    ptr.real = now();
+  };
+  const now = () => performance.now();
+  addEventListener('pointermove', onMove, { passive: true });
+
+  const dprNow = () => Math.min(3, window.devicePixelRatio || 1);
+  dpr = dprNow();
+  const ro = new ResizeObserver(() => { dpr = dprNow(); W = 0; size(); });
+  ro.observe(cv);
+  const io = new IntersectionObserver(([e]) => { seen = e.isIntersecting; if (seen) last = now(); wake(); });
+  io.observe(cv);
+  document.addEventListener('visibilitychange', () => { last = now(); wake(); });
+  size();
+  return {
+    redraw() { wake(); },
+    stop() { ro.disconnect(); io.disconnect(); removeEventListener('pointermove', onMove); if (raf) cancelAnimationFrame(raf); },
+  };
+}
+</script>
+<script>
+  let field = cubeField(document.getElementById('cf-canvas'));
+  QM.demo({ kind: 'loop', restart() { field.redraw(); } });
+</script>
+</body>
+</html>

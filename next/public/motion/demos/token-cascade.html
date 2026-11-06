@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token cascade · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "token-cascade", "title": "Token cascade", "group": "studio", "added": "2026-11-06", "cat": "scenes", "order": 10,
+  "kind": "states", "tone": "paper", "n": 4, "shot": 9000,
+  "line": "4 states · 1 token · 9 uses · ease-move",
+  "summary": "A Strata scene that changes one token. The accent swatch turns from ink to lime and its value rolls to the new hex. An elbow wire draws to the Button, which is uncovered in lime from the side the wire arrives. Another wire runs on to the Card, whose tag and foot bar take it, and a last one to the page preview, where all six uses change together. A counter on the token rolls 0, 1, 3, 9.",
+  "spec": [
+    ["States", "4: token · button · card · page (n = 4, t in beats)"],
+    ["Wire", "2px ink elbow, stroke-dashoffset 1 → 0 over the first half of its state, ease-move; a 8px square node lands at each end"],
+    ["Lime", "a lime layer over the ink one, clip-path inset(0 100% 0 0) → inset(0): uncovered left to right (the swatch, bottom to top)"],
+    ["Stagger", "card: tag at 0.35–0.8, foot bar at 0.5–1 · page: all six uses on the same 0.45–1 so they change at once"],
+    ["Value", "#121417 and #B8FF00 in one sleeve, translateY 0 → −100%, with the swatch"],
+    ["Counter", "Uses 0 → 1 → 3 → 9: a column of digits, translateY by the beat"],
+    ["Trigger", "seek(t): pure in t, so the scrubber and the rewind run it backwards · reduced motion snaps each state, nothing slides"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-06"],
+  "where": "Strata's page on a launch site: the step that says change one token and see the whole system follow.",
+  "rules": [
+    "One lime, one job: the accent. Everything that uses the token takes the same lime, the same way, and nothing else on the scene is lime.",
+    "Each wire arrives first and the target is uncovered from the side it arrives on: cause, then effect.",
+    "The page's six uses change at the same moment: a token is one edit, not six.",
+    "Nothing fades. Lime is uncovered, wires are drawn, digits roll.",
+    "Every frame is a function of t, so a scrub in either direction is exact."
+  ],
+  "tags": ["scene", "states", "design tokens", "wire", "wipe", "strata"]
+}
+</script>
+<style data-code>
+/* Token cascade. A 640 × 400 scene on a white surface; zoom it to its box. Tokens: --signal, --on-lime, the qbix easings. */
+.tc { --ink: #121417; --lime: #B8FF00; --on: #0c1300; --tint: rgba(18, 20, 23, .64); --cut: 10px;
+  position: relative; width: 640px; height: 400px; background: #fff; color: var(--ink); overflow: hidden;
+  font-family: Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+.tc > * { position: absolute; }
+.tc .mono { font-family: 'Encode Sans', Geist, sans-serif; font-variant-numeric: tabular-nums; }
+.tc-k { font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--tint); }
+.tc-lab { position: absolute; left: 12px; top: 12px; font: 11px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--tint); }
+
+/* a sleeve: lines stacked in a one-line window, rolled by --r (lines) */
+.tc-sleeve { overflow: hidden; height: var(--h, 20px); line-height: var(--h, 20px); }
+.tc-sleeve > * { display: block; translate: 0 calc(var(--r, 0) * var(--h, 20px) * -1); }
+.tc-sleeve i { display: block; height: var(--h, 20px); font-style: normal; white-space: nowrap; }
+
+/* the accent: an ink layer with a lime layer over it, uncovered by --p (0 … 1) */
+.acc { position: relative; display: flex; align-items: center; justify-content: center; background: var(--ink); color: #fff; overflow: hidden; }
+.acc-top { position: absolute; inset: -1px; display: flex; align-items: center; justify-content: center; background: var(--lime); color: var(--on);
+  clip-path: inset(-1px calc((1 - var(--p, 0)) * 100% - var(--p, 0) * 1px) -1px -1px); }
+.acc--up .acc-top { clip-path: inset(calc((1 - var(--p, 0)) * 100% - var(--p, 0) * 1px) -1px -1px -1px); }
+.acc.cut { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+
+/* the token */
+.tc-token { left: 28px; top: 108px; width: 148px; height: 200px; background: #f3f4f5; }
+.tc-token .nm { position: absolute; left: 12px; top: 32px; font: 500 19px/28px 'Encode Sans', Geist, sans-serif; letter-spacing: -.01em; }
+.tc-token .acc { position: absolute; left: 12px; top: 70px; width: 124px; height: 62px; }
+.tc-token .val { position: absolute; left: 12px; top: 142px; font: 13px/20px 'Encode Sans', Geist, sans-serif; color: var(--tint); }
+.tc-token .use { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.tc-token .use b { font: 500 16px/20px 'Encode Sans', Geist, sans-serif; }
+
+/* the components */
+.tc-comp { background: #f3f4f5; }
+.tc-btn { left: 224px; top: 60px; width: 168px; height: 110px; }
+.tc-btn .acc { position: absolute; left: 12px; top: 38px; width: 124px; height: 40px; font: 500 14px/1 Geist, sans-serif; }
+.tc-btn .acc-top { font: inherit; }
+.tc-btn .nt { position: absolute; left: 12px; top: 86px; font: 11px/14px 'Encode Sans', Geist, sans-serif; color: var(--tint); }
+.tc-card { left: 224px; top: 204px; width: 168px; height: 148px; }
+.tc-card .mk { position: absolute; left: 12px; top: 34px; width: 144px; height: 100px; background: #fff; }
+.tc-card .tg { position: absolute; left: 10px; top: 10px; width: 38px; height: 18px; font: 500 10px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.tc-card .tg .acc-top { font: inherit; }
+.tc-card .ln { position: absolute; left: 10px; height: 7px; background: rgba(18, 20, 23, .12); }
+.tc-card .ft { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; }
+
+/* the page preview: six uses of the accent */
+.tc-page { left: 432px; top: 62px; width: 180px; height: 300px; background: #f3f4f5; }
+.tc-page .url { position: absolute; left: 12px; top: 10px; font: 10px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--tint); }
+.tc-page .nav { position: absolute; right: 12px; top: 10px; width: 38px; height: 16px; }
+.tc-page h3 { position: absolute; left: 12px; top: 46px; width: 150px; margin: 0; font: 400 24px/1.04 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
+.tc-page .ln { position: absolute; left: 12px; height: 6px; background: rgba(18, 20, 23, .12); }
+.tc-page .cta { position: absolute; left: 12px; top: 130px; width: 92px; height: 30px; font: 500 12px/1 Geist, sans-serif; }
+.tc-page .cta .acc-top { font: inherit; }
+.tc-page .tg { position: absolute; left: 12px; top: 176px; width: 38px; height: 18px; font: 500 10px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.tc-page .tg .acc-top { font: inherit; }
+.tc-page .pc { position: absolute; top: 204px; width: 74px; height: 60px; background: #fff; }
+.tc-page .pc .ft { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; }
+.tc-page .lk { position: absolute; left: 12px; top: 272px; font: 500 12px/18px Geist, sans-serif; }
+.tc-page .lk .ul { position: absolute; left: 0; right: 0; bottom: -4px; height: 2px; }
+
+/* the wires: drawn over the cards, 2px ink elbows with a square node at each end */
+.tc-wires { left: 0; top: 0; width: 640px; height: 400px; pointer-events: none; overflow: visible; }
+.tc-wires path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: miter; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.tc-wires rect { fill: var(--ink); transform-box: fill-box; transform-origin: center; transform: scale(0); }
+
+</style>
+<style>
+  .tcw { display: grid; justify-items: center; }
+  .tc-box { width: min(76vw, 960px, calc((100vh - 150px) * 1.6)); aspect-ratio: 640 / 400; }
+  html:not(.qm-tile) .tc-box { width: min(76vw, 960px, calc((100vh - 190px) * 1.6)); }
+  .tc-box .tc { zoom: var(--z, 1); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="tcw">
+    <div class="tc-box" id="tc-box">
+<!-- code -->
+<div class="tc" id="tc" role="img" aria-label="Strata scene: changing the accent token turns the button, the card and the page preview lime">
+  <p class="tc-k" style="left:28px; top:24px; margin:0">Strata · Change one token</p>
+  <div class="tc-k tc-sleeve mono" style="right:28px; top:22px; --h:20px; text-align:right" data-k="step"><span><i>00 / 04</i><i>01 / 04</i><i>02 / 04</i><i>03 / 04</i><i>04 / 04</i></span></div>
+
+  <div class="tc-token">
+    <span class="tc-lab">Token</span>
+    <span class="nm">--accent</span>
+    <div class="acc acc--up" data-k="swatch"><div class="acc-top"></div></div>
+    <div class="val tc-sleeve" style="--h:20px" data-k="val"><span><i>#121417</i><i>#B8FF00</i></span></div>
+    <div class="use"><span class="tc-lab" style="position:static">Uses</span><div class="tc-sleeve" style="--h:20px; width:16px; text-align:right" data-k="uses"><b><span><i>0</i><i>1</i><i>3</i><i>9</i></span></b></div></div>
+  </div>
+
+  <div class="tc-comp tc-btn">
+    <span class="tc-lab">Button</span>
+    <div class="acc cut" data-k="btn" style="--cut:10px">Start a brief<div class="acc-top">Start a brief</div></div>
+    <span class="nt">fill · --accent</span>
+  </div>
+
+  <div class="tc-comp tc-card">
+    <span class="tc-lab">Card</span>
+    <div class="mk">
+      <div class="acc tg" data-k="tag">New<div class="acc-top">New</div></div>
+      <i class="ln" style="top:40px; width:104px"></i><i class="ln" style="top:54px; width:72px"></i>
+      <div class="acc ft" data-k="foot"><div class="acc-top"></div></div>
+    </div>
+  </div>
+
+  <div class="tc-page">
+    <span class="url">forma.studio</span>
+    <div class="acc cut nav" data-k="p-nav" style="--cut:6px"><div class="acc-top"></div></div>
+    <h3>Pots, made slow.</h3>
+    <i class="ln" style="top:106px; width:132px"></i><i class="ln" style="top:116px; width:96px"></i>
+    <div class="acc cut cta" data-k="p-cta" style="--cut:8px">Shop now<div class="acc-top">Shop now</div></div>
+    <div class="acc tg" data-k="p-tag">New<div class="acc-top">New</div></div>
+    <div class="pc" style="left:12px"><div class="acc ft" data-k="p-f1"><div class="acc-top"></div></div></div>
+    <div class="pc" style="left:94px"><div class="acc ft" data-k="p-f2"><div class="acc-top"></div></div></div>
+    <span class="lk">Read the story<span class="acc ul" data-k="p-ul"><span class="acc-top"></span></span></span>
+  </div>
+
+  <svg class="tc-wires" viewBox="0 0 640 400" aria-hidden="true">
+    <path data-k="w1" pathLength="1" d="M176 150H200V115H224"/>
+    <path data-k="w2" pathLength="1" d="M308 170V204"/>
+    <path data-k="w3" pathLength="1" d="M392 278H412V200H432"/>
+    <rect data-k="n1a" x="172" y="146" width="8" height="8"/><rect data-k="n1b" x="220" y="111" width="8" height="8"/>
+    <rect data-k="n2a" x="304" y="166" width="8" height="8"/><rect data-k="n2b" x="304" y="200" width="8" height="8"/>
+    <rect data-k="n3a" x="388" y="274" width="8" height="8"/><rect data-k="n3b" x="428" y="196" width="8" height="8"/>
+  </svg>
+</div>
+<!-- /code -->
+    </div>
+  </div>
+  <div class="qm-ui"><span>Scrub: one token, four states</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Token cascade. cascade(t) draws the whole scene at beat t (0 … 4): a pure function, so a scrub or a rewind is exact.
+   State k (1 … 4) plays while t runs from k − 1 to k. */
+const tcRoot = document.getElementById('tc');
+const tcq = (k) => tcRoot.querySelector(`[data-k="${k}"]`);
+const tcEl = Object.fromEntries(['step', 'swatch', 'val', 'uses', 'btn', 'tag', 'foot', 'p-nav', 'p-cta', 'p-tag', 'p-f1', 'p-f2', 'p-ul',
+  'w1', 'w2', 'w3', 'n1a', 'n1b', 'n2a', 'n2b', 'n3a', 'n3b'].map((k) => [k, tcq(k)]));
+
+const tcClamp = (x) => Math.min(1, Math.max(0, x));
+const tcMove = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);   // --ease-move
+const tcOut = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x));                          // ~ --ease-out-expo
+/* progress of state k between a and b (fractions of its beat) */
+const tcSeg = (t, k, a, b) => tcClamp((t - (k - 1) - a) / (b - a));
+
+function cascade(t) {
+  const p = (name, v) => tcEl[name].style.setProperty('--p', v.toFixed(4));
+  const wire = (w, a, b, v) => {                       // v: the wire's own 0 … 1
+    tcEl[w].style.strokeDashoffset = (1 - v).toFixed(4);
+    const sc = (n, s) => (tcEl[n].style.transform = `scale(${s.toFixed(3)})`);
+    sc(a, tcOut(tcClamp(v * 8)));                      // the start node lands first
+    sc(b, tcOut(tcClamp((v - 0.85) / 0.15)));          // the end node lands as the wire arrives
+  };
+  // 1 — the token: the swatch is uncovered from below, the value rolls with it
+  const s1 = tcOut(tcSeg(t, 1, 0, 0.8));
+  p('swatch', s1);
+  tcEl.val.style.setProperty('--r', s1.toFixed(4));
+  // 2 — a wire to the Button, which is uncovered from the side the wire arrives on
+  wire('w1', 'n1a', 'n1b', tcMove(tcSeg(t, 2, 0, 0.5)));
+  const s2 = tcOut(tcSeg(t, 2, 0.45, 1));
+  p('btn', s2);
+  // 3 — on to the Card: its tag, then its foot bar
+  wire('w2', 'n2a', 'n2b', tcMove(tcSeg(t, 3, 0, 0.45)));
+  const s3a = tcOut(tcSeg(t, 3, 0.35, 0.8)), s3b = tcOut(tcSeg(t, 3, 0.5, 1));
+  p('tag', s3a); p('foot', s3b);
+  // 4 — on to the page: every use changes at once
+  wire('w3', 'n3a', 'n3b', tcMove(tcSeg(t, 4, 0, 0.5)));
+  const s4 = tcOut(tcSeg(t, 4, 0.45, 1));
+  ['p-nav', 'p-cta', 'p-tag', 'p-f1', 'p-f2', 'p-ul'].forEach((k) => p(k, s4));
+  // the counter: Uses 0 → 1 → 3 → 9, and the step label 00 … 04
+  tcEl.uses.style.setProperty('--r', (s2 + s3b + s4).toFixed(4));
+  tcEl.step.style.setProperty('--r', Math.min(4, Math.max(0, t)).toFixed(4));
+}
+</script>
+<script>
+  // --- harness glue: fit the scene to its box, then play it by beats ------------------------
+  const box = document.getElementById('tc-box');
+  const fit = () => { const z = box.clientWidth / 640; if (z > 0) box.style.setProperty('--z', String(Math.round(z * 1000) / 1000)); };
+  fit();
+  new ResizeObserver(fit).observe(box);
+  // reduced motion: a still per state, no slide between them (as the site's driver does)
+  const seek = (t) => cascade(QM.reduced ? (t > 0 ? Math.max(1, Math.round(t)) : 0) : t);
+  cascade(0);
+  QM.demo({ kind: 'states', n: 4, seek, first: 2200, dwell: 2000, hold: 1400, rewind: 1700 });
+</script>
+</body>
+</html>

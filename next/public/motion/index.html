@@ -27,12 +27,6 @@
     <a href="#bench" data-page="bench">Bench</a>
   </nav>
   <div class="nav-right">
-    <label class="search">
-      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.4 10.4 14 14"/></svg>
-      <span class="sr-only">Find a motion</span>
-      <input id="find" type="search" placeholder="Search motion" autocomplete="off" spellcheck="false">
-      <kbd aria-hidden="true">/</kbd>
-    </label>
     <button class="icon-btn" type="button" id="theme" aria-label="Dark mode" aria-pressed="false">
       <svg class="i-moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 10.1A5.6 5.6 0 0 1 5.9 2.8a5.6 5.6 0 1 0 7.3 7.3Z"/></svg>
       <svg class="i-sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1"/></svg>
@@ -54,7 +48,6 @@
 <div class="shell" id="top">
   <main class="main" id="main">
     <section class="hero">
-      <p class="hero-line" id="hero-count"></p>
       <h1 class="hero-title">Motion you can <span class="hl">remix</span>.</h1>
       <p class="hero-lede">Every piece Qbix moves with, from <b>the mark and the loaders</b> to <b>buttons, cards and scenes</b>. Open one live, tune it and take its code.</p>
       <div class="hero-cta">
@@ -65,13 +58,37 @@
     </section>
 
     <div class="toolbar" id="toolbar">
+      <label class="search">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.6"/><path d="M10.4 10.4 14 14"/></svg>
+        <span class="sr-only">Find a motion</span>
+        <input id="find" type="search" placeholder="Search motion" autocomplete="off" spellcheck="false">
+        <kbd aria-hidden="true">/</kbd>
+      </label>
       <div class="seg seg--view" id="view" role="tablist" aria-label="Show">
-        <span class="seg-ink" aria-hidden="true"></span>
         <button type="button" role="tab" data-view="all">All</button>
         <!-- one tab per category, from data.js (app.js) -->
       </div>
       <p class="toolbar-count" id="toolbar-count"></p>
+      <!-- two ways to look: the grid, or one piece at a time to swipe through (keep right, pass left) -->
+      <div class="mode" id="mode" role="radiogroup" aria-label="Layout">
+        <button type="button" role="radio" data-mode="grid" aria-checked="true" class="is-on" title="Grid"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h4.5v4.5H2.5ZM9 2.5h4.5v4.5H9ZM2.5 9h4.5v4.5H2.5ZM9 9h4.5v4.5H9Z"/></svg><span class="sr-only">Grid</span></button>
+        <button type="button" role="radio" data-mode="swipe" aria-checked="false" title="Swipe"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5h7v11h-7ZM2 4.5v7M14 4.5v7"/></svg><span class="sr-only">Swipe</span></button>
+      </div>
     </div>
+
+    <section class="swipe" id="swipe" hidden aria-label="Swipe through the pieces">
+      <div class="swipe-deck" id="swipe-deck"></div>
+      <div class="swipe-end" id="swipe-end" hidden>
+        <p class="swipe-end-t">That is every piece here.</p>
+        <button class="btn" type="button" data-swipe-again>Start again</button>
+      </div>
+      <div class="swipe-acts">
+        <button class="swipe-btn" type="button" data-swipe="left" aria-label="Pass" title="Pass (←)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+        <button class="swipe-btn swipe-btn--open" type="button" data-swipe="open" aria-label="Open it" title="Open (↑)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 10.5 10.5 5.5M6 5.5h4.5V10"/></svg></button>
+        <button class="swipe-btn swipe-btn--keep" type="button" data-swipe="right" aria-label="Save" title="Save (→)"><svg viewBox="0 0 12 16" aria-hidden="true"><path d="M1.5 1.5H10.5V14.3L6 10.9L1.5 14.3Z"/></svg></button>
+      </div>
+      <p class="swipe-hint">Drag the card: right to save, left to pass. Or ← and →.</p>
+    </section>
 
     <section class="group no-match" id="no-match" hidden>
       <h2 class="group-title">No motion matches</h2>
@@ -137,11 +154,9 @@
       </ol>
     </section>
 
-    <footer class="foot">
-      <span id="foot-count"></span>
-      <span class="foot-built">Built from qbix.space · <span id="built"></span> · some pieces start from <a href="https://bencho.dev" target="_blank" rel="noopener">bencho.dev</a>'s free blocks (<a href="LICENSES.txt">MIT</a>) · photographs from Unsplash</span>
-      <a href="#top">Back to top ↑</a>
-    </footer>
+    <!-- the credits (bencho.dev's MIT blocks, Unsplash) stay in LICENSES.txt; the page shows none (Yuan) -->
+    <div class="foot" aria-hidden="true"></div>
+    <a class="to-top" id="to-top" href="#top" aria-label="Back to top" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3.5M3.5 8 8 3.5 12.5 8"/></svg></a>
     <div class="floor" aria-hidden="true">
       <svg id="floor-mark" viewBox="0 0 918 242" preserveAspectRatio="xMidYMin meet">
         <path d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5Z"/>
@@ -160,8 +175,8 @@
       <div class="export">
         <button class="btn btn-quiet" type="button" data-export-open aria-expanded="false" aria-controls="export-pop" hidden><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.75" y="3.25" width="9.5" height="9.5" rx="2"/><path d="M11.25 6.5 14.25 4.75v6.5L11.25 9.5"/></svg><span class="lbl">Export video</span><b class="dl-n" data-dl-n title="Downloads"></b></button>
         <div class="export-pop" id="export-pop" role="dialog" aria-label="Export video" hidden>
-          <p class="export-h">Export a showcase video</p>
-          <p class="export-note">The live piece in a designed frame, with its name and timing. MP4, 30 fps.</p>
+          <p class="export-h">Export video</p>
+          <p class="export-note">Only the motion, edge to edge. MP4, 30 fps.</p>
           <div class="export-row">
             <span>Format</span>
             <div class="seg" id="export-format" role="radiogroup" aria-label="Format">
@@ -178,7 +193,7 @@
               <button type="button" role="radio" data-secs="15" aria-checked="false">15 s</button>
             </div>
           </div>
-          <div class="export-plan" id="export-plan" data-format="16x9" aria-hidden="true"><i class="p-copy"></i><i class="p-win"></i><i class="p-rail"></i></div>
+          <div class="export-plan" id="export-plan" data-format="16x9" aria-hidden="true"><i class="p-win"></i></div>
           <div class="export-go">
             <button class="btn btn-solid" type="button" data-export-go>Export</button>
             <div class="export-bar" id="export-bar" hidden><i></i></div>
@@ -220,7 +235,7 @@
         <p class="info-lede" id="info-lede"></p>
         <div class="info-acts" id="info-acts">
           <button class="act-btn" type="button" data-save aria-pressed="false"><span class="mark" aria-hidden="true"><svg viewBox="0 0 12 16"><path d="M1.5 1.5H10.5V14.3L6 10.9L1.5 14.3Z"/></svg></span><span class="lbl">Save</span></button>
-          <button class="act-btn" type="button" data-like aria-pressed="false"><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2 10.1 2 6.1A3.1 3.1 0 0 1 8 4.6a3.1 3.1 0 0 1 6 1.5c0 4-6 7.5-6 7.5Z"/></svg><span class="lbl">Like</span><b data-like-n></b></button>
+          <button class="act-btn" type="button" data-like aria-pressed="false" hidden><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2 10.1 2 6.1A3.1 3.1 0 0 1 8 4.6a3.1 3.1 0 0 1 6 1.5c0 4-6 7.5-6 7.5Z"/></svg><span class="lbl">Like</span><b data-like-n></b></button>
           <button class="act-btn" type="button" data-remix><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="3.5" r="1.6"/><circle cx="12" cy="3.5" r="1.6"/><circle cx="8" cy="12.5" r="1.6"/><path d="M4 5.1v1.4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5.1M8 8.5v2.4"/></svg><span class="lbl">Remix</span></button>
           <button class="act-btn" type="button" data-share><svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.6 9.4 9.4 6.6M7.3 4.5l1-1a2.6 2.6 0 0 1 3.7 3.7l-1 1M8.7 11.5l-1 1A2.6 2.6 0 0 1 4 8.8l1-1"/></svg><span class="lbl">Share</span></button>
           <button class="act-btn act-btn--danger" type="button" data-remix-delete hidden><span class="lbl">Delete remix</span></button>
