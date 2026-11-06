@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import HomePage from '@/components/HomePage';
+import Home from '@/components/blocks/Home';
 
 const SITE_URL = 'https://qbix.space';
 const TITLE = 'Qbix for local businesses: listing kits and practice websites';
@@ -31,5 +31,5 @@ export const metadata: Metadata = {
 };
 
 export default function BusinessPage() {
-  return <HomePage audience="business" />;
+  return <Home audience="business" />;
 }

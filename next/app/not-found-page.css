@@ -1,0 +1,14 @@
+/* =============================================================================
+   The 404: one white block, a screen tall less the dock's room (so the floor is
+   never under it), its 404 as blocks on the floor (components/NotFoundBlocks.tsx,
+   a canvas filling the block). The words let the pointer through to the blocks,
+   all but their links. Every rule waits for .pg-404: a page's CSS stays loaded
+   after the page.
+   ============================================================================= */
+.pg-404 .nf { height: calc(100svh - 96px * var(--u)); min-height: 520px; overflow: hidden; }
+.pg-404 .nf-blocks { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; font-family: var(--font-headline); }
+.pg-404 .nf-in { position: relative; z-index: 2; padding-top: calc(var(--nav) + clamp(28px, 6vh, calc(84px * var(--u)))); pointer-events: none; }
+.pg-404 .nf-in a { pointer-events: auto; }
+.pg-404 .nf-h { max-width: 11em; }
+.pg-404 .nf-in .lede { margin-top: clamp(18px, 2.4vw, 28px); }
+.pg-404 .nf-in .acts { margin-top: clamp(24px, 3vw, 36px); }

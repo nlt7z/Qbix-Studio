@@ -1,0 +1,94 @@
+/* =============================================================================
+   The homepage (components/blocks/Home.tsx), on top of blocks.css
+   ============================================================================= */
+
+/* Hero 2, after wise.com/platform: the claim in the middle, one line under it, then a big inset card with
+   the thing itself playing in it and the converter floating over it */
+.pg-home .hv2 .in { padding-top: calc(var(--nav) + clamp(28px, 7vh, calc(96px * var(--u)))); padding-bottom: clamp(8px, 1.4vw, calc(20px * var(--u))); }
+.pg-home .hv2-say { display: grid; justify-items: center; text-align: center; }
+.pg-home .hv2-h { width: 100%; margin: 0; }
+.pg-home .hv2-h .line { margin-inline: auto; }
+.pg-home .hv2-lede { margin-top: clamp(18px, 2.6vh, calc(30px * var(--u))); max-width: 31em; font-size: var(--t-s); text-wrap: balance; }
+
+/* the cube behind the claim, the words over it */
+.pg-home .hv2-say { position: relative; isolation: isolate; }
+.pg-home .hv2-cube { position: absolute; z-index: -1; left: 50%; top: 46%; width: min(64vh, calc(560px * var(--u)), 88vw); aspect-ratio: 1; translate: -50% -50%; pointer-events: none; }
+.pg-home .hv2-cube .scene { position: absolute; inset: 0; height: auto; min-height: 0; }
+.pg-home .hv2-cube .scene > * { width: 100%; height: 100%; }
+
+/* the card: the sage, the site's cut corner, the two services side by side. It grows to full size as the page
+   scrolls into it (--g, set by Home) */
+.pg-home .hv2-wrap { margin-top: clamp(36px, 6vh, calc(72px * var(--u))); }
+.pg-home .hv2-card {
+  --g: 0;
+  position: relative;
+  padding: clamp(14px, 2vw, calc(32px * var(--u)));
+  background: var(--tint);
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  transform: scale(calc(0.92 + 0.08 * var(--g)));
+  transform-origin: 50% 0;
+}
+@media (prefers-reduced-motion: reduce) { .pg-home .hv2-card { transform: none; } }
+
+/* a service: three lines (its name, one line, time and price); pointed at, the face slides up out of its tile and
+   its picture rolls in under it (a sleeve, as the buttons' letters) */
+.pg-home .offers { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pg-home .offer {
+  position: relative; display: block; height: clamp(200px, 22vw, calc(300px * var(--u))); overflow: hidden;
+  background: var(--ink); color: #ffffff; text-decoration: none;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+}
+.pg-home .offer-face, .pg-home .offer-back { position: absolute; inset: 0; transition: transform 0.6s var(--e-out); }
+.pg-home .offer-face { display: grid; align-content: space-between; padding: clamp(20px, 2.2vw, calc(34px * var(--u))); }
+.pg-home .offer-back { transform: translateY(101%); }
+.pg-home .offer-back img { width: 100%; height: 100%; object-fit: cover; }
+.pg-home .offer-go-t { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px clamp(20px, 2.2vw, calc(34px * var(--u))); background: var(--ink); font: 300 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.02em; }
+.pg-home .offer-go-t svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+@media (hover: hover) and (pointer: fine) {
+  .pg-home .offer:hover .offer-face { transform: translateY(-101%); }
+  .pg-home .offer:hover .offer-back { transform: none; }
+}
+.pg-home .offer:focus-visible .offer-face { transform: translateY(-101%); }
+.pg-home .offer:focus-visible .offer-back { transform: none; }
+.pg-home .offer-n { font: 300 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.02em; }
+.pg-home .offer-d { margin-top: 6px; font-size: var(--t-s); color: rgba(255, 255, 255, 0.66); }
+.pg-home .offer-m { display: flex; flex-wrap: wrap; gap: 8px clamp(24px, 2.6vw, calc(44px * var(--u))); }
+.pg-home .offer-m > span { display: grid; gap: 4px; font: 300 var(--t-m)/1.1 var(--font-headline); letter-spacing: -0.02em; }
+.pg-home .offer-m small { font: 400 13px/1.2 var(--font-sans); letter-spacing: 0; color: rgba(255, 255, 255, 0.6); }
+.pg-home .offer-m del { margin-left: 0.3em; font-size: var(--t-s); color: rgba(255, 255, 255, 0.5); }
+@media (max-width: 760px) { .pg-home .offers { grid-template-columns: 1fr; } .pg-home .offer { height: 190px; } }
+
+/* the products chapter: the state after a name, the lit one's note under the list */
+.pg-home .steps .state { color: inherit; font-weight: 400; }
+.pg-home .ch-list-foot { display: grid; gap: 22px; }
+
+/* the samples, on black, as a reel that runs off the right edge */
+.pg-home .reel-wrap { margin-top: clamp(40px, 5vw, calc(72px * var(--u))); margin-right: calc(-1 * var(--gut)); }
+.pg-home .samples-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px 40px; }
+.pg-home .samples-head .h2 { max-width: 12em; }
+
+/* the other audience, in rows */
+.pg-home .cross .rows { margin-top: clamp(40px, 5vw, calc(72px * var(--u))); }
+.pg-home .cross .acts { margin-top: clamp(32px, 4vw, calc(56px * var(--u))); }
+
+/* the sign-off: the words and the glass cube */
+.pg-home .sign .in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, calc(72px * var(--u))); min-height: 100vh; padding-block: calc(var(--nav) + 32px) 48px; }
+.pg-home .sign .h1 { max-width: 9em; }
+.pg-home .sign .acts { margin-top: clamp(32px, 4vw, calc(56px * var(--u))); }
+.pg-home .sign-mail { font: 500 var(--t-s)/1 var(--font-sans); }
+.pg-home .sign-cube { position: relative; height: min(66vh, calc(600px * var(--u))); }
+@media (max-width: 899px) {
+  .pg-home .sign .in { grid-template-columns: 1fr; min-height: 0; }
+  .pg-home .sign-cube { height: 56vw; order: -1; }
+}
+
+/* the other audience's rows slide in, one after another, as the block comes up */
+.pg-home .rows-wrap { position: relative; margin-top: clamp(40px, 5vw, calc(72px * var(--u))); }
+.pg-home .cross .rows-wrap .rows { margin-top: 0; }
+.js .pg-home .rows-v4 > li { transform: translateX(64px); clip-path: inset(0 0 0 100%); transition: transform 0.85s var(--e-out) calc(var(--k) * 110ms), clip-path 0.85s var(--e-out) calc(var(--k) * 110ms); }
+.js .pg-home .rows-v4.is-in > li { transform: none; clip-path: inset(0); }
+@media (prefers-reduced-motion: reduce) { .js .pg-home .rows-v4 > li { transform: none; clip-path: none; transition: none; } }
+
+/* the sign-off's headline: its words light from grey to ink as the block comes up (Home sets .on) */
+.pg-home .sign[data-v='4'] h2 .w { color: var(--fg3); transition: color 0.35s var(--e); }
+.pg-home .sign[data-v='4'] h2 .w.on { color: var(--fg); }

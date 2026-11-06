@@ -1,0 +1,50 @@
+/* =============================================================================
+   The homepage's section options under review (components/blocks/variants) and
+   their 方案 panel. Local review only.
+   ============================================================================= */
+.vp {
+  position: fixed; z-index: 70; left: max(12px, env(safe-area-inset-left, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  width: min(420px, calc(100vw - 24px)); max-height: calc(100vh - 100px); overflow: auto;
+  background: var(--ink); color: #ffffff; font: 400 13px/1.4 var(--font-sans); letter-spacing: 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+@media (max-width: 699px) { .vp { bottom: calc(max(18px, env(safe-area-inset-bottom, 0px)) + 64px); width: auto; } }
+.vp-head { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.vp-head b { font-weight: 500; color: var(--lime); }
+.vp-sum { flex: 1; font-family: var(--font-mono, monospace); color: rgba(255, 255, 255, 0.7); letter-spacing: 0.08em; }
+.vp-head svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.vp-head[aria-expanded='false'] svg { rotate: 180deg; }
+.vp-body { display: grid; gap: 2px; padding: 0 12px 12px; }
+.vp-row { display: grid; grid-template-columns: 7.6em auto minmax(0, 1fr); align-items: center; gap: 4px 10px; padding: 3px 0; }
+.vp-k { color: rgba(255, 255, 255, 0.8); white-space: nowrap; }
+.vp-n { display: flex; gap: 2px; }
+.vp-n button { width: 24px; height: 24px; padding: 0; border: 0; background: #1b260d; color: rgba(255, 255, 255, 0.7); font: inherit; cursor: pointer; }
+.vp-n button:hover { color: #ffffff; }
+.vp-n button[aria-checked='true'] { background: #ffffff; color: var(--ink); }
+.vp-o { min-width: 0; color: rgba(255, 255, 255, 0.56); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- a chapter played by something other than the scroll (Chapter.tsx, data-drive 2–5): one screen tall ---- */
+.chapter[data-drive]:not([data-drive='1']) { --moves: 0 !important; }
+/* 2 · the steps are buttons */
+.chapter[data-drive='2'] .steps li { cursor: pointer; transition: color 0.2s var(--e); }
+.chapter[data-drive='2'] .steps li:hover { color: var(--fg); }
+.chapter[data-drive='2'] .ch-run { cursor: pointer; }
+/* 3 · on its own: a bar fills beside the step being shown, for as long as it's shown */
+.chapter[data-drive='3'] .steps li { position: relative; }
+.chapter[data-drive='3'] .steps li::before { content: ''; position: absolute; left: -14px; top: 0.25em; bottom: 0.25em; width: 2px; background: var(--hi); transform: scaleY(0); transform-origin: 50% 0; }
+.chapter[data-drive='3'][data-step='0'] .steps li:nth-child(1)::before,
+.chapter[data-drive='3'][data-step='1'] .steps li:nth-child(2)::before,
+.chapter[data-drive='3'][data-step='2'] .steps li:nth-child(3)::before,
+.chapter[data-drive='3'][data-step='3'] .steps li:nth-child(4)::before { animation: ch-fill 2.8s linear forwards; }
+@keyframes ch-fill { to { transform: scaleY(1); } }
+/* 4 · a scrubber under the picture */
+.ch-scrub { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 28px; margin: 12px 0 0; background: transparent; cursor: ew-resize; }
+.ch-scrub::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--fg) var(--p, 0%), var(--fg3) var(--p, 0%)); }
+.ch-scrub::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -7px; border: 0; background: var(--hi); }
+.ch-scrub::-moz-range-track { height: 2px; background: var(--fg3); }
+.ch-scrub::-moz-range-progress { height: 2px; background: var(--fg); }
+.ch-scrub::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 0; background: var(--hi); }
+/* 5 · the pointer across the picture */
+.chapter[data-drive='5'] .ch-run { cursor: ew-resize; touch-action: pan-y; }
+.ch-hint { margin: 12px 0 0; font-size: 13px; color: var(--fg2); }
+@media (prefers-reduced-motion: reduce) { .chapter[data-drive='3'] .steps li::before { animation: none; transform: scaleY(1); } }

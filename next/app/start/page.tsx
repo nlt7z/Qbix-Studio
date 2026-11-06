@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import Colophon from '@/components/Colophon';
-import BrandText from '@/components/BrandText';
-import StartStudio from '@/components/StartStudio';
-import Odometer from '@/components/offers/Odometer';
-import { Reveal, Words } from '@/components/Reveal';
-import Marker from '@/components/Marker';
+import type { CSSProperties } from 'react';
+import Footer from '@/components/blocks/Footer';
+import { Line, Mark, Rise } from '@/components/blocks/Rise';
 import { CONTACT_EMAIL, BOOKING_URL } from '@/lib/data';
+import Brief from './Brief';
+import './start-page.css';
 
 const START_DESC =
   'Tell Qbix what you’re building. Share your project type, budget, and timeline and we’ll reply within 24 hours — a senior AI product team in Seattle.';
@@ -36,101 +34,70 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-  {
-    k: '01',
-    t: 'We read every brief',
-    d: 'We read what you send — not a sales desk. Expect a reply within 24 hours.',
-  },
-  {
-    k: '02',
-    t: 'A short scoping call',
-    d: 'If it’s a fit, we hop on a 30-minute call to pressure-test scope, goals, and constraints.',
-  },
-  {
-    k: '03',
-    t: 'A fixed proposal',
-    d: 'You get a clear proposal — scope, price, and timeline — with no agency overhead or hand-off PDFs.',
-  },
+  { t: 'We read every brief', d: 'We read what you send, not a sales desk. Expect a reply within 24 hours.' },
+  { t: 'A short scoping call', d: 'If it’s a fit, we hop on a 30-minute call to pressure-test scope, goals, and constraints.' },
+  { t: 'A fixed proposal', d: 'You get a clear proposal (scope, price, and timeline) with no agency overhead or hand-off PDFs.' },
 ];
 
+/**
+ * Start a project: the headline across the page, the words and the cube beside the brief (white); what happens
+ * next in three numbers (black); the two ways to reach us directly (white). No dock here: this page is the brief.
+ */
 export default function StartPage() {
   return (
-    <>
-      <main className="start">
-        <section className="start-hero" data-nav-theme="dark">
-          <div className="container">
-            <Link href="/" className="sp-crumb mono">
-              ← Qbix
-            </Link>
-            <Reveal as="span" className="sp-eyebrow mono" speed="fast">
-              Start a project
-            </Reveal>
-            <Words as="h1" className="start-title" text="Tell us what you’re building." speed="slow" step={0.06} />
-            <Reveal as="p" className="sp-lede" speed="base" delay={0.35}>
-              A few more details than the quick form — project type, budget, timeline — so our first reply is already
-              useful. We read every brief and answer{" "}
-              {/* the screen's one lime is the cube beside the form: the highlighter is white */}
-              <Marker delay={1.1} className="marker--white">within 24 hours</Marker>.
-            </Reveal>
-          </div>
-        </section>
+    <main className="blocks pg-start" data-stack>
+      <section className="block block--flat hero" data-tone="white" id="top">
+        <div className="in">
+          <p className="kicker">Start a project</p>
+          <Rise as="h1" className="display hero-h" fit={{ max: 150, min: 30 }}>
+            <Line>Tell us what</Line>
+            <Line>you’re building.</Line>
+          </Rise>
+          <Brief>
+            <p className="lede" data-up="">
+              A few details, so our first reply is already useful. We read every brief and answer{' '}
+              <Mark>within 24 hours.</Mark>
+            </p>
+          </Brief>
+        </div>
+      </section>
 
-        <section className="start-work" data-nav-theme="dark">
-          <StartStudio />
-        </section>
+      <section className="block" data-tone="black">
+        <div className="in">
+          <Rise className="h1">
+            What happens <Mark>next.</Mark>
+          </Rise>
+          <ol className="next">
+            {STEPS.map((s, i) => (
+              <li key={s.t} data-up="" style={i ? ({ '--ud': `${i * 120}ms` } as CSSProperties) : undefined}>
+                <span className="next-n">{String(i + 1).padStart(2, '0')}</span>
+                <h3 className="h4">{s.t}</h3>
+                <p>{s.d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
-        <section className="start-next" data-nav-theme="dark">
-          <div className="container">
-            <Words as="h2" className="start-h2" text="What happens next" />
-            <ol className="start-next-list">
-              {STEPS.map((s, i) => (
-                <Reveal as="li" key={s.k} className="start-next-step" speed="base" delay={i * 0.12}>
-                  <span className="start-next-k mono">{s.k}</span>
-                  <h3>{s.t}</h3>
-                  <p>
-                    <BrandText>{s.d}</BrandText>
-                  </p>
-                </Reveal>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section className="start-sprint-panel" data-nav-theme="light">
-          <div className="container start-sprint-grid">
-            <div>
-              <span className="start-sprint-eyebrow mono">Design service</span>
-              <p className="start-sprint-figure">
-                <Odometer value="1–3" className="start-sprint-n" />
-                <span className="start-sprint-unit">weeks</span>
-              </p>
-            </div>
-            <div className="start-sprint-copy">
-              <p className="start-sprint-price">
-                From <strong>$500</strong> · moodboard → live domain
-              </p>
-              <Reveal as="p" speed="base">
-                From moodboard to a live domain. We design it, write the code, and ship it ready for business in one
-                to three weeks. Pick &ldquo;Design service&rdquo; above and we&rsquo;ll send the next open slot.
-              </Reveal>
-            </div>
-          </div>
-        </section>
-
-        <section className="start-reach-panel" data-nav-theme="dark">
-          <div className="container start-reach-grid">
-            <span className="sp-eyebrow mono">Reach us directly</span>
-            <a href={`mailto:${CONTACT_EMAIL}`} className="start-reach-big">
-              {CONTACT_EMAIL}
-            </a>
-            <a href={BOOKING_URL} target="_blank" rel="noreferrer" className="start-reach-big">
+      <section className="block" id="reach" data-tone="white">
+        <div className="in">
+          <p className="kicker">Reach us directly</p>
+          <div className="reach-big">
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+            <a href={BOOKING_URL} target="_blank" rel="noreferrer">
               Book a 30-min intro call ↗︎
             </a>
-            <span className="start-reach-meta mono">Remote, worldwide</span>
           </div>
-        </section>
-      </main>
-      <Colophon />
-    </>
+          <p className="reach-foot">
+            <span>
+              <b>Remote, worldwide</b>
+            </span>
+            <span>Based in Seattle, Washington</span>
+          </p>
+        </div>
+      </section>
+
+      <Footer />
+    </main>
   );
 }

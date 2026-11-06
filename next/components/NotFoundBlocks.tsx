@@ -7,7 +7,9 @@ import { useEffect, useRef } from 'react';
  * can be picked up and thrown (Qbix Motion's Physics 404). A small 2D rigid body engine: oriented
  * boxes, separating-axis contacts clipped to the touching edge, sequential impulses with friction
  * and warm starting; the pointer holds a block by the point it touched through a soft joint.
- * Blocks are flat, the top right corner cut like the site's buttons; the 0 is the screen's one lime.
+ * Blocks are flat, the top right corner cut like the site's buttons, in the white page's ink and sage;
+ * the 0 is the screen's one lime. On a touch screen the page scrolls under a finger that misses the
+ * blocks (the canvas is touch-action: pan-y); one that lands on a block holds it and the page stays.
  * With reduced motion they're settled before the first frame and stay still.
  */
 
@@ -23,17 +25,18 @@ type Contact = { p: V; depth: number; key: string; rA: V; rB: V; mn: number; mt:
 type Manifold = { A: Solid; B: Solid; n: V; pts: Contact[] };
 type Joint = { b: Body; lx: number; ly: number; tx: number; ty: number };
 
-const PAPER = '#f3f4f5';
-const INK = '#08090A';
-const GRAPHITE = '#232528';
-const FLOOR = '#161718';
+// blocks.css: lime's own black, the sage tiles, the sage a step down for the floor
+const INK = '#0F1A00';
+const WHITE = '#FFFFFF';
+const SAGE = '#EEF1E8';
+const FLOOR = '#E3E8DA';
 const SPEC: Spec[] = [
-  { t: '4', k: 'd', fill: PAPER, ink: INK },
-  { t: '0', k: 'd', fill: '#B8FF00', ink: '#0F1A00' },
-  { t: '4', k: 'd', fill: GRAPHITE, ink: PAPER },
-  { t: 'Not', k: 'w', fill: GRAPHITE, ink: PAPER },
-  { t: 'built', k: 'w', fill: PAPER, ink: INK },
-  { t: 'yet', k: 'w', fill: GRAPHITE, ink: PAPER },
+  { t: '4', k: 'd', fill: INK, ink: WHITE },
+  { t: '0', k: 'd', fill: '#B8FF00', ink: INK },
+  { t: '4', k: 'd', fill: SAGE, ink: INK },
+  { t: 'Not', k: 'w', fill: SAGE, ink: INK },
+  { t: 'built', k: 'w', fill: INK, ink: WHITE },
+  { t: 'yet', k: 'w', fill: SAGE, ink: INK },
 ];
 // contact: allowed overlap, position correction, friction, bounce (only above 120 px/s)
 const SLOP = 0.6, BETA = 0.18, MU = 0.55, E = 0.12;
@@ -340,6 +343,11 @@ export default function NotFoundBlocks({ className }: { className?: string }) {
       if (!reduce) cv.style.cursor = joint ? 'grabbing' : hit(x, y) ? 'grab' : '';
     };
     const onUp = () => { joint = null; };
+    // a finger on a block keeps the page from scrolling under it (only a cancelled touchstart can)
+    const onTouch = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!reduce && t && hit(t.clientX - OX, t.clientY - OY)) e.preventDefault();
+    };
     const onScroll = () => {
       const r = cv.getBoundingClientRect();
       OX = r.left;
@@ -350,6 +358,7 @@ export default function NotFoundBlocks({ className }: { className?: string }) {
     cv.addEventListener('pointermove', onMove);
     cv.addEventListener('pointerup', onUp);
     cv.addEventListener('pointercancel', onUp);
+    cv.addEventListener('touchstart', onTouch, { passive: false });
     document.addEventListener('visibilitychange', start);
     window.addEventListener('resize', resize);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -380,6 +389,7 @@ export default function NotFoundBlocks({ className }: { className?: string }) {
       cv.removeEventListener('pointermove', onMove);
       cv.removeEventListener('pointerup', onUp);
       cv.removeEventListener('pointercancel', onUp);
+      cv.removeEventListener('touchstart', onTouch);
       document.removeEventListener('visibilitychange', start);
       window.removeEventListener('resize', resize);
       window.removeEventListener('scroll', onScroll);

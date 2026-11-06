@@ -1,35 +1,40 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import './globals.css';
+import './blocks.css';
 
-import TopNav from '@/components/TopNav';
-import LoadingScreen from '@/components/LoadingScreen';
-import LimeIn from '@/components/LimeIn';
+import Nav from '@/components/blocks/Nav';
+import Dock from '@/components/blocks/Dock';
+import Runtime from '@/components/blocks/Runtime';
 import FastScroll from '@/components/FastScroll';
 import { ContactModalProvider } from '@/components/ContactModalProvider';
 import { CONTACT_EMAIL } from '@/lib/data';
 
-// Headlines — Eurostile (licensed, self-hosted). Single Regular weight, so the
-// CSS disables weight synthesis on headings to avoid faux-bold smearing.
+// Headlines — Outfit (OFL, self-hosted variable), the open face closest to the qbix logo. Its range is
+// declared as 100–300, so every weight-400 headline renders Light: the logo's own stroke (2026-11-05).
 const headlineFont = localFont({
-  src: [{ path: './fonts/Eurostile-400.woff2', weight: '400', style: 'normal' }],
-  variable: '--font-eurostile',
+  src: [{ path: './fonts/Outfit-var.woff2', weight: '100 300', style: 'normal' }],
+  variable: '--font-outfit',
   display: 'swap',
 });
 
-// Body voice — Geist (self-hosted 400/500/600), exposed as --font-geist.
+// Body — Geist, one step lighter everywhere: 500 is drawn from the 400 cut, 600 from the 500 cut.
 const bodyFont = localFont({
   src: [
     { path: './fonts/Geist-400.woff2', weight: '400', style: 'normal' },
-    { path: './fonts/Geist-500.woff2', weight: '500', style: 'normal' },
-    { path: './fonts/Geist-600.woff2', weight: '600', style: 'normal' },
+    { path: './fonts/Geist-400.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/Geist-500.woff2', weight: '600', style: 'normal' },
   ],
   variable: '--font-geist',
   display: 'swap',
 });
 
-// Technical register — Encode Sans (labels, tags, timestamps, numbers),
-// exposed as --font-encode. Kept tabular so digits still align.
+// The scenes' drawings keep the old site's faces: Eurostile (licensed) for the products they show, Encode
+// Sans for their small labels.
+const sceneFont = localFont({
+  src: [{ path: './fonts/Eurostile-400.woff2', weight: '400', style: 'normal' }],
+  variable: '--font-eurostile',
+  display: 'swap',
+});
 const monoFont = localFont({
   src: [
     { path: './fonts/EncodeSans-400.woff2', weight: '400', style: 'normal' },
@@ -168,17 +173,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${headlineFont.variable} ${bodyFont.variable} ${monoFont.variable}`}
+      suppressHydrationWarning
+      className={`${headlineFont.variable} ${bodyFont.variable} ${sceneFont.variable} ${monoFont.variable}`}
     >
-      <body>
-        <LoadingScreen />
+      <head>
+        {/* entrances start hidden only when script runs, set before the first paint */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
+      <body data-tone="white">
         <ContactModalProvider>
-          <TopNav />
+          <Nav />
           {children}
+          <Dock />
         </ContactModalProvider>
-        {/* Campaign texture: film grain over everything, lime cursor accent. */}
-        <div className="site-grain" aria-hidden />
-        <LimeIn />
+        <Runtime />
         <FastScroll />
         <script
           type="application/ld+json"

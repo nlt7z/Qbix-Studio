@@ -1,0 +1,66 @@
+/* =============================================================================
+   The Practice Website Refresh (/practice-websites), on the Listing Launch Kit's pattern: the promise
+   and the offer, why it matters, what you get (the tour), how it works, questions, the price.
+   The page's own layout; every rule sits under .pg-practice. The parts are blocks.css's.
+   ============================================================================= */
+
+/* the hero: the headline and its lede on the left, the offer beside them */
+.pg-practice .pr-hero .in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, calc(500px * var(--u))); align-items: center; gap: clamp(32px, 5vw, calc(96px * var(--u))); min-height: min(100vh, calc(980px * var(--u))); padding-top: calc(var(--nav) + clamp(28px, 6vh, calc(80px * var(--u)))); padding-bottom: clamp(48px, 7vh, calc(96px * var(--u))); }
+.pg-practice .pr-hero-say { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(24px, 3.4vh, calc(40px * var(--u))); align-content: center; min-width: 0; }
+.pg-practice .pr-hero-say > * { min-width: 0; } /* a fitted headline must not size its own column */
+.pg-practice .pr-hero-say .display { margin-left: -0.04em; }
+.pg-practice .pr-hero-say .lede { color: var(--fg); font-size: var(--t-s); max-width: 26em; }
+.pg-practice .conv-foot a { color: var(--fg); }
+@media (max-width: 899px) { .pg-practice .pr-hero .in { grid-template-columns: minmax(0, 1fr); min-height: 0; } }
+
+/* why it matters: the claim left, the reason right */
+.pg-practice .pr-why .in { display: grid; gap: clamp(20px, 2.4vw, calc(32px * var(--u))); }
+.pg-practice .pr-why .lede { max-width: 30em; }
+
+/* the tour: seven stops, so the rows and notes past the fourth light too */
+.pg-practice [data-steps][data-step='4'] .steps li:nth-child(5),
+.pg-practice [data-steps][data-step='5'] .steps li:nth-child(6),
+.pg-practice [data-steps][data-step='6'] .steps li:nth-child(7) { color: var(--fg); }
+.pg-practice [data-step='4'] .notes > :nth-child(5),
+.pg-practice [data-step='5'] .notes > :nth-child(6),
+.pg-practice [data-step='6'] .notes > :nth-child(7) { visibility: visible; }
+@media (max-width: 899px), (max-height: 559px) {
+  .pg-practice .pr-tour .ch-run .scene { height: min(50vh, calc((100vw - 2 * var(--gap) - 2 * var(--gut)) * 0.84)); }
+}
+
+/* how it works: three days, a big row each */
+.pg-practice .pr-how-head { display: grid; gap: clamp(20px, 2.4vw, calc(32px * var(--u))); }
+.pg-practice .how { list-style: none; margin: clamp(64px, 8vw, calc(120px * var(--u))) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px clamp(24px, 3vw, calc(56px * var(--u))); }
+.pg-practice .how li { display: grid; gap: clamp(16px, 2vw, calc(28px * var(--u))); align-content: start; }
+.pg-practice .how-day { font: 400 var(--t-l)/0.8 var(--font-headline); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.pg-practice .how p { margin: 0; max-width: 14em; font: 400 var(--t-m)/1.2 var(--font-headline); letter-spacing: -0.025em; text-wrap: balance; }
+.pg-practice .how-v { margin-top: -6px; max-width: 22em; font-size: var(--t-s); color: var(--fg2); text-wrap: balance; }
+@media (max-width: 760px) { .pg-practice .how { grid-template-columns: 1fr; } }
+
+/* questions, and who answers them */
+.pg-practice .pr-q .in { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); grid-template-areas: 'h faq' 'about faq'; grid-template-rows: auto 1fr; gap: clamp(28px, 4vw, calc(56px * var(--u))) clamp(36px, 5vw, calc(96px * var(--u))); align-items: start; }
+.pg-practice .pr-q .in > h2 { grid-area: h; }
+.pg-practice .pr-q .faq { grid-area: faq; }
+.pg-practice .pr-q-about { grid-area: about; display: grid; gap: 12px; max-width: 26em; }
+.pg-practice .pr-q-about .body { font-size: var(--t-s); }
+@media (max-width: 899px) { .pg-practice .pr-q .in { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'h' 'faq' 'about'; grid-template-rows: none; } .pg-practice .pr-q-about { margin-top: 24px; } }
+
+/* in the stack, the next block slides over a block's foot first: these feet are kept empty and
+   tall, so the claim, the three days and the open answer stay in view while it comes */
+@media (min-width: 900px) and (min-height: 560px) {
+  .pg-practice .pr-why .in { padding-bottom: clamp(120px, 22vh, calc(240px * var(--u))); }
+  .pg-practice .pr-how .in, .pg-practice .pr-q .in { padding-bottom: clamp(140px, 32vh, calc(340px * var(--u))); }
+}
+
+/* the sign-off: the price as the floor word, the site live beside it */
+.pg-practice .pr-sign .in { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, calc(72px * var(--u))); min-height: 100vh; padding-block: calc(var(--nav) + 32px) 56px; }
+.pg-practice .pr-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.16em; margin: 18px 0 0; font: 400 var(--t-xl-fit, var(--t-xl))/0.84 var(--font-headline); letter-spacing: -0.055em; font-variant-numeric: tabular-nums; }
+.pg-practice .pr-price del { font-size: var(--t-m); letter-spacing: -0.03em; }
+.pg-practice .pr-price-u { font: 500 var(--t-s)/1.2 var(--font-sans); letter-spacing: -0.01em; color: var(--fg2); }
+.pg-practice .pr-sign-split { margin: clamp(20px, 2.4vw, calc(32px * var(--u))) 0 0; font-size: var(--t-s); color: var(--fg2); }
+.pg-practice .pr-sign .acts { margin-top: clamp(28px, 3.4vw, calc(44px * var(--u))); }
+.pg-practice .pr-sign-note { margin: 18px 0 0; font-size: var(--t-s); color: var(--fg2); }
+.pg-practice .pr-sign-note a { color: var(--fg); }
+.pg-practice .pr-live { position: relative; height: min(64vh, calc(580px * var(--u))); }
+.pg-practice .pr-live .scene { height: 100%; }
+@media (max-width: 899px) { .pg-practice .pr-sign .in { grid-template-columns: 1fr; min-height: 0; } .pg-practice .pr-live { height: 92vw; } }

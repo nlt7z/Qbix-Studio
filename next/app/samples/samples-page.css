@@ -1,0 +1,83 @@
+/* =============================================================================
+   /samples: the samples on a map, then a block a kind (its name on the left,
+   its cards on the right), the sign-off.
+   Every rule waits for .pg-samples: a page's CSS stays loaded after the page.
+   ============================================================================= */
+
+/* ---- the map: the block holds while the scroll flies from the whole coast to each region (SamplesMap) ---- */
+.pg-samples .smap { height: calc(var(--len) + 100svh); padding: 0; }
+.pg-samples .smap-stage { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.pg-samples .smap-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pg-samples .smap-pins { position: absolute; inset: 0; pointer-events: none; }
+.pg-samples .smap-pin { position: absolute; left: 0; top: 0; }
+.pg-samples .smap-pin i { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; background: var(--lime); }
+.pg-samples .smap-pin > span { position: absolute; left: 12px; top: -9px; font-size: 13px; line-height: 18px; color: var(--fg2); white-space: nowrap; visibility: hidden; }
+.pg-samples .smap-pin[data-named] > span { visibility: visible; }
+.pg-samples .smap-pin.studio i { background: #ffffff; }
+.pg-samples .smap-pin.studio > span { color: var(--fg); font-weight: 500; }
+.pg-samples .smap-hero { position: absolute; z-index: 3; left: var(--gut); top: calc(var(--nav) + clamp(28px, 7vh, calc(96px * var(--u)))); max-width: min(30em, 40%); }
+.pg-samples .smap-hero .h1 { margin: 14px 0 0; }
+.pg-samples .smap-hero .lede { margin: 16px 0 0; color: var(--fg2); }
+
+/* a region's samples, beside the map: each plays and opens its page */
+.pg-samples .smap-panel { position: absolute; z-index: 4; right: var(--gut); top: calc(var(--nav) + 24px); bottom: 32px; width: min(calc(440px * var(--u)), 40%); display: grid; align-content: center; animation: smap-in 0.55s var(--e-out); }
+@keyframes smap-in { from { clip-path: inset(0 0 100% 0); transform: translateY(24px); } to { clip-path: inset(0 0 -10% 0); transform: none; } }
+.pg-samples .smap-k { margin: 0; font-size: var(--t-s); color: var(--fg2); }
+.pg-samples .smap-h { margin: 6px 0 0; font: 300 var(--t-l)/1.02 var(--font-headline); letter-spacing: -0.035em; text-wrap: balance; }
+.pg-samples .smap-sub { margin: 10px 0 18px; font-size: var(--t-s); color: var(--fg2); }
+.pg-samples .smap-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pg-samples .smap-card { display: grid; grid-template-columns: calc(64px * var(--u)) minmax(0, 1fr); gap: 12px; align-items: center; padding: 8px; background: var(--soft); color: var(--fg); text-decoration: none; transition: background-color 0.2s var(--e); }
+.pg-samples .smap-card:hover { background: var(--soft2); }
+.pg-samples .smap-media { position: relative; aspect-ratio: 9 / 16; overflow: hidden; background: var(--soft2); }
+.pg-samples .smap-media img, .pg-samples .smap-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pg-samples .smap-t b { display: block; font-size: var(--t-s); font-weight: 500; line-height: 1.3; }
+.pg-samples .smap-t > span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.35; color: var(--fg2); }
+/* at the end, the kinds to jump to */
+.pg-samples .smap-jump { list-style: none; margin: 0; padding: 0; }
+.pg-samples .smap-jump a { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-top: 1px solid rgba(255, 255, 255, 0.14); font-size: var(--t-s); font-weight: 500; text-decoration: none; color: var(--fg); transition: color 0.2s var(--e); }
+.pg-samples .smap-jump a:hover { color: var(--lime); }
+.pg-samples .smap-jump span { color: var(--fg2); font-variant-numeric: tabular-nums; }
+@media (max-width: 859px) {
+  .pg-samples .smap-hero { right: var(--gut); max-width: none; }
+  .pg-samples .smap-panel { left: 0; right: 0; top: auto; bottom: 0; width: auto; align-content: end; padding: 14px var(--gut) 84px; background: var(--bg); }
+  .pg-samples .smap-card { grid-template-columns: 40px minmax(0, 1fr); gap: 8px; padding: 6px; }
+  .pg-samples .smap-t > span { display: none; }
+  .pg-samples .smap-h { font-size: 30px; }
+  .pg-samples .smap-sub { margin-bottom: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .pg-samples .smap-panel { animation: none; } }
+
+/* ---- a group: its name big on the left, its cards on the right ---- */
+.pg-samples .grp-in { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(28px, 4vw, calc(72px * var(--u))); align-items: start; }
+.pg-samples .grp-head { display: grid; gap: 14px; align-content: start; }
+.pg-samples .grp-n { margin: 0; font: 500 var(--t-s)/1 var(--font-sans); color: var(--fg2); }
+.pg-samples .grp-title { margin: 0; font: 400 var(--t-l)/1 var(--font-headline); letter-spacing: -0.035em; font-synthesis-weight: none; text-wrap: balance; }
+.pg-samples .grp-count { margin: 6px 0 0; font-size: var(--t-s); color: var(--fg2); }
+.pg-samples .grp-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(28px, 3vw, calc(44px * var(--u))) 8px; }
+.pg-samples .grp-cards > li { min-width: 0; }
+@media (min-width: 900px) and (min-height: 560px) { .pg-samples .grp-head { position: sticky; top: calc(var(--nav) + 40px); } }
+@media (max-width: 899px) {
+  .pg-samples .grp-in { grid-template-columns: 1fr; }
+  .pg-samples .grp-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* a card: the cover, then who it was made for; its preview rises into the cover while it plays */
+.pg-samples .grp .vcard-media video { opacity: 1; clip-path: inset(100% 0 0 0); transition: clip-path 0.5s var(--e-out); }
+.pg-samples .grp .vcard.is-playing .vcard-media video { clip-path: inset(0); }
+.pg-samples .grp .vcard-t { gap: 3px; }
+/* the arrow is glued to the name's last word (a no-break space), so it never sits alone on a line */
+.pg-samples .grp .vcard-name::after { content: '\a0\2197\FE0E'; position: relative; left: 0; top: 0; color: var(--fg2); transition: left 0.26s var(--e), top 0.26s var(--e), color 0.26s var(--e); }
+.pg-samples .grp .vcard:hover .vcard-name::after, .pg-samples .grp .vcard.is-playing .vcard-name::after { left: 2px; top: -2px; color: var(--fg); }
+/* what it is in ink, then the town */
+.pg-samples .grp .vcard-line { color: var(--fg); }
+.pg-samples .grp .vcard-line + .vcard-line { color: var(--fg2); }
+@media (prefers-reduced-motion: reduce) {
+  .pg-samples .grp .vcard-media video, .pg-samples .grp .vcard-name::after { transition: none; }
+}
+
+/* ---- the sign-off: an invitation, and the kit's price as a figure ---- */
+.pg-samples .sign-in { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(40px, 5vw, calc(96px * var(--u))); align-items: end; }
+.pg-samples .sign-in .head { max-width: 44rem; }
+.pg-samples .sign-in .acts { margin-top: clamp(32px, 4vw, calc(52px * var(--u))); }
+.pg-samples .sign .figs { grid-template-columns: 1fr; gap: clamp(32px, 4vw, calc(48px * var(--u))); }
+@media (max-width: 899px) { .pg-samples .sign-in { grid-template-columns: 1fr; align-items: start; } }

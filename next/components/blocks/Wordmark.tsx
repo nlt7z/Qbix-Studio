@@ -1,0 +1,13 @@
+/** The qbix wordmark (the logo's own path). With `dot`, the i's square is drawn apart (the footer's lime point). */
+const BODY =
+  'M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z';
+const TITTLE = 'M583.5 0H616.5V34H583.5Z';
+
+export default function Wordmark({ dot = false }: { dot?: boolean }) {
+  return (
+    <svg viewBox="0 0 918 342" aria-hidden="true">
+      <path d={BODY} />
+      <path d={TITTLE} className={dot ? 'dot' : undefined} />
+    </svg>
+  );
+}

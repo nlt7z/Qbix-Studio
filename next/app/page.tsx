@@ -1,5 +1,5 @@
-import HomePage from '@/components/HomePage';
+import Home from '@/components/blocks/Home';
 
 export default function LandingPage() {
-  return <HomePage audience="ai" />;
+  return <Home audience="ai" />;
 }

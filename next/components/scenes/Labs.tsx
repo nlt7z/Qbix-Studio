@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import '@/app/scenes-labs.css';
+import '@/app/scenes-labs-interview.css';
 import Scene from '@/components/scene/Scene';
 import { A, Lock, Play, Check, cut, notch } from '@/components/scene/kit';
 import { BidScreen, playBid } from '@/components/scenes/BidScreen';
@@ -18,9 +19,10 @@ import { E } from '@/lib/scene/timeline';
  * 3 · TTS Editor, on the way: a voice as a field of bars in depth (time
  *     across, pitch bands going back), its pitch drawn floating over it, a
  *     playhead plane moving through it, and the script lit word by word;
- * 4 · Interview Assistant, on the way: a call (photographs); frosted over
- *     it, the live captions and the assistant, whose hints arrive while the
- *     candidate talks.
+ * 4 · Interview Assistant, on the way: the call, drawn: its last minute as
+ *     two voices along a ruler, his answer coming in on his lane as its
+ *     words are typed below, and beside it the assistant, each hint pinned
+ *     to the moment of the answer it came from, the newest lit.
  * Each move: the cube pulls back a little and turns a quarter to the left,
  * the next window coming round from the right, then settles back in; its
  * address is typed, its name (its tag with it) comes up in the title above,
@@ -193,11 +195,39 @@ const SLIDERS: [string, string, number][] = [
   ['Warmth', '70%', 0.7],
 ];
 
-/* --- the Interview Assistant: a call, the assistant and the captions frosted over it --- */
-const SIDE = { x: 422, y: 16, w: 280, h: 388 };
-const HINTS = { x: 438, w: 248, h: 60, y: [56, 124, 192] };
+/* --- the Interview Assistant, drawn: the call's last minute, what was just said, the assistant beside it --- */
+// the minute runs along the lanes, 0 (13:32) to 1 (now, 14:32); a voice is bars mirrored round its lane's middle
+const IV_LANE = { x: 70, w: 324, you: { y: 96, h: 22 }, sam: { y: 138, h: 40 } };
+const IV_RULER = 70;
+const IV_STEP = 4;
+const IV_YOU: [number, number][] = [[0.03, 0.12], [0.42, 0.5]];
+const IV_SAM: [number, number][] = [[0.15, 0.38]];
+const IV_NOW: [number, number] = [0.53, 0.97]; // his answer, coming in
+const IV_MOMENTS = [0.66, 0.8, 0.93]; // where in it each hint came from
+const ivX = (f: number) => IV_LANE.x + f * IV_LANE.w;
+const ivAt = (f: number) => {
+  const sec = 13 * 60 + 32 + Math.round(f * 60);
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+};
+/** A voice over the given parts of the minute: bars every 4px, loudest mid-phrase, in a lane at y, h tall. */
+function ivVoice(parts: [number, number][], y: number, h: number, seed: number, dx = 0) {
+  let d = '';
+  for (const [a, b] of parts) {
+    const x0 = ivX(a);
+    const x1 = ivX(b);
+    for (let x = Math.ceil(x0 / IV_STEP) * IV_STEP, n = 0; x <= x1; x += IV_STEP, n++) {
+      const env = Math.pow(Math.sin((Math.PI * (x - x0)) / (x1 - x0)), 0.6);
+      const hh = Math.max(2, h * env * (0.3 + 0.7 * rnd(seed + n * 7 + x)));
+      d += `M${f1(x - dx)} ${f1(y + (h - hh) / 2)}V${f1(y + (h + hh) / 2)}`;
+    }
+  }
+  return d;
+}
+const IV_SIDE = { x: 420, w: 298 };
+const HINTS = { x: 434, w: 270, h: 56, y: [58, 122, 186] };
 const HINT = ['Ask what they measured', 'How big was the team?', 'Led the rebuild.'];
-const CAPS = { x: 16, y: 336, w: 390, h: 68 };
+const IV_COVER: [string, number][] = [['Ownership', 2], ['Impact', 1], ['Team', 0]];
+const IV_COV = { y: 288, gap: 34, seg: 22, sgap: 3 };
 
 export default function Labs() {
   const ph0 = playhead(0);
@@ -411,61 +441,113 @@ export default function Labs() {
       ))}
     </div>,
 
-    /* 4 · Interview Assistant: the call, and frosted over it the assistant and the captions */
-    <div key="int" className="labs-panel labs-call">
-      <img className="labs-cam" src="/art/sam.webp" alt="" draggable={false} loading="lazy" decoding="async" />
-      <A x={16} y={16} w={120} h={80} c="labs-self">
-        <img src="/art/you.webp" alt="" draggable={false} loading="lazy" decoding="async" />
-        <span>You</span>
+    /* 4 · Interview Assistant, drawn: the call's last minute, what was just said, and the assistant beside it */
+    <div key="int" className="labs-panel iv">
+      {/* who's on the call; his bars move while he talks */}
+      <A x={16} y={16} h={32} c="iv-who">
+        <span className="iv-mono">SR</span>
+        <span>
+          Sam Rivera<i>Candidate</i>
+        </span>
+        <span className="iv-bars" aria-hidden>
+          <i data-k="int.bar.0" style={{ height: 4 }} />
+          <i data-k="int.bar.1" style={{ height: 7 }} />
+          <i data-k="int.bar.2" style={{ height: 5 }} />
+        </span>
       </A>
-      <A x={148} y={16} h={30} c="glass labs-dark-glass labs-chip notch">
+      <A x={286} y={16} w={118} h={32} c="iv-rec">
         Recording <b>14:32</b>
       </A>
-      <A x={16} y={CAPS.y - 40} h={30} c="glass labs-dark-glass labs-chip notch">
-        Sam Rivera <i>Candidate</i>
-      </A>
-      {/* the live captions */}
-      <A x={CAPS.x} y={CAPS.y} w={CAPS.w} h={CAPS.h} c="glass labs-dark-glass labs-caps notch">
-        <span className="labs-line labs-line--you">
-          <b>You</b>
-          <span>What was your part in it?</span>
-        </span>
-        <span className="labs-line">
-          <b>
+      {/* the last minute: a ruler, your voice, his, and now */}
+      <A x={0} y={0} w={IV_SIDE.x} h={210} c="iv-call">
+        <svg width={IV_SIDE.x} height={210} viewBox={`0 0 ${IV_SIDE.x} 210`} aria-hidden>
+          {Array.from({ length: 13 }, (_, i) => (
+            <path key={i} className="iv-tick" d={`M${f1(ivX(i / 12))} ${IV_RULER}v${i % 3 ? 4 : 8}`} />
+          ))}
+          {[13 * 60 + 45, 14 * 60, 14 * 60 + 15].map((sec) => (
+            <text key={sec} className="iv-ruler" x={f1(ivX((sec - 13 * 60 - 32) / 60))} y={IV_RULER - 6} textAnchor="middle">
+              {`${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`}
+            </text>
+          ))}
+          <text className="iv-k" x={16} y={IV_LANE.you.y + 15}>
+            You
+          </text>
+          <text className="iv-k" x={16} y={IV_LANE.sam.y + 25}>
             Sam
-            <span className="labs-bars" aria-hidden>
-              <i data-k="int.bar.0" style={{ height: 4 }} />
-              <i data-k="int.bar.1" style={{ height: 7 }} />
-              <i data-k="int.bar.2" style={{ height: 5 }} />
-            </span>
-          </b>
-          <span data-k="int.l1">I led the rebuild of our checkout.</span>
-        </span>
+          </text>
+          <path className="iv-floor" d={`M${ivX(0)} ${IV_LANE.you.y + IV_LANE.you.h / 2}H${ivX(1)}M${ivX(0)} ${IV_LANE.sam.y + IV_LANE.sam.h / 2}H${ivX(1)}`} />
+          <path className="iv-you" d={ivVoice(IV_YOU, IV_LANE.you.y, IV_LANE.you.h, 11)} />
+          <path className="iv-sam" d={ivVoice(IV_SAM, IV_LANE.sam.y, IV_LANE.sam.h, 23)} />
+          <path className="iv-now" d={`M${ivX(1)} ${IV_RULER - 2}V${IV_LANE.sam.y + IV_LANE.sam.h + 22}`} />
+          <text className="iv-now-k" x={ivX(1) - 6} y={IV_RULER - 6} textAnchor="end">
+            Now
+          </text>
+        </svg>
       </A>
-      {/* the assistant: its hints, the newest lit, and a note */}
-      <A x={SIDE.x} y={SIDE.y} w={SIDE.w} h={SIDE.h} c="glass labs-dark-glass labs-side">
-        <span className="f-label">Assistant</span>
+      {/* his answer on his lane, coming in as it is said */}
+      <A k="int.live" x={f1(ivX(IV_NOW[0]) - 2)} y={IV_LANE.sam.y} w={f1(ivX(IV_NOW[1]) - ivX(IV_NOW[0]) + 4)} h={IV_LANE.sam.h} c="iv-live">
+        <svg width={f1(ivX(IV_NOW[1]) - ivX(IV_NOW[0]) + 4)} height={IV_LANE.sam.h} aria-hidden>
+          <path className="iv-said-v" d={ivVoice([IV_NOW], 0, IV_LANE.sam.h, 41, ivX(IV_NOW[0]) - 2)} />
+        </svg>
+      </A>
+      {/* the moments the hints came from */}
+      {IV_MOMENTS.map((f, i) => (
+        <A key={f} k={`int.m${i}`} x={f1(ivX(f) - 3)} y={IV_LANE.sam.y + IV_LANE.sam.h + 8} w={6} h={6} c="iv-m" />
+      ))}
+      <A k="int.mk" x={f1(ivX(IV_MOMENTS[0]) - 4)} y={IV_LANE.sam.y + IV_LANE.sam.h + 7} w={8} h={8} c="iv-mk" />
+      {/* what was just said */}
+      <A x={16} y={224} w={390} c="iv-said">
+        <span className="iv-said-k">You · {ivAt(0.42)}</span>
+        <span className="iv-q">What was your part in it?</span>
+      </A>
+      <A x={16} y={292} w={390} c="iv-said">
+        <span className="iv-said-k">Sam · {ivAt(IV_NOW[0])}</span>
+      </A>
+      <span data-k="int.l1" className="a t iv-a" style={{ left: 16, top: 312 }}>
+        I <span data-k="int.ph">led the rebuild</span> of our checkout.
+        <i data-k="int.ul" className="iv-ul" />
+      </span>
+      {/* the assistant: its hints, each from a moment of the answer, the newest lit; what's covered */}
+      <A x={IV_SIDE.x} y={0} w={IV_SIDE.w} h={CH} c="iv-side" />
+      <A x={HINTS.x} y={18} w={HINTS.w} h={24} c="iv-side-k">
+        Assistant <span>Listening</span>
       </A>
       {HINTS.y.map((y, i) => (
-        <A key={y} k={`int.r${i}`} x={HINTS.x} y={y} w={HINTS.w} h={HINTS.h} c={i === 2 ? 'labs-card labs-note' : 'labs-card'} />
+        <A key={y} k={`int.r${i}`} x={HINTS.x} y={y} w={HINTS.w} h={HINTS.h} c={i === 2 ? 'iv-card iv-note' : 'iv-card'} />
       ))}
-      {HINT.map((s, i) => (
-        <A key={s} k={`int.h${i}`} x={HINTS.x} y={HINTS.y[i]} w={HINTS.w} h={HINTS.h} c="labs-hint">
+      {HINT.map((h, i) => (
+        <A key={h} k={`int.h${i}`} x={HINTS.x} y={HINTS.y[i]} w={HINTS.w} h={HINTS.h} c="iv-hint">
           <span>
             {i === 2 && <Check size={14} />}
-            {s}
+            {h}
           </span>
+          <em>{ivAt(IV_MOMENTS[i])}</em>
         </A>
       ))}
-      <A k="int.cur" x={HINTS.x} y={HINTS.y[0]} w={HINTS.w} h={HINTS.h} c="labs-cur">
-        <div data-k="int.cur.ink" className="labs-cur-ink">
-          {HINT.slice(0, 2).map((s, i) => (
-            <span key={s} className="labs-hint labs-hint--ink" style={{ top: HINTS.y[i] - HINTS.y[0], height: HINTS.h }}>
-              <span>{s}</span>
+      <A k="int.cur" x={HINTS.x} y={HINTS.y[0]} w={HINTS.w} h={HINTS.h} c="iv-cur">
+        <div data-k="int.cur.ink" className="iv-cur-ink">
+          {HINT.slice(0, 2).map((h, i) => (
+            <span key={h} className="iv-hint iv-hint--ink" style={{ top: HINTS.y[i] - HINTS.y[0], height: HINTS.h }}>
+              <span>{h}</span>
+              <em>{ivAt(IV_MOMENTS[i])}</em>
             </span>
           ))}
         </div>
       </A>
+      <A x={HINTS.x} y={IV_COV.y - 30} w={HINTS.w} c="iv-cov-k">
+        Covered so far
+      </A>
+      {IV_COVER.map(([k, n], i) => (
+        <A key={k} x={HINTS.x} y={IV_COV.y + i * IV_COV.gap} w={HINTS.w} h={22} c="iv-cov">
+          <span>{k}</span>
+          <span className="iv-meter">
+            {[0, 1, 2].map((j) => (
+              <i key={j} className={j < n ? 'on' : undefined} />
+            ))}
+            {i === 0 && <b data-k="int.cov" style={{ left: 2 * (IV_COV.seg + IV_COV.sgap), width: IV_COV.seg }} />}
+          </span>
+        </A>
+      ))}
     </div>,
   ];
 
@@ -590,9 +672,11 @@ export default function Labs() {
           }
         });
 
-        /* 3 → 4, then: Sam answers, and the hints come in, the newest lit */
+        /* 3 → 4, then: Sam answers (his voice comes in on his lane as his words are typed), and the
+           assistant's hints come in, each with the moment it came from, the newest lit */
         const SAYS = { at: 3.58, dur: 0.12 };
         tl.type(q('int.l1'), SAYS.at, SAYS.dur);
+        tl.from(q('int.live'), { clip: [0, 100, 0, 0] }).to(q('int.live'), { clip: [0, 0, 0, 0] }, SAYS.at, SAYS.dur, E.lin);
         // his voice moves the bars by his name while he talks
         const bars = [0, 1, 2].map((i) => q(`int.bar.${i}`));
         let said = '';
@@ -604,20 +688,35 @@ export default function Labs() {
           said = key;
           bars.forEach((b, i) => b && (b.style.height = `${hs[i]}px`));
         });
-        const card = (i: number, at: number) =>
+        const card = (i: number, at: number) => {
           [q(`int.r${i}`), q(`int.h${i}`)].forEach((el) =>
             tl.from(el, { y: 10, clip: 'inset(100% 0% 0% 0%)' }).to(el, { y: 0, clip: 'inset(0% 0% 0% 0%)' }, at, 0.08, E.out),
           );
-        // the lime is one block that moves to the newest hint; it carries the hints' words in ink, held in place inside it
+          tl.from(q(`int.m${i}`), { s: 0 }).to(q(`int.m${i}`), { s: 1 }, at, 0.04, E.out);
+        };
+        // the lime is one block that moves to the newest hint (carrying the hints' words in ink, held in place
+        // inside it), and its moment on his lane with it
         const cur = q('int.cur');
         const ink = q('int.cur.ink');
+        const mk = q('int.mk');
         const step = HINTS.y[1] - HINTS.y[0];
         card(0, 3.7);
-        tl.from(cur, { clip: notch(24, [0, 100, 0, 0]) }).to(cur, { clip: notch(24) }, 3.74, 0.045, E.out);
+        tl.from(cur, { clip: notch(18, [0, 100, 0, 0]) }).to(cur, { clip: notch(18) }, 3.74, 0.045, E.out);
+        tl.from(mk, { s: 0 }).to(mk, { s: 1 }, 3.74, 0.04, E.out);
         card(1, 3.8);
         tl.to(cur, { y: step }, 3.855, 0.05, E.move);
         tl.to(ink, { y: -step }, 3.855, 0.05, E.move);
+        tl.to(mk, { x: ivX(IV_MOMENTS[1]) - ivX(IV_MOMENTS[0]) }, 3.855, 0.05, E.move);
         card(2, 3.9);
+        // and what he said is noted: the phrase underlined, ownership covered
+        const ph = q('int.ph');
+        const ul = q('int.ul');
+        if (ph && ul) {
+          ul.style.left = `${ph.offsetLeft}px`;
+          ul.style.width = `${ph.offsetWidth}px`;
+        }
+        tl.from(ul, { clip: [0, 100, 0, 0] }).to(ul, { clip: [0, 0, 0, 0] }, 3.92, 0.05, E.out);
+        tl.from(q('int.cov'), { clip: [0, 100, 0, 0] }).to(q('int.cov'), { clip: [0, 0, 0, 0] }, 3.94, 0.04, E.out);
       }}
     >
       {/* --- the names, in a mask: each product's name with its tag --- */}

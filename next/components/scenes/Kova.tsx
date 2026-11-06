@@ -104,9 +104,9 @@ const SLOT = { x: SCR.x + M, y: SCR.y + 56, s: 32 };
 // in the gap beside the phone, then turns into the header (two wrappers, so the path curves)
 const FLY0 = { x: ICON.x + 0.7 * ICON.s - 16, y: ICON.y + 0.3 * ICON.s - 16, s: 1.6 };
 
-// the exploded view: the stack's tilt (about the scene's centre, plus a nudge to keep it framed), and each
-// layer's depth (px, toward us) with the beats it lifts off and presses back
-const TILT = { rx: 12, ry: -18, x: 24, y: 8, s: 0.9 };
+// the exploded view: a clean three-quarter view (turned about the upright axis only, never tipped, so the
+// phone's edges stay upright), and each layer's depth (px, toward us) with the beats it lifts off and presses back
+const TILT = { rx: 0, ry: -34, x: 18, y: 0, s: 0.88 };
 const LAYERS: { k: string[]; z: number; in: number; out: number }[] = [
   { k: ['z.ground', 'z.ground2'], z: 24, in: 0.26, out: 2.22 },
   { k: ['z.grid'], z: 70, in: 0.3, out: 2.16 },

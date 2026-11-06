@@ -252,13 +252,18 @@ export default function GlassCube({
   className = '',
   label = 'The qbix cube: eight pieces of frosted glass round a lime core, half of it turning now and then',
   lime = true,
+  lean: leanBy = 0.1,
 }: {
   className?: string;
   label?: string;
+  /** how far (radians) it turns about its upright axis toward the pointer */
+  lean?: number;
   /** false where the screen's one lime is something else (a form's button): the core is a dim white */
   lime?: boolean;
 }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
+  const leanRef = useRef(leanBy);
+  leanRef.current = leanBy;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -360,8 +365,9 @@ export default function GlassCube({
       gl.uniform1f(uTone, tone === 'paper' || tone === 'lime' ? 1 : 0);
       gl.uniform1f(uLimePage, tone === 'lime' ? 1 : 0);
       gl.uniform3fv(uCore, tone === 'lime' ? [1.0, 1.0, 1.0] : lime ? [0.72, 1.0, 0.0] : [0.85, 0.86, 0.84]);
-      // the view: a three-quarter view from above, leaning toward the pointer
-      const yaw = -0.62 + leanS.x * 0.16, pitch = 0.5 + leanS.y * 0.08;
+      // the view: an exact three-quarter view at eye level (turned 45°, never tipped, so its upright edges stay
+      // upright), turning a little toward the pointer
+      const yaw = -Math.PI / 4 + leanS.x * leanRef.current, pitch = 0;
       const view = mul(rotAxis(0, pitch), rotAxis(1, yaw));
       // three.js-style column-major upload of a row-major matrix: transpose
       gl.uniformMatrix3fv(uView, false, new Float32Array(transpose(view)));

@@ -69,3 +69,27 @@ export const LISTING_SAMPLES: Sample[] = SAMPLE_GROUPS.find((g) => g.title === '
 
 /** The honest line under the title, on /samples and on the strip. */
 export const SAMPLES_LEDE = 'Short videos and posters we made for local businesses.';
+
+/**
+ * Where each sample's town is (latitude, longitude), for the map on /samples. A sample from a new town
+ * needs its place here, and a region on the map (app/samples/SamplesMap.tsx) that takes it in.
+ */
+export const TOWN_AT: Record<string, [number, number]> = {
+  'Gig Harbor': [47.33, -122.58],
+  Woodinville: [47.75, -122.16],
+  'Lake Tapps': [47.22, -122.17],
+  Eatonville: [46.87, -122.27],
+  Deming: [48.82, -122.21],
+  Spokane: [47.66, -117.43],
+  Cheney: [47.49, -117.58],
+  'Columbia River Gorge': [45.55, -122.18],
+  'Mt. Hood': [45.52, -121.59],
+  'Oregon City': [45.36, -122.61],
+  Winston: [43.12, -123.41],
+  Novato: [38.11, -122.57],
+  Sacramento: [38.58, -121.49],
+  'Grass Valley': [39.22, -121.06],
+  Fresno: [36.74, -119.79],
+  Altadena: [34.19, -118.13],
+  Menifee: [33.73, -117.15],
+};

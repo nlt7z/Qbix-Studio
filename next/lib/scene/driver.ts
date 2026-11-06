@@ -26,6 +26,8 @@ type Entry = {
   seen: boolean;
   /** held at a time (for checking a scene frame by frame), or null */
   pinned: number | null;
+  /** steered by something other than the scroll (a click, a timer, a scrubber): the time it heads for, or null */
+  steer: number | null;
   /** on a phone, the runway the chapter's scene pins on (app/story.css .ch-run), and where it pins */
   run: HTMLElement | null;
   pinTop: number | null;
@@ -54,6 +56,7 @@ const splashDone = () => (window as unknown as { __qbixSplashDone?: boolean })._
 
 /** Where the scroll has a chapter's scene, in beats (0..n). */
 function target(e: Entry, now: number): number {
+  if (e.steer !== null) return e.steer;
   const vh = window.innerHeight;
   const r = e.section.getBoundingClientRect();
   const tail = Number(e.section.dataset.tail ?? 0) * vh;
@@ -131,6 +134,22 @@ const onResize = () => {
   kick();
 };
 
+/**
+ * Play a chapter's scene from something other than the scroll: it eases to time `t` (1..n, a whole number is a
+ * state) as it would to the scroll's; null gives it back to the scroll. Returns the scene's state count (0 if the
+ * chapter has no scene yet).
+ */
+export function steerScene(section: Element, t: number | null): number {
+  let n = 0;
+  entries.forEach((e) => {
+    if (e.section !== section) return;
+    e.steer = t === null ? null : Math.max(1, Math.min(e.n, t));
+    n = e.n;
+  });
+  kick();
+  return n;
+}
+
 /** Add a scene to the page's loop; returns its removal. */
 export function playScene(o: { section: HTMLElement; tl: Timeline; n: number; intro?: 'scroll' | 'load' }) {
   const e: Entry = {
@@ -143,6 +162,7 @@ export function playScene(o: { section: HTMLElement; tl: Timeline; n: number; in
     step: -1,
     seen: false,
     pinned: null,
+    steer: null,
     run: o.section.querySelector<HTMLElement>('.ch-run[data-run]'),
     pinTop: null,
   };

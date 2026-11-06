@@ -1,0 +1,65 @@
+/* =============================================================================
+   The Listing Launch Kit (/listing-kit), after prototypes/qbix-blocks/pages/listing-kit.html.
+   The page's own layout; every rule sits under .pg-listing. The parts are blocks.css's.
+   ============================================================================= */
+
+/* the hero: the headline and its lede on the left, the converter beside them (Wise's own hero) */
+.pg-listing .lk-hero .in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, calc(500px * var(--u))); align-items: center; gap: clamp(32px, 5vw, calc(96px * var(--u))); min-height: min(100vh, calc(980px * var(--u))); padding-top: calc(var(--nav) + clamp(28px, 6vh, calc(80px * var(--u)))); padding-bottom: clamp(48px, 7vh, calc(96px * var(--u))); }
+.pg-listing .lk-hero-say { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(24px, 3.4vh, calc(40px * var(--u))); align-content: center; min-width: 0; }
+.pg-listing .lk-hero-say > * { min-width: 0; } /* a fitted headline must not size its own column */
+.pg-listing .lk-hero-say .display { margin-left: -0.04em; }
+.pg-listing .lk-hero-say .lede { color: var(--fg); font-size: var(--t-s); max-width: 26em; }
+.pg-listing .conv-foot a { color: var(--fg); }
+@media (max-width: 899px) { .pg-listing .lk-hero .in { grid-template-columns: minmax(0, 1fr); min-height: 0; } }
+
+/* the samples: the words on the left, the two films standing on the right */
+.pg-listing .lk-samples .in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; gap: clamp(36px, 5vw, calc(96px * var(--u))); }
+.pg-listing .lk-samples-say { display: grid; gap: clamp(24px, 3vw, calc(40px * var(--u))); }
+.pg-listing .lk-cards { display: grid; grid-template-columns: repeat(2, minmax(0, calc(300px * var(--u)))); justify-content: end; gap: 8px; }
+@media (max-width: 899px) { .pg-listing .lk-samples .in { grid-template-columns: 1fr; } .pg-listing .lk-cards { justify-content: start; } }
+
+/* the tour: five stops, so the fifth row and note light too */
+.pg-listing [data-steps][data-step='4'] .steps li:nth-child(5) { color: var(--fg); }
+.pg-listing [data-step='4'] .notes > :nth-child(5) { visibility: visible; }
+.pg-listing .lk-tour .notes { min-height: 3.2em; }
+@media (max-width: 899px), (max-height: 559px) {
+  .pg-listing .lk-tour .ch-run .scene { height: min(50vh, calc((100vw - 2 * var(--gap) - 2 * var(--gut)) * 0.9)); }
+}
+
+/* how it works: three big numbered rows */
+.pg-listing .lk-how-head { display: grid; gap: clamp(20px, 2.4vw, calc(32px * var(--u))); }
+.pg-listing .lk-how-head .lede { max-width: 38em; }
+.pg-listing .how { list-style: none; margin: clamp(64px, 8vw, calc(120px * var(--u))) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px clamp(24px, 3vw, calc(56px * var(--u))); counter-reset: h; }
+.pg-listing .how li { display: grid; gap: clamp(16px, 2vw, calc(28px * var(--u))); align-content: start; }
+.pg-listing .how li::before { counter-increment: h; content: counter(h, decimal-leading-zero); font: 400 var(--t-l)/0.8 var(--font-headline); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.pg-listing .how p { margin: 0; max-width: 14em; font: 400 var(--t-m)/1.2 var(--font-headline); letter-spacing: -0.025em; text-wrap: balance; }
+@media (max-width: 760px) { .pg-listing .how { grid-template-columns: 1fr; } }
+
+/* questions, and who answers them */
+.pg-listing .lk-q .in { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); grid-template-areas: 'h faq' 'about faq'; grid-template-rows: auto 1fr; gap: clamp(28px, 4vw, calc(56px * var(--u))) clamp(36px, 5vw, calc(96px * var(--u))); align-items: start; }
+.pg-listing .lk-q .in > h2 { grid-area: h; }
+.pg-listing .lk-q .faq { grid-area: faq; }
+.pg-listing .lk-q-about { grid-area: about; display: grid; gap: 12px; max-width: 26em; }
+.pg-listing .lk-q-about .body { font-size: var(--t-s); }
+@media (max-width: 899px) { .pg-listing .lk-q .in { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'h' 'faq' 'about'; grid-template-rows: none; } .pg-listing .lk-q-about { margin-top: 24px; } }
+
+/* in the stack, the next block slides over a block's foot first: these feet are kept empty and
+   tall, so the steps, the refund answer and the sample names stay in view while it comes */
+@media (min-width: 900px) and (min-height: 560px) {
+  .pg-listing .lk-samples .in { padding-bottom: clamp(120px, 22vh, calc(240px * var(--u))); }
+  .pg-listing .lk-how .in, .pg-listing .lk-q .in { padding-bottom: clamp(140px, 32vh, calc(340px * var(--u))); }
+}
+
+/* the sign-off: the price as the floor word, the kit at a glance beside it */
+.pg-listing .lk-sign .in { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, calc(72px * var(--u))); min-height: 100vh; padding-block: calc(var(--nav) + 32px) 56px; }
+.pg-listing .lk-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.16em; margin: 18px 0 0; font: 400 var(--t-xl-fit, var(--t-xl))/0.84 var(--font-headline); letter-spacing: -0.055em; font-variant-numeric: tabular-nums; }
+.pg-listing .lk-price del { font-size: var(--t-m); letter-spacing: -0.03em; }
+.pg-listing .lk-price-u { font: 500 var(--t-s)/1.2 var(--font-sans); letter-spacing: -0.01em; color: var(--fg2); }
+.pg-listing .lk-sign-video { margin: clamp(20px, 2.4vw, calc(32px * var(--u))) 0 0; font-size: var(--t-s); color: var(--fg2); }
+.pg-listing .lk-sign-video b { color: var(--fg); font-weight: 600; }
+.pg-listing .lk-sign .acts { margin-top: clamp(28px, 3.4vw, calc(44px * var(--u))); }
+.pg-listing .lk-sign-note { margin: 18px 0 0; font-size: var(--t-s); color: var(--fg2); }
+.pg-listing .lk-sign-note a { color: var(--fg); }
+.pg-listing .lk-kit { position: relative; height: min(64vh, calc(580px * var(--u))); }
+.pg-listing .lk-kit .scene { height: 100%; }
+@media (max-width: 899px) { .pg-listing .lk-sign .in { grid-template-columns: 1fr; min-height: 0; } .pg-listing .lk-kit { height: 92vw; } }

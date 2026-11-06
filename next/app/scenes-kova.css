@@ -71,6 +71,12 @@
 .scn .kova-ground { background: #fff; }
 .scn .kova-ground2 { background: #0b0c0e; }
 .scn .kova-sheet { pointer-events: none; }
+/* apart, every layer is a pane you can see: a surface under its words and an edge round it, so the words sit
+   on the model and not loose on the page */
+.scn .kova-stack.is-3d .kova-plane { box-shadow: inset 0 0 0 1px rgba(18, 20, 23, 0.16); }
+.scn .kova-stack.is-3d .kova-plain { background: rgba(255, 255, 255, 0.92); }
+.scn .kova-stack.is-3d [data-k='z.grid'] { background: rgba(226, 231, 216, 0.6); }
+.scn .kova-stack.is-3d .kova-ground { background: #eef1e8; }
 
 .scn .kova-status { position: absolute; left: 0; top: 0; width: 100%; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px 0 30px; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
 .scn .kova-island { position: absolute; left: 50%; top: 11px; width: 84px; height: 24px; margin-left: -42px; --r: 12px; background: #000; }

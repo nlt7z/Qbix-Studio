@@ -1,0 +1,70 @@
+/* =============================================================================
+   /start: the headline across the page, the words and the cube beside the
+   brief (a sage panel, its fields white on it), what happens next, the two
+   ways to reach us. Every rule waits for .pg-start: a page's CSS stays loaded
+   after the page.
+   ============================================================================= */
+
+/* the hero, on white: the headline across the page, then the words and the cube beside the form */
+.pg-start .hero .in { padding-top: calc(var(--nav) + clamp(24px, 5.5vh, calc(76px * var(--u)))); padding-bottom: clamp(48px, 7vw, calc(112px * var(--u))); }
+.pg-start .hero .kicker { margin-bottom: clamp(14px, 2vh, calc(22px * var(--u))); }
+.pg-start .hero-h { margin: 0 0 0 -0.045em; }
+.pg-start .hero-row { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, calc(700px * var(--u))); gap: clamp(32px, 5vw, calc(104px * var(--u))); align-items: start; margin-top: clamp(28px, 4.5vh, calc(60px * var(--u))); }
+.pg-start .hero-say { position: sticky; top: calc(var(--nav) + 28px); align-self: start; display: grid; gap: clamp(24px, 3.5vh, calc(40px * var(--u))); }
+.pg-start .hero-say .lede { color: var(--fg); max-width: 24em; }
+.pg-start .hero-cube { position: relative; width: min(100%, calc(440px * var(--u))); height: min(40vh, calc(400px * var(--u))); margin-left: -12px; }
+.pg-start .meter { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; width: min(100%, calc(420px * var(--u))); font-size: var(--t-s); font-weight: 500; }
+.pg-start .meter-bar { position: relative; height: 6px; background: var(--soft2); overflow: hidden; }
+.pg-start .meter-bar i { position: absolute; inset: 0; background: var(--fg); transform-origin: 0 50%; transform: scaleX(0); transition: transform 0.6s var(--e-out); }
+.pg-start .meter-n { font-variant-numeric: tabular-nums; color: var(--fg2); min-width: 3.2em; text-align: right; }
+@media (max-width: 899px) {
+  .pg-start .hero-row { grid-template-columns: 1fr; }
+  .pg-start .hero-say { position: static; }
+  .pg-start .hero-cube, .pg-start .meter { display: none; }
+}
+
+/* the brief: a sage panel with the site's cut corner, its fields white on it */
+.pg-start .brief {
+  --soft: #ffffff;
+  --soft2: #f8f9f5;
+  display: grid;
+  gap: clamp(28px, 3.4vw, calc(44px * var(--u)));
+  padding: clamp(22px, 3.2vw, calc(48px * var(--u)));
+  background: var(--tint);
+  color: var(--fg);
+  clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 0 100%);
+}
+.pg-start .brief-head { display: grid; gap: 14px; }
+.pg-start .brief-head .h3 { max-width: 14em; }
+.pg-start .brief-head .h3:focus { outline: none; }
+.pg-start .brief-head .lede { color: var(--fg); }
+.pg-start .brief .fields { row-gap: clamp(22px, 2.4vw, calc(30px * var(--u))); column-gap: 8px; }
+.pg-start .brief fieldset.field > legend { margin-bottom: 10px; }
+.pg-start .brief .choices span { padding: 12px 15px; }
+.pg-start .brief .field textarea { min-height: 200px; }
+.pg-start .brief-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
+.pg-start .brief-note { margin: 0; max-width: 36em; font-weight: 500; }
+.pg-start .brief-note:empty { display: none; }
+
+/* what happens next: three big numbers */
+.pg-start .next { list-style: none; margin: clamp(48px, 6vw, calc(96px * var(--u))) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(40px, 4vw, calc(64px * var(--u))) clamp(24px, 3vw, calc(48px * var(--u))); }
+.pg-start .next li { display: grid; gap: 18px; align-content: start; }
+.pg-start .next-n { font: 400 var(--t-l)/0.86 var(--font-headline); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.pg-start .next .h4 { margin-top: 10px; }
+.pg-start .next p { margin: 0; color: var(--fg2); max-width: 22em; text-wrap: balance; }
+@media (max-width: 899px) { .pg-start .next { grid-template-columns: 1fr; } }
+
+/* reach us directly: two big lines; the one pointed at dims, a colour and not a line */
+.pg-start .reach-big { display: grid; justify-items: start; gap: clamp(6px, 1vw, calc(14px * var(--u))); margin: clamp(28px, 3.4vw, calc(48px * var(--u))) 0; }
+.pg-start .reach-big a {
+  margin-left: -0.04em;
+  font: 400 var(--t-l)/1.04 var(--font-headline);
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  transition: color 0.25s var(--e);
+}
+.pg-start .reach-big a:hover { color: var(--fg2); }
+.pg-start .reach-foot { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0; color: var(--fg2); font-size: var(--t-s); }
+.pg-start .reach-foot b { color: var(--fg); font-weight: 500; }
