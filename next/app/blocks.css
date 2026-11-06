@@ -1,6 +1,6 @@
 /* =============================================================================
    QBIX · BLOCKS, the site's design (2026-11-06; ported from prototypes/qbix-blocks).
-   The page is a run of colour blocks, white and lime's own black, one idea each:
+   The page is a run of colour blocks, white and near-black, one idea each:
    into a dark block by a 45° wipe, back to white by the cover (the dark block
    sticks and the white slides over it). Lime is a point, never a ground. Four
    type sizes (--t-xl/l/m/s); headlines in Outfit (Light), the rest in Geist.
@@ -15,10 +15,10 @@
   /* the size of everything that has a ceiling: 1 up to a laptop, more on a big screen (only when it is
      tall enough too, so a pinned chapter still fits) */
   --u: 1;
-  /* one hue family, as Wise's forest and bright green: the dark is lime's own black (qbix's signal-dark),
+  /* the dark is a near-black (Nov 6: no deep green under anything),
      the pale tiles are a sage made from it; lime itself is a point, never a ground */
-  --black: #0f1a00;
-  --ink: #0f1a00;
+  --black: #0b0c0d;
+  --ink: #0b0c0d;
   --white: #ffffff;
   --tint: #eef1e8;
   --tint2: #e3e8da;
@@ -55,21 +55,21 @@
 @media (min-width: 2500px) and (min-height: 1320px) { :root { --u: 1.42; } }
 
 [data-tone='white'] {
-  --bg: #ffffff; --fg: var(--ink); --fg2: rgba(15, 26, 0, 0.66); --fg3: rgba(15, 26, 0, 0.38);
+  --bg: #ffffff; --fg: var(--ink); --fg2: rgba(11, 12, 13, 0.66); --fg3: rgba(11, 12, 13, 0.38);
   --soft: var(--tint); --soft2: var(--tint2);   /* tiles and fields: the sage */
   --hi: var(--ink); --on-hi: #ffffff;
   --mk-bg: transparent; --mk-fg: var(--ink); --mk-h: 0; --mk-y: 100%; /* a marked word: no line, plain ink */
   --act: var(--ink); --on-act: #ffffff;          /* the button: the dark, as Wise's */
   --act2: var(--tint); --on-act2: var(--ink);    /* the other button: a sage tile */
-  --nav-dim: rgba(15, 26, 0, 0.42); --nav-on: var(--ink);
+  --nav-dim: rgba(11, 12, 13, 0.42); --nav-on: var(--ink);
 }
 [data-tone='black'] {
   --bg: var(--ink); --fg: #ffffff; --fg2: rgba(255, 255, 255, 0.68); --fg3: rgba(255, 255, 255, 0.36);
-  --soft: #1b260d; --soft2: #25321a;            /* tiles and fields: the dark, lifted */
+  --soft: #18191b; --soft2: #222427;            /* tiles and fields: the dark, lifted */
   --hi: var(--lime); --on-hi: var(--ink);
   --mk-bg: transparent; --mk-fg: var(--lime); --mk-h: 0; --mk-y: 100%; /* a marked word: lime words */
   --act: #ffffff; --on-act: var(--ink);
-  --act2: #1b260d; --on-act2: #ffffff;
+  --act2: #18191b; --on-act2: #ffffff;
   --nav-dim: rgba(255, 255, 255, 0.5); --nav-on: var(--lime);
 }
 
@@ -483,8 +483,8 @@ a.row:hover .row-t { transform: translateX(10px); }
 .ch-cap .n { font-size: var(--t-s); color: var(--fg2); font-variant-numeric: tabular-nums; }
 /* the scenes are drawings of other products (Forma's site, Kova, Strata): they keep the site's own face */
 .scn { --font-headline: var(--font-eurostile), var(--font-geist), sans-serif; }
-/* and the page's hue family: windows on the dark lifted from the lime-black, the sunk parts on white the sage */
-[data-tone='dark'] .scn { --win: #16220a; --sunk: #1d2a10; --fill: rgba(240, 248, 225, 0.06); --line: rgba(240, 248, 225, 0.09); --line2: rgba(240, 248, 225, 0.16); }
+/* and the page's hue family: windows on the dark lifted from the black, the sunk parts on white the sage */
+[data-tone='dark'] .scn { --win: #161719; --sunk: #1d1e21; --fill: rgba(255, 255, 255, 0.06); --line: rgba(255, 255, 255, 0.09); --line2: rgba(255, 255, 255, 0.16); }
 [data-tone='paper'] .scn { --sunk: var(--tint); }
 
 @media (min-width: 900px) and (min-height: 560px) {
@@ -706,7 +706,6 @@ p, li, dd, h1, h2, h3, .h1, .h2, .kicker, .lede, .row-d, .fv2-say { text-wrap: b
 /* words kept on one line together (a heading's break falls only between these) */
 .nb { white-space: nowrap; }
 
-/* the homepage's foot comes up from under the page: under the block before it, its words rising as it shows
-   (Home sets --cp, 0 to 1) */
-.fv2[data-v='3'] { z-index: -1; }
+/* the homepage's foot comes up from under the page: the block before it is lifted over it (home.css .sign), and
+   its words rise as it shows (Home sets --cp, 0 to 1). It stays over any dark block still stuck behind the page. */
 .fv2[data-v='3'] > .in { transform: translateY(calc((1 - var(--cp, 1)) * -45%)); }

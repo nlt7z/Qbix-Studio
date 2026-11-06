@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import { smoothScrollTo } from '@/lib/smoothScroll';
 
 /**
  * What the blocks do as the page moves, set on the DOM (as data attributes and CSS variables, which React
@@ -15,8 +16,73 @@ import { useEffect } from 'react';
  *    offset) and into the dark by the wipe (data-wipe: the tone before over its top, cut back by a 45° edge,
  *    --wc, scrubbed by the scroll). With reduced motion, the plain cut.
  */
+// a block's place in the page: a block that has stuck isn't where the browser thinks it is, so the browser's
+// own jump to it (a #link) lands past or short of it; measure it unstuck
+function placeOf(el: HTMLElement) {
+  const b = el.closest<HTMLElement>('.blocks > .block') ?? el;
+  const was = b.style.position;
+  // static, not relative: a stuck block's offset (top) would still move it
+  b.style.position = 'static';
+  const y = el.getBoundingClientRect().top + scrollY;
+  b.style.position = was;
+  return Math.max(0, Math.round(y));
+}
+const HOMES = ['/', '/business'];
+let jumped = '';
+
+/** To a block by its id; on the homepage, a block of the other audience switches to it first. */
+function jumpTo(id: string, smooth: boolean) {
+  const el = document.getElementById(id);
+  if (!el) return false;
+  // eased through the page's own scroller (lib/smoothScroll.ts), which would otherwise pull a native scroll back
+  const go = () => (smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? smoothScrollTo(placeOf(el)) : scrollTo(0, placeOf(el)));
+  const aud = el.closest<HTMLElement>('[data-aud]')?.dataset.aud;
+  if (el.closest('[hidden]') && aud) {
+    dispatchEvent(new CustomEvent('qb:audience', { detail: aud }));
+    requestAnimationFrame(() => requestAnimationFrame(go));
+  } else go();
+  return true;
+}
+
 export default function Runtime() {
   const pathname = usePathname();
+
+  // #links: the bar's services, the hero's card, a block on this page (or the homepage's other audience)
+  useEffect(() => {
+    const onClick = (e: globalThis.MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as Element | null)?.closest?.('a[href*="#"]') as HTMLAnchorElement | null;
+      if (!a || a.target === '_blank') return;
+      const url = new URL(a.href, location.href);
+      const here = url.pathname === location.pathname || (HOMES.includes(url.pathname) && HOMES.includes(location.pathname));
+      if (url.origin !== location.origin || !here || !url.hash) return;
+      const id = decodeURIComponent(url.hash.slice(1));
+      if (!document.getElementById(id)) return;
+      // before Next's link sees it (it skips a prevented click)
+      e.preventDefault();
+      jumpTo(id, true);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        jumped = location.pathname + url.hash;
+        history.replaceState(history.state, '', location.pathname + url.hash);
+      }));
+    };
+    addEventListener('click', onClick, true);
+    return () => removeEventListener('click', onClick, true);
+  }, []);
+
+  // arriving with a #: to the block once the page has its size
+  useEffect(() => {
+    const key = location.pathname + location.hash;
+    if (!location.hash || key === jumped) return;
+    jumped = key;
+    const id = decodeURIComponent(location.hash.slice(1));
+    let done = false;
+    const go = () => !done && ((done = true), jumpTo(id, false));
+    const t = setTimeout(go, 600);
+    document.fonts?.ready.then(() => requestAnimationFrame(go));
+    return () => clearTimeout(t);
+  }, [pathname]);
+
   useEffect(() => {
     const root = document.documentElement;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;

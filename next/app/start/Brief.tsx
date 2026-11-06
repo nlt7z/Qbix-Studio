@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
 import { BtnLabel } from '@/components/blocks/Btn';
-import GlassCube from '@/components/scene/GlassCube';
 import { BOOKING_URL, CONTACT_EMAIL } from '@/lib/data';
 
 const TYPES = ['AI product', 'SaaS / web app', 'Marketing site', 'Brand / identity', 'Design service', 'Something else'];
@@ -33,16 +32,8 @@ export default function Brief({ children }: { children: ReactNode }) {
   const [errorMsg, setErrorMsg] = useState('');
   // the thank-you, once the button has shown the brief is in
   const [thanked, setThanked] = useState(false);
-  const [wide, setWide] = useState(false);
   const done = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => {
-    const mq = matchMedia('(min-width: 900px)');
-    const on = () => setWide(mq.matches);
-    on();
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, []);
   // the button that was pressed is gone: the thank-you takes the focus
   useEffect(() => {
     if (thanked) done.current?.focus();
@@ -91,10 +82,6 @@ export default function Brief({ children }: { children: ReactNode }) {
     <div className="hero-row">
       <div className="hero-say">
         {children}
-        {/* the qbix cube, its core the screen's one lime */}
-        <div className="hero-cube" data-tone="paper">
-          {wide && <GlassCube />}
-        </div>
         <div className="meter" aria-hidden="true">
           <span>Your brief</span>
           <span className="meter-bar">

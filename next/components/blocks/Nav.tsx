@@ -231,7 +231,6 @@ export default function Nav() {
           </ul>
         </nav>
         <div className="nav-end">
-          <Btn href="/start" variant="line" small>Start a project</Btn>
           <button type="button" className="nav-menu" aria-expanded={menu} aria-controls="nav-sheet" onClick={() => setMenu((v) => !v)}>
             <span>{menu ? 'Close' : 'Menu'}</span>
             <i aria-hidden="true" />
@@ -261,7 +260,7 @@ export default function Nav() {
         </div>
         <div className="nav-sheet-foot">
           <Btn href="/start" variant="line" onClick={() => setMenu(false)}>
-            Start a project
+            Start a brief
           </Btn>
           <a className="link" href={`mailto:${CONTACT_EMAIL}`}>
             {CONTACT_EMAIL}

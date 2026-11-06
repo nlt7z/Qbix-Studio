@@ -12,8 +12,6 @@ const DRIVE = ['滚动播放（现在）', '点步骤切换', '自动播放', '�
 export const SECTIONS: { k: VKey; name: string; opts: string[] }[] = [
   { k: 'services', name: 'Design service', opts: DRIVE },
   { k: 'brand', name: 'Brand upgrade', opts: DRIVE },
-  { k: 'products', name: 'Products', opts: DRIVE },
-  { k: 'about', name: 'About', opts: DRIVE },
 ];
 
 const KEY = 'qb-variants';

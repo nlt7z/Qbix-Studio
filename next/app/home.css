@@ -10,11 +10,6 @@
 .pg-home .hv2-h .line { margin-inline: auto; }
 .pg-home .hv2-lede { margin-top: clamp(18px, 2.6vh, calc(30px * var(--u))); max-width: 31em; font-size: var(--t-s); text-wrap: balance; }
 
-/* the cube behind the claim, the words over it */
-.pg-home .hv2-say { position: relative; isolation: isolate; }
-.pg-home .hv2-cube { position: absolute; z-index: -1; left: 50%; top: 46%; width: min(64vh, calc(560px * var(--u)), 88vw); aspect-ratio: 1; translate: -50% -50%; pointer-events: none; }
-.pg-home .hv2-cube .scene { position: absolute; inset: 0; height: auto; min-height: 0; }
-.pg-home .hv2-cube .scene > * { width: 100%; height: 100%; }
 
 /* the card: the sage, the site's cut corner, the two services side by side. It grows to full size as the page
    scrolls into it (--g, set by Home) */
@@ -30,33 +25,66 @@
 }
 @media (prefers-reduced-motion: reduce) { .pg-home .hv2-card { transform: none; } }
 
-/* a service: three lines (its name, one line, time and price); pointed at, the face slides up out of its tile and
-   its picture rolls in under it (a sleeve, as the buttons' letters) */
-.pg-home .offers { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+/* the two services, an accordion: side by side; the one pointed at opens to show the real thing beside its words
+   (its share of the row and its picture's column both grow), the other narrows */
+.pg-home .offers { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; }
+.pg-home .offers > li { flex: 1 1 0; min-width: 0; transition: flex-grow 0.6s var(--e-out); }
+.pg-home .offers > li.is-open { flex-grow: 2.3; }
 .pg-home .offer {
-  position: relative; display: block; height: clamp(200px, 22vw, calc(300px * var(--u))); overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1fr) 0fr; height: clamp(220px, 23vw, calc(320px * var(--u)));
   background: var(--ink); color: #ffffff; text-decoration: none;
   clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  transition: grid-template-columns 0.6s var(--e-out);
 }
-.pg-home .offer-face, .pg-home .offer-back { position: absolute; inset: 0; transition: transform 0.6s var(--e-out); }
-.pg-home .offer-face { display: grid; align-content: space-between; padding: clamp(20px, 2.2vw, calc(34px * var(--u))); }
-.pg-home .offer-back { transform: translateY(101%); }
-.pg-home .offer-back img { width: 100%; height: 100%; object-fit: cover; }
-.pg-home .offer-go-t { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px clamp(20px, 2.2vw, calc(34px * var(--u))); background: var(--ink); font: 300 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.02em; }
-.pg-home .offer-go-t svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; }
-@media (hover: hover) and (pointer: fine) {
-  .pg-home .offer:hover .offer-face { transform: translateY(-101%); }
-  .pg-home .offer:hover .offer-back { transform: none; }
-}
-.pg-home .offer:focus-visible .offer-face { transform: translateY(-101%); }
-.pg-home .offer:focus-visible .offer-back { transform: none; }
+.pg-home .is-open .offer { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+.pg-home .offer-text { display: grid; align-content: space-between; min-width: 0; padding: clamp(20px, 2.2vw, calc(34px * var(--u))); }
+.pg-home .offer-media { position: relative; min-width: 0; overflow: hidden; background: var(--dark2); }
+.pg-home .offer-media > img, .pg-home .offer-media > video, .pg-home .offer-media > canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Brand upgrade's picture: the brand itself, as a small board */
+.pg-home .offer-board { position: absolute; inset: 0; display: grid; grid-template-columns: 1.4fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; padding: 6px; }
+.pg-home .ob-mark { grid-row: span 2; display: grid; place-items: center; background: #000000; padding: 18%; }
+.pg-home .ob-mark svg { width: 100%; height: auto; } .pg-home .ob-mark path { fill: #ffffff; } .pg-home .ob-mark .dot { fill: var(--lime); }
+.pg-home .ob-lime, .pg-home .ob-sage { display: grid; align-content: end; padding: 10px; font: 400 12px/1 var(--font-sans); }
+.pg-home .ob-lime { background: var(--lime); color: var(--ink); }
+.pg-home .ob-sage { background: var(--tint); color: var(--ink); font: 200 clamp(28px, 3vw, 48px)/1 var(--font-headline); align-content: center; justify-content: center; }
 .pg-home .offer-n { font: 300 var(--t-m)/1.15 var(--font-headline); letter-spacing: -0.02em; }
 .pg-home .offer-d { margin-top: 6px; font-size: var(--t-s); color: rgba(255, 255, 255, 0.66); }
 .pg-home .offer-m { display: flex; flex-wrap: wrap; gap: 8px clamp(24px, 2.6vw, calc(44px * var(--u))); }
-.pg-home .offer-m > span { display: grid; gap: 4px; font: 300 var(--t-m)/1.1 var(--font-headline); letter-spacing: -0.02em; }
+.pg-home .offer-m > span { display: grid; gap: 4px; font: 300 var(--t-m)/1.1 var(--font-headline); letter-spacing: -0.02em; white-space: nowrap; }
 .pg-home .offer-m small { font: 400 13px/1.2 var(--font-sans); letter-spacing: 0; color: rgba(255, 255, 255, 0.6); }
 .pg-home .offer-m del { margin-left: 0.3em; font-size: var(--t-s); color: rgba(255, 255, 255, 0.5); }
-@media (max-width: 760px) { .pg-home .offers { grid-template-columns: 1fr; } .pg-home .offer { height: 190px; } }
+@media (max-width: 760px) { .pg-home .offers { flex-direction: column; } .pg-home .offer, .pg-home .is-open .offer { grid-template-columns: minmax(0, 1fr) 0fr; height: auto; min-height: 180px; } }
+@media (prefers-reduced-motion: reduce) { .pg-home .offers > li, .pg-home .offer { transition: none; } }
+
+/* the products drawn (art/ProductArt.tsx), in the ideas' peek; their type is the page's */
+.art { display: block; width: 100%; height: auto; }
+.art text { fill: #f4f5f2; }
+.art .art-mono { font: 400 12px var(--font-sans); letter-spacing: 0.01em; }
+.art .art-dim { fill: rgba(244, 245, 242, 0.5); }
+.art .art-label { font: 400 13px var(--font-sans); fill: rgba(244, 245, 242, 0.62); }
+.art .art-aa { font: 200 54px var(--font-headline); }
+.art .art-aa.small { font-size: 20px; }
+.art .art-ink { fill: #0b0c0d; }
+.art .art-btn { font: 500 13px var(--font-sans); fill: #0b0c0d; }
+.art .art-q { font: 200 46px var(--font-headline); fill: rgba(244, 245, 242, 0.42); }
+.art .art-num { font: 300 40px var(--font-headline); letter-spacing: -0.02em; }
+/* a chapter's 3D (components/blocks/three) */
+.three { position: relative; width: 100%; height: 100%; }
+.three canvas { display: block; width: 100%; height: 100%; }
+
+/* About: the story on the left, the right left open; under the block's words, the ideas running (Ideas.tsx) */
+.pg-home .about .in { padding-bottom: clamp(56px, 7vw, calc(112px * var(--u))); }
+.pg-home .about-head { max-width: 34rem; }
+.pg-home .ideas { position: relative; display: grid; gap: 10px; padding-bottom: var(--pad); overflow: hidden; }
+.pg-home .ideas-row { display: flex; gap: 10px; width: max-content; will-change: transform; }
+.pg-home .idea { padding: 14px 20px; background: var(--tint); font: 300 var(--t-m)/1.1 var(--font-headline); letter-spacing: -0.02em; white-space: nowrap; cursor: default; transition: background-color 0.2s var(--e), color 0.2s var(--e); }
+.pg-home .idea.lime { background: var(--lime); }
+.pg-home .idea:hover { background: var(--ink); color: #ffffff; }
+.pg-home .ideas-peek { position: absolute; left: 0; top: 0; z-index: 4; width: clamp(200px, 20vw, 300px); pointer-events: none; background: var(--ink); color: #ffffff; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); transition: transform 0.25s var(--e-out); }
+.pg-home .ideas-peek img, .pg-home .ideas-peek video { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.pg-home .ideas-art { display: block; background: #18191b; }
+.pg-home .ideas-peek span { display: block; padding: 10px 14px; font-size: var(--t-s); }
+
 
 /* the products chapter: the state after a name, the lit one's note under the list */
 .pg-home .steps .state { color: inherit; font-weight: 400; }
@@ -71,15 +99,21 @@
 .pg-home .cross .rows { margin-top: clamp(40px, 5vw, calc(72px * var(--u))); }
 .pg-home .cross .acts { margin-top: clamp(32px, 4vw, calc(56px * var(--u))); }
 
-/* the sign-off: the words and the glass cube */
-.pg-home .sign .in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, calc(72px * var(--u))); min-height: 100vh; padding-block: calc(var(--nav) + 32px) 48px; }
-.pg-home .sign .h1 { max-width: 9em; }
+/* the sign-off: the words, and water running beside them (art/FlowArt.tsx) */
+.pg-home .sign .in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: clamp(32px, 4vw, 80px); padding-block: clamp(120px, 16vw, calc(220px * var(--u))); }
+.pg-home .flow-art {
+  display: block; width: 100%; height: clamp(340px, 58vh, calc(600px * var(--u)));
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 55%, transparent 100%);
+}
+/* over the footer, which comes up from under it */
+.pg-home .sign { z-index: 1; }
+.pg-home .sign .h1 { max-width: 11em; }
 .pg-home .sign .acts { margin-top: clamp(32px, 4vw, calc(56px * var(--u))); }
 .pg-home .sign-mail { font: 500 var(--t-s)/1 var(--font-sans); }
-.pg-home .sign-cube { position: relative; height: min(66vh, calc(600px * var(--u))); }
 @media (max-width: 899px) {
   .pg-home .sign .in { grid-template-columns: 1fr; min-height: 0; }
-  .pg-home .sign-cube { height: 56vw; order: -1; }
+  .pg-home .flow-art { height: min(64vw, 420px); }
 }
 
 /* the other audience's rows slide in, one after another, as the block comes up */

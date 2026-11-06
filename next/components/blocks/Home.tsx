@@ -1,34 +1,37 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import Btn from '@/components/blocks/Btn';
 import Chapter, { Meta, Steps, up } from '@/components/blocks/Chapter';
 import Footer from '@/components/blocks/Footer';
 import { Line, Mark, Rise } from '@/components/blocks/Rise';
 import VCard from '@/components/blocks/VCard';
+import FormaShot from '@/components/blocks/art/FormaShot';
+import FlowArt from '@/components/blocks/art/FlowArt';
+import Wordmark from '@/components/blocks/Wordmark';
+import Ideas from '@/components/blocks/Ideas';
 import { AudienceProvider, useAudience, type Audience } from '@/components/Audience';
 import Forma from '@/components/scenes/Forma';
-import Kova from '@/components/scenes/Kova';
 import Labs from '@/components/scenes/Labs';
-import Dream from '@/components/scenes/Dream';
 import { ListingStory } from '@/components/scenes/Listing';
 import { PracticeStory } from '@/components/scenes/Practice';
-import GlassCube from '@/components/scene/GlassCube';
 import { CONTACT_EMAIL, PRICES } from '@/lib/data';
 import Count from '@/components/blocks/variants/Count';
-import Panel from '@/components/blocks/variants/Panel';
-import { relayout, useVariant } from '@/components/blocks/variants/store';
-import '@/app/variants.css';
 import { STRIP_SAMPLES } from '@/lib/samples';
+import { smoothScrollTo } from '@/lib/smoothScroll';
 import '@/app/home.css';
 
 /**
- * The homepage, in blocks after Wise's: white for the most part, the lime's own black where it counts, the
+ * The homepage, in blocks after Wise's: white for the most part, near-black where it counts, the
  * lime only as a point. / talks to AI teams, /business to local businesses (components/Audience.tsx); the
  * bar's two audiences switch it in place (the bar sends `qb:audience`). Each audience's blocks stay in the
  * page, hidden while the other shows, so the switch is instant and their scenes keep their place.
  */
+// the brand upgrade's 3D (three.js), loaded on the page only
+const KovaLayers = dynamic(() => import('@/components/blocks/three/KovaLayers'), { ssr: false });
+
 const was = (p: { now: string; was: string }) => (
   <>
     {p.now} <del>{p.was}</del>
@@ -36,14 +39,14 @@ const was = (p: { now: string; was: string }) => (
 );
 
 // the hero's two services, side by side under the claim: each opens its own part of the page (or its page)
-type Offer = { k: string; name: string; line: string; tl: string; time: string; pl: string; price: ReactNode; href: string; pic: string };
+type Offer = { k: string; name: string; line: string; tl: string; time: string; pl: string; price: ReactNode; href: string; pic: string; vid?: string; board?: boolean; forma?: boolean };
 const OFFERS: Record<Audience, Offer[]> = {
   ai: [
-    { k: 'web', name: 'Design service', line: 'From moodboard to a live domain.', tl: 'Ready in', time: '1 to 3 weeks', pl: 'Starts at', price: '$500', href: '#services', pic: '/motion/thumbs/forma.jpg' },
-    { k: 'brand', name: 'Brand upgrade', line: 'From usable to worth sharing.', tl: 'Ready in', time: '5 to 10 weeks', pl: 'Starts at', price: '$5,000', href: '#brand', pic: '/motion/thumbs/kova.jpg' },
+    { k: 'web', name: 'Design service', line: 'From moodboard to a live domain.', tl: 'Ready in', time: '1 to 3 weeks', pl: 'Starts at', price: '$500', href: '#services', pic: '', forma: true },
+    { k: 'brand', name: 'Brand upgrade', line: 'From usable to worth sharing.', tl: 'Ready in', time: '5 to 10 weeks', pl: 'Starts at', price: '$5,000', href: '#brand', pic: '', board: true },
   ],
   business: [
-    { k: 'kit', name: 'Listing Launch Kit', line: 'A flyer, five posts and a video.', tl: 'Ready in', time: '48 hours', pl: 'Per listing', price: was(PRICES.listingKit), href: '/listing-kit', pic: '/motion/thumbs/listing-story.jpg' },
+    { k: 'kit', name: 'Listing Launch Kit', line: 'A flyer, five posts and a video.', tl: 'Ready in', time: '48 hours', pl: 'Per listing', price: was(PRICES.listingKit), href: '/listing-kit', pic: '/samples/justin-allen/thumb.webp', vid: '/samples/justin-allen/preview.mp4' },
     { k: 'practice', name: 'Practice Website Refresh', line: 'A calm website for your practice.', tl: 'Live in', time: '7 days', pl: 'Flat', price: was(PRICES.practice), href: '/practice-websites', pic: '/motion/thumbs/practice-story.jpg' },
   ],
 };
@@ -53,6 +56,18 @@ const STORY = (
     Anyone can build now; not everyone builds well. We bring 10 years of training, because <b>no idea deserves to be wasted.</b>
   </>
 );
+
+/** A service's film in the hero card: plays while its service is open. */
+function OfferFilm({ src, poster, play }: { src: string; poster: string; play: boolean }) {
+  const v = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const el = v.current;
+    if (!el) return;
+    if (play && !matchMedia('(prefers-reduced-motion: reduce)').matches) el.play().catch(() => {});
+    else el.pause();
+  }, [play]);
+  return <video ref={v} src={src} poster={poster} muted loop playsInline preload="none" />;
+}
 
 type RowData = { href: string; t: string; d: string; e: ReactNode; img: string };
 
@@ -136,6 +151,7 @@ function Page() {
   const cv = 4;
   const fv = 3;
   const [counted, setCounted] = useState(false);
+  const [openOffer, setOpenOffer] = useState(-1);
 
   // the bar's audiences
   useEffect(() => {
@@ -240,7 +256,8 @@ function Page() {
   const switchTo = (a: Audience) => (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     setAudience(a);
-    scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) scrollTo(0, 0);
+    else smoothScrollTo(0);
   };
 
   return (
@@ -249,12 +266,6 @@ function Page() {
       <section className="block block--flat hv2" data-tone="white" id="top">
         <div className="in">
           <div className="hv2-say">
-            {/* the cube, turning behind the claim: three-quarter view, at eye level */}
-            <div className="hv2-cube" data-chapter="" aria-hidden="true">
-              <div className="scene" data-tone="paper">
-                <GlassCube />
-              </div>
-            </div>
             <Rise as="h1" className="display hv2-h" fit={{ max: 150, min: 30, ratio: 0.92 }} hidden={!ai} aud="ai" wave>
               <Line>We build the</Line>
               <Line>
@@ -272,21 +283,17 @@ function Page() {
               <br />
               We’re a sharp team that moves fast, <b>from sketch to shipped product.</b>
             </p>
-            <p className="lede hv2-lede" {...up()} hidden={ai}>
-              Fixed-price design for local businesses, <b>ready in days.</b>
-              <br />
-              A listing kit for real estate agents and a calm website for solo practices.
-            </p>
           </div>
 
-          {/* the two services, three lines each; pointed at, a service turns over to show what it is */}
+          {/* the two services side by side, three lines each; pointed at, one opens (an accordion) to show the real
+              thing beside its words, and the other narrows */}
           <div className="hv2-wrap" {...up(220)}>
             <div className="hv2-card" ref={card}>
-              <ul className="offers">
-                {OFFERS[audience].map((o) => (
-                  <li key={o.k}>
+              <ul className="offers" onPointerLeave={() => setOpenOffer(-1)}>
+                {OFFERS[audience].map((o, i) => (
+                  <li key={o.k} className={openOffer === i ? 'is-open' : undefined} onPointerEnter={() => setOpenOffer(i)} onFocus={() => setOpenOffer(i)}>
                     <Link className="offer" href={o.href}>
-                      <span className="offer-face">
+                      <span className="offer-text">
                         <span className="offer-n">{o.name}</span>
                         <span className="offer-d">{o.line}</span>
                         <span className="offer-m">
@@ -300,15 +307,23 @@ function Page() {
                           </span>
                         </span>
                       </span>
-                      <span className="offer-back" aria-hidden="true">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={o.pic} alt="" loading="lazy" />
-                        <span className="offer-go-t">
-                          {o.name}
-                          <svg viewBox="0 0 16 16">
-                            <path d="M4 12 12 4M5.5 4H12v6.5" />
-                          </svg>
-                        </span>
+                      <span className="offer-media" aria-hidden="true">
+                        {o.forma ? (
+                          <FormaShot />
+                        ) : o.board ? (
+                          <span className="offer-board">
+                            <span className="ob-mark">
+                              <Wordmark dot />
+                            </span>
+                            <span className="ob-lime">Lime</span>
+                            <span className="ob-sage">Aa</span>
+                          </span>
+                        ) : o.vid ? (
+                          <OfferFilm src={o.vid} poster={o.pic} play={openOffer === i} />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={o.pic} alt="" loading="lazy" />
+                        )}
                       </span>
                     </Link>
                   </li>
@@ -321,26 +336,20 @@ function Page() {
 
       {/* ===== for AI teams ===== */}
 
-      {/* 02 · black: the design service, the Forma moodboard becoming its site */}
+      {/* 02 · black: the design service, a case: the Forma moodboard becoming its site, live, on a phone too */}
       <Chapter
         id="services"
-        vkey="services"
         tone="black"
         side="right"
         moves={2}
-        steps
-        caps={['Moodboard', 'Design and code', 'Live on your domain']}
         hidden={!ai}
         aud="ai"
         copy={
           <>
-            <p className="kicker">
-              Design service <span>· Founders, launch sites, brand</span>
-            </p>
+            <p className="kicker">Design service</p>
             <Rise className="h2">
               <span className="nb">From moodboard</span> <span className="nb">to a <Mark>live domain.</Mark></span>
             </Rise>
-            <Steps items={['Moodboard', 'Design and code', 'Live on your domain']} />
             <div className="acts">
               <Meta items={[['Starts at', '$500'], ['Takes', '1 to 3 weeks']]} />
             </div>
@@ -349,38 +358,31 @@ function Page() {
         scene={<Forma />}
       />
 
-      {/* 03 · white: the brand upgrade, Kova's layers lifted, coloured and pressed back */}
+      {/* 03 · white: the brand upgrade, Kova's phone taken apart into its layers and put back with its brand */}
       <Chapter
         id="brand"
-        vkey="brand"
         tone="white"
         side="left"
         moves={2}
-        steps
-        caps={['The grid', 'Color and type', 'The mark']}
         hidden={!ai}
         aud="ai"
         copy={
           <>
-            <p className="kicker">
-              Brand upgrade <span>· Growing teams, 1 to 100</span>
-            </p>
+            <p className="kicker">Brand upgrade</p>
             <Rise className="h2">
               <span className="nb">From usable</span> <span className="nb">to <Mark>worth sharing.</Mark></span>
             </Rise>
-            <Steps items={['The grid', 'Color and type', 'The mark']} />
             <div className="acts">
               <Meta items={[['Starts at', '$5,000'], ['Takes', '5 to 10 weeks']]} />
             </div>
           </>
         }
-        scene={<Kova />}
+        scene={<KovaLayers />}
       />
 
-      {/* 04 · black: Qbix Labs, the four products one after another */}
+      {/* 04 · black: Qbix Labs, the products one after another on the faces of a cube of windows (as live) */}
       <Chapter
         id="products"
-        vkey="products"
         tone="black"
         side="right"
         moves={3}
@@ -390,9 +392,7 @@ function Page() {
         aud="ai"
         copy={
           <>
-            <p className="kicker">
-              Qbix Labs <span>· Two live, two on the way</span>
-            </p>
+            <p className="kicker">Qbix Labs</p>
             <Rise className="h2">
               Things we’ve <Mark>shipped.</Mark>
             </Rise>
@@ -409,25 +409,6 @@ function Page() {
                 </span>
               ))}
             />
-            <div className="ch-list-foot">
-              <div className="notes">
-                <p>
-                  <b>Strata.</b> A moodboard in, a working design system out: tokens, components, and code.
-                </p>
-                <p>
-                  <b>AI Bidding.</b> Blind boxes, sealed bids, one clue a round. Work your way up from flea markets to the Devil’s Auction.
-                </p>
-                <p>
-                  <b>TTS Editor.</b> Shape pitch, pauses, and emotion, and edit the script until the voice is right.
-                </p>
-                <p>
-                  <b>Interview Assistant.</b> Live hints, follow-up questions, and clean notes, so you stay in the conversation.
-                </p>
-              </div>
-              <div className="acts">
-                <Btn href="/products/strata">Explore Strata</Btn>
-              </div>
-            </div>
           </>
         }
         scene={<Labs />}
@@ -468,9 +449,7 @@ function Page() {
         aud="business"
         copy={
           <>
-            <p className="kicker">
-              Listing Launch Kit <span>· Real estate agents, per listing</span>
-            </p>
+            <p className="kicker">Listing Launch Kit</p>
             <Rise className="h2">
               Your listing, ready to share in <Mark>48 hours.</Mark>
             </Rise>
@@ -496,9 +475,7 @@ function Page() {
         aud="business"
         copy={
           <>
-            <p className="kicker">
-              Practice Website Refresh <span>· Solo practices, therapists</span>
-            </p>
+            <p className="kicker">Practice Website Refresh</p>
             <Rise className="h2">
               A website that feels as <Mark>calm</Mark> as your office.
             </Rise>
@@ -514,15 +491,10 @@ function Page() {
 
       {/* ===== both ===== */}
 
-      {/* 05 · white: about us, ideas as bubbles, then one of them built (its own for each audience) */}
-      <Chapter
-        id="about"
-        vkey="about"
-        tone="white"
-        side="left"
-        moves={1}
-        copy={
-          <>
+      {/* 05 · white: about us; the ideas we've been brought run under it, each pointing at what it became */}
+      <section className="block about" id="about" data-tone="white">
+        <div className="in">
+          <div className="head about-head">
             <p className="kicker">About us</p>
             <Rise className="h2">
               <span className="nb">Our story</span> <span className="nb">is simple.</span>
@@ -530,22 +502,17 @@ function Page() {
             <p className="lede" {...up()}>
               {STORY}
             </p>
-          </>
-        }
-        scene={<Dream key={audience} biz={!ai} />}
-      />
+          </div>
+        </div>
+        <Ideas />
+      </section>
 
       {/* 06 · black: the other side of Qbix, after Wise's "Built for business too" */}
       <section className="block cross" data-tone="black" hidden={!ai} data-aud="ai">
         <div className="in">
-          <div className="head head--split">
-            <Rise className="h1">
-              <span className="nb">Built for</span> <span className="nb"><Mark>local business</Mark> too.</span>
-            </Rise>
-            <p className="lede" {...up()}>
-              Fixed-price design for local businesses, <b>ready in days.</b> A listing kit for real estate agents and a calm website for solo practices.
-            </p>
-          </div>
+          <Rise className="h1">
+            <span className="nb">Built for</span> <span className="nb"><Mark>local business</Mark> too.</span>
+          </Rise>
           <Rows
             v={cv}
             rows={[
@@ -563,14 +530,9 @@ function Page() {
       </section>
       <section className="block cross" data-tone="black" hidden={ai} data-aud="business">
         <div className="in">
-          <div className="head head--split">
-            <Rise className="h1">
-              <span className="nb">Built for</span> <span className="nb"><Mark>product teams</Mark> too.</span>
-            </Rise>
-            <p className="lede" {...up()}>
-              Qbix never writes off a small idea. We’re a sharp team that moves fast, <b>from sketch to shipped product.</b>
-            </p>
-          </div>
+          <Rise className="h1">
+            <span className="nb">Built for</span> <span className="nb"><Mark>product teams</Mark> too.</span>
+          </Rise>
           <Rows
             v={cv}
             rows={[
@@ -587,10 +549,10 @@ function Page() {
         </div>
       </section>
 
-      {/* 07 · white: the sign-off, the glass cube, its core lime */}
+      {/* 07 · white: the sign-off, its words lit one by one, and water running beside them */}
       <section className="block sign" id="contact" data-tone="white" data-v="4" ref={sign}>
         <div className="in">
-          <div>
+          <div className="sign-say">
             <p className="kicker">Contact</p>
             <Rise className="h1" style={{ marginTop: 22 }}>
               <span className="nb">Bring the idea.</span> <span className="nb">We’ll build the thing.</span>
@@ -601,16 +563,11 @@ function Page() {
               </a>
             </div>
           </div>
-          <div className="sign-cube" data-chapter="">
-            <div className="scene" data-tone="paper" style={{ height: '100%' }}>
-              <GlassCube />
-            </div>
-          </div>
+          <FlowArt />
         </div>
       </section>
 
       <Footer v={fv} />
-      <Panel />
     </main>
   );
 }

@@ -50,15 +50,14 @@ const PHONE = { x: 540, y: 144 };
 // they sort correctly under the camera's tilt.
 const DEPTH0: Record<string, number> = { slices: 70, pal: -50, wall: 100, obj: 90, flow: -70, type: -20, cross: 40, ring: -10, block: 60 };
 const LAYER = { tile: 4, lime: 6 };
-// the camera, beat by beat: the site's plane square to us (never turned or tipped: depth is distance only),
-// set back and shifted; the phone in front of it, square too
+// the camera, beat by beat: the site's plane (turned about y, tilted about x, set back, shifted) and the phone
 const CAM = [
-  { ry: 0, rx: 0, z: -30, x: 0 },
-  { ry: 0, rx: 0, z: -10, x: 0 },
-  { ry: 0, rx: 0, z: -40, x: 0 },
-  { ry: 0, rx: 0, z: -100, x: -22 },
+  { ry: -9, rx: 4, z: -30, x: 0 },
+  { ry: -6, rx: 3, z: -10, x: 0 },
+  { ry: 7, rx: 3, z: -40, x: 0 },
+  { ry: 15, rx: 2, z: -100, x: -22 },
 ];
-const PH = { z: 130, ry: 0, rx: 0, x: -8 };
+const PH = { z: 130, ry: -10, rx: 2, x: -8 };
 const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const soft = (x: number) => { const t = clamp01(x); return t * t * (3 - 2 * t); };
@@ -142,7 +141,7 @@ export default function Forma() {
           still.forEach(([el, z0]) => { if (el) el.style.transform = `translateZ(${z0}px)`; });
           if (phone) {
             const k = soft((t - 2.24) / 0.4);
-            phone.style.transform = `translate3d(${(PH.x * k).toFixed(2)}px, 0, ${lerp(40, PH.z, k).toFixed(2)}px) rotateX(${(PH.rx * k).toFixed(2)}deg) rotateY(${lerp(0, PH.ry, k).toFixed(2)}deg)`;
+            phone.style.transform = `translate3d(${(PH.x * k).toFixed(2)}px, 0, ${lerp(40, PH.z, k).toFixed(2)}px) rotateX(${(PH.rx * k).toFixed(2)}deg) rotateY(${lerp(-3, PH.ry, k).toFixed(2)}deg)`;
           }
         });
         tl.from(q('phone'), { y: 90, clip: 'inset(0% 0% 100% 0%)' }).to(q('phone'), { y: 0, clip: 'inset(-64px -64px -64px -64px)' }, 2.24, 0.28, E.out);

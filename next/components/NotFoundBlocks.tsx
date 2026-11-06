@@ -25,8 +25,8 @@ type Contact = { p: V; depth: number; key: string; rA: V; rB: V; mn: number; mt:
 type Manifold = { A: Solid; B: Solid; n: V; pts: Contact[] };
 type Joint = { b: Body; lx: number; ly: number; tx: number; ty: number };
 
-// blocks.css: lime's own black, the sage tiles, the sage a step down for the floor
-const INK = '#0F1A00';
+// blocks.css: the near-black, the sage tiles, the sage a step down for the floor
+const INK = '#0B0C0D';
 const WHITE = '#FFFFFF';
 const SAGE = '#EEF1E8';
 const FLOOR = '#E3E8DA';

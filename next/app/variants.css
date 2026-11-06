@@ -18,7 +18,7 @@
 .vp-row { display: grid; grid-template-columns: 7.6em auto minmax(0, 1fr); align-items: center; gap: 4px 10px; padding: 3px 0; }
 .vp-k { color: rgba(255, 255, 255, 0.8); white-space: nowrap; }
 .vp-n { display: flex; gap: 2px; }
-.vp-n button { width: 24px; height: 24px; padding: 0; border: 0; background: #1b260d; color: rgba(255, 255, 255, 0.7); font: inherit; cursor: pointer; }
+.vp-n button { width: 24px; height: 24px; padding: 0; border: 0; background: #18191b; color: rgba(255, 255, 255, 0.7); font: inherit; cursor: pointer; }
 .vp-n button:hover { color: #ffffff; }
 .vp-n button[aria-checked='true'] { background: #ffffff; color: var(--ink); }
 .vp-o { min-width: 0; color: rgba(255, 255, 255, 0.56); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
