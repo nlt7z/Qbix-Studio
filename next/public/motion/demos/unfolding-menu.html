@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unfolding menu · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "unfolding-menu", "title": "Unfolding menu", "group": "studio", "added": "2026-11-05", "cat": "buttons", "order": 40,
+  "kind": "hover", "tone": "paper", "shot": 3600,
+  "line": "420 ms rows · 40 ms stagger · lime marker 300 ms",
+  "summary": "A Publish split button. Point at its caret and a menu unfolds under it, each row uncovered from the top by a clip, 40 ms apart, while the caret turns. A lime marker bar slides to the row you are on. Leaving folds it back up, last row first.",
+  "spec": [
+    ["Rows", "clip-path inset(0 0 100% 0) → inset(0), 420 ms expo out, 40 ms stagger top down"],
+    ["Fold", "260 ms ease-move, last row first, 40 ms apart"],
+    ["Caret", "rotates 180°, 300 ms ease-move"],
+    ["Marker", "4px lime bar, translateY to the row, 300 ms ease-move"],
+    ["Trigger", "hover on the caret opens, a 140 ms grace on leaving; a press pins it; Esc or a click outside closes"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The publish bar of a Design service project: Publish, with Preview link and Schedule behind the caret.",
+  "rules": [
+    "Rows are uncovered, never faded: the clip is on each row, so the menu is always made of whole rows.",
+    "The menu is closed with inert, so a folded menu cannot be tabbed into.",
+    "Lime is the marker, the only signal in the menu.",
+    "The split button's top right corner is cut; the gap between its two parts is 2px of the surface."
+  ],
+  "tags": ["button", "menu", "split button", "hover", "clip", "stagger"]
+}
+</script>
+<style data-code>
+/* Unfolding menu. Rows are ink, uncovered top down by a clip each. */
+.um { position: relative; display: flex; gap: 2px; }
+.um-main, .um-caret { height: 64px; border: 0; background: #121417; color: #f3f4f5; cursor: pointer; user-select: none; transition: transform 160ms cubic-bezier(.22, 1, .36, 1); }
+.um-main { padding: 0 32px; font: 500 19px/1 Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+.um-caret { width: 64px; display: grid; place-items: center; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.um-main:active, .um-caret:active { transform: translateY(2px); }
+.um-caret svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 300ms cubic-bezier(.65, 0, .35, 1); }
+.um.is-open .um-caret svg { transform: rotate(180deg); }
+.um button:focus-visible { outline: 2px solid #B8FF00; outline-offset: -6px; }
+
+.um-menu { position: absolute; top: calc(100% + 8px); right: 0; width: 340px; z-index: 5; }
+.um-row { display: block; width: 100%; height: 58px; padding: 0 20px; border: 0; background: #121417; color: #f3f4f5; text-align: left; cursor: pointer;
+  clip-path: inset(0 0 100% 0); transition: clip-path 260ms cubic-bezier(.65, 0, .35, 1) calc(var(--o) * 40ms), background 160ms cubic-bezier(.4, 0, .2, 1); }
+.um-in { height: 100%; display: flex; align-items: center; gap: 14px; font: 400 16px/1 Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+.um-in svg { flex: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.um-in b { flex: 1; font-weight: 400; white-space: nowrap; }
+.um-in kbd { font: 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(243, 244, 245, .5); }
+.um-row:hover, .um-row.is-hot { background: #20242a; }
+.um.is-open .um-row { clip-path: inset(0); transition: clip-path 420ms cubic-bezier(.16, 1, .3, 1) calc(var(--i) * 40ms), background 160ms cubic-bezier(.4, 0, .2, 1); }
+
+/* the lime marker: one bar that slides between rows */
+.um-bar { position: absolute; left: 0; top: 0; width: 4px; height: 58px; z-index: 2; pointer-events: none; background: #B8FF00;
+  transform: translateY(calc(var(--k, 0) * 58px)); clip-path: inset(0 0 100% 0); transition: transform 300ms cubic-bezier(.65, 0, .35, 1), clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.um.is-open.has-mark .um-bar { clip-path: inset(0); transition: transform 300ms cubic-bezier(.65, 0, .35, 1), clip-path 320ms cubic-bezier(.16, 1, .3, 1); }
+@media (prefers-reduced-motion: reduce) { .um-row, .um-bar, .um-caret svg, .um-main, .um-caret { transition: none !important; } }
+</style>
+<style>
+  .umw { width: min(78vw, 660px); display: grid; gap: 20px; }
+  .um-card { position: relative; background: #fff; padding: 36px 40px 36px; min-height: 340px; display: flex; flex-direction: column; justify-content: flex-start; }
+  .um-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+  .um-t { margin: 0; font: 400 clamp(26px, 4vw, 38px)/1.04 var(--font-headline); letter-spacing: -.03em; }
+  .um-s { margin: 12px 0 0; font: 12px/16px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fg2); }
+  .um-strip { margin-top: auto; background: var(--sunk); padding: 18px 20px; font: 12px/16px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--fg2); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="umw">
+    <p class="kicker">Publish · Split button</p>
+    <div class="um-card">
+      <div class="um-head">
+        <div>
+          <h2 class="um-t">Forma, ready.</h2>
+          <p class="um-s">5 pages · 12 files</p>
+        </div>
+<!-- code -->
+<div class="um" id="um">
+  <button class="um-main" type="button">Publish</button>
+  <button class="um-caret" id="um-caret" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="More publish options">
+    <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4 7l5 5 5-5"/></svg>
+  </button>
+  <div class="um-menu" id="um-menu" role="menu" inert>
+    <i class="um-bar" aria-hidden="true"></i>
+    <button class="um-row" role="menuitem" type="button" style="--i:0;--o:2"><span class="um-in"><svg viewBox="0 0 18 18"><path d="M2 9s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="9" cy="9" r="2.2"/></svg><b>Preview link</b><kbd>⌘ P</kbd></span></button>
+    <button class="um-row" role="menuitem" type="button" style="--i:1;--o:1"><span class="um-in"><svg viewBox="0 0 18 18"><path d="M5 13L13 5M6 5h7v7"/></svg><b>Publish to forma.studio</b><kbd>⌘ ↵</kbd></span></button>
+    <button class="um-row" role="menuitem" type="button" style="--i:2;--o:0"><span class="um-in"><svg viewBox="0 0 18 18"><rect x="3" y="4" width="12" height="11"/><path d="M3 8h12M6 2v3M12 2v3"/></svg><b>Schedule for Monday</b><kbd>⌘ S</kbd></span></button>
+  </div>
+</div>
+<!-- /code -->
+      </div>
+      <div class="um-strip"><span>Last saved 2 min ago</span><span>Round 2 approved</span></div>
+    </div>
+  </div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Unfolding menu. One class, is-open, unfolds the rows (their delays are CSS vars); --k places the marker. */
+const um = document.getElementById('um');
+const umCaret = document.getElementById('um-caret');
+const umMenu = document.getElementById('um-menu');
+const umRows = Array.from(umMenu.querySelectorAll('.um-row'));
+let umPinned = false, umGrace = 0;
+
+function umOpen() {
+  clearTimeout(umGrace);
+  um.classList.add('is-open');
+  umCaret.setAttribute('aria-expanded', 'true');
+  umMenu.inert = false;
+}
+function umClose() {
+  clearTimeout(umGrace);
+  umPinned = false;
+  um.classList.remove('is-open', 'has-mark');
+  umCaret.setAttribute('aria-expanded', 'false');
+  umMenu.inert = true;
+  umRows.forEach((r) => r.classList.remove('is-hot'));
+}
+function umMark(i) {
+  um.style.setProperty('--k', i);
+  um.classList.add('has-mark');
+  umRows.forEach((r, k) => r.classList.toggle('is-hot', k === i));
+}
+umCaret.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') umOpen(); });
+um.addEventListener('pointerenter', () => clearTimeout(umGrace));
+um.addEventListener('pointerleave', () => { if (!umPinned) umGrace = setTimeout(umClose, 140); });
+umCaret.addEventListener('click', () => { if (umPinned) umClose(); else { umPinned = true; umOpen(); } });
+umCaret.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown') { e.preventDefault(); umPinned = true; umOpen(); umRows[0].focus(); } });
+umRows.forEach((r, i) => {
+  r.addEventListener('pointerenter', () => umMark(i));
+  r.addEventListener('focus', () => umMark(i));
+  r.addEventListener('click', umClose);
+});
+document.addEventListener('pointerdown', (e) => { if (!um.contains(e.target)) umClose(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { umClose(); umCaret.focus(); } });
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let timers = [];
+  const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+  const clear = () => { timers.forEach(clearTimeout); timers = []; };
+  const centre = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width * 0.45, r.top + r.height * 0.55]; };
+  // the ghost script: open on the caret, then walk the three rows
+  function enter() {
+    clear();
+    umOpen();
+    umRows.forEach((r, i) => {
+      at(900 + i * 800, () => { const [x, y] = centre(r); QM.ghostTo(x, y, 520); });
+      at(1250 + i * 800, () => umMark(i));
+    });
+  }
+  function leave() { clear(); umClose(); }
+  if (!QM.tile) {
+    // a real mouse takes over: drop the scripted timers, keep what the pointer itself opened
+    addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'mouse' || !timers.length) return;
+      clear();
+      if (!um.matches(':hover')) umClose();
+    }, { passive: true });
+  }
+  QM.demo({ kind: 'hover', targets: '#um-caret', dur: 4200, travel: 900, enter, leave });
+  if (reduced) { /* still state: the menu stays folded, hover and press still open it, with no transition */ }
+})();
+</script>
+</body>
+</html>

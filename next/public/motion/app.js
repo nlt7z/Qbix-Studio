@@ -22,7 +22,7 @@
     pointer: 'Move the pointer over it',
     loop: 'Always running',
   };
-  const ORIGIN = { site: 'qbix.space', lab: 'Lab', picks: 'Picks' };
+  const ORIGIN = { site: 'qbix.space', lab: 'Lab', picks: 'Picks', studio: 'Studio' };
   const MARK = '<span class="mark" aria-hidden="true"><svg viewBox="0 0 12 16"><path d="M1.5 1.5H10.5V14.3L6 10.9L1.5 14.3Z"/></svg></span>';
   const FILM = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.75" y="3.25" width="9.5" height="9.5" rx="2"/><path d="M11.25 6.5 14.25 4.75v6.5L11.25 9.5"/></svg>';
   const HEART = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2 10.1 2 6.1A3.1 3.1 0 0 1 8 4.6a3.1 3.1 0 0 1 6 1.5c0 4-6 7.5-6 7.5Z"/></svg>';
@@ -36,7 +36,7 @@
   const items = LIB.items.slice();
   const byId = new Map(items.map((it) => [it.id, it]));
   const groupOf = new Map(LIB.groups.map((g) => [g.id, g]));
-  const originOf = (it) => (it.group === 'lab' ? 'lab' : it.group === 'picks' ? 'picks' : 'site');
+  const originOf = (it) => (['lab', 'picks', 'studio'].includes(it.group) ? it.group : 'site');
   const CATS = LIB.cats || [];
   const catOf = new Map(CATS.map((c) => [c.id, c]));
   const catName = (it) => (catOf.get(it.cat) || {}).title || '';
@@ -79,6 +79,17 @@
 
   /* --- one library: every piece in one grid, shuffled; the strip shows one category ---- */
   const strip = $('#view');
+  // New: the last seven days of studio drops (build.py marks them fresh), right after All
+  const hasFresh = items.some((it) => it.fresh);
+  if (hasFresh) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'tab');
+    b.dataset.view = 'new';
+    b.title = 'Added in the last seven days';
+    b.textContent = 'New';
+    strip.appendChild(b);
+  }
   CATS.forEach((c) => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -110,7 +121,7 @@
         <p class="card-line"><span class="card-cat">${esc(r ? 'Remix' : catName(it))}</span>${line ? ` · ${esc(line)}` : ''}</p>
         <div class="card-side">
           <button class="act like" type="button" aria-pressed="false" aria-label="Like ${esc(title)}" title="Like">${HEART}<b class="like-n"></b></button>
-          ${r ? '' : `<button class="act act--export" type="button" aria-label="Export ${esc(title)} as a video" title="Export video">${FILM}</button>`}
+          ${r ? '' : `<button class="act act--export" type="button" aria-label="Export ${esc(title)} as a video" title="Export video">${FILM}<b class="dl-n"></b></button>`}
         </div>
       </div>`;
   }
@@ -120,6 +131,7 @@
     card.dataset.id = it.id;               // the piece: its still, its preview
     card.dataset.key = r ? r.rid : it.id;  // what is liked and saved
     card.dataset.cat = it.cat || '';
+    if (it.fresh && !r) card.dataset.fresh = '1';
     card.innerHTML = cardHTML(it, r);
     return card;
   }
@@ -262,7 +274,7 @@
   function counts() {
     const words = searchWords();
     const has = new Set();
-    cards.forEach((c) => { if (matches(c.dataset.id, words)) has.add(c.dataset.cat); });
+    cards.forEach((c) => { if (matches(c.dataset.id, words)) { has.add(c.dataset.cat); if (c.dataset.fresh) has.add('new'); } });
     $$('#view button[data-view]').forEach((b) => b.classList.toggle('is-empty', b.dataset.view !== 'all' && !has.has(b.dataset.view)));
     $('#hero-count').textContent = 'Qbix Motion';
     $('#foot-count').textContent = 'Qbix Motion';
@@ -278,7 +290,7 @@
     const more = [];
     cards.forEach((c) => {
       const id = c.dataset.id;
-      const inView = (view === 'all' || c.dataset.cat === view) && matches(id, words);
+      const inView = (view === 'all' || c.dataset.cat === view || (view === 'new' && !!c.dataset.fresh)) && matches(id, words);
       const ok = inView && !locked(id);
       if (inView && !ok) more.push(byId.get(id));
       c.hidden = !ok;
@@ -307,7 +319,7 @@
   }
   addEventListener('resize', () => { inkPlaced = false; placeInk(); });
   function setView(v, scroll) {
-    view = catOf.has(v) ? v : 'all';
+    view = catOf.has(v) || (v === 'new' && hasFresh) ? v : 'all';
     flip(filter);
     // on a narrow screen the strip scrolls: keep the tab that is on in sight
     const b = $(`#view button[data-view="${view}"]`);
@@ -325,6 +337,8 @@
     $('.save', c).setAttribute('aria-pressed', String(saved.has(k)));
     const lk = $('.like', c);
     if (lk) { lk.setAttribute('aria-pressed', String(liked.has(k))); $('.like-n', lk).textContent = C.likes[k] || ''; }
+    const dl = $('.act--export', c);
+    if (dl) { const n = C.downloads[k] || 0; $('.dl-n', dl).textContent = n || ''; dl.title = n ? `Export video · downloaded ${n} ${n === 1 ? 'time' : 'times'}` : 'Export video'; }
   }
   function paintSaved() {
     $$('.card').forEach(paintCard);
@@ -333,6 +347,7 @@
       $('[data-save]', sheet).setAttribute('aria-pressed', String(saved.has(k)));
       $('[data-like]', sheet).setAttribute('aria-pressed', String(liked.has(k)));
       $('[data-like-n]', sheet).textContent = C.likes[k] || '';
+      $('[data-dl-n]', sheet).textContent = C.downloads[k] || '';
     }
     $$('[data-bench-count]').forEach((el) => (el.textContent = saved.size || ''));
   }
@@ -392,7 +407,7 @@
   let canEdit = false;
   const served = /^https?:$/.test(location.protocol);
   const toast = $('#toast');
-  const C = { on: false, full: false, off: false, user: null, members: 0, likes: {}, saves: {}, top: [], remixes: [] };
+  const C = { on: false, full: false, off: false, user: null, members: 0, likes: {}, saves: {}, downloads: {}, top: [], remixes: [] };
   let liked = new Set();
   // the local server answers at /api/…; the site at window.QM_API (/api/motion/…)
   const API = window.QM_STATIC ? window.QM_API || '' : '/api';
@@ -443,6 +458,7 @@
       C.off = false;
       C.user = j.user || null;
       liked = new Set(j.liked || []);
+      C.downloads = j.downloads || {};
       if (C.user) {
         // saves made in this browser before joining move into the account
         const local = (() => { try { const v = JSON.parse(store.get(SAVED_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } })();
@@ -659,6 +675,13 @@
       j = { job: j.job, ...(await s2.json()) };
     }
   }
+  // each download of a film counts (the server logs the GET of the file); the count beside the film icon follows at once
+  function countDownload(id) {
+    C.downloads[id] = (C.downloads[id] || 0) + 1;
+    paintSaved();
+    [...cardsFor(id).map((c) => $('.act--export .dl-n', c)), sheetOpen && curKey() === id && $('[data-dl-n]', sheet)].forEach(popMark);
+  }
+  $('#export-state').addEventListener('click', (e) => { if (e.target.closest('a[download]') && cur) countDownload(cur.id); });
   // from a piece's icon: the default film, its progress in the toast
   async function quickFilm(id) {
     const it = byId.get(id);
@@ -667,6 +690,7 @@
     try {
       const url = await film(id, '16x9', 10, say);
       download(url, fileName(it, '16x9', 10));
+      countDownload(id);
       showToast(`Saved “${it.title}” · 16:9 · 10 s`, { ms: 3200 });
     } catch (err) {
       showToast(`Could not film “${it.title}”: ${err.message || err}`, { ms: 5000 });
@@ -972,6 +996,7 @@
         state.textContent = st === 'queued' ? 'Waiting' : `${Math.round(p * 100)}%`;
       });
       download(url, fileName(it, fmt, secs));
+      countDownload(it.id);
       bar.hidden = true;
       state.innerHTML = `Saved · <a href="${esc(url)}" download="${esc(fileName(it, fmt, secs))}">download again</a>`;
     } catch (err) {

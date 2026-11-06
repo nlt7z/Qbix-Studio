@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hold to publish · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "hold-to-publish", "title": "Hold to publish", "group": "studio", "added": "2026-11-05", "cat": "buttons", "order": 20,
+  "kind": "loop", "tone": "paper", "shot": 4500,
+  "line": "1.2 s hold · drains in 0.4 s · 2px press",
+  "summary": "A black publish button that needs a deliberate hold. A lime fill crosses it from the left over 1.2 s, and the label's letters pass from paper to ink as the fill reaches them (two stacked labels, the top one clipped by the fill). Let go early and the fill drains back, faster. At the end the button presses 2px and the label rolls to Published.",
+  "spec": [
+    ["Hold", "1.2 s, linear: the fill is the progress, so it should read as progress"],
+    ["Fill", "clip-path inset on a lime face holding the ink label; the paper label underneath stays put"],
+    ["Release", "drains at 3× the fill speed, 400 ms from full"],
+    ["Complete", "2px press 160 ms, label rolls up 420 ms expo out to Published ↗︎"],
+    ["Reset", "2.2 s later the label rolls back and the fill drains in 450 ms"],
+    ["Input", "pointer down and up, Space or Enter held"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The publish bar of a Design service project: the last step before forma.studio goes live.",
+  "rules": [
+    "The label is one text in two layers, never two different labels cross-faded.",
+    "Lime is the fill, the only signal on the bar.",
+    "A release must never feel like a failure: it drains, it does not shake.",
+    "Keyboard works the same: hold Space."
+  ],
+  "tags": ["button", "hold", "press", "progress", "confirm"]
+}
+</script>
+<style data-code>
+/* Hold to publish. Two faces share one box; the lime face is clipped by --p (0..1). */
+.hp { width: min(74vw, 680px); background: #fff; padding: 32px 32px 32px 40px; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
+.hp-t { margin: 0; font: 400 clamp(26px, 4vw, 38px)/1.04 Eurostile, Geist, sans-serif; letter-spacing: -.03em; color: #121417; }
+.hp-m { margin: 12px 0 0; font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+
+.hp-btn {
+  position: relative; flex: none; width: clamp(200px, 30vw, 262px); height: 64px; padding: 0; border: 0;
+  background: #121417; color: #f3f4f5; cursor: pointer; user-select: none; touch-action: none; -webkit-tap-highlight-color: transparent;
+  font: 500 19px/1 Geist, system-ui, sans-serif; letter-spacing: -.011em;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  transition: transform 160ms cubic-bezier(.22, 1, .36, 1);
+}
+.hp-btn.is-press { transform: translateY(2px); }
+.hp-btn:focus-visible { outline: 2px solid #B8FF00; outline-offset: -6px; }
+.hp-face { position: absolute; inset: 0; display: grid; place-items: center; }
+.hp-fill { background: #B8FF00; color: #0c1300; clip-path: inset(0 calc(100% - var(--p, 0) * 100%) 0 0); }
+
+/* the label: two words in a sleeve, both faces roll together */
+.hp-lab { display: grid; justify-items: center; overflow: hidden; height: 1.3em; line-height: 1.3em; }
+.hp-lab span { grid-area: 1 / 1; white-space: nowrap; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.hp-lab .b { transform: translateY(110%); }
+.hp-btn.is-done .hp-lab .a { transform: translateY(-110%); }
+.hp-btn.is-done .hp-lab .b { transform: none; }
+@media (prefers-reduced-motion: reduce) { .hp-btn, .hp-lab span { transition: none; } }
+</style>
+<style>
+  .hpw { display: grid; gap: 20px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="hpw">
+    <p class="kicker">Publish · Hold to confirm</p>
+<!-- code -->
+<div class="hp">
+  <div>
+    <h2 class="hp-t">Ready to go live.</h2>
+    <p class="hp-m">forma.studio · 5 pages · 12 files</p>
+  </div>
+  <button class="hp-btn" id="hp-btn" type="button" aria-label="Hold to publish">
+    <span class="hp-face"><span class="hp-lab"><span class="a">Hold to publish</span><span class="b">Published ↗︎</span></span></span>
+    <span class="hp-face hp-fill" id="hp-fill" aria-hidden="true"><span class="hp-lab"><span class="a">Hold to publish</span><span class="b">Published ↗︎</span></span></span>
+  </button>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Hold the button 1.2 s · pointer or Space</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Hold to publish. A tiny state machine: idle → hold → (drain → idle | done → reset → idle). */
+const hpBtn = document.getElementById('hp-btn');
+const hpFill = document.getElementById('hp-fill');
+const HOLD = 1200, DRAIN = 400, RESET = 450, STAY = 2200;
+let hpP = 0, hpMode = 'idle', hpRaf = 0, hpLast = 0, hpRate = 1 / DRAIN, hpStay = 0;
+
+function hpFrame(now) {
+  const dt = Math.min(64, now - hpLast); hpLast = now;
+  if (hpMode === 'hold') { hpP = Math.min(1, hpP + dt / HOLD); if (hpP >= 1) hpComplete(); }
+  else if (hpMode === 'drain') { hpP = Math.max(0, hpP - dt * hpRate); if (hpP <= 0) hpMode = 'idle'; }
+  hpFill.style.setProperty('--p', hpP);
+  hpRaf = (hpMode === 'hold' || hpMode === 'drain') ? requestAnimationFrame(hpFrame) : 0;
+}
+function hpKick() { if (!hpRaf) { hpLast = performance.now(); hpRaf = requestAnimationFrame(hpFrame); } }
+function hpStart() {
+  if (hpMode === 'done') return;
+  hpMode = 'hold'; hpKick();
+}
+function hpRelease() {
+  if (hpMode !== 'hold') return;
+  hpMode = 'drain'; hpRate = 1 / DRAIN; hpKick();
+}
+function hpComplete() {
+  hpMode = 'done'; hpP = 1;
+  hpBtn.classList.add('is-done', 'is-press');
+  setTimeout(() => hpBtn.classList.remove('is-press'), 160);
+  hpStay = setTimeout(hpReset, STAY);
+}
+function hpReset() {
+  clearTimeout(hpStay);
+  hpBtn.classList.remove('is-done', 'is-press');
+  hpMode = 'drain'; hpRate = 1 / RESET; hpKick();
+}
+hpBtn.addEventListener('pointerdown', (e) => { hpBtn.setPointerCapture(e.pointerId); hpStart(); });
+hpBtn.addEventListener('pointerup', hpRelease);
+hpBtn.addEventListener('pointercancel', hpRelease);
+hpBtn.addEventListener('keydown', (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); hpBtn.classList.add('is-press'); hpStart(); } });
+hpBtn.addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') { hpBtn.classList.remove('is-press'); hpRelease(); } });
+hpBtn.addEventListener('pointerdown', () => { if (hpMode === 'hold') hpBtn.classList.add('is-press'); });
+['pointerup', 'pointercancel'].forEach((n) => hpBtn.addEventListener(n, () => { if (hpMode !== 'done') hpBtn.classList.remove('is-press'); }));
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const aim = () => { const r = hpBtn.getBoundingClientRect(); return [r.left + r.width * 0.5, r.top + r.height * 0.6]; };
+  const press = (on) => hpBtn.classList.toggle('is-press', on);
+  function reset() { clearTimeout(hpStay); hpMode = 'idle'; hpP = 0; hpFill.style.setProperty('--p', 0); hpBtn.classList.remove('is-done', 'is-press'); }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 700);
+        const [x, y] = aim();
+        await QM.ghostTo(x, y, 800);
+        await gap(my, 250);
+        press(true); hpStart();                      // too short: 600 ms
+        await gap(my, 600);
+        press(false); hpRelease();
+        await gap(my, 1000);
+        press(true); hpStart();                      // the whole hold
+        await gap(my, 1450);
+        press(false); hpRelease();
+        await gap(my, 2900);                         // Published, then the reset
+        await QM.ghostTo(x + 90, y + 70, 600);
+        await gap(my, 900);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (hpMode === 'idle' && !hpBtn.matches(':hover')) { reset(); script(); } else touch({}); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}), { passive: true });
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

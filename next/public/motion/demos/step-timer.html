@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Working timer · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "step-timer",
+  "title": "Working timer",
+  "group": "studio",
+  "added": "2026-11-05",
+  "cat": "agent",
+  "order": 40,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "a quarter turn a second · digits roll 380 ms · lime tick on done",
+  "summary": "Three small status blocks, one for each step of a build: queued, working, done. A working block turns its square a quarter every second with a tiny press, and its seconds roll up digit by digit out of a sleeve. Done, the label rolls to “Done in 4s”, the square becomes a lime tick and the block narrows to fit. The run passes from one block to the next.",
+  "spec": [
+    ["Square", "16px; queued is a 2px frame, working is solid ink, done is lime with a drawn ink tick"],
+    ["Beat", "every 1000 ms the square turns 90° with a press to 80% and back, 360 ms on the move curve"],
+    ["Seconds", "a digit sleeve: the old digit leaves up, the new arrives from below, 380 ms, expo out"],
+    ["Label", "Queued → Working → Done in 4s, rolled through one sleeve whose width glides, so the block follows"],
+    ["Done", "the clock closes in 320 ms, the tick is drawn in 220 ms (stroke-dashoffset 20 → 0)"],
+    ["Order", "each step starts 500 ms after the one before is done; 3 s, 4 s, 3 s here"],
+    ["Reduced motion", "one block of each state, nothing turns"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The header of a build run on a Strata or site-build page: how long each stage has been working, and how long it took.",
+  "rules": [
+    "The square is the only thing that moves while working; the seconds only change by rolling.",
+    "Lime appears once per block and only for done.",
+    "A block is as wide as its words; nothing is padded to a fixed size.",
+    "Click a block to move it on: Queued, Working, Done, Queued."
+  ],
+  "tags": ["agent", "timer", "status", "digits", "sleeve"],
+  "deps": [],
+  "shot": 6000
+}
+</script>
+<style data-code>
+/* Working timer: queued, working, done. One square, one label sleeve, one clock sleeve. */
+.st { width: 540px; background: var(--surface); padding: 24px; display: grid; gap: 20px; color: var(--fg); --cut: 16px; }
+.st-top { display: flex; justify-content: space-between; align-items: center; height: 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+.st-row { display: flex; gap: 8px; align-items: flex-start; }
+.st-col { display: grid; gap: 8px; min-width: 0; }
+.st-k { margin: 0; height: 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg3); }
+.st-b { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; height: 64px; padding: 0 20px; background: var(--fill); font-size: 16px; letter-spacing: -0.011em; cursor: pointer; white-space: nowrap; transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+.st-b:active { transform: translateY(2px); }
+.st-b:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
+.st-sq { position: relative; flex: none; width: 16px; height: 16px; margin-right: 14px; background: var(--fg); transition: background 160ms ease, box-shadow 160ms ease; }
+.st-sq svg { position: absolute; inset: 0; width: 16px; height: 16px; fill: none; stroke: var(--on-lime); stroke-width: 2.2; stroke-linecap: square; }
+.st-sq path { stroke-dasharray: 18; stroke-dashoffset: 20; }
+.st-b[data-s="q"] .st-sq { background: transparent; box-shadow: inset 0 0 0 2px var(--fg3); }
+.st-b[data-s="d"] .st-sq { background: var(--signal); }
+.st-b[data-s="q"] .st-lab { color: var(--fg2); }
+.st-clk { display: inline-flex; width: 0; overflow: hidden; font-family: var(--font-mono); font-variant-numeric: tabular-nums; transition: width 320ms cubic-bezier(0.65, 0, 0.35, 1), margin 320ms cubic-bezier(0.65, 0, 0.35, 1); }
+.st-b[data-s="w"] .st-clk { width: 28px; margin-left: 10px; }
+.st-clk .sl { height: 24px; line-height: 24px; }
+.st-clk > i { font-style: normal; line-height: 24px; color: var(--fg2); }
+.sl { position: relative; display: inline-block; overflow: hidden; vertical-align: top; height: 24px; line-height: 24px; }
+.sl-t { position: absolute; left: 0; top: 0; display: block; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .st *, .st { transition: none !important; } }
+</style>
+<style>
+  .fit { position: fixed; z-index: 1; display: grid; gap: 16px; }
+  .fit > .kicker { padding-left: 2px; }
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Click a block to move it on</span>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Agent · Working timer</p>
+<!-- code -->
+<section class="st cut" aria-label="Build run">
+  <div class="st-top"><span>Forma · Build run</span><span class="sl" id="tot" style="height:16px;line-height:16px"></span></div>
+  <div class="st-row" id="row">
+    <div class="st-col"><p class="st-k">Moodboard</p><button class="st-b" type="button" data-s="q"><i class="st-sq"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.4 6.6 11.3 12.5 4.6"/></svg></i><span class="sl st-lab"></span><span class="st-clk"><span class="sl st-dg"></span><i>s</i></span></button></div>
+    <div class="st-col"><p class="st-k">Tokens</p><button class="st-b" type="button" data-s="q"><i class="st-sq"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.4 6.6 11.3 12.5 4.6"/></svg></i><span class="sl st-lab"></span><span class="st-clk"><span class="sl st-dg"></span><i>s</i></span></button></div>
+    <div class="st-col"><p class="st-k">Preview</p><button class="st-b" type="button" data-s="q"><i class="st-sq"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.4 6.6 11.3 12.5 4.6"/></svg></i><span class="sl st-lab"></span><span class="st-clk"><span class="sl st-dg"></span><i>s</i></span></button></div>
+  </div>
+</section>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Agent · Working timer</span><span class="qm-sep">/</span><span>Click a block</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Each block is its own little machine: a state, a second counter, an angle. */
+const $ = (s) => document.querySelector(s);
+const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)', MOVE = 'cubic-bezier(0.65, 0, 0.35, 1)';
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const B = [...document.querySelectorAll('.st-b')].map((el) => ({
+  el, sq: el.querySelector('.st-sq'), path: el.querySelector('path'), lab: el.querySelector('.st-lab'), dg: el.querySelector('.st-dg'), secs: 0, ang: 0, timer: 0,
+}));
+const tot = $('#tot');
+
+function put(sl, text) { sl.innerHTML = ''; const t = document.createElement('span'); t.className = 'sl-t'; t.textContent = text; sl.append(t); sl.style.width = t.offsetWidth + 'px'; }
+function roll(sl, text, ms = 380) {
+  if (still) return put(sl, text);
+  const old = sl.lastElementChild, next = document.createElement('span');
+  next.className = 'sl-t'; next.textContent = text; sl.append(next);
+  const w0 = sl.offsetWidth, w1 = next.offsetWidth, o = { duration: ms, easing: OUT, fill: 'both' };
+  if (old) old.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-110%)' }], o).finished.then(() => old.remove());
+  next.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], o);
+  sl.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], { duration: ms, easing: OUT });
+  sl.style.width = w1 + 'px';
+}
+function beat(b) {                                  // a quarter turn with a small press
+  const a = b.ang;
+  b.ang += 90;
+  if (still) return;
+  b.sq.animate([
+    { transform: `rotate(${a}deg) scale(1)` },
+    { transform: `rotate(${a + 40}deg) scale(0.8)`, offset: 0.4 },
+    { transform: `rotate(${a + 90}deg) scale(1)` },
+  ], { duration: 360, easing: MOVE, fill: 'forwards' });
+}
+function total() { const n = B.filter((b) => b.el.dataset.s === 'd').length; roll(tot, n + ' / 3 done', 320); }
+function queue(b) {
+  clearInterval(b.timer); b.sq.getAnimations().forEach((a) => a.cancel()); b.path.getAnimations().forEach((a) => a.cancel());
+  b.el.dataset.s = 'q'; b.secs = 0; b.ang = 0; b.sq.style.transform = ''; b.path.style.strokeDashoffset = 20;
+  put(b.lab, 'Queued'); put(b.dg, '0');
+}
+function work(b) {
+  b.el.dataset.s = 'w'; b.secs = 0; b.path.getAnimations().forEach((a) => a.cancel()); b.path.style.strokeDashoffset = 20;
+  roll(b.lab, 'Working'); put(b.dg, '0');
+  clearInterval(b.timer);
+  b.timer = setInterval(() => { b.secs++; roll(b.dg, String(b.secs)); beat(b); }, 1000);
+}
+function done(b) {
+  clearInterval(b.timer); b.sq.getAnimations().forEach((a) => a.cancel()); b.sq.style.transform = ''; b.ang = 0;
+  b.el.dataset.s = 'd';
+  roll(b.lab, 'Done in ' + Math.max(1, b.secs) + 's');
+  if (still) b.path.style.strokeDashoffset = 0;
+  else b.path.animate([{ strokeDashoffset: 20 }, { strokeDashoffset: 0 }], { duration: 220, easing: OUT, fill: 'forwards', delay: 80 });
+  total();
+}
+B.forEach((b) => b.el.addEventListener('click', () => {
+  const s = b.el.dataset.s;
+  if (s === 'q') work(b); else if (s === 'w') done(b); else queue(b);
+  total();
+}));
+</script>
+<script src="../assets/picks/p3-ghost.js"></script>
+<script>
+  PickGhost.fit($('#fit'), 540, 200, { max: 1.5, gutter: 100 });
+  function rest() { B.forEach(queue); put(tot, '0 / 3 done'); }
+  PickGhost.start({
+    hot: '.st-b',
+    reset: rest,
+    still() { rest(); B[0].el.dataset.s = 'd'; put(B[0].lab, 'Done in 3s'); B[0].path.style.strokeDashoffset = 0; B[1].el.dataset.s = 'w'; put(B[1].lab, 'Working'); put(B[1].dg, '2'); put(tot, '1 / 3 done'); },
+    async script(g) {
+      QM.ghostHide();                               // a run, not a pointer: the pipeline moves by itself
+      await g.wait(700);
+      for (const [i, s] of [[0, 3], [1, 4], [2, 3]]) {
+        work(B[i]);
+        await g.wait(s * 1000 + 80);
+        done(B[i]);
+        await g.wait(560);
+      }
+      await g.wait(2200);
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

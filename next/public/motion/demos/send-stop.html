@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Send and stop · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "send-stop",
+  "title": "Send and stop",
+  "group": "studio",
+  "added": "2026-11-05",
+  "cat": "agent",
+  "order": 30,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "arrow out 260 ms · stop in 320 ms · lime ring 1.6 s a turn",
+  "summary": "A composer with one square button. Send turns the button like a wheel: the arrow rises out, a stop square arrives behind it, and a small timer opens beside it, a lime ring running around the seconds. The typed words slide out of the field and rise as the sent message. Stop snaps the ring closed, closes the timer and rolls the wheel back to the arrow.",
+  "spec": [
+    ["Button", "40px ink square with a 10px cut; the arrow leaves up in 260 ms (move curve), the stop square arrives in 320 ms after 80 ms (expo out)"],
+    ["Back", "the same wheel the other way: the stop square leaves down, the arrow comes from above"],
+    ["Timer", "a 36px box opens in 320 ms on the move curve: an ink circle with the seconds, a 3px lime arc running around it, 1.6 s a turn, linear"],
+    ["Ring", "on stop the arc grows to a full circle in 160 ms, then the timer closes"],
+    ["Field", "the typed words slide up out of the field in 320 ms; the placeholder rolls to “Qbix is working…” and back"],
+    ["Message", "uncovered from the bottom by clip-path inset(100% 0 0 0) → 0 with a 16px rise, 420 ms, expo out"],
+    ["Reduced motion", "the sent message and the running state, still"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The composer of any Qbix Labs assistant: Strata asking for a change, a build agent taking a page edit.",
+  "rules": [
+    "One button, two jobs. The wheel turns the same way every time, so the eye knows which job it is.",
+    "The ring is the one lime and it only runs while the agent works.",
+    "The button stays quiet (a light ink) until there are words to send.",
+    "Type and press Enter or the button to send, press it again to stop."
+  ],
+  "tags": ["agent", "composer", "send", "stop", "ring", "timer"],
+  "deps": [],
+  "shot": 5200
+}
+</script>
+<style data-code>
+/* A composer: one wheel button, a timer with a running ring, a field whose words lift away. */
+.ss { width: 520px; background: var(--surface); padding: 24px; display: grid; gap: 16px; color: var(--fg); --cut: 16px; }
+.ss-chat { height: 64px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; }
+.ss-msg { margin: 0; max-width: 360px; padding: 10px 14px; background: var(--fill); font-size: 14px; line-height: 20px; clip-path: inset(100% 0 0 0); }
+.ss-box { display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 12px 0 20px; background: var(--fill); }
+.ss-fld { position: relative; flex: 1; min-width: 0; height: 24px; overflow: hidden; font-size: 16px; line-height: 24px; letter-spacing: -0.011em; }
+.ss-inp { all: unset; position: absolute; inset: 0; width: 100%; height: 24px; font: inherit; letter-spacing: inherit; color: var(--fg); caret-color: var(--fg); }
+.ss-ph { position: absolute; left: 0; top: 0; height: 24px; overflow: hidden; pointer-events: none; color: var(--fg2); }
+.ss-ph .sl { height: 24px; line-height: 24px; }
+.ss-echo { position: absolute; left: 0; top: 0; white-space: nowrap; visibility: hidden; }
+.ss-tm { position: relative; flex: none; width: 0; height: 36px; margin-right: -12px; overflow: hidden; transition: width 320ms cubic-bezier(0.65, 0, 0.35, 1), margin 320ms cubic-bezier(0.65, 0, 0.35, 1); }
+.ss.is-run .ss-tm { width: 36px; margin-right: 0; }
+.ss-tm svg { position: absolute; left: 0; top: 0; width: 36px; height: 36px; }
+.ss-tm .ring { fill: none; stroke: var(--signal); stroke-width: 3; stroke-dasharray: 26 77.7; transform-origin: 18px 18px; animation: ss-spin 1600ms linear infinite; animation-play-state: paused; }
+.ss.is-run .ss-tm .ring { animation-play-state: running; }
+.ss-tm .core { fill: var(--fg); }
+.ss-n { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: 11px; font-variant-numeric: tabular-nums; color: var(--surface); }
+@keyframes ss-spin { to { transform: rotate(360deg); } }
+.ss-go { all: unset; box-sizing: border-box; position: relative; flex: none; width: 40px; height: 40px; overflow: hidden; cursor: pointer; background: var(--fg3); --cut: 10px; transition: background 160ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+.ss-go.has-text, .ss.is-run .ss-go { background: var(--fg); }
+.ss-go:active { transform: translateY(2px); }
+.ss-go:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.ss-go > i { position: absolute; inset: 0; display: grid; place-items: center; }
+.ss-go svg { width: 16px; height: 16px; fill: none; stroke: var(--surface); stroke-width: 2; stroke-linecap: square; }
+.ss-up { transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1) 80ms; }
+.ss-stop { transform: translateY(130%); transition: transform 260ms cubic-bezier(0.65, 0, 0.35, 1); }
+.ss-stop b { width: 12px; height: 12px; background: var(--surface); }
+.ss.is-run .ss-up { transform: translateY(-130%); transition: transform 260ms cubic-bezier(0.65, 0, 0.35, 1); }
+.ss.is-run .ss-stop { transform: none; transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1) 80ms; }
+.sl { position: relative; display: inline-block; overflow: hidden; vertical-align: top; }
+.sl-t { position: absolute; left: 0; top: 0; display: block; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .ss *, .ss { transition: none !important; } .ss-tm .ring { animation: none; } }
+</style>
+<style>
+  .fit { position: fixed; z-index: 1; display: grid; gap: 16px; }
+  .fit > .kicker { padding-left: 2px; }
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Type, Enter to send, again to stop</span>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Agent · Send and stop</p>
+<!-- code -->
+<section class="ss cut" id="ss" aria-label="Composer">
+  <div class="ss-chat"><p class="ss-msg" id="msg" hidden></p></div>
+  <div class="ss-box">
+    <div class="ss-fld">
+      <input class="ss-inp" id="inp" type="text" autocomplete="off" spellcheck="false" aria-label="Message">
+      <span class="ss-ph"><span class="sl" id="ph"></span></span>
+      <span class="ss-echo" id="echo"></span>
+    </div>
+    <div class="ss-tm" aria-hidden="true">
+      <svg viewBox="0 0 36 36"><circle class="core" cx="18" cy="18" r="12"/><circle class="ring" id="ring" cx="18" cy="18" r="16.5"/></svg>
+      <span class="ss-n mono" id="sec">0</span>
+    </div>
+    <button class="ss-go cut" id="go" type="button" aria-label="Send">
+      <i class="ss-up"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V3M3 7.5 8 2.5l5 5"/></svg></i>
+      <i class="ss-stop"><b></b></i>
+    </button>
+  </div>
+</section>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Agent · Send and stop</span><span class="qm-sep">/</span><span>Type a change, press Enter</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+const $ = (s) => document.querySelector(s);
+const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)', MOVE = 'cubic-bezier(0.65, 0, 0.35, 1)';
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ss = $('#ss'), inp = $('#inp'), ph = $('#ph'), msg = $('#msg'), echo = $('#echo'), go = $('#go');
+const IDLE = 'Ask Qbix to change the page…', BUSY = 'Qbix is working…';
+let clock = 0, secs = 0;
+
+function put(sl, text) { sl.innerHTML = ''; const t = document.createElement('span'); t.className = 'sl-t'; t.textContent = text; sl.append(t); sl.style.width = t.offsetWidth + 'px'; }
+function roll(sl, text, ms = 380) {
+  if (still) return put(sl, text);
+  const old = sl.lastElementChild, next = document.createElement('span');
+  next.className = 'sl-t'; next.textContent = text; sl.append(next);
+  const o = { duration: ms, easing: OUT, fill: 'both' };
+  if (old) old.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-110%)' }], o).finished.then(() => old.remove());
+  next.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], o);
+  sl.style.width = next.offsetWidth + 'px';
+}
+/* the placeholder is a sleeve of its own: typing slides it up and out, an empty field brings it back */
+function showPh(on) {
+  if (still) { ph.style.transform = on ? 'none' : 'translateY(-110%)'; return; }
+  ph.style.transition = 'transform 260ms ' + MOVE;
+  ph.style.transform = on ? 'translateY(0)' : 'translateY(-110%)';
+}
+function seen() { const t = inp.value.length > 0; go.classList.toggle('has-text', t); showPh(!t); }
+inp.addEventListener('input', seen);
+
+function send() {
+  const text = inp.value.trim();
+  if (!text || ss.classList.contains('is-run')) return;
+  msg.textContent = text; msg.hidden = false;
+  if (!still) {
+    echo.textContent = text; echo.style.visibility = 'visible';
+    echo.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-110%)' }], { duration: 320, easing: MOVE, fill: 'forwards' }).finished.then(() => { echo.style.visibility = 'hidden'; });
+    msg.animate([{ clipPath: 'inset(100% 0 0 0)', transform: 'translateY(16px)' }, { clipPath: 'inset(0 0 0 0)', transform: 'translateY(0)' }], { duration: 420, easing: OUT, fill: 'both' });
+  } else msg.style.clipPath = 'inset(0)';
+  inp.value = ''; go.classList.remove('has-text');
+  ph.style.transition = 'none'; ph.style.transform = 'translateY(110%)'; put(ph, BUSY);
+  requestAnimationFrame(() => showPh(true));
+  ss.classList.add('is-run'); go.setAttribute('aria-label', 'Stop');
+  secs = 0; $('#sec').textContent = '0'; clearInterval(clock);
+  clock = setInterval(() => { $('#sec').textContent = ++secs; }, 1000);
+}
+function stop() {
+  if (!ss.classList.contains('is-run')) return;
+  clearInterval(clock);
+  if (!still) $('#ring').animate([{ strokeDasharray: '26 77.7' }, { strokeDasharray: '103.7 0' }], { duration: 160, easing: OUT, fill: 'forwards' });
+  setTimeout(() => { ss.classList.remove('is-run'); go.setAttribute('aria-label', 'Send'); roll(ph, IDLE); $('#ring').getAnimations().forEach((a) => a.cancel()); }, still ? 0 : 200);
+}
+go.addEventListener('click', () => (ss.classList.contains('is-run') ? stop() : send()));
+inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); send(); } });
+</script>
+<script src="../assets/picks/p3-ghost.js"></script>
+<script>
+  PickGhost.fit($('#fit'), 520, 260, { max: 1.5, gutter: 90 });
+  function rest() {
+    clearInterval(clock); ss.classList.remove('is-run');
+    document.getAnimations().forEach((a) => a.cancel());
+    inp.value = ''; go.classList.remove('has-text'); go.setAttribute('aria-label', 'Send');
+    msg.hidden = true; msg.style.clipPath = ''; echo.style.visibility = 'hidden';
+    ph.style.transition = 'none'; ph.style.transform = 'none'; put(ph, IDLE);
+  }
+  const type = async (g, str, ms) => { for (const ch of str) { inp.value += ch; seen(); await g.wait(ms / str.length); } };
+  PickGhost.start({
+    hot: '.ss-go',
+    reset: rest,
+    still() { rest(); inp.value = 'Make the hero headline bigger'; send(); $('#sec').textContent = '3'; },
+    async script(g) {
+      await g.wait(500);
+      await g.to('.ss-inp', { ms: 700, fx: 0.2 });
+      inp.focus({ preventScroll: true });
+      await g.wait(200);
+      await type(g, 'Make the hero headline bigger', 1100);
+      await g.wait(380);
+      await g.click('#go', { ms: 600 });
+      await g.wait(3300);
+      await g.click('#go', { ms: 200 });
+      inp.blur();
+      await g.wait(2000);
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

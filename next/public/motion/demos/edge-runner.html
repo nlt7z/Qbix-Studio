@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edge runner · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "edge-runner", "title": "Edge runner", "group": "studio", "cat": "loading", "order": 20,
+  "kind": "loop", "tone": "paper", "added": "2026-11-05", "shot": 1800,
+  "line": "1.6 s a lap · 560 ms to close · 600 ms fill",
+  "summary": "A black Generating button is its own progress: a lime segment, a third of the frame long, runs around the perimeter cut corner included, while the three dots of the label step. When the work is done the segment grows until it closes the frame, then the button is filled lime from the edges inward and the label rises to Open preview.",
+  "spec": [
+    ["Lap", "1.6 s, linear, a third of the frame lit (stroke 3 px on a path with pathLength 100)"],
+    ["Close", "the segment grows 33 → 100 in 560 ms ease-move; the tail stays, the head keeps running"],
+    ["Fill", "the ink core clips inset(0) → inset(50% 0) in 600 ms ease-move, so lime is uncovered from the frame inward"],
+    ["Label", "Open preview rises out of a sleeve 520 ms expo, 160 ms after the fill starts"],
+    ["Dots", "a 1.1 s steps(4) width, not an opacity"],
+    ["Run", "3.2 s of work, 2 s hold, then again; a click restarts it"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The Generate step in Strata: a moodboard goes in, the button waits, then opens the system's preview.",
+  "rules": [
+    "The path is the button's own outline, drawn from its measured size, so the cut corner is followed exactly.",
+    "Lime is the runner and then the fill: one job at a time, never both lime and a second accent.",
+    "Nothing fades. The lime is uncovered; reduced motion shows the finished button."
+  ],
+  "tags": ["loading", "button", "svg stroke", "clip", "agent"]
+}
+</script>
+<style data-code>
+/* Edge runner: the button is its own progress */
+.er { --cut: 1.1em; position: relative; display: block; width: 17em; height: 4.5em; padding: 0; border: 0; cursor: pointer;
+  background: #121417; color: #f4f5f2; font: 500 1.05em/1 Geist, system-ui, sans-serif; letter-spacing: -.011em; overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  transition: transform 300ms cubic-bezier(.22, 1, .36, 1); }
+.er:active { transform: translateY(2px); transition-duration: 140ms; }
+.er-core, .er-fill { position: absolute; inset: 0; display: grid; place-items: center; }
+.er-fill { background: #B8FF00; color: #0c1300; }
+.er-fill span { display: block; overflow: hidden; padding-block: .2em; }
+.er-fill i { display: block; transform: translateY(120%); transition: transform 520ms cubic-bezier(.16, 1, .3, 1); }
+.er.is-done .er-fill i { transform: none; transition-delay: 160ms; }
+.er-core { background: #121417; clip-path: inset(0); transition: clip-path 600ms cubic-bezier(.65, 0, .35, 1); }
+.er.is-done .er-core { clip-path: inset(50% 0 50% 0); }
+.er-t { position: relative; }
+.er-dots { position: absolute; left: 100%; bottom: 0; overflow: hidden; width: 0; animation: er-dots 1.1s steps(4, jump-start) infinite; }
+@keyframes er-dots { from { width: 0; } to { width: 1.1em; } }
+.er-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.er-svg path { fill: none; stroke-width: 3; stroke-linejoin: miter; }
+.er-seg { stroke: #B8FF00; }
+.er.nt, .er.nt * { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .er-dots { animation: none; width: 1.1em; } .er, .er * { transition: none !important; } }
+</style>
+<style>
+  .sd { font-size: clamp(11px, min(2vw, 3.2vh), 26px); display: grid; gap: 1.1em; justify-items: start; }
+  .sd .kicker { font-size: .75em; }
+  .er-card { --cut: 1em; width: 31em; padding: 1.6em 1.6em 1.8em; background: #fff; color: #121417;
+    clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+  .er-card h2 { font: 400 2em/1.05 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
+  .er-card .m { margin: .7em 0 1.7em; font: 400 .78em/1.4 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="sd">
+  <p class="kicker">Strata · Generate</p>
+  <div class="er-card">
+    <h2>Forma design system</h2>
+    <p class="m">1 moodboard · 6 references · tokens, components, code</p>
+<!-- code -->
+<button type="button" class="er" id="er" aria-live="polite">
+  <span class="er-fill"><span><i>Open preview ↗︎</i></span></span>
+  <span class="er-core"><span class="er-t">Generating<span class="er-dots" aria-hidden="true">...</span></span></span>
+  <svg class="er-svg" id="er-svg" aria-hidden="true"><path class="er-seg" id="er-seg" pathLength="100"/></svg>
+</button>
+<!-- /code -->
+  </div>
+</div>
+<div class="qm-ui"><span>Click the button to run it again</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* The runner is drawn by hand each frame: head position p along the outline, a length len of it lit. */
+const ER = (() => {
+  const btn = document.getElementById('er'), seg = document.getElementById('er-seg'), svg = document.getElementById('er-svg');
+  const LAP = 1600, still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let p = 0, len = 33, raf = 0, last = 0, closeAt = 0, timers = [];
+  const ease = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  function outline() {                       // the button's own outline, cut corner included, inset by half the stroke
+    const W = btn.clientWidth, H = btn.clientHeight, c = parseFloat(getComputedStyle(btn).getPropertyValue('--cut')) * parseFloat(getComputedStyle(btn).fontSize), i = 1.5;
+    const d = `M${i} ${i}H${W - c}L${W - i} ${c}V${H - i}H${i}Z`;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    seg.setAttribute('d', d);
+  }
+  function draw() {
+    seg.style.strokeDasharray = len >= 99.9 ? '100 0' : `${len} ${100 - len}`;
+    seg.style.strokeDashoffset = (len - p).toFixed(3);
+  }
+  function frame(now) {
+    const dt = Math.min(50, now - last); last = now;
+    p = (p + dt / LAP * 100) % 100;
+    if (closeAt) len = 33 + 67 * ease(Math.min(1, (now - closeAt) / 560));
+    draw();
+    raf = requestAnimationFrame(frame);
+  }
+  function clear() { timers.forEach(clearTimeout); timers = []; }
+  function reset() {
+    clear();
+    btn.classList.add('nt');
+    btn.classList.remove('is-done');
+    len = 33; closeAt = 0;
+    outline(); draw();
+    void btn.offsetWidth;
+    btn.classList.remove('nt');
+  }
+  function run() {                           // 3.2 s of work, then close the frame, then fill
+    reset();
+    if (still) { len = 100; draw(); btn.classList.add('nt', 'is-done'); return; }
+    cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(frame);
+    timers.push(setTimeout(() => { closeAt = performance.now(); }, 3200));
+    timers.push(setTimeout(() => btn.classList.add('is-done'), 3200 + 560));
+  }
+  if (window.ResizeObserver) new ResizeObserver(outline).observe(btn);
+  btn.addEventListener('click', run);
+  return { run };
+})();
+</script>
+<script>
+  let run = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function start() {
+    const my = ++run;
+    ER.run();
+    await w(3200 + 560 + 600 + 2200); if (my !== run) return;
+    start();
+  }
+  document.getElementById('er').addEventListener('click', () => { run++; clearTimeout(resumeT); resumeT = setTimeout(start, 8000); });
+  QM.demo({ kind: 'loop', restart: start });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(start));
+</script>
+</body>
+</html>

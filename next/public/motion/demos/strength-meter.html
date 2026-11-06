@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strength meter · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "strength-meter",
+  "title": "Strength meter",
+  "group": "studio",
+  "added": "2026-11-05",
+  "cat": "inputs",
+  "order": 20,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "4 segments · 360 ms expo · lime only at Strong",
+  "summary": "Four segments under a password field fill one by one, each uncovered from the left, and the word beside them rolls Weak, Fair, Good, Strong. The segments stay ink until the last state, when a lime layer sweeps across all four. The eye toggle draws its strike line, and the dots roll over into letters one cell after another.",
+  "spec": [
+    ["Segment", "8px tall, clip from the left, 360 ms cubic-bezier(0.16, 1, 0.3, 1); a jump of two states staggers 80 ms"],
+    ["Word", "20px sleeve, translateY by whole lines, 420 ms cubic-bezier(0.65, 0, 0.35, 1)"],
+    ["Strong", "a lime layer clips across the four segments, 70 ms apart; it leaves the same way"],
+    ["Reveal", "each cell is a sleeve with a dot over its letter; 360 ms ease-move, 22 ms per cell"],
+    ["Typing", "a new cell rolls up out of its sleeve in 320 ms"],
+    ["Eye", "the strike line draws with a stroke offset in 240 ms; the lid dips once"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The Qbix sign-up, under the password field, where the strength of what you typed is told in one word and one bar.",
+  "rules": [
+    "Ink until Strong. Lime says one thing: this is done.",
+    "The word rolls, it is never swapped or faded.",
+    "Dots and letters share one cell width so nothing shifts when they roll.",
+    "The caret follows the real selection."
+  ],
+  "tags": ["input", "password", "meter", "roll", "form"],
+  "shot": 4600
+}
+</script>
+<style data-code>
+/* Strength meter: four segments, one word, one lime. */
+.card { background: var(--surface); padding: 28px; display: grid; gap: 14px; --cut: 16px; }
+.pw-label { font: 500 15px/20px var(--font-sans); letter-spacing: -0.011em; }
+.pw-field { position: relative; height: 60px; background: var(--sunk); }
+.pw-in { position: absolute; inset: 0; width: 100%; padding: 0 64px 0 16px; border: 0; outline: 0; background: transparent; color: transparent; caret-color: transparent; font: 500 17px/1 var(--font-sans); letter-spacing: 0; }
+.pw-show { position: absolute; left: 16px; top: 0; bottom: 0; display: flex; align-items: center; pointer-events: none; }
+.pw-c { width: 14px; height: 24px; overflow: hidden; flex: 0 0 auto; }
+.pw-e { animation: pw-in 320ms var(--ease-out-expo) both; }
+.pw-r { display: block; transition: transform 360ms var(--ease-move); transition-delay: calc(var(--i) * 22ms); }
+.pw-r i { display: grid; place-items: center; height: 24px; font: 500 17px/24px var(--font-sans); font-style: normal; color: var(--fg); }
+.pw-r u { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); }
+.pw-field.is-shown .pw-r { transform: translateY(-24px); }
+@keyframes pw-in { from { transform: translateY(24px); } to { transform: none; } }
+.pw-caret { position: absolute; top: 18px; width: 2px; height: 24px; background: var(--fg); opacity: 0; pointer-events: none; }
+.pw-field.is-focus .pw-caret, .pw-field:focus-within .pw-caret { opacity: 1; animation: pw-blink 1s steps(1) infinite; }
+@keyframes pw-blink { 50% { opacity: 0; } }
+.pw-eye { position: absolute; right: 0; top: 0; width: 60px; height: 60px; display: grid; place-items: center; border: 0; background: transparent; color: var(--fg); cursor: pointer; transition: transform 160ms var(--ease-portfolio); }
+.pw-eye:active { transform: translateY(2px); }
+.pw-eye svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: square; }
+.pw-eye .lid { transform-origin: 12px 12px; }
+.pw-eye .slash { stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 240ms var(--ease-move); }
+.pw-field.is-shown .pw-eye .slash { stroke-dashoffset: 0; }
+.pw-eye.is-dip .lid { animation: pw-dip 240ms var(--ease-move); }
+@keyframes pw-dip { 50% { transform: scaleY(0.4); } }
+.pw-meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pw-meter i { position: relative; height: 8px; background: var(--sunk); overflow: hidden; }
+.pw-meter b { position: absolute; inset: 0; clip-path: inset(0 100% 0 0); transition: clip-path 360ms var(--ease-out-expo); }
+.pw-meter .ink { background: var(--fg); }
+.pw-meter .lime { background: var(--signal); transition-duration: 300ms; transition-delay: calc(var(--k) * 70ms); }
+.pw-meter .ink.on { clip-path: inset(0); }
+.pw-meter.is-strong .lime { clip-path: inset(0); }
+.pw-foot { display: flex; justify-content: space-between; align-items: center; font-size: 11px; line-height: 20px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+.pw-word { display: block; height: 20px; overflow: hidden; color: var(--fg); text-align: right; }
+.pw-col { display: block; transition: transform 420ms var(--ease-move); }
+.pw-col em { display: block; height: 20px; }
+@media (prefers-reduced-motion: reduce) { .pw-e { animation: none; } .pw-r, .pw-col, .pw-meter b, .pw-eye .slash { transition: none; } }
+</style>
+<style>
+  .rig { width: 520px; display: grid; gap: 16px; transform-origin: 50% 50%; }
+  .rig.is-reset *, .rig.is-reset *::before { transition: none !important; animation: none !important; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="rig" id="rig">
+  <p class="kicker">Sign up · Password</p>
+<!-- code -->
+<div class="card cut pw">
+  <label class="pw-label" for="pw-in">Create a password</label>
+  <div class="pw-field" id="pw-field">
+    <div class="pw-show" id="pw-show" aria-hidden="true"></div>
+    <i class="pw-caret" id="pw-caret"></i>
+    <input id="pw-in" class="pw-in" type="text" maxlength="26" autocomplete="off" spellcheck="false">
+    <button class="pw-eye" id="pw-eye" type="button" aria-label="Show password" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g class="lid"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></g><path class="slash" d="M4 20L20 4"/></svg>
+    </button>
+  </div>
+  <div class="pw-meter" id="pw-meter" aria-hidden="true">
+    <i><b class="ink"></b><b class="lime" style="--k:0"></b></i><i><b class="ink"></b><b class="lime" style="--k:1"></b></i><i><b class="ink"></b><b class="lime" style="--k:2"></b></i><i><b class="ink"></b><b class="lime" style="--k:3"></b></i>
+  </div>
+  <div class="pw-foot mono"><span>Strength</span><span class="pw-word" aria-live="polite"><span class="pw-col" id="pw-col"><em>Empty</em><em>Weak</em><em>Fair</em><em>Good</em><em>Strong</em></span></span></div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Type a password · the eye shows it</span></div>
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Strength meter. The field is a real input with invisible text; its characters are drawn as cells
+   (14px each, dot over letter) so the reveal can roll them. The caret is drawn from the real selection. */
+const pwIn = document.getElementById('pw-in'), pwField = document.getElementById('pw-field');
+const pwShow = document.getElementById('pw-show'), pwCaret = document.getElementById('pw-caret');
+const pwEye = document.getElementById('pw-eye'), pwCol = document.getElementById('pw-col');
+const segs = Array.from(document.querySelectorAll('#pw-meter i'));
+const CELL = 14;
+let cells = [], shown = false, score = 0;
+
+function cell(ch, i, fresh) {
+  const c = document.createElement('span');
+  c.className = 'pw-c'; c.style.setProperty('--i', i);
+  c.innerHTML = `<span class="${fresh ? 'pw-e' : ''}"><span class="pw-r"><i><u></u></i><i></i></span></span>`;
+  c.querySelectorAll('i')[1].textContent = ch;
+  c._ch = ch;
+  return c;
+}
+function rate(v) {
+  if (!v) return 0;
+  if (v.length < 8) return 1;
+  let s = 2;
+  const mixed = /[a-z]/.test(v) && /[A-Z]/.test(v), digit = /\d/.test(v), sym = /[^A-Za-z0-9]/.test(v);
+  if (mixed && digit) s = 3;
+  if (s === 3 && sym && v.length >= 12) s = 4;
+  return s;
+}
+function paint(next) {
+  segs.forEach((seg, i) => {
+    const ink = seg.querySelector('.ink');
+    ink.style.transitionDelay = i < next && i >= score ? (i - score) * 80 + 'ms' : '0ms';
+    ink.classList.toggle('on', i < next);
+  });
+  document.getElementById('pw-meter').classList.toggle('is-strong', next === 4);
+  pwCol.style.transform = `translateY(${-20 * next}px)`;
+  score = next;
+}
+function caret() {
+  const p = pwIn.selectionStart == null ? pwIn.value.length : pwIn.selectionStart;
+  pwCaret.style.left = 16 + p * CELL + 'px';
+}
+function sync() {
+  const v = pwIn.value;
+  while (cells.length > v.length) cells.pop().remove();
+  for (let i = 0; i < v.length; i++) {
+    if (!cells[i]) { cells[i] = cell(v[i], i, true); pwShow.appendChild(cells[i]); }
+    else if (cells[i]._ch !== v[i]) { cells[i]._ch = v[i]; cells[i].querySelectorAll('i')[1].textContent = v[i]; }
+  }
+  caret();
+  const next = rate(v);
+  if (next !== score) paint(next);
+}
+function setShown(on) {
+  shown = on;
+  pwField.classList.toggle('is-shown', on);
+  pwEye.setAttribute('aria-pressed', on); pwEye.setAttribute('aria-label', on ? 'Hide password' : 'Show password');
+  pwEye.classList.remove('is-dip'); void pwEye.offsetWidth; pwEye.classList.add('is-dip');
+}
+pwIn.addEventListener('input', sync);
+['keyup', 'click', 'select', 'focus'].forEach((n) => pwIn.addEventListener(n, caret));
+pwEye.addEventListener('click', () => setShown(!shown));
+</script>
+<script>
+  /* ---- harness glue ---- */
+  const rig = document.getElementById('rig');
+  function fit() {
+    const bar = QM.tile ? 0 : 46;
+    const k = Math.min(innerWidth * 0.68 / 520, (innerHeight - bar - 48) / rig.offsetHeight, 2.2);
+    rig.style.transform = `scale(${k.toFixed(4)})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  const ABORT = { abort: true };
+  let gen = 0, running = false, paused = false, lastReal = -1e9;
+  const sleep = (ms) => { const g = gen; return new Promise((res, rej) => setTimeout(() => (g === gen ? res() : rej(ABORT)), ms)); };
+  const focusOn = (on) => pwField.classList.toggle('is-focus', on);
+  function setValue(v) { pwIn.value = v; pwIn.setSelectionRange(v.length, v.length); sync(); }
+  function reset() {
+    rig.classList.add('is-reset');
+    setValue(''); setShown(false); focusOn(false); pwEye.classList.remove('is-dip');
+    void rig.offsetWidth;
+    rig.classList.remove('is-reset');
+  }
+  async function type(s, ms = 112) { for (const ch of s) { setValue(pwIn.value + ch); await sleep(ms); } }
+  async function press(el) {
+    const r = el.getBoundingClientRect(), g = gen;
+    QM.ghostShow();
+    await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.55, 800);
+    if (g !== gen) throw ABORT;
+    await sleep(120); el.click(); await sleep(200);
+  }
+  async function story() {
+    reset(); await sleep(600);
+    focusOn(true); await sleep(300);
+    await type('FormaStudio'); await sleep(650);
+    await type('9'); await sleep(750);
+    await type('!'); await sleep(1100);
+    await press(pwEye); await sleep(1700);
+    await press(pwEye); await sleep(900);
+    QM.ghostHide();
+    while (pwIn.value) { setValue(pwIn.value.slice(0, -1)); await sleep(26); }
+    focusOn(false); await sleep(900);
+  }
+  function cancel() { gen++; running = false; QM.ghostHide(); }
+  if (!QM.tile) {
+    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) { cancel(); focusOn(false); } } };
+    ['pointerdown', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+  }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancel(); } });
+  if (QM.reduced) { setValue('FormaStudio9!'); focusOn(true); }
+  else (async function idle() {
+    for (;;) {
+      await new Promise((r) => setTimeout(r, 250));
+      if (paused || document.hidden || running || (!QM.tile && performance.now() - lastReal < 4000)) continue;
+      running = true;
+      try { await story(); } catch (e) { if (e !== ABORT) throw e; }
+      running = false;
+    }
+  })();
+  QM.demo({ kind: 'loop', restart() { paused = false; lastReal = -1e9; if (running) cancel(); } });
+</script>
+</body>
+</html>

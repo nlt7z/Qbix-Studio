@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Travelling tooltip · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "travelling-tooltip",
+  "title": "Travelling tooltip",
+  "group": "studio",
+  "added": "2026-11-05",
+  "cat": "cursor",
+  "order": 30,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "one tooltip · glide 300 ms · 350 ms to appear",
+  "summary": "A toolbar of six icon buttons shares one tooltip. It waits a beat before first appearing, then glides from icon to icon, its label and key hint rolling to the new words while the box eases to their width. It leaves a beat after the pointer does.",
+  "spec": [
+    ["Show", "after 350 ms of hover on the first icon; uncovered from the bottom with a clip, 260 ms, expo out"],
+    ["Travel", "left follows the icon's centre, 300 ms, cubic-bezier(0.65, 0, 0.35, 1); no wait between icons"],
+    ["Roll", "label and hint each leave up and enter from below, 280 ms, expo out; their sleeves glide to the new width"],
+    ["Hide", "250 ms after the pointer leaves the toolbar; clipped away downward, 180 ms, ease-in"],
+    ["Hover", "the icon's tile is a tint of paper, 120 ms; the picked tool is the lime tile"],
+    ["Input", "the ghost pointer visits the icons; a real pointer takes over and the script resumes when it leaves"],
+    ["Reduced motion", "the tooltip jumps and swaps without a roll"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The editor in a Design service: the tool strip under a page draft, where six icons need names without six tooltips.",
+  "rules": [
+    "There is one tooltip, never one per button. It moves; it is not recreated.",
+    "The delay applies only to the first show. Between icons it is instant.",
+    "The lime marks the picked tool and nothing else."
+  ],
+  "tags": ["tooltip", "toolbar", "pointer", "hover", "cursor"],
+  "shot": 4800
+}
+</script>
+<style data-code>
+/* One tooltip for a whole toolbar: it travels, its words roll, its box follows the words. */
+.tb { position: relative; display: inline-flex; gap: 4px; padding: 8px; background: var(--fg, #121417); }
+.tb-btn { all: unset; box-sizing: border-box; width: 64px; height: 64px; display: grid; place-items: center; cursor: pointer; color: var(--ground, #f3f4f5); transition: background 120ms var(--ease, cubic-bezier(.4, 0, .2, 1)), color 120ms var(--ease, cubic-bezier(.4, 0, .2, 1)), transform 160ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.tb-btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linejoin: miter; stroke-linecap: square; }
+.tb-btn.is-hot { background: rgba(244, 245, 242, 0.14); }
+.tb-btn[aria-pressed='true'] { background: var(--signal, #B8FF00); color: var(--on-lime, #0c1300); }
+.tb-btn:active { transform: translateY(2px); }
+.tb-btn:focus-visible { outline: 2px solid var(--ground, #f3f4f5); outline-offset: -6px; }
+.tt {
+  position: absolute; bottom: calc(100% + 10px); left: 0; z-index: 3; pointer-events: none;
+  display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 8px 0 14px; background: var(--fg, #121417); color: var(--ground, #f3f4f5);
+  font: 500 14px/1 var(--font-sans, 'Geist', sans-serif); letter-spacing: -0.005em; white-space: nowrap;
+  transform: translateX(-50%); --cut: 10px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  transition: left 300ms var(--ease-move, cubic-bezier(.65, 0, .35, 1));
+}
+.tt.is-off { visibility: hidden; clip-path: polygon(0 100%, calc(100% - var(--cut)) 100%, 100% 100%, 100% 100%, 0 100%); transition: clip-path 180ms var(--ease-in, cubic-bezier(.5, 0, .75, 0)), visibility 0s 180ms; }
+.tt:not(.is-off) { transition: left 300ms var(--ease-move, cubic-bezier(.65, 0, .35, 1)), clip-path 260ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.tt-slot { position: relative; display: block; height: 18px; overflow: hidden; transition: width 300ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.tt-slot > span { position: absolute; left: 0; top: 0; height: 18px; line-height: 18px; white-space: nowrap; transition: transform 280ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.tt-slot > .is-in { transform: translateY(0); }
+.tt-slot > .is-out { transform: translateY(-110%); }
+.tt-slot > .is-park { transition: none; transform: translateY(110%); }
+.tt-key { height: 24px; padding: 0 7px; display: grid; place-items: center; background: rgba(244, 245, 242, 0.16); }
+.tt-key .tt-slot { height: 14px; }
+.tt-key .tt-slot > span { height: 14px; line-height: 14px; font: 500 11px/14px var(--font-mono, 'Encode Sans', sans-serif); letter-spacing: 0.08em; }
+@media (prefers-reduced-motion: reduce) { .tt, .tt-slot, .tt-slot > span { transition: none !important; } }
+</style>
+<style>
+  .fit { width: 600px; transform: scale(var(--s, 1)); transform-origin: center; display: grid; gap: 14px; }
+  .canvas { position: relative; height: 330px; background: var(--surface); --cut: 16px; display: grid; place-items: end center; padding-bottom: 26px; overflow: hidden; }
+  .wf { position: absolute; left: 32px; right: 32px; top: 32px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 12px; }
+  .wf i { display: block; background: var(--fill); }
+  .wf .a { height: 22px; width: 38%; }
+  .wf .b { height: 54px; grid-column: 1; }
+  .wf .c { height: 54px; grid-row: 2 / 4; grid-column: 2; }
+  .wf .d { height: 12px; width: 70%; }
+  .tbw { position: relative; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Editor · Tool tips</p>
+  <div class="canvas cut">
+    <div class="wf" aria-hidden="true"><i class="a"></i><i class="c"></i><i class="b"></i><i class="d"></i></div>
+    <div class="tbw">
+<!-- code -->
+      <div class="tb" id="tb" role="toolbar" aria-label="Tools">
+        <button class="tb-btn" data-tip="Select" data-key="V" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M6 3.5 V19 L10 15.2 L12.8 20.5 L15.6 19.2 L12.9 14 H18.5 Z"/></svg></button>
+        <button class="tb-btn" data-tip="Frame" data-key="F" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M8.5 3 V21 M15.5 3 V21 M3 8.5 H21 M3 15.5 H21"/></svg></button>
+        <button class="tb-btn" data-tip="Text" data-key="T" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 5.5 H19 M12 5.5 V19.5 M9 19.5 H15"/></svg></button>
+        <button class="tb-btn" data-tip="Pen" data-key="P" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 20 L5.2 15 L16 4.2 L19.8 8 L9 18.8 Z M13.8 6.4 L17.6 10.2"/></svg></button>
+        <button class="tb-btn" data-tip="Comment" data-key="C" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 5 H20 V16.5 H11.5 L7 20.5 V16.5 H4 Z"/></svg></button>
+        <button class="tb-btn" data-tip="Share" data-key="⌘ S" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12 14.5 V3.5 M7.5 8 L12 3.5 L16.5 8 M5 13.5 V20.5 H19 V13.5"/></svg></button>
+        <div class="tt is-off" id="tt" role="tooltip" aria-hidden="true"><span class="tt-slot" id="tt-l"></span><span class="tt-key"><span class="tt-slot" id="tt-k"></span></span></div>
+      </div>
+<!-- /code -->
+    </div>
+  </div>
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const tb = document.getElementById('tb'), tt = document.getElementById('tt');
+  const btns = [...tb.querySelectorAll('.tb-btn')];
+  const slots = { l: document.getElementById('tt-l'), k: document.getElementById('tt-k') };
+  const SHOW = 350, HIDE = 250;
+  let cur = null, open = false, tShow = 0, tHide = 0;
+
+  // roll a slot to a new word: the old one leaves up, the new one rises from below, the slot glides to its width
+  function roll(slot, text, instant) {
+    const old = slot.querySelector('.is-in');
+    if (old && old.textContent === text) return;
+    const n = document.createElement('span'); n.textContent = text; n.className = 'is-park';
+    slot.appendChild(n);
+    const w = n.offsetWidth; void n.offsetWidth;
+    if (instant) { slot.style.transition = 'none'; slot.style.width = w + 'px'; void slot.offsetWidth; slot.style.transition = ''; if (old) old.remove(); n.className = 'is-in'; return; }
+    n.className = 'is-in'; slot.style.width = w + 'px';
+    if (old) { old.className = 'is-out'; setTimeout(() => old.remove(), 320); }
+  }
+  function point(b, instant) {
+    roll(slots.l, b.dataset.tip, instant); roll(slots.k, b.dataset.key, instant);
+    const bx = b.offsetLeft + b.offsetWidth / 2;
+    if (instant) { tt.style.transition = 'none'; tt.style.left = bx + 'px'; void tt.offsetWidth; tt.style.transition = ''; } else tt.style.left = bx + 'px';
+  }
+  function over(b) {
+    clearTimeout(tHide);
+    if (b === cur) return;
+    if (cur) cur.classList.remove('is-hot');
+    cur = b; b.classList.add('is-hot');
+    if (open) { point(b, false); return; }
+    clearTimeout(tShow);
+    tShow = setTimeout(() => { point(b, true); open = true; tt.classList.remove('is-off'); tt.setAttribute('aria-hidden', 'false'); }, SHOW);
+  }
+  function out() {
+    clearTimeout(tShow); clearTimeout(tHide);
+    tHide = setTimeout(() => { if (cur) cur.classList.remove('is-hot'); cur = null; open = false; tt.classList.add('is-off'); tt.setAttribute('aria-hidden', 'true'); }, HIDE);
+  }
+  // pointer in client px; the toolbar's tiles are the hit areas
+  function move(x, y) {
+    const r = tb.getBoundingClientRect();
+    if (x < r.left || x > r.right || y < r.top || y > r.bottom) { if (cur || open || tShow) out(); return; }
+    const b = btns.find((e) => { const q = e.getBoundingClientRect(); return x >= q.left && x < q.right + 4; });
+    if (b) over(b);
+  }
+  tb.addEventListener('pointermove', (e) => move(e.clientX, e.clientY));
+  tb.addEventListener('pointerleave', out);
+  btns.forEach((b) => { b.addEventListener('click', () => btns.forEach((o) => o.setAttribute('aria-pressed', o === b))); b.addEventListener('focus', () => { if (b.matches(':focus-visible')) over(b); }); b.addEventListener('blur', out); });
+  window.Tips = { move, out, tb, reset() { clearTimeout(tShow); clearTimeout(tHide); if (cur) cur.classList.remove('is-hot'); cur = null; open = false; tt.classList.add('is-off'); } };
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+
+  // the ghost's route: out of frame, then tool to tool with a dwell on each, and away again
+  const ez = QM.bezier(0.65, 0, 0.35, 1);
+  const STOPS = [ // [arrive at, leave at, button | -1 = away below]
+    [1.0, 2.9, 0], [3.5, 4.5, 1], [5.0, 6.2, 2], [6.7, 7.5, 3], [8.1, 9.4, -1],
+    [10.5, 11.5, 4], [12.0, 13.1, 5], [13.8, 15.2, -1],
+  ];
+  const PERIOD = 16.6;
+  function spot(k) {
+    const r = Tips.tb.getBoundingClientRect();
+    if (k < 0) return [r.right + r.width * 0.16, r.bottom + 70];
+    const b = Tips.tb.querySelectorAll('.tb-btn')[k].getBoundingClientRect();
+    return [b.left + b.width * 0.55, b.top + b.height * 0.6];
+  }
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y) => Tips.move(x, y),
+    leave: () => Tips.out(),
+    path(t) {
+      const u = t % PERIOD;
+      let from = spot(-1), tPrev = 0;
+      for (const [a, l, k] of STOPS) {
+        const p = spot(k);
+        if (u < a) { const f = ez(Math.max(0, (u - tPrev) / (a - tPrev))); return [from[0] + (p[0] - from[0]) * f, from[1] + (p[1] - from[1]) * f]; }
+        if (u < l) return p;
+        from = p; tPrev = l;
+      }
+      const e = spot(-1); return e;
+    },
+  });
+</script>
+</body>
+</html>

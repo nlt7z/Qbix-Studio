@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Undo countdown · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "undo-countdown",
+  "title": "Undo countdown",
+  "group": "studio",
+  "added": "2026-11-05",
+  "cat": "feedback",
+  "order": 40,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "5 s linear drain · row out 320 ms · list closes 420 ms",
+  "summary": "Archive a file and its row slides out to the left while the rows below close up. A black toast is uncovered from under the card, a lime bar along its foot draining over 5 seconds. Undo drops the toast away and opens the gap again, the row sliding back into its place. Left alone, the toast leaves and the file stays archived.",
+  "spec": [
+    ["Row out", "320 ms · cubic-bezier(0.5, 0, 0.75, 0) · translateX to -110%, clipped by its slot"],
+    ["Close up", "slot height 56px to 0, 420 ms ease-move, starting 220 ms into the exit"],
+    ["Toast", "uncovered from the card's foot: translateY 100% to 0, 480 ms expo out; leaves in 300 ms ease-in"],
+    ["Countdown", "3px lime bar, scaleX 1 to 0 from the left, 5000 ms linear, the same clock that commits the archive"],
+    ["Undo", "the slot opens 420 ms ease-move, then the row slides in 520 ms expo out, 120 ms behind"],
+    ["Loop", "the script presses Undo once, then lets the next one run out"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The files list of a client project: archiving an old hero image or a spent moodboard, with a way back.",
+  "rules": [
+    "The bar and the timer are one clock: when the bar is empty the archive is final.",
+    "The row leaves sideways and the list closes after it, never both at once.",
+    "Lime is the bar. The toast is the one black object.",
+    "A second archive commits the first."
+  ],
+  "tags": ["undo", "toast", "list", "countdown", "feedback"],
+  "shot": 3300
+}
+</script>
+<style data-code>
+/* Undo countdown: the list closes, a toast holds the way back for five seconds. */
+.card { position: relative; background: var(--surface); padding: 24px 24px 0; --cut: 16px; overflow: hidden; }
+.uf-list { list-style: none; margin: 0; padding: 0; height: 224px; }
+.uf-slot { height: 56px; overflow: hidden; transition: height 420ms var(--ease-move); }
+.uf-slot.is-gone { height: 0; }
+.uf-row { display: grid; grid-template-columns: 32px 1fr auto auto; align-items: center; gap: 16px; height: 48px; padding: 0 16px 0 8px; background: var(--sunk); transition: transform 520ms var(--ease-out-expo) 120ms, background 160ms var(--ease); }
+.uf-slot.is-gone .uf-row { transform: translateX(-110%); transition: transform 320ms var(--ease-in); }
+.uf-row:hover, .uf-row.is-hover { background: rgba(18, 20, 23, 0.09); }
+.uf-ext { display: grid; place-items: center; width: 32px; height: 32px; background: var(--surface); font: 500 10px/1 var(--font-mono); letter-spacing: 0.08em; }
+.uf-nm { font: 500 15px/20px var(--font-sans); letter-spacing: -0.011em; white-space: nowrap; }
+.uf-sz { font-size: 12px; color: var(--fg2); }
+.uf-arc { all: unset; cursor: pointer; font: 500 11px/16px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); transition: color 160ms var(--ease), transform 300ms var(--ease-portfolio); }
+.uf-row:hover .uf-arc, .uf-row.is-hover .uf-arc { color: var(--fg); }
+.uf-arc:active { transform: translateY(2px); }
+.uf-dock { position: relative; height: 80px; overflow: hidden; margin: 0 -24px; padding: 8px 24px 0; }
+.uf-toast { position: absolute; left: 24px; right: 24px; top: 8px; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 20px; background: var(--fg); color: var(--ground); font-size: 15px; letter-spacing: -0.011em; --cut: 12px; transform: translateY(110%); transition: transform 300ms var(--ease-in); overflow: hidden; }
+.uf-toast.is-in { transform: none; transition: transform 480ms var(--ease-out-expo); }
+.uf-toast b { font-weight: 500; }
+.uf-undo { all: unset; cursor: pointer; display: grid; place-items: center; height: 40px; padding: 0 16px; background: rgba(243, 244, 245, 0.14); font: 500 12px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; transition: background 160ms var(--ease), transform 300ms var(--ease-portfolio); }
+.uf-undo:hover, .uf-undo.is-hover { background: rgba(243, 244, 245, 0.24); }
+.uf-undo:active, .uf-undo.is-down { transform: translateY(2px); }
+.uf-drain { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--signal); transform-origin: left center; }
+.uf-toast.is-in .uf-drain { animation: uf-drain 5000ms linear forwards; }
+@keyframes uf-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .uf-slot, .uf-row, .uf-toast { transition: none !important; } .uf-toast.is-in .uf-drain { animation: none; transform: scaleX(0.6); } }
+</style>
+<style>
+  .rig { width: 520px; display: grid; gap: 16px; transform-origin: 50% 50%; }
+  .rig.is-reset *, .rig.is-reset *::before { transition: none !important; animation: none !important; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="rig" id="rig">
+  <p class="kicker">Files · Forma</p>
+<!-- code -->
+<div class="card cut uf">
+  <ul class="uf-list" id="uf-list">
+    <li class="uf-slot"><div class="uf-row"><span class="uf-ext">PNG</span><span class="uf-nm">hero-v3.png</span><span class="uf-sz mono">2.4 MB</span><button class="uf-arc" type="button">Archive</button></div></li>
+    <li class="uf-slot"><div class="uf-row"><span class="uf-ext">PNG</span><span class="uf-nm">old-hero.png</span><span class="uf-sz mono">3.1 MB</span><button class="uf-arc" type="button">Archive</button></div></li>
+    <li class="uf-slot"><div class="uf-row"><span class="uf-ext">PDF</span><span class="uf-nm">moodboard.pdf</span><span class="uf-sz mono">8.7 MB</span><button class="uf-arc" type="button">Archive</button></div></li>
+    <li class="uf-slot"><div class="uf-row"><span class="uf-ext">JSON</span><span class="uf-nm">tokens.json</span><span class="uf-sz mono">12 KB</span><button class="uf-arc" type="button">Archive</button></div></li>
+  </ul>
+  <div class="uf-dock">
+    <div class="uf-toast cut" id="uf-toast" role="status"><span>Archived <b id="uf-name">old-hero.png</b></span><button class="uf-undo" id="uf-undo" type="button">Undo</button><i class="uf-drain"></i></div>
+  </div>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Archive a file · Undo within 5 s</span></div>
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Undo countdown. One pending archive at a time; the bar's animation and the commit timer run on the same 5 s. */
+const ufList = document.getElementById('uf-list'), ufToast = document.getElementById('uf-toast');
+const ufName = document.getElementById('uf-name'), ufUndo = document.getElementById('uf-undo');
+const HOLD = 5000;
+let pending = null;
+
+function commit() {                       // the toast leaves; the file stays archived
+  if (!pending) return;
+  clearTimeout(pending.timer); pending = null;
+  ufToast.classList.remove('is-in');
+}
+function archive(slot) {
+  if (pending) commit();                  // a second archive commits the first
+  slot.classList.add('is-gone');
+  ufName.textContent = slot.querySelector('.uf-nm').textContent;
+  ufToast.classList.remove('is-in'); void ufToast.offsetWidth;   // restart the bar
+  ufToast.classList.add('is-in');
+  pending = { slot, timer: setTimeout(commit, HOLD) };
+}
+function undo() {
+  if (!pending) return;
+  clearTimeout(pending.timer);
+  pending.slot.classList.remove('is-gone');
+  pending = null;
+  ufToast.classList.remove('is-in');
+}
+ufList.addEventListener('click', (e) => {
+  const b = e.target.closest('.uf-arc');
+  if (b) archive(b.closest('.uf-slot'));
+});
+ufUndo.addEventListener('click', undo);
+</script>
+<script>
+  /* ---- harness glue ---- */
+  const rig = document.getElementById('rig');
+  function fit() {
+    const bar = QM.tile ? 0 : 46;
+    const k = Math.min(innerWidth * 0.68 / 520, (innerHeight - bar - 48) / rig.offsetHeight, 2.2);
+    rig.style.transform = `scale(${k.toFixed(4)})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  const ABORT = { abort: true };
+  let gen = 0, running = false, paused = false, lastReal = -1e9, round = 0;
+  const sleep = (ms) => { const g = gen; return new Promise((res, rej) => setTimeout(() => (g === gen ? res() : rej(ABORT)), ms)); };
+  function reset() {
+    rig.classList.add('is-reset');
+    if (pending) { clearTimeout(pending.timer); pending = null; }
+    ufToast.classList.remove('is-in');
+    ufList.querySelectorAll('.uf-slot').forEach((s) => s.classList.remove('is-gone'));
+    ufList.querySelectorAll('.is-hover').forEach((r) => r.classList.remove('is-hover'));
+    void rig.offsetWidth;
+    rig.classList.remove('is-reset');
+  }
+  async function pointAt(el) {
+    const r = el.getBoundingClientRect(), g = gen;
+    QM.ghostShow();
+    await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.6, 800);
+    if (g !== gen) throw ABORT;
+  }
+  async function press(el) {
+    await sleep(110); el.classList.add('is-down'); await sleep(130); el.classList.remove('is-down'); el.click();
+  }
+  async function story() {
+    reset(); await sleep(800);
+    const row = ufList.children[1].firstElementChild, arc = row.querySelector('.uf-arc');
+    await pointAt(arc); row.classList.add('is-hover');
+    await press(arc); await sleep(250); row.classList.remove('is-hover');
+    await sleep(1600);
+    if (round++ % 2 === 0) {                       // this round: Undo
+      await pointAt(ufUndo); ufUndo.classList.add('is-hover');
+      await press(ufUndo); ufUndo.classList.remove('is-hover');
+      QM.ghostHide(); await sleep(2400);
+    } else {                                       // next round: let it run out
+      await QM.ghostTo(innerWidth * 0.9, innerHeight * 0.9, 900);
+      QM.ghostHide(); await sleep(HOLD - 1850 + 1200);
+    }
+  }
+  function cancel() { gen++; running = false; QM.ghostHide(); ufUndo.classList.remove('is-down', 'is-hover'); }
+  if (!QM.tile) {
+    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) cancel(); } };
+    ['pointerdown', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+  }
+  addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancel(); } });
+  if (QM.reduced) archive(ufList.children[1]);
+  else (async function idle() {
+    for (;;) {
+      await new Promise((r) => setTimeout(r, 250));
+      if (paused || document.hidden || running || (!QM.tile && performance.now() - lastReal < 4000)) continue;
+      running = true;
+      try { await story(); } catch (e) { if (e !== ABORT) throw e; }
+      running = false;
+    }
+  })();
+  QM.demo({ kind: 'loop', restart() { paused = false; lastReal = -1e9; if (running) cancel(); } });
+</script>
+</body>
+</html>

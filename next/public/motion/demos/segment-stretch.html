@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stretch segments · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "segment-stretch",
+  "title": "Stretch segments",
+  "group": "studio",
+  "added": "2026-11-05",
+  "cat": "buttons",
+  "order": 10,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "lead 300 ms · trail 560 ms · expo out",
+  "summary": "The ink block under a segmented control stretches toward the next segment: its leading edge leaves fast, its trailing edge follows slower, then it settles. The labels flip from ink to paper exactly where the block passes, and the preview below narrows to the chosen device.",
+  "spec": [
+    ["Leading edge", "300 ms, cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Trailing edge", "560 ms, same curve, 40 ms late"],
+    ["Labels", "a second set of labels in paper ink sits inside the block, held still against the track, so the block clips them"],
+    ["Preview", "width 100% / 62% / 30%, 600 ms, cubic-bezier(0.65, 0, 0.35, 1)"],
+    ["Input", "click, or arrow keys; Home and End jump to the ends"],
+    ["Idle", "a ghost pointer cycles Desktop, Tablet, Phone; it resumes after 4 s without input"],
+    ["Reduced motion", "the block and the preview jump"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "A design service preview page: the toolbar over a draft of the site, so a founder can check the same page at three widths.",
+  "rules": [
+    "The block is one element. Its two edges move on their own timings, never a scale.",
+    "The paper labels never move against the track. Only the block's window moves.",
+    "No radii, no borders. The track is a sunk surface, the block is ink."
+  ],
+  "tags": ["segmented control", "toolbar", "stretch", "preview", "buttons"],
+  "shot": 3000
+}
+</script>
+<style data-code>
+/* A segmented control whose block stretches: edges on different timings (data-dir says which leads). */
+.sg { position: relative; display: inline-grid; grid-auto-flow: column; grid-auto-columns: 112px; padding: 4px; background: var(--sunk, #eceef0); }
+.sg-seg {
+  all: unset; box-sizing: border-box; position: relative; z-index: 1; height: 44px; display: grid; place-items: center; cursor: pointer;
+  font: 500 15px/1 var(--font-sans, 'Geist', sans-serif); letter-spacing: -0.011em; color: var(--fg, #121417);
+  transition: transform 160ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1));
+}
+.sg-seg.is-press { transform: translateY(2px); }
+.sg-seg:focus-visible { outline: 2px solid var(--fg, #121417); outline-offset: -6px; }
+.sg-blk { position: absolute; z-index: 2; top: 4px; bottom: 4px; background: var(--fg, #121417); overflow: hidden; pointer-events: none; }
+.sg-in { position: absolute; top: 0; bottom: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 112px; color: var(--ground, #f3f4f5); }
+.sg-in .sg-seg { transform: none; color: inherit; }
+/* leading edge 300 ms, trailing edge 560 ms; the paper labels hang from the same left edge so they stay put */
+.sg[data-dir='r'] .sg-blk, .sg[data-dir='r'] .sg-in { transition: left 560ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)) 40ms, right 300ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.sg[data-dir='l'] .sg-blk, .sg[data-dir='l'] .sg-in { transition: left 300ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)), right 560ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)) 40ms; }
+.sg-in { transition: none; }
+@media (prefers-reduced-motion: reduce) { .sg .sg-blk, .sg .sg-in, .sg-seg { transition: none !important; } }
+</style>
+<style>
+  .fit { width: 560px; transform: scale(var(--s, 1)); transform-origin: center; display: grid; gap: 14px; }
+  .card { background: var(--surface); padding: 24px; display: grid; gap: 20px; --cut: 16px; }
+  .bar { display: flex; align-items: center; justify-content: space-between; }
+  .bar .mono { font-size: 12px; letter-spacing: 0.1em; color: var(--fg2); text-transform: uppercase; }
+  .pv { height: 214px; background: var(--ground); display: flex; justify-content: center; align-items: stretch; padding: 10px 0 0; overflow: hidden; }
+  .pg { width: 100%; background: #fff; container-type: inline-size; overflow: hidden; transition: width 600ms var(--ease-move); display: grid; grid-template-rows: 36px 1fr; }
+  .pg-nav { display: flex; align-items: center; gap: 12px; padding: 0 14px; }
+  .pg-nav i { width: 10px; height: 10px; background: var(--fg); }
+  .pg-nav b { font: 400 15px/1 var(--font-headline); letter-spacing: -0.02em; margin-right: auto; }
+  .pg-nav u { text-decoration: none; width: 34px; height: 5px; background: var(--fg4); }
+  .pg-body { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 14px; padding: 8px 14px 14px; overflow: hidden; }
+  .pg-copy { flex: 1 1 150px; display: grid; gap: 12px; align-content: start; }
+  .pg-copy h3 { font-size: clamp(16px, 7cqw, 30px); line-height: 1.04; letter-spacing: -0.03em; }
+  .pg-copy span { display: block; height: 5px; background: var(--fg4); width: 70%; }
+  .pg-btn { height: 26px; width: 92px; background: var(--signal); color: var(--on-lime); font: 500 11px/26px var(--font-sans); text-align: center; letter-spacing: -0.01em; }
+  .pg-img { flex: 1 1 96px; min-height: 96px; background: #eceef0 url('../assets/art/vase.webp') center / cover; }
+  @media (prefers-reduced-motion: reduce) { .pg { transition: none; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Preview · Device width</p>
+<!-- code -->
+  <div class="card cut">
+    <div class="bar">
+      <div class="sg" id="sg" role="radiogroup" aria-label="Device width" data-dir="r">
+        <button class="sg-seg" role="radio" aria-checked="true" tabindex="0">Desktop</button>
+        <button class="sg-seg" role="radio" aria-checked="false" tabindex="-1">Tablet</button>
+        <button class="sg-seg" role="radio" aria-checked="false" tabindex="-1">Phone</button>
+        <div class="sg-blk" aria-hidden="true"><div class="sg-in"></div></div>
+      </div>
+      <span class="mono" id="px">1280 px</span>
+    </div>
+    <div class="pv">
+      <div class="pg" id="pg">
+        <div class="pg-nav"><i></i><b>Forma</b><u></u><u></u></div>
+        <div class="pg-body">
+          <div class="pg-copy"><h3>Small batches, made by hand.</h3><span></span><span></span><div class="pg-btn">Shop the batch</div></div>
+          <div class="pg-img"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- /code -->
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const sg = document.getElementById('sg');
+  const segs = [...sg.querySelectorAll(':scope > .sg-seg')];
+  const blk = sg.querySelector('.sg-blk');
+  const inner = blk.firstElementChild;
+  // the paper labels: a clone of the real ones, as wide as the track, held still against it
+  segs.forEach((s) => { const c = s.cloneNode(true); c.removeAttribute('role'); c.removeAttribute('aria-checked'); c.tabIndex = -1; c.setAttribute('aria-hidden', 'true'); inner.appendChild(c); });
+  const WIDTHS = ['100%', '62%', '30%'], PX = ['1280 px', '820 px', '390 px'];
+  let cur = 0;
+  function place(i) {
+    const L = segs[i].offsetLeft, R = sg.clientWidth - (L + segs[i].offsetWidth);
+    blk.style.left = inner.style.left = '';
+    blk.style.left = L + 'px'; blk.style.right = R + 'px';
+    inner.style.left = -L + 'px'; inner.style.width = (segs.length * segs[0].offsetWidth) + 'px';
+  }
+  function select(i, focus) {
+    if (i === cur && blk.style.left) return;
+    sg.dataset.dir = i > cur ? 'r' : 'l';
+    cur = i;
+    segs.forEach((s, k) => { s.setAttribute('aria-checked', k === i); s.tabIndex = k === i ? 0 : -1; });
+    place(i);
+    if (focus) segs[i].focus();
+    document.getElementById('pg').style.width = WIDTHS[i];
+    document.getElementById('px').textContent = PX[i];
+  }
+  segs.forEach((s, i) => s.addEventListener('click', () => select(i)));
+  sg.addEventListener('keydown', (e) => {
+    const k = { ArrowRight: cur + 1, ArrowDown: cur + 1, ArrowLeft: cur - 1, ArrowUp: cur - 1, Home: 0, End: segs.length - 1 }[e.key];
+    if (k === undefined) return;
+    e.preventDefault();
+    select(Math.max(0, Math.min(segs.length - 1, k)), true);
+  });
+  const snap = (i) => { const t = sg.dataset.dir; sg.removeAttribute('data-dir'); cur = -1; blk.style.left = ''; select(i); void blk.offsetWidth; sg.dataset.dir = t || 'r'; };
+  window.Segments = { select, snap, segs, get cur() { return cur; } };
+  snap(0);
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+  document.fonts && document.fonts.ready.then(() => Segments.snap(Segments.cur < 0 ? 0 : Segments.cur));
+
+  // the ghost: press Tablet, Phone, Desktop; any real input stops it, and it resumes after 4 s idle
+  const ABORT = {};
+  let gen = 0, lastReal = -1e9, running = false;
+  async function press(g, z, i) {
+    const el = Segments.segs[i], r = el.getBoundingClientRect();
+    await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.62, 760); if (g !== gen) throw ABORT;
+    el.classList.add('is-press'); await z(130); el.classList.remove('is-press');
+    Segments.select(i);
+  }
+  async function story(g) {
+    const z = async (ms) => { await QM.wait(ms); if (g !== gen) throw ABORT; };
+    QM.ghostShow();
+    await z(900);
+    await press(g, z, 1); await z(1500);
+    await press(g, z, 2); await z(1500);
+    await press(g, z, 0); await z(1700);
+  }
+  if (QM.reduced) { Segments.snap(1); document.getElementById('pg').style.transition = 'none'; document.getElementById('pg').style.width = '62%'; }
+  else {
+    if (!QM.tile) ['pointerdown', 'keydown', 'pointermove'].forEach((n) => addEventListener(n, (e) => {
+      if (!e.isTrusted || (n === 'pointermove' && e.pointerType !== 'mouse')) return;
+      lastReal = performance.now(); if (running) { gen++; QM.ghostHide(); }
+    }, { capture: true, passive: true }));
+    (async function idle() {
+      for (;;) {
+        await QM.wait(250);
+        if (document.hidden || (!QM.tile && performance.now() - lastReal < 4000)) continue;
+        running = true; const g = gen;
+        try { await story(g); } catch (e) { if (e !== ABORT) throw e; }
+        QM.ghostHide(); running = false;
+      }
+    })();
+  }
+  QM.demo({ kind: 'loop', restart() { lastReal = -1e9; if (running) { gen++; QM.ghostHide(); } } });
+</script>
+</body>
+</html>

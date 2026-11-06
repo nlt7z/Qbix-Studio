@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Autosave · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "autosave",
+  "title": "Autosave",
+  "group": "studio",
+  "added": "2026-11-05",
+  "cat": "feedback",
+  "order": 20,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "roll 320 ms · tick 280 ms · expo out",
+  "summary": "A save state sits beside a document's title. Type, and it rolls up to Saving with three squares stepping. A beat after you stop it rolls to Saved and draws a tick in the one lime square. A few seconds later it rolls to Edited just now, in a lighter ink.",
+  "spec": [
+    ["Roll", "each state sits in a sleeve; the old one leaves up, the new one rises from below, 320 ms, cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Width", "the sleeve glides to the new word's width over the same 320 ms"],
+    ["Saving", "three 6px squares light one after another, a step every 160 ms"],
+    ["Saved", "the lime square wipes in from the left (180 ms), then the tick strokes itself (280 ms, dashoffset)"],
+    ["Timing", "Saving on the first keystroke; Saved 900 ms after the last; Edited just now 3.5 s later"],
+    ["Input", "the live paragraph is editable; the script types into it and resumes after 4 s idle"],
+    ["Reduced motion", "states swap without a roll; the tick is drawn"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-05"],
+  "where": "The brief in a Design service workspace: the line beside the title tells a founder their words are safe while they type.",
+  "rules": [
+    "Words roll, they do not fade. Nothing else on the page moves.",
+    "The lime is the tick's square and nothing else.",
+    "Edited just now is quieter than Saved: ink at 64%, so the eye stays on the document."
+  ],
+  "tags": ["autosave", "status", "text roll", "document", "feedback"],
+  "shot": 4000
+}
+</script>
+<style data-code>
+/* A save state: one sleeve, words that roll through it. data-state on .as picks the visible row. */
+.as { display: inline-flex; align-items: center; height: 32px; padding: 0 12px 0 10px; gap: 10px; background: var(--fill, rgba(18,20,23,.05)); font: 500 13px/1 var(--font-sans, 'Geist', sans-serif); letter-spacing: -0.005em; color: var(--fg, #121417); }
+.as-sleeve { position: relative; height: 18px; overflow: hidden; width: var(--w, 52px); transition: width 320ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.as-row { position: absolute; left: 0; top: 0; height: 18px; display: flex; align-items: center; gap: 8px; white-space: nowrap; transform: translateY(110%); transition: transform 320ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.as-row.is-in { transform: translateY(0); }
+.as-row.is-out { transform: translateY(-110%); }
+.as-row.is-park { transition: none; transform: translateY(110%); }
+.as-row[data-s='edited'] { color: var(--fg2, rgba(18,20,23,.64)); }
+/* the mark before the word: three squares, or the lime tick */
+.as-mark { position: relative; width: 16px; height: 16px; flex: none; }
+.as-dots { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; }
+.as-dots i { width: 4px; height: 4px; background: var(--fg, #121417); opacity: .22; }
+.as[data-state='saving'] .as-dots i { animation: as-step 480ms steps(1, end) infinite; }
+.as[data-state='saving'] .as-dots i:nth-child(2) { animation-delay: 160ms; }
+.as[data-state='saving'] .as-dots i:nth-child(3) { animation-delay: 320ms; }
+@keyframes as-step { 0% { opacity: 1; } 33.3% { opacity: .22; } 100% { opacity: .22; } }
+.as-tick { position: absolute; left: 0; top: 50%; width: 18px; height: 18px; margin-top: -9px; background: var(--signal, #B8FF00); clip-path: inset(0 100% 0 0); transition: clip-path 180ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.as-tick svg { position: absolute; inset: 0; }
+.as-tick path { fill: none; stroke: var(--on-lime, #0c1300); stroke-width: 2; stroke-dasharray: 14; stroke-dashoffset: 14; transition: stroke-dashoffset 280ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
+.as[data-state='saved'] .as-tick { clip-path: inset(0); }
+.as[data-state='saved'] .as-tick path { stroke-dashoffset: 0; transition-delay: 120ms; }
+@media (prefers-reduced-motion: reduce) { .as-sleeve, .as-row, .as-tick, .as-tick path { transition: none; } .as[data-state='saving'] .as-dots i { animation: none; opacity: 1; } }
+</style>
+<style>
+  .fit { width: 560px; transform: scale(var(--s, 1)); transform-origin: center; display: grid; gap: 14px; }
+  .doc { background: var(--surface); padding: 28px 32px 32px; display: grid; gap: 18px; --cut: 16px; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .head h2 { font-size: 30px; letter-spacing: -0.03em; line-height: 1.1; }
+  .doc p.body { font-size: 17px; line-height: 1.6; color: var(--fg); outline: none; min-height: 1.6em; }
+  .doc p.body + p.body { margin-top: -6px; }
+  .doc .sec { font: 500 11px/16px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg2); }
+  .live::after { content: ''; display: inline-block; width: 2px; height: 1.15em; background: var(--fg); vertical-align: -0.2em; margin-left: 1px; animation: blink 1060ms steps(1, end) infinite; }
+  .live:focus::after { display: none; }
+  .live:focus { caret-color: var(--fg); }
+  @keyframes blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .live::after { animation: none; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Document · Autosave</p>
+<!-- code -->
+  <div class="doc cut">
+    <div class="head">
+      <h2 class="title">Forma · Brief</h2>
+      <div class="as" id="as" data-state="edited" role="status" aria-live="polite">
+        <span class="as-mark"><span class="as-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="as-tick" aria-hidden="true"><svg viewBox="0 0 18 18"><path d="M4.5 9.5 L7.8 12.6 L13.5 5.8"/></svg></span></span>
+        <span class="as-sleeve" id="sleeve">
+          <span class="as-row" data-s="edited">Edited just now</span>
+          <span class="as-row" data-s="saving">Saving</span>
+          <span class="as-row" data-s="saved">Saved</span>
+        </span>
+      </div>
+    </div>
+    <div class="sec">01 · The studio</div>
+    <p class="body" contenteditable="true" spellcheck="false">Forma is a ceramics studio in Portland. It sells small batches and needs a site that feels like the work.</p>
+    <div class="sec">02 · The launch</div>
+    <p class="body live" id="live" contenteditable="true" spellcheck="false" aria-label="Edit the brief"></p>
+  </div>
+<!-- /code -->
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const as = document.getElementById('as'), sleeve = document.getElementById('sleeve');
+  const rows = {}; sleeve.querySelectorAll('.as-row').forEach((r) => { rows[r.dataset.s] = r; });
+  const width = (s) => rows[s].scrollWidth + 1;
+  let t1 = 0, t2 = 0, state = '';
+  function set(s) {
+    if (s === state) return;
+    const old = rows[state], row = rows[s];
+    // the new word always rises from below the sleeve; the old one always leaves upward
+    row.classList.remove('is-out'); row.classList.add('is-park'); void row.offsetWidth; row.classList.remove('is-park'); row.classList.add('is-in');
+    if (old) { old.classList.remove('is-in'); old.classList.add('is-out'); }
+    state = s; as.dataset.state = s; sleeve.style.setProperty('--w', width(s) + 'px');
+  }
+  // call on every edit: Saving now, Saved 900 ms after the last keystroke, Edited just now 3.5 s after that
+  function edited() {
+    clearTimeout(t1); clearTimeout(t2);
+    set('saving');
+    t1 = setTimeout(() => { set('saved'); t2 = setTimeout(() => set('edited'), 3500); }, 900);
+  }
+  document.querySelectorAll('.doc .body').forEach((p) => p.addEventListener('input', edited));
+  set('edited');
+  window.Autosave = { edited, set, reset() { clearTimeout(t1); clearTimeout(t2); state = ''; Object.values(rows).forEach((r) => r.classList.remove('is-in', 'is-out')); set('edited'); } };
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+  const live = document.getElementById('live');
+  document.fonts && document.fonts.ready.then(() => Autosave.reset());
+
+  // the ghost types into the launch paragraph; real input stops it, and it resumes after 4 s idle
+  const ABORT = {};
+  let gen = 0, lastReal = -1e9, running = false;
+  async function story(g) {
+    const z = async (ms) => { await QM.wait(ms); if (g !== gen) throw ABORT; };
+    const type = async (s) => { for (const ch of s) { live.textContent += ch; Autosave.edited(); await z(ch === ' ' ? 90 : 62); } };
+    live.textContent = ''; Autosave.reset();
+    await z(900);
+    await type('Launch in two weeks.');
+    await z(3700);
+    await type(' Three pages: home, shop, studio.');
+    await z(5600);
+    live.textContent = ''; await z(600);
+  }
+  if (QM.reduced) { live.textContent = 'Launch in two weeks. Three pages: home, shop, studio.'; Autosave.set('saved'); }
+  else {
+    if (!QM.tile) ['pointerdown', 'keydown'].forEach((n) => addEventListener(n, (e) => {
+      if (!e.isTrusted) return;
+      lastReal = performance.now(); if (running) { gen++; running = false; }
+    }, { capture: true, passive: true }));
+    (async function idle() {
+      for (;;) {
+        await QM.wait(250);
+        if (document.hidden || (!QM.tile && performance.now() - lastReal < 4000 + (document.activeElement === live ? 2000 : 0))) continue;
+        running = true; const g = gen;
+        try { await story(g); } catch (e) { if (e !== ABORT) throw e; }
+        running = false;
+      }
+    })();
+  }
+  QM.demo({ kind: 'loop', restart() { lastReal = -1e9; if (running) { gen++; running = false; } } });
+</script>
+</body>
+</html>
