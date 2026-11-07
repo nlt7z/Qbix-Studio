@@ -15,13 +15,13 @@
   "kind": "loop",
   "tone": "paper",
   "line": "a step every 1.1 to 2.1 s · 320 ms count-up · hairlines between",
-  "summary": "Four figures share one board, split by hairlines instead of cards. Each has a sparkline whose line slides one step to the left every second or two while its figure counts up to the new total, both over 320 ms, expo out. The line is ink; the lime is the live fill under it and the Live dot.",
+  "summary": "Four figures share one board, split by hairlines instead of cards. Each has a sparkline whose line slides one step to the left every second or two while its figure counts up to the new total, both over 320 ms, expo out. The line is ink over a deeper sage fill; the lime is the Live dot and nothing else.",
   "spec": [
-    ["Board", "one white block, radius 14px, four cells split by 1px hairlines (the grid gap over a hairline ground); no card in a card"],
+    ["Board", "one sage block, radius 14px, four cells split by 1px hairlines (the grid gap over a hairline ground); no card in a card"],
     ["Step", "each tile on its own clock: every 1.7 s, 1.3 s, 1.1 s and 2.1 s (plus up to 0.4 s of chance)"],
     ["Slide", "the window of 24 points moves one step left over 320 ms while the newest point grows in from the edge; the dot rides the end of the line"],
     ["Count", "the figure counts from its old value to the new in whole numbers over 320 ms, expo out; tabular numerals"],
-    ["Line", "2px ink, area under it lime at 40%, dot 10px with a 22px halo"],
+    ["Line", "2px ink, area under it sage #E3E8DA, dot 10px with a 22px halo"],
     ["Pause", "the loop runs only while the page is visible; reduced motion shows the figures still"]
   ],
   "source": ["motion.ui.o2tech.ai · Live tiles (data-live-tiles)", "Idea: Qbix studio library · live-bento"],
@@ -29,31 +29,31 @@
   "rules": [
     "No card in a card: the cells are told apart by hairlines.",
     "Counts are moments under 320 ms, never a long roll.",
-    "One lime: the fill under the lines and the Live dot are the same job, what is live.",
+    "One lime, one job: the Live dot says what is live; the lines and fills stay ink and sage.",
     "The loop pauses when the page is hidden."
   ],
-  "tags": ["dashboard", "sparkline", "counter", "live", "paper"],
+  "tags": ["dashboard", "sparkline", "counter", "live", "sage"],
   "shot": 2600
 }
 </script>
 <style data-code>
 /* Live tiles · redrawn for Qbix (Idea: library/demos/live-bento.html).
-   Layout, sizes and motion are the original's; colours are Qbix's: ink lines, one lime. */
+   Layout, sizes and motion are the original's; colours are Qbix's: ink lines on sage, one lime (the live dot). */
 .lt { position: absolute; inset: 0; padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow: hidden; font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg); }
 .lt-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
-.lt-head h1 { font: 400 28px/1.35 var(--font-sans); letter-spacing: -0.03em; }
-.lt-head .meta { margin-top: 4px; font-size: 12px; color: rgba(18, 20, 23, 0.56); }
+.lt-head h1 { font: 300 28px/1.35 var(--font-headline); letter-spacing: -0.035em; }
+.lt-head .meta { margin-top: 4px; font-size: 12px; color: var(--fg2); }
 .lt-live { display: inline-flex; align-items: center; gap: 8px; color: var(--fg2); }
 .lt-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); animation: lt-pulse 1.6s cubic-bezier(.65, 0, .35, 1) infinite; }
 @keyframes lt-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-.lt-board { flex: 1; min-height: 0; max-height: 560px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: rgba(18, 20, 23, 0.08); border-radius: 14px; overflow: hidden; }
+.lt-board { flex: 1; min-height: 0; max-height: 560px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: #E3E8DA; border-radius: 14px; overflow: hidden; }
 .lt-tile { background: var(--surface); padding: 24px; display: flex; flex-direction: column; min-width: 0; }
 .lt-lab { color: var(--fg2); }
-.lt-fig { margin-top: 8px; font-size: 28px; letter-spacing: -0.03em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.lt-fig { margin-top: 8px; font-family: var(--font-mono); font-size: 28px; letter-spacing: -0.03em; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .lt-unit { margin-top: 4px; color: var(--fg2); }
 .lt-spark { position: relative; flex: 1; min-height: 56px; margin-top: 20px; }
 .lt-spark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.lt-spark .area { fill: var(--signal); fill-opacity: 0.4; }
+.lt-spark .area { fill: #E3E8DA; }
 .lt-spark .ln { fill: none; stroke: var(--fg); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .lt-spark .dot { position: absolute; right: 0; width: 10px; height: 10px; margin: -5px -5px 0 0; border-radius: 50%; background: var(--fg); }
 .lt-spark .dot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; background: var(--fg); opacity: 0.16; }

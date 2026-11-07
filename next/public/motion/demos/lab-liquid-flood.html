@@ -15,19 +15,19 @@
   "kind": "pointer",
   "tone": "paper",
   "line": "edge-aware · 2 wave layers · clip-path polygon",
-  "summary": "Each tile notices which edge the pointer came in through and floods from that edge; on leaving, it drains out through the edge the pointer left by. The surface is a clip-path polygon recomputed every frame from two sine waves, one for a deep lime band that runs ahead and one for the lime that follows, out of phase.",
+  "summary": "Each tile notices which edge the pointer came in through and floods from that edge; on leaving, it drains out through the edge the pointer left by. The surface is a clip-path polygon recomputed every frame from two sine waves, one for a lime band that runs ahead and one for the ink that follows, out of phase.",
   "spec": [
     ["Edge", "nearest edge on entry, farthest-out edge on exit"],
-    ["Levels", "two springs: lime k 26 / 8.5, the deep lime band ahead of it k 46 / 10"],
+    ["Levels", "two springs: ink k 26 / 8.5, the lime band ahead of it k 46 / 10"],
     ["Surface", "26-point polygon, two waves (6.6 and 11.3 cycles), amplitude 3.5% of the tile growing with energy to 11%"],
-    ["Colour", "tile white, a deep lime band (#6FAE00) ahead, lime behind it with ink type"],
+    ["Colour", "tile sage, a lime band (#B8FF00) ahead, ink behind it with light type"],
     ["Trigger", "the pointer crossing a tile; the ghost glides from tile to tile"]
   ],
   "source": ["Qbix studio library · liquid-flood"],
   "where": "The Design service grid: each part of a build lights up from the side you reach it from.",
   "rules": [
-    "Content is duplicated on the lime layer, so type is always readable on its ground.",
-    "Only one tile is lime at a time; the deep lime band is a lead, not a second signal.",
+    "Content is duplicated on the ink layer, so type is always readable on its ground.",
+    "Only one tile is ink at a time; the lime band is the one lime, a lead and nothing more.",
     "The cut corner stays on every tile while it floods."
   ],
   "tags": ["hover", "clip-path", "liquid", "grid"],
@@ -36,16 +36,16 @@
 </script>
 <style data-code>
 .lf-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(var(--cols, 3), 1fr); grid-template-rows: repeat(var(--rows, 2), 1fr); gap: 8px; }
-.lf-tile { position: relative; background: #ffffff; color: #121417; overflow: hidden;
+.lf-tile { position: relative; background: #EEF1E8; color: #0B0C0D; overflow: hidden;
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
 .lf-content { position: absolute; inset: 0; padding: clamp(12px, 2vw, 24px); display: flex; flex-direction: column; box-sizing: border-box; }
 .lf-content svg { width: clamp(20px, 2.6vw, 30px); height: clamp(20px, 2.6vw, 30px); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter; }
-.lf-content h2 { margin: auto 0 4px; font: 400 clamp(18px, 2.4vw, 30px)/1.1 Eurostile, Geist, sans-serif; letter-spacing: -.02em; }
-.lf-content p { font: 400 clamp(10px, 1.1vw, 12px)/1.35 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+.lf-content h2 { margin: auto 0 4px; font: 300 clamp(18px, 2.4vw, 30px)/1.1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.lf-content p { font: 400 clamp(12px, 1.2vw, 13px)/1.35 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13,.66); }
 .lf-liq { position: absolute; inset: 0; clip-path: polygon(0 0, 0 0, 0 0); will-change: clip-path; }
-.lf-back { background: #6FAE00; }
-.lf-front { background: #B8FF00; color: #0c1300; }
-.lf-front .lf-content p { color: rgba(12, 19, 0, .66); }
+.lf-back { background: #B8FF00; }
+.lf-front { background: #0B0C0D; color: #f4f5f2; }
+.lf-front .lf-content p { color: rgba(244, 245, 242, .64); }
 </style>
 <style>
   .qm-stage { place-items: stretch; padding: clamp(16px, 4.5vmin, 48px); }
@@ -142,7 +142,7 @@ const flood = (() => {
         continue;
       }
       t.drawn = true;
-      // the deep lime band runs ahead, the lime follows
+      // the lime band runs ahead, the ink follows
       t.back.style.clipPath = poly(t, Math.max(0, t.lb + (t.target ? 0.05 : 0)), amp * 1.15, t.phase + 1.9, 26);
       t.front.style.clipPath = poly(t, Math.max(0, t.lf), amp, t.phase, 26);
     }

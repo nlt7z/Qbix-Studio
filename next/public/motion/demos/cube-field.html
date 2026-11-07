@@ -9,10 +9,10 @@
   "id": "cube-field", "title": "Cube field", "group": "studio", "added": "2026-11-06", "cat": "backgrounds", "order": 20,
   "kind": "loop", "tone": "paper", "shot": 6200,
   "line": "isometric 2:1 · noise heights · 1 lime top",
-  "summary": "An isometric field of small cubes on paper: white tops, light ink-tint sides, ink edges. Their heights rise and fall slowly on 3D noise. One cube top turns lime, a wipe along its edge, and hops to a neighbour every 1.1 s, leaving by the same wipe. Cubes near the pointer rise a little more, and an idle pointer drifts by itself.",
+  "summary": "An isometric field of small cubes on white: white tops, sage sides, ink edges. Their heights rise and fall slowly on 3D noise. One cube top turns lime, a wipe along its edge, and hops to a neighbour every 1.1 s, leaving by the same wipe. Cubes near the pointer rise a little more, and an idle pointer drifts by itself.",
   "spec": [
     ["Projection", "2:1 isometric: x = (i − j) · a, y = (i + j) · a / 2 − z; a = width / 18, 20 to 56 px; painter's order by i + j"],
-    ["Cube", "inset 0.1 of its cell on each side, so paper shows between: top #fff, left rgb(225, 226, 227), right rgb(206, 208, 210), edges rgba(18, 20, 23, 0.3) at 1 px"],
+    ["Cube", "inset 0.1 of its cell on each side, so white shows between: top #fff, left sage rgb(238, 241, 232), right rgb(222, 228, 210), edges rgba(11, 12, 13, 0.3) at 1 px"],
     ["Height", "z = a · (0.18 + 1.9 · u^2.6), u = 0.5 + 0.62 · (0.7 · noise3(0.09i, 0.09j, 0.08t) + 0.3 · noise3(0.21i + 9, 0.21j, 0.13t))"],
     ["Pointer", "+1.1 a · exp(−d² / 2σ²), σ = 4.2 a, the pointer chased at 1 − e^(−8 dt); after 3 s idle a virtual one drifts"],
     ["Lime top", "one cell at a time: enters 420 ms expo out and leaves 420 ms ease-in, a wipe along the top's u axis, the cube lifting 0.9 a and settling over 600 ms; a hop every 1.1 s toward a roaming waypoint"],
@@ -21,7 +21,7 @@
   "source": ["Qbix Motion · Studio · 2026-11-06"],
   "where": "Behind the hero of a Qbix launch page or the studio's About chapter: the build as a field of blocks, with the headline on a white block at the side.",
   "rules": [
-    "One lime top on the whole field: the single signal. Cubes are white, tint and ink, never lime sides.",
+    "One lime top on the whole field: the single signal. Cubes are white, sage and ink, never lime sides.",
     "Cubes are never faded: the lime is uncovered along the top, the height is geometry.",
     "Nothing is under the headline: the words stand on a white block that covers the field.",
     "Redraw only while it is seen and the tab is open; reduced motion draws one still frame."
@@ -31,17 +31,17 @@
 }
 </script>
 <style data-code>
-/* Cube field: a canvas field behind a white block that carries the words. Tokens: --paper, --ink, the cut corner. */
-.cf { position: relative; width: 100%; height: 100%; background: #f3f4f5; overflow: hidden; }
+/* Cube field: a canvas field behind a white block that carries the words. Tokens: --sage, --ink, the cut corner. */
+.cf { position: relative; width: 100%; height: 100%; background: #ffffff; overflow: hidden; }
 .cf-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .cf-block {
   position: absolute; left: clamp(20px, 6%, 64px); top: 50%; translate: 0 -50%;
-  width: clamp(250px, 38%, 440px); padding: 30px 30px 28px; background: #fff; color: #121417;
+  width: clamp(250px, 38%, 440px); padding: 30px 30px 28px; background: #EEF1E8; color: #0B0C0D;
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
 }
-.cf-block .kicker { margin: 0 0 18px; font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
-.cf-block h2 { margin: 0; font: 400 clamp(26px, 3.3vw, 46px)/1.04 Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; text-wrap: balance; }
-.cf-block .meta { margin: 22px 0 0; font: 11px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+.cf-block .kicker { margin: 0 0 18px; font: 12px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
+.cf-block h2 { margin: 0; font: 400 clamp(26px, 3.3vw, 46px)/1.04 Outfit, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; text-wrap: balance; }
+.cf-block .meta { margin: 22px 0 0; font: 12px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
 </style>
 <style>
   .qm-stage { padding: 0; display: block; }
@@ -72,8 +72,7 @@ function cubeField(cv, { seed = 7, speed = 0.08 } = {}) {
   const g = cv.getContext('2d');
   const noise = QMNoise.noise3(seed);                       // lib/noise.ts
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const mixInk = (a) => `rgb(${[243, 244, 245].map((c, i) => Math.round(c + ([18, 20, 23][i] - c) * a)).join(',')})`;
-  const TOP = '#ffffff', LEFT = mixInk(0.08), RIGHT = mixInk(0.16), EDGE = 'rgba(18,20,23,.3)', LIME = '#B8FF00';
+    const TOP = '#ffffff', LEFT = 'rgb(238, 241, 232)', RIGHT = 'rgb(222, 228, 210)', EDGE = 'rgba(11, 12, 13,.3)', LIME = '#B8FF00';
   const GAP = 0.1, SPAN = 1 - 2 * GAP;
   const clamp = (x) => Math.min(1, Math.max(0, x));
   const outExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x));

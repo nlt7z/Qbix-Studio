@@ -14,9 +14,9 @@
   "kind": "pointer",
   "tone": "paper",
   "line": "two layers · scan band 32% wide · eased 5/s",
-  "summary": "Two drawings of the same page are stacked: the finished home page in ink on paper, and its build underneath on white (a 12 column grid, every box, the spacing redlines, one line of code). A vertical scan band follows the pointer and uncovers the build only inside it.",
+  "summary": "Two drawings of the same page are stacked: the finished home page in ink on white with sage panels, and its build underneath (a 12 column grid, every box, the spacing redlines, one line of code). A vertical scan band follows the pointer and uncovers the build only inside it.",
   "spec": [
-    ["Layers", "the page design on paper, the build on white, both drawn once at device size"],
+    ["Layers", "the page design in ink and sage, the build on white, both drawn once at device size"],
     ["Band", "32% of the stage, 120 to 380 px, clipped hard at both edges"],
     ["Edges", "two 2px lime bars mark the band"],
     ["Follow", "1 − e^(−5 dt)"],
@@ -66,7 +66,7 @@ function createXray(cv, { reduce = false } = {}) {
   const X = (f) => ox + f * u, Y = (f) => oy - f * u;           // units to css px, y up from the foot of the page
   const rect = (c, x0, y0, x1, y1) => c.rect(X(x0), Y(y1), (x1 - x0) * u, (y1 - y0) * u);
   const line = (c, x0, y0, x1, y1) => { c.moveTo(X(x0), Y(y0)); c.lineTo(X(x1), Y(y1)); };
-  const INK = '#121417', WHITE = '#ffffff', PAPER = '#f3f4f5';
+  const INK = '#0B0C0D', WHITE = '#ffffff', PAPER = '#ffffff', SAGE = '#EEF1E8';
 
   // the page: one list of boxes, [x0, y0, x1, y1], that both layers draw
   const BOX = {
@@ -91,37 +91,37 @@ function createXray(cv, { reduce = false } = {}) {
   const bar = (c, b, fill) => { c.fillStyle = fill; c.fillRect(X(b[0]), Y(b[3]), (b[2] - b[0]) * u, (b[3] - b[1]) * u); };
   const hatch = (c, b, alpha) => { c.save(); c.beginPath(); rect(c, ...b); c.clip(); c.beginPath(); for (let y = b[1] + 0.5; y < b[3]; y += 0.5) line(c, b[0], y, b[2], y); c.lineWidth = 1; c.strokeStyle = alpha; c.stroke(); c.restore(); };
   const disc = (c, cx, cy, r, fill) => { c.fillStyle = fill; c.beginPath(); c.arc(X(cx), Y(cy), r * u, 0, 6.2832); c.fill(); };
-  const headFont = () => `400 ${FS1 * u}px Eurostile, Geist, sans-serif`;
+  const headFont = () => `400 ${FS1 * u}px Outfit, Geist, sans-serif`;
 
-  function drawOuter() {                    // the finished page: ink on white, on paper
+  function drawOuter() {                    // the finished page: ink on white, with sage panels
     const c = setup(outer), lw = Math.max(1.5, u * 0.1), B = BOX;
     c.fillStyle = PAPER; c.fillRect(0, 0, W, H);
-    tooth(c, 'rgba(18,20,23,0.1)');
+    tooth(c, 'rgba(11, 12, 13,0.1)');
     c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = lw;
     c.beginPath(); rect(c, 0, 0, 24, 28); c.fill(); c.stroke();
     // header: mark, name, three links, one button
     bar(c, B.logo, INK); bar(c, B.word, INK);
-    B.nav.forEach((n) => bar(c, n, 'rgba(18,20,23,0.5)'));
+    B.nav.forEach((n) => bar(c, n, 'rgba(11, 12, 13,0.5)'));
     bar(c, B.btn, INK); bar(c, [20.6, 26.7, 22, 26.9], WHITE);
-    c.beginPath(); line(c, 0, 25.6, 24, 25.6); c.lineWidth = 1; c.strokeStyle = 'rgba(18,20,23,0.3)'; c.stroke();
-    // hero: kicker, headline in Eurostile, two lines of text, the button; a ring object on the right
-    bar(c, B.kick, 'rgba(18,20,23,0.5)');
+    c.beginPath(); line(c, 0, 25.6, 24, 25.6); c.lineWidth = 1; c.strokeStyle = 'rgba(11, 12, 13,0.3)'; c.stroke();
+    // hero: kicker, headline in Outfit, two lines of text, the button; a ring object on the right
+    bar(c, B.kick, 'rgba(11, 12, 13,0.5)');
     c.fillStyle = INK; c.font = headFont(); c.textBaseline = 'alphabetic'; c.textAlign = 'left';
     HEADLINE.forEach((t, i) => c.fillText(t, X(B.h1[0]), Y(B.h1[3] - i * LH1 - 1.75)));
-    B.para.forEach((p) => bar(c, p, 'rgba(18,20,23,0.28)'));
+    B.para.forEach((p) => bar(c, p, 'rgba(11, 12, 13,0.28)'));
     bar(c, B.cta, INK); bar(c, [2.1, 12.7, 4.6, 12.9], WHITE);
-    c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = lw; c.beginPath(); rect(c, ...B.hero); c.fill(); hatch(c, B.hero, 'rgba(18,20,23,0.2)'); c.beginPath(); rect(c, ...B.hero); c.stroke();
+    c.fillStyle = SAGE; c.strokeStyle = INK; c.lineWidth = lw; c.beginPath(); rect(c, ...B.hero); c.fill(); hatch(c, B.hero, 'rgba(11, 12, 13,0.2)'); c.beginPath(); rect(c, ...B.hero); c.stroke();
     disc(c, 17.7, 18, 3.6, INK); disc(c, 17.7, 18, 1.6, WHITE);
     // three cards: a picture, a name, a price
     B.cards.forEach((b, i) => {
-      c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = lw; c.beginPath(); rect(c, ...b); c.fill(); c.stroke();
-      const pic = [b[0], 6.3, b[2], b[3]]; hatch(c, pic, 'rgba(18,20,23,0.2)');
-      c.beginPath(); line(c, pic[0], pic[1], pic[2], pic[1]); c.lineWidth = 1; c.strokeStyle = 'rgba(18,20,23,0.3)'; c.stroke();
+      c.fillStyle = SAGE; c.strokeStyle = INK; c.lineWidth = lw; c.beginPath(); rect(c, ...b); c.fill(); c.stroke();
+      const pic = [b[0], 6.3, b[2], b[3]]; hatch(c, pic, 'rgba(11, 12, 13,0.2)');
+      c.beginPath(); line(c, pic[0], pic[1], pic[2], pic[1]); c.lineWidth = 1; c.strokeStyle = 'rgba(11, 12, 13,0.3)'; c.stroke();
       const mx = (b[0] + b[2]) / 2, my = (pic[1] + pic[3]) / 2;
       if (i === 0) disc(c, mx, my, 1.25, INK);
       else if (i === 1) bar(c, [mx - 1.2, my - 1.2, mx + 1.2, my + 1.2], INK);
       else { c.fillStyle = INK; c.beginPath(); c.moveTo(X(mx - 1.4), Y(my - 1.2)); c.lineTo(X(mx + 1.4), Y(my - 1.2)); c.lineTo(X(mx), Y(my + 1.3)); c.closePath(); c.fill(); }
-      bar(c, [b[0] + 0.5, 5.3, b[0] + 4.1, 5.65], INK); bar(c, [b[0] + 0.5, 4.4, b[0] + 2.3, 4.7], 'rgba(18,20,23,0.4)');
+      bar(c, [b[0] + 0.5, 5.3, b[0] + 4.1, 5.65], INK); bar(c, [b[0] + 0.5, 4.4, b[0] + 2.3, 4.7], 'rgba(11, 12, 13,0.4)');
     });
     // footer: one ink band with its links
     bar(c, BOX.foot, INK);
@@ -134,11 +134,11 @@ function createXray(cv, { reduce = false } = {}) {
     const hw = Math.max(...HEADLINE.map((t) => c.measureText(t).width)) / u;
     const B = { ...BOX, h1: [BOX.h1[0], BOX.h1[1], BOX.h1[0] + hw, BOX.h1[3]] };
     c.fillStyle = WHITE; c.fillRect(0, 0, W, H);
-    tooth(c, 'rgba(18,20,23,0.12)');
+    tooth(c, 'rgba(11, 12, 13,0.12)');
     c.fillStyle = WHITE; c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); rect(c, 0, 0, 24, 28); c.fill(); c.stroke();
-    c.fillStyle = 'rgba(18,20,23,0.06)'; cols.forEach(([a, b]) => c.fillRect(X(a), Y(28), (b - a) * u, 28 * u));   // the 12 column grid
+    c.fillStyle = 'rgba(11, 12, 13,0.06)'; cols.forEach(([a, b]) => c.fillRect(X(a), Y(28), (b - a) * u, 28 * u));   // the 12 column grid
     // every box, outlined
-    c.strokeStyle = 'rgba(18,20,23,0.85)'; c.lineWidth = 1; c.beginPath();
+    c.strokeStyle = 'rgba(11, 12, 13,0.85)'; c.lineWidth = 1; c.beginPath();
     const list = [B.head, B.logo, B.word, ...B.nav, B.btn, B.kick, B.h1, ...B.para, B.cta, B.hero, ...B.cards, B.foot];
     list.forEach((b) => rect(c, ...b));
     B.cards.forEach((b) => { rect(c, b[0], 6.3, b[2], b[3]); rect(c, b[0] + 0.5, 5.3, b[0] + 4.1, 5.65); rect(c, b[0] + 0.5, 4.4, b[0] + 2.3, 4.7); });
@@ -150,7 +150,7 @@ function createXray(cv, { reduce = false } = {}) {
     }));
     // spacing redlines: a measured gap, a bar across it, a tick at each end; the gap itself is tinted
     const gap = (hz, a, b, at) => {
-      c.fillStyle = 'rgba(18,20,23,0.1)'; c.beginPath();
+      c.fillStyle = 'rgba(11, 12, 13,0.1)'; c.beginPath();
       if (hz) rect(c, a, at - 0.5, b, at + 0.5); else rect(c, at - 0.5, a, at + 0.5, b);
       c.fill();
       c.strokeStyle = INK; c.lineWidth = lw; c.beginPath();
@@ -160,13 +160,12 @@ function createXray(cv, { reduce = false } = {}) {
     };
     gap(false, 24, 25.6, 0.6); gap(false, 9.9, 12, 0.6); gap(true, 7.8, 8.7, 7); gap(true, 0, 1.2, 19.6); gap(false, 12, 13.6, 6.9);
     // labels: small ink tags in the voice of the site's tags
-    const fs = Math.max(10, Math.min(12, u * 0.62)); c.font = `500 ${fs}px "Encode Sans", Geist, sans-serif`;
-    if ('letterSpacing' in c) c.letterSpacing = '1px';
+    const fs = Math.max(10, Math.min(12, u * 0.62)); c.font = `500 ${fs}px "Geist Mono", Geist, sans-serif`;
     c.textBaseline = 'alphabetic';
     const tag = (t, fx, fy) => { const w = c.measureText(t).width; c.fillStyle = INK; c.fillRect(X(fx) - 5, Y(fy) - fs * 1.05, w + 10, fs * 1.6); c.fillStyle = PAPER; c.fillText(t, X(fx), Y(fy)); };
     tag('48', 1.0, 24.6); tag('64', 1.0, 10.7); tag('24', 8.0, 6.5); tag('36', 0.3, 20.2); tag('48', 7.2, 12.6);
-    tag('H1 66/70', B.h1[2] + 0.45, 20.4); tag('GRID 12', 5.8, 26.6);
-    c.font = `500 ${fs}px "Encode Sans", Geist, sans-serif`;
+    tag('H1 66/70', B.h1[2] + 0.45, 20.4); tag('Grid 12', 5.8, 26.6);
+    c.font = `500 ${fs}px "Geist Mono", Geist, sans-serif`;
     tag('grid-template-columns: repeat(12, 1fr);', 0, -1.2);
     if ('letterSpacing' in c) c.letterSpacing = '0px';
   }

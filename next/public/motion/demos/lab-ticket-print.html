@@ -14,7 +14,7 @@
   "kind": "loop",
   "tone": "paper",
   "line": "1300 ms feed · odometer 110 ms a column · torn clip-path",
-  "summary": "A lime printer feeds a Qbix invoice out of its slot in two smooth runs. The total is an odometer: each column keeps its own unrolled count, so it only ever rolls forward as lines are added. When the last line is in, the trailing edge turns to a zigzag clip-path and the invoice is torn off. Click to tear or print the next.",
+  "summary": "A near-black printer feeds a Qbix invoice out of its slot in two smooth runs. The total is an odometer: each column keeps its own unrolled count, so it only ever rolls forward as lines are added. When the last line is in, the trailing edge turns to a zigzag clip-path and the invoice is torn off. Click to tear or print the next.",
   "spec": [
     ["Feed", "1300 ms ease in-out to 226 px out, then 1100 ms to fully out, with the lines rolling in between"],
     ["Odometer", "one spring per column (k 130 · c 17), unrolled count, 110 ms stagger from the right"],
@@ -27,7 +27,7 @@
   "rules": [
     "The invoice is uncovered by the slot (a mask), never faded in.",
     "A column only rolls forward: keep the unwrapped count, never reset it.",
-    "The printer is the lime block; the invoice is white paper on the paper ground."
+    "The printer is the ink block with one lime number; the invoice is a sage slip on the white ground."
   ],
   "tags": ["click", "odometer", "mask", "clip-path", "invoice"],
   "shot": 8000
@@ -36,29 +36,29 @@
 <style data-code>
 /* Invoice printer */
 .tk-feed { position: absolute; z-index: 2; left: 40px; width: 260px; top: -1400px; height: 1829px; overflow: hidden; }
-.tk-ticket { position: absolute; left: 25px; bottom: 0; width: 210px; height: 330px; background: #ffffff; color: #121417; transform-origin: 50% 100%; }
+.tk-ticket { position: absolute; left: 25px; bottom: 0; width: 210px; height: 330px; background: #EEF1E8; color: #0B0C0D; transform-origin: 50% 100%; }
 .tk-in { position: absolute; inset: 0; padding: 22px 20px 0; }
-.tk-row { display: flex; justify-content: space-between; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
-.tk-client { margin-top: 14px; font: 400 30px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
+.tk-row { display: flex; justify-content: space-between; font: 500 10.5px/1 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.55); }
+.tk-client { margin-top: 14px; font: 400 30px/1 'Outfit', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
 .tk-what { margin-top: 7px; font-size: 13px; }
 .tk-cut { display: block; width: 100%; height: 2px; margin: 15px 0; }
 .tk-m { display: block; position: relative; overflow: hidden; height: 1.35em; }
 .tk-m > span { position: absolute; left: 0; top: 0; white-space: nowrap; }
-.tk-lbl { font: 500 10.5px/1.35 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
-.tk-price { display: flex; align-items: flex-start; font: 600 46px/1 'Encode Sans', sans-serif; height: 1em; margin-top: 8px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.tk-lbl { font: 500 10.5px/1.35 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.55); }
+.tk-price { display: flex; align-items: flex-start; font: 600 46px/1 'Geist Mono', sans-serif; height: 1em; margin-top: 8px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .tk-price .cur { font-size: 0.6em; margin: 0.08em 0.06em 0 0; }
 .tk-col { display: inline-block; position: relative; height: 1em; overflow: hidden; width: 0.6em; }
 .tk-col i { position: absolute; left: 0; top: 0; width: 100%; font-style: normal; display: flex; flex-direction: column; text-align: center; line-height: 1; }
 .tk-comma { width: 0.26em; display: inline-block; }
-.tk-line { margin-top: 10px; font: 500 13px/1.35 'Encode Sans', sans-serif; }
+.tk-line { margin-top: 10px; font: 500 13px/1.35 'Geist Mono', sans-serif; }
 .tk-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
-.tk-foot span { font: 500 10px/1.4 'Encode Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); text-align: right; }
-.tk-body { position: absolute; left: 20px; top: 400px; width: 300px; height: 150px; background: #b8ff00; color: #0c1300; --cut: 20px; }
-.tk-slot { position: absolute; left: 35px; top: 24px; width: 230px; height: 10px; background: #0c1300; }
-.tk-body .t1 { position: absolute; left: 28px; bottom: 44px; font: 400 36px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
-.tk-body .t2 { position: absolute; left: 28px; bottom: 22px; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(12, 19, 0, 0.66); }
-.tk-body .t3 { position: absolute; right: 28px; bottom: 22px; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(12, 19, 0, 0.66); text-align: right; }
-.tk-body .t3 b { display: block; font: 400 30px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; color: #0c1300; margin-bottom: 6px; }
+.tk-foot span { font: 500 10px/1.4 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.55); text-align: right; }
+.tk-body { position: absolute; left: 20px; top: 400px; width: 300px; height: 150px; background: #0B0C0D; color: #f4f5f2; --cut: 20px; }
+.tk-slot { position: absolute; left: 35px; top: 24px; width: 230px; height: 10px; background: #222427; }
+.tk-body .t1 { position: absolute; left: 28px; bottom: 44px; font: 400 36px/1 'Outfit', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
+.tk-body .t2 { position: absolute; left: 28px; bottom: 22px; font: 500 10.5px/1 'Geist', sans-serif; letter-spacing: 0; color: rgba(244, 245, 242, 0.64); }
+.tk-body .t3 { position: absolute; right: 28px; bottom: 22px; font: 500 10.5px/1 'Geist', sans-serif; letter-spacing: 0; color: rgba(244, 245, 242, 0.64); text-align: right; }
+.tk-body .t3 b { display: block; font: 400 30px/1 'Outfit', var(--font-headline, sans-serif); letter-spacing: -0.03em; color: #B8FF00; margin-bottom: 6px; }
 </style>
 <style>
   .qm-stage { padding: 0; cursor: pointer; }
@@ -83,11 +83,11 @@
   <div class="tk-row"><span>Qbix invoice</span><span id="tk-no">No. 0042</span></div>
   <div class="tk-client" id="tk-client">Forma</div>
   <div class="tk-what" id="tk-what">Launch site, forma.studio</div>
-  <svg class="tk-cut" viewBox="0 0 170 2" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="1" x2="170" y2="1" stroke="#121417" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="4 4"/></svg>
+  <svg class="tk-cut" viewBox="0 0 170 2" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="1" x2="170" y2="1" stroke="#0B0C0D" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="4 4"/></svg>
   <div class="tk-lbl tk-m" id="tk-lbl"><span>Total so far</span></div>
   <div class="tk-price" id="tk-price"><span class="cur">$</span></div>
   <div class="tk-line tk-m" id="tk-line"><span>Design and brief</span></div>
-  <svg class="tk-cut" viewBox="0 0 170 2" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="1" x2="170" y2="1" stroke="#121417" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="4 4"/></svg>
+  <svg class="tk-cut" viewBox="0 0 170 2" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="1" x2="170" y2="1" stroke="#0B0C0D" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="4 4"/></svg>
   <div class="tk-foot"><svg id="tk-bars" width="96" height="30" aria-hidden="true"></svg><span>Due in<br>14 days</span></div>
 </div></div></div>
 <div class="tk-body cut"><div class="tk-slot"></div>
@@ -159,7 +159,7 @@ function swapText(box, txt, instant) {
 }
 function bars(seed) {
   let x = 0, h = '', r = seed; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
-  while (x < 92) { const w = rnd() < 0.35 ? 2.6 : 1.2; h += `<rect x="${x.toFixed(1)}" y="0" width="${w}" height="30" fill="#121417"/>`; x += w + 1.3 + Math.round(rnd() * 2); }
+  while (x < 92) { const w = rnd() < 0.35 ? 2.6 : 1.2; h += `<rect x="${x.toFixed(1)}" y="0" width="${w}" height="30" fill="#0B0C0D"/>`; x += w + 1.3 + Math.round(rnd() * 2); }
   $('#tk-bars').innerHTML = h;
 }
 

@@ -40,12 +40,12 @@
 :root { --gutter: clamp(24px, 6vw, 96px); }
 .lw-chapter { position: fixed; inset: 0; display: grid; align-content: center; gap: 24px; padding: 40px var(--gutter); font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
 .lw-num { color: var(--fg2); font-weight: 500; }
-.lw-read { margin: 0; max-width: 26em; font-family: var(--font-headline); font-weight: 400; font-size: clamp(22px, calc(8px + 2.3vw), 42px); letter-spacing: -0.02em; line-height: 1.28; text-wrap: pretty; }
+.lw-read { margin: 0; max-width: 26em; font-family: var(--font-headline); font-weight: 300; font-size: clamp(22px, calc(8px + 2.3vw), 42px); letter-spacing: -0.03em; line-height: 1.28; text-wrap: pretty; }
 .lw-w { color: color-mix(in srgb, var(--fg) calc(var(--k, 0) * 100%), color-mix(in srgb, var(--fg) 26%, var(--ground))); }
 .lw-foot { display: flex; align-items: center; gap: 16px; max-width: 26em; }
-.lw-track { flex: 1; height: 2px; background: rgba(18, 20, 23, 0.09); }
+.lw-track { flex: 1; height: 2px; background: #E3E8DA; }
 .lw-track > i { display: block; height: 100%; background: var(--fg); width: calc(var(--p, 0) * 100%); }
-.lw-meta { min-width: 6.5em; text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--fg2); }
+.lw-meta { min-width: 6.5em; text-align: right; font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--fg2); }
 </style>
 <style>
   .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }

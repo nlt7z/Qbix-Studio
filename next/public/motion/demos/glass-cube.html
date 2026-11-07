@@ -22,7 +22,7 @@
     ["Gather", "1600 ms from a loose spread (1.55× apart), ease out cubic, the upper four trailing the lower four · begins when the splash is done, 380 ms after it"],
     ["Turn", "half the cube (one slab of four) turns a quarter every 2.6–3.8 s · 900 ms, ease in-out cubic · never the turn that undoes the last one"],
     ["Lean", "toward the pointer: yaw + 0.16 x, pitch + 0.08 y (x, y in −1…1 across the window), smoothed 0.08 a frame · a mouse only"],
-    ["Tone", "read from the nearest [data-tone]: dark (a lime core), paper (clear glass, the lime a colour) or lime (white frost round a white core)"],
+    ["Tone", "read from the nearest [data-tone]: dark (a lime core), white (clear glass, the lime a colour) or sage (white frost round a white core)"],
     ["Core", "lime (0.72, 1, 0) · or, with lime off where the screen's lime is somewhere else, a dim white at 35%"],
     ["Draws", "only while it gathers, turns, leans or resizes, and while on screen · 4 rays a pixel with a mouse, 2 on a phone · up to 2 pixels a css pixel (1.5 on a phone)"],
     ["Reduced motion", "gathered at once, never turns, does not lean"]
@@ -33,12 +33,12 @@
     "components/story/Story.tsx · the sign-off chapter",
     "app/scenes.css · .glass-cube"
   ],
-  "where": "The home page's hero, beside the headline (black) · the sign-off chapter on plain lime, its core white · the start page, its core a dim white.",
+  "where": "The home page's hero, beside the headline (black) · the sign-off chapter on sage, its core white · the start page, its core a dim white.",
   "rules": [
     "The core is the screen's one lime. Where another lime is on screen (a form's button), turn lime off: the core is a dim white.",
     "Half the cube turns, never all of it, and never back the way it came.",
     "Draw only while something moves (a gather, a turn, the lean settling, a resize) and only while it is on screen.",
-    "It reads its tone from the nearest [data-tone], so one canvas does black, paper and lime.",
+    "It reads its tone from the nearest [data-tone], so one canvas does black, white and sage.",
     "Give it a box taller than it is wide and let it breathe: the cube is sized by the box's height."
   ],
   "tags": ["webgl", "3d", "glass", "hero", "pointer", "lime", "brand"]
@@ -56,9 +56,11 @@
   html:not(.qm-tile) .qm-stage { --ui: 46px; }
   .ch-copy { position: absolute; left: var(--edge); top: calc(50% - var(--ui) / 2); translate: 0 -55%; width: min(46%, 760px); display: flex; flex-direction: column; align-items: flex-start; z-index: 2; }
   .copy-sign { display: none; }
+  /* the sign-off tone: the sage field (the shader still calls it 'lime': white frost, white core) */
+  html[data-tone='lime'] { --ground: #EEF1E8; --fg: #0B0C0D; --fg2: rgba(11, 12, 13, 0.66); --fg3: rgba(11, 12, 13, 0.38); --fg4: rgba(11, 12, 13, 0.14); --fill: rgba(11, 12, 13, 0.05); --surface: #ffffff; --sunk: #E3E8DA; }
   html[data-tone='lime'] .copy-hero { display: none; }
   html[data-tone='lime'] .copy-sign { display: flex; flex-direction: column; align-items: flex-start; }
-  .hero-title { margin: 0; font-size: clamp(40px, min(7vw, 11vh), 116px); line-height: 0.96; letter-spacing: -0.045em; white-space: nowrap; color: var(--fg); }
+  .hero-title { margin: 0; font-size: clamp(40px, min(7vw, 11vh), 116px); line-height: 0.96; letter-spacing: -0.04em; font-weight: 300; white-space: nowrap; color: var(--fg); }
   .hero-line { display: block; }
   .hero-sub { margin: clamp(16px, 2.6vh, 26px) 0 0; max-width: 34em; font-size: clamp(16px, 1.35vw, 20px); line-height: 1.55; color: var(--fg2); }
   /* the cube's box; the canvas is a little taller than it, so the cube fills the frame */
@@ -68,9 +70,9 @@
   .ch-sign { margin: 0; font-size: clamp(34px, 3.8vw, 60px); line-height: 1.04; letter-spacing: -0.03em; color: var(--fg); text-wrap: balance; }
   .ch-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 26px; }
   .ch-mail { color: var(--fg); font-size: 16px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
-  /* the highlighter, drawn (components/Marker.tsx · app/globals.css MARKER): the bar is the page's own ink on lime */
+  /* the highlighter, drawn (components/Marker.tsx · app/globals.css MARKER): the bar is the page's own ink, its words lime */
   .marker { position: relative; display: inline-block; white-space: nowrap; clip-path: inset(-0.06em -0.16em -0.1em); }
-  .marker-bar { position: absolute; inset: -0.02em -0.14em -0.06em; overflow: hidden; background: #121417; }
+  .marker-bar { position: absolute; inset: -0.02em -0.14em -0.06em; overflow: hidden; background: #0B0C0D; }
   .marker-in { position: absolute; inset: 0; padding: 0.02em 0.14em 0.06em; line-height: inherit; white-space: nowrap; color: #B8FF00; user-select: none; -webkit-user-select: none; }
   .qm-ui .qm-k { color: var(--fg3); }
   @media (max-width: 760px) { .ch-copy { width: 54%; } .hero-sub { font-size: 14px; } }
@@ -96,8 +98,8 @@
   <div class="qm-ui" id="ui">
     <span class="qm-k">Tone</span>
     <button data-tone-set="dark" class="is-on">Dark</button>
-    <button data-tone-set="paper">Paper</button>
-    <button data-tone-set="lime">Lime</button>
+    <button data-tone-set="paper">White</button>
+    <button data-tone-set="lime">Sage</button>
     <span class="qm-sep">/</span>
     <span class="qm-k">Core</span>
     <button data-core="1" class="is-on">Lime</button>

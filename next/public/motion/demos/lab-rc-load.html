@@ -14,7 +14,7 @@
   "kind": "play",
   "tone": "paper",
   "line": "real progress · curtain lift 850 ms · picture carried",
-  "summary": "A lime loader counts real work, each picture reporting when it has decoded, then lifts like a curtain on a white work index. Opening a project carries the clicked picture into the next page's hero while the rest is uncovered, not faded.",
+  "summary": "A near-black loader with a lime bar counts real work, each picture reporting when it has decoded, then lifts like a curtain on a white work index. Opening a project carries the clicked picture into the next page's hero while the rest is uncovered, not faded.",
   "spec": [
     ["Count", "shown eases toward decoded ÷ total, damp λ = 6; never under 1 s, so it never flickers; the bar is scaleX of the same value"],
     ["Pace", "the jobs run one after another with 60 ms between them, as a slow network would"],
@@ -27,7 +27,7 @@
   "where": "Entering a work index and opening one project: the studio's own first seconds on a page.",
   "rules": [
     "Count work that is really done, not a timer.",
-    "The loader is the screen's one lime; the detail's button is the next screen's.",
+    "The loader bar is the screen's one lime; the detail's button is ink.",
     "Move the picture by its rect, not a scale, so the crop holds. Name nothing else that moves."
   ],
   "tags": ["loader", "transition", "shared element", "recipe", "work index"],
@@ -47,7 +47,7 @@
 .ld-pic img, .ld-hero img, .ld-fly img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ld-card .ld-pic img { transition: transform 800ms var(--ease-out-expo); }
 .ld-card:hover .ld-pic img, .ld-card.is-hot .ld-pic img { transform: scale(1.04); }
-.ld-card b { font-family: var(--font-headline); font-weight: 400; font-size: clamp(16px, 2vw, 24px); line-height: 1.1; letter-spacing: -0.02em; }
+.ld-card b { font-family: var(--font-headline); font-weight: 300; font-size: clamp(16px, 2vw, 24px); line-height: 1.1; letter-spacing: -0.03em; }
 .ld-card span { color: var(--fg2); font-size: 13px; }
 /* detail */
 .ld-det { grid-template-columns: 1.25fr 1fr; gap: clamp(16px, 3vw, 36px); height: 100%; align-content: stretch; }
@@ -56,16 +56,16 @@
 .ld-side h2 { font-size: clamp(28px, 4.4vw, 56px); line-height: 0.98; letter-spacing: -0.03em; }
 .ld-sleeve { overflow: hidden; padding-bottom: 0.12em; margin-bottom: -0.12em; }
 .ld-sleeve > * { display: block; }
-.ld-back { all: unset; cursor: pointer; font: 12px/16px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg2); }
+.ld-back { all: unset; cursor: pointer; font: 13px/16px var(--font-sans); letter-spacing: 0; color: var(--fg2); }
 .ld-back:hover { color: var(--fg); }
 .ld-fly { position: absolute; z-index: 5; overflow: hidden; pointer-events: none; }
 /* the loader */
-.ld-loader { position: absolute; inset: 0; z-index: 10; background: #B8FF00; color: #0c1300; display: grid; grid-template-rows: auto 1fr auto; padding: clamp(16px, 3.5vmin, 36px); clip-path: inset(0 0 0 0); }
+.ld-loader { position: absolute; inset: 0; z-index: 10; background: #0B0C0D; color: #f4f5f2; display: grid; grid-template-rows: auto 1fr auto; padding: clamp(16px, 3.5vmin, 36px); clip-path: inset(0 0 0 0); }
 .ld-loader[hidden] { display: none; }
-.ld-loader .kicker { color: #0c1300; }
+.ld-loader .kicker { color: rgba(244, 245, 242, 0.64); }
 .ld-row { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
-.ld-count { font-family: var(--font-headline); font-size: clamp(88px, 24vmin, 260px); line-height: 0.8; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.ld-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #0c1300; transform-origin: 0 50%; transform: scaleX(0); }
+.ld-count { font-family: var(--font-headline); font-size: clamp(88px, 24vmin, 260px); font-weight: 200; line-height: 0.8; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.ld-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #B8FF00; transform-origin: 0 50%; transform: scaleX(0); }
 </style>
 <style>
   .qm-stage { padding: 0; }
@@ -90,7 +90,7 @@
       <div class="ld-sleeve"><h2 class="title ld-t"></h2></div>
       <div class="ld-sleeve"><p class="kicker ld-k"></p></div>
       <div class="ld-sleeve"><p class="lede ld-l"></p></div>
-      <div class="ld-sleeve" style="margin-top:auto"><button class="btn btn-lime cut ld-next"></button></div>
+      <div class="ld-sleeve" style="margin-top:auto"><button class="btn btn-solid cut ld-next"></button></div>
     </div>
   </section>
   <div class="ld-loader" aria-hidden="true">
@@ -109,9 +109,9 @@
 function loadAndGo(root, { reduce = false, base = '../assets/art/' } = {}) {
   const P = [
     ['objects', 'Forma', 'Launch site · live in 2 weeks', 'A ceramics studio with a shop and a waitlist. The moodboard came in on Monday and forma.studio went live two weeks later.'],
-    ['cross', 'Kova', 'Brand upgrade · 3 weeks', 'A money app that wanted to look worth sharing. New type, a tighter palette and a launch page.'],
-    ['calla', 'Willow Counseling', 'Website refresh · live in 7 days', 'A practice site that says who Dana is and how to book. Refreshed for $600 and live in a week.'],
-    ['bottle'], ['block'], ['vase'],
+    ['lime-tube', 'Kova', 'Brand upgrade · 3 weeks', 'A money app that wanted to look worth sharing. New type, a tighter palette and a launch page.'],
+    ['lime-bloom', 'Willow Counseling', 'Website refresh · live in 7 days', 'A practice site that says who Dana is and how to book. Refreshed for $600 and live in a week.'],
+    ['lime-arc'], ['block'], ['lime-slice'],
   ];
   const $ = (s) => root.querySelector(s);
   const idx = $('.ld-index'), det = $('.ld-det'), grid = $('.ld-grid'), loader = $('.ld-loader');

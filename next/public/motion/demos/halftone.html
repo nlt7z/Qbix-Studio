@@ -39,7 +39,7 @@
     ],
     [
       "Colour",
-      "rgb(18, 20, 23) dots on white · the label band is the post's one lime"
+      "rgb(18, 20, 23) dots on white · the label band is ink, with one lime mark"
     ],
     [
       "Light mode",
@@ -64,7 +64,7 @@
   "rules": [
     "The dots are the picture: ink on white, one dot to a cell, none where the picture is white. Never over type; the post's label sits in its own band.",
     "Draw the picture cropped to cover (pos says which part), read at one pixel a dot, and cache that grid until the canvas changes size.",
-    "Lime is the screen's one lime here: the label band. The page around it stays paper.",
+    "Lime is the screen's one lime here: the small mark on the label band. The page around it stays white.",
     "Redraw only while seen, in an open tab, with the page at rest; reduced motion draws one still frame."
   ],
   "tags": [
@@ -79,15 +79,16 @@
 </script>
 <style data-code>
 /* Halftone — a canvas that fills the post it is drawn in (the site's scene css) */
-.lst-post { position: relative; width: 111px; height: 111px; overflow: hidden; background: #ffffff; }
+.lst-post { position: relative; width: 111px; height: 111px; overflow: hidden; background: #EEF1E8; }
 .lst-gen { position: absolute; inset: 0; display: block; }
 .lst-gen .gen { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-/* a post's label: a flat lime band at the foot of its picture, the post's one lime */
+/* a post's label: a flat ink band at the foot of its picture, with one lime mark */
 .lst-label {
   position: absolute; left: 0; bottom: 0; width: 100%; height: 24px;
   display: flex; align-items: center; padding: 0 9px; font-size: 11px; font-weight: 500; white-space: nowrap;
-  background: #B8FF00; color: #0c1300;
+  background: #0B0C0D; color: #f4f5f2;
 }
+.lst-label::before { content: ''; width: 8px; height: 8px; margin-right: 6px; flex: none; background: #B8FF00; }
 </style>
 <style>
   /* the stage is a story chapter on paper: its words on the left, the post (laid out at its own size, zoomed to its box) on the right */
@@ -95,14 +96,14 @@
   html:not(.qm-tile) .qm-stage { --ui: 46px; }
   .ch-copy { position: absolute; top: 50%; left: var(--edge); translate: 0 -46%; width: clamp(240px, 34vw, 480px); max-width: calc(100% - 2 * var(--edge)); display: flex; flex-direction: column; align-items: flex-start; }
   .ch-copy .kicker { margin: 0 0 18px; text-wrap: balance; }
-  .ch-title { margin: 0; font-size: clamp(32px, 3.4vw, 58px); line-height: 1.04; letter-spacing: -0.03em; color: var(--fg); text-wrap: balance; }
+  .ch-title { margin: 0; font-weight: 300; font-size: clamp(32px, 3.4vw, 58px); line-height: 1.04; letter-spacing: -0.035em; color: var(--fg); text-wrap: balance; }
   /* the chapter's steps: the one the scene is showing is lit, a square marks it (app/story.css .ch-steps) */
   .ch-steps { list-style: none; margin: 26px 0 0; padding: 0; width: min(100%, 20em); display: grid; }
-  .ch-steps li { display: flex; align-items: baseline; gap: 16px; padding: 9px 0; font-size: 16px; color: var(--fg2); }
+  .ch-steps li { display: flex; align-items: baseline; gap: 16px; padding: 9px 0; font-size: 15px; color: var(--fg2); }
   .ch-steps li::after { content: ''; width: 8px; height: 8px; margin-left: auto; align-self: center; background: currentColor; scale: 0; }
   .ch-steps li.is-lit { color: var(--fg); }
   .ch-steps li.is-lit::after { scale: 1; }
-  .ch-step-n { min-width: 2.4em; font-size: 12px; letter-spacing: 0.1em; }
+  .ch-step-n { min-width: 2.4em; font-size: 13px; letter-spacing: 0; }
   .post-box { position: absolute; right: var(--edge); top: clamp(20px, 5vmin, 48px); bottom: calc(var(--ui) + clamp(20px, 5vmin, 48px)); width: 54%; display: grid; place-items: center; min-width: 0; min-height: 0; contain: inline-size; }
   .post-scn { position: relative; flex: none; width: 111px; height: 111px; font-family: var(--font-sans); line-height: 1.4; }
   @media (max-width: 640px) { .ch-steps { display: none; } }

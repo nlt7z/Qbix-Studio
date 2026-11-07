@@ -39,10 +39,10 @@
 </script>
 <style data-code>
 /* Sign-in code · Idea: bencho.dev one-time-code (MIT).
-   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+   O2's roles in qbix colours: ink on white, one lime. Radii, spacing and type are the O2 library's own. */
 .otp {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
-  --surface: #ffffff; --surface-muted: #eceef0; --track: rgba(18, 20, 23, 0.08); --edge: rgba(18, 20, 23, 0.52);
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64); --faint: rgba(11, 12, 13, 0.58);
+  --surface: #EEF1E8; --surface-muted: #E3E8DA; --track: #E3E8DA; --edge: rgba(11, 12, 13, 0.52);
   --primary: #B8FF00; --on-primary: #0c1300;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   display: grid; gap: 24px; width: 440px; padding: 40px 40px 32px; background: var(--surface); border-radius: 14px;
@@ -52,14 +52,14 @@
 .otp-view[hidden] { display: none; }
 .otp-who { display: flex; align-items: center; gap: 12px; }
 .otp-logo { display: block; height: 24px; width: auto; }
-.otp-title { font-family: inherit; font-size: 20px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.35; }   /* O2's titles are Geist */
+.otp-title { font-family: var(--font-headline); font-size: 20px; font-weight: 300; letter-spacing: -0.03em; line-height: 1.35; }   /* title: Outfit Light */
 .otp-body { margin: 8px 0 0; line-height: 1.6; color: var(--muted); }
 .otp-cells { position: relative; height: 60px; width: 372px; margin: 0 auto; }
-.otp-cell { position: absolute; top: 0; width: 52px; height: 60px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface); display: grid; place-items: center; overflow: hidden; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
+.otp-cell { position: absolute; top: 0; width: 52px; height: 60px; border: 1px solid var(--edge); border-radius: 8px; background: #ffffff; display: grid; place-items: center; overflow: hidden; font-family: var(--font-mono); font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
 .otp-cell.ok { background: var(--primary); color: var(--on-primary); border-color: transparent; }
 .otp-cell.no { background: var(--text); color: #fff; border-color: transparent; }
 .otp-cell span { display: block; }
-.otp-caret { position: absolute; top: 0; left: 0; width: 52px; height: 60px; border-radius: 8px; border: 1.5px solid var(--text); box-shadow: 0 0 0 3px rgba(18, 20, 23, 0.14); pointer-events: none; opacity: 0; transition: opacity 120ms var(--ease-out); }
+.otp-caret { position: absolute; top: 0; left: 0; width: 52px; height: 60px; border-radius: 8px; border: 1.5px solid var(--text); box-shadow: 0 0 0 3px #D3DAC5; pointer-events: none; opacity: 0; transition: opacity 120ms var(--ease-out); }
 .otp-cells[data-focus] .otp-caret { opacity: 1; }
 .otp-code { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; font-size: 16px; cursor: text; }
 .otp-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; }

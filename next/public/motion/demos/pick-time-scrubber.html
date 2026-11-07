@@ -38,7 +38,7 @@
 </script>
 <style data-code>
 /* Go-live ruler — idea: bencho.dev time-scrubber (MIT), redrawn for Qbix.
-   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: white ground, sage card, ink, one lime. */
 .pk {
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-7: 32px;
   --radius-sm: 8px; --radius-lg: 14px;
@@ -48,13 +48,13 @@
 }
 .card { width: min(600px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-7) var(--space-6) var(--space-6); display: grid; gap: var(--space-6); }
 .hd { display: grid; gap: var(--space-1); }
-.hd h1 { font: 400 20px/1.35 var(--font-sans); letter-spacing: -0.02em; }
+.hd h1 { font: 300 20px/1.35 var(--font-headline); letter-spacing: -0.03em; }
 .hd p { color: var(--muted); }
 .read { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
-.read .d { font-size: 42px; letter-spacing: -0.04em; line-height: 1.15; font-variant-numeric: tabular-nums; min-width: 4.4ch; }
-.read .w { color: var(--muted); font-size: 16px; }
+.read .d { font-family: var(--font-headline); font-weight: 200; font-size: 42px; letter-spacing: -0.04em; line-height: 1.15; font-variant-numeric: tabular-nums; min-width: 4.4ch; }
+.read .w { color: var(--muted); font-size: 14px; }
 .read .chip { margin-left: auto; }
-.chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px var(--space-2); border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: rgba(18, 20, 23, .08); }
+.chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px var(--space-2); border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: #E3E8DA; }
 .chip.on { color: var(--ground); background: var(--fg); }
 .dial { position: relative; height: 112px; border-radius: var(--radius-sm); background: var(--surface-muted); overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .dial.is-drag { cursor: grabbing; }
@@ -66,7 +66,7 @@
 .mid::before { content: ""; position: absolute; left: 0; top: 0; bottom: 36px; width: 2px; background: var(--fg); border-radius: 1px; }
 .dial:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 .foot { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
-.foot .meta { margin-left: auto; font-size: 12px; color: rgba(18, 20, 23, .56); }
+.foot .meta { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
 .btn:hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
 .btn:active { background: color-mix(in oklab, var(--signal) 78%, #000); }

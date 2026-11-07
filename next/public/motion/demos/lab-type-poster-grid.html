@@ -17,14 +17,14 @@
   "summary": "One letter per cell. A Gaussian distance field from the pointer makes the letters near it heavier and larger, and pushes the ring around it outward like a lens. The nearest cell turns lime.",
   "spec": [
     ["Field", "f = exp(−2.4 d²), d = distance to the pointer ÷ half the short side"],
-    ["Weight", "110 → 900 by f, drawn as Geist 400 + a text stroke (the kit ships static weights, not the variable axis)"],
+    ["Weight", "110 → 900 by f, drawn as Outfit 300 + a text stroke (the kit ships static weights, not the variable axis)"],
     ["Scale", "0.72 + 0.8 f"],
     ["Push", "d · exp(−2.4 d²) · 22% of R, along the line from the pointer: a lens, not a bulge"],
     ["Follow", "pointer eased 1 − e^(−5 dt)"],
     ["Idle", "after 2.5 s without input the pointer drifts on a slow Lissajous path"]
   ],
   "source": ["Qbix studio library · type-poster-grid"],
-  "where": "A type specimen poster for the Qbix type system: the face and its use come up out of the letters you point at.",
+  "where": "A type specimen poster for the Qbix type system: the headline face and its use come up out of the letters you point at.",
   "rules": [
     "One lime cell, the nearest to the pointer. Nothing else is lime.",
     "Each row starts three letters later, so the alphabet steps along the diagonal.",
@@ -38,7 +38,7 @@
 .pgrid { position: relative; width: 100%; height: 100%; touch-action: none; user-select: none; }
 .pgrid-c {
   position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center;
-  font-family: 'Geist', system-ui, sans-serif; font-weight: 400; line-height: 1; color: var(--fg4);
+  font-family: 'Outfit', 'Geist', system-ui, sans-serif; font-weight: 300; line-height: 1; color: var(--fg4);
   will-change: transform;
 }
 .pgrid-c.is-hot { background: #B8FF00; color: #0c1300; }
@@ -47,7 +47,7 @@
   .pg { width: 100%; height: calc(100svh - clamp(40px, 9vmin, 96px)); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; }
   html:not(.qm-tile) .pg { height: calc(100svh - clamp(40px, 9vmin, 96px) - 46px); }
   .pg-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
-  .pg-row h1 { font-family: var(--font-headline); font-weight: 400; font-size: clamp(30px, 5.4vw, 72px); line-height: 0.95; letter-spacing: -0.03em; }
+  .pg-row h1 { font-family: var(--font-headline); font-weight: 300; font-size: clamp(30px, 5.4vw, 72px); line-height: 0.95; letter-spacing: -0.03em; }
   .pg-row p { text-align: right; font-size: 14px; line-height: 1.4; color: var(--fg2); }
 </style>
 </head>
@@ -58,7 +58,7 @@
 <!-- code -->
 <div class="pgrid" data-pgrid="abcdefghijklmnopqrstuvwxyz" aria-hidden="true"></div>
 <!-- /code -->
-    <div class="pg-row"><h1 class="title">Eurostile</h1><p>Headlines, 400<br>Geist for text</p></div>
+    <div class="pg-row"><h1 class="title">Outfit</h1><p>Headlines, Light 300<br>Geist for text</p></div>
   </div>
   <div class="qm-ui"><span>Move the pointer over the letters</span></div>
 </main>
@@ -103,7 +103,7 @@ function posterGrid(box, { reduce = false } = {}) {
       const k = `translate(${(c.x - cw / 2 + dx * inv * push).toFixed(1)}px,${(c.y - ch / 2 + dy * inv * push).toFixed(1)}px) scale(${s.toFixed(3)})`;
       if (k !== c.k) {
         c.el.style.transform = k; c.k = k;
-        // weight 110 → 900 as a stroke on Geist 400, and the ink rises with it
+        // weight 110 → 900 as a stroke on Outfit 300, and the ink rises with it
         const stroke = (f * 0.07 * c.fsz).toFixed(2);
         c.el.style.webkitTextStroke = `${stroke}px currentColor`;
         c.el.style.color = f > 0.12 ? 'var(--fg)' : f > 0.03 ? 'var(--fg3)' : '';

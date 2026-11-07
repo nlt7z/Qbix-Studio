@@ -15,7 +15,7 @@
   "kind": "pointer",
   "tone": "dark",
   "line": "dot spring k 240 · c 22 · ripple 1.2 ms a px · heat 110–170 px",
-  "summary": "A field of dots spells QBIX; under the pointer the dots swell, run together and melt into a lime heat map. A press ripples the dots into the next word, IDEA, then BUILD, outward from where it landed. Qbix colours: black ground, the rest dots in the text colour at 34%, and a lime ramp for the heat, dark olive at its edge to a pale lime at its core.",
+  "summary": "A field of dots spells Qbix; under the pointer the dots swell, run together and melt into a lime heat map. A press ripples the dots into the next word, Idea, then Build, outward from where it landed. Qbix colours: black ground, the rest dots in the text colour at 34%, and a lime ramp for the heat, dark olive at its edge to a pale lime at its core.",
   "spec": [
     ["Grid", "pitch P = clamp(8, 14, width ÷ 84) px; the word is set in Geist 500 on an offscreen mask, sized to 76% of the columns wide and at most 0.86 of the rows high, thickened by a 0.07 em stroke; a dot is lit where the mask is"],
     ["Dot", "radius 0.34 P at rest, 0 where the word is not; each dot is its own spring, k 240 · c 22 (dt capped at 1/30 s)"],
@@ -28,7 +28,7 @@
     ["Reduced motion", "a still: the heat held at the centre of the word"]
   ],
   "source": ["motion.ui.o2tech.ai · Heat dots (ix-heat-word)", "Idea: bencho.dev heat-word (MIT)"],
-  "where": "A Qbix splash or sign-off: the name and the line (QBIX, IDEA, BUILD, from “Bring the idea. We’ll build the thing.”) spelled in dots that melt into lime under the pointer.",
+  "where": "A Qbix splash or sign-off: the name and the line (Qbix, Idea, Build, from “Bring the idea. We’ll build the thing.”) spelled in dots that melt into lime under the pointer.",
   "rules": [
     "Canvas 2D; the loop stops in a hidden tab.",
     "The lime is the heat and nothing else; the dots at rest are the text colour.",
@@ -43,13 +43,13 @@
 /* Heat dots · Idea: bencho.dev heat-word (MIT).
    O2's roles in qbix colours: black for O2's film dark, the text colour for the rest dots, and a lime ramp for the heat. */
 .hw {
-  --ground: #08090A; --text: #f4f5f2; --muted: rgba(244, 245, 242, 0.64);
+  --ground: #0B0C0D; --text: #f4f5f2; --muted: rgba(244, 245, 242, 0.64);
   --duration-base: 200ms; --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   position: fixed; inset: 0 0 var(--bar, 0px) 0; background: var(--ground);
   font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
 }
 .hw canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; touch-action: none; }
-.hw-tabs { position: absolute; left: 0; right: 0; bottom: 24px; display: flex; justify-content: center; gap: 20px; pointer-events: none; color: var(--muted); }
+.hw-tabs { position: absolute; left: 0; right: 0; bottom: 24px; display: flex; justify-content: center; gap: 20px; pointer-events: none; color: var(--muted); font-weight: 500; }
 .hw-tabs span { transition: color var(--duration-base) var(--ease-out); }
 .hw-tabs span.on { color: var(--text); }
 @media (max-width: 760px) { .hw-tabs { bottom: 16px; } }
@@ -76,9 +76,9 @@
    pointer the dots swell on a gaussian and are drawn, additively and at a third of the size, into a heat map that is
    cut at a threshold and coloured through a ramp. Canvas 2D. */
 const cv = document.getElementById('hw-cv'), ctx = cv.getContext('2d');
-const WORDS = ['QBIX', 'IDEA', 'BUILD'];
+const WORDS = ['Qbix', 'Idea', 'Build'];
 const FONT = '"Geist", ui-sans-serif, system-ui, sans-serif';
-const GROUND = '#08090A';                     // qbix black (O2's film dark)
+const GROUND = '#0B0C0D';                     // qbix black (O2's film dark)
 const REST = '244, 245, 242';                 // the qbix text colour: the rest dots, at 0.34
 document.getElementById('hw-tabs').innerHTML = WORDS.map((w) => `<span>${w}</span>`).join('');
 const tabs = [...document.getElementById('hw-tabs').children];

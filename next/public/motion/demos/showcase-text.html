@@ -30,7 +30,7 @@
   "rules": [
     "One readable copy is kept for screen readers (visually hidden); the lit words are aria-hidden.",
     "Positions are measured on resize and after the fonts load; the scroll handler only compares numbers and toggles classes.",
-    "The mark is the page's own ink (an ink bar on paper, a white one on black): this chapter's lime is the idea in its scene.",
+    "The mark is the page's own ink (an ink bar on white, a white one on black): this chapter's lime is the idea in its scene.",
     "The closing phrase is set heavier (600) and is whole from the start; the words before it are what light.",
     "This lit ink is a colour change, not a fade of the block: the paragraph never moves."
   ],
@@ -40,8 +40,8 @@
 </script>
 <style data-code>
 /* The about paragraph, read at the speed of the scroll — app/story.css, components/ShowcaseText.tsx */
-.showcase .sc-w { color: color-mix(in srgb, var(--fg, #121417) 22%, transparent); transition: color 0.3s linear; }
-.showcase .sc-w.on { color: var(--fg, #121417); }
+.showcase .sc-w { color: color-mix(in srgb, var(--fg, #0B0C0D) 22%, transparent); transition: color 0.3s linear; }
+.showcase .sc-w.on { color: var(--fg, #0B0C0D); }
 .showcase .about-hi { color: inherit; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .showcase .sc-w { transition: none; } }
 
@@ -54,12 +54,12 @@
 /* the closing phrase is marked last: Marker's own markup, carried by this progress (--mark, 0 … 1) */
 .marker { position: relative; display: inline-block; white-space: nowrap; clip-path: inset(-0.06em -0.16em -0.1em); }
 .marker-bar { position: absolute; inset: -0.02em -0.14em -0.06em; overflow: hidden; background: #B8FF00; translate: calc((var(--mark, 1) - 1) * 101%) 0; }
-.marker-in { position: absolute; inset: 0; padding: 0.02em 0.14em 0.06em; line-height: inherit; white-space: nowrap; color: #121417; translate: calc((1 - var(--mark, 1)) * 101%) 0; user-select: none; -webkit-user-select: none; }
-/* where the screen's one lime is elsewhere (here, the scene's idea): the page's own ink, an ink bar on paper, a white one on black */
-.marker--ink .marker-bar { background: #121417; }
+.marker-in { position: absolute; inset: 0; padding: 0.02em 0.14em 0.06em; line-height: inherit; white-space: nowrap; color: #0B0C0D; translate: calc((1 - var(--mark, 1)) * 101%) 0; user-select: none; -webkit-user-select: none; }
+/* where the screen's one lime is elsewhere (here, the scene's idea): the page's own ink, an ink bar on white, a white one on black */
+.marker--ink .marker-bar { background: #0B0C0D; }
 .marker--ink .marker-in { color: #f4f5f2; }
 .marker--white .marker-bar { background: #f4f5f2; }
-.marker--white .marker-in { color: #121417; }
+.marker--white .marker-in { color: #0B0C0D; }
 </style>
 <style>
   /* the page: a phone reads the chapter top to bottom (the paragraph passes up the screen) */
@@ -68,7 +68,7 @@
   .ch-frame { display: block; }
   .ch-copy { width: min(100% - 2 * clamp(24px, 6vmin, 72px), 680px); margin: 0 auto; display: flex; flex-direction: column; align-items: flex-start; }
   .ch-copy .kicker { margin: 0 0 18px; }
-  .ch-copy .title { font-size: clamp(30px, 3.4vw, 58px); margin: 0; }
+  .ch-copy .title { font-weight: 300; letter-spacing: -0.035em; font-size: clamp(30px, 3.4vw, 58px); margin: 0; }
   .ch-story { margin: 20px 0 0; max-width: 100%; font-size: clamp(18px, 1.45vw, 23px); line-height: 1.6; color: var(--fg); }
   /* a wide window pins the chapter while the scroll plays it (story.css, wide screens). The site's
      query is 900px; the library's tile is 800px wide, so it pins from 640px up (the same JS, told so below). */

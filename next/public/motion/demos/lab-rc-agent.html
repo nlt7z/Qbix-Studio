@@ -27,23 +27,23 @@
   "rules": [
     "Everything the agent does is a sentence on screen. Nothing happens off screen.",
     "Uncertain items are asked, never guessed: two buttons each, in the same place every time.",
-    "The lime is the orb's core only. Steps, ticks and buttons stay white and ink; a chosen answer turns ink."
+    "The lime is the orb's core only. Steps, ticks and buttons stay sage, white and ink; a chosen answer turns ink."
   ],
   "tags": ["agent", "run", "orb", "steps", "ui kit", "launch site"],
   "shot": 7600
 }
 </script>
 <style data-code>
-/* Agent run: a white panel with the cut corner, steps as paper rows, a review that opens under them */
-.ag { --c: 14px; background: #ffffff; padding: 14px 16px 12px; display: grid; gap: 8px; min-width: 0;
+/* Agent run: a sage panel with the cut corner, steps as white rows, a review that opens under them */
+.ag { --c: 14px; background: #EEF1E8; padding: 14px 16px 12px; display: grid; gap: 8px; min-width: 0;
   clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
-.ag-req { font-family: 'Eurostile', Geist, sans-serif; font-size: clamp(20px, 2.4vw, 26px); line-height: 1.1; letter-spacing: -0.02em; }
-.ag-meta { display: flex; gap: 16px; font: 400 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(18, 20, 23, 0.5); }
+.ag-req { font-family: 'Outfit', Geist, sans-serif; font-size: clamp(20px, 2.4vw, 26px); font-weight: 300; line-height: 1.1; letter-spacing: -0.03em; }
+.ag-meta { display: flex; gap: 16px; font: 400 12px/1 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.5); }
 .ag-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.ag-st { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; background: #f3f4f5; padding: 6px 12px; clip-path: inset(0 0 100% 0); transition: clip-path 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ag-st { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; background: #ffffff; padding: 6px 12px; clip-path: inset(0 0 100% 0); transition: clip-path 600ms cubic-bezier(0.16, 1, 0.3, 1); }
 .ag-st.in { clip-path: inset(0 0 0 0); }
-.ag-st .t { font-size: 14px; font-weight: 500; line-height: 1.3; }
-.ag-st small { display: block; font-size: 12px; font-weight: 400; color: rgba(18, 20, 23, 0.55); line-height: 1.35; }
+.ag-st .t { font-size: 13px; font-weight: 500; line-height: 1.3; }
+.ag-st small { display: block; font-size: 12px; font-weight: 400; color: rgba(11, 12, 13, 0.55); line-height: 1.35; }
 .ag-ic { position: relative; width: 20px; height: 20px; margin-top: 1px; }
 .ag-ic svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ag-spin { animation: ag-spin 900ms linear infinite; }
@@ -54,28 +54,28 @@
 .ag-review { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 600ms cubic-bezier(0.16, 1, 0.3, 1); }
 .ag-review.on { grid-template-rows: 1fr; }
 .ag-review > div { overflow: hidden; display: grid; gap: 6px; }
-.ag-review h3 { font-size: 16px; letter-spacing: -0.02em; margin-top: 2px; }
-.ag-chg { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; background: #f3f4f5; padding: 8px 8px 8px 12px; font-size: 13px; line-height: 1.3; }
-.ag-chg small { display: block; color: rgba(18, 20, 23, 0.55); font-size: 12px; }
+.ag-review h3 { font-size: 16px; font-weight: 300; letter-spacing: -0.03em; margin-top: 2px; }
+.ag-chg { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; background: #ffffff; padding: 8px 8px 8px 12px; font-size: 13px; line-height: 1.3; }
+.ag-chg small { display: block; color: rgba(11, 12, 13, 0.55); font-size: 12px; }
 .ag-chg .acts { display: flex; gap: 6px; }
-.ag-chg button { all: unset; cursor: pointer; height: 32px; padding: 0 12px; display: grid; place-items: center; font: 500 13px/1 Geist, sans-serif; background: #ffffff; color: #121417; }
-.ag-chg button.press, .ag-chg button:hover { background: #121417; color: #ffffff; }
-.ag-chg.kept button[data-a='keep'], .ag-chg.changed button[data-a='change'] { background: #121417; color: #ffffff; }
-.ag-end { min-height: 1.2em; font-size: 13px; color: rgba(18, 20, 23, 0.7); }
-.ag-end b { color: #121417; font-weight: 500; }
+.ag-chg button { all: unset; cursor: pointer; height: 32px; padding: 0 12px; display: grid; place-items: center; font: 500 13px/1 Geist, sans-serif; background: #EEF1E8; color: #0B0C0D; }
+.ag-chg button.press, .ag-chg button:hover { background: #0B0C0D; color: #ffffff; }
+.ag-chg.kept button[data-a='keep'], .ag-chg.changed button[data-a='change'] { background: #0B0C0D; color: #ffffff; }
+.ag-end { min-height: 1.2em; font-size: 13px; color: rgba(11, 12, 13, 0.7); }
+.ag-end b { color: #0B0C0D; font-weight: 500; }
 .ag-orbbox { display: grid; justify-items: center; gap: 14px; align-content: center; }
 .ag-orb { width: clamp(120px, 20vw, 200px); aspect-ratio: 1; display: block; }
-.ag-seg { display: flex; gap: 14px; font: 400 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
-.ag-seg button { all: unset; cursor: pointer; padding: 4px 0; color: rgba(18, 20, 23, 0.38); }
-.ag-seg button.on { color: #121417; box-shadow: 0 2px 0 #121417; }
-.ag-line { font: 400 12px/1.4 'Encode Sans', Geist, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); text-align: center; min-height: 2.8em; }
+.ag-seg { display: flex; gap: 14px; font: 400 12px/1 'Geist', Geist, sans-serif; letter-spacing: 0; }
+.ag-seg button { all: unset; cursor: pointer; padding: 4px 0; color: rgba(11, 12, 13, 0.38); }
+.ag-seg button.on { color: #0B0C0D; box-shadow: 0 2px 0 #0B0C0D; }
+.ag-line { font: 400 12px/1.4 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.64); text-align: center; min-height: 2.8em; }
 .ag.is-reset * { transition: none !important; }
-/* the page: the run and the orb side by side, two white panels 8px apart */
+/* the page: the run and the orb side by side, two sage panels 8px apart */
 .agw { width: min(100%, 980px); display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 8px; align-items: stretch; }
-.agw .ag-orbbox { background: #ffffff; }
+.agw .ag-orbbox { background: #EEF1E8; }
 .ag-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.ag-replay { all: unset; cursor: pointer; font: 400 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(18, 20, 23, 0.5); }
-.ag-replay:hover { color: #121417; }
+.ag-replay { all: unset; cursor: pointer; font: 400 12px/1 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.5); }
+.ag-replay:hover { color: #0B0C0D; }
 @media (max-width: 720px) { .agw { grid-template-columns: 1fr; } .ag-orbbox { display: none; } }
 @media (prefers-reduced-motion: reduce) { .ag-spin { animation: none; } }
 </style>
@@ -111,7 +111,7 @@
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wait = (ms) => new Promise((r) => setTimeout(r, reduced ? Math.min(ms, 60) : ms));
   const $ = (id) => document.getElementById(id);
-  const ICON = '<span class="ag-ic"><svg class="ag-spin" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 0 1 9 9" stroke="#121417" stroke-width="2.4"/><path d="M12 3a9 9 0 1 0 9 9" stroke="#121417" stroke-width="2.4" opacity="0"/></svg><svg class="ag-tick" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#121417" stroke-width="2.4"/></svg></span>';
+  const ICON = '<span class="ag-ic"><svg class="ag-spin" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 0 1 9 9" stroke="#0B0C0D" stroke-width="2.4"/><path d="M12 3a9 9 0 1 0 9 9" stroke="#0B0C0D" stroke-width="2.4" opacity="0"/></svg><svg class="ag-tick" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#0B0C0D" stroke-width="2.4"/></svg></span>';
   const STEPS = [
     { t: 'Reading 9 moodboard pictures', done: '9 read, 5 colours pulled', ms: 1300 },
     { t: 'Placing each picture in the layout', done: '8 placed, 1 too dark for the hero', ms: 1600 },
@@ -166,8 +166,8 @@
     const W = cv.width, H = cv.height, R = Math.min(W, H) / 2, lw = Math.max(2, W / 90);
     const amp = mode === 'speak' && !reduced ? (Math.sin(phase * 9) * 0.5 + 0.5) * 0.06 : 0, base = R * (sp.size.value + amp);
     g.clearRect(0, 0, W, H);
-    g.lineWidth = lw; g.strokeStyle = 'rgba(18,20,23,0.16)'; blob(base * 1.16, sp.wob.value * 1.2, 2); g.stroke();
-    g.strokeStyle = 'rgba(18,20,23,0.5)'; blob(base * 1.0, sp.wob.value, 1); g.stroke();
+    g.lineWidth = lw; g.strokeStyle = 'rgba(11, 12, 13,0.16)'; blob(base * 1.16, sp.wob.value * 1.2, 2); g.stroke();
+    g.strokeStyle = 'rgba(11, 12, 13,0.5)'; blob(base * 1.0, sp.wob.value, 1); g.stroke();
     g.fillStyle = '#B8FF00'; blob(base * 0.72, sp.wob.value * 1.1, 0); g.fill();
     requestAnimationFrame(drawOrb);
   }

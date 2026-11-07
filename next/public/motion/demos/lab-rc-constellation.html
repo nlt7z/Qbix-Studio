@@ -14,7 +14,7 @@
   "kind": "play",
   "tone": "paper",
   "line": "Halton scatter · spring lift ×1.7 · FLIP to an index",
-  "summary": "Small pictures float in a lot of paper, all type in the four corners. Hover lifts one on a spring and washes out the rest; one switch flies the same pictures into a plain index with a FLIP.",
+  "summary": "Small pictures float in a lot of white, all type in the four corners. Hover lifts one on a spring and washes out the rest; one switch flies the same pictures into a plain index with a FLIP.",
   "spec": [
     ["Scatter", "Halton sequence (bases 2 and 3) inside an ellipse of 36% × 30% of the frame, then nudged apart until each has 10 px of air"],
     ["Drift", "each picture circles 6 px, cos(0.25 t + φ), sin(0.21 t + φ), φ = 1.7 per picture"],
@@ -40,11 +40,11 @@
 .cf-corner { position: absolute; z-index: 10; font-size: 14px; line-height: 1.4; }
 .cf-tl { top: 18px; left: 18px; } .cf-tr { top: 18px; right: 18px; display: flex; gap: 4px; }
 .cf-bl { bottom: 18px; left: 18px; } .cf-br { bottom: 18px; right: 18px; text-align: right; }
-.cf-tl b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: 18px; letter-spacing: -0.02em; }
+.cf-tl b { display: block; font-family: var(--font-headline); font-weight: 300; font-size: 18px; letter-spacing: -0.03em; }
 .cf-tl span, .cf-bl span { color: var(--fg2); }
-.cf-tr button { all: unset; cursor: pointer; height: 28px; padding: 0 12px; display: flex; align-items: center; font: 500 12px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+.cf-tr button { all: unset; cursor: pointer; height: 28px; padding: 0 12px; display: flex; align-items: center; font: 500 12px/1 var(--font-sans); letter-spacing: 0; color: var(--fg2); }
 .cf-tr button[aria-pressed='true'] { background: #B8FF00; color: #0c1300; }
-.cf-bl b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: 22px; line-height: 1.1; letter-spacing: -0.02em; min-height: 1.1em; }
+.cf-bl b { display: block; font-family: var(--font-headline); font-weight: 300; font-size: 22px; line-height: 1.1; letter-spacing: -0.03em; min-height: 1.1em; }
 .cf-field { position: absolute; inset: 0; }
 .cf-it { all: unset; position: absolute; left: 0; top: 0; overflow: hidden; cursor: pointer; background: var(--sunk); will-change: transform; transition: filter 350ms var(--ease-out-expo); }
 .cf-it img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -55,8 +55,8 @@
 .cf-field.index .cf-it { position: relative; display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 14px; width: auto !important; height: auto !important; background: none; overflow: visible; }
 .cf-field.index .cf-it img { width: 56px; height: 42px; }
 .cf-field.index .cf-it .nm { display: contents; }
-.cf-field.index .cf-it .nm b { font-family: var(--font-headline); font-weight: 400; font-size: clamp(16px, 1.8vw, 22px); letter-spacing: -0.02em; }
-.cf-field.index .cf-it .nm span { color: var(--fg2); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; }
+.cf-field.index .cf-it .nm b { font-family: var(--font-headline); font-weight: 300; font-size: clamp(16px, 1.8vw, 22px); letter-spacing: -0.03em; }
+.cf-field.index .cf-it .nm span { color: var(--fg2); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0; }
 </style>
 <style>
   .qm-stage { padding: 0; }
@@ -87,10 +87,10 @@ function constellation(root, { reduce = false, base = '../assets/art/' } = {}) {
   const field = root.querySelector('.cf-field');
   const capB = root.querySelector('.cf-bl b'), capS = root.querySelector('.cf-cap');
   const DATA = [
-    ['objects', 1.4, 'Forma', 'Launch site'], ['cross', 1.4, 'Knot stool', 'Product page'], ['block', 1.5, 'Prism block', 'Product page'],
-    ['ring', 1.78, 'Halo lamp', 'Product page'], ['vase', 0.67, 'Dream', 'Concept'], ['calla', 1.5, 'Willow Counseling', 'Practice site'],
-    ['bottle', 0.67, 'Carafe', 'Product page'], ['curves', 0.67, 'Kova', 'App design'], ['ribbon', 1.78, 'Strata', 'Design system'],
-    ['wall', 0.7, 'Kova mark', 'Brand'], ['glass', 1.5, 'Glaze set', 'Product page'], ['container', 1.5, 'Interview Assistant', 'Landing page'],
+    ['objects', 1.4, 'Forma', 'Launch site'], ['lime-tube', 1.4, 'Knot stool', 'Product page'], ['block', 1.5, 'Prism block', 'Product page'],
+    ['ring', 1.78, 'Halo lamp', 'Product page'], ['lime-slice', 0.67, 'Dream', 'Concept'], ['lime-bloom', 1.5, 'Willow Counseling', 'Practice site'],
+    ['lime-arc', 0.67, 'Carafe', 'Product page'], ['curves', 0.67, 'Kova', 'App design'], ['ribbon', 1.78, 'Strata', 'Design system'],
+    ['lime-dune', 0.7, 'Kova mark', 'Brand'], ['lime-swirl', 1.5, 'Glaze set', 'Product page'], ['lime-cubes', 1.5, 'Interview Assistant', 'Landing page'],
   ];
   const halton = (i, b) => { let f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; };
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));

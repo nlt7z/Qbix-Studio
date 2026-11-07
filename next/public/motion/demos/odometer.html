@@ -59,29 +59,29 @@
 /* The price around it — app/globals.css · EXCLUSIVE-OFFER PRICING */
 .offer-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px; }
 .offer-price-big {
-  font-family: var(--font-headline, 'Eurostile', sans-serif);
-  font-size: clamp(64px, 11vw, 124px);
+  font-family: var(--font-headline, 'Outfit', sans-serif);
+  font-size: clamp(64px, 11vw, 124px); font-weight: 200;
   line-height: 0.9; letter-spacing: -0.04em;
-  color: var(--fg, #121417);
+  color: var(--fg, #0B0C0D);
 }
 .was-price {
-  color: var(--fg3, rgba(18, 20, 23, 0.38));
+  color: var(--fg3, rgba(11, 12, 13, 0.38));
   font-weight: 400;
   text-decoration: line-through;
   text-decoration-thickness: 0.08em;
 }
-.offer-price-was { font-family: var(--font-headline, 'Eurostile', sans-serif); font-size: clamp(28px, 4.4vw, 52px); letter-spacing: -0.03em; }
-.offer-price-unit { font-size: 18px; color: var(--fg2, rgba(18, 20, 23, 0.64)); }
-.offer-price-note { margin: 16px 0 0; font-size: 17px; color: var(--fg2, rgba(18, 20, 23, 0.64)); }
-.offer-price-note strong { color: var(--fg, #121417); font-weight: 500; }
-/* a tag, an outline by default; lime beside the price, where it is the screen's one lime */
+.offer-price-was { font-family: var(--font-headline, 'Outfit', sans-serif); font-size: clamp(28px, 4.4vw, 52px); letter-spacing: -0.03em; }
+.offer-price-unit { font-size: 18px; color: var(--fg2, rgba(11, 12, 13, 0.64)); }
+.offer-price-note { margin: 16px 0 0; font-size: 17px; color: var(--fg2, rgba(11, 12, 13, 0.64)); }
+.offer-price-note strong { color: var(--fg, #0B0C0D); font-weight: 500; }
+/* a tag, sage by default; lime beside the price, where it is the screen's one lime */
 .offer-badge {
-  display: inline-flex; align-items: center; height: 24px; padding: 0 8px;
-  font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap;
+  display: inline-flex; align-items: center; height: 26px; padding: 0 10px;
+  font: 500 13px/1 var(--font-sans, 'Geist', sans-serif); letter-spacing: 0; white-space: nowrap;
   vertical-align: middle;
-  color: currentColor; box-shadow: inset 0 0 0 1px currentColor;
+  color: var(--fg, #0B0C0D); background: var(--sage, #EEF1E8);
 }
-.offer-price .offer-badge { align-self: baseline; background: #B8FF00; color: #121417; box-shadow: none; }
+.offer-price .offer-badge { align-self: baseline; background: #B8FF00; color: #0B0C0D; box-shadow: none; }
 .offer-price-note .offer-badge { margin-left: 4px; }
 </style>
 <style>
@@ -92,7 +92,7 @@
   .od .offer-price-was { font-size: calc(var(--big) * 0.4); }
   .od .offer-price-unit { font-size: clamp(16px, 2.4vmin, 22px); }
   .od .offer-price-note { margin: 0; font-size: clamp(15px, 2.6vmin, 20px); }
-  .od .offer-h2 { margin: 0; font-family: var(--font-headline); font-weight: 400; font-size: clamp(28px, 4vw, 46px); letter-spacing: -0.025em; }
+  .od .offer-h2 { margin: 0; font-family: var(--font-headline); font-weight: 300; font-size: clamp(28px, 4vw, 46px); letter-spacing: -0.03em; }
   .odo.is-reset .odo-strip { transition: none; }
 </style>
 </head>
@@ -105,11 +105,11 @@
   <span class="offer-price-unit">from</span>
   <span class="odo offer-price-big" data-odo="$500"></span>
   <span class="offer-price-unit">1 to 3 weeks</span>
-  <span class="offer-badge mono">Design service</span>
+  <span class="offer-badge">Design service</span>
 </div>
 <p class="offer-price-note">
   Practice Website Refresh: <strong>$600</strong> <del class="was-price" aria-label="Regular price $800">$800</del>
-  <span class="offer-badge mono">Exclusive offer</span>
+  <span class="offer-badge">Exclusive offer</span>
 </p>
 <!-- /code -->
   </div>
@@ -175,7 +175,7 @@ document.querySelectorAll('[data-odo]').forEach((el) => {
       `<span class="odo offer-price-big" data-odo="${p.now}"></span>` +
       (p.was ? `<del class="was-price offer-price-was" aria-label="Regular price ${p.was}">${p.was}</del>` : '') +
       `<span class="offer-price-unit">${p.unit}</span>` +
-      `<span class="offer-badge mono">${p.badge}</span>`;
+      `<span class="offer-badge">${p.badge}</span>`;
     odo = row.querySelector('[data-odo]');
     odometer(odo, p.now);
     note.style.display = p.note ? '' : 'none';

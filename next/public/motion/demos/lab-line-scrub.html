@@ -13,7 +13,7 @@
   "spec": [["Resample", "monotone cubic (Fritsch-Carlson) to 220 points"], ["Morph", "900 ms in-out, each point starts up to 35% later than the one before"], ["Crosshair", "snaps to the nearest sample, eases at 1 − e^(−22 dt)"], ["Readout", "counts to the new total over 800 ms; shows the hovered day while scrubbing"], ["Range pill", "indicator slides 500 ms, expo out"], ["Idle", "a ghost scrubs for 4.4 s, then picks the next range"]],
   "source": ["Qbix studio library · line-scrub"],
   "where": "A Forma or Practice chapter that reports how a launched site is doing over the week, the month, the year.",
-  "rules": ["One lime: the point the crosshair sits on, framed in ink so it reads on paper.", "No gradients, no glow: the area under the line is one flat step of the foreground, the rules are dotted.", "The range control is a white block with the top right corner cut and an ink block for the range you are on."],
+  "rules": ["One lime: the point the crosshair sits on, framed in ink so it reads on white.", "No gradients, no glow: the area under the line is one flat sage step, the rules are dotted.", "The range control is a sage block with the top right corner cut and an ink block for the range you are on."],
   "tags": ["canvas", "chart", "drag", "data"]
 }
 </script>
@@ -21,13 +21,13 @@
 .ls { position: absolute; inset: 0; display: flex; flex-direction: column; padding: clamp(18px, 5vmin, 48px) clamp(18px, 5vmin, 56px) clamp(12px, 3vmin, 28px); user-select: none; }
 .ls-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 14px 24px; }
 .ls-read { display: flex; align-items: baseline; gap: 10px; margin-top: 8px; }
-.ls-val { font: 400 clamp(44px, 7vw, 88px)/.92 Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-.ls-unit { font: 12px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18,20,23,.64); }
-.ls-when { margin: 10px 0 0; font-size: clamp(13px, 1.25vw, 15px); color: rgba(18,20,23,.64); height: 1.3em; }
-.ls-ranges { position: relative; display: flex; gap: 0; background: #ffffff; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
-.ls-ranges button { position: relative; z-index: 1; appearance: none; border: 0; background: none; color: rgba(18,20,23,.64); font: 500 12px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; padding: 14px clamp(10px, 1.4vw, 16px); cursor: pointer; transition: color .3s; }
+.ls-val { font: 200 clamp(44px, 7vw, 88px)/.92 Outfit, Geist, sans-serif; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.ls-unit { font: 13px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13,.64); }
+.ls-when { margin: 10px 0 0; font-size: clamp(13px, 1.25vw, 15px); color: rgba(11, 12, 13,.64); height: 1.3em; }
+.ls-ranges { position: relative; display: flex; gap: 0; background: #EEF1E8; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.ls-ranges button { position: relative; z-index: 1; appearance: none; border: 0; background: none; color: rgba(11, 12, 13,.64); font: 500 13px/1 'Geist', Geist, sans-serif; letter-spacing: 0; padding: 14px clamp(10px, 1.4vw, 16px); cursor: pointer; transition: color .3s; }
 .ls-ranges button.on { color: #f4f5f2; }
-.ls-ind { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: #121417; transition: transform .5s cubic-bezier(.16, 1, .3, 1), width .5s cubic-bezier(.16, 1, .3, 1); }
+.ls-ind { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: #0B0C0D; transition: transform .5s cubic-bezier(.16, 1, .3, 1), width .5s cubic-bezier(.16, 1, .3, 1); }
 .ls-plot { position: relative; flex: 1; min-height: 0; margin-top: clamp(10px, 2.4vmin, 26px); }
 .ls-plot canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 @media (prefers-reduced-motion: reduce) { .ls-ind { transition: none; } }
@@ -54,7 +54,7 @@
 <script data-code>
 const LineScrub = (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const MONO = '"Encode Sans", Geist, sans-serif', FG = '18, 20, 23', LIME = '#B8FF00';
+  const MONO = '"Geist Mono", Geist, sans-serif', FG = '18, 20, 23', LIME = '#B8FF00';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -150,7 +150,7 @@ const LineScrub = (() => {
     const tgt = targetY(cur);
     for (let i = 0; i < N; i++) shownY[i] = fromY[i] + (tgt[i] - fromY[i]) * ease(clamp(morphT * 1.35 - (i / N) * 0.35, 0, 1));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    const s = SETS[cur], ps = SETS[prev], la = ease(morphT), fs = Math.round(clamp(W * 0.011, 11, 13));
+    const s = SETS[cur], ps = SETS[prev], la = ease(morphT), fs = Math.round(clamp(W * 0.011, 12, 13));
     ctx.font = `400 ${fs}px ${MONO}`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     // value rules are dotted; the two sets of rules swap by sliding as the line morphs
     for (const [set, a] of [[ps, 1 - la], [s, la]]) {
@@ -170,13 +170,13 @@ const LineScrub = (() => {
       for (let t = 0; t < ticks; t++) {
         const i = Math.round(t / (ticks - 1) * (n - 1)), d = set.d[i];
         ctx.textAlign = t === 0 ? 'left' : t === ticks - 1 ? 'right' : 'center';
-        ctx.fillText(`${MON[d.getMonth()]} ${d.getDate()}`.toUpperCase(), L + i / (n - 1) * (R - L), H - 8);
+        ctx.fillText(`${MON[d.getMonth()]} ${d.getDate()}`  , L + i / (n - 1) * (R - L), H - 8);
       }
     }
     const X = (i) => L + i / (N - 1) * (R - L);
     ctx.beginPath(); ctx.moveTo(X(0), B);
     for (let i = 0; i < N; i++) ctx.lineTo(X(i), shownY[i]);
-    ctx.lineTo(X(N - 1), B); ctx.closePath(); ctx.fillStyle = `rgba(${FG}, .06)`; ctx.fill();
+    ctx.lineTo(X(N - 1), B); ctx.closePath(); ctx.fillStyle = '#EEF1E8'; ctx.fill();
     ctx.beginPath();
     for (let i = 0; i < N; i++) i ? ctx.lineTo(X(i), shownY[i]) : ctx.moveTo(X(i), shownY[i]);
     ctx.lineWidth = 2; ctx.strokeStyle = `rgb(${FG})`; ctx.lineJoin = 'round'; ctx.stroke();

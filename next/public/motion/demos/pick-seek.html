@@ -28,20 +28,20 @@
   "where": "The top bar of the studio's work page: find Forma's launch site, its moodboard, its brief and its launch film.",
   "rules": [
     "One box whose width is the state: never a button that swaps for an input.",
-    "The scrim dims the page, never blurs it.",
+    "The scrim washes the page back to white, never blurs it.",
     "Results sit in a ring popover; the match is marked with the lime, the only colour on the screen.",
     "The focused field's edge turns ink, the one heavier edge."
   ],
-  "tags": ["search", "spring", "morph", "scrim", "paper"],
+  "tags": ["search", "spring", "morph", "scrim", "sage"],
   "shot": 5200
 }
 </script>
 <style data-code>
 /* Search morph · Idea: bencho.dev seek (MIT).
-   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+   O2's roles in qbix colours: ink on white, one lime. Radii, spacing and type are the O2 library's own. */
 .sk {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
-  --surface: #ffffff; --surface-muted: #eceef0; --surface-border: rgba(18, 20, 23, 0.14); --edge: rgba(18, 20, 23, 0.52); --scrim: rgba(18, 20, 23, 0.16);
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64); --faint: rgba(11, 12, 13, 0.58);
+  --surface: #ffffff; --surface-muted: #EEF1E8; --surface-border: #E3E8DA; --edge: rgba(11, 12, 13, 0.52); --scrim: rgba(255, 255, 255, 0.72);
   --primary: #B8FF00; --on-primary: #0c1300;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative; overflow: hidden; width: 680px; background: var(--surface); border-radius: 14px;
@@ -63,7 +63,7 @@
 .sk-seek.open .sk-esc { opacity: 1; }
 .sk-results { position: absolute; left: 50%; top: 66px; width: 420px; margin-left: -210px; z-index: 2; background: var(--surface); border-radius: 8px; box-shadow: 0 0 0 1px var(--surface-border); padding: 4px; display: none; transform-origin: 50% 0; }
 .sk-results.show { display: block; }
-.sk-rh { padding: 8px 12px 4px; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+.sk-rh { padding: 8px 12px 4px; font-size: 12px; font-weight: 500; letter-spacing: 0; color: var(--faint); }
 .sk-res { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 6px; height: 56px; transition: background-color 120ms var(--ease-out); }
 .sk-res:hover, .sk-res.is-hot { background: var(--surface-muted); }
 .sk-res img { width: 36px; height: 26px; object-fit: cover; border-radius: 3px; }
@@ -73,12 +73,12 @@
 .sk-res .pr { text-align: right; font-variant-numeric: tabular-nums; }
 .sk-res .pr div:last-child { font-size: 12px; color: var(--muted); }
 .sk-page { padding: 24px; display: grid; gap: 16px; }
-.sk-page h1 { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }
+.sk-page h1 { font-family: var(--font-headline); font-size: 28px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.35; }
 .sk-page p { margin: 0; font-size: 12px; color: var(--faint); }
 .sk-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .sk-tile { background: var(--surface-muted); border-radius: 14px; padding: 20px; display: grid; gap: 4px; }
 .sk-tile span { font-size: 12px; color: var(--muted); }
-.sk-tile b { font-weight: 400; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sk-tile b { font-family: var(--font-mono); font-weight: 400; font-size: 16px; line-height: 30px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .sk-row { height: 44px; border-radius: 8px; background: var(--surface-muted); }
 .sk-scrim { position: absolute; inset: 72px 0 0 0; background: var(--scrim); opacity: 0; pointer-events: none; z-index: 1; transition: opacity 200ms var(--ease-out); }
 .sk-scrim.on { opacity: 1; }
@@ -129,8 +129,8 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ITEMS = [
   { t: 'Forma launch site', d: 'forma.studio · Design service', v: 'Live', n: '3 weeks', img: 'cross', pos: '50% 50%' },
   { t: 'Forma moodboard', d: 'Eight pages, 24 images', v: 'PDF', n: '8 pages', img: 'objects', pos: '50% 50%' },
-  { t: 'Forma brief', d: 'Ceramic objects, a site and a film', v: '1 brief', n: 'Signed', img: 'vase', pos: '50% 40%' },
-  { t: 'Forma launch film', d: '30 seconds, captions typed in', v: '0:30', n: 'Video', img: 'ring', pos: '50% 50%' },
+  { t: 'Forma brief', d: 'Ceramic objects, a site and a film', v: '1 brief', n: 'Signed', img: 'lime-bloom', pos: '50% 50%' },
+  { t: 'Forma launch film', d: '30 seconds, captions typed in', v: '0:30', n: 'Video', img: 'lime-arc', pos: '50% 50%' },
 ];
 results.innerHTML = '<div class="sk-rh">Forma · Design service</div>' + ITEMS.map((p) =>
   `<div class="sk-res"><img src="../assets/art/${p.img}.webp" alt="" style="object-position:${p.pos}"><span class="t"><span><mark>Forma</mark>${p.t.slice(5)}</span><span>${p.d}</span></span><span class="pr"><div>${p.v}</div><div>${p.n}</div></span></div>`).join('');

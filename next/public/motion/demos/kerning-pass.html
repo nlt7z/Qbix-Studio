@@ -33,14 +33,14 @@
 </script>
 <style data-code>
 /* Kerning pass. One function of time, kernRender(t), draws every frame. */
-.kp { --cut: 16px; position: relative; width: min(74vw, 900px); background: var(--surface, #fff); color: var(--fg, #121417); padding: min(4.4vw, 56px); padding-top: min(4vw, 48px); display: grid; gap: min(3.2vw, 40px); }
-.kp-line { position: relative; margin: 0; padding-top: min(1.2vw, 14px); font-family: 'Eurostile', Geist, sans-serif; font-weight: 400; font-synthesis-weight: none; font-size: min(11.6vw, 140px); line-height: 1; letter-spacing: -0.02em; white-space: pre; }
+.kp { --cut: 16px; position: relative; width: min(74vw, 900px); background: var(--surface, #fff); color: var(--fg, #0B0C0D); padding: min(4.4vw, 56px); padding-top: min(4vw, 48px); display: grid; gap: min(3.2vw, 40px); }
+.kp-line { position: relative; margin: 0; padding-top: min(1.2vw, 14px); font-family: 'Outfit', Geist, sans-serif; font-weight: 300; font-synthesis-weight: none; font-size: min(11.6vw, 140px); line-height: 1; letter-spacing: -0.03em; white-space: pre; }
 .kp-ch { display: inline-block; }
-.kp-caret { position: absolute; left: 0; top: 0; width: 3px; margin-left: -1.5px; background: #121417; clip-path: inset(100% 0 0 0); pointer-events: none; }
-.kp-tag { position: absolute; left: 0; top: 0; z-index: 2; height: 24px; padding: 0 8px; display: flex; align-items: center; transform: translateX(-50%); background: #121417; color: #f3f4f5; font: 500 13px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; white-space: nowrap; clip-path: inset(100% 0 0 0); pointer-events: none; }
-.kp-track { position: relative; display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 20px; background: rgba(18, 20, 23, 0.05); font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); font-variant-numeric: tabular-nums; }
+.kp-caret { position: absolute; left: 0; top: 0; width: 3px; margin-left: -1.5px; background: #0B0C0D; clip-path: inset(100% 0 0 0); pointer-events: none; }
+.kp-tag { position: absolute; left: 0; top: 0; z-index: 2; height: 24px; padding: 0 8px; display: flex; align-items: center; transform: translateX(-50%); background: #0B0C0D; color: #ffffff; font: 500 13px/1 'Geist Mono', Geist, sans-serif; letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; clip-path: inset(100% 0 0 0); pointer-events: none; }
+.kp-track { position: relative; display: flex; align-items: center; justify-content: space-between; height: 52px; padding: 0 20px; background: #E3E8DA; font: 13px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.64); font-variant-numeric: tabular-nums; }
 .kp-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #B8FF00; color: #0c1300; clip-path: inset(0 100% 0 0); }
-.kp-done b { font: 500 17px/1 Geist, system-ui, sans-serif; letter-spacing: -0.011em; text-transform: none; }
+.kp-done b { font: 500 15px/1 Geist, system-ui, sans-serif; letter-spacing: -0.011em; text-transform: none; }
 </style>
 <style>
   .kpw { display: grid; justify-items: center; }

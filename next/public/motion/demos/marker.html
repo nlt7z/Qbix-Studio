@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-tone="lime">
+<html lang="en" data-tone="paper">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,7 @@
   "order": 60,
   "kind": "scroll",
   "line": "carried by the scroll · ⅓ screen",
-  "tone": "lime",
+  "tone": "paper",
   "summary": "A bar slides across a key phrase as you scroll, carrying an ink copy of the words that counter-slides, so the type never moves and each letter turns as the bar reaches it.",
   "spec": [
     ["Carried by", "the scroll: a third of a screen (0.32 vh) after the phrase passes 90% down the screen"],
@@ -22,14 +22,14 @@
     ["Move", "bar translateX (mark − 1) × 101%, copy translateX (1 − mark) × 101%"],
     ["Back", "scrolling back unmarks it"],
     ["Near the end", "finishes where the page does if there is less scroll left"],
-    ["Colours", "lime bar on black · ink bar on lime · white bar where the screen's lime is elsewhere"]
+    ["Colours", "lime bar on white or on black · ink bar with lime words on white · white bar on black where the screen's lime is elsewhere"]
   ],
   "source": ["components/Marker.tsx", "app/globals.css · MARKER"],
   "where": "The sign-off's “We’ll build the thing.”, About’s last line, an offer’s key promise.",
   "rules": [
     "Keep phrases short: the line does not wrap.",
     "The copy is aria-hidden and unselectable, so the phrase is read and copied once.",
-    "One marker per screen. It is the screen's one lime when it is lime."
+    "One marker per screen. It is the screen's one lime."
   ],
   "tags": ["text", "scroll", "highlight", "lime"]
 }
@@ -55,16 +55,16 @@
   padding: 0.02em 0.14em 0.06em;
   line-height: inherit;
   white-space: nowrap;
-  color: #121417;
+  color: #0B0C0D;
   translate: calc((1 - var(--mark, 1)) * 101%) 0;
   user-select: none;
   -webkit-user-select: none;
 }
-/* where the screen's one lime is elsewhere, the bar is the page's own ink or paper */
-.marker--ink .marker-bar { background: #121417; }
+/* where the screen's one lime is elsewhere, the bar is the page's own ink or white */
+.marker--ink .marker-bar { background: #0B0C0D; }
 .marker--ink .marker-in { color: #B8FF00; }
 .marker--white .marker-bar { background: #f4f5f2; }
-.marker--white .marker-in { color: #121417; }
+.marker--white .marker-in { color: #0B0C0D; }
 </style>
 <style>
   /* the phrase comes up the screen and the scroll carries the bar across it */
@@ -79,15 +79,16 @@
   <div class="mk">
     <p class="kicker">Contact</p>
 <!-- code -->
-<h2 class="title">Bring the idea. <span class="marker marker--ink" data-marker>We’ll build the thing.</span></h2>
+<h2 class="title">Bring the idea. <span class="marker" data-marker>We’ll build the thing.</span></h2>
 <!-- /code -->
   </div>
 </div>
 <span class="qm-hint">Scroll ↓</span>
 <div class="qm-ui">
   <span>Bar</span>
-  <button data-v="ink" class="is-on">Ink on lime</button>
-  <button data-v="lime">Lime on black</button>
+  <button data-v="lime" class="is-on">Lime on white</button>
+  <button data-v="dark">Lime on black</button>
+  <button data-v="ink">Ink on white</button>
   <button data-v="white">White on black</button>
 </div>
 <script src="../kit/stage.js"></script>
@@ -141,7 +142,7 @@ request();
   document.querySelectorAll('[data-v]').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('[data-v]').forEach((x) => x.classList.toggle('is-on', x === b));
     const v = b.dataset.v;
-    document.documentElement.dataset.tone = v === 'ink' ? 'lime' : 'dark';
+    document.documentElement.dataset.tone = v === 'lime' || v === 'ink' ? 'paper' : 'dark';
     mk.classList.toggle('marker--ink', v === 'ink');
     mk.classList.toggle('marker--white', v === 'white');
   }));

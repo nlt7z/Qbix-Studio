@@ -28,15 +28,15 @@
 .cc-front { display: flex; flex-direction: column; }
 .cc-band { position: relative; flex: 1; }
 .cc-band:last-child { flex: 2.2; }
-.cc-band span { position: absolute; left: var(--pad); bottom: calc(var(--pad) * .55); font: 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.cc-band span { position: absolute; left: var(--pad); bottom: calc(var(--pad) * .55); font: 500 13px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; }
 .cc-band:last-child span { bottom: var(--pad); }
-.cc-name { position: absolute; left: var(--pad); right: var(--pad); bottom: calc(var(--pad) + 26px); font: 400 var(--big)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
-.cc-backf { transform: rotateY(180deg); padding: var(--pad); display: flex; flex-direction: column; background: #ffffff; color: #121417; }
-.cc-backf h2 { margin: 0 0 auto; font: 400 var(--big)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
+.cc-name { position: absolute; left: var(--pad); right: var(--pad); bottom: calc(var(--pad) + 26px); font: 300 var(--big)/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.cc-backf { transform: rotateY(180deg); padding: var(--pad); display: flex; flex-direction: column; background: #EEF1E8; color: #0B0C0D; }
+.cc-backf h2 { margin: 0 0 auto; font: 300 var(--big)/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
 .cc-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 13px; }
 .cc-chip { width: 22px; height: 22px; flex: none; }
 .cc-row b { font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
-.cc-row i { font: 11px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+.cc-row i { font: 400 13px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; color: rgba(11, 12, 13,.64); }
 @media (prefers-reduced-motion: reduce) { .cc-card, .cc-flip { transition: none; } }
 </style>
 <style>
@@ -66,7 +66,7 @@ const ColorCards = (() => {
     { name: 'Sunny', c: [['#d9a21b', 'Honey'], ['#ebc65a', 'Butter'], ['#f5de96', 'Straw'], ['#faefc8', 'Oat']] },
   ];
   const lum = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
-  const ink = (h) => (lum(h) > 0.5 ? '#121417' : '#f4f5f2');
+  const ink = (h) => (lum(h) > 0.5 ? '#0B0C0D' : '#f4f5f2');
 
   const cards = PALETTES.map((p, i) => {
     const el = document.createElement('div');

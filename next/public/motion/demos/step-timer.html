@@ -42,11 +42,11 @@
 <style data-code>
 /* Working timer: queued, working, done. One square, one label sleeve, one clock sleeve. */
 .st { width: 540px; background: var(--surface); padding: 24px; display: grid; gap: 20px; color: var(--fg); --cut: 16px; }
-.st-top { display: flex; justify-content: space-between; align-items: center; height: 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+.st-top { display: flex; justify-content: space-between; align-items: center; height: 16px; font-family: var(--font-sans); font-size: 13px; letter-spacing: 0; color: var(--fg2); }
 .st-row { display: flex; gap: 8px; align-items: flex-start; }
 .st-col { display: grid; gap: 8px; min-width: 0; }
-.st-k { margin: 0; height: 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg3); }
-.st-b { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; height: 64px; padding: 0 20px; background: var(--fill); font-size: 16px; letter-spacing: -0.011em; cursor: pointer; white-space: nowrap; transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+.st-k { margin: 0; height: 16px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--fg2); }
+.st-b { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; height: 64px; padding: 0 20px; background: var(--sunk); font-size: 16px; letter-spacing: -0.011em; cursor: pointer; white-space: nowrap; transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
 .st-b:active { transform: translateY(2px); }
 .st-b:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
 .st-sq { position: relative; flex: none; width: 16px; height: 16px; margin-right: 14px; background: var(--fg); transition: background 160ms ease, box-shadow 160ms ease; }

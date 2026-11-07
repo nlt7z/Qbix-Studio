@@ -15,7 +15,7 @@
   "kind": "loop",
   "tone": "paper",
   "line": "drag an item to a day · 200 ms settle · time order kept",
-  "summary": "A week of studio work in seven columns: Monday to Friday wide, the weekend narrow and sunk. Take an item to another day and the day under it takes a recessed block; let go and it settles into its place in time order, to-dos last. Items are fills, never outlines: a grey block for the studio's own work, an ink block for what happens with a client, one lime block for the day something goes live, a light block for a to-do.",
+  "summary": "A week of studio work in seven columns: Monday to Friday wide, the weekend narrow and sunk. Take an item to another day and the day under it takes a recessed block; let go and it settles into its place in time order, to-dos last. Items are fills, never outlines: a white block for the studio's own work, an ink block for what happens with a client, one lime block for the day something goes live, a sage block for a to-do.",
   "spec": [
     ["Columns", "5 × 1fr for Monday to Friday, 2 × 0.8fr for the weekend (a sunk block); 8px gaps, 12px × 8px padding, 8px radius"],
     ["Drag", "pointer events; the item follows the hand 1:1 (translate), above everything"],
@@ -25,7 +25,7 @@
     ["Today", "the day's number sits on an ink pill"]
   ],
   "source": ["motion.ui.o2tech.ai · Team schedule (erp-calendar)"],
-  "where": "The studio's week: the Listing Launch Kit for 1428 Alder Street shipping inside 48 hours, Forma going live, Kova's moodboard review, a shoot for an estate sale.",
+  "where": "The studio's week: Willow's refresh shipping inside 7 days, Forma going live, Kova's moodboard review, a product shoot for Forma.",
   "rules": [
     "Mon to Fri wide, the weekend narrow and muted.",
     "Items are fills. One lime block in the week, for the day something goes live.",
@@ -33,47 +33,48 @@
     "A to-do has a 12px check and no time; times read 10:00 AM.",
     "touch-action: none on the items, so a finger drags instead of scrolling."
   ],
-  "tags": ["calendar", "week", "drag", "sort", "paper"],
+  "tags": ["calendar", "week", "drag", "sort", "sage"],
   "shot": 2750
 }
 </script>
 <style data-code>
 /* Studio week — redrawn for Qbix.
-   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: white, sage, ink, one lime. */
 .pk {
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
   --radius-sm: 8px; --radius-lg: 14px; --radius-pill: 999px;
   --duration-fast: 120ms; --duration-base: 200ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
-  --muted: var(--fg2); --faint: rgba(18, 20, 23, .56); --surface-muted: var(--sunk);
+  --muted: var(--fg2); --faint: rgba(11, 12, 13, .56); --surface-muted: var(--sunk);
   font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
 }
 .stage { display: flex; flex-direction: column; gap: var(--space-5); }
 .head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
-.head h1 { font: 400 28px/1.35 var(--font-sans); letter-spacing: -0.03em; }
+.head h1 { font: 300 28px/1.1 var(--font-headline); letter-spacing: -0.035em; }
 .nav { display: flex; align-items: center; gap: var(--space-2); }
 .nav .range { min-width: 168px; text-align: center; font-weight: 500; }
-.nav button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 1px solid rgba(18, 20, 23, .32); border-radius: var(--radius-sm); background: var(--surface); color: var(--fg); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.nav button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 1px solid rgba(11, 12, 13, .32); border-radius: var(--radius-sm); background: var(--surface); color: var(--fg); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
 .nav button:hover { background: var(--surface-muted); }
 .card { background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-4); }
 .grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) repeat(2, minmax(0, .8fr)); gap: var(--space-2); height: 330px; }
 .col { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-2); border-radius: var(--radius-sm); position: relative; transition: background-color var(--duration-fast) var(--ease-out); }
 .col.wk { background: var(--surface-muted); }
 .col.is-drop { background: var(--surface-muted); }
-.col.wk.is-drop { background: var(--fg4); }
+.col.wk.is-drop { background: #D6DCCB; }
 .day { display: flex; align-items: baseline; gap: var(--space-2); padding: 0 var(--space-1) var(--space-1); color: var(--muted); }
 .day b { font-weight: 500; color: var(--fg); font-variant-numeric: tabular-nums; }
 .wk .day, .wk .day b { color: var(--faint); }
 .day .today { background: var(--fg); color: var(--ground); border-radius: var(--radius-pill); padding: 0 var(--space-2); min-width: 24px; text-align: center; }
-.it { display: grid; gap: 2px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; position: relative; background: var(--fg4); color: var(--fg); transition: background-color var(--duration-fast) var(--ease-out); }
+.it { display: grid; gap: 2px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; position: relative; background: #fff; color: var(--fg); transition: background-color var(--duration-fast) var(--ease-out); }
 .it.k-info { background: var(--fg); color: var(--ground); }
 .it.k-att { background: var(--signal); color: var(--on-lime); }
-.it.k-todo { background: var(--fill); color: var(--fg); }
-.it .t { white-space: nowrap; font-weight: 500; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: var(--space-1); }
+.it.k-todo { background: var(--sunk); color: var(--fg); }
+.col.wk .it.k-todo, .col.is-drop .it.k-todo { background: #fff; }
+.it .t { white-space: nowrap; font: 500 13px var(--font-mono); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: var(--space-1); }
 .it .n { line-height: 1.35; }
-.it:hover, .it.is-hover { background: rgba(18, 20, 23, .2); }
+.it:hover, .it.is-hover { background: #D6DCCB; }
 .it.k-info:hover, .it.k-info.is-hover { background: #2c2f33; }
 .it.k-att:hover, .it.k-att.is-hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
-.it.k-todo:hover, .it.k-todo.is-hover { background: var(--fg4); }
+.it.k-todo:hover, .it.k-todo.is-hover { background: #C9D1BC; }
 .it.is-drag { z-index: 5; cursor: grabbing; transition: none; }
 .it.is-fly { transition: transform var(--duration-base) var(--ease-out); }
 .wk .it { padding: var(--space-2); }
@@ -113,13 +114,13 @@ const TODAY = 1;   // Tuesday the 3rd
 const FIRST = [    // [day, minutes from midnight (0 = a to-do), title, kind]
   [0, 540, 'Week planning', ''],
   [0, 840, 'Brief call, Dana Reyes', 'info'],
-  [1, 600, 'Ship the Kit, 1428 Alder Street', ''],
+  [1, 600, 'Ship Willow refresh', ''],
   [1, 0, 'Send proof to Willow', 'todo'],
   [2, 690, 'Forma goes live', 'att'],
   [3, 780, 'Moodboard review, Kova', 'info'],
   [4, 570, 'Studio stand-up', ''],
   [4, 0, 'Send round 2 to Kova', 'todo'],
-  [5, 480, 'Estate sale shoot', ''],
+  [5, 480, 'Forma product shoot', ''],
 ];
 const grid = $('#grid');
 const clock = (m) => `${Math.floor(m / 60) % 12 || 12}:${String(m % 60).padStart(2, '0')} ${m < 720 ? 'AM' : 'PM'}`;

@@ -36,13 +36,13 @@
 </script>
 <style data-code>
 /* The surface: a black panel with the cut corner. Its size is sprung from JS. */
-.sm-surf { --cut: 12px; position: relative; background: #121417; color: #f4f5f2; overflow: hidden; cursor: pointer;
+.sm-surf { --cut: 12px; position: relative; background: #0B0C0D; color: #f4f5f2; overflow: hidden; cursor: pointer;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); touch-action: manipulation; }
 .sm-c { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 1.1em; white-space: nowrap;
   padding: 1.2em 1.4em; transform: translate(-50%, -50%); visibility: hidden; }
 .sm-c.is-in { visibility: visible; }
 .sm-t b { display: block; font: 500 1.05em/1.25 Geist, system-ui, sans-serif; letter-spacing: -0.011em; font-weight: 500; }
-.sm-t span { display: block; margin-top: .25em; font: 400 .8em/1.3 'Encode Sans', Geist, sans-serif; letter-spacing: .04em; color: rgba(244,245,242,.62); font-variant-numeric: tabular-nums; }
+.sm-t span { display: block; margin-top: .25em; font: 400 .8em/1.3 'Geist Mono', Geist, sans-serif; letter-spacing: 0; color: rgba(244,245,242,.62); font-variant-numeric: tabular-nums; }
 .sm-1 { padding-bottom: 2.3em; }
 .sm-stack { position: relative; height: 2.9em; flex: none; }
 .sm-ph { position: absolute; top: .1em; width: 2.6em; height: 2.6em; background: #26282C; overflow: hidden; }
@@ -53,9 +53,9 @@
 .sm-frame { position: relative; width: 3.5em; height: 6.2em; background: rgba(244,245,242,.12); overflow: hidden; flex: none; }
 .sm-frame i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: #B8FF00; }
 .sm-frame svg { position: absolute; left: 50%; top: 50%; width: 1.2em; height: 1.2em; margin: -.6em 0 0 -.6em; }
-.sm-pct { margin-left: .5em; font: 400 2.1em/1 Eurostile, Geist, sans-serif; letter-spacing: -.02em; font-variant-numeric: tabular-nums; min-width: 2.2em; }
+.sm-pct { margin-left: .5em; font: 400 2.1em/1 Outfit, Geist, sans-serif; letter-spacing: -.02em; font-variant-numeric: tabular-nums; min-width: 2.2em; }
 .sm-ok { width: 2.3em; height: 2.3em; background: #B8FF00; display: grid; place-items: center; flex: none; }
-.sm-send { margin-left: .5em; height: 2.6em; padding: 0 1.1em; background: #f4f5f2; color: #121417; display: grid; place-items: center; font: 500 .95em/1 Geist, sans-serif; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.sm-send { margin-left: .5em; height: 2.6em; padding: 0 1.1em; background: #f4f5f2; color: #0B0C0D; display: grid; place-items: center; font: 500 .95em/1 Geist, sans-serif; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
 .sm-4 .sm-t b { font-size: 1.1em; }
 </style>
 <style>
@@ -63,7 +63,7 @@
   .sm { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(20px, 5vw, 64px); align-items: center; width: 100%; }
   .sm-head { display: grid; gap: clamp(10px, 2vmin, 20px); align-content: center; }
   .sm-head .title { font-size: clamp(34px, min(6.6vw, 10vh), 72px); }
-  .sm-pad { height: 100%; min-height: 56vmin; display: grid; place-items: center; background: #ffffff; position: relative; }
+  .sm-pad { height: 100%; min-height: 56vmin; display: grid; place-items: center; background: #EEF1E8; position: relative; }
   .sm-surf-box { font-size: clamp(14px, 3.4vmin, 28px); width: 100%; height: 14em; position: relative; }
   .sm-surf { position: absolute; left: 50%; top: 50%; }
   .sm-count { position: absolute; left: 16px; bottom: 14px; color: var(--fg3); }
@@ -99,7 +99,7 @@
   const $ = (s) => document.querySelector(s);
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const surf = $('#surf');
-  const PICS = ['../assets/art/objects.webp', '../assets/art/calla.webp', '../assets/art/curves.webp', '../assets/art/vase.webp', '../assets/art/block.webp'];
+  const PICS = ['../assets/art/lime-fold.webp', '../assets/art/lime-bloom.webp', '../assets/art/lime-tube.webp', '../assets/art/lime-lattice.webp', '../assets/art/lime-arc.webp'];
 
   /* a tiny clock: jobs at a time, ticks every frame */
   let T = 0, last = performance.now(), raf = 0;

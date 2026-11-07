@@ -36,17 +36,17 @@
 <style data-code>
 /* Page count slider */
 .gs-read { display: flex; align-items: flex-end; gap: 14px; }
-.gs-num { display: flex; font: 400 176px/1 'Eurostile', var(--font-headline, sans-serif); height: 1em; letter-spacing: -0.04em; }
+.gs-num { display: flex; font: 200 176px/1 'Outfit', var(--font-headline, sans-serif); height: 1em; letter-spacing: -0.04em; }
 .gs-col { position: relative; display: inline-block; height: 1em; width: 0.58em; overflow: hidden; }
 .gs-col i { position: absolute; left: 0; top: 0; width: 100%; font-style: normal; display: flex; flex-direction: column; text-align: center; line-height: 1; }
-.gs-unit { font: 500 12px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); margin-bottom: 26px; }
-.gs-tier { position: relative; height: 22px; overflow: hidden; font-size: 16px; }
+.gs-unit { font: 500 14px/1 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.64); margin-bottom: 26px; }
+.gs-tier { position: relative; height: 22px; overflow: hidden; font-size: 14px; }
 .gs-tier > span { position: absolute; left: 0; top: 0; white-space: nowrap; }
-.gs-tier em { font-style: normal; color: rgba(18, 20, 23, 0.64); }
+.gs-tier em { font-style: normal; color: rgba(11, 12, 13, 0.64); }
 .gs-track { position: relative; width: 760px; height: 110px; touch-action: none; cursor: grab; }
 .gs-track.drag { cursor: grabbing; }
-.gs-tick { position: absolute; bottom: 52px; width: 3px; margin-left: -1.5px; background: rgba(18, 20, 23, 0.3); transform-origin: 50% 100%; }
-.gs-lbl { position: absolute; bottom: 24px; width: 40px; margin-left: -20px; text-align: center; font: 500 11px/1 'Encode Sans', sans-serif; color: rgba(18, 20, 23, 0.5); font-variant-numeric: tabular-nums; }
+.gs-tick { position: absolute; bottom: 52px; width: 3px; margin-left: -1.5px; background: rgba(11, 12, 13, 0.3); transform-origin: 50% 100%; }
+.gs-lbl { position: absolute; bottom: 24px; width: 40px; margin-left: -20px; text-align: center; font: 500 14px/1 'Geist Mono', sans-serif; color: rgba(11, 12, 13, 0.5); font-variant-numeric: tabular-nums; }
 .gs-thumb { position: absolute; bottom: 44px; left: 0; width: 8px; height: 64px; margin-left: -4px; background: #b8ff00; transform-origin: 50% 100%; }
 </style>
 <style>
@@ -56,7 +56,7 @@
   .gs-read { grid-column: 2; grid-row: 1; align-self: end; }
   .gs-tier, .gs-track { grid-column: 1 / -1; }
   .gs-q .title { font-size: 44px; max-width: 8em; }
-  .gs-q .lede { font-size: 15px; max-width: 20em; }
+  .gs-q .lede { font-size: 14px; max-width: 20em; }
   .gs-tier { grid-row: 2; margin: 12px 0 0 0; }
   .gs-track { grid-row: 3; margin: 26px 0 0 10px; }
 </style>
@@ -153,7 +153,7 @@ ticks.add((dt) => {
   ticksEl.forEach((t) => {
     const d = (t._x - x) / SIG, k = Math.exp(-d * d);
     t.style.transform = `translateY(${(-k * (10 + 8 * hold.x)).toFixed(2)}px) scaleY(${(1 + k * (0.7 + 0.5 * hold.x)).toFixed(3)})`;
-    const a = 0.3 + 0.7 * k; t.style.background = `rgba(18,20,23,${a.toFixed(3)})`;
+    const a = 0.3 + 0.7 * k; t.style.background = `rgba(11, 12, 13,${a.toFixed(3)})`;
   });
   const v = Math.round(Math.max(MIN, Math.min(MAX, val.x)));
   if (v !== shownV) { shownV = v; showValue(v); setTier(v); }

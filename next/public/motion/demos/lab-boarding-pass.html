@@ -14,7 +14,7 @@
   "kind": "loop",
   "tone": "paper",
   "line": "spring in · 520 ms rip · 900 ms fall",
-  "summary": "A launch-night pass and its lime stub are two clipped blocks that share one toothed edge. The white pass springs up into view, the stub opens from the top of the perforation and swings about its foot, then falls under gravity while the pass recoils. Pull the stub right to tear it yourself.",
+  "summary": "A launch-night pass and its ink stub are two clipped blocks that share one toothed edge. The sage pass springs up into view, the stub opens from the top of the perforation and swings about its foot, then falls under gravity while the pass recoils. Pull the stub right to tear it yourself.",
   "spec": [
     ["Enter", "spring k 150 · c 19 from below the frame, 900 ms"],
     ["Rip", "stub rotates 0 → 6.5° about its bottom edge, 520 ms ease in-out (220 ms when dragged)"],
@@ -26,7 +26,7 @@
   "where": "The admit pass for a Forma launch night or a Qbix studio visit, on the invite page.",
   "rules": [
     "Both halves are cut from the same list of tooth points so the edge always meets.",
-    "The pass is white on the paper ground; the stub is the lime block and nothing else on the pass is lime.",
+    "The pass is sage on the white ground; the stub is the ink block, and the one lime on it is the admit number.",
     "The fall is gravity (t²), not an eased slide."
   ],
   "tags": ["pointer", "drag", "spring", "gravity", "ticket"],
@@ -36,27 +36,27 @@
 <style data-code>
 /* Launch pass: two clipped halves with one toothed edge */
 .tp { position: relative; width: 600px; height: 250px; }
-.tp-part { position: absolute; top: 0; height: 250px; color: #121417; }
-.tp-main { left: 0; width: 440px; background: #ffffff; transform-origin: 100% 100%; }
-.tp-stub { left: 434.4px; width: 165px; background: #b8ff00; color: #0c1300; transform-origin: 0 100%; cursor: grab; touch-action: none; }
+.tp-part { position: absolute; top: 0; height: 250px; color: #0B0C0D; }
+.tp-main { left: 0; width: 440px; background: #EEF1E8; transform-origin: 100% 100%; }
+.tp-stub { left: 434.4px; width: 165px; background: #0B0C0D; color: #f4f5f2; transform-origin: 0 100%; cursor: grab; touch-action: none; }
 .tp-in { position: absolute; inset: 0; padding: 22px 28px; }
-.tp-hd { display: flex; justify-content: space-between; font: 500 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.6); }
-.tp-hd b { font-weight: 500; color: #121417; }
+.tp-hd { display: flex; justify-content: space-between; font: 500 13px/16px 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.66); }
+.tp-hd b { font-weight: 500; color: #0B0C0D; }
 .tp-route { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: end; margin-top: 18px; }
-.tp-route small, .tp-fields small { display: block; margin-bottom: 4px; font: 500 10px/1.2 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
-.tp-w { display: block; font: 400 52px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; white-space: nowrap; }
+.tp-route small, .tp-fields small { display: block; margin-bottom: 4px; font: 500 13px/1.2 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.66); }
+.tp-w { display: block; font: 300 52px/1 'Outfit', var(--font-headline, sans-serif); letter-spacing: -0.035em; white-space: nowrap; }
 .tp-mask { display: block; overflow: hidden; padding-bottom: 0.14em; margin-bottom: -0.14em; }
-.tp-t { display: block; margin-top: 8px; font: 500 14px/1 'Encode Sans', sans-serif; }
+.tp-t { display: block; margin-top: 8px; font: 500 14px/1 'Geist Mono', sans-serif; }
 .tp-route .r { text-align: right; }
 .tp-route svg { width: 40px; height: 20px; margin-bottom: 30px; }
-.tp-fields { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; margin-top: 24px; }
-.tp-fields span { display: block; font: 500 15px/1.2 var(--font-sans, 'Geist'); white-space: nowrap; }
-.tp-note { position: absolute; left: 28px; right: 28px; bottom: 18px; font-size: 12.5px; color: rgba(18, 20, 23, 0.6); }
+.tp-fields { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; margin-top: 14px; }
+.tp-fields span { display: block; font: 500 14px/1.2 var(--font-sans, 'Geist'); white-space: nowrap; }
+.tp-note { position: absolute; left: 28px; right: 28px; bottom: 18px; font-size: 13px; color: rgba(11, 12, 13, 0.66); }
 .tp-stub .tp-in { display: flex; flex-direction: column; justify-content: space-between; padding: 22px 20px 18px 31px; }
-.tp-adm small { display: block; margin-bottom: 6px; font: 500 10px/1.2 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(12, 19, 0, 0.6); }
-.tp-adm b { display: block; font: 400 64px/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; font-weight: 400; }
+.tp-adm small { display: block; margin-bottom: 6px; font: 500 13px/1.2 'Geist', sans-serif; letter-spacing: 0; color: rgba(244, 245, 242, 0.64); }
+.tp-adm b { display: block; font: 200 52px/1 'Outfit', var(--font-headline, sans-serif); letter-spacing: -0.04em; color: #B8FF00; }
 .tp-bc svg { display: block; }
-.tp-bc span { display: block; margin-top: 6px; font: 500 10px/1 'Encode Sans', sans-serif; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+.tp-bc span { display: block; margin-top: 6px; font: 500 13px/1 'Geist Mono', sans-serif; letter-spacing: 0; font-variant-numeric: tabular-nums; }
 </style>
 <style>
   .qm-stage { padding: 0; }
@@ -74,7 +74,7 @@
       <div class="tp-hd"><span id="tp-kind">Forma launch night</span><b id="tp-no">No. 0412</b></div>
       <div class="tp-route">
         <div><small>From</small><span class="tp-mask"><span class="tp-w" id="tp-from">Doors</span></span><span class="tp-t" id="tp-t1">6:30 pm</span></div>
-        <svg viewBox="0 0 40 20" fill="none" stroke="#121417" stroke-width="2" aria-hidden="true"><path d="M2 10h30" stroke-dasharray="2 4"/><path d="M30 4l7 6-7 6"/></svg>
+        <svg viewBox="0 0 40 20" fill="none" stroke="#0B0C0D" stroke-width="2" aria-hidden="true"><path d="M2 10h30" stroke-dasharray="2 4"/><path d="M30 4l7 6-7 6"/></svg>
         <div class="r"><small>To</small><span class="tp-mask"><span class="tp-w" id="tp-to">Live</span></span><span class="tp-t" id="tp-t2">8:00 pm</span></div>
       </div>
       <div class="tp-fields">
@@ -140,7 +140,7 @@ function teethY() { const a = []; for (let y = 14; y <= H - 14; y += TOOTH) a.pu
 
 function bars(seed) {
   let x = 0, h = '', r = seed; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
-  while (x < 112) { const w = rnd() < 0.35 ? 3 : rnd() < 0.5 ? 2 : 1.2; h += `<rect x="${x.toFixed(1)}" y="0" width="${w}" height="46" fill="#0c1300"/>`; x += w + 1.4 + Math.round(rnd() * 2); }
+  while (x < 112) { const w = rnd() < 0.35 ? 3 : rnd() < 0.5 ? 2 : 1.2; h += `<rect x="${x.toFixed(1)}" y="0" width="${w}" height="46" fill="#f4f5f2"/>`; x += w + 1.4 + Math.round(rnd() * 2); }
   $('#tp-bars').innerHTML = h;
 }
 const passes = [

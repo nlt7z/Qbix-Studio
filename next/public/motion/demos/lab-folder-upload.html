@@ -28,7 +28,7 @@
   "rules": [
     "Every moving value is a spring with its own stiffness; the story is only a list of targets.",
     "Flat facets, no radii: the folder has the cut corner on its tab side, a lime flap over an ink back.",
-    "The one lime is the folder's flap; the progress bar is ink on a light tint."
+    "The one lime is the folder's flap; the progress bar is ink on sage."
   ],
   "tags": ["upload", "svg", "spring", "drag", "character", "moodboard"],
   "shot": 5200
@@ -36,16 +36,16 @@
 </script>
 <style data-code>
 /* Folder upload: an SVG scene, with the copy under it sliding out of sleeves */
-.fu { position: absolute; inset: 0; background: #f3f4f5; color: #121417; }
+.fu { position: absolute; inset: 0; background: #ffffff; color: #0B0C0D; }
 .fu svg.fu-s { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
 .fu-copy { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; }
-.fu-t { font: 400 clamp(26px, 4.6vw, 44px)/1.15 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; height: 1.15em; position: relative; overflow: hidden; }
-.fu-sub { font-size: clamp(14px, 2vw, 16px); color: rgba(18, 20, 23, 0.64); margin-top: 6px; height: 1.4em; line-height: 1.4em; position: relative; overflow: hidden; font-variant-numeric: tabular-nums; }
+.fu-t { font: 300 clamp(26px, 4.6vw, 44px)/1.15 'Outfit', 'Geist', sans-serif; letter-spacing: -0.03em; height: 1.15em; position: relative; overflow: hidden; }
+.fu-sub { font-size: clamp(14px, 2vw, 16px); color: rgba(11, 12, 13, 0.64); margin-top: 6px; height: 1.4em; line-height: 1.4em; position: relative; overflow: hidden; font-variant-numeric: tabular-nums; }
 .fu-t span, .fu-sub span { position: absolute; left: 0; right: 0; transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 .fu .in { transform: translateY(110%); } .fu .out { transform: translateY(-110%); }
-.fu-bar { width: min(220px, 50vw); height: 6px; margin: 14px auto 0; background: rgba(18, 20, 23, 0.14); overflow: hidden; transform: scaleX(0); transform-origin: left; transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1); }
+.fu-bar { width: min(220px, 50vw); height: 6px; margin: 14px auto 0; background: #E3E8DA; overflow: hidden; transform: scaleX(0); transform-origin: left; transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1); }
 .fu-bar.is-on { transform: scaleX(1); }
-.fu-bar i { display: block; height: 100%; width: 100%; background: #121417; transform-origin: left; transform: scaleX(0); }
+.fu-bar i { display: block; height: 100%; width: 100%; background: #0B0C0D; transform-origin: left; transform: scaleX(0); }
 @media (prefers-reduced-motion: reduce) { .fu-t span, .fu-sub span, .fu-bar { transition: none; } }
 </style>
 <style>
@@ -58,25 +58,25 @@
 <div class="fu" id="fu">
   <svg class="fu-s" id="fu-svg" aria-label="A folder that acts out a file upload">
     <g id="folder">
-      <path id="back" fill="#121417"/>
-      <rect id="pap1" fill="#d9dce0"/>
+      <path id="back" fill="#0B0C0D"/>
+      <rect id="pap1" fill="#E3E8DA"/>
       <rect id="pap2" fill="#ffffff"/>
       <g id="mid"></g>
       <path id="flap" fill="#B8FF00"/>
       <g id="eyes">
-        <g id="eyeL"><rect fill="#ffffff"/><rect fill="#121417"/></g>
-        <g id="eyeR"><rect fill="#ffffff"/><rect fill="#121417"/></g>
-        <path id="happy" fill="none" stroke="#121417" stroke-width="5" stroke-linejoin="miter" stroke-linecap="butt"/>
+        <g id="eyeL"><rect fill="#ffffff"/><rect fill="#0B0C0D"/></g>
+        <g id="eyeR"><rect fill="#ffffff"/><rect fill="#0B0C0D"/></g>
+        <path id="happy" fill="none" stroke="#0B0C0D" stroke-width="5" stroke-linejoin="miter" stroke-linecap="butt"/>
       </g>
     </g>
     <g id="top">
       <g id="file">
-        <rect x="-33" y="-42" width="66" height="84" fill="#d3d6da" transform="rotate(-9)"/>
-        <rect x="-33" y="-42" width="66" height="84" fill="#e6e8eb" transform="rotate(6)"/>
+        <rect x="-33" y="-42" width="66" height="84" fill="#E3E8DA" transform="rotate(-9)"/>
+        <rect x="-33" y="-42" width="66" height="84" fill="#EEF1E8" transform="rotate(6)"/>
         <rect x="-33" y="-42" width="66" height="84" fill="#ffffff"/>
         <image href="../assets/art/objects.webp" x="-27" y="-36" width="54" height="46" preserveAspectRatio="xMidYMid slice"/>
-        <rect x="-27" y="18" width="34" height="5" fill="#121417"/>
-        <rect x="-27" y="28" width="22" height="5" fill="rgba(18, 20, 23, 0.24)"/>
+        <rect x="-27" y="18" width="34" height="5" fill="#0B0C0D"/>
+        <rect x="-27" y="28" width="22" height="5" fill="rgba(11, 12, 13, 0.24)"/>
       </g>
     </g>
   </svg>

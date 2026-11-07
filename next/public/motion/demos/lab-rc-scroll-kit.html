@@ -27,8 +27,8 @@
   "where": "An offer page: a promise that reads as you scroll, the process as stacked panels, a shelf of client work.",
   "rules": [
     "None of the three takes the wheel from the page: the scroll is real, the motion only follows it.",
-    "Panels are flat grounds (white, lime, paper); they recede by scale, not by a veil.",
-    "One lime per screen: the stacked lime panel, or the gallery's progress bar."
+    "Panels are flat grounds (sage, near-black, deeper sage); they recede by scale, not by a veil.",
+    "One lime per screen: the dark panel's number, or the gallery's progress bar."
   ],
   "tags": ["scroll", "text", "stacked", "horizontal", "recipe"],
   "shot": 6000
@@ -39,9 +39,9 @@
 .sk { padding-inline: clamp(24px, 5vw, 64px); }
 .sk-label { margin: 0 0 18px; }
 .sk-show { padding-block: 16vh 20vh; }
-.sk-big { margin: 0; max-width: 20ch; font: 400 clamp(32px, 5.4vw, 80px)/1.1 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; }
-.sk-big .w { color: rgba(18, 20, 23, 0.16); transition: color 250ms linear; }
-.sk-big .w.on { color: #121417; }
+.sk-big { margin: 0; max-width: 20ch; font: 300 clamp(32px, 5.4vw, 80px)/1.1 'Outfit', 'Geist', sans-serif; letter-spacing: -0.035em; }
+.sk-big .w { color: rgba(11, 12, 13, 0.16); transition: color 250ms linear; }
+.sk-big .w.on { color: #0B0C0D; }
 
 .sk-stack { position: relative; }
 .sheet {
@@ -53,31 +53,32 @@
   --cut: 28px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
 }
 .sheet:last-child { margin-bottom: 0; }
-.sheet .k { font: 400 12px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; }
-.sheet h3 { font: 400 clamp(40px, 7vw, 104px)/0.95 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; max-width: 12ch; }
-.sheet p { margin: 0; max-width: 40ch; font-size: clamp(15px, 1.4vw, 17px); opacity: 0.8; }
-.sheet[data-g='white'] { background: #ffffff; color: #121417; }
-.sheet[data-g='lime'] { background: #B8FF00; color: #0c1300; }
-.sheet[data-g='paper'] { background: #f3f4f5; color: #121417; }
+.sheet .k { font: 500 13px/16px 'Geist', sans-serif; letter-spacing: -.006em; opacity: 0.7; }
+.sheet h3 { font: 200 clamp(40px, 7vw, 104px)/0.95 'Outfit', 'Geist', sans-serif; letter-spacing: -0.04em; max-width: 12ch; }
+.sheet p { margin: 0; max-width: 40ch; font-size: 15px; opacity: 0.8; }
+.sheet[data-g='white'] { background: #EEF1E8; color: #0B0C0D; }
+.sheet[data-g='dark'] { background: #0B0C0D; color: #ffffff; }
+.sheet[data-g='dark'] .k { color: #B8FF00; opacity: 1; }
+.sheet[data-g='paper'] { background: #E3E8DA; color: #0B0C0D; }
 
 .sk-h { position: relative; height: 320vh; }
 .sk-pin { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; padding-block: 24px; }
 .sk-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-inline: clamp(24px, 5vw, 64px); }
-.sk-head h2 { font: 400 clamp(30px, 4vw, 54px)/1 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; }
-.sk-head span { font: 400 12px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; color: rgba(18, 20, 23, 0.64); font-variant-numeric: tabular-nums; }
+.sk-head h2 { font: 300 clamp(32px, 5.4vw, 80px)/1 'Outfit', 'Geist', sans-serif; letter-spacing: -0.035em; }
+.sk-head span { font: 400 13px/16px 'Geist Mono', monospace; letter-spacing: 0; color: rgba(11, 12, 13, 0.66); font-variant-numeric: tabular-nums; }
 .sk-track { display: flex; gap: clamp(16px, 2.4vw, 32px); align-items: center; will-change: transform; padding-left: clamp(24px, 5vw, 64px); }
 .frame { flex: none; width: clamp(220px, 30vw, 460px); margin: 0; }
-.frame .pic { aspect-ratio: 4 / 5; overflow: hidden; background: #eceef0; --cut: 18px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.frame .pic { aspect-ratio: 4 / 5; overflow: hidden; background: #EEF1E8; --cut: 18px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
 .frame:nth-child(3n+2) .pic { aspect-ratio: 1; }
 .frame .pic img { width: 120%; max-width: none; height: 100%; object-fit: cover; margin-left: -10%; will-change: transform; }
 .frame b { display: block; font-weight: 500; margin-top: 12px; }
-.frame span { color: rgba(18, 20, 23, 0.64); font-size: 14px; }
-.sk-bar { height: 6px; background: #e6e8ea; overflow: hidden; margin-inline: clamp(24px, 5vw, 64px); }
+.frame span { color: rgba(11, 12, 13, 0.66); font-size: 13px; }
+.sk-bar { height: 6px; background: #E3E8DA; overflow: hidden; margin-inline: clamp(24px, 5vw, 64px); }
 .sk-bar i { display: block; height: 100%; background: #B8FF00; transform-origin: 0 50%; transform: scaleX(0); }
 @media (prefers-reduced-motion: reduce) {
   .sk-h { height: auto; } .sk-pin { position: relative; height: auto; }
   .sk-track { overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; } .frame { scroll-snap-align: start; }
-  .sheet { position: relative; top: 0; } .sk-big .w { color: #121417; }
+  .sheet { position: relative; top: 0; } .sk-big .w { color: #0B0C0D; }
 }
 </style>
 <style>
@@ -93,7 +94,7 @@
 <section class="sk sk-stack" id="sk-stack" aria-label="Stacked scroll">
   <p class="kicker sk-label">Stacked panels</p>
   <article class="sheet" style="--i:0" data-g="white"><span class="k">01 / Listen</span><h3>Start with the owner.</h3><p>A 30-minute call, then we write the brief back to you in your own words.</p></article>
-  <article class="sheet" style="--i:1" data-g="lime"><span class="k">02 / Shape</span><h3>Find the one idea.</h3><p>Everything on the page answers to a sentence we can say out loud.</p></article>
+  <article class="sheet" style="--i:1" data-g="dark"><span class="k">02 / Shape</span><h3>Find the one idea.</h3><p>Everything on the page answers to a sentence we can say out loud.</p></article>
   <article class="sheet" style="--i:2" data-g="paper"><span class="k">03 / Build</span><h3>Make it real early.</h3><p>A live page by the end of week 1, so the motion is designed, not described.</p></article>
   <article class="sheet" style="--i:3" data-g="white"><span class="k">04 / Ship</span><h3>Then keep going.</h3><p>Launch is the first draft people can use. The work after it is where it gets good.</p></article>
 </section>
@@ -122,8 +123,8 @@ function scrollKit() {
   });
   // 3. build the shelf
   const track = document.getElementById('sk-track');
-  const SHELF = [['objects', 'Forma', 'Launch site'], ['curves', 'Kova', 'Brand and app'], ['ribbon', 'Strata', 'Design system'], ['calla', 'Willow Counseling', 'Practice site'],
-    ['cross', 'Knot stool', 'Product page'], ['block', 'Prism block', 'Product page'], ['bottle', 'Carafe', 'Product page'], ['ava', 'Dana Reyes, LMFT', 'Willow Counseling']];
+  const SHELF = [['objects', 'Forma', 'Launch site'], ['curves', 'Kova', 'Brand and app'], ['ribbon', 'Strata', 'Design system'], ['lime-bloom', 'Willow Counseling', 'Practice site'],
+    ['lime-lattice', 'Knot stool', 'Product page'], ['block', 'Prism block', 'Product page'], ['lime-tube', 'Carafe', 'Product page'], ['ava', 'Dana Reyes, LMFT', 'Willow Counseling']];
   SHELF.forEach(([a, t, m]) => { const f = document.createElement('figure'); f.className = 'frame'; f.innerHTML = `<div class="pic"><img alt="" src="../assets/art/${a}.webp"></div><b>${t}</b><span>${m}</span>`; track.append(f); });
   const imgs = [...track.querySelectorAll('img')], show = document.getElementById('sk-show'), stack = document.getElementById('sk-stack');
   const sheets = [...stack.querySelectorAll('.sheet')], hs = document.getElementById('sk-h');

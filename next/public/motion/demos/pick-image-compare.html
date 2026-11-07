@@ -44,9 +44,9 @@
    Two renders of one picture and a line between them. */
 .cmp { display: grid; gap: 16px; width: 760px; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
 .cmp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-.cmp-head h1 { font-family: var(--font-sans); font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }
-.cmp-meta { font-size: 12px; color: rgba(18, 20, 23, 0.56); }
-.cmp-chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--fg2); background: rgba(18, 20, 23, 0.07); }
+.cmp-head h1 { font-family: var(--font-headline); font-size: 28px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.2; }
+.cmp-meta { font-size: 13px; color: var(--fg2); }
+.cmp-chip { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--fg2); background: rgba(11, 12, 13, 0.07); }
 .cmp-chip.alert { color: #fff; background: var(--fg); }
 
 .cmp-frame { position: relative; width: 760px; height: 400px; border-radius: 14px; overflow: hidden; touch-action: none; cursor: ew-resize; user-select: none; -webkit-user-select: none; background: var(--surface); }
@@ -67,7 +67,7 @@
 .cmp-find { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--surface); border-radius: 14px; padding: 12px 20px; }
 .cmp-find .what { display: flex; align-items: center; gap: 12px; }
 .cmp-find .what b { font-weight: 500; }
-.cmp-find .nums { color: var(--fg2); font-variant-numeric: tabular-nums; }
+.cmp-find .nums { color: var(--fg2); font: 400 13px var(--font-mono); font-variant-numeric: tabular-nums; }
 </style>
 <style>
   .cmp-fit { position: fixed; z-index: 1; }

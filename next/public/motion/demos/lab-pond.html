@@ -38,8 +38,8 @@
 .pd { position: absolute; inset: 0; touch-action: none; }
 .pd canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .pd-cap { position: absolute; left: clamp(16px, 4.5vmin, 52px); top: clamp(14px, 4vmin, 44px); pointer-events: none; }
-.pd-cap h1 { font-family: Eurostile, Geist, sans-serif; font-weight: 400; font-size: clamp(30px, 5vw, 60px); line-height: 1; letter-spacing: -.03em; margin-top: 8px; }
-.pd-cap p.sub { margin-top: 8px; font-size: clamp(12px, 1.35vw, 16px); color: rgba(244,245,242,.64); }
+.pd-cap h1 { font-family: Outfit, Geist, sans-serif; font-weight: 300; font-size: clamp(30px, 5vw, 60px); line-height: 1; letter-spacing: -.03em; margin-top: 8px; }
+.pd-cap p.sub { margin-top: 8px; font-size: 14px; color: rgba(244,245,242,.64); }
 </style>
 </head>
 <body>
@@ -64,12 +64,12 @@ const pond = (() => {
   const N = 11;
   const PROFILE = [0.62, 0.86, 0.96, 0.98, 0.92, 0.8, 0.66, 0.5, 0.36, 0.24, 0.14];
   const SKINS = [
-    { body: '#f4f5f2', fin: '#9AA0A9', spot: '#08090A', spots: [[0.18, 0.35, 0.42], [0.42, -0.4, 0.5], [0.62, 0.2, 0.34]] },
+    { body: '#f4f5f2', fin: '#9AA0A9', spot: '#0B0C0D', spots: [[0.18, 0.35, 0.42], [0.42, -0.4, 0.5], [0.62, 0.2, 0.34]] },
     { body: '#D0D6E0', fin: '#838892', spot: '#26282C', spots: [[0.3, -0.2, 0.55], [0.55, 0.45, 0.3]] },
     { body: '#9AA0A9', fin: '#5f646c', spot: '#f4f5f2', spots: [[0.12, 0, 0.36], [0.5, 0.35, 0.28]] },
     { body: '#f4f5f2', fin: '#838892', spot: '#26282C', spots: [[0.26, 0.3, 0.32], [0.48, -0.15, 0.4], [0.7, 0.1, 0.22]] },
     { body: '#838892', fin: '#5f646c', spot: '#f4f5f2', spots: [[0.35, 0.3, 0.38]] },
-    { body: '#E6E8EA', fin: '#9AA0A9', spot: '#08090A', spots: [[0.2, -0.3, 0.4], [0.58, 0.2, 0.45]] }
+    { body: '#E6E8EA', fin: '#9AA0A9', spot: '#0B0C0D', spots: [[0.2, -0.3, 0.4], [0.58, 0.2, 0.45]] }
   ];
   function makeFish(i, count) {
     const len = Math.max(72, Math.min(165, S * 0.21)) * (0.82 + Math.random() * 0.36);
@@ -203,7 +203,7 @@ const pond = (() => {
       ctx.beginPath(); ctx.ellipse(x + nx * side * w, y + ny * side * w, w * r * 1.5, w * r, ang[k], 0, TAU); ctx.fill();
     }
     ctx.restore();
-    ctx.fillStyle = '#08090A';
+    ctx.fillStyle = '#0B0C0D';
     for (const side of [1, -1]) {
       const ex = j[0].x + f0x * w * 0.35 + n0x * w * 0.5 * side, ey = j[0].y + f0y * w * 0.35 + n0y * w * 0.5 * side;
       ctx.beginPath(); ctx.arc(ex, ey, Math.max(1.2, w * 0.11), 0, TAU); ctx.fill();
@@ -211,7 +211,7 @@ const pond = (() => {
   }
   function drawPad(p, time) {
     const x = p.x + p.ox, y = p.y + p.oy, rot = p.rot + Math.sin(time * 0.2 + p.rot) * 0.06;
-    ctx.fillStyle = '#1b1d20';
+    ctx.fillStyle = '#18191B';
     ctx.beginPath(); ctx.moveTo(x, y);
     ctx.arc(x, y, p.r, rot + p.notch * 0.5, rot + TAU - p.notch * 0.5); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = '#26282C'; ctx.lineWidth = Math.max(1, p.r * 0.03);
@@ -220,7 +220,7 @@ const pond = (() => {
       const fx = x + Math.cos(rot + 3.6) * p.r * 0.35, fy = y + Math.sin(rot + 3.6) * p.r * 0.35, pr = p.r * 0.34;
       ctx.fillStyle = '#D0D6E0';
       for (let k = 0; k < 7; k++) { const a = rot + k * TAU / 7; ctx.beginPath(); ctx.ellipse(fx + Math.cos(a) * pr * 0.55, fy + Math.sin(a) * pr * 0.55, pr * 0.6, pr * 0.26, a, 0, TAU); ctx.fill(); }
-      ctx.fillStyle = '#08090A'; ctx.beginPath(); ctx.arc(fx, fy, pr * 0.26, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#0B0C0D'; ctx.beginPath(); ctx.arc(fx, fy, pr * 0.26, 0, TAU); ctx.fill();
     }
   }
   function frame(nowMs) {
@@ -239,7 +239,7 @@ const pond = (() => {
     }
     pads.forEach((p) => { p.vx += -p.ox * 0.6 * dt; p.vy += -p.oy * 0.6 * dt; p.vx *= 0.985; p.vy *= 0.985; p.ox += p.vx; p.oy += p.vy; });
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = '#08090A'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#0B0C0D'; ctx.fillRect(0, 0, W, H);
     // slow pools of deeper water: flat discs, not a gradient
     [[0.3, 0.38, 0.5], [0.76, 0.62, 0.42]].forEach(([bx, by, br], i) => {
       ctx.fillStyle = '#0c0d0f'; ctx.beginPath();

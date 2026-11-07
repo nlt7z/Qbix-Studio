@@ -27,7 +27,7 @@
   "where": "The sign-off at the bottom of qbix.space, under the giant wordmark.",
   "rules": [
     "The wordmark is measured, not scaled by eye, so it meets both edges at every width.",
-    "The animal is flat lime facets, the one lime on paper, sitting on the ink letter: no outline, no shadow.",
+    "The animal is flat lime facets, the one lime on white, sitting on the ink letter: no outline, no shadow.",
     "The z's grow and are gone at the top; they are never faded."
   ],
   "tags": ["footer", "canvas", "wordmark", "pointer", "character"],
@@ -43,12 +43,12 @@
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px 64px;
   padding: clamp(20px, 4.5vw, 56px) clamp(20px, 4.5vw, 56px) 0;
 }
-.sign h2 { font: 400 clamp(28px, 4.6vw, 58px)/1.02 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; max-width: 9em; color: #121417; }
-.sign .pitch p { margin: 12px 0 0; color: rgba(18, 20, 23, 0.64); font-size: clamp(13px, 1.4vw, 16px); max-width: 26em; }
+.sign h2 { font: 300 clamp(28px, 4.6vw, 58px)/1.02 'Outfit', 'Geist', sans-serif; letter-spacing: -0.035em; max-width: 9em; color: #0B0C0D; }
+.sign .pitch p { margin: 12px 0 0; color: rgba(11, 12, 13, 0.64); font-size: 15px; max-width: 26em; }
 .sign .btn { margin-top: 16px; }
-.sign nav { display: flex; gap: clamp(28px, 5vw, 64px); font-size: clamp(13px, 1.3vw, 15px); color: #121417; }
+.sign nav { display: flex; gap: clamp(28px, 5vw, 64px); font-size: 15px; color: #0B0C0D; }
 .sign nav div { display: flex; flex-direction: column; gap: 6px; }
-.sign nav b { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.38); margin-bottom: 4px; }
+.sign nav b { font: 500 13px/16px 'Geist', sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, 0.66); margin-bottom: 4px; }
 .sign nav a { color: inherit; text-decoration: none; }
 .sign.is-tight nav, .sign.is-tight .pitch p:not(.kicker) { display: none; }
 </style>
@@ -68,7 +68,7 @@
       <p>Send a brief or a moodboard. Live in 1 to 3 weeks.</p>
       <a class="btn btn-solid" href="#" id="cta" onclick="return false">Tell us your idea</a>
     </div>
-    <nav><div><b>Services</b><a href="#">Design service</a><a href="#">Brand upgrade</a><a href="#">Website Refresh</a></div><div><b>Studio</b><a href="#">About</a><a href="#">Strata</a><a href="#">Contact</a></div></nav>
+    <nav><div><b>Services</b><a href="#">Design service</a><a href="#">Brand upgrade</a><a href="#">Website refresh</a></div><div><b>Studio</b><a href="#">About</a><a href="#">Strata</a><a href="#">Contact</a></div></nav>
   </div>
 </footer>
 <!-- /code -->
@@ -79,7 +79,7 @@
 function sleepyFooter(root, word = 'Qbix', letterIndex = 3) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const cv = root.querySelector('canvas'), ctx = cv.getContext('2d');
-  const FONT = '"Eurostile","Geist",sans-serif', LIME = '#B8FF00', SHADE = '#a6e600', INK = '#121417', PAPER = '#f3f4f5';   // ink wordmark, a lime animal
+  const FONT = '"Outfit","Geist",sans-serif', LIME = '#B8FF00', SHADE = '#a6e600', INK = '#0B0C0D', PAPER = '#ffffff';   // ink wordmark, a lime animal
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   let W = 0, H = 0, dpr = 1, fs = 100, base = 0, cap = 0, xh = 0, cx = 0, cy = 0, s = 40, wx0 = 0;
 
@@ -88,9 +88,9 @@ function sleepyFooter(root, word = 'Qbix', letterIndex = 3) {
     dpr = Math.min(2, devicePixelRatio || 1);
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     const pad = clamp(W * 0.045, 16, 56);
-    ctx.font = `400 100px ${FONT}`;
+    ctx.font = `300 100px ${FONT}`;
     fs = ((W - 2 * pad) / ctx.measureText(word).width) * 100;   // the word meets both margins
-    ctx.font = `400 ${fs}px ${FONT}`;
+    ctx.font = `300 ${fs}px ${FONT}`;
     const mx = ctx.measureText(word[letterIndex]), mb = ctx.measureText('b');
     xh = mx.actualBoundingBoxAscent || fs * 0.55; cap = mb.actualBoundingBoxAscent || fs * 0.72;
     wx0 = (W - ctx.measureText(word).width) / 2;
@@ -155,7 +155,7 @@ function sleepyFooter(root, word = 'Qbix', letterIndex = 3) {
       // grows to full size, then shrinks to nothing at the top (a z leaves by scale, never by fade)
       const sc = (0.55 + 0.75 * u) * (1 - Math.pow(Math.max(0, (u - 0.6) / 0.4), 2));
       const x = cx + s * 0.55 + u * s * 0.9 + Math.sin(u * Math.PI * 2 + z.k) * s * 0.12, y = cy - s * 1.25 - u * s * 1.7;
-      ctx.font = `400 ${s * 0.55 * sc}px ${FONT}`; ctx.fillText('z', x, y);
+      ctx.font = `300 ${s * 0.55 * sc}px ${FONT}`; ctx.fillText('z', x, y);
     }
   }
 
@@ -172,13 +172,13 @@ function sleepyFooter(root, word = 'Qbix', letterIndex = 3) {
     else if (want < awake) { awake = Math.max(0, awake - dt / 1.6); falling = true; }
     yawn = falling && awake > 0 && awake < 0.95 ? Math.sin(Math.PI * clamp((1 - awake) / 0.8, 0, 1)) : 0;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = INK; ctx.font = `400 ${fs}px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = INK; ctx.font = `300 ${fs}px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     ctx.fillText(word, wx0, base);
     creature(now); drawZ(now);
   })(last);
   addEventListener('resize', measure);
   measure();
-  if (document.fonts) { document.fonts.load('400 100px Eurostile').then(measure).catch(() => {}); document.fonts.ready.then(measure); }
+  if (document.fonts) { document.fonts.load('300 100px Outfit').then(measure).catch(() => {}); document.fonts.ready.then(measure); }
   return { point(x, y) { ptr.x = x; ptr.y = y; }, away() { ptr.x = ptr.y = -9999; }, spot: () => { const o = root.getBoundingClientRect(); return { x: cx + o.left, y: cy + o.top, s }; } };
 }
 const sleepy = sleepyFooter(document.getElementById('sign'));

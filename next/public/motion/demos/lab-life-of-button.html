@@ -35,10 +35,10 @@
 </script>
 <style data-code>
 /* Life of a button: three text layers stacked in one clipped box, driven from JS springs */
-.lb { position: relative; height: 56px; min-width: 56px; padding: 0; border: 0; cursor: pointer; overflow: hidden; background: #121417; color: #f4f5f2;
+.lb { position: relative; height: 56px; min-width: 56px; padding: 0; border: 0; cursor: pointer; overflow: hidden; background: #0B0C0D; color: #f4f5f2;
   font: 500 17px/1 Geist, system-ui, sans-serif; letter-spacing: -0.011em;
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
-.lb:focus-visible { outline: 2px solid #121417; outline-offset: 4px; }
+.lb:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 4px; }
 .lb-ly { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 10px; white-space: nowrap; }
 .lb-bar { display: block; width: 28px; height: 4px; background: rgba(244, 245, 242, 0.24); position: relative; overflow: hidden; }
 .lb-bar i { position: absolute; inset: 0; background: #f4f5f2; transform: scaleX(0); transform-origin: left; }
@@ -46,9 +46,9 @@
 .lb-ok { color: #0c1300; }   /* the success layer sits on lime: ink text */
 .lb-check { width: 22px; height: 22px; }
 .lb-check path { stroke-dasharray: 24; stroke-dashoffset: 24; }
-.lb-steps { position: relative; display: flex; gap: clamp(14px, 3vw, 28px); font: 400 12px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.38); padding-bottom: 12px; }
-.lb-steps span { transition: color 200ms; } .lb-steps span.on { color: #121417; }
-.lb-uline { position: absolute; left: 0; bottom: 0; height: 2px; background: #121417; width: 30px; }
+.lb-steps { position: relative; display: flex; gap: clamp(14px, 3vw, 28px); font: 400 13px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; color: rgba(11, 12, 13, 0.38); padding-bottom: 12px; }
+.lb-steps span { transition: color 200ms; } .lb-steps span.on { color: #0B0C0D; }
+.lb-uline { position: absolute; left: 0; bottom: 0; height: 2px; background: #0B0C0D; width: 30px; }
 .lb-measure { position: absolute; visibility: hidden; white-space: nowrap; font: 500 17px/1 Geist, sans-serif; letter-spacing: -0.011em; pointer-events: none; }
 </style>
 <style>

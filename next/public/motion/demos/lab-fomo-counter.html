@@ -25,8 +25,8 @@
   "source": ["Qbix studio library · fomo-counter"],
   "where": "A live site preview: who is reviewing forma.studio right now, and when the review call is.",
   "rules": [
-    "The numeral is Eurostile, the labels Encode Sans. The digit window clips the strip, nothing is faded.",
-    "'You' is the only lime on the screen; other people are white, mist and ink blocks with the cut corner.",
+    "The numeral is Outfit ExtraLight, the labels Geist. The digit window clips the strip, nothing is faded.",
+    "'You' is the only lime on the screen; other people are sage and ink blocks with the cut corner.",
     "Blocks scale from their own centre with a spring, never a fade."
   ],
   "tags": ["counter", "spring", "live", "avatars"]
@@ -36,18 +36,18 @@
 /* Reviewer counter: a spring-driven numeral, a row of initial blocks */
 .fm { width: min(100%, 720px); display: grid; gap: 22px; --a: clamp(44px, 7.4vw, 60px); }
 .fm-top { display: flex; align-items: flex-end; gap: clamp(16px, 3vw, 32px); }
-.fm-num { display: flex; font-family: 'Eurostile', 'Geist', sans-serif; font-size: clamp(110px, 21vw, 220px); line-height: 1; height: 1em; letter-spacing: -0.03em; color: #121417; overflow: hidden; font-variant-numeric: tabular-nums; }
+.fm-num { display: flex; font-family: 'Outfit', 'Geist', sans-serif; font-size: clamp(110px, 21vw, 220px); font-weight: 200; line-height: 1; height: 1em; letter-spacing: -0.04em; color: #0B0C0D; overflow: hidden; font-variant-numeric: tabular-nums; }
 .fm-col { height: 1em; overflow: hidden; width: 0.64em; text-align: center; transition: width 400ms cubic-bezier(0.65, 0, 0.35, 1); }
 .fm-strip { will-change: transform; }
 .fm-strip span { display: block; height: 1em; line-height: 1em; }
 .fm-label { padding-bottom: 0.9em; display: grid; gap: 6px; }
 .fm-row { position: relative; height: var(--a); }
 .fm-av { --c: 10px; position: absolute; left: 0; top: 0; width: var(--a); height: var(--a); display: grid; place-items: center; overflow: hidden;
-  font: 500 calc(var(--a) * 0.28) / 1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.08em;
+  font: 500 calc(var(--a) * 0.28) / 1 'Geist Mono', Geist, sans-serif; letter-spacing: 0.02em;
   clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
-.fm-av.more { background: rgba(18, 20, 23, 0.07); color: rgba(18, 20, 23, 0.64); }
+.fm-av.more { background: #E3E8DA; color: rgba(11, 12, 13, 0.66); }
 .fm-av.more i { display: block; font-style: normal; transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1); }
-.fm-foot { position: relative; height: 1.6em; overflow: hidden; font: 400 12px/1.6 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); }
+.fm-foot { position: relative; height: 1.6em; overflow: hidden; font: 400 13px/1.6 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.66); }
 .fm-foot span { position: absolute; left: 0; top: 0; white-space: nowrap; transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1); }
 .fm-foot span.in { transform: translateY(110%); } .fm-foot span.out { transform: translateY(-110%); }
 </style>
@@ -63,7 +63,7 @@
   <p class="kicker">Preview · forma.studio</p>
   <div class="fm-top">
     <div class="fm-num" id="num" role="img" aria-label="people reviewing now"></div>
-    <div class="fm-label"><p class="kicker">Reviewing now</p><p class="mono" style="font-size:13px;color:rgba(18,20,23,.5)">Review call Friday, 2 pm</p></div>
+    <div class="fm-label"><p class="kicker">Reviewing now</p><p class="mono" style="font-size:13px;color:rgba(11, 12, 13,.66)">Review call Friday, 2 pm</p></div>
   </div>
   <div class="fm-row" id="row"></div>
   <div class="fm-bar"><button class="btn btn-solid cut fm-join" id="join">Join the review</button><div class="fm-foot" id="foot"></div></div>
@@ -96,7 +96,7 @@
     }
     setColWidths(to);
   }
-  const POOL = [['AL', '#ffffff', '#121417'], ['MR', '#dadfd6', '#121417'], ['JK', '#121417', '#f4f5f2'], ['SO', '#ffffff', '#121417'], ['TB', '#dadfd6', '#121417'], ['EP', '#ffffff', '#121417'], ['DW', '#dadfd6', '#121417'], ['CN', '#121417', '#f4f5f2'], ['RV', '#ffffff', '#121417'], ['HG', '#dadfd6', '#121417'], ['LM', '#ffffff', '#121417'], ['QF', '#dadfd6', '#121417']];
+  const POOL = [['AL', '#EEF1E8', '#0B0C0D'], ['MR', '#E3E8DA', '#0B0C0D'], ['JK', '#0B0C0D', '#f4f5f2'], ['SO', '#EEF1E8', '#0B0C0D'], ['TB', '#E3E8DA', '#0B0C0D'], ['EP', '#EEF1E8', '#0B0C0D'], ['DW', '#E3E8DA', '#0B0C0D'], ['CN', '#0B0C0D', '#f4f5f2'], ['RV', '#EEF1E8', '#0B0C0D'], ['HG', '#E3E8DA', '#0B0C0D'], ['LM', '#EEF1E8', '#0B0C0D'], ['QF', '#E3E8DA', '#0B0C0D']];
   let pi = 0; const SHOW = 5; let viewers = [], moreEl = null, moreN = 0;
   function avatar(v) { const el = document.createElement('div'); el.className = 'fm-av'; el.textContent = v[0]; el.style.background = v[1]; el.style.color = v[2]; row.appendChild(el); return el; }
   function newViewer(you) { const v = you ? ['You', '#B8FF00', '#0c1300'] : POOL[pi++ % POOL.length]; return { el: avatar(v), x: -1, vx: 0, s: reduce ? 1 : 0, vs: 0, ts: 1, you: !!you }; }

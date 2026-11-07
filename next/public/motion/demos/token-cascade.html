@@ -15,7 +15,7 @@
     ["Wire", "2px ink elbow, stroke-dashoffset 1 → 0 over the first half of its state, ease-move; a 8px square node lands at each end"],
     ["Lime", "a lime layer over the ink one, clip-path inset(0 100% 0 0) → inset(0): uncovered left to right (the swatch, bottom to top)"],
     ["Stagger", "card: tag at 0.35–0.8, foot bar at 0.5–1 · page: all six uses on the same 0.45–1 so they change at once"],
-    ["Value", "#121417 and #B8FF00 in one sleeve, translateY 0 → −100%, with the swatch"],
+    ["Value", "#0B0C0D and #B8FF00 in one sleeve, translateY 0 → −100%, with the swatch"],
     ["Counter", "Uses 0 → 1 → 3 → 9: a column of digits, translateY by the beat"],
     ["Trigger", "seek(t): pure in t, so the scrubber and the rewind run it backwards · reduced motion snaps each state, nothing slides"]
   ],
@@ -33,13 +33,13 @@
 </script>
 <style data-code>
 /* Token cascade. A 640 × 400 scene on a white surface; zoom it to its box. Tokens: --signal, --on-lime, the qbix easings. */
-.tc { --ink: #121417; --lime: #B8FF00; --on: #0c1300; --tint: rgba(18, 20, 23, .64); --cut: 10px;
-  position: relative; width: 640px; height: 400px; background: #fff; color: var(--ink); overflow: hidden;
+.tc { --ink: #0B0C0D; --lime: #B8FF00; --on: #0c1300; --tint: rgba(11, 12, 13, .64); --cut: 10px;
+  position: relative; width: 640px; height: 400px; background: #EEF1E8; color: var(--ink); overflow: hidden;
   font-family: Geist, system-ui, sans-serif; letter-spacing: -.011em; }
 .tc > * { position: absolute; }
-.tc .mono { font-family: 'Encode Sans', Geist, sans-serif; font-variant-numeric: tabular-nums; }
-.tc-k { font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--tint); }
-.tc-lab { position: absolute; left: 12px; top: 12px; font: 11px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--tint); }
+.tc .mono { font-family: 'Geist Mono', Geist, sans-serif; font-variant-numeric: tabular-nums; }
+.tc-k { font: 12px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: var(--tint); }
+.tc-lab { position: absolute; left: 12px; top: 12px; font: 11px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: var(--tint); }
 
 /* a sleeve: lines stacked in a one-line window, rolled by --r (lines) */
 .tc-sleeve { overflow: hidden; height: var(--h, 20px); line-height: var(--h, 20px); }
@@ -54,37 +54,37 @@
 .acc.cut { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
 
 /* the token */
-.tc-token { left: 28px; top: 108px; width: 148px; height: 200px; background: #f3f4f5; }
-.tc-token .nm { position: absolute; left: 12px; top: 32px; font: 500 19px/28px 'Encode Sans', Geist, sans-serif; letter-spacing: -.01em; }
+.tc-token { left: 28px; top: 108px; width: 148px; height: 200px; background: #ffffff; }
+.tc-token .nm { position: absolute; left: 12px; top: 32px; font: 500 19px/28px 'Geist Mono', Geist, sans-serif; letter-spacing: -.01em; }
 .tc-token .acc { position: absolute; left: 12px; top: 70px; width: 124px; height: 62px; }
-.tc-token .val { position: absolute; left: 12px; top: 142px; font: 13px/20px 'Encode Sans', Geist, sans-serif; color: var(--tint); }
+.tc-token .val { position: absolute; left: 12px; top: 142px; font: 13px/20px 'Geist Mono', Geist, sans-serif; color: var(--tint); }
 .tc-token .use { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-.tc-token .use b { font: 500 16px/20px 'Encode Sans', Geist, sans-serif; }
+.tc-token .use b { font: 500 16px/20px 'Geist Mono', Geist, sans-serif; }
 
 /* the components */
-.tc-comp { background: #f3f4f5; }
+.tc-comp { background: #ffffff; }
 .tc-btn { left: 224px; top: 60px; width: 168px; height: 110px; }
 .tc-btn .acc { position: absolute; left: 12px; top: 38px; width: 124px; height: 40px; font: 500 14px/1 Geist, sans-serif; }
 .tc-btn .acc-top { font: inherit; }
-.tc-btn .nt { position: absolute; left: 12px; top: 86px; font: 11px/14px 'Encode Sans', Geist, sans-serif; color: var(--tint); }
+.tc-btn .nt { position: absolute; left: 12px; top: 86px; font: 11px/14px 'Geist Mono', Geist, sans-serif; color: var(--tint); }
 .tc-card { left: 224px; top: 204px; width: 168px; height: 148px; }
-.tc-card .mk { position: absolute; left: 12px; top: 34px; width: 144px; height: 100px; background: #fff; }
-.tc-card .tg { position: absolute; left: 10px; top: 10px; width: 38px; height: 18px; font: 500 10px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.tc-card .mk { position: absolute; left: 12px; top: 34px; width: 144px; height: 100px; background: #EEF1E8; }
+.tc-card .tg { position: absolute; left: 10px; top: 10px; width: 38px; height: 18px; font: 500 10px/1 'Geist', Geist, sans-serif; letter-spacing: 0; }
 .tc-card .tg .acc-top { font: inherit; }
-.tc-card .ln { position: absolute; left: 10px; height: 7px; background: rgba(18, 20, 23, .12); }
+.tc-card .ln { position: absolute; left: 10px; height: 7px; background: rgba(11, 12, 13, .12); }
 .tc-card .ft { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; }
 
 /* the page preview: six uses of the accent */
-.tc-page { left: 432px; top: 62px; width: 180px; height: 300px; background: #f3f4f5; }
-.tc-page .url { position: absolute; left: 12px; top: 10px; font: 10px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: var(--tint); }
+.tc-page { left: 432px; top: 62px; width: 180px; height: 300px; background: #ffffff; }
+.tc-page .url { position: absolute; left: 12px; top: 10px; font: 10px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: var(--tint); }
 .tc-page .nav { position: absolute; right: 12px; top: 10px; width: 38px; height: 16px; }
-.tc-page h3 { position: absolute; left: 12px; top: 46px; width: 150px; margin: 0; font: 400 24px/1.04 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
-.tc-page .ln { position: absolute; left: 12px; height: 6px; background: rgba(18, 20, 23, .12); }
+.tc-page h3 { position: absolute; left: 12px; top: 46px; width: 150px; margin: 0; font: 400 24px/1.04 Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.tc-page .ln { position: absolute; left: 12px; height: 6px; background: rgba(11, 12, 13, .12); }
 .tc-page .cta { position: absolute; left: 12px; top: 130px; width: 92px; height: 30px; font: 500 12px/1 Geist, sans-serif; }
 .tc-page .cta .acc-top { font: inherit; }
-.tc-page .tg { position: absolute; left: 12px; top: 176px; width: 38px; height: 18px; font: 500 10px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.tc-page .tg { position: absolute; left: 12px; top: 176px; width: 38px; height: 18px; font: 500 10px/1 'Geist', Geist, sans-serif; letter-spacing: 0; }
 .tc-page .tg .acc-top { font: inherit; }
-.tc-page .pc { position: absolute; top: 204px; width: 74px; height: 60px; background: #fff; }
+.tc-page .pc { position: absolute; top: 204px; width: 74px; height: 60px; background: #EEF1E8; }
 .tc-page .pc .ft { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; }
 .tc-page .lk { position: absolute; left: 12px; top: 272px; font: 500 12px/18px Geist, sans-serif; }
 .tc-page .lk .ul { position: absolute; left: 0; right: 0; bottom: -4px; height: 2px; }
@@ -115,7 +115,7 @@
     <span class="tc-lab">Token</span>
     <span class="nm">--accent</span>
     <div class="acc acc--up" data-k="swatch"><div class="acc-top"></div></div>
-    <div class="val tc-sleeve" style="--h:20px" data-k="val"><span><i>#121417</i><i>#B8FF00</i></span></div>
+    <div class="val tc-sleeve" style="--h:20px" data-k="val"><span><i>#0B0C0D</i><i>#B8FF00</i></span></div>
     <div class="use"><span class="tc-lab" style="position:static">Uses</span><div class="tc-sleeve" style="--h:20px; width:16px; text-align:right" data-k="uses"><b><span><i>0</i><i>1</i><i>3</i><i>9</i></span></b></div></div>
   </div>
 

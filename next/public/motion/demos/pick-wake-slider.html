@@ -34,13 +34,13 @@
     "A colour block marks the pick, no shadow.",
     "role=slider on the bars, with the arrow keys, and touch-action: none."
   ],
-  "tags": ["slider", "spring", "wake", "drag", "paper"],
+  "tags": ["slider", "spring", "wake", "drag", "sage"],
   "shot": 2000
 }
 </script>
 <style data-code>
 /* Wake slider — idea: bencho.dev wake-slider (MIT), redrawn for Qbix.
-   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: white ground, sage card, ink, one lime. */
 .pk {
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-7: 32px;
   --radius-sm: 8px; --radius-lg: 14px; --radius-pill: 999px;
@@ -49,11 +49,11 @@
   font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
 }
 .card { width: min(680px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-7) var(--space-6) var(--space-6); display: grid; gap: var(--space-6); }
-.hd h1 { font: 400 20px/1.35 var(--font-sans); letter-spacing: -0.02em; }
+.hd h1 { font: 300 20px/1.35 var(--font-headline); letter-spacing: -0.035em; }
 .hd p { color: var(--muted); }
 .read { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); }
-.read .n { font-size: 42px; letter-spacing: -0.04em; line-height: 1.15; font-variant-numeric: tabular-nums; }
-.read .n small { font-size: 16px; color: var(--muted); letter-spacing: 0; margin-left: var(--space-1); }
+.read .n { font-family: var(--font-headline); font-weight: 300; font-size: 42px; letter-spacing: -0.04em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.read .n small { font-family: var(--font-sans); font-size: 14px; color: var(--muted); letter-spacing: 0; margin-left: var(--space-1); }
 .ends { display: flex; justify-content: space-between; color: var(--muted); }
 .bars { position: relative; height: 84px; display: flex; align-items: center; justify-content: space-between; touch-action: none; cursor: ew-resize; user-select: none; -webkit-user-select: none; }
 .bars:focus-visible { outline: 2px solid var(--fg); outline-offset: 6px; border-radius: var(--radius-sm); }
@@ -96,9 +96,9 @@
 const $ = (s) => document.querySelector(s);
 const bars = $('#bars');
 const TIERS = [   // the Design service, by turnaround: [name, weeks, dollars, picture]
-  ['Rush', 1, 1200, 'cross'],
-  ['Priority', 2, 750, 'ring'],
-  ['Standard', 3, 500, 'objects'],
+  ['Rush', 1, 1200, 'lime-fold'],
+  ['Priority', 2, 750, 'lime-dune'],
+  ['Standard', 3, 500, 'lime-arc'],
 ];
 const money = (n) => '$' + n.toLocaleString('en-US');
 const minP = Math.min(...TIERS.map((t) => t[2])), maxP = Math.max(...TIERS.map((t) => t[2]));

@@ -61,10 +61,11 @@
 <style>
   html:not(.qm-tile) .qm-stage { padding-bottom: 84px; }
   .lw { width: min(100%, 780px); display: grid; justify-items: start; gap: clamp(14px, 3vmin, 26px); }
-  .lw .eyebrow { margin: 0; font-family: var(--font-mono); font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: var(--fg2); }
+  .lw .eyebrow { margin: 0; font-family: var(--font-sans); font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--fg2); }
   .lw .title { font-size: clamp(40px, 7.4vw, 104px); line-height: 1.02; letter-spacing: -0.032em; }
   .lw .title span { display: block; }
-  .lw .lede { max-width: 32em; font-size: clamp(16px, 1.9vw, 22px); }
+  .lw .lede { max-width: 32em; font-size: clamp(14px, 1.9vw, 20px); }
+  .lw .btn-line { border: 0; box-shadow: none; background: var(--sage); color: #0B0C0D; }
   .lw-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: clamp(4px, 1vw, 12px); }
   /* demo only: the block shut again between plays */
   .btn-primary.is-reset { animation: none !important; clip-path: inset(0 100% 0 0); }

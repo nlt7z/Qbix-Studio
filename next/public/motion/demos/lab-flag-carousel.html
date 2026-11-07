@@ -27,7 +27,7 @@
   "where": "Launch banners for the studio's own work: the flags a launch day can fly.",
   "rules": [
     "Flat colour on the cloth; the only shading is the wave's own light.",
-    "One lime flag, the studio's; the rest are white and paper, drawn in ink.",
+    "The flags are sage with ink on them; the studio's own is ink with its name in lime.",
     "The caption slides through a mask when the centred flag changes."
   ],
   "tags": ["webgl", "drag", "inertia", "cloth"],
@@ -39,11 +39,11 @@
 .fc.drag { cursor: grabbing; }
 .fc canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .fc-head { position: absolute; left: clamp(16px, 4.5vmin, 52px); top: clamp(14px, 4vmin, 44px); pointer-events: none; }
-.fc-head h1 { font: 400 clamp(28px, 4.6vw, 56px)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; margin-top: 8px; }
-.fc-cap { position: absolute; left: 0; top: 0; height: 1.6em; overflow: hidden; pointer-events: none; min-width: 60vw; font: 400 12px/1.6 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.fc-head h1 { font: 300 clamp(28px, 4.6vw, 56px)/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; margin-top: 8px; }
+.fc-cap { position: absolute; left: 0; top: 0; height: 1.6em; overflow: hidden; pointer-events: none; min-width: 60vw; font: 400 14px/1.6 'Geist', Geist, sans-serif; letter-spacing: 0; }
 .fc-cap span { position: absolute; left: 0; top: 0; white-space: nowrap; }
-.fc-cap b { font-weight: 500; color: #121417; }
-.fc-cap i { color: rgba(18,20,23,.64); }
+.fc-cap b { font-weight: 500; color: #0B0C0D; }
+.fc-cap i { color: rgba(11, 12, 13,.64); }
 .fc-cap span.in { animation: fc-in .45s cubic-bezier(.16, 1, .3, 1) .2s both; }
 .fc-cap span.out { animation: fc-out .22s cubic-bezier(.5, 0, .75, 0) both; }
 @keyframes fc-in { from { transform: translateY(105%); } to { transform: none; } }
@@ -69,15 +69,15 @@ const flags = (() => {
   const capEl = document.getElementById('cap'), host = document.getElementById('fc');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const BANNERS = [
-    { bg: '#ffffff', fg: '#121417', name: 'Forma', sub: 'The shop is live' },
-    { bg: '#f3f4f5', fg: '#121417', name: 'Strata', sub: 'Public beta' },
-    { bg: '#B8FF00', fg: '#0c1300', name: 'Qbix', sub: 'Studio flag' },
-    { bg: '#ffffff', fg: '#121417', name: 'Kova', sub: 'The app is live' },
-    { bg: '#f3f4f5', fg: '#121417', name: 'Qbix Labs', sub: 'Three tools, one door' },
-    { bg: '#ffffff', fg: '#121417', name: 'Willow Counseling', sub: 'The site is live' }
+    { bg: '#EEF1E8', fg: '#0B0C0D', name: 'Forma', sub: 'The shop is live' },
+    { bg: '#EEF1E8', fg: '#0B0C0D', name: 'Strata', sub: 'Public beta' },
+    { bg: '#0B0C0D', fg: '#f4f5f2', name: 'Qbix', sub: 'Studio flag' },
+    { bg: '#EEF1E8', fg: '#0B0C0D', name: 'Kova', sub: 'The app is live' },
+    { bg: '#EEF1E8', fg: '#0B0C0D', name: 'Qbix Labs', sub: 'Three tools, one door' },
+    { bg: '#EEF1E8', fg: '#0B0C0D', name: 'Willow Counseling', sub: 'The site is live' }
   ];
   const K = BANNERS.length, TW = 768, TH = 512;
-  const SERIF = (s) => `400 ${s}px Eurostile, Geist, sans-serif`, SANS = (s) => `500 ${s}px Geist, Arial, sans-serif`;
+  const SERIF = (s) => `300 ${s}px Outfit, Geist, sans-serif`, SANS = (s) => `500 ${s}px Geist, Arial, sans-serif`;
   // banner art, painted once per flag; the top right corner is cut
   function paint(i) {
     const b = BANNERS[i], c = document.createElement('canvas'); c.width = TW; c.height = TH;
@@ -86,7 +86,7 @@ const flags = (() => {
     x.fillStyle = b.fg; x.textBaseline = 'alphabetic';
     if (i === 0) { x.font = SERIF(h * .3); x.fillText('Forma', w * .1, h * .5); x.font = SANS(h * .07); x.fillText('Objects for bright rooms.', w * .1, h * .67); x.lineWidth = h * .035; x.strokeStyle = b.fg; x.beginPath(); x.arc(w * .78, h * .7, h * .12, 0, Math.PI * 2); x.stroke(); }   // a halo
     else if (i === 1) { x.font = SERIF(h * .26); x.fillText('Strata', w * .1, h * .36); x.font = SANS(h * .065); x.fillText('Moodboard in, system out.', w * .1, h * .5); for (let k = 0; k < 4; k++) x.fillRect(w * .1, h * (.62 + k * .075), w * (.8 - k * .17), h * .045); }   // four strata
-    else if (i === 2) { x.font = SERIF(h * .36); x.textAlign = 'center'; x.fillText('qbix', w * .47, h * .6); x.font = SANS(h * .065); x.fillText('Design by Qbix', w * .47, h * .78); }
+    else if (i === 2) { x.font = SERIF(h * .36); x.textAlign = 'center'; x.fillStyle = '#B8FF00'; x.fillText('qbix', w * .47, h * .6); x.fillStyle = b.fg; x.font = SANS(h * .065); x.fillText('Design by Qbix', w * .47, h * .78); }
     else if (i === 3) { x.fillStyle = '#B8FF00'; x.fillRect(w * .1, h * .14, h * .3, h * .3); x.fillStyle = b.fg; x.font = SERIF(h * .3); x.textAlign = 'center'; x.fillText('k', w * .1 + h * .15, h * .4); x.textAlign = 'left'; x.font = SERIF(h * .2); x.fillText('Kova', w * .1, h * .7); x.font = SANS(h * .065); x.fillText('The app is live.', w * .1, h * .83); }
     else if (i === 4) { x.font = SERIF(h * .22); x.fillText('Qbix', w * .1, h * .4); x.fillText('Labs', w * .1, h * .64); for (let k = 0; k < 3; k++) x.fillRect(w * .1 + k * h * .11, h * .76, h * .07, h * .07); }   // three tools
     else { x.font = SERIF(h * .2); x.fillText('Willow', w * .1, h * .38); x.fillText('Counseling', w * .1, h * .6); x.font = SANS(h * .065); x.fillText('A calm practice, online.', w * .1, h * .78); x.fillRect(w * .1, h * .86, w * .14, h * .035); }
@@ -161,7 +161,7 @@ void main(){
     });
   }
   uploadTextures();
-  if (document.fonts) document.fonts.load('400 100px Eurostile').then(uploadTextures, () => {});
+  if (document.fonts) document.fonts.load('300 100px Outfit').then(uploadTextures, () => {});
   // layout and carousel state
   let W, H, dpr, bw, bh, gap, top0;
   function resize() {
@@ -256,7 +256,7 @@ void main(){
     for (const it of items) {
       if (!glOK) octx.drawImage(textures[it.i], it.ox, it.oy, it.w, it.h);
       const pw = Math.max(3, it.w * 0.014);
-      octx.fillStyle = '#121417';
+      octx.fillStyle = '#0B0C0D';
       octx.fillRect(it.ox - pw, it.oy - it.h * 0.08, pw, H - (it.oy - it.h * 0.08));
     }
     capEl.style.transform = `translate(${cx - bw * 0.5 + 4}px, ${top0 + bh + Math.max(18, bh * 0.12)}px)`;

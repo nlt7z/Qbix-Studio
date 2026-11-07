@@ -13,7 +13,7 @@
   "spec": [["Grow", "950 ms cubic-out, 70 ms between bars, 150 ms lead"], ["Hover", "1 − e^(−12 dt) on width (×1.9), height (+12px) and dim"], ["Dim", "other bars to 50%, others in the bar to 70%"], ["Segments", "3px gap between, top right of each bar cut"], ["Readout", "text slides up out of a mask (170 ms in, 280 ms out)"], ["Idle", "a ghost visits six segments, 1.7 s each"]],
   "source": ["Qbix studio library · stacked-bars"],
   "where": "A studio dashboard or Practice chapter that shows where new briefs come from.",
-  "rules": ["Sources are told apart by a short ladder (moss, ink, mist, pale lime), never by a rainbow; the saturated lime is only the segment being read.", "No gridlines: the rows are dotted.", "Numbers are Encode Sans, the percentage is Eurostile."],
+  "rules": ["Sources are told apart by a short ladder (ink, dark sage, sage, pale sage), never by a rainbow; the lime is only the segment being read.", "No gridlines: the rows are dotted.", "Numbers and weeks are Geist Mono, the percentage is Outfit."],
   "tags": ["canvas", "chart", "hover", "data"],
   "shot": 1550
 }
@@ -21,10 +21,10 @@
 <style data-code>
 .sb { position: absolute; inset: 0; display: flex; flex-direction: column; padding: clamp(18px, 5vmin, 48px) clamp(18px, 5vmin, 56px) clamp(12px, 3vmin, 28px); user-select: none; }
 .sb-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 28px; }
-.sb-head h2 { font: 400 clamp(28px, 4.6vw, 52px)/1 Eurostile, Geist, sans-serif; letter-spacing: -0.03em; margin: 8px 0 0; }
-.sb-sub { height: 1.5em; overflow: hidden; margin-top: 10px; color: rgba(18,20,23,.64); font-size: clamp(13px, 1.3vw, 15px); }
+.sb-head h2 { font: 300 clamp(28px, 4.6vw, 52px)/1 'Outfit', 'Geist', sans-serif; letter-spacing: -0.035em; margin: 8px 0 0; }
+.sb-sub { height: 1.5em; overflow: hidden; margin-top: 10px; color: rgba(11, 12, 13,.66); font-size: 15px; }
 .sb-sub span { display: block; }
-.sb-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font: 11px 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+.sb-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font: 500 13px 'Geist', sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13,.66); }
 .sb-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; vertical-align: -1px; }
 .sb-plot { position: relative; flex: 1; min-height: 0; margin-top: clamp(8px, 2vmin, 20px); }
 .sb-plot canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
@@ -52,8 +52,8 @@
 const StackedBars = (() => {
   const LIME = '#B8FF00', ON_LIME = '#0c1300', FG = '18, 20, 23';
   const S = [
-    { n: 'Referral', c: '#6fae00' }, { n: 'Search', c: '#121417' },
-    { n: 'Social', c: '#dadfd6' }, { n: 'Direct', c: '#eaf9b0' },
+    { n: 'Referral', c: '#0B0C0D' }, { n: 'Search', c: '#4A5043' },
+    { n: 'Social', c: '#A9B39A' }, { n: 'Direct', c: '#E3E8DA' },
   ];
   const WK = ['Sep 1', 'Sep 8', 'Sep 15', 'Sep 22', 'Sep 29', 'Oct 6', 'Oct 13', 'Oct 20'];
   const D = [[4, 2, 3, 2], [5, 3, 2, 3], [6, 3, 3, 2], [6, 4, 4, 3], [7, 5, 3, 3], [8, 6, 4, 4], [7, 5, 5, 4], [9, 6, 5, 4]];
@@ -61,7 +61,7 @@ const StackedBars = (() => {
   const ALL = TOT.reduce((a, b) => a + b, 0);
   const MAXV = Math.ceil(Math.max(...TOT) / 5) * 5;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const MONO = '"Encode Sans", Geist, sans-serif', HEAD = 'Eurostile, Geist, sans-serif';
+  const MONO = '"Geist Mono", monospace', HEAD = '"Outfit", "Geist", sans-serif', SANS = 'Geist, sans-serif';
 
   const legend = document.getElementById('sb-legend');
   S.forEach((s) => { const d = document.createElement('span'); d.innerHTML = `<i style="background:${s.c}"></i>${s.n}`; legend.appendChild(d); });
@@ -118,7 +118,7 @@ const StackedBars = (() => {
 
   function draw(now) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    const plotH = B - T, fs = Math.round(clamp(W * 0.011, 11, 13));
+    const plotH = B - T, fs = 13;
     ctx.font = `400 ${fs}px ${MONO}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
     for (let v = 0; v <= MAXV; v += 5) {
       const y = Math.round(B - v / MAXV * plotH);
@@ -129,7 +129,7 @@ const StackedBars = (() => {
     }
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
     const every = colW < 40 ? 2 : 1;
-    WK.forEach((w, i) => { if ((D.length - 1 - i) % every) return; ctx.fillStyle = i === hb ? `rgb(${FG})` : `rgba(${FG}, .38)`; ctx.fillText(w.toUpperCase(), L + (i + 0.5) * colW, H - 6); });
+    WK.forEach((w, i) => { if ((D.length - 1 - i) % every) return; ctx.fillStyle = i === hb ? `rgb(${FG})` : `rgba(${FG}, .38)`; ctx.fillText(w, L + (i + 0.5) * colW, H - 6); });
 
     geo = [];
     const gap = 3;
@@ -162,13 +162,13 @@ const StackedBars = (() => {
       const i = lastHB, j = lastHS, g = geo[i], topY = g.s[g.s.length - 1].y0, cx = L + (i + 0.5) * colW;
       const num = Math.round(D[i][j] / TOT[i] * 100) + '%';
       ctx.globalAlpha = dim;
-      const nf = Math.round(clamp(W * 0.05, 28, 46)), lf = Math.round(clamp(W * 0.011, 11, 13));
-      ctx.font = `400 ${nf}px ${HEAD}`; const nw = ctx.measureText(num).width;
-      ctx.font = `500 ${lf}px ${MONO}`; const lw = ctx.measureText(S[j].n.toUpperCase()).width;
+      const nf = Math.round(clamp(W * 0.05, 28, 46)), lf = 13;
+      ctx.font = `300 ${nf}px ${HEAD}`; const nw = ctx.measureText(num).width;
+      ctx.font = `500 ${lf}px ${SANS}`; const lw = ctx.measureText(S[j].n).width;
       const tw = nw + 10 + lw, x0 = clamp(cx - tw / 2, L, W - tw - 2), by = topY - 14 - (1 - dim) * 8;
       ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-      ctx.fillStyle = `rgb(${FG})`; ctx.font = `400 ${nf}px ${HEAD}`; ctx.fillText(num, x0, by);
-      ctx.font = `500 ${lf}px ${MONO}`; ctx.fillStyle = `rgba(${FG}, .64)`; ctx.fillText(S[j].n.toUpperCase(), x0 + nw + 10, by - 2);
+      ctx.fillStyle = `rgb(${FG})`; ctx.font = `300 ${nf}px ${HEAD}`; ctx.fillText(num, x0, by);
+      ctx.font = `500 ${lf}px ${SANS}`; ctx.fillStyle = `rgba(${FG}, .66)`; ctx.fillText(S[j].n, x0 + nw + 10, by - 2);
       ctx.globalAlpha = 1;
     }
   }

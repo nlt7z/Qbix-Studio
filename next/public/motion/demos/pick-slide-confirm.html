@@ -40,17 +40,17 @@
 </script>
 <style data-code>
 /* Slide to book · Idea: bencho.dev slide-confirm (MIT).
-   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+   O2's roles in qbix colours: ink on white, one lime. Radii, spacing and type are the O2 library's own. */
 .sc {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64);
-  --page: #f3f4f5; --surface: #ffffff; --divider: rgba(18, 20, 23, 0.08); --edge: rgba(18, 20, 23, 0.52);
-  --primary: #B8FF00; --on-primary: #0c1300; --primary-soft: #eaffb2;
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64);
+  --page: #ffffff; --surface: #EEF1E8; --divider: #E3E8DA; --edge: rgba(11, 12, 13, 0.52);
+  --primary: #B8FF00; --on-primary: #0c1300; --primary-soft: #E3E8DA;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   width: 360px; height: 560px; background: var(--page); border-radius: 28px; display: flex; flex-direction: column; padding: 24px 16px 20px; gap: 14px;
   font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
 }
 .sc-hd { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
-.sc-title { font-size: 20px; letter-spacing: -0.02em; line-height: 1.35; }
+.sc-title { font-family: var(--font-headline); font-weight: 300; font-size: 20px; letter-spacing: -0.03em; line-height: 1.35; }
 .sc-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: var(--divider); transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
 .sc-chip.done { color: #fff; background: var(--text); }
 .sc-panel { background: var(--surface); border-radius: 14px; padding: 18px 16px; display: grid; gap: 14px; }
@@ -68,7 +68,7 @@
 .sc-ln .n { font-variant-numeric: tabular-nums; }
 .sc-tot { display: flex; justify-content: space-between; align-items: baseline; }
 .sc-tot > span:first-child { color: var(--muted); }
-.sc-tot b { color: var(--text); font-weight: 400; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sc-tot b { font-family: var(--font-mono); color: var(--text); font-weight: 400; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .sc-tot small { margin-left: 8px; font-size: 14px; color: var(--muted); }
 .sc-grow { flex: 1; }
 
@@ -103,7 +103,7 @@
     <div class="sc-lines">
       <div class="sc-ln"><img src="../assets/art/objects.webp" alt=""><span class="t"><span>Moodboard</span><span>Palette, type and a grid</span></span><span class="n">PDF</span></div>
       <div class="sc-ln"><img src="../assets/art/block.webp" alt=""><span class="t"><span>Design and code</span><span>Five pages, built in code</span></span><span class="n">5</span></div>
-      <div class="sc-ln"><img src="../assets/art/ring.webp" alt=""><span class="t"><span>Live on your domain</span><span>forma.studio, connected</span></span><span class="n">Live</span></div>
+      <div class="sc-ln"><img src="../assets/art/lime-arc.webp" alt=""><span class="t"><span>Live on your domain</span><span>forma.studio, connected</span></span><span class="n">Live</span></div>
     </div>
     <div class="sc-tot"><span>From</span><span><b>$500</b><small>and up</small></span></div>
   </div>

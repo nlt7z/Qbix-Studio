@@ -14,7 +14,7 @@
   "kind": "loop",
   "tone": "paper",
   "line": "SAT contacts · sequential impulses · grab with a soft joint",
-  "summary": "A hand-written 2D rigid body engine drops the numbers 4, 0, 4 and three words (Not built yet) onto a white floor. Boxes collide by separating axis tests with clipped contact points and are solved by sequential impulses with friction and warm starting. A pointer picks a block up through a soft constraint and flings it.",
+  "summary": "A hand-written 2D rigid body engine drops the numbers 4, 0, 4 and three words (Not built yet) onto a sage floor. Boxes collide by separating axis tests with clipped contact points and are solved by sequential impulses with friction and warm starting. A pointer picks a block up through a soft constraint and flings it.",
   "spec": [
     ["Engine", "oriented boxes, SAT + edge clipping, 10 solver iterations, 3 sub-steps a frame"],
     ["Contact", "friction 0.55, restitution 0.12 above 120 px/s, slop 0.6 px, bias 0.18, warm-started"],
@@ -26,8 +26,8 @@
   "where": "The not-found page of a Qbix site: this page isn't built yet, and the numbers are yours to throw.",
   "rules": [
     "Blocks are flat with the cut corner (drawn, the collision stays a plain box). No shadows under them.",
-    "The 0 is the lime one; everything else is ink, or white with a 2px ink frame.",
-    "Digits are Eurostile at half the block height, words are Eurostile at a third."
+    "The 0 is the lime one; everything else is ink or sage.",
+    "Digits are Outfit Light at half the block height, words are Outfit Light at a third."
   ],
   "tags": ["canvas", "physics", "404", "drag"],
   "shot": 4500
@@ -60,15 +60,15 @@ html:not(.qm-tile) .ph-cv { bottom: 46px; height: calc(100% - 46px); }
   const cv = document.getElementById('c'), ctx = cv.getContext('2d'), resetB = document.getElementById('reset');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let W = 0, H = 0, dpr = 1, G = 2200, TH = 100, OX = 0, OY = 0;
-  const FONT = "Eurostile, 'Geist', system-ui, sans-serif";
+  const FONT = "Outfit, 'Geist', system-ui, sans-serif";
   const SPEC = [
-    { t: '4', k: 'd', fill: '#121417', ink: '#f4f5f2' }, { t: '0', k: 'd', fill: '#B8FF00', ink: '#0c1300' }, { t: '4', k: 'd', fill: '#ffffff', ink: '#121417', frame: 1 },
-    { t: 'Not', k: 'w', fill: '#ffffff', ink: '#121417', frame: 1 }, { t: 'built', k: 'w', fill: '#121417', ink: '#f4f5f2' }, { t: 'yet', k: 'w', fill: '#ffffff', ink: '#121417', frame: 1 },
+    { t: '4', k: 'd', fill: '#0B0C0D', ink: '#f4f5f2' }, { t: '0', k: 'd', fill: '#B8FF00', ink: '#0c1300' }, { t: '4', k: 'd', fill: '#EEF1E8', ink: '#0B0C0D' },
+    { t: 'Not', k: 'w', fill: '#EEF1E8', ink: '#0B0C0D' }, { t: 'built', k: 'w', fill: '#0B0C0D', ink: '#f4f5f2' }, { t: 'yet', k: 'w', fill: '#EEF1E8', ink: '#0B0C0D' },
   ];
   let bodies = [], walls = [], idc = 0;
   function mkBody(x, y, hw, hh, a, stat) { const m = stat ? 0 : hw * hh * 4 / 1000, I = stat ? 0 : m * ((2 * hw) ** 2 + (2 * hh) ** 2) / 12; return { id: idc++, x, y, a, vx: 0, vy: 0, w: 0, hw, hh, m, im: stat ? 0 : 1 / m, iI: stat ? 0 : 1 / I, stat }; }
   const measure = () => { TH = Math.max(64, Math.min(W * 0.2, H * 0.27, 190)); };
-  const wordW = (t) => { ctx.font = `${TH * 0.34}px ${FONT}`; return ctx.measureText(t).width; };
+  const wordW = (t) => { ctx.font = `300 ${TH * 0.34}px ${FONT}`; return ctx.measureText(t).width; };
   function spawn() {
     bodies = []; measure();
     const tw = TH * 0.8, gap = Math.min(TH * 0.18, (W - 3 * tw) / 4), total = 3 * tw + 2 * gap, x0 = W / 2 - total / 2 + tw / 2;
@@ -170,14 +170,14 @@ html:not(.qm-tile) .ph-cv { bottom: 46px; height: calc(100% - 46px); }
   // render: flat blocks, the top right corner cut
   function draw() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    const fl = Math.min(22, H * 0.03); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, H - fl, W, fl);   // the floor: a white surface on the paper
+    const fl = Math.min(22, H * 0.03); ctx.fillStyle = '#E3E8DA'; ctx.fillRect(0, H - fl, W, fl);   // the floor: a deeper sage on the white
     for (const b of bodies) {
       ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.a);
       const c = Math.min(18, Math.min(b.hw, b.hh) * 0.5);
       ctx.fillStyle = b.fill; ctx.beginPath(); ctx.moveTo(-b.hw, -b.hh); ctx.lineTo(b.hw - c, -b.hh); ctx.lineTo(b.hw, -b.hh + c); ctx.lineTo(b.hw, b.hh); ctx.lineTo(-b.hw, b.hh); ctx.closePath(); ctx.fill();
-      if (b.frame) { ctx.save(); ctx.clip(); ctx.lineWidth = 4; ctx.strokeStyle = b.ink; ctx.stroke(); ctx.restore(); }   // a white block gets a 2px inset ink frame
+      if (b.frame) { ctx.save(); ctx.clip(); ctx.lineWidth = 4; ctx.strokeStyle = b.ink; ctx.stroke(); ctx.restore(); }   // (a framed block gets a 2px inset ink frame; none are framed now)
       ctx.fillStyle = b.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = `${b.k === 'd' ? TH * 0.54 : TH * 0.34}px ${FONT}`; ctx.fillText(b.t, 0, TH * 0.02);
+      ctx.font = `300 ${b.k === 'd' ? TH * 0.54 : TH * 0.34}px ${FONT}`; ctx.fillText(b.t, 0, TH * 0.02);
       ctx.restore();
     }
   }
@@ -207,7 +207,7 @@ html:not(.qm-tile) .ph-cv { bottom: 46px; height: calc(100% - 46px); }
   addEventListener('resize', resize);
   window.physApi = { grab: (x, y) => grab(x - OX, y - OY), move: (x, y) => move(x - OX, y - OY), release, spawn, get joint() { return joint; }, get bodies() { return bodies; }, off: () => [OX, OY], get asleep() { return asleep; } };
   resize(); spawn();
-  if (document.fonts) document.fonts.load('20px Eurostile').then(() => { for (const b of bodies) { if (b.k !== 'w') continue; b.hw = wordW(b.t) / 2 + TH * 0.16; b.iI = 1 / (b.m * ((2 * b.hw) ** 2 + (2 * b.hh) ** 2) / 12); } asleep = false; still = 0; });
+  if (document.fonts) document.fonts.load('20px Outfit').then(() => { for (const b of bodies) { if (b.k !== 'w') continue; b.hw = wordW(b.t) / 2 + TH * 0.16; b.iI = 1 / (b.m * ((2 * b.hw) ** 2 + (2 * b.hh) ** 2) / 12); } asleep = false; still = 0; });
   if (reduce) { for (let i = 0; i < 900 && !asleep; i++) { step(1 / 120); let mx = 0; for (const b of bodies) mx = Math.max(mx, Math.hypot(b.vx, b.vy)); if (mx < 5 && i > 200) asleep = true; } draw(); }
   else start();
 })();

@@ -20,19 +20,19 @@
 <style data-code>
 .mm { position: absolute; inset: 8px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; }
 @media (max-width: 560px) { .mm { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); } }
-.mm-panel { position: relative; overflow: hidden; background: #ffffff; color: #121417; display: grid; grid-template-rows: auto 1fr; padding: 16px 18px;
+.mm-panel { position: relative; overflow: hidden; background: #EEF1E8; color: #0B0C0D; display: grid; grid-template-rows: auto 1fr; padding: 16px 18px;
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
-.mm-panel h2 { margin: 0; font: 11px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; font-weight: 400; color: rgba(18,20,23,.64); }
-.mm-panel h2 b { font-weight: 400; color: rgba(18,20,23,.38); }
+.mm-panel h2 { margin: 0; font: 500 13px/16px 'Geist', sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13,.66); }
+.mm-panel h2 b { font-weight: 500; color: rgba(11, 12, 13,.38); }
 .mm-s { display: grid; place-items: center; position: relative; min-height: 0; }
 .mm-btn { height: 48px; padding: 0 24px; border: 0; cursor: pointer; font: 500 15px/1 Geist, sans-serif; white-space: nowrap; touch-action: manipulation;
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
 .mm-lime { background: #B8FF00; color: #0c1300; }
-.mm-solid { background: #121417; color: #f3f4f5; }
-.mm-quiet { background: none; color: #121417; padding: 0 4px; height: 32px; clip-path: none; }
+.mm-solid { background: #0B0C0D; color: #ffffff; }
+.mm-quiet { background: none; color: #0B0C0D; padding: 0 4px; height: 32px; clip-path: none; }
 
 /* 1. rolling number */
-.mm-ticker { font: 400 clamp(36px, 5.4vw, 64px)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; display: flex; font-variant-numeric: tabular-nums; }
+.mm-ticker { font: 400 clamp(36px, 5.4vw, 64px)/1 'Outfit', 'Geist', sans-serif; letter-spacing: -.03em; display: flex; font-variant-numeric: tabular-nums; }
 .mm-ticker .col { height: 1em; overflow: hidden; display: inline-block; }
 .mm-ticker .reel { display: flex; flex-direction: column; }
 .mm-ticker .reel span { height: 1em; display: block; text-align: center; }
@@ -48,22 +48,22 @@
 .mm-send svg.tick path { stroke-dasharray: 24; stroke-dashoffset: 24; }
 .mm-send.done svg.tick path { animation: mm-draw .42s .05s cubic-bezier(.16, 1, .3, 1) forwards; }
 @keyframes mm-draw { to { stroke-dashoffset: 0; } }
-.mm-status { color: rgba(18,20,23,.64); font-size: 13px; min-height: 1.4em; margin-top: 10px; text-align: center; }
+.mm-status { color: rgba(11, 12, 13,.66); font-size: 13px; min-height: 1.4em; margin-top: 10px; text-align: center; }
 /* 4. toasts */
 .mm-toasts { position: absolute; left: 0; right: 0; bottom: 12px; display: grid; justify-items: center; pointer-events: none; }
-.mm-toast { grid-area: 1 / 1; background: #121417; color: #f3f4f5; padding: 10px 16px; font-size: 14px; will-change: transform;
+.mm-toast { grid-area: 1 / 1; background: #0B0C0D; color: #ffffff; padding: 10px 16px; font-size: 15px; will-change: transform;
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
 /* 5. dots */
 .mm-dots { position: absolute; inset: 0; width: 100%; height: 100%; }
-.mm-copy { position: relative; font: 400 clamp(20px, 2.4vw, 28px)/1.1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; text-align: center; max-width: 11ch; pointer-events: none; background: #ffffff; padding: 8px 12px; }
+.mm-copy { position: relative; font: 400 clamp(20px, 2.4vw, 28px)/1.1 'Outfit', 'Geist', sans-serif; letter-spacing: -.03em; text-align: center; max-width: 11ch; pointer-events: none; background: #EEF1E8; padding: 8px 12px; }
 /* 6. skeleton, then content */
 .mm-feed { width: 100%; max-width: 260px; display: grid; gap: 10px; }
 .mm-item { display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; }
-.mm-item .av { width: 36px; height: 36px; background: #eceef0; display: grid; place-items: center; font: 500 11px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; }
-.mm-item b { display: block; font-weight: 500; font-size: 14px; line-height: 1.25; }
-.mm-item span { color: rgba(18,20,23,.64); font-size: 12px; }
-.sk { position: relative; overflow: hidden; background: #eceef0; }
-.sk::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: #ffffff; animation: mm-sweep 1.3s linear infinite; }
+.mm-item .av { width: 36px; height: 36px; background: #E3E8DA; display: grid; place-items: center; font: 500 13px 'Geist Mono', monospace; letter-spacing: 0; }
+.mm-item b { display: block; font-weight: 500; font-size: 15px; line-height: 1.25; }
+.mm-item span { color: rgba(11, 12, 13,.64); font-size: 13px; }
+.sk { position: relative; overflow: hidden; background: #E3E8DA; }
+.sk::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: #EEF1E8; animation: mm-sweep 1.3s linear infinite; }
 @keyframes mm-sweep { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
 .mm-lines { display: grid; gap: 7px; }
 .mm-lines .sk { height: 9px; }
@@ -196,7 +196,7 @@ const Micro = (() => {
     const r = sp.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
     if (dc.width !== Math.round(r.width * dpr) || dc.height !== Math.round(r.height * dpr)) { dc.width = Math.round(r.width * dpr); dc.height = Math.round(r.height * dpr); }
     dg.setTransform(dpr, 0, 0, dpr, 0, 0); dg.clearRect(0, 0, r.width, r.height);
-    dg.fillStyle = '#121417';
+    dg.fillStyle = '#0B0C0D';
     const G = 14, s2 = 2 * 70 * 70;
     dg.beginPath();
     for (let y = G / 2; y < r.height; y += G) for (let x = G / 2; x < r.width; x += G) {

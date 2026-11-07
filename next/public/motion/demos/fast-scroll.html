@@ -60,24 +60,24 @@
   .fs-block .title { font-size: clamp(32px, 4.4vw, 62px); }
   .words.is-reset .w-word { transition: none; }
   /* the readout */
-  .hud { position: fixed; z-index: 30; right: clamp(16px, 3vw, 40px); top: 50%; translate: 0 -50%; width: min(40vw, 380px); padding: 18px 20px 20px; display: grid; gap: 16px; background: #ffffff; color: var(--fg); }
+  .hud { position: fixed; z-index: 30; right: clamp(16px, 3vw, 40px); top: 50%; translate: 0 -50%; width: min(40vw, 380px); padding: 18px 20px 20px; display: grid; gap: 16px; background: #EEF1E8; color: var(--fg); }
   .hud-top { display: flex; justify-content: space-between; align-items: center; }
-  .hud-state { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); box-shadow: inset 0 0 0 1px currentColor; }
-  .hud-state.is-fast { background: #121417; color: #f3f4f5; box-shadow: none; }
-  .hud-big b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: clamp(40px, 5vw, 64px); line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-  .hud-big .kicker { display: block; margin-top: 8px; font-size: 11px; }
+  .hud-state { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; font-family: var(--font-sans); font-size: 12px; font-weight: 500; letter-spacing: 0; color: var(--fg2); background: #E3E8DA; }
+  .hud-state.is-fast { background: #0B0C0D; color: #ffffff; box-shadow: none; }
+  .hud-big b { display: block; font-family: var(--font-headline); font-weight: 300; font-size: clamp(40px, 5vw, 64px); line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .hud-big .kicker { display: block; margin-top: 8px; font-size: 12px; }
   .gauge { position: relative; height: 8px; margin-top: 18px; background: var(--fg4); }
-  .gauge-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #121417; transform-origin: left; transform: scaleX(0); }
-  .gauge.is-fast .gauge-fill { background: #B8FF00; box-shadow: inset 0 0 0 2px #121417; }   /* lime with an ink edge, so it reads on the light track */
-  .gauge-th { position: absolute; top: -8px; bottom: -8px; left: 24%; width: 3px; margin-left: -1px; background: #121417; }
-  .gauge-peak { position: absolute; top: 0; bottom: 0; width: 3px; background: #121417; opacity: 0; }
-  .gauge-lbl { position: absolute; left: 24%; top: 17px; translate: -50% 0; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); white-space: nowrap; }
+  .gauge-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #0B0C0D; transform-origin: left; transform: scaleX(0); }
+  .gauge.is-fast .gauge-fill { background: #B8FF00; box-shadow: inset 0 0 0 2px #0B0C0D; }   /* lime with an ink edge, so it reads on the light track */
+  .gauge-th { position: absolute; top: -8px; bottom: -8px; left: 24%; width: 3px; margin-left: -1px; background: #0B0C0D; }
+  .gauge-peak { position: absolute; top: 0; bottom: 0; width: 3px; background: #0B0C0D; opacity: 0; }
+  .gauge-lbl { position: absolute; left: 24%; top: 17px; translate: -50% 0; font-family: var(--font-sans); font-size: 12px; letter-spacing: 0; color: var(--fg2); white-space: nowrap; }
   .hud-counts { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; }
-  .hud-counts b { display: block; font-family: var(--font-headline); font-weight: 400; font-size: clamp(26px, 3vw, 36px); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-  .hud-counts .kicker { display: block; margin-top: 6px; font-size: 10.5px; letter-spacing: 0.08em; white-space: nowrap; }
+  .hud-counts b { display: block; font-family: var(--font-headline); font-weight: 300; font-size: clamp(26px, 3vw, 36px); line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .hud-counts .kicker { display: block; margin-top: 6px; font-size: 12px; letter-spacing: 0; white-space: nowrap; }
   .hud-attr { margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 12px; color: var(--fg2); }
   .hud-attr code { font-family: var(--font-mono); letter-spacing: 0; color: var(--fg); }
-  .hud-attr b { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+  .hud-attr b { font-family: var(--font-sans); font-weight: 500; letter-spacing: 0; }
   @media (max-width: 720px) { .hud { width: calc(100vw - 32px); right: 16px; top: auto; bottom: 64px; translate: none; } .fs-block { max-width: none; } }
   html.qm-tile .hud { padding: 14px 16px 16px; gap: 10px; width: min(44vw, 360px); }
   html.qm-tile .hud-counts b { font-size: 26px; }

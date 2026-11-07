@@ -27,7 +27,7 @@
   "where": "A Design service chapter: a desk and a screen drawing themselves, then the address of the finished site.",
   "rules": [
     "The whole story is one function of time, so it can be scrubbed and replayed from a click.",
-    "Lines are ink on paper; the hero block on the screen is the one lime fill.",
+    "Lines are ink on white, the faces sage; the hero block on the screen is the one lime fill.",
     "Fills uncover top to bottom by clip. They never fade."
   ],
   "tags": ["isometric", "svg", "stroke-dashoffset", "blueprint"]
@@ -52,7 +52,7 @@
   <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" role="img" aria-label="An isometric desk with a screen showing a web page, drawn line by line, with a web address typed on the desk">
     <defs><clipPath id="iso-wipe"><rect id="iso-wipe-r" x="0" y="0" width="800" height="0"></rect></clipPath></defs>
     <g id="iso-faces"></g>
-    <text id="iso-sign" fill="#121417" style="font-family: Eurostile, Geist, sans-serif"></text>
+    <text id="iso-sign" fill="#0B0C0D" style="font-family: Outfit, Geist, sans-serif"></text>
   </svg>
   <div class="iso-copy"><p class="kicker">Design service · Forma</p><h2 class="title">Drawn first,<br>then built.</h2></div>
 </div>
@@ -69,16 +69,16 @@ function createIso(svg) {
   // faces back to front: [3D points, flat colour]; a desk, a screen showing a page, a keyboard
   const FACES = [
     [[[0, 0, .3], [8, 0, .3], [8, 8.5, .3], [0, 8.5, .3]], '#ffffff'],                                 // desk, top
-    [[[8, 0, 0], [8, 8.5, 0], [8, 8.5, .3], [8, 0, .3]], '#dcdfe2'],                                   // desk, +x edge
-    [[[0, 8.5, 0], [8, 8.5, 0], [8, 8.5, .3], [0, 8.5, .3]], '#eceef0'],                               // desk, +y edge
-    [[[2.4, 2, .42], [4.8, 2, .42], [4.8, 3.4, .42], [2.4, 3.4, .42]], '#eceef0'],                     // screen foot, top
-    [[[3.3, 2.7, .42], [3.9, 2.7, .42], [3.9, 2.7, 1.9], [3.3, 2.7, 1.9]], '#dcdfe2'],                 // screen neck, +y
+    [[[8, 0, 0], [8, 8.5, 0], [8, 8.5, .3], [8, 0, .3]], '#E3E8DA'],                                   // desk, +x edge
+    [[[0, 8.5, 0], [8, 8.5, 0], [8, 8.5, .3], [0, 8.5, .3]], '#EEF1E8'],                               // desk, +y edge
+    [[[2.4, 2, .42], [4.8, 2, .42], [4.8, 3.4, .42], [2.4, 3.4, .42]], '#EEF1E8'],                     // screen foot, top
+    [[[3.3, 2.7, .42], [3.9, 2.7, .42], [3.9, 2.7, 1.9], [3.3, 2.7, 1.9]], '#E3E8DA'],                 // screen neck, +y
     [[[.8, 2.4, 5.2], [6.4, 2.4, 5.2], [6.4, 2.7, 5.2], [.8, 2.7, 5.2]], '#ffffff'],                   // screen, top
-    [[[6.4, 2.4, 1.9], [6.4, 2.7, 1.9], [6.4, 2.7, 5.2], [6.4, 2.4, 5.2]], '#dcdfe2'],                 // screen, +x side
-    [[[.8, 2.7, 1.9], [6.4, 2.7, 1.9], [6.4, 2.7, 5.2], [.8, 2.7, 5.2]], '#121417'],                   // screen, +y face (the bezel)
+    [[[6.4, 2.4, 1.9], [6.4, 2.7, 1.9], [6.4, 2.7, 5.2], [6.4, 2.4, 5.2]], '#E3E8DA'],                 // screen, +x side
+    [[[.8, 2.7, 1.9], [6.4, 2.7, 1.9], [6.4, 2.7, 5.2], [.8, 2.7, 5.2]], '#0B0C0D'],                   // screen, +y face (the bezel)
     [[[1.1, 2.7, 2.2], [6.1, 2.7, 2.2], [6.1, 2.7, 4.9], [1.1, 2.7, 4.9]], '#ffffff'],                 // the page on the screen
     [[[1.5, 2.7, 3.3], [4, 2.7, 3.3], [4, 2.7, 4.5], [1.5, 2.7, 4.5]], '#B8FF00'],                     // its hero block, the one lime
-    [[[4.4, 2.7, 2.6], [5.7, 2.7, 2.6], [5.7, 2.7, 4.5], [4.4, 2.7, 4.5]], '#dcdfe2'],                 // its card
+    [[[4.4, 2.7, 2.6], [5.7, 2.7, 2.6], [5.7, 2.7, 4.5], [4.4, 2.7, 4.5]], '#E3E8DA'],                 // its card
     [[[1.8, 4.4, .5], [5.4, 4.4, .5], [5.4, 5.6, .5], [1.8, 5.6, .5]], '#ffffff'],                     // keyboard, top
   ];
   const g = svg.querySelector('#iso-faces'), wipe = svg.querySelector('#iso-wipe-r'), sign = svg.querySelector('#iso-sign');
@@ -88,7 +88,7 @@ function createIso(svg) {
     const base = document.createElementNS(NS, 'path'); base.setAttribute('d', d); base.setAttribute('fill', 'none');            // hides the lines behind
     const fill = document.createElementNS(NS, 'path'); fill.setAttribute('d', d); fill.setAttribute('fill', col); fill.setAttribute('clip-path', 'url(#iso-wipe)');
     const line = document.createElementNS(NS, 'path'); line.setAttribute('d', d); line.setAttribute('pathLength', '1'); line.setAttribute('fill', 'none');
-    line.setAttribute('stroke', '#121417'); line.setAttribute('stroke-width', '2'); line.setAttribute('stroke-linejoin', 'round'); line.setAttribute('stroke-dasharray', '1 1');
+    line.setAttribute('stroke', '#0B0C0D'); line.setAttribute('stroke-width', '2'); line.setAttribute('stroke-linejoin', 'round'); line.setAttribute('stroke-dasharray', '1 1');
     line.setAttribute('vector-effect', 'non-scaling-stroke');
     grp.append(base, fill, line); g.appendChild(grp); return { base, line };
   });
@@ -102,7 +102,7 @@ function createIso(svg) {
     for (let i = 0; i < N; i++) {
       const d = clamp((t - i * 300) / 900), u = clamp((t - 10600 - (N - 1 - i) * 100) / 500), p = u > 0 ? 1 - u : d;
       els[i].line.setAttribute('stroke-dashoffset', (1 - ease(p)).toFixed(4));
-      els[i].base.setAttribute('fill', p > 0 ? '#f3f4f5' : 'none');
+      els[i].base.setAttribute('fill', p > 0 ? '#ffffff' : 'none');
       els[i].line.style.display = p > 0 ? '' : 'none';
     }
     const w = t < 9400 ? ease(clamp((t - 4300) / 1500)) : 1 - clamp((t - 9400) / 1300);

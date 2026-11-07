@@ -16,13 +16,13 @@
   "kind": "pointer",
   "tone": "paper",
   "line": "chase 12/s · snap 240 ms · 2 px press",
-  "summary": "A pricing card follows the pointer on a 12 column artboard. A pale block trails the pointer loosely; the lime card itself only ever stands on a column and an 8 px row, and glides to the nearest slot with a 2 px press at each snap. The columns it covers deepen, and its foot reads the slot: x, y and column count, each number rolling.",
+  "summary": "A pricing card follows the pointer on a 12 column artboard. A white block trails the pointer loosely; the ink card itself only ever stands on a column and an 8 px row, and glides to the nearest slot with a 2 px press at each snap. The columns it covers deepen in sage, and its foot reads the slot: x, y and column count, each number rolling.",
   "spec": [
     ["Grid", "12 columns of 38 px with 8 px gutters, 24 px margins; rows of 8 px, the card between y 40 and 192. Columns are tints, never lines"],
     ["Loose block", "chases the pointer, 1 − e^(−12 dt), centred on it"],
     ["Snap", "the card's left edge to the nearest column, its top to the nearest 8 px row; glide 240 ms, expo out"],
     ["Press", "each time the slot changes the card sits 2 px down and back, 220 ms"],
-    ["Columns", "the 4 covered columns deepen from 5% to 13% ink, 160 ms; their numbers turn to ink"],
+    ["Columns", "the 4 covered columns deepen from sage #E3E8DA to #CBD3BB, 160 ms; their numbers turn to ink"],
     ["Readout", "x, y and col in the card's foot; a changed number leaves up or down and the next enters, 260 ms expo out, the sleeve's width gliding"],
     ["Input", "the ghost pointer drives the tile; a real pointer anywhere in the sheet drives the card, and the script resumes when it leaves"],
     ["Reduced motion", "no loose block; the card jumps from slot to slot"]
@@ -33,38 +33,38 @@
     "The loose block and the snapped card are two things. The pointer never moves the card directly.",
     "Snap on the loose block's edges, not the pointer's, so the card settles a beat after the hand.",
     "Columns are tints. No guide lines, no borders.",
-    "The lime is the card: the one thing being placed."
+    "The card is ink with one lime word, its price: the one thing being placed."
   ],
   "tags": ["grid", "snap", "layout", "cursor", "drag", "readout"],
   "shot": 3300
 }
 </script>
 <style data-code>
-/* Snap to grid. A card that follows the pointer loosely and stands only on the grid. Tokens: --fill, --fg, --signal, --on-lime. */
-.sn { position: relative; width: 592px; height: 340px; background: #fff; overflow: hidden; user-select: none; touch-action: none; --cut: 16px; }
-.sn-head { position: absolute; left: 24px; right: 24px; top: 10px; display: flex; justify-content: space-between; font: 500 11px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+/* Snap to grid. A card that follows the pointer loosely and stands only on the grid. Tokens: --fg, --signal. */
+.sn { position: relative; width: 592px; height: 340px; background: #EEF1E8; overflow: hidden; user-select: none; touch-action: none; --cut: 16px; }
+.sn-head { position: absolute; left: 24px; right: 24px; top: 10px; display: flex; justify-content: space-between; font: 500 13px/14px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .66); }
 
 /* twelve column tints under the head strip: 38 wide, 46 apart; the ones the card covers deepen */
-.sn-col { position: absolute; top: 36px; bottom: 0; width: 38px; background: rgba(18, 20, 23, .05); transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
-.sn-col.is-cov { background: rgba(18, 20, 23, .13); }
-.sn-col b { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; font: 500 11px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; color: rgba(18, 20, 23, .38); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
-.sn-col.is-cov b { color: #121417; }
+.sn-col { position: absolute; top: 36px; bottom: 0; width: 38px; background: #E3E8DA; transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.sn-col.is-cov { background: #CBD3BB; }
+.sn-col b { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; font: 500 13px/14px 'Geist Mono', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .38); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.sn-col.is-cov b { color: #0B0C0D; }
 
 /* the loose block: where the hand is; the card is where the grid says */
 .sn-loose, .sn-card { position: absolute; left: 0; top: 0; width: 176px; height: 112px; }
-.sn-loose { background: rgba(18, 20, 23, .1); --cut: 12px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); will-change: transform; }
+.sn-loose { background: #ffffff; --cut: 12px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); will-change: transform; }
 .sn-card { transition: transform 240ms cubic-bezier(.16, 1, .3, 1); will-change: transform; }
 .sn-body {
   position: absolute; inset: 0; padding: 14px 14px 12px; display: flex; flex-direction: column; justify-content: space-between;
-  background: #B8FF00; color: #0c1300; --cut: 12px;
+  background: #0B0C0D; color: #ffffff; --cut: 12px;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
 }
 .sn-body.is-press { animation: sn-press 220ms cubic-bezier(.22, 1, .36, 1); }
 @keyframes sn-press { 0% { transform: none; } 35% { transform: translateY(2px); } 100% { transform: none; } }
-.sn-k { font: 500 11px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(12, 19, 0, .66); }
-.sn-p { font: 400 40px/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; }
-.sn-p small { font: 500 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; text-transform: uppercase; margin-right: 6px; color: rgba(12, 19, 0, .66); }
-.sn-read { display: flex; gap: 0; white-space: pre; font: 500 11px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.sn-k { font: 500 13px/14px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(255, 255, 255, .66); }
+.sn-p { font: 300 40px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; font-synthesis-weight: none; color: var(--signal); }
+.sn-p small { font: 500 13px/1 'Geist', Geist, sans-serif; letter-spacing: 0; margin-right: 6px; color: rgba(255, 255, 255, .66); }
+.sn-read { display: flex; gap: 0; white-space: pre; font: 500 13px/14px 'Geist', Geist, sans-serif; letter-spacing: 0; }
 
 /* a number that rolls: the sleeve clips, the old leaves, the new enters, the sleeve's width glides */
 .sn-roll { display: inline-grid; overflow: hidden; height: 14px; vertical-align: top; transition: width 260ms cubic-bezier(.16, 1, .3, 1); }

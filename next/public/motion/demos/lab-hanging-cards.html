@@ -14,7 +14,7 @@
   "kind": "pointer",
   "tone": "paper",
   "line": "verlet rope · 5 tags · 120 Hz solve",
-  "summary": "Five swatch tags, Forma's palette, hang from a rail on strings that only resist stretching. Each tag is a rigid body of five particles, so grabbing one by its corner swings and turns it, and letting go keeps its velocity while damping slowly settles it. A passing pointer gives a tag a light push.",
+  "summary": "Five swatch tags, Forma's palette (lime, sage, ink, deep sage, moss), hang from a rail on strings that only resist stretching. Each tag is a rigid body of five particles, so grabbing one by its corner swings and turns it, and letting go keeps its velocity while damping slowly settles it. A passing pointer gives a tag a light push.",
   "spec": [
     ["Rope", "9 particles, resists stretch only"],
     ["Tag", "4 corners + the hole, 10 stiff links"],
@@ -27,7 +27,7 @@
   "where": "A palette or brand page: the swatch tags of a project, which a visitor can pick up and swing.",
   "rules": [
     "The tags are flat blocks with the top right corner cut; the only curve is the punched hole.",
-    "One tag in lime, the rest are the project's own swatches (white, mist, moss, ink). The rope is a single 1.5px line.",
+    "One tag in lime, the rest are the project's own swatches (sage, deep sage, moss, ink). The rope is a single 1.5px line.",
     "Release keeps the velocity: never snap a tag back to rest."
   ],
   "tags": ["physics", "drag", "canvas", "verlet", "palette"],
@@ -67,9 +67,9 @@ function createTags(cv, { reduce = false } = {}) {
   /* Forma's palette: each tag is its own swatch, named, with its hex under a rule */
   const TAGS = [
     { role: 'Accent', name: 'Lime', price: '#B8FF00', bg: '#B8FF00', fg: '#0c1300', sub: 'rgba(12,19,0,.66)' },
-    { role: 'Ground', name: 'Paper', price: '#FFFFFF', bg: '#ffffff', fg: '#121417', sub: 'rgba(18,20,23,.62)' },
-    { role: 'Text', name: 'Ink', price: '#121417', bg: '#121417', fg: '#f4f5f2', sub: 'rgba(244,245,242,.62)' },
-    { role: 'Surface', name: 'Mist', price: '#DADFD6', bg: '#DADFD6', fg: '#121417', sub: 'rgba(18,20,23,.62)' },
+    { role: 'Surface', name: 'Sage', price: '#EEF1E8', bg: '#EEF1E8', fg: '#0B0C0D', sub: 'rgba(11, 12, 13,.66)' },
+    { role: 'Text', name: 'Ink', price: '#0B0C0D', bg: '#0B0C0D', fg: '#f4f5f2', sub: 'rgba(244,245,242,.64)' },
+    { role: 'Deeper', name: 'Deep sage', price: '#E3E8DA', bg: '#E3E8DA', fg: '#0B0C0D', sub: 'rgba(11, 12, 13,.66)' },
     { role: 'Shade', name: 'Moss', price: '#6FAE00', bg: '#6FAE00', fg: '#0c1300', sub: 'rgba(12,19,0,.66)' },
   ];
   const ROPE = 9, STEP = 1 / 120;
@@ -182,32 +182,30 @@ function createTags(cv, { reduce = false } = {}) {
     ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2 - cut, -h / 2); ctx.lineTo(w / 2, -h / 2 + cut);
     ctx.lineTo(w / 2, h / 2); ctx.lineTo(-w / 2, h / 2); ctx.closePath(); ctx.fill();
     const hy = -h / 2 + card.holeV, hr = Math.max(3, w * 0.03);
-    ctx.fillStyle = '#f3f4f5'; ctx.beginPath(); ctx.arc(0, hy, hr * 1.5, 0, 6.2832); ctx.fill();   // punched hole: the paper shows through
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, hy, hr * 1.5, 0, 6.2832); ctx.fill();   // punched hole: the paper shows through
     const pad = w * 0.11;
     ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
-    ctx.fillStyle = tag.sub; ctx.font = `500 ${Math.max(9, w * 0.065)}px "Encode Sans", Geist, sans-serif`;
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '1.2px';
-    ctx.fillText(tag.role.toUpperCase(), -w / 2 + pad, -h / 2 + h * 0.3);
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-    ctx.fillStyle = tag.fg; ctx.font = `400 ${w * 0.15}px Eurostile, Geist, sans-serif`;
+    ctx.fillStyle = tag.sub; ctx.font = `500 ${Math.max(11, w * 0.08)}px Geist, system-ui, sans-serif`;
+    ctx.fillText(tag.role, -w / 2 + pad, -h / 2 + h * 0.3);
+    ctx.fillStyle = tag.fg; ctx.font = `300 ${w * 0.15}px Outfit, Geist, sans-serif`;
     const words = tag.name.split(' '); const lines = []; let line = '';
     for (const wd of words) { const t = line ? line + ' ' + wd : wd; if (ctx.measureText(t).width > w - pad * 2 && line) { lines.push(line); line = wd; } else line = t; }
     lines.push(line);
     lines.forEach((l, i) => ctx.fillText(l, -w / 2 + pad, -h / 2 + h * 0.46 + i * w * 0.17));
     ctx.fillStyle = tag.sub; ctx.fillRect(-w / 2 + pad, h / 2 - h * 0.2, w - pad * 2, 2);
-    ctx.fillStyle = tag.fg; ctx.font = `500 ${w * 0.13}px "Encode Sans", Geist, sans-serif`;
+    ctx.fillStyle = tag.fg; ctx.font = `500 ${w * 0.13}px "Geist Mono", Geist, sans-serif`;
     ctx.fillText(tag.price, -w / 2 + pad, h / 2 - pad);
     ctx.restore();
   }
   function draw() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#121417'; ctx.fillRect(0, railY - 1, W, 2);
+    ctx.fillStyle = '#0B0C0D'; ctx.fillRect(0, railY - 1, W, 2);
     for (const card of cards) {
-      ctx.strokeStyle = 'rgba(18,20,23,.6)'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(11, 12, 13,.6)'; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       ctx.beginPath(); card.rope.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.stroke();
       drawCard(card);
-      const r0 = card.rope[0]; ctx.fillStyle = '#121417'; ctx.fillRect(r0.x - 3, r0.y - 3, 6, 6);
+      const r0 = card.rope[0]; ctx.fillStyle = '#0B0C0D'; ctx.fillRect(r0.x - 3, r0.y - 3, 6, 6);
     }
   }
   function frame(now) {

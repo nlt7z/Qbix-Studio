@@ -56,15 +56,15 @@
   html:not(.qm-tile) .qm-stage { padding-bottom: 84px; }
   .rs { width: min(100%, 1120px); display: grid; gap: clamp(26px, 5vmin, 52px); }
   .rs-head { display: grid; gap: 12px; }
-  .rs .eyebrow { margin: 0; font-family: var(--font-mono); font-size: 13px; font-weight: 500; letter-spacing: 0.04em; color: rgba(18, 20, 23, 0.72); }
-  .rs .title { max-width: 11em; font-size: clamp(34px, 5.4vw, 72px); line-height: 1.02; letter-spacing: -0.032em; }
+  .rs .eyebrow { margin: 0; font-family: var(--font-sans); font-size: 14px; font-weight: 500; letter-spacing: -0.006em; color: var(--fg2); }
+  .rs .title { max-width: 11em; font-size: clamp(34px, 5.4vw, 72px); line-height: 1; letter-spacing: -0.035em; }
   /* the panel's one lime: the marker, already drawn */
   .mk { background: #B8FF00; color: #0c1300; padding: 0.02em 0.14em 0.06em; margin: 0 -0.14em; }
   .outputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: clamp(18px, 3vw, 40px); }
   .outputs article { display: grid; align-content: start; gap: 12px; }
-  .outputs .num { font-family: var(--font-headline); font-size: clamp(44px, 6.2vw, 84px); line-height: 0.9; letter-spacing: -0.04em; color: #121417; }
-  .outputs h3 { font-size: clamp(19px, 2.2vw, 26px); letter-spacing: -0.02em; color: #121417; }
-  .outputs p { max-width: 40ch; font-size: clamp(14px, 1.5vw, 17px); line-height: 1.5; letter-spacing: -0.011em; color: rgba(18, 20, 23, 0.78); }
+  .outputs .num { font-family: var(--font-headline); font-weight: 200; font-size: clamp(34px, 5.4vw, 72px); line-height: 0.9; letter-spacing: -0.04em; color: #0B0C0D; }
+  .outputs h3 { font-weight: 300; font-size: clamp(19px, 2.2vw, 26px); letter-spacing: -0.035em; color: #0B0C0D; }
+  .outputs p { max-width: 40ch; font-size: 15px; line-height: 1.5; letter-spacing: -0.011em; color: var(--fg2); }
   .rise.is-reset { transition: none !important; }
 </style>
 </head>
@@ -72,7 +72,7 @@
 <main class="qm-stage">
   <div class="rs">
     <div class="rs-head">
-      <p class="eyebrow">FIG 02 — What you get</p>
+      <p class="eyebrow">Fig 02 · What you get</p>
       <h2 class="title">Everything a <span class="mk">system</span> needs.</h2>
     </div>
 <!-- code -->
@@ -80,7 +80,7 @@
   <article class="rise">
     <span class="num">01</span>
     <h3>Design tokens</h3>
-    <p>Color, type, spacing, and radius as named scales — CSS variables ready to theme.</p>
+    <p>Color, type, spacing, and cut corners as named scales, CSS variables ready to theme.</p>
   </article>
   <article class="rise">
     <span class="num">02</span>

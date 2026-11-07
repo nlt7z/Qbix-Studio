@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-tone="lime">
+<html lang="en" data-tone="dark">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fitted headline · Qbix Motion</title>
@@ -12,7 +12,7 @@
   "cat": "brand",
   "order": 710,
   "kind": "pointer",
-  "tone": "lime",
+  "tone": "dark",
   "line": "fit by measuring · 45 ms rise · lift springs k 220 · c 18",
   "summary": "One huge word is measured letter by letter until it exactly fills the panel's width, then dropped so its baseline sits just above the bottom edge and the descender is cut by it. The letters rise into view once, from under the floor. After that only the letters near the pointer respond, each lifting on its own spring.",
   "spec": [
@@ -23,7 +23,7 @@
     ["Trigger", "pointer inside the panel; the ghost sweeps along the word"]
   ],
   "source": ["Qbix studio library · 01-fit-headline", "Qbix studio library/recipes/motion-core.js"],
-  "where": "The sign-off panel of a page: a giant cropped word on lime, the way the footer of qbix.space ends.",
+  "where": "The sign-off panel of a page: a giant cropped lime word on near-black, the way the footer of qbix.space ends.",
   "rules": [
     "Measure, never guess: a vw clamp only approximates the fit.",
     "The panel's overflow is the mask. Letters are uncovered by the edge, not faded.",
@@ -35,13 +35,13 @@
 </script>
 <style data-code>
 /* Floor word: a giant word that fills the width and sits on the bottom edge */
-.fw-hero { position: relative; overflow: hidden; height: 100svh; display: grid; grid-template-rows: auto 1fr; background: #b8ff00; color: #0c1300; }
+.fw-hero { position: relative; overflow: hidden; height: 100svh; display: grid; grid-template-rows: auto 1fr; background: #0B0C0D; color: #f4f5f2; }
 .fw-intro { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px 48px; padding: 28px 32px 0; }
 .fw-intro p { margin: 0; }
-.fw-lede { font: 400 clamp(24px, 3.4vw, 40px)/1.08 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; max-width: 14em; }
-.fw-muted { max-width: 28ch; font-size: 15px; line-height: 1.5; color: rgba(12, 19, 0, 0.66); }
+.fw-lede { font: 300 clamp(24px, 3.4vw, 40px)/1.08 'Outfit', var(--font-headline, sans-serif); letter-spacing: -0.035em; max-width: 14em; }
+.fw-muted { max-width: 28ch; font-size: 15px; line-height: 1.5; color: rgba(244, 245, 242, 0.64); }
 .fw-floor { position: relative; padding: 0 32px; }
-.fw-word { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; font: 400 22vw/1 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; white-space: nowrap; color: #0c1300; transform: translateY(var(--sink, 0px)); }
+.fw-word { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; font: 200 22vw/1 'Outfit', var(--font-headline, sans-serif); letter-spacing: -0.04em; white-space: nowrap; color: #B8FF00; transform: translateY(var(--sink, 0px)); }
 .fw-word .c { display: inline-block; will-change: transform; }
 .fw-probe { display: inline-block; width: 0; height: 0; }
 </style>

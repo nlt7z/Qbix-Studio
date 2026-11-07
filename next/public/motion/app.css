@@ -9,6 +9,7 @@
 @font-face { font-family: 'Geist'; src: url('kit/fonts/Geist-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
 @font-face { font-family: 'Geist'; src: url('kit/fonts/Geist-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
 @font-face { font-family: 'Geist Mono'; src: url('kit/fonts/GeistMono-400.woff2') format('woff2'); font-weight: 400 500; font-display: swap; }
+@font-face { font-family: 'Outfit'; src: url('kit/fonts/Outfit-var.woff2') format('woff2'); font-weight: 100 300; font-display: swap; }
 
 :root {
   --bg: #ffffff;
@@ -210,10 +211,10 @@ kbd {
 .card-hit:focus-visible { outline: 2px solid var(--fg); outline-offset: 4px; }
 .card-view {
   position: relative; aspect-ratio: 8 / 5; overflow: hidden; border-radius: var(--r);
-  background: var(--view, #08090A);
+  background: var(--view, #0B0C0D);
 }
 .card-zoom { position: absolute; inset: 0; }
-.card-view[data-tone='paper'] { --view: #f3f4f5; }
+.card-view[data-tone='paper'] { --view: #ffffff; }
 .card-view[data-tone='lime'] { --view: #b8ff00; }
 .card-view img, .card-view iframe { position: absolute; left: 0; top: 0; border: 0; display: block; }
 .card-view img { width: 100%; height: 100%; object-fit: cover; }
@@ -307,8 +308,8 @@ kbd {
 .export:has(> [data-export-open][hidden]) + .sep { display: none; }   /* nothing to set apart without filming */
 .sheet-body { display: grid; grid-template-columns: minmax(0, 1fr) min(410px, 34vw); min-height: 0; }
 .stage { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; min-height: 0; padding: 4px 8px 14px 22px; }
-.stage-frame { position: relative; min-height: 0; overflow: hidden; border-radius: 16px; background: var(--view, #08090A); }
-.stage-frame[data-tone='paper'] { --view: #f3f4f5; }
+.stage-frame { position: relative; min-height: 0; overflow: hidden; border-radius: 16px; background: var(--view, #0B0C0D); }
+.stage-frame[data-tone='paper'] { --view: #ffffff; }
 .stage-frame[data-tone='lime'] { --view: #b8ff00; }
 .stage-frame { background-size: cover; background-position: center; }
 .stage-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; visibility: hidden; }
@@ -812,8 +813,8 @@ html[data-mode='swipe'] :is(#groups, #more-gate) { display: none !important; }
 .sw-card.is-drag { cursor: grabbing; transition: none; }
 .sw-card.is-next { transform: translateY(14px) scale(0.955); pointer-events: none; }
 .sw-card.is-next .sw-info { visibility: hidden; }
-.sw-view { position: relative; aspect-ratio: 8 / 5; overflow: hidden; border-radius: var(--r); background: var(--view, #08090A); }
-.sw-view[data-tone='paper'] { --view: #f3f4f5; }
+.sw-view { position: relative; aspect-ratio: 8 / 5; overflow: hidden; border-radius: var(--r); background: var(--view, #0B0C0D); }
+.sw-view[data-tone='paper'] { --view: #ffffff; }
 .sw-view[data-tone='lime'] { --view: #b8ff00; }
 .sw-view img, .sw-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
 .sw-stamp { position: absolute; top: 18px; padding: 6px 12px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; pointer-events: none; }
@@ -858,3 +859,14 @@ html:has(.sheet[aria-hidden='false']) .to-top { display: none; }
 .nav-tabs { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin-left: 0; }
 .nav-tabs a:hover { background: transparent; }
 @media (max-width: 760px) { .nav-tabs { position: static; transform: none; margin-left: 10px; } }
+
+/* the hero's headline in the site's headline face (Outfit ExtraLight, as qbix.space since 2026-11-06) */
+.hero-title { font-family: 'Outfit', var(--sans); font-weight: 200; letter-spacing: -0.045em; line-height: 0.96; }
+.hero-title .hl { font-weight: 300; }
+
+/* the pieces are white now (the Blocks look), like the page: a faint inner edge keeps each tile a tile */
+.card-view[data-tone='paper']::after, .sw-view[data-tone='paper']::after, .stage-frame[data-tone='paper']::after, .more-peek .card-view::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(11, 12, 13, 0.08);
+}
+.card-acts { z-index: 2; }

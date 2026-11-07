@@ -17,21 +17,21 @@
   "tone": "paper",
   "line": "75vh a stop · 0.3 screens' tail · row = button",
   "shot": 5900,
-  "summary": "The section pins with its scene beside a list that has one row for each of the scene's states. Scrolling walks the scene from one state to the next and lights that row (a white tile, never a line); each row is a button that scrolls to its stop; a 4px meter fills a row at a time, and the last state is held for a third of a screen before the page moves on.",
+  "summary": "The section pins with its scene beside a list that has one row for each of the scene's states. Scrolling walks the scene from one state to the next and lights that row (a sage tile, never a line); each row is a button that scrolls to its stop; a 4px meter fills a row at a time, and the last state is held for a third of a screen before the page moves on.",
   "spec": [
     ["Height", "stops × 75vh + 130vh (practice page: stops × 60vh + 130vh)"],
     ["Pinned", "100svh sticky; the list on the left (0.85fr), the scene on the right (1.15fr, 78vh)"],
     ["Walk", "the page driver's beats: row i is lit when the scene shows state i + 1"],
     ["Tail", "0.3 screens: the last state is held after the walk ends, before the section scrolls on"],
     ["Jump", "a row button scrolls to top + (travel − 0.3vh) × i / (n − 1), smoothly"],
-    ["Row", "a white tile when on; colour 300 ms; its text opens on grid-template-rows 0fr → 1fr, 600 ms expo out"],
+    ["Row", "a sage tile when on; colour 300 ms; its text opens on grid-template-rows 0fr → 1fr, 600 ms expo out"],
     ["Number", "an ink block wipes in under the current number once the tour is half way up the screen: 450 ms, ease-move"],
     ["Meter", "4px; scaleX((i + 1) / n), 700 ms expo out"]
   ],
   "source": ["components/offers/KitTour.tsx · KitTour, TOUR_TAIL", "components/offers/PracticeTour.tsx", "app/globals.css · lk-tour, MODULE rows, MODULE meters", "lib/scene/driver.ts · target"],
-  "where": "The “What you get” section of the offer pages: a fixed-price offer's deliverables beside its scene, here filled with the Design service (moodboard, launch site, your domain, editable copy, one round of changes). The Practice Website Refresh does the same on paper, with an ink stroke wiping across the current row's lead words.",
+  "where": "The “What you get” section of the offer pages: a fixed-price offer's deliverables beside its scene, here filled with the Design service (moodboard, launch site, your domain, editable copy, one round of changes). The Practice Website Refresh does the same on white, with an ink stroke wiping across the current row's lead words.",
   "rules": [
-    "Rows are tiles or air, never lines: the current one is a white tile, the others sit on the paper.",
+    "Rows are tiles or air, never lines: the current one is a sage tile, the others sit on the white ground.",
     "A row that says nothing more than its title (the last one) has no text to open.",
     "The tail is part of the contract: the driver, the section's height and the jump all subtract it.",
     "The current number's chip waits until the tour is well on screen, so the screen's one lime stays in the scene.",
@@ -47,8 +47,8 @@
 .container { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 32px); }
 .offer-h2 {
   margin: 0 0 clamp(20px, 3vw, 32px);
-  font-family: var(--font-headline); font-weight: 400;
-  font-size: clamp(28px, 4vw, 46px); letter-spacing: -0.025em; color: var(--fg);
+  font-family: var(--font-headline); font-weight: 300;
+  font-size: clamp(28px, 4vw, 46px); letter-spacing: -0.035em; color: var(--fg);
 }
 .lk-tour { position: relative; height: calc(var(--stops) * 75vh + 130vh); }
 .lk-tour-pin { position: sticky; top: 0; height: 100vh; height: 100svh; display: flex; align-items: center; overflow: hidden; }
@@ -64,19 +64,19 @@
 }
 .lk-tour-list button:hover { color: var(--fg); }
 .lk-tour-list button:focus-visible { outline: 2px solid var(--fg); outline-offset: -4px; }
-.lk-tour-list li.is-on { background: #ffffff; }                     /* the row on is a tile: white on the paper */
+.lk-tour-list li.is-on { background: #EEF1E8; }                     /* the row on is a tile: sage on the white */
 .lk-tour-list li.is-on button { color: var(--fg); }
 .lk-tour-k { font-weight: 500; }
 .lk-tour-num {
   font-size: 12px; color: var(--fg3);
   /* now: an ink block wipes in under the number of the stop the tour is on */
   justify-self: start; margin: -3px 0 -3px -6px; padding: 3px 6px;
-  background: linear-gradient(#121417, #121417) no-repeat 0 0 / 0 100%;
+  background: linear-gradient(#0B0C0D, #0B0C0D) no-repeat 0 0 / 0 100%;
   transition: color 300ms var(--ease), background-size 450ms cubic-bezier(0.65, 0, 0.35, 1);
 }
 .lk-tour-list li.is-past .lk-tour-num { color: var(--fg2); }
 .lk-tour-list li.is-on .lk-tour-num { color: var(--fg); }
-.lk-tour-list.is-live li.is-on .lk-tour-num { color: #f3f4f5; background-size: 100% 100%; }
+.lk-tour-list.is-live li.is-on .lk-tour-num { color: #ffffff; background-size: 100% 100%; }
 /* a row's text opens from nothing: its height on grid rows, and it settles up 8px */
 .lk-tour-v { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 600ms cubic-bezier(0.16, 1, 0.3, 1); }
 .lk-tour-v > p {
@@ -86,7 +86,7 @@
 }
 .lk-tour-list li.is-on .lk-tour-v { grid-template-rows: 1fr; }
 .lk-tour-list li.is-on .lk-tour-v > p { transform: none; padding-bottom: 18px; }
-.lk-tour-meter { margin-top: 28px; height: 4px; background: var(--fg4); }
+.lk-tour-meter { margin-top: 28px; height: 4px; background: var(--sunk); }
 .lk-tour-meter span {
   display: block; height: 4px; background: var(--fg); transform-origin: left;
   transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -118,35 +118,37 @@
 </style>
 <style data-code>
 /* The scene: a stand-in for the Design service's own (components/scenes/Forma.tsx), drawn with the kit.
-   Everything made is ink on white, on the paper; the one lime is handed on from state to state. */
+   Everything made is ink on sage, on the white ground; the one lime is handed on from state to state. */
 .scn .t { display: inline-block; }
 .scn .tl-g { pointer-events: none; }
-.scn .tl-paper { background: #ffffff; color: #121417; box-shadow: var(--lift); }
+.scn .tl-paper { background: #EEF1E8; color: #0B0C0D; box-shadow: var(--lift); }
 .scn .tl-sheet { overflow: hidden; z-index: 2; }
 .scn .tl-flat { box-shadow: none; }                            /* a card that sits flat in a white window */
 .scn .tl-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; }
-.scn .tl-tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; background: var(--lime); color: var(--on-lime); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; }
+.scn .tl-tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; background: var(--lime); color: var(--on-lime); font-family: var(--font-sans); font-size: 10px; letter-spacing: 0; white-space: nowrap; }
 .scn .tl-tag.tl-url { height: 24px; font-family: var(--font-sans); font-size: 11.5px; font-weight: 500; letter-spacing: 0; text-transform: none; }
-.scn .tl-band { background: #121417; color: #ffffff; font-size: 10.5px; line-height: 1.35; display: flex; align-items: center; gap: 10px; padding: 0 16px; }
-.scn .tl-band b { display: grid; place-items: center; width: 28px; height: 28px; background: #ffffff; color: #121417; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+.scn .tl-band { background: #0B0C0D; color: #ffffff; font-size: 10.5px; line-height: 1.35; display: flex; align-items: center; gap: 10px; padding: 0 16px; }
+.scn .tl-band b { display: grid; place-items: center; width: 28px; height: 28px; background: #EEF1E8; color: #0B0C0D; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
 .scn .tl-swatches { display: flex; gap: 6px; }
 .scn .tl-swatches i { display: block; width: 24px; height: 24px; }
 .scn .tl-post { overflow: hidden; z-index: 2; }
-.scn .tl-strip { display: flex; align-items: center; padding: 0 12px; background: #ffffff; color: #121417; font-size: 12px; white-space: nowrap; }
+.scn .tl-strip { display: flex; align-items: center; padding: 0 12px; background: #EEF1E8; color: #0B0C0D; font-size: 12px; white-space: nowrap; }
 .scn .tl-tile { overflow: hidden; }                              /* a picture in a tile of the board, cropped to it */
 .scn .tl-big { font-size: 46px; line-height: 0.96; letter-spacing: -0.04em; }
-.scn .tl-col { background: rgba(18, 20, 23, 0.06); }            /* the layout grid, a column of it */
-.scn .tl-blk { background: #121417; }
-.scn .tl-tint { background: rgba(18, 20, 23, 0.1); }
+.scn .tl-col { background: rgba(11, 12, 13, 0.06); }            /* the layout grid, a column of it */
+.scn .tl-blk { background: #0B0C0D; }
+.scn .tl-tint { background: rgba(11, 12, 13, 0.1); }
 .scn .phone { --r: 30px; z-index: 2; }
-.scn .tl-bar { height: 3px; background: rgba(18, 20, 23, 0.16); }
-.scn .tl-bar i { display: block; height: 100%; background: #121417; transform-origin: left; }
+.scn .tl-bar { height: 3px; background: rgba(11, 12, 13, 0.16); }
+.scn .tl-bar i { display: block; height: 100%; background: #0B0C0D; transform-origin: left; }
 .scn .tl-field { background: var(--sunk); font-size: 15px; display: flex; align-items: center; padding: 0 12px; }
 .scn .tl-edit { box-shadow: inset 0 0 0 2px var(--fg), 0 0 0 3px var(--lime); }   /* the field in hand: ink ring, lime outside it */
 .scn .tl-bubble { z-index: 2; padding: 0 18px; display: flex; flex-direction: column; justify-content: center; gap: 3px; font-size: 15px; }
 .scn .tl-bubble--you { background: var(--sunk); }
-.scn .tl-bubble--us { background: #121417; color: #f4f5f2; }
+.scn .tl-bubble--us { background: #0B0C0D; color: #f4f5f2; }
 .scn .tl-file { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; background: var(--sunk); font-size: 12px; color: var(--fg2); white-space: nowrap; }
+/* the scene's small labels: Geist, sentence case (the kit draws them tracked caps) */
+.scn .f-label { font-family: var(--font-sans); font-weight: 500; font-size: 12px; letter-spacing: -0.006em; text-transform: none; color: var(--fg2); }
 </style>
 <style>
   /* the page round the tour: the section before, the one after */
@@ -229,7 +231,7 @@ const cut = (size, right = 0) => {
   return `polygon(0 0, calc(${r} - ${size * k}px) 0, ${r} ${size * k}px, ${r} 100%, 0 100%)`;
 };
 const POSTS = [[10, 84], [222, 84], [434, 84], [116, 296], [328, 296]];      // five squares, 196 each, 3 + 2
-const SWATCHES = ['#e8eadf', '#d4c5b0', '#a2b08a', '#121417'];                // Forma's palette: porcelain, clay, sage, ink
+const SWATCHES = ['#EEF1E8', '#B8FF00', '#6FAE00', '#0B0C0D'];                // Forma's palette: porcelain, lime, moss, ink
 
 function drawService(scn) {
   scn.innerHTML = [
@@ -245,7 +247,7 @@ function drawService(scn) {
       a(null, 16, 252, null, null, 'f-head', `<span class="t" data-k="f.addr" style="font-size:26px;letter-spacing:-0.03em">Forma</span>`),
       a('f.city', 16, 290, null, null, 'dim', 'Ceramic objects · forma.studio'),
       a('f.facts', 16, 314, null, null, 'tl-swatches', SWATCHES.map((c) => `<i style="background:${c}"></i>`).join('')),
-      a('f.open', 16, 346, null, null, '', '<span class="f-head" style="font-size:19px;letter-spacing:-0.02em;margin-right:8px">Aa</span><span class="dim" style="font-size:12px">Eurostile and Geist</span>'),
+      a('f.open', 16, 346, null, null, '', '<span class="f-head" style="font-size:19px;letter-spacing:-0.02em;margin-right:8px">Aa</span><span class="dim" style="font-size:12px">Outfit and Geist</span>'),
       a('f.band', 0, 372, 310, 48, 'tl-band', '<b>QB</b><span>Prepared by Sera<br>Qbix · Design service</span>'),
     ]),
     // 2 · five pages of the site: home, shop, a product, about on its grid, contact
@@ -282,8 +284,8 @@ function drawService(scn) {
         a(null, 0, 0, 168, 104, 'tl-tile', img('cross', '78% 50%')),
         a(null, 12, 116, null, null, 'f-head', `<span class="t" data-k="ed.old" style="font-size:20px;letter-spacing:-0.03em">$180</span><span class="t" data-k="ed.new" style="position:absolute;left:0;top:0;font-size:20px;letter-spacing:-0.03em">$160</span>`),
         a(null, 12, 148, null, null, 'dim', '<span style="font-size:11px">Knot stool · Forma</span>'),
-        a(null, 12, 176, 120, 4, '', '<i style="display:block;height:100%;background:rgba(18,20,23,0.12)"></i>'),
-        a(null, 12, 190, 90, 4, '', '<i style="display:block;height:100%;background:rgba(18,20,23,0.12)"></i>')]),
+        a(null, 12, 176, 120, 4, '', '<i style="display:block;height:100%;background:rgba(11, 12, 13,0.12)"></i>'),
+        a(null, 12, 190, 90, 4, '', '<i style="display:block;height:100%;background:rgba(11, 12, 13,0.12)"></i>')]),
       a('ed.l1', 232, 28, null, null, 'f-label', 'Price'),
       a('ed.f1', 232, 46, 300, 40, 'tl-field', `<span class="t" data-k="ed.v1">$160</span><span data-k="ed.caret" class="a caret" style="left:12px;top:12px;height:16px"><i></i></span>`),
       a('ed.ring', 232, 46, 300, 40, 'tl-edit'),

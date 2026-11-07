@@ -27,7 +27,7 @@
   "where": "A ring as a Qbix Labs chapter plate: the object as pure type.",
   "rules": [
     "Characters are flat colours from a ladder, never alpha. Dark ones are grey, the top two levels are lime.",
-    "The grid is monospace so cells line up; use the system mono, the studio fonts are not fixed-width.",
+    "The grid is monospace so cells line up: Geist Mono, the studio's fixed-width face.",
     "Resolution follows the grid: more cells, more samples."
   ],
   "tags": ["text", "canvas", "3d", "pointer"],
@@ -61,7 +61,7 @@
 function asciiRing(box, { reduce = false } = {}) {
   const cv = box.querySelector('canvas');
   const ctx = cv.getContext('2d');
-  const FAM = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+  const FAM = '"Geist Mono", ui-monospace, "SF Mono", Menlo, monospace';
   const RAMP = '.,:;-~=+*cxoe%#&@';
   const LEVELS = RAMP.length;
   // a flat ladder: dark grey up to chalk, the lit edge (top two levels) in lime
@@ -81,7 +81,7 @@ function asciiRing(box, { reduce = false } = {}) {
     dpr = Math.min(2, window.devicePixelRatio || 1);
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     fsz = Math.max(9, Math.min(15, Math.min(W, H) / 40));
-    ctx.font = `600 ${fsz}px ${FAM}`;
+    ctx.font = `500 ${fsz}px ${FAM}`;
     cw = ctx.measureText('M').width || fsz * 0.6;
     lh = fsz * 1.18;
     cols = Math.floor(W / cw); rows = Math.floor(H / lh);
@@ -151,7 +151,7 @@ function asciiRing(box, { reduce = false } = {}) {
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    ctx.font = `600 ${fsz}px ${FAM}`;
+    ctx.font = `500 ${fsz}px ${FAM}`;
     ctx.textBaseline = 'top';
     // a quiet field of dots so the empty cells still read as the same material
     ctx.fillStyle = '#26282C';
@@ -191,6 +191,7 @@ function asciiRing(box, { reduce = false } = {}) {
   document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else start(); });
   new ResizeObserver(() => { size(); if (reduce) render(); }).observe(cv);
   size(); start();
+  if (document.fonts) document.fonts.load(`500 12px "Geist Mono"`).then(() => { size(); if (reduce) render(); });
   return { aim, idle() { lastInput = -1e9; } };
 }
 </script>

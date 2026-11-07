@@ -39,11 +39,11 @@
 .morph-word { position: relative; height: calc(var(--fs, 120px) * 1.22); overflow: hidden; }
 .morph-g {
   position: absolute; left: 50%; top: 0;
-  font-family: 'Eurostile', 'Geist', sans-serif; font-weight: 400; font-synthesis-weight: none;
+  font-family: 'Outfit', 'Geist', sans-serif; font-weight: 400; font-synthesis-weight: none;
   letter-spacing: -0.03em; line-height: 1.04; white-space: pre; will-change: transform;
 }
 .morph-steps { position: relative; display: flex; justify-content: center; gap: clamp(8px, 2vw, 16px); margin-top: 16px; }
-.morph-steps span { position: relative; z-index: 1; padding: 0 16px; height: 32px; display: flex; align-items: center; font: 500 12px/1 'Encode Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+.morph-steps span { position: relative; z-index: 1; padding: 0 16px; height: 32px; display: flex; align-items: center; font: 500 13px/1 'Geist', sans-serif; letter-spacing: 0; color: var(--fg2); }
 .morph-steps span.on { color: #0c1300; }
 .morph-steps .block { position: absolute; left: 0; top: 0; height: 32px; background: #B8FF00; transition: transform 800ms cubic-bezier(0.65, 0, 0.35, 1), width 800ms cubic-bezier(0.65, 0, 0.35, 1); }
 </style>
@@ -79,7 +79,7 @@ function textMorph(root, { reduce = false, hold = 2700 } = {}) {
   const stepsEl = root.querySelector('.morph-steps');
   const sr = root.querySelector('.sr-only');
   const mctx = document.createElement('canvas').getContext('2d');
-  const FAM = "Eurostile, Geist, sans-serif";
+  const FAM = "Outfit, Geist, sans-serif";
   const OUT = 'cubic-bezier(0.5, 0, 0.75, 0)', IN = 'cubic-bezier(0.16, 1, 0.3, 1)', MOVE = 'cubic-bezier(0.65, 0, 0.35, 1)';
   let fs = 100, idx = 0, glyphs = [], busyUntil = 0, timer = 0;
 

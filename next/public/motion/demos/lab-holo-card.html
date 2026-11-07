@@ -15,7 +15,7 @@
   "kind": "pointer",
   "tone": "paper",
   "line": "tilt ±18° · spring 120 / 16 · lime foil bands",
-  "summary": "A white member card tilts in 3D perspective toward the pointer on a spring. A guilloche rosette is generated in code and drawn twice: a fine ink line at rest, and again in full ink on a lime foil that shows only through hard-edged diagonal bands whose position follows the tilt, so the foil seems to run across the engraving as the card turns.",
+  "summary": "A sage member card tilts in 3D perspective toward the pointer on a spring. A guilloche rosette is generated in code and drawn twice: a fine ink line at rest, and again in full ink on a lime foil that shows only through hard-edged diagonal bands whose position follows the tilt, so the foil seems to run across the engraving as the card turns.",
   "spec": [
     ["Tilt", "rotateY = x · 18°, rotateX = −y · 18°, perspective 1100px"],
     ["Spring", "stiffness 120, damping 16 (40 / 14 for reduced motion)"],
@@ -37,25 +37,25 @@
 <style data-code>
 .hc-stage { perspective: 1100px; display: grid; place-items: center; }
 .hc { --rx: 0deg; --ry: 0deg; --fx: 50%; --fy: 50%;
-  position: relative; width: var(--w, 300px); aspect-ratio: 5 / 7; background: #ffffff; color: #121417; overflow: hidden;
+  position: relative; width: var(--w, 300px); aspect-ratio: 5 / 7; background: #EEF1E8; color: #0B0C0D; overflow: hidden;
   transform: rotateX(var(--rx)) rotateY(var(--ry)); container-type: inline-size; isolation: isolate; will-change: transform;
   clip-path: polygon(0 0, calc(100% - 9cqw) 0, 100% 9cqw, 100% 100%, 0 100%); }
 .hc-face { position: absolute; inset: 0; padding: 7cqw; display: flex; flex-direction: column; box-sizing: border-box; }
-.hc-row { display: flex; justify-content: space-between; font: 400 3.8cqw/1.2 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18,20,23,.64); position: relative; z-index: 2; }
+.hc-row { display: flex; justify-content: space-between; font: 500 4.8cqw/1.2 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13,.64); position: relative; z-index: 2; }
 .hc-rose { position: absolute; left: 50%; top: 41%; width: 118cqw; height: 118cqw; transform: translate(-50%, -50%); }
-.hc-num { position: absolute; left: 0; right: 0; top: 41%; transform: translateY(-52%); text-align: center; font: 400 40cqw/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
+.hc-num { position: absolute; left: 0; right: 0; top: 41%; transform: translateY(-52%); text-align: center; font: 200 40cqw/1 Outfit, Geist, sans-serif; letter-spacing: -.04em; }
 .hc-num em { font-size: .28em; vertical-align: .95em; margin-right: .1em; letter-spacing: 0; }
 .hc-info { margin-top: auto; position: relative; z-index: 2; display: grid; gap: 3cqw; }
-.hc-info h2 { font: 400 10.5cqw/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
-.hc-info p { font-size: 4cqw; line-height: 1.5; display: flex; justify-content: space-between; color: rgba(18,20,23,.64); }
-.hc-info p b { font-weight: 500; color: #121417; }
+.hc-info h2 { font: 300 10.5cqw/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.hc-info p { font-size: 4.8cqw; line-height: 1.5; display: flex; justify-content: space-between; color: rgba(11, 12, 13,.64); }
+.hc-info p b { font-weight: 500; color: #0B0C0D; }
 /* the foil sits under the card face: a lime fill with the engraving in full ink, seen only through moving bands */
 .hc-lit { position: absolute; inset: 0; background: #B8FF00; color: #0c1300; pointer-events: none;
   -webkit-mask-image: repeating-linear-gradient(115deg, transparent 0 18%, #000 18% 26%, transparent 26% 44%);
   mask-image: repeating-linear-gradient(115deg, transparent 0 18%, #000 18% 26%, transparent 26% 44%);
   -webkit-mask-size: 240% 240%; mask-size: 240% 240%; -webkit-mask-position: var(--fx) var(--fy); mask-position: var(--fx) var(--fy); }
 .hc-lit .hc-rose path { stroke: currentColor; stroke-opacity: .4; }
-.hc-rose path { stroke: #121417; stroke-opacity: .3; }
+.hc-rose path { stroke: #0B0C0D; stroke-opacity: .3; }
 </style>
 <style>
   .qm-stage { place-items: stretch; }

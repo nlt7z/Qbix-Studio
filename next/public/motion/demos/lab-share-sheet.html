@@ -14,12 +14,12 @@
   "kind": "loop",
   "tone": "paper",
   "line": "spring k 190 · c 25 · button ⇄ sheet",
-  "summary": "The Share the site button and the sheet are the same lime block, on the paper. Its position, width and height spring between the two sizes while the label is pushed out and the options are uncovered in order, one after another. A chosen option turns into a check, then the sheet folds back into the button, which reports the result.",
+  "summary": "The Share the site button and the sheet are the same near-black block, on white. Its position, width and height spring between the two sizes while the label is pushed out and the options are uncovered in order, one after another. A chosen option turns into a check, then the sheet folds back into the button, which reports the result.",
   "spec": [
     ["Morph", "x, y, width, height on one set of springs, k 190 · c 25"],
     ["Label", "slides out upward as the sheet opens (translateY 0 → −100% by 2.2× progress)"],
     ["Options", "uncovered in order: clip inset 100% → 0 and translateY 28 → 0, 45 ms apart"],
-    ["Choice", "the tile turns ink with a lime check (380 ms pop), the button reads the result for 2.1 s"],
+    ["Choice", "the tile turns near-black with a lime check (380 ms pop), the button reads the result for 2.1 s"],
     ["Corner", "the cut corner stays the same size at both extremes"]
   ],
   "source": ["Qbix studio library · share-sheet"],
@@ -27,33 +27,33 @@
   "rules": [
     "One element, two sizes. Never cross-fade between a button and a panel.",
     "Content is uncovered by a clip, not faded.",
-    "The block is the lime; the options on it are ink."
+    "The block is near-black and the options on it are dark tiles; lime is only the check."
   ],
   "tags": ["click", "morph", "spring", "sheet", "launch"],
   "shot": 2700
 }
 </script>
 <style data-code>
-/* Share sheet: one lime block, two sizes */
-.sh-surf { position: absolute; left: 0; top: 0; background: #b8ff00; color: #0c1300; overflow: hidden; cursor: pointer; touch-action: manipulation; --cut: 12px; }
+/* Share sheet: one near-black block, two sizes */
+.sh-surf { position: absolute; left: 0; top: 0; background: #0B0C0D; color: #ffffff; overflow: hidden; cursor: pointer; touch-action: manipulation; --cut: 12px; }
 .sh-btnc { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 .sh-bl { position: relative; height: 22px; overflow: hidden; width: 168px; }
 .sh-bl > span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 9px; font: 500 15px/1 var(--font-sans, 'Geist'); white-space: nowrap; }
 .sh-bl svg { width: 18px; height: 18px; flex: none; }
 .sh-sheetc { position: absolute; left: 0; top: 0; width: 336px; height: 280px; cursor: default; }
 .sh-head { position: absolute; left: 22px; top: 22px; }
-.sh-head b { display: block; font: 400 24px/1.05 'Eurostile', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
-.sh-head span { display: block; margin-top: 6px; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(12, 19, 0, 0.66); }
-.sh-x { position: absolute; right: 18px; top: 18px; width: 34px; height: 34px; background: rgba(12, 19, 0, 0.1); display: grid; place-items: center; cursor: pointer; }
+.sh-head b { display: block; font: 300 24px/1.05 'Outfit', var(--font-headline, sans-serif); letter-spacing: -0.03em; }
+.sh-head span { display: block; margin-top: 6px; font: 500 13px/1 'Geist', sans-serif; letter-spacing: -.006em; color: rgba(255, 255, 255, 0.66); }
+.sh-x { position: absolute; right: 18px; top: 18px; width: 34px; height: 34px; background: #222427; display: grid; place-items: center; cursor: pointer; }
 .sh-grid { position: absolute; left: 12px; right: 12px; display: grid; grid-template-columns: repeat(4, 1fr); }
 .sh-g1 { top: 82px; } .sh-g2 { top: 176px; }
-.sh-o { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; font: 500 10.5px/1 'Encode Sans', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
-.sh-o .c { position: relative; width: 52px; height: 52px; display: grid; place-items: center; font: 400 22px/1 'Eurostile', var(--font-headline, sans-serif); background: #0c1300; color: #b8ff00; transition: transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.sh-o { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; font: 500 13px/1 'Geist', sans-serif; letter-spacing: -.006em; }
+.sh-o .c { position: relative; width: 52px; height: 52px; display: grid; place-items: center; font: 300 24px/1 'Outfit', var(--font-headline, sans-serif); background: #222427; color: #ffffff; transition: transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 .sh-o:active .c { transform: scale(0.92); }
 .sh-o .c svg { width: 22px; height: 22px; }
-.sh-o .c.ic { background: rgba(12, 19, 0, 0.12); color: #0c1300; }
-.sh-o .ck { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transform: scale(0.4); background: #0c1300; }
-.sh-o .lab { position: relative; height: 12px; overflow: hidden; width: 76px; text-align: center; }
+.sh-o .c.ic { background: #18191B; color: #ffffff; }
+.sh-o .ck { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transform: scale(0.4); background: #0B0C0D; }
+.sh-o .lab { position: relative; height: 14px; overflow: hidden; width: 76px; text-align: center; }
 .sh-o .lab > span { position: absolute; left: 0; right: 0; top: 0; white-space: nowrap; }
 .sh-fx { will-change: transform, clip-path; }
 </style>
@@ -61,9 +61,9 @@
   .qm-stage { padding: 0; }
   #sh-stage { position: absolute; left: 50%; top: 48%; width: 780px; height: 400px; transform-origin: 50% 50%; }
   .sh-copy { position: absolute; left: 0; top: 36px; width: 360px; display: grid; gap: 14px; }
-  .sh-copy .title { font-size: 72px; }
+  .sh-copy .title { font-size: 72px; font-weight: 200; letter-spacing: -0.04em; }
   .sh-copy p.b { font-size: 15px; line-height: 1.5; color: var(--fg2); max-width: 22em; }
-  .sh-copy .pr { font: 500 22px/1 'Encode Sans', sans-serif; letter-spacing: -0.01em; margin-top: 4px; }
+  .sh-copy .pr { font: 500 24px/1 'Geist Mono', monospace; letter-spacing: -0.01em; margin-top: 4px; }
   #sh-unit { position: absolute; right: 0; top: 0; width: 360px; height: 400px; }
   #sh-cur { position: absolute; left: 0; top: 0; width: 22px; height: 22px; pointer-events: none; z-index: 9; opacity: 0; }
 </style>
@@ -81,10 +81,10 @@
   <div id="sh-unit">
 <!-- code -->
 <div class="sh-surf cut" id="sh-surf">
-  <div class="sh-btnc" id="sh-btnc"><div class="sh-bl" id="sh-bl"><span><svg viewBox="0 0 18 18" fill="none" stroke="#0c1300" stroke-width="1.7" stroke-linecap="square"><path d="M9 11.5V2.5M5.5 6L9 2.5 12.5 6"/><path d="M4 9.5H3v6h12v-6h-1"/></svg>Share the site</span></div></div>
+  <div class="sh-btnc" id="sh-btnc"><div class="sh-bl" id="sh-bl"><span><svg viewBox="0 0 18 18" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="square"><path d="M9 11.5V2.5M5.5 6L9 2.5 12.5 6"/><path d="M4 9.5H3v6h12v-6h-1"/></svg>Share the site</span></div></div>
   <div class="sh-sheetc" id="sh-sheetc">
     <div class="sh-head sh-fx"><b>Share the site</b><span>forma.studio · live today</span></div>
-    <div class="sh-x sh-fx" id="sh-close"><svg width="12" height="12" viewBox="0 0 12 12" stroke="#0c1300" stroke-width="1.8"><path d="M2 2l8 8M10 2l-8 8"/></svg></div>
+    <div class="sh-x sh-fx" id="sh-close"><svg width="12" height="12" viewBox="0 0 12 12" stroke="#ffffff" stroke-width="1.8"><path d="M2 2l8 8M10 2l-8 8"/></svg></div>
     <div class="sh-grid sh-g1" id="sh-g1"></div>
     <div class="sh-grid sh-g2" id="sh-g2"></div>
   </div>
@@ -126,7 +126,7 @@ const ic = {
   msg: '<path d="M4 5.5h14v9H9l-4 3.2v-3.2H4z"/>',
   qr: '<path d="M4 4h5v5H4zM13 4h5v5h-5zM4 13h5v5H4z"/><path d="M13 13h2v2h-2zM16 16h2v2h-2zM16 13h2M13 17v1"/>',
 };
-const svg = (p) => `<svg viewBox="0 0 22 22" fill="none" stroke="#0c1300" stroke-width="1.7" stroke-linecap="square">${p}</svg>`;
+const svg = (p) => `<svg viewBox="0 0 22 22" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="square">${p}</svg>`;
 const check = '<svg viewBox="0 0 22 22" fill="none" stroke="#b8ff00" stroke-width="2.4" stroke-linecap="square"><path d="M6 11.5l3.4 3.4L16.5 7.5"/></svg>';
 const people = ['Mina', 'Noor', 'Ravi', 'Dana'];
 const acts = [['link', 'Copy link', 'Copied'], ['mail', 'Email', 'Drafted'], ['msg', 'Message', 'Sent'], ['qr', 'QR code', 'Saved']];
@@ -153,7 +153,7 @@ ticks.add((dt) => {
 function setState(o) { open = o; const R = o ? S : B; for (const k of ['x', 'y', 'w', 'h']) g[k].t = R[k]; g.o.t = o ? 1 : 0; }
 
 const shareHTML = bl.firstElementChild.innerHTML;
-const doneHTML = (t) => `<svg viewBox="0 0 18 18" fill="none" stroke="#0c1300" stroke-width="2" stroke-linecap="square"><path d="M3.5 9.5l3.5 3.5 7.5-8"/></svg>${t}`;
+const doneHTML = (t) => `<svg viewBox="0 0 18 18" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="square"><path d="M3.5 9.5l3.5 3.5 7.5-8"/></svg>${t}`;
 function swapLab(box, html) {
   const old = box.querySelector('span:not(.out)'); if (old && old.innerHTML === html) return;
   const n = document.createElement('span'); n.innerHTML = html; box.appendChild(n); if (!old) return; old.classList.add('out');

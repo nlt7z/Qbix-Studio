@@ -21,7 +21,7 @@
     ["Width", "clamp(5.6 − v × 2.6, 1.3, 5.2) px, v the pen's speed in px per ms, smoothed 0.35"],
     ["Clear", "segments removed from the end over min(1100, 260 + 5 × segments) ms, in-out cubic"],
     ["Accept", "asleep (lime at 32%) until there is ink and the pen is up, then the filled lime; accepting leaves a check"],
-    ["Status chip", "Awaiting signature (grey) → Signed (ink tint) → Accepted (ink); colour 200 ms, expo out"],
+    ["Status chip", "Awaiting signature (sage) → Signed (deeper sage) → Accepted (ink); colour 200 ms, expo out"],
     ["Hint", "“Sign above the line” fades out once there is ink: 200 ms, expo out"],
     ["Pad", "190 px tall, radius 8, a 1px line 44 px up; the card is radius 14, padding 32"]
   ],
@@ -30,20 +30,20 @@
   "rules": [
     "One filled primary, disabled until signed: lime is the only fill on the card besides the status.",
     "The status chip changes fill and word.",
-    "No shadow, no outline on the pad: it is a recessed grey block.",
+    "No shadow, no outline on the pad: it is a recessed sage block.",
     "A real pad: pointer events with capture and touch-action none, so a finger signs as well as a mouse."
   ],
-  "tags": ["signature", "pointer", "svg", "form", "paper"],
+  "tags": ["signature", "pointer", "svg", "form", "sage"],
   "shot": 6800
 }
 </script>
 <style data-code>
 /* Sign the brief · Idea: bencho.dev signature (MIT).
-   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+   O2's roles in qbix colours: ink on white, one lime. Radii, spacing and type are the O2 library's own. */
 .sg {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64);
-  --surface: #ffffff; --surface-muted: #eceef0;
-  --divider: rgba(18, 20, 23, 0.08); --divider-strong: rgba(18, 20, 23, 0.2); --secondary-border: rgba(18, 20, 23, 0.3);
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64);
+  --surface: #ffffff; --surface-muted: #EEF1E8;
+  --divider: #E3E8DA; --divider-strong: #C5CDB6; --secondary-border: rgba(11, 12, 13, 0.3);
   --primary: #B8FF00; --on-primary: #0c1300;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   width: 600px; background: var(--surface); border-radius: 14px; padding: 32px; display: grid; gap: 20px;
@@ -52,15 +52,15 @@
 .sg-hd { display: flex; align-items: center; gap: 16px; }
 .sg-av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
 .sg-t { flex: 1; }
-.sg-title { font-size: 20px; letter-spacing: -0.02em; line-height: 1.35; }
+.sg-title { font-family: var(--font-headline); font-weight: 300; font-size: 20px; letter-spacing: -0.03em; line-height: 1.35; }
 .sg-meta { font-size: 12px; color: var(--muted); }
 .sg-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: var(--divider); transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out); }
-.sg-chip.signed { color: var(--text); background: rgba(18, 20, 23, 0.14); }
+.sg-chip.signed { color: var(--text); background: #D3DAC5; }
 .sg-chip.done { color: #fff; background: var(--text); }
 .sg-terms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .sg-terms div { display: grid; gap: 2px; }
 .sg-terms span { font-size: 12px; color: var(--muted); }
-.sg-terms b { font-weight: 400; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sg-terms b { font-family: var(--font-mono); font-weight: 400; font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 
 /* the pad: a recessed block; the ink is an SVG over it */
 .sg-pad { position: relative; height: 190px; border-radius: 8px; background: var(--surface-muted); touch-action: none; cursor: crosshair; user-select: none; -webkit-user-select: none; }
@@ -81,7 +81,7 @@
 .sg-btn:hover, .sg-btn.is-hot { background: var(--surface-muted); }
 .sg-btn.quiet { border-color: transparent; background: transparent; }
 .sg-btn.quiet:hover, .sg-btn.quiet.is-hot { background: var(--surface-muted); }
-.sg-btn:disabled { color: rgba(18, 20, 23, 0.38); cursor: default; }
+.sg-btn:disabled { color: rgba(11, 12, 13, 0.38); cursor: default; }
 .sg-btn.primary { background: var(--primary); border-color: transparent; color: var(--on-primary); }
 .sg-btn.primary:hover, .sg-btn.primary.is-hot { background: color-mix(in oklab, var(--primary) 88%, #000); }
 .sg-btn.primary:active { background: color-mix(in oklab, var(--primary) 78%, #000); }

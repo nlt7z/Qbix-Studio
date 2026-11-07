@@ -35,7 +35,7 @@
 </script>
 <style data-code>
 /* Floating toolbar: one highlight, one tooltip, both on springs */
-.tb-bar { position: absolute; left: 50%; top: 336px; height: 64px; padding: 0 8px; background: #121417; color: #f4f5f2; display: flex; align-items: center; transform: translateX(-50%); --cut: 12px; }
+.tb-bar { position: absolute; left: 50%; top: 336px; height: 64px; padding: 0 8px; background: #0B0C0D; color: #f4f5f2; display: flex; align-items: center; transform: translateX(-50%); --cut: 12px; }
 .tb-it { position: relative; z-index: 1; width: 52px; height: 48px; display: grid; place-items: center; cursor: pointer; flex: none; }
 .tb-it svg { width: 22px; height: 22px; }
 .tb-sep { width: 2px; height: 24px; background: rgba(244, 245, 242, 0.16); margin: 0 8px; flex: none; }
@@ -45,7 +45,7 @@
 .tb-colw { display: flex; align-items: center; overflow: hidden; flex: none; height: 48px; }
 .tb-sw { flex: none; width: 36px; height: 48px; display: grid; place-items: center; cursor: pointer; }
 .tb-sw i { display: block; width: 20px; height: 20px; }
-.tb-tip { position: absolute; left: 0; top: 292px; height: 32px; background: #121417; color: #f4f5f2; font: 500 12px/32px 'Encode Sans', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; overflow: hidden; pointer-events: none; }
+.tb-tip { position: absolute; left: 0; top: 292px; height: 32px; background: #0B0C0D; color: #f4f5f2; font: 500 13px/32px 'Geist', sans-serif; letter-spacing: 0; overflow: hidden; pointer-events: none; }
 .tb-tip span { position: absolute; left: 0; top: 0; height: 32px; padding: 0 12px; white-space: nowrap; }
 </style>
 <style>
@@ -109,8 +109,8 @@ function tween(d, e, f, done) {
 const EZ = 'cubic-bezier(.2,.8,.2,1)';
 
 const items = [...bar.querySelectorAll('.tb-it')];
-const colors = [['Ink', '#121417'], ['Moss', '#6faf00'], ['Clay', '#c2603a']];
-colw.innerHTML = colors.map(([n, c]) => `<div class="tb-sw" data-tip="${n}" data-c="${c}"><i style="background:${c}${c === '#121417' ? ';box-shadow:inset 0 0 0 2px rgba(244,245,242,.55)' : ''}"></i></div>`).join('');
+const colors = [['Ink', '#0B0C0D'], ['Moss', '#6faf00'], ['Pine', '#2F4A12']];
+colw.innerHTML = colors.map(([n, c]) => `<div class="tb-sw" data-tip="${n}" data-c="${c}"><i style="background:${c}${c === '#0B0C0D' ? ';box-shadow:inset 0 0 0 2px rgba(244,245,242,.55)' : ''}"></i></div>`).join('');
 const sws = [...colw.children];
 const targets = [...items, ...sws];
 
@@ -167,7 +167,7 @@ function press(el) {
   el.animate([{ transform: 'scale(1)' }, { transform: 'scale(.86)' }, { transform: 'scale(1)' }], { duration: 280, easing: 'ease-out' });
   if (el.dataset.mode) { mode = items.indexOf(el); paintIcons(); if (colOpen) setCol(false); }
   else if (el.id === 'tb-colorBtn') setCol(!colOpen);
-  else if (el.dataset.c) { head.style.color = el.dataset.c; dot.setAttribute('fill', el.dataset.c === '#121417' ? '#f4f5f2' : el.dataset.c); at(650, () => setCol(false)); }
+  else if (el.dataset.c) { head.style.color = el.dataset.c; dot.setAttribute('fill', el.dataset.c === '#0B0C0D' ? '#f4f5f2' : el.dataset.c); at(650, () => setCol(false)); }
   else if (el.dataset.tip === 'Export') { if (colOpen) setCol(false); }
 }
 

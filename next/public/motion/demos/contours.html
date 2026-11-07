@@ -15,14 +15,14 @@
   "kind": "loop",
   "tone": "paper",
   "line": "18 levels · 240 px hills · 12 fps",
-  "summary": "A topographic map of a slowly changing noise field, drawn on canvas behind a paper chapter's words. The field is sampled on a grid, each level is traced by marching squares, and every fourth level is an index contour, drawn heavier. It is texture, so it stays faint, and it holds still while the page scrolls.",
+  "summary": "A topographic map of a slowly changing noise field, drawn on canvas behind a white chapter's words. The field is sampled on a grid, each level is traced by marching squares, and every fourth level is an index contour, drawn heavier. It is texture, so it stays faint, and it holds still while the page scrolls.",
   "spec": [
     ["Field", "noise3(x, y, z) × 0.72 + noise3(2.3x + 11, 2.3y, 1.4z) × 0.28, sampled every 12 px (6 px at the least)"],
     ["Levels", "18 between −0.9 and 0.9, each traced by marching squares"],
     ["Index lines", "every fourth level (l % 4 = 2): full alpha, 1.25 px · the rest alpha × 0.55, 0.8 px"],
     ["Drift", "z = t × 0.05, redrawn 12 times a second"],
     ["Hills", "240 px across (scale), in css px"],
-    ["Ink", "rgb(18, 20, 23) at alpha 0.12 on the chapter's paper"],
+    ["Ink", "rgb(18, 20, 23) at alpha 0.12 on the chapter's white"],
     ["Density", "1 canvas pixel a css pixel: the lines are soft, so a retina screen adds only cost"],
     ["Trigger", "drawn the first time it is on screen · paused off screen, in a hidden tab and while the page scrolls · one still frame for reduced motion"]
   ],
@@ -34,7 +34,7 @@
     "lib/scene/quiet.ts",
     "app/story.css · .ch-backdrop"
   ],
-  "where": "Behind every paper chapter of the homepage (pinned with its words and its scene), and as a post's picture: a map card, like a practice site's “Find us”.",
+  "where": "Behind every white chapter of the homepage (pinned with its words and its scene), and as a post's picture: a map card, like a practice site's “Find us”.",
   "rules": [
     "Behind words it is alpha 0.12. Alpha 0.5 is only for a map that is the picture (a post), never under type.",
     "One seed a chapter (a hash of its id), so no two backdrops draw the same land.",
@@ -42,7 +42,7 @@
     "Draw at density 1 and redraw only while seen, in an open tab, with the page at rest, at 12 fps. Reduced motion draws one still frame.",
     "Ink only, never lime: the screen's one lime is somewhere else."
   ],
-  "tags": ["canvas", "generative", "backdrop", "paper", "noise", "marching squares"],
+  "tags": ["canvas", "generative", "backdrop", "white", "noise", "marching squares"],
   "deps": ["noise"]
 }
 </script>
@@ -53,7 +53,7 @@
 .ch-backdrop .gen { display: block; width: 100%; height: 100%; }
 </style>
 <style>
-  /* the stage is one paper chapter: the frame fills it, the words stand on the left */
+  /* the stage is one white chapter: the frame fills it, the words stand on the left */
   .qm-stage { display: block; padding: 0; --edge: clamp(16px, 4vw, 32px); --ui: 0px; }
   html:not(.qm-tile) .qm-stage { --ui: 46px; }
   .qm-stage .ch-frame { position: absolute; inset: 0; height: auto; }
@@ -70,26 +70,25 @@
   .ch-title { margin: 0; font-size: clamp(34px, 3.4vw, 58px); line-height: 1.04; letter-spacing: -0.03em; color: var(--fg); text-wrap: balance; }
   .ch-lede { margin: 20px 0 0; max-width: 34em; font-size: clamp(16px, 1.2vw, 19px); line-height: 1.6; color: var(--fg2); }
   .ch-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 30px; }
-  /* a set with no words: what it is, on a plain paper tab so the lines never run through it */
+  /* a set with no words: what it is, on a plain white tab so the lines never run through it */
   .ch-note { z-index: 3; position: absolute; left: var(--edge); bottom: calc(var(--ui) + 20px); margin: 0; display: grid; gap: 8px; padding: 16px 20px 14px; background: var(--ground); clip-path: inset(0 0 100% 0); transition: clip-path 560ms var(--ease-out-expo); }
   .ch-note.is-on { clip-path: inset(0 0 0 0); }
   .ch-note b { font-family: var(--font-headline); font-weight: 400; font-size: clamp(22px, 2.4vw, 34px); line-height: 1; letter-spacing: -0.03em; color: var(--fg); text-transform: none; }
   /* a post whose picture is a map (app/scenes-listing.css), laid out at its own size and zoomed to its box */
   .post-box { z-index: 3; position: absolute; right: var(--edge); top: 24px; bottom: calc(var(--ui) + 24px); width: min(46%, 560px); display: grid; place-items: center; clip-path: inset(0 0 100% 0); transition: clip-path 560ms var(--ease-out-expo); }
   .post-box.is-on { clip-path: inset(-2px -2px -2px -2px); }
-  .post-scn { position: relative; flex: none; width: 111px; height: 111px; background: #ffffff; color: #121417; overflow: hidden; font-family: var(--font-sans); line-height: 1.4; }
+  .post-scn { position: relative; flex: none; width: 111px; height: 111px; background: #EEF1E8; color: #0B0C0D; overflow: hidden; font-family: var(--font-sans); line-height: 1.4; }
   .lst-gen { position: absolute; inset: 0; display: block; }
   .lst-gen .gen { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
   .lst-map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
-  .lst-road { fill: none; stroke: #f4f5f2; stroke-width: 4; stroke-linecap: square; }
+  .lst-road { fill: none; stroke: #ffffff; stroke-width: 4; stroke-linecap: square; }
   .lst-road--s { stroke-width: 2.5; }
-  .lst-pin path { fill: #121417; }
+  .lst-pin path { fill: #0B0C0D; }
   .lst-pin circle { fill: #f4f5f2; }
   .lst-label {
     position: absolute; left: 0; bottom: 0; width: 111px; height: 24px; z-index: 5;
-    display: flex; align-items: center; padding: 0 9px; font-size: 11px; font-weight: 500; white-space: nowrap;
-    background: rgba(255, 255, 255, 0.62); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-    -webkit-backdrop-filter: blur(10px) saturate(1.5); backdrop-filter: blur(10px) saturate(1.5);
+    display: flex; align-items: center; padding: 0 9px; font-size: 12px; font-weight: 500; white-space: nowrap;
+    background: #ffffff;
   }
   .qm-ui .is-dim { opacity: 0.4; }
   @media (prefers-reduced-motion: reduce) { .ch-copy, .ch-note, .post-box { transition: none; } }
@@ -279,7 +278,7 @@ function contours({ seed = 3, ink = '18, 20, 23', bg, alpha = 0.5, levels = 14, 
 /* ---- Story.tsx — a chapter's own seed, so no two backdrops draw the same land */
 const seedOf = (id = '') => id.split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 9973, 7);
 
-/* Behind a paper chapter's words: faint, drifting, 12 fps at one canvas pixel a css pixel. */
+/* Behind a white chapter's words: faint, drifting, 12 fps at one canvas pixel a css pixel. */
 let backdrop = art(
   document.querySelector('.ch-backdrop .gen'),
   contours({ seed: seedOf('services'), alpha: 0.12, levels: 18, scale: 240, speed: 0.05 }),
@@ -292,10 +291,10 @@ let backdrop = art(
   const postCv = document.getElementById('post-gen');
   const $ = (id) => document.getElementById(id);
   const SETS = {
-    // Story.tsx: the paper chapters' backdrop
+    // Story.tsx: the white chapters' backdrop
     chapter: { paint: (land) => ({ seed: seedOf(land), alpha: 0.12, levels: 18, scale: 240, speed: 0.05 }), moves: true, fps: 12, density: 1 },
     // MapGen (components/scenes): a post whose picture is a map. A still (moves is off), bold, hills 46 px across in the drawing's px
-    map: { paint: () => ({ seed: 14, ink: '18, 20, 23', bg: '244, 245, 242', alpha: 0.5, levels: 12, scale: 46 }), moves: false },
+    map: { paint: () => ({ seed: 14, ink: '18, 20, 23', bg: '238, 241, 232', alpha: 0.5, levels: 12, scale: 46 }), moves: false },
     // Generative.tsx: the component's own defaults (set moving, to see them)
     bold: { paint: () => ({}), moves: true, fps: 18, title: 'Defaults', sub: 'Seed 3 · 14 levels · hills 140 px · alpha 0.5 · 18 fps' },
   };

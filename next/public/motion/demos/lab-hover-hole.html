@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-tone="lime">
+<html lang="en" data-tone="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,9 +13,9 @@
   "cat": "cursor",
   "order": 30,
   "kind": "pointer",
-  "tone": "lime",
+  "tone": "dark",
   "line": "5 holes · grows still, shrinks fast · spring 90 / 13",
-  "summary": "A full-bleed lime panel sits over a white one carrying a render of objects. The lime has five round holes cut out of it: a main one that follows the pointer and four small ones trailing behind. The holes grow while the pointer rests and shrink when it moves fast, the radius on a spring.",
+  "summary": "A full-bleed ink panel sits over a white one carrying a render of objects. The ink has five round holes cut out of it: a main one that follows the pointer and four small ones trailing behind. The holes grow while the pointer rests and shrink when it moves fast, the radius on a spring.",
   "spec": [
     ["Mask", "five hard-edged radial holes combined with mask-composite: intersect"],
     ["Follow", "1 − e^(−22 dt); the four followers lag at 16, 13, 10 and 7 per second, at 0.62, 0.42, 0.28, 0.18 of the radius"],
@@ -24,29 +24,30 @@
     ["Trigger", "the pointer anywhere on the panel"]
   ],
   "source": ["Qbix studio library · hover-hole"],
-  "where": "The sign-off panel of the home page, or any lime chapter that has a second scene underneath it.",
+  "where": "The sign-off panel of the home page, or any dark chapter that has a second scene underneath it.",
   "rules": [
-    "The hole edge is hard, never feathered: the lime is cut, not melted.",
-    "The panel under the lime is white with a render, so the cut reads as a different chapter, not a lighter tint.",
+    "The hole edge is hard, never feathered: the dark is cut, not melted.",
+    "The panel under the ink is white with a render, so the cut reads as a different chapter, not a lighter tint. The one lime is a word of the headline.",
     "Hold still to look inside; moving fast closes it."
   ],
-  "tags": ["mask", "reveal", "pointer", "lime"],
+  "tags": ["mask", "reveal", "pointer", "dark"],
   "shot": 3600
 }
 </script>
 <style data-code>
-.hh { position: absolute; inset: 0; overflow: hidden; background: #f3f4f5; }
-.hh-below { position: absolute; inset: 0; color: #121417; }
+.hh { position: absolute; inset: 0; overflow: hidden; background: #ffffff; }
+.hh-below { position: absolute; inset: 0; color: #0B0C0D; }
 .hh-below img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .hh-below .say { position: absolute; left: clamp(18px, 5vw, 64px); bottom: clamp(18px, 6vh, 56px); }
-.hh-below .say h2 { font-family: Eurostile, Geist, sans-serif; font-weight: 400; font-size: clamp(44px, 9vw, 132px); line-height: .92; letter-spacing: -.03em; }
+.hh-below .say h2 { font-family: Outfit, Geist, sans-serif; font-weight: 200; font-size: clamp(44px, 9vw, 132px); line-height: .92; letter-spacing: -.04em; }
 .hh-below .say p { margin-top: .7em; font-size: clamp(13px, 1.5vw, 18px); }
-.hh-below .tagbar { display: inline-block; background: #121417; color: #f4f5f2; padding: 6px 10px; }
-.hh-top { position: absolute; inset: 0; background: #B8FF00; color: #0c1300; display: flex; flex-direction: column; justify-content: space-between;
+.hh-below .tagbar { display: inline-block; background: #0B0C0D; color: #f4f5f2; padding: 6px 10px; }
+.hh-top { position: absolute; inset: 0; background: #0B0C0D; color: #f4f5f2; display: flex; flex-direction: column; justify-content: space-between;
   padding: clamp(20px, 6vmin, 64px); -webkit-mask-composite: source-in; mask-composite: intersect; }
-.hh-top .kick { font: 400 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
-.hh-top h1 { font-family: Eurostile, Geist, sans-serif; font-weight: 400; font-size: clamp(38px, 7.6vw, 112px); line-height: .98; letter-spacing: -.03em; max-width: 12ch; }
-.hh-top .hint { font: 400 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.hh-top .kick { font: 500 13px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(244, 245, 242, 0.64); }
+.hh-top h1 { font-family: Outfit, Geist, sans-serif; font-weight: 300; font-size: clamp(38px, 7.6vw, 112px); line-height: .98; letter-spacing: -.035em; max-width: 12ch; }
+.hh-top h1 b { font-weight: inherit; color: #B8FF00; }
+.hh-top .hint { font: 500 13px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(244, 245, 242, 0.64); }
 </style>
 </head>
 <body>
@@ -59,7 +60,7 @@
   </div>
   <div class="hh-top" id="top">
     <p class="kick">Forma · forma.studio</p>
-    <h1>Ceramic objects, made by hand</h1>
+    <h1>Ceramic objects, made by <b>hand</b></h1>
     <p class="hint">Hold still to look inside</p>
   </div>
 </div>

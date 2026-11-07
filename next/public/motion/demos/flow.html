@@ -21,7 +21,7 @@
     ["Currents", "angle = sin(0.011 u + 0.35 t) × 1.5 + cos(0.013 v − 0.25 t) × 1.3 + sin(0.0045 (u + v) + 1.3) × 2.4, with (u, v) the point in the drawing's px ÷ scale"],
     ["Step", "t += 0.004 × speed · a particle moves 1.15 px × speed along its angle and draws that segment"],
     ["Fade", "the ground over the whole canvas at alpha 1 − 0.94ⁿ each step, so old lines melt away"],
-    ["Line", "0.9 px (a device pixel at least), rgba(184, 255, 0, 0.78) on rgb(11, 12, 14)"],
+    ["Line", "0.9 px (a device pixel at least), rgba(184, 255, 0, 0.78) on rgb(11, 12, 13)"],
     ["Drawn ahead", "the first time it is on screen: 40–180 steps at once, fewer and faded every fourth the bigger the canvas, so a big one coming in mid-scroll is no stall"],
     ["Density", "the canvas's own device pixels, the scene's zoom included (a big soft one may ask for a lower `density`)"],
     ["Trigger", "moves only while on screen and the tab is open · still while the page scrolls (lib/scene/quiet.ts) · a single drawn frame for reduced motion"]
@@ -47,17 +47,15 @@
 <style data-code>
 /* Flow — the canvas fills the box it is drawn in; the box carries the ground the lines fade into */
 .flow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-.fm-flow { position: relative; width: 232px; height: 200px; overflow: hidden; background: #0b0c0e; }
+.fm-flow { position: relative; width: 232px; height: 200px; overflow: hidden; background: #0B0C0D; }
 
-/* Forma's motion study: a dark glass caption over it, its top right corner notched (.notch is the kit's) */
+/* Forma's motion study: a dark caption over it, its top right corner notched (.notch is the kit's) */
 .fm-flow-cap {
   --cut: 12px;
   position: absolute; left: 12px; bottom: 12px;
   display: inline-flex; align-items: center; height: 30px; padding: 0 12px;
   font-size: 12px; font-weight: 500; color: #f4f5f2;
-  background: rgba(30, 32, 36, 0.5);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-  -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6);
+  background: #18191B;
 }
 </style>
 <style>
@@ -69,30 +67,30 @@
   .fl-box { position: relative; width: 100%; height: 100%; display: grid; place-items: center; min-width: 0; min-height: 0; contain: inline-size; }
   .fl-scn { position: relative; flex: none; font-family: var(--font-sans); font-size: 13px; line-height: 1.4; color: #f4f5f2; -webkit-font-smoothing: antialiased; }
   /* the board's title, over the piece (app/scenes-forma.css .fm-lbl) */
-  .fm-lbl { position: absolute; left: 0; right: 0; top: 0; height: 18px; display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244, 245, 242, 0.62); white-space: nowrap; }
+  .fm-lbl { position: absolute; left: 0; right: 0; top: 0; height: 18px; display: flex; align-items: center; justify-content: space-between; font-family: var(--font-sans); font-size: 12px; font-weight: 500; letter-spacing: 0; color: rgba(244, 245, 242, 0.64); white-space: nowrap; }
   .fm-lbl span:last-child { color: rgba(244, 245, 242, 0.38); }
   #v-study .fm-flow { position: absolute; left: 0; top: 26px; }
 
   /* Bid King's table (app/scenes-bid.css): the three models' faces and what the table reads, all Flow */
-  .bk { padding: 12px; background: #0b0c0e; color: #f4f5f2; }
-  .bk-k { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(244, 245, 242, 0.5); white-space: nowrap; }
+  .bk { padding: 12px; background: #0B0C0D; color: #f4f5f2; }
+  .bk-k { font-family: var(--font-sans); font-size: 12px; font-weight: 500; letter-spacing: 0; color: rgba(244, 245, 242, 0.5); white-space: nowrap; }
   .bk-side { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; min-height: 0; }
   .bk-side-k { display: flex; justify-content: space-between; }
   .bk-side-k em { font-style: normal; color: rgba(244, 245, 242, 0.32); }
-  .bk-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; height: 52px; padding: 0 12px; background: rgba(244, 245, 242, 0.05); }
+  .bk-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; height: 52px; padding: 0 12px; background: #18191B; }
   .bk-row.is-out { color: rgba(244, 245, 242, 0.42); }
   .bk-av { position: relative; width: 32px; height: 32px; overflow: hidden; background: rgba(244, 245, 242, 0.12); }
   .bk-av img, .bk-av .flow, .bk-signal .flow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
   .bk-av img { object-position: 50% 30%; }
   .bk-row.is-out .bk-av { opacity: 0.4; }
   .bk-who b { display: block; font-size: 14px; font-weight: 500; line-height: 1.2; }
-  .bk-who em { font-style: normal; font-size: 11px; color: rgba(244, 245, 242, 0.5); }
-  .bk-said { font-size: 12.5px; color: rgba(244, 245, 242, 0.72); white-space: nowrap; }
-  .bk-read { margin-top: auto; display: grid; gap: 10px; padding: 12px; background: rgba(244, 245, 242, 0.05); }
+  .bk-who em { font-style: normal; font-size: 12px; color: rgba(244, 245, 242, 0.5); }
+  .bk-said { font-size: 12px; color: rgba(244, 245, 242, 0.72); white-space: nowrap; }
+  .bk-read { margin-top: auto; display: grid; gap: 10px; padding: 12px; background: #18191B; }
   .bk-signal { position: relative; height: 30px; overflow: hidden; }
   .bk-read-v { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
   .bk-read-v b { font-weight: 500; }
-  .bk-read-v em { font-style: normal; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .bk-read-v em { font-style: normal; font-family: var(--font-mono); font-size: 12px; }
   .bk-meter { position: relative; height: 4px; background: rgba(244, 245, 242, 0.12); }
   .bk-meter i { position: absolute; left: 0; top: 0; width: 82%; height: 100%; background: #f4f5f2; }
 </style>
@@ -165,7 +163,7 @@ function scrolling() {
    and the tab is open, and for reduced motion it's a still.
    count · seed · ground · ink · speed · scale (the size of the currents: above 1, wider) ·
    alpha (how strong each line is drawn) · density (canvas pixels per css pixel, for a big soft one) */
-function flow(cv, { count = 520, seed = 7, ground = '11, 12, 14', ink = '184, 255, 0', speed = 1, scale = 1, alpha = 0.78, density, ratio } = {}) {
+function flow(cv, { count = 520, seed = 7, ground = '11, 12, 13', ink = '184, 255, 0', speed = 1, scale = 1, alpha = 0.78, density, ratio } = {}) {
   const g = cv.getContext('2d', { alpha: false });
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let s = seed;

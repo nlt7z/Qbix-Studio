@@ -14,7 +14,7 @@
     ["Band", "a phrase is read while its middle sits between 12% and 76% of the screen's height; one at a time, the one nearest 42% wins"],
     ["Highlight", "a lime bar uncovered left to right, clip-path inset(0 100% 0 0) → inset(0), 620 ms expo out"],
     ["Note", "translateX(−101%) → 0 behind the column's edge, 700 ms expo out, 140 ms after the bar"],
-    ["Number", "Encode Sans, in the note's head: the note and its phrase share a number"],
+    ["Number", "Geist Mono, in the note's head: the note and its phrase share a number"],
     ["Leave", "bar exits to the right 420 ms on the move curve; the note folds back 380 ms ease-in"],
     ["Trigger", "the real scroll, one rAF-throttled listener; notes are placed on their phrase's first line"]
   ],
@@ -31,14 +31,14 @@
 }
 </script>
 <style data-code>
-/* Margin notes. Lime #B8FF00, ink #121417, paper #f3f4f5; the qbix easings. */
+/* Margin notes. Lime #B8FF00, ink #0B0C0D, paper #ffffff; the qbix easings. */
 .mn { --col: 18em; --pad: 2.2em; font-size: clamp(14px, 2vw, 24px); }
-.mn-sheet { position: relative; width: 37.4em; max-width: 100%; margin: 0 auto; padding: 2.4em var(--pad) 3em; background: #fff; }
+.mn-sheet { position: relative; width: 37.4em; max-width: 100%; margin: 0 auto; padding: 2.4em var(--pad) 3em; background: #EEF1E8; }
 .mn-top { display: grid; gap: .9em; margin-bottom: 3em; }
-.mn-kick { margin: 0; font: 400 .72em/1.4 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
-.mn-title { font-family: 'Eurostile', Geist, sans-serif; font-weight: 400; font-synthesis-weight: none; font-size: 2.5em; line-height: 1.04; letter-spacing: -.03em; color: #121417; }
+.mn-kick { margin: 0; font: 500 .82em/1.4 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
+.mn-title { font-family: 'Outfit', Geist, sans-serif; font-weight: 400; font-synthesis-weight: none; font-size: 2.5em; line-height: 1.04; letter-spacing: -.03em; color: #0B0C0D; }
 .mn-col { width: var(--col); }
-.mn-col p { margin: 0 0 9em; font: 400 1em/1.62 Geist, system-ui, sans-serif; letter-spacing: -.011em; color: #121417; }
+.mn-col p { margin: 0 0 9em; font: 400 1em/1.62 Geist, system-ui, sans-serif; letter-spacing: -.011em; color: #0B0C0D; }
 .mn-col p:last-child { margin-bottom: 0; }
 
 /* the phrase: a lime bar uncovered from the left, ink type on it */
@@ -49,13 +49,13 @@
 
 /* the margin: starts at the column's edge and hides what is still tucked behind it */
 .mn-margin { position: absolute; top: 0; bottom: 0; left: calc(var(--pad) + var(--col) + .7em); right: 0; overflow: hidden; pointer-events: none; }
-.mn-note { position: absolute; left: 0; width: 14.6em; padding: .75em .95em .9em; background: #f3f4f5; color: #121417; transform: translateX(-101%); transition: transform 380ms var(--ease-in, cubic-bezier(.5, 0, .75, 0)); clip-path: polygon(0 0, calc(100% - .7em) 0, 100% .7em, 100% 100%, 0 100%); }
+.mn-note { position: absolute; left: 0; width: 14.6em; padding: .75em .95em .9em; background: #ffffff; color: #0B0C0D; transform: translateX(-101%); transition: transform 380ms var(--ease-in, cubic-bezier(.5, 0, .75, 0)); clip-path: polygon(0 0, calc(100% - .7em) 0, 100% .7em, 100% 100%, 0 100%); }
 .mn-note.is-on { transform: none; transition: transform 700ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)) 140ms; }
-.mn-note b { display: block; margin-bottom: .45em; font: 500 .7em/1 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; color: rgba(18, 20, 23, .64); }
+.mn-note b { display: block; margin-bottom: .45em; font: 500 .8em/1 'Geist Mono', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
 .mn-note span { display: block; font: 500 .94em/1.32 Geist, system-ui, sans-serif; letter-spacing: -.011em; text-wrap: balance; }
 
 /* the page's end */
-.mn-next { margin-top: 7em; display: flex; justify-content: space-between; font: 400 .72em/1.4 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+.mn-next { margin-top: 7em; display: flex; justify-content: space-between; font: 500 .82em/1.4 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
 
 @media (prefers-reduced-motion: reduce) {
   .mn-hl::before, .mn-note { transition: none !important; }

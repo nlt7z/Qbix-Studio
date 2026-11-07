@@ -53,23 +53,23 @@
 <style>
   /* the page the scroller owns: the homepage's chapters, one screen each */
   .pg { position: relative; min-height: 100vh; padding: clamp(40px, 9vh, 96px) clamp(24px, 5vw, 64px); background: var(--ground); color: var(--fg); overflow: hidden; }
-  .pg:nth-child(even) { background: var(--sunk); }   /* the chapters alternate paper and its sunk shade, so the page still reads as chapters */
-  .pg .title { max-width: min(11em, 42vw); font-size: clamp(30px, 4.4vw, 60px); }
-  .pg-n { position: absolute; left: clamp(20px, 4.4vw, 56px); bottom: clamp(8px, 3vh, 36px); font-family: var(--font-headline); font-size: min(34vh, 24vw); line-height: 0.8; letter-spacing: -0.04em; color: rgba(18, 20, 23, 0.1); }
+  /* the chapters alternate white and near-black (data-tone), so the page still reads as chapters */
+  .pg .title { max-width: min(11em, 42vw); font-weight: 300; letter-spacing: -0.035em; font-size: clamp(30px, 4.4vw, 60px); }
+  .pg-n { position: absolute; left: clamp(20px, 4.4vw, 56px); bottom: clamp(8px, 3vh, 36px); font-family: var(--font-headline); font-weight: 200; font-size: min(34vh, 24vw); line-height: 0.8; letter-spacing: -0.04em; color: var(--sunk); }
   /* the readout */
-  .hud { position: fixed; z-index: 30; right: clamp(16px, 3vw, 40px); top: 50%; translate: 0 -50%; width: min(48vw, 470px); padding: 18px 20px 20px; display: grid; gap: 14px; background: #ffffff; color: var(--fg); }
+  .hud { position: fixed; z-index: 30; right: clamp(16px, 3vw, 40px); top: 50%; translate: 0 -50%; width: min(48vw, 470px); padding: 18px 20px 20px; display: grid; gap: 14px; background: #EEF1E8; color: var(--fg); }
   .hud-top { display: flex; justify-content: space-between; align-items: baseline; }
   .hud-mode { color: var(--fg); }
   .hud-nums { display: flex; gap: clamp(14px, 3vw, 30px); }
-  .hud-nums b { display: block; min-width: 4.4ch; font-family: var(--font-headline); font-weight: 400; font-size: clamp(24px, 3vw, 34px); line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-  .hud-nums .kicker { display: block; margin-top: 6px; font-size: 11px; }
+  .hud-nums b { display: block; min-width: 4.4ch; font-family: var(--font-mono); font-weight: 400; font-size: clamp(22px, 2.6vw, 30px); line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .hud-nums .kicker { display: block; margin-top: 6px; font-size: 13px; }
   .hud-plot { display: block; width: 100%; height: clamp(120px, 24vh, 210px); background: var(--ground); }
-  .hud-key { display: flex; flex-wrap: wrap; gap: 6px 22px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+  .hud-key { display: flex; flex-wrap: wrap; gap: 6px 22px; font-family: var(--font-sans); font-size: 13px; letter-spacing: 0; color: var(--fg2); }
   .hud-key i { display: inline-block; width: 14px; height: 4px; margin-right: 8px; vertical-align: 2px; }
-  .hud-key .t { background: #121417; }
-  .hud-key .p { background: #B8FF00; height: 6px; vertical-align: 1px; box-shadow: 0 0 0 1.5px #121417; }   /* lime with an ink edge, as on the plot */
+  .hud-key .t { background: #0B0C0D; }
+  .hud-key .p { background: #B8FF00; height: 6px; vertical-align: 1px; box-shadow: 0 0 0 1.5px #0B0C0D; }   /* lime with an ink edge, as on the plot */
   .hud-jump { display: grid; gap: 10px; padding-top: 6px; }
-  .hud-jump > span { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); }
+  .hud-jump > span { font-family: var(--font-sans); font-size: 13px; letter-spacing: 0; color: var(--fg2); }
   @media (max-width: 720px) { .hud { width: calc(100vw - 32px); right: 16px; top: auto; bottom: 64px; translate: none; } .pg .title { max-width: none; } }
   html.qm-tile .hud { padding: 14px 16px 16px; gap: 10px; width: min(50vw, 400px); }
   html.qm-tile .hud-plot { height: 156px; }
@@ -79,11 +79,11 @@
 <body>
 <main>
   <section class="pg" data-tone="paper" id="services"><p class="kicker">01</p><h2 class="title">From moodboard to a live domain.</h2><span class="pg-n" aria-hidden="true">01</span></section>
-  <section class="pg" data-tone="paper" id="brand"><p class="kicker">02</p><h2 class="title">From usable to worth sharing.</h2><span class="pg-n" aria-hidden="true">02</span></section>
+  <section class="pg" data-tone="dark" id="brand"><p class="kicker">02</p><h2 class="title">From usable to worth sharing.</h2><span class="pg-n" aria-hidden="true">02</span></section>
   <section class="pg" data-tone="paper" id="products"><p class="kicker">03</p><h2 class="title">Things we’ve shipped.</h2><span class="pg-n" aria-hidden="true">03</span></section>
-  <section class="pg" data-tone="paper" id="about"><p class="kicker">04</p><h2 class="title">Our story is simple.</h2><span class="pg-n" aria-hidden="true">04</span></section>
+  <section class="pg" data-tone="dark" id="about"><p class="kicker">04</p><h2 class="title">Our story is simple.</h2><span class="pg-n" aria-hidden="true">04</span></section>
   <section class="pg" data-tone="paper" id="practice"><p class="kicker">05</p><h2 class="title">A website that feels as calm as your office.</h2><span class="pg-n" aria-hidden="true">05</span></section>
-  <section class="pg" data-tone="paper" id="contact"><p class="kicker">06</p><h2 class="title">Bring the idea.</h2><span class="pg-n" aria-hidden="true">06</span></section>
+  <section class="pg" data-tone="dark" id="contact"><p class="kicker">06</p><h2 class="title">Bring the idea.</h2><span class="pg-n" aria-hidden="true">06</span></section>
 </main>
 
 <aside class="hud" data-tone="paper" aria-label="The scroller, measured">
@@ -314,33 +314,33 @@ document.querySelectorAll('[data-jump]').forEach((a) => a.addEventListener('clic
     for (let v = b0; v < rhi; v += 100) {
       if (Math.round(v / 100) % 2 === 0) continue;
       const y0 = Y(v + 100), y1 = Y(v);
-      ctx.fillStyle = 'rgba(18, 20, 23, 0.04)';
+      ctx.fillStyle = '#EEF1E8';
       ctx.fillRect(0, y0, cw, y1 - y0);
     }
     // the hold
     if (scroller && scroller.holdY != null) {
       const yh = Y(scroller.holdY);
-      ctx.fillStyle = '#121417';
+      ctx.fillStyle = '#0B0C0D';
       for (let x = 0; x < cw; x += 10) ctx.fillRect(x, yh - 1, 6, 2);
-      ctx.font = '500 10px "Encode Sans", sans-serif';
-      ctx.fillText('HOLD', 8, yh - 7);
+      ctx.font = '500 12px "Geist Mono", sans-serif';
+      ctx.fillText('Hold', 8, yh - 7);
     }
     // the target: the wheel's steps
     ctx.lineJoin = 'miter';
-    ctx.strokeStyle = '#121417'; ctx.lineWidth = 2;
+    ctx.strokeStyle = '#0B0C0D'; ctx.lineWidth = 2;
     ctx.beginPath();
     samples.forEach((s, i) => { const x = X(s.t), yy = Y(s.g); if (i) ctx.lineTo(x, yy); else ctx.moveTo(x, yy); });
     ctx.stroke();
     // the page: what you see, lime with an ink edge so it reads on the light plot
     ctx.beginPath();
     samples.forEach((s, i) => { const x = X(s.t), yy = Y(s.y); if (i) ctx.lineTo(x, yy); else ctx.moveTo(x, yy); });
-    ctx.strokeStyle = '#121417'; ctx.lineWidth = 6.5; ctx.stroke();
+    ctx.strokeStyle = '#0B0C0D'; ctx.lineWidth = 6.5; ctx.stroke();
     ctx.strokeStyle = '#B8FF00'; ctx.lineWidth = 3.5; ctx.stroke();
     // each wheel notch, on the floor of the plot
-    ctx.fillStyle = 'rgba(18, 20, 23, 0.7)';
+    ctx.fillStyle = 'rgba(11, 12, 13, 0.7)';
     for (const t of notches) ctx.fillRect(X(t) - 1, ch - 7, 2, 7);
     // the end of both lines
-    ctx.fillStyle = '#121417'; ctx.fillRect(cw - 6, Y(tg) - 3, 6, 6);
+    ctx.fillStyle = '#0B0C0D'; ctx.fillRect(cw - 6, Y(tg) - 3, 6, 6);
     ctx.fillRect(cw - 11, Y(y) - 5, 11, 10);
     ctx.fillStyle = '#B8FF00'; ctx.fillRect(cw - 9, Y(y) - 3, 7, 6);
 

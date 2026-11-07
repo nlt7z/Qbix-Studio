@@ -41,28 +41,28 @@
 </script>
 <style data-code>
 /* Scope stretch. Tokens: --fill, --fg, --signal, --on-lime, the qbix easings. 1 week = 50 px. */
-.sc { position: relative; width: 600px; padding: 28px 28px 26px; background: #fff; user-select: none; touch-action: none; --cut: 16px; }
+.sc { position: relative; width: 600px; padding: 28px 28px 26px; background: #EEF1E8; user-select: none; touch-action: none; --cut: 16px; }
 .sc-head { display: flex; justify-content: space-between; align-items: flex-start; }
-.sc-k { font: 500 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
-.sc-big { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; font: 400 92px/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; color: #121417; }
-.sc-big small { font: 400 26px/1 Eurostile, Geist, sans-serif; letter-spacing: -.02em; color: rgba(18, 20, 23, .64); }
-.sc-live { text-align: right; font: 500 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
-.sc-live .sc-roll { display: grid; justify-items: end; width: 124px; transition: none; height: 38px; margin-top: 10px; font: 400 32px/38px Eurostile, Geist, sans-serif; letter-spacing: -.02em; text-transform: none; color: #121417; }
+.sc-k { font: 500 13px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .66); }
+.sc-big { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; font: 200 92px/1 Outfit, Geist, sans-serif; letter-spacing: -.04em; font-synthesis-weight: none; color: #0B0C0D; }
+.sc-big small { font: 300 32px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; color: rgba(11, 12, 13, .66); }
+.sc-live { text-align: right; font: 500 13px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .66); }
+.sc-live .sc-roll { display: grid; justify-items: end; width: 124px; transition: none; height: 38px; margin-top: 10px; font: 300 32px/38px Outfit, Geist, sans-serif; letter-spacing: -.035em; color: #0B0C0D; }
 
 /* the row: the phases are its weeks, 8 px apart; the handle stands 8 px past the end */
 .sc-row { position: relative; height: 144px; margin-top: 24px; cursor: pointer; outline: none; }
-.sc-row:focus-visible .sc-handle { outline: 2px solid #121417; outline-offset: 3px; }
-.sc-rail { position: absolute; left: 0; top: 0; width: 500px; height: 144px; background: rgba(18, 20, 23, .035); }
-.sc-ph { position: absolute; top: 0; height: 144px; background: rgba(18, 20, 23, .09); overflow: hidden; }
+.sc-row:focus-visible .sc-handle { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.sc-rail { position: absolute; left: 0; top: 0; width: 500px; height: 144px; background: rgba(11, 12, 13, .035); }
+.sc-ph { position: absolute; top: 0; height: 144px; background: #E3E8DA; overflow: hidden; }
 .sc-ph::before { content: ''; position: absolute; inset: 0; background: #B8FF00; clip-path: inset(0 100% 0 0); transition: clip-path 240ms cubic-bezier(.5, 0, .75, 0); }
 .sc-ph.is-lime::before { clip-path: inset(0); transition: clip-path 420ms cubic-bezier(.16, 1, .3, 1); }
-.sc-n { position: absolute; left: 10px; top: 8px; height: 40px; font: 400 40px/40px Eurostile, Geist, sans-serif; letter-spacing: -.03em; font-synthesis-weight: none; color: #121417; }
-.sc-name { position: absolute; left: 10px; bottom: 10px; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font: 500 12px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #121417; }
+.sc-n { position: absolute; left: 10px; top: 8px; height: 40px; font: 300 40px/40px Outfit, Geist, sans-serif; letter-spacing: -.035em; font-synthesis-weight: none; color: #0B0C0D; }
+.sc-name { position: absolute; left: 10px; bottom: 10px; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font: 500 13px/14px 'Geist', Geist, sans-serif; letter-spacing: 0; color: #0B0C0D; }
 .sc-handle {
-  position: absolute; left: 0; top: 54px; width: 36px; height: 36px; background: #121417; cursor: ew-resize; --cut: 10px;
+  position: absolute; left: 0; top: 54px; width: 36px; height: 36px; background: #0B0C0D; cursor: ew-resize; --cut: 10px;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); will-change: transform;
 }
-.sc-handle i { position: absolute; top: 10px; width: 2px; height: 16px; background: #f3f4f5; }
+.sc-handle i { position: absolute; top: 10px; width: 2px; height: 16px; background: #ffffff; }
 .sc-handle i:nth-child(1) { left: 12px; } .sc-handle i:nth-child(2) { left: 19px; }
 .sc-handle .sc-in { position: absolute; inset: 0; }
 .sc-handle .sc-in { transition: transform 120ms cubic-bezier(.4, 0, .2, 1); }
@@ -71,10 +71,10 @@
 /* the ruler: a tick a week, ink where the row is, faint beyond; labels follow */
 .sc-ruler { position: relative; height: 38px; margin-top: 12px; }
 .sc-tk { position: absolute; top: 0; width: 38px; margin-left: -19px; text-align: center; }
-.sc-tk::before { content: ''; display: block; width: 2px; height: 8px; margin: 0 auto 6px; background: rgba(18, 20, 23, .14); transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
-.sc-tk b { display: block; font: 500 12px/14px 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; color: rgba(18, 20, 23, .38); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
-.sc-tk.is-on::before { background: #121417; }
-.sc-tk.is-on b { color: #121417; }
+.sc-tk::before { content: ''; display: block; width: 2px; height: 8px; margin: 0 auto 6px; background: rgba(11, 12, 13, .14); transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.sc-tk b { display: block; font: 500 13px/14px 'Geist Mono', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .38); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.sc-tk.is-on::before { background: #0B0C0D; }
+.sc-tk.is-on b { color: #0B0C0D; }
 
 /* a number that rolls: the sleeve clips, the old leaves, the new enters, the sleeve's width glides */
 .sc-roll { display: inline-grid; overflow: hidden; vertical-align: top; transition: width 260ms cubic-bezier(.16, 1, .3, 1); }

@@ -15,7 +15,7 @@
   "kind": "loop",
   "tone": "paper",
   "line": "lead drop k 360 · tail k 150 · goo blur 4",
-  "summary": "The drop leads across the track, stretching along its travel, while a smaller drop follows on a slower spring and a goo filter fuses the two into one waisted capsule that settles round. You can drag it or press it. Qbix colours: a lime track when on, an ink drop on it, and a white one on the grey.",
+  "summary": "The drop leads across the track, stretching along its travel, while a smaller drop follows on a slower spring and a goo filter fuses the two into one waisted capsule that settles round. You can drag it or press it. Qbix colours: a lime track when on, an ink drop on it, and a white one on the ink track.",
   "spec": [
     ["Lead drop", "30 px, spring k 360 · c 24; scaled (1 + min(0.5, |v| ÷ 520), its inverse) along the travel, from its trailing edge"],
     ["Tail drop", "22 px, spring k 150 · c 17, chasing the lead: the slower spring is what makes the waist"],
@@ -28,7 +28,7 @@
   "where": "A project's own switches: whether a Practice Website Refresh goes live by itself, emails Dana, shows the number in the header.",
   "rules": [
     "A switch is for a true on or off; lime means on, and only the track carries it.",
-    "A flat drop, no shadow: white on the grey, ink on the lime (white would vanish on it).",
+    "A flat drop, no shadow: white on the ink, ink on the lime (white would vanish on it).",
     "One drop colour per state: the goo filter needs the two drops to be the same colour.",
     "A real button with role=switch and aria-checked, so keyboard and screen readers get it; focus is a 2px ring."
   ],
@@ -38,16 +38,16 @@
 </script>
 <style data-code>
 /* Liquid toggle · Idea: bencho.dev liq-toggle (MIT).
-   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+   O2's roles in qbix colours: ink on white, one lime. Radii, spacing and type are the O2 library's own. */
 .lt {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
-  --surface: #ffffff; --divider: rgba(18, 20, 23, 0.08); --edge: rgba(18, 20, 23, 0.52);
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64); --faint: rgba(11, 12, 13, 0.58);
+  --surface: #EEF1E8; --divider: #E3E8DA; --edge: #0B0C0D;
   --primary: #B8FF00; --on-primary: #0c1300;
   --radius-lg: 14px; --duration-base: 200ms; --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   width: 640px; display: grid; gap: 16px; align-content: start;
   font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
 }
-.lt-heading { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.lt-heading { font-family: var(--font-headline); font-size: 28px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.35; }   /* headline: Outfit Light */
 .lt-meta { font-size: 12px; color: var(--faint); }
 .lt-card { background: var(--surface); border-radius: var(--radius-lg); padding: 8px 24px; }
 .lt-setting { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 0; }
@@ -58,11 +58,11 @@
 /* a true on/off: the drop crosses the track, stretching along its way, and lands round */
 .sw { position: relative; flex: none; width: 76px; height: 40px; padding: 0; border: 0; border-radius: 999px; background: var(--edge); touch-action: none; cursor: pointer; transition: background-color var(--duration-base) var(--ease-out); }
 .sw[aria-checked='true'] { background: var(--primary); }
-.sw:hover, .sw.is-hot { background: color-mix(in oklab, var(--edge) 88%, #000); }
+.sw:hover, .sw.is-hot { background: color-mix(in oklab, var(--edge) 88%, #fff); }
 .sw[aria-checked='true']:hover, .sw[aria-checked='true'].is-hot { background: color-mix(in oklab, var(--primary) 88%, #000); }
 .sw:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .sw .blobs { position: absolute; inset: 0; pointer-events: none; filter: url(#goo); }
-.sw .drop { position: absolute; top: 50%; left: 0; border-radius: 50%; background: #fff; transition: background-color var(--duration-base) var(--ease-out); }
+.sw .drop { position: absolute; top: 50%; left: 0; border-radius: 50%; background: #ffffff; transition: background-color var(--duration-base) var(--ease-out); }
 .sw[aria-checked='true'] .drop { background: var(--on-primary); }
 .sw .lead { width: 30px; height: 30px; margin-top: -15px; }
 .sw .tail { width: 22px; height: 22px; margin-top: -11px; }

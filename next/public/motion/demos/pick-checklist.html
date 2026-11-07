@@ -43,17 +43,17 @@
 /* Launch checklist. Idea: bencho.dev checklist (MIT). */
 .ck { width: 520px; background: var(--surface); border-radius: 14px; padding: 24px; display: grid; gap: 16px; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
 .ck-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.ck-top h1 { margin: 0; font-family: var(--font-sans); font-size: 20px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.35; }
+.ck-top h1 { margin: 0; font-family: var(--font-headline); font-size: 20px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.2; }
 .ck-top p { margin: 4px 0 0; color: var(--fg2); }
-.ck-count { font-size: 20px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.35; }
+.ck-count { font-family: var(--font-mono); font-size: 20px; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1.35; }
 .ck-count span { color: var(--fg2); }
-.ck-track { height: 6px; border-radius: 999px; background: rgba(18, 20, 23, 0.09); overflow: hidden; }
+.ck-track { height: 6px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
 .ck-track > i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--signal); transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1); }
 .ck ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .ck-item { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; margin: 0 -12px; width: calc(100% + 24px); border: 0; border-radius: 8px; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
 .ck-item:hover, .ck-item.is-hot { background: var(--fill); }
 .ck-item:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
-.ck-box { position: relative; width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; border: 1px solid rgba(18, 20, 23, 0.52); background: var(--surface); transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), border-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-box { position: relative; width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; border: 1px solid rgba(11, 12, 13, 0.52); background: var(--surface); transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), border-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
 .ck-item[aria-checked="true"] .ck-box { background: var(--signal); border-color: var(--signal); }
 .ck-box svg { display: block; width: 14px; height: 14px; fill: none; stroke: var(--on-lime); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .ck-box path { stroke-dasharray: 18; stroke-dashoffset: 18; transition: stroke-dashoffset 200ms cubic-bezier(0.16, 1, 0.3, 1); }

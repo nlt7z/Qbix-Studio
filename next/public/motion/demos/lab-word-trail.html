@@ -15,7 +15,7 @@
   "kind": "pointer",
   "tone": "paper",
   "line": "2.1 s life · ink to lime by speed · source-atop",
-  "summary": "The pointer's path is drawn into an offscreen canvas where it fades with time, its colour going from ink to lime as the pointer speeds up. The word is drawn first, as a pale tint, and the trail is composited with source-atop, so it shows only inside the letterforms.",
+  "summary": "The pointer's path is drawn into an offscreen canvas where it fades with time, its colour going from ink to lime as the pointer speeds up. The word is drawn first, as a pale sage tint, and the trail is composited with source-atop, so it shows only inside the letterforms.",
   "spec": [
     ["Life", "2.1 s a point, width and colour easing back to the letter colour with age"],
     ["Colour", "ink when slow, lime when fast, a short blend between (smoothstep from 30% to 70% of the top speed); speed is smoothed 25% a point against 2 × the short side a second"],
@@ -26,7 +26,7 @@
   "source": ["Qbix studio library · word-trail"],
   "where": "The giant wordmark sign-off: the name is the surface you draw on.",
   "rules": [
-    "The trail never leaves the letters; outside them the ground stays paper.",
+    "The trail never leaves the letters; outside them the ground stays white.",
     "Lime means fast. Slow strokes are ink, so only motion earns the signal colour.",
     "The key under the word is flat steps, not a ramp."
   ],
@@ -38,7 +38,7 @@
 .wt { position: absolute; inset: 0; cursor: crosshair; touch-action: none; }
 .wt canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .wt-top, .wt-foot { position: absolute; left: clamp(16px, 4vmin, 48px); right: clamp(16px, 4vmin, 48px); display: flex; justify-content: space-between; align-items: center; gap: 16px; pointer-events: none;
-  font: 400 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+  font: 500 13px/16px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13,.64); }
 .wt-top { top: clamp(16px, 4vmin, 44px); }
 .wt-foot { bottom: clamp(16px, 4vmin, 44px); }
 .wt-key { display: flex; align-items: center; gap: 10px; }
@@ -62,9 +62,9 @@ const wordTrail = (() => {
   const cv = document.getElementById('c'), ctx = cv.getContext('2d');
   const trail = document.createElement('canvas'), tctx = trail.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const FONT = 'Eurostile, Geist, system-ui, sans-serif', WORD = 'qbix';
+  const FONT = 'Outfit, Geist, system-ui, sans-serif', WORD = 'qbix';
   const LIFE = reduce ? 3 : 2.1;
-  const BASE = [210, 212, 215], C0 = [18, 20, 23], C1 = [184, 255, 0];   // a pale word, ink when slow, lime when fast
+  const BASE = [227, 232, 218], C0 = [11, 12, 13], C1 = [184, 255, 0];   // a pale word, ink when slow, lime when fast
   let W, H, dpr, lines = [WORD], fs = 100, VMAX = 1500;
   const FOOT = () => Math.min(80, H * 0.12);
   function fitWord() {
@@ -138,7 +138,7 @@ const wordTrail = (() => {
   }
   layout();
   addEventListener('resize', layout);
-  if (document.fonts) document.fonts.load('400 100px Eurostile').then(layout, () => {});
+  if (document.fonts) document.fonts.load('400 100px Outfit').then(layout, () => {});
   requestAnimationFrame(frame);
   // the key: flat steps
   const key = document.getElementById('key');

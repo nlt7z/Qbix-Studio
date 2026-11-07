@@ -17,7 +17,7 @@
   "summary": "A square toggle for a Qbix build agent's permissions (pull requests, deploy previews, client email, tool spend). The ink thumb stretches as it travels: the leading edge runs ahead on an ease-out and the trailing edge follows on an ease-in, so it elongates and then settles. The dash inside morphs into a check by moving the same three points. Turning a row on opens its note underneath, and the text slides down into the opening.",
   "spec": [
     ["Thumb", "leading edge ease-out (t), trailing edge ease-in (t²), 420 ms, 24 → 44 → 24 px"],
-    ["Glyph", "three points interpolated from a dash to a check, stroke from paper to lime on the ink thumb"],
+    ["Glyph", "three points interpolated from a dash to a check, stroke from white to lime on the ink thumb"],
     ["Track", "ink at 14% → lime, mixed over the same 420 ms ease in-out"],
     ["Note", "height 0 → auto 460 ms ease in-out; the paragraph slides from −100% inside the opening"],
     ["Idle", "a ghost pointer toggles a row every 1.5 s"]
@@ -36,7 +36,7 @@
 <style data-code>
 /* Permission rows with a stretching thumb */
 .pt-list { display: flex; flex-direction: column; gap: 8px; width: 440px; }
-.pt-row { background: #ffffff; cursor: pointer; overflow: hidden; }
+.pt-row { background: #EEF1E8; cursor: pointer; overflow: hidden; }
 .pt-top { display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 16px 0 18px; }
 .pt-top svg.i { width: 20px; height: 20px; flex: none; }
 .pt-top b { flex: 1; font-size: 15px; font-weight: 500; }
@@ -44,7 +44,7 @@
 .pt-kn { position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; }
 .pt-kn svg { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; }
 .pt-ex { height: 0; overflow: hidden; }
-.pt-ex p { margin: 0; padding: 0 18px 16px 52px; font-size: 13.5px; line-height: 1.5; color: rgba(18, 20, 23, 0.64); }
+.pt-ex p { margin: 0; padding: 0 18px 16px 52px; font-size: 13.5px; line-height: 1.5; color: rgba(11, 12, 13, 0.64); }
 </style>
 <style>
   .qm-stage { padding: 0; }
@@ -114,14 +114,14 @@ const mix = (a, b, p) => a + (b - a) * p;
 const col = (a, b, p) => `rgb(${a.map((v, i) => Math.round(mix(v, b[i], p))).join(',')})`;
 const rows = perms.map(([ic, label, ex], i) => {
   const r = document.createElement('div'); r.className = 'pt-row';
-  r.innerHTML = `<div class="pt-top"><svg class="i" viewBox="0 0 20 20" fill="none" stroke="#121417" stroke-width="1.5" stroke-linecap="square">${icons[ic]}</svg><b>${label}</b>
+  r.innerHTML = `<div class="pt-top"><svg class="i" viewBox="0 0 20 20" fill="none" stroke="#0B0C0D" stroke-width="1.5" stroke-linecap="square">${icons[ic]}</svg><b>${label}</b>
     <div class="pt-tg"><div class="pt-kn"><svg viewBox="0 0 22 22" fill="none" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path/></svg></div></div></div>
     <div class="pt-ex"><p>${ex}</p></div>`;
   list.appendChild(r);
   const R = { el: r, tg: r.querySelector('.pt-tg'), kn: r.querySelector('.pt-kn'), path: r.querySelector('.pt-kn path'), ex: r.querySelector('.pt-ex'), p: r.querySelector('.pt-ex p'), on: false, anim: null };
   R.draw = (p, l, w) => {
     R.kn.style.left = l.toFixed(2) + 'px'; R.kn.style.width = w.toFixed(2) + 'px';
-    R.tg.style.background = p <= 0 ? 'rgba(18,20,23,.14)' : p >= 1 ? '#b8ff00' : `color-mix(in srgb, #b8ff00 ${(p * 100).toFixed(1)}%, rgba(18,20,23,.14))`;
+    R.tg.style.background = p <= 0 ? 'rgba(11, 12, 13,.14)' : p >= 1 ? '#b8ff00' : `color-mix(in srgb, #b8ff00 ${(p * 100).toFixed(1)}%, rgba(11, 12, 13,.14))`;
     R.kn.style.background = col([18, 20, 23], [12, 19, 0], p);
     R.path.setAttribute('stroke', col([244, 245, 242], [184, 255, 0], p));
     R.path.setAttribute('d', 'M' + OFF.map((o, k) => `${mix(o[0], ON[k][0], p).toFixed(2)} ${mix(o[1], ON[k][1], p).toFixed(2)}`).join('L'));

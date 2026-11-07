@@ -39,7 +39,7 @@
 .sh canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .sh-copy { position: absolute; left: 0; right: 0; bottom: clamp(16px, 4vh, 36px); display: grid; justify-items: center; gap: 10px; text-align: center; pointer-events: none; }
 .sh-copy .tag { background: #B8FF00; color: #0c1300; box-shadow: none; }
-.sh-copy .lede { font-size: clamp(14px, 1.5vw, 17px); max-width: 28em; }
+.sh-copy .lede { font-size: 15px; max-width: 28em; }
 </style>
 <style>
   .qm-stage { padding: 0; }
@@ -66,7 +66,7 @@
    createSand(canvas, { word, reduce }) -> { pointer(x, y, on) } (css px in the canvas) */
 function createSand(cv, { word = 'qbix', reduce = false } = {}) {
   const g = cv.getContext('2d');
-  const TONES = ['#121417', '#1b1e22', '#272b30', '#353a41'];   // ink, a shade apart
+  const TONES = ['#0B0C0D', '#1b1e22', '#272b30', '#353a41'];   // ink, a shade apart
   let W = 0, H = 0, k = 1, N = 0, x, y, vx, vy, hx, hy, rest, col, sz;
   const P = { x: -999, y: -999, px: -999, py: -999, vx: 0, vy: 0, on: false };
 
@@ -74,10 +74,10 @@ function createSand(cv, { word = 'qbix', reduce = false } = {}) {
     const off = document.createElement('canvas');
     off.width = Math.max(1, Math.round(W)); off.height = Math.max(1, Math.round(H));
     const o = off.getContext('2d', { willReadFrequently: true });
-    o.font = '200px Eurostile, Geist, sans-serif';
+    o.font = '200px Outfit, Geist, sans-serif';
     const per = o.measureText(word).width / 200;
     const size = Math.min(H * 0.5, (W * 0.8) / per);
-    o.font = `${size}px Eurostile, Geist, sans-serif`;
+    o.font = `${size}px Outfit, Geist, sans-serif`;
     o.textAlign = 'center'; o.textBaseline = 'alphabetic';
     o.fillStyle = '#fff'; o.fillText(word, W / 2, H * 0.47 + size * 0.27);
     const d = o.getImageData(0, 0, off.width, off.height).data;
@@ -158,7 +158,7 @@ function createSand(cv, { word = 'qbix', reduce = false } = {}) {
     draw();
   }
   fit(false);
-  if (document.fonts) document.fonts.load('200px Eurostile').then(() => fit(!reduce));
+  if (document.fonts) document.fonts.load('200px Outfit').then(() => fit(!reduce));
   new ResizeObserver(() => { if (cv.clientWidth !== W || cv.clientHeight !== H) fit(true); }).observe(cv);
   requestAnimationFrame(frame);
   return { pointer(px, py, on = true) { P.x = px; P.y = py; P.on = on; } };

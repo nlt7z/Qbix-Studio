@@ -39,17 +39,17 @@
 </script>
 <style data-code>
 /* Run steps — idea: bencho.dev step-player (MIT), redrawn for Qbix.
-   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: white ground, sage card, ink, one lime. */
 .pk {
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-7: 32px;
   --radius-sm: 8px; --radius-lg: 14px;
   --duration-fast: 120ms; --duration-base: 200ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
-  --muted: var(--fg2); --surface-muted: var(--sunk); --control-track: var(--fg4);
+  --muted: var(--fg2); --surface-muted: var(--sunk); --control-track: #D3DAC5;
   font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
 }
 .card { width: min(560px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-7) var(--space-6) var(--space-6); display: grid; gap: var(--space-6); }
 .hd { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); }
-.hd h1 { font: 400 20px/1.35 var(--font-sans); letter-spacing: -0.02em; }
+.hd h1 { font: 300 20px/1.35 var(--font-headline); letter-spacing: -0.03em; }
 .hd p { color: var(--muted); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
 .btn:hover, .btn.is-hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
@@ -60,16 +60,16 @@
 .pill.done { background: var(--fg); }
 .pill:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 .now { display: grid; gap: var(--space-1); min-height: 64px; }
-.now .big { font-size: 28px; letter-spacing: -0.03em; line-height: 1.15; }
+.now .big { font-family: var(--font-headline); font-weight: 300; font-size: 28px; letter-spacing: -0.035em; line-height: 1.15; }
 .now .n { color: var(--muted); font-variant-numeric: tabular-nums; }
 .list { display: grid; gap: 2px; }
 .row { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: var(--space-3); height: 40px; padding: 0 var(--space-3); border-radius: var(--radius-sm); color: var(--muted); transition: background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out); }
 .row.cur { background: var(--surface-muted); color: var(--fg); }
 .row.done { color: var(--fg); }
-.row .res { font-variant-numeric: tabular-nums; color: var(--muted); }
+.row .res { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); }
 .row .ic { display: grid; place-items: center; width: 24px; }
 .row .ic svg { color: var(--fg); }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(18, 20, 23, .2); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #C5CDB6; }
 .row.cur .dot { background: var(--fg); }
 </style>
 <style>

@@ -19,7 +19,7 @@
     ["Strips", "10 per sheet, each cut into 4px segments that curl by length squared"],
     ["Feed", "speed eases toward (sheet + head) / 3.6 s, / 1.2 s while held"],
     ["Drop", "gravity 900, spin and sideways drift per strip, a new sheet slides in"],
-    ["Draw", "2D canvas, no gradient, no shadow, strips are flat white paper with a light-tint back"],
+    ["Draw", "2D canvas, no gradient, no shadow, strips are flat white sheet with a sage back"],
     ["Trigger", "always on; press and hold to speed up"]
   ],
   "source": ["Qbix studio library · shredder"],
@@ -27,9 +27,9 @@
   "rules": [
     "The sheet is drawn once to an offscreen canvas and sampled, so the strips always match the document.",
     "The only lime is the head's status light, lit while a sheet is feeding.",
-    "No blur, no shadow under the pile: the strips are told apart by the paper ground."
+    "No blur, no shadow under the pile: the strips are told apart by the white ground."
   ],
-  "tags": ["canvas", "paper", "loading", "hold", "drafts"],
+  "tags": ["canvas", "sheet", "loading", "hold", "drafts"],
   "shot": 3300
 }
 </script>
@@ -61,14 +61,14 @@
 (function () {
   const cv = document.getElementById('shred'), ctx = cv.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const INK = '#121417', SHEET = '#ffffff', LIME = '#B8FF00', HEAD = '#121417', SLOT = '#f3f4f5', BAR = '#08090A', OFF = '#3a3d42', BACK = '#d9dce0', LINE = '#dcdfe2';   // a white sheet on the paper, one ink head
+  const INK = '#0B0C0D', SHEET = '#ffffff', LIME = '#B8FF00', HEAD = '#0B0C0D', SLOT = '#ffffff', BAR = '#0B0C0D', OFF = '#3a3d42', BACK = '#E3E8DA', LINE = '#E3E8DA';   // a white sheet on the white ground, one ink head
   let W, H, dpr, s, docW, docH, headY, headH, cx, N = 10;
   const doc = document.createElement('canvas');
   let seedN = 1; const rnd = () => ((seedN = (seedN * 16807) % 2147483647) - 1) / 2147483646;
   const docs = [
-    { title: 'Homepage', tag: 'DRAFT 2', addr: 'Forma · forma.studio', price: 'Round 1' },
-    { title: 'Logo ideas', tag: 'OLD VERSION', addr: 'Kova · 6 marks', price: 'Round 2' },
-    { title: 'Type test', tag: 'DRAFT 1', addr: 'Willow Counseling', price: 'Nov 3' },
+    { title: 'Homepage', tag: 'Draft 2', addr: 'Forma · forma.studio', price: 'Round 1' },
+    { title: 'Logo ideas', tag: 'Old version', addr: 'Kova · 6 marks', price: 'Round 2' },
+    { title: 'Type test', tag: 'Draft 1', addr: 'Willow Counseling', price: 'Nov 3' },
   ];
   let di = 0;
   function drawDoc() {
@@ -78,9 +78,9 @@
     const u = docW / 150;
     c.fillStyle = SHEET; c.fillRect(0, 0, docW, docH);
     c.fillStyle = LIME; c.fillRect(14 * u, 16 * u, 22 * u, 3 * u);                       // the marker bar
-    c.fillStyle = INK; c.font = `${20 * u}px Eurostile, 'Geist', sans-serif`; c.textBaseline = 'alphabetic';
+    c.fillStyle = INK; c.font = `300 ${20 * u}px 'Outfit', 'Geist', sans-serif`; c.textBaseline = 'alphabetic';
     c.fillText(d.title, 14 * u, 44 * u);
-    c.fillStyle = 'rgba(18, 20, 23, 0.55)'; c.font = `500 ${6.6 * u}px 'Encode Sans', Geist, sans-serif`;
+    c.fillStyle = 'rgba(11, 12, 13, 0.55)'; c.font = `500 ${7.2 * u}px Geist, sans-serif`;
     const tw = c.measureText(d.tag).width; c.fillText(d.tag, docW - 14 * u - tw, 20 * u);
     c.fillStyle = INK; c.font = `500 ${9 * u}px Geist, sans-serif`; c.fillText(d.addr, 14 * u, 62 * u);
     c.font = `500 ${12 * u}px Geist, sans-serif`; c.fillText(d.price, 14 * u, 80 * u);
@@ -171,7 +171,7 @@
   addEventListener('resize', () => { resize(); if (reduce) draw(0); });
   window.shredHold = (v) => { fast = v; };
   resize(); strips = makeStrips();
-  if (document.fonts) document.fonts.load("20px Eurostile").then(() => document.fonts.ready).then(() => { drawDoc(); if (reduce) draw(0); });
+  if (document.fonts) document.fonts.load("20px Outfit").then(() => document.fonts.ready).then(() => { drawDoc(); if (reduce) draw(0); });
   if (reduce) { phase = 'feed'; F = docH * 0.62; draw(0); }
   else { phase = 'enter'; pt = 0.45; start(); }
 })();

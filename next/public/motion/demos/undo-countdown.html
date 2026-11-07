@@ -44,18 +44,18 @@
 .uf-slot.is-gone { height: 0; }
 .uf-row { display: grid; grid-template-columns: 32px 1fr auto auto; align-items: center; gap: 16px; height: 48px; padding: 0 16px 0 8px; background: var(--sunk); transition: transform 520ms var(--ease-out-expo) 120ms, background 160ms var(--ease); }
 .uf-slot.is-gone .uf-row { transform: translateX(-110%); transition: transform 320ms var(--ease-in); }
-.uf-row:hover, .uf-row.is-hover { background: rgba(18, 20, 23, 0.09); }
-.uf-ext { display: grid; place-items: center; width: 32px; height: 32px; background: var(--surface); font: 500 10px/1 var(--font-mono); letter-spacing: 0.08em; }
+.uf-row:hover, .uf-row.is-hover { background: #D9E0CC; }
+.uf-ext { display: grid; place-items: center; width: 32px; height: 32px; background: var(--surface); font: 500 11px/1 var(--font-mono); letter-spacing: 0; }
 .uf-nm { font: 500 15px/20px var(--font-sans); letter-spacing: -0.011em; white-space: nowrap; }
 .uf-sz { font-size: 12px; color: var(--fg2); }
-.uf-arc { all: unset; cursor: pointer; font: 500 11px/16px var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); transition: color 160ms var(--ease), transform 300ms var(--ease-portfolio); }
+.uf-arc { all: unset; cursor: pointer; font: 500 11px/16px var(--font-sans); letter-spacing: 0; color: var(--fg2); transition: color 160ms var(--ease), transform 300ms var(--ease-portfolio); }
 .uf-row:hover .uf-arc, .uf-row.is-hover .uf-arc { color: var(--fg); }
 .uf-arc:active { transform: translateY(2px); }
 .uf-dock { position: relative; height: 80px; overflow: hidden; margin: 0 -24px; padding: 8px 24px 0; }
 .uf-toast { position: absolute; left: 24px; right: 24px; top: 8px; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 20px; background: var(--fg); color: var(--ground); font-size: 15px; letter-spacing: -0.011em; --cut: 12px; transform: translateY(110%); transition: transform 300ms var(--ease-in); overflow: hidden; }
 .uf-toast.is-in { transform: none; transition: transform 480ms var(--ease-out-expo); }
 .uf-toast b { font-weight: 500; }
-.uf-undo { all: unset; cursor: pointer; display: grid; place-items: center; height: 40px; padding: 0 16px; background: rgba(243, 244, 245, 0.14); font: 500 12px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; transition: background 160ms var(--ease), transform 300ms var(--ease-portfolio); }
+.uf-undo { all: unset; cursor: pointer; display: grid; place-items: center; height: 40px; padding: 0 16px; background: rgba(243, 244, 245, 0.14); font: 500 12px/1 var(--font-sans); letter-spacing: 0; transition: background 160ms var(--ease), transform 300ms var(--ease-portfolio); }
 .uf-undo:hover, .uf-undo.is-hover { background: rgba(243, 244, 245, 0.24); }
 .uf-undo:active, .uf-undo.is-down { transform: translateY(2px); }
 .uf-drain { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--signal); transform-origin: left center; }

@@ -15,25 +15,25 @@
   "kind": "loop",
   "tone": "paper",
   "line": "lid opens at 150 px · lid 260 ms spring · card in over 640 ms",
-  "summary": "Drag the moodboard toward the folder: the lid opens as it nears, the folder takes the card in and closes over it, and a row under it says what it read. Let go anywhere else and the lid shuts and the card glides home. Qbix colours: an ink back and a lime front on paper, the card and the check in ink.",
+  "summary": "Drag the moodboard toward the folder: the lid opens as it nears, the folder takes the card in and closes over it, and a row under it says what it read. Let go anywhere else and the lid shuts and the card glides home. Qbix colours: an ink back, a deep sage front and one lime edge on a sage board, the card white, the check in ink.",
   "spec": [
     ["Lid", "the front panel scales to 0.8 in height from its bottom edge, 260 ms, cubic-bezier(0.34, 1.26, 0.64, 1): a small overshoot, then rest"],
     ["Near", "the lid opens while the card's top-left is within 150 px of a point 40 px above the mouth, and closes when it leaves"],
     ["Swallow", "the card glides to 20 px above the mouth in 220 ms (cubic-bezier(0.16, 1, 0.3, 1)), then down to y 102 in 420 ms (cubic-bezier(0.65, 0, 0.35, 1)), behind the front panel; the lid closes"],
     ["Result", "260 ms after the lid closes the card is gone and the row arrives: opacity and a 6 px rise, 200 ms, expo out; the tip is gone with it"],
     ["Let go short", "the lid closes and the card glides home in 260 ms, expo out"],
-    ["Card", "128 × 140, 8 px radius; hover turns it white in 120 ms (not while it is held, or in the folder); it rides above the folder while dragged (z 6) and under the front panel once let go (z 3, front 4)"],
-    ["Folder", "240 × 220: a back with a tab, a paper edge, a front panel with a handle slot; flat fills, 12 px corners"],
+    ["Card", "128 × 140, 8 px radius; hover turns it deep sage in 120 ms (not while it is held, or in the folder); it rides above the folder while dragged (z 6) and under the front panel once let go (z 3, front 4)"],
+    ["Folder", "240 × 220: a back with a tab, a lime paper edge, a front panel with a handle slot; flat fills, 12 px corners"],
     ["Box", "640 × 430, scaled to the stage at 94% (up to 1.7×); card radius 14 px"],
     ["Reduced motion", "the card is already in, the row is showing, the lid is shut"]
   ],
   "source": ["motion.ui.o2tech.ai · Into the drive (bom-folder-swallow)", "Idea: Qbix studio library · folder-upload"],
   "where": "A Design service folder for Forma: the moodboard goes in and the folder says what it read, eight pages and 24 images. The same move takes Palette.zip and Launch-film.mp4, or the logo files of a Brand upgrade.",
   "rules": [
-    "Flat fills only: an ink back and a lime front, no gradient, no shadow, no face on the folder.",
+    "Flat fills only: an ink back and a sage front, no gradient, no shadow, no face on the folder.",
     "Every step within 320 ms, the lid on the spring, the card on expo out and then in-out.",
     "The lid opens as the card nears and closes when it leaves; once let go the card goes behind the front panel, never over it.",
-    "One lime, on the folder's front; the card's bar and the check are ink.",
+    "One lime, the paper edge in the folder; the card's bar and the check are ink.",
     "The folder says what it took in, in a row under it."
   ],
   "tags": ["drag", "folder", "upload", "spring", "files"],
@@ -42,14 +42,14 @@
 </script>
 <style data-code>
 /* Into the folder · Idea: Qbix studio library · folder-upload
-   O2's roles in qbix colours: ink and paper, one lime (the folder's front). Radii, spacing, type and timings are the O2 library's own. */
+   O2's roles in qbix colours: ink, white and sage, one lime (the paper edge). Radii, spacing, type and timings are the O2 library's own. */
 .fd {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.6);
-  --surface: #ffffff; --surface-muted: #f3f4f5; --divider-strong: rgba(18, 20, 23, 0.14);
-  --primary: #121417;                         /* O2's primary green: the card's bar and the check, ink here */
-  --primary-soft: #E1FFB8;                    /* the paper edge in the folder: a soft lime tint (lime at 42% over white) */
-  --viz-good: #B8FF00;                        /* the folder's front: the one lime */
-  --viz-o2: #121417; --viz-o2-deep: #08090A;  /* its back, and the slot in the back */
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64); --faint: rgba(11, 12, 13, 0.6);
+  --surface: #EEF1E8; --surface-muted: #ffffff; --divider-strong: rgba(11, 12, 13, 0.14);
+  --primary: #0B0C0D;                         /* O2's primary green: the card's bar and the check, ink here */
+  --primary-soft: #B8FF00;                    /* the paper edge in the folder: the one lime */
+  --viz-good: #D6DCCB;                        /* the folder's front: a deep sage */
+  --viz-o2: #0B0C0D; --viz-o2-deep: #0B0C0D;  /* its back, and the slot in the back */
   --radius-sm: 8px; --radius-lg: 14px;
   --duration-fast: 120ms; --duration-base: 200ms; --duration-slow: 260ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-spring: cubic-bezier(0.34, 1.26, 0.64, 1);
@@ -57,8 +57,8 @@
   font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
 }
 .fd-head { display: flex; align-items: baseline; justify-content: space-between; }
-.fd-heading { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
-.fd-meta { font-size: 12px; color: var(--faint); }
+.fd-heading { font-family: var(--font-headline); font-size: 28px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.2; }
+.fd-meta { font-size: 13px; color: var(--faint); }
 .fd-card { position: relative; background: var(--surface); border-radius: var(--radius-lg); }
 .fd-stage { position: relative; height: 100%; }
 
@@ -71,8 +71,8 @@
 
 /* the card: a moodboard's first page, to be dragged */
 .fd-doc { position: absolute; left: 0; top: 0; z-index: 3; display: grid; align-content: start; gap: 8px; width: 128px; height: 140px; padding: 14px 12px; border-radius: var(--radius-sm); background: var(--surface-muted); touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; transition: background-color var(--duration-fast) var(--ease-out); }
-.fd-doc:hover { background: var(--surface); }
-.fd-doc.dragging, .fd-doc.in { background: var(--surface-muted); }      /* in the hand, or in the folder: no hover look (white on the white card would lose it) */
+.fd-doc:hover { background: var(--sunk); }
+.fd-doc.dragging, .fd-doc.in { background: var(--surface-muted); }      /* in the hand, or in the folder: no hover look */
 .fd-hd { height: 22px; border-radius: 4px; background: var(--primary); }
 .fd-ln { height: 8px; border-radius: 4px; background: var(--divider-strong); }
 .fd-nm { margin-top: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }

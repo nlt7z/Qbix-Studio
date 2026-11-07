@@ -15,7 +15,7 @@
   "kind": "loop",
   "tone": "paper",
   "line": "digits roll 320 ms · a build lands every 520 ms · skeleton pulse 1.6 s",
-  "summary": "Each project sits as a pulsing skeleton until its figures land, one row at a time. The live page count rolls up digit by digit and the total above the table rolls with it, together with the count of sites that are live. A project with no pages yet reads In design, never 0. Press Get live builds and the board blanks and lands again, a little higher. Qbix colours: ink on paper, with the lime on the button alone.",
+  "summary": "Each project sits as a pulsing skeleton until its figures land, one row at a time. The live page count rolls up digit by digit and the total above the table rolls with it, together with the count of sites that are live. A project with no pages yet reads In design, never 0. Press Get live builds and the board blanks and lands again, a little higher. Qbix colours: ink on sage, with the lime on the button alone.",
   "spec": [
     ["Landing", "skeletons for 500 ms, then a build every 520 ms; a refresh blanks the board for 400 ms, then lands a build every 380 ms"],
     ["Roll", "every digit is a strip 0 to 9 that slides translateY(−1.4em × digit) over 320 ms, cubic-bezier(0.16, 1, 0.3, 1); a comma holds still"],
@@ -32,20 +32,20 @@
   "rules": [
     "A skeleton while a row's figures are pending; the total adds up only what has landed, never a guess ahead of it.",
     "Digits roll over 320 ms, the total with them; the comma stays put.",
-    "Tabular figures, so the columns hold still while the digits slide.",
+    "Tabular figures in Geist Mono, so the columns hold still while the digits slide.",
     "A project with no pages says In design in words, never 0.",
     "One lime, on Get live builds; the pictures carry the projects' colour and the figures stay ink."
   ],
-  "tags": ["table", "odometer", "skeleton", "count", "live", "paper"],
+  "tags": ["table", "odometer", "skeleton", "count", "live", "sage"],
   "shot": 4500
 }
 </script>
 <style data-code>
 /* Pages across builds · Idea: Qbix studio library · fomo-counter
-   O2's roles in qbix colours: ink on paper, one lime (the button). Radii, spacing, type and timings are the O2 library's own. */
+   O2's roles in qbix colours: ink on sage, one lime (the button). Radii, spacing, type and timings are the O2 library's own. */
 .lb {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.6);
-  --surface: #ffffff; --divider: rgba(18, 20, 23, 0.08); --track: rgba(18, 20, 23, 0.1);
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64); --faint: rgba(11, 12, 13, 0.6);
+  --surface: #EEF1E8; --divider: #E3E8DA; --track: #E3E8DA;
   --primary: #B8FF00; --on-primary: #0c1300;
   --radius-sm: 8px; --radius-lg: 14px;
   --duration-fast: 120ms; --duration-slower: 320ms;
@@ -54,7 +54,7 @@
   font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
 }
 .lb-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
-.lb-heading { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.lb-heading { font-family: var(--font-headline); font-size: 28px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.35; }   /* headline: Outfit Light */
 .lb-meta { font-size: 12px; color: var(--faint); }
 .lb-card { background: var(--surface); border-radius: var(--radius-lg); padding: 20px 24px; }
 
@@ -68,7 +68,7 @@
 /* the total: two odometers and the words between them */
 .lb-total { display: flex; align-items: baseline; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--divider); font-size: 20px; letter-spacing: -0.02em; }
 .lb-lbl { color: var(--muted); }
-.lb-roll { display: inline-flex; font-variant-numeric: tabular-nums; }
+.lb-roll { display: inline-flex; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .lb-roll .c { height: 1.4em; line-height: 1.4em; overflow: hidden; display: inline-block; }
 .lb-roll .s { display: block; transition: transform var(--duration-slower) var(--ease-out); }
 .lb-roll .s i { display: block; height: 1.4em; font-style: normal; }
@@ -82,8 +82,8 @@
 .lb-cap .r, .lb-row .r { justify-self: end; text-align: right; }
 .lb-mark { display: block; width: 36px; height: 36px; max-width: none; object-fit: cover; }
 .lb-name { font-weight: 500; }
-.lb-no { margin-right: 12px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
-.lb-price { font-variant-numeric: tabular-nums; }
+.lb-no { margin-right: 12px; font-family: var(--font-mono); font-size: 13px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lb-price { font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
 .lb-none { color: var(--muted); }
 .lb-skel { width: 72px; height: 14px; border-radius: var(--radius-sm); background: var(--track); animation: lb-pulse 1.6s var(--ease-in-out) infinite; }
 @keyframes lb-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
@@ -120,9 +120,9 @@
    Every figure is an odometer: each digit a strip 0 to 9 that slides, a comma holding still.
    A project is a skeleton until its figures land; the total is the sum of what has landed. */
 const BUILDS = [   // est: how long the build took; a: the pages live on the first load; b: after Get live builds
-  { no: '01', name: 'Forma launch site',         img: 'vase',    est: '3 weeks', a: 12, b: 14 },
-  { no: '02', name: 'Kova brand upgrade',        img: 'ring',    est: '8 weeks', a: 24, b: 27 },
-  { no: '03', name: 'Willow Counseling site',    img: 'calla',   est: '7 days',  a: 5,  b: 5 },
+  { no: '01', name: 'Forma launch site',         img: 'lime-bloom',    est: '3 weeks', a: 12, b: 14 },
+  { no: '02', name: 'Kova brand upgrade',        img: 'lime-arc',    est: '8 weeks', a: 24, b: 27 },
+  { no: '03', name: 'Willow Counseling site',    img: 'lime-swirl',   est: '7 days',  a: 5,  b: 5 },
   { no: '04', name: 'Strata marketing site',     img: 'cross',   est: '4 weeks', a: 18, b: 21 },
   { no: '05', name: 'Juniper Yoga launch site',  img: 'block',   est: '2 weeks', a: 9,  b: 12 },
   { no: '06', name: 'Pennant Studio portfolio',  img: 'objects', est: '10 days', a: 7,  b: 7 },

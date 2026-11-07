@@ -38,18 +38,18 @@
 </script>
 <style data-code>
 /* Create menu · Idea: bencho.dev liq-create (MIT).
-   O2's roles in qbix colours: ink on paper, one lime. Radii, spacing and type are the O2 library's own. */
+   O2's roles in qbix colours: ink on white, one lime. Radii, spacing and type are the O2 library's own. */
 .cr {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
-  --surface: #ffffff; --surface-muted: #eceef0; --surface-border: rgba(18, 20, 23, 0.14);
-  --row-stripe: color-mix(in srgb, #eceef0 62%, #ffffff); --row-hover: #f6f7f8;
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64); --faint: rgba(11, 12, 13, 0.58);
+  --surface: #ffffff; --surface-muted: #EEF1E8; --surface-border: #E3E8DA;
+  --row-stripe: #EEF1E8; --row-hover: #E3E8DA;
   --primary: #B8FF00; --on-primary: #0c1300;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative; width: 800px; display: grid; gap: 16px; align-content: start;
   font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
 }
 .cr-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.cr-heading { font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }
+.cr-heading { font-family: var(--font-headline); font-size: 28px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.35; }
 .cr-meta { margin: 0; font-size: 12px; color: var(--faint); }
 .cr-card { background: var(--surface); border-radius: 14px; padding: 8px 16px 16px; }
 .cr-table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -61,9 +61,9 @@
 .cr-bn { display: flex; align-items: center; gap: 12px; }
 .cr-bn img { width: 36px; height: 26px; object-fit: cover; border-radius: 3px; }
 .cr-bn b { font-weight: 500; }
-.cr-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: rgba(18, 20, 23, 0.08); }
+.cr-chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: #E3E8DA; }
 .cr-chip.live { color: #fff; background: var(--text); }
-.cr-chip.review { color: var(--text); background: rgba(18, 20, 23, 0.14); }
+.cr-chip.review { color: var(--text); background: #D3DAC5; }
 
 /* the create control: one shape that spreads from a pill into the menu */
 .cr-anchor { position: relative; width: 92px; height: 36px; flex: none; z-index: 5; }
@@ -136,7 +136,7 @@ const BRIEFS = [
   ['objects', 'Forma', 'Design service', '1 to 3 weeks', 'Nov 2, 2026', 'Live', 'live'],
   ['block', 'Kova', 'Brand upgrade', '5 to 10 weeks', 'Oct 30, 2026', 'In review', 'review'],
   ['cross', 'Tidewell Coffee', 'Design service', '1 to 3 weeks', 'Oct 29, 2026', 'Delivered', ''],
-  ['bottle', 'Willow Counseling', 'Practice Website Refresh', '7 days', 'Oct 27, 2026', 'Live', 'live'],
+  ['lime-tube', 'Willow Counseling', 'Practice Website Refresh', '7 days', 'Oct 27, 2026', 'Live', 'live'],
   ['slices', 'Pennant Studio', 'Brand upgrade', '5 to 10 weeks', 'Oct 21, 2026', 'Delivered', ''],
 ];
 document.getElementById('cr-rows').innerHTML = BRIEFS.map((b) => `<tr><td><div class="cr-bn"><img src="../assets/art/${b[0]}.webp" alt=""><b>${b[1]}</b></div></td><td>${b[2]}</td><td class="num">${b[3]}</td><td>${b[4]}</td><td><span class="cr-chip ${b[6]}">${b[5]}</span></td></tr>`).join('');

@@ -14,7 +14,7 @@
   "kind": "play",
   "tone": "paper",
   "line": "typed ask · 3 open slots lit · 1 picked and dropped in",
-  "summary": "The hero of a product page shows the product doing its one job on a loop. A request is typed into a bar, the open slots in a week light up one after another as frames, and one is picked and uncovered as a lime block in the calendar. Rebuilt from the saas-landing recipe in the qbix language: flat blocks, one lime, nothing faded.",
+  "summary": "The hero of a product page shows the product doing its one job on a loop. A request is typed into a bar, the open slots in a week light up one after another as frames, and one is picked and uncovered as a lime block in the calendar. Rebuilt from the saas-landing recipe in the Blocks look: sage blocks on white, one lime point, nothing faded.",
   "spec": [
     ["Type", "one letter every 38 ms, a 2px caret, 700 ms before and 500 ms after"],
     ["Slots", "three open frames uncovered left to right, 220 ms apart, 2px ink inset frames"],
@@ -26,7 +26,7 @@
   "where": "The hero of a studio page: Sera finds the review hour that works for the client, the designer and the developer.",
   "rules": [
     "The calendar is HTML, so it stays sharp and follows the tone.",
-    "Events are flat white blocks; only the picked slot is lime.",
+    "Events are flat sage blocks on white columns; only the picked slot is lime.",
     "A slot is a 2px inset frame, not a border; nothing is rounded."
   ],
   "tags": ["hero", "product", "typing", "calendar"],
@@ -35,27 +35,27 @@
 </script>
 <style data-code>
 /* Week planner: an ask bar over a five-day grid. Times map to percentages of the column height. */
-.wk { --ch: clamp(230px, 56vh, 330px); background: #ffffff; padding: 14px; display: grid; gap: 12px; width: 100%; --c: 14px;
+.wk { --ch: clamp(230px, 56vh, 330px); background: #EEF1E8; padding: 14px; display: grid; gap: 12px; width: 100%; --c: 14px;
   clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
-.wk-ask { display: flex; align-items: center; gap: 10px; min-height: 36px; background: #f3f4f5; padding: 0 12px; font-size: 14px; color: #121417; white-space: nowrap; overflow: hidden; }
+.wk-ask { display: flex; align-items: center; gap: 10px; min-height: 36px; background: #ffffff; padding: 0 12px; font-size: 15px; color: #0B0C0D; white-space: nowrap; overflow: hidden; }
 .wk-ask svg { flex: none; width: 14px; height: 14px; }
-.wk-caret { width: 2px; height: 16px; background: #121417; flex: none; margin-left: -8px; }
-.wk-answer { margin-left: auto; flex: none; overflow: hidden; height: 1.6em; font: 400 11px/1.6 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: #121417; }
+.wk-caret { width: 2px; height: 16px; background: #0B0C0D; flex: none; margin-left: -8px; }
+.wk-answer { margin-left: auto; flex: none; overflow: hidden; height: 1.6em; font: 500 13px/1.6 'Geist', sans-serif; letter-spacing: -.006em; color: #0B0C0D; }
 .wk-answer span { display: block; transform: translateY(110%); transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1); }
 .wk-answer.on span { transform: translateY(0); }
 .wk-week { display: grid; grid-template-columns: 28px repeat(5, 1fr); gap: 4px; }
-.wk-dh { font: 400 11px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); padding: 2px 0 4px; }
+.wk-dh { font: 500 13px/1 'Geist', sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, 0.66); padding: 2px 0 4px; }
 .wk-hours { position: relative; height: var(--ch); }
-.wk-hours span { position: absolute; left: 0; font: 400 10px/1 'Encode Sans', Geist, sans-serif; color: rgba(18, 20, 23, 0.38); transform: translateY(-50%); }
-.wk-col { position: relative; height: var(--ch); background: #f3f4f5; }
-.wk-ev { position: absolute; left: 0; right: 0; background: #ffffff; padding: 5px 6px; overflow: hidden; display: grid; align-content: start; gap: 2px; }
-.wk-ev b { font-weight: 500; font-size: 11px; line-height: 1.2; color: #121417; }
-.wk-ev span { font-size: 10px; line-height: 1.2; color: rgba(18, 20, 23, 0.55); }
-.wk-slot { position: absolute; left: 0; right: 0; box-shadow: inset 0 0 0 2px #121417; clip-path: inset(0 100% 0 0); transition: clip-path 380ms cubic-bezier(0.16, 1, 0.3, 1); }
+.wk-hours span { position: absolute; left: 0; font: 400 12px/1 'Geist Mono', monospace; color: rgba(11, 12, 13, 0.38); transform: translateY(-50%); }
+.wk-col { position: relative; height: var(--ch); background: #ffffff; }
+.wk-ev { position: absolute; left: 0; right: 0; background: #EEF1E8; padding: 5px 6px; overflow: hidden; display: grid; align-content: start; gap: 2px; }
+.wk-ev b { font-weight: 500; font-size: 12px; line-height: 1.2; color: #0B0C0D; }
+.wk-ev span { font-size: 12px; line-height: 1.2; color: rgba(11, 12, 13, 0.55); }
+.wk-slot { position: absolute; left: 0; right: 0; box-shadow: inset 0 0 0 2px #0B0C0D; clip-path: inset(0 100% 0 0); transition: clip-path 380ms cubic-bezier(0.16, 1, 0.3, 1); }
 .wk-slot.on { clip-path: inset(0 0 0 0); }
 .wk-pick { position: absolute; left: 0; right: 0; background: #B8FF00; color: #0c1300; padding: 6px; display: grid; align-content: start; gap: 2px; clip-path: inset(0 0 100% 0); transition: clip-path 600ms cubic-bezier(0.16, 1, 0.3, 1); }
 .wk-pick.on { clip-path: inset(0 0 0 0); }
-.wk-pick b { font-weight: 500; font-size: 12px; line-height: 1.2; } .wk-pick span { font-size: 10px; opacity: 1; color: rgba(12, 19, 0, 0.7); }
+.wk-pick b { font-weight: 500; font-size: 12px; line-height: 1.2; } .wk-pick span { font-size: 12px; opacity: 1; color: rgba(12, 19, 0, 0.7); }
 .wk.is-reset * { transition: none !important; }
 </style>
 <style>
@@ -78,7 +78,7 @@
     </div>
 <!-- code -->
 <div class="wk" id="wk" aria-label="Sera finding a review hour">
-  <div class="wk-ask"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z" fill="#121417"/></svg><span id="ask-text"></span><span class="wk-caret"></span><span class="wk-answer" id="answer"><span>3 open, 1 picked</span></span></div>
+  <div class="wk-ask"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z" fill="#0B0C0D"/></svg><span id="ask-text"></span><span class="wk-caret"></span><span class="wk-answer" id="answer"><span>3 open, 1 picked</span></span></div>
   <div class="wk-week" id="week">
     <div></div><div class="wk-dh">Mon 9</div><div class="wk-dh">Tue 10</div><div class="wk-dh">Wed 11</div><div class="wk-dh">Thu 12</div><div class="wk-dh">Fri 13</div>
     <div class="wk-hours" id="hours"></div>

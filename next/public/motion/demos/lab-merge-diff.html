@@ -13,15 +13,15 @@
   "spec": [["Fly", "820 ms, each word 50 ms behind the one before, cubic-out"], ["Collapse", "480 ms in-out from 760 ms: two lines become one"], ["Merge strip", "lime, shown for 1.5 s after the collapse, then retracts left"], ["Leaving words", "slide 0.6 line height out of their strip and are cut by its edge"], ["New words", "scale from 0 to 1 at the merged position"], ["Reset", "a wipe from the left covers the file and the next round is planned"]],
   "source": ["Qbix studio library · merge-diff"],
   "where": "A Design service chapter about review rounds: two people's edits to one homepage, resolved in a click.",
-  "rules": ["No fading: words leave through the cut edge of their strip, the reset is a wipe.", "Lime is the merged line and the Resolve button.", "Strips are flat blocks with the top right corner cut; no rounded rectangles.", "Keep a line to six words: the fly lasts 820 ms with words 50 ms apart, so a seventh would land short."],
+  "rules": ["No fading: words leave through the cut edge of their strip, the reset is a wipe.", "Lime is only the merged line; the Resolve button is ink on white.", "Strips are flat blocks with the top right corner cut; no rounded rectangles.", "Keep a line to six words: the fly lasts 820 ms with words 50 ms apart, so a seventh would land short."],
   "tags": ["canvas", "text", "click", "diff"]
 }
 </script>
 <style data-code>
 .md { width: min(100%, 820px); height: 100%; display: flex; flex-direction: column; }
 .md-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
-.md-head h2 { font: 400 clamp(28px, 4.6vw, 50px)/1 Eurostile, Geist, sans-serif; letter-spacing: -.03em; margin: 8px 0 0; }
-.md-sub { height: 1.5em; overflow: hidden; margin-top: 10px; color: rgba(18,20,23,.64); font-size: clamp(13px, 1.3vw, 15px); }
+.md-head h2 { font: 300 clamp(28px, 4.6vw, 50px)/1 Outfit, Geist, sans-serif; letter-spacing: -.03em; margin: 8px 0 0; }
+.md-sub { height: 1.5em; overflow: hidden; margin-top: 10px; color: rgba(11, 12, 13,.64); font-size: clamp(13px, 1.3vw, 15px); }
 .md-sub span { display: block; }
 .md-plot { position: relative; flex: 1; min-height: 0; margin-top: clamp(14px, 2.6vh, 28px); }
 .md-plot canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
@@ -42,7 +42,7 @@
       <h2>Two edits, one homepage</h2>
       <div class="md-sub" id="md-sub"><span>3 conflicts in homepage copy</span></div>
     </div>
-    <button class="btn btn-lime" id="md-go">Resolve</button>
+    <button class="btn btn-solid" id="md-go">Resolve</button>
   </div>
   <div class="md-plot" id="md-plot"><canvas id="md-c"></canvas></div>
 </div>
@@ -56,9 +56,9 @@ const Merge = (() => {
   const ease = (t) => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
   const ease2 = (t) => { t = clamp(t, 0, 1); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
   const lerp = (a, b, t) => a + (b - a) * t;
-  const HEAD = 'Eurostile, Geist, sans-serif', MONO = '"Encode Sans", Geist, sans-serif', SANS = 'Geist, system-ui, sans-serif';
-  // flat colours on paper: yours on a white strip, Sera's on a light tint, the merge in lime with ink on it; rest is the ink a merged line settles into
-  const C = { ours: [18, 20, 23], theirs: [92, 96, 102], rest: [18, 20, 23], ink: [12, 19, 0], lime: [184, 255, 0], s1: [255, 255, 255], s2: [224, 227, 230], num: [134, 137, 142] };
+  const HEAD = 'Outfit, Geist, sans-serif', MONO = '"Geist Mono", Geist, sans-serif', SANS = 'Geist, system-ui, sans-serif';
+  // flat colours on white: yours on a sage strip, Sera's on a deeper sage, the merge in lime with ink on it; rest is the ink a merged line settles into
+  const C = { ours: [18, 20, 23], theirs: [92, 96, 102], rest: [18, 20, 23], ink: [12, 19, 0], lime: [184, 255, 0], s1: [238, 241, 232], s2: [227, 232, 218], num: [134, 137, 142] };
   const rgb = (c) => `rgb(${c.map(Math.round)})`;
   const mixc = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 
@@ -132,7 +132,7 @@ const Merge = (() => {
     for (const l of file) {
       if (l.t) {
         ctx.fillStyle = rgb(C.num); ctx.textAlign = 'right'; ctx.font = `400 ${FS * 0.8}px ${MONO}`; ctx.fillText(n, GUT - 14, y + LH / 2);
-        ctx.textAlign = 'left'; ctx.font = font; ctx.fillStyle = 'rgba(18,20,23,.64)'; ctx.fillText(l.t.join(' '), GUT, y + LH / 2);
+        ctx.textAlign = 'left'; ctx.font = font; ctx.fillStyle = 'rgba(11, 12, 13,.64)'; ctx.fillText(l.t.join(' '), GUT, y + LH / 2);
         y += LH; n++; continue;
       }
       const t = l.start === null ? -1 : now - l.start;
@@ -147,11 +147,11 @@ const Merge = (() => {
       const limeW = sw * (1 - ease2(p3)) * (e1 > 0.5 ? 1 : 0);
       if (limeW > 0.5) { ctx.fillStyle = rgb(C.lime); cutRect(sx, y + LH * 0.5 - up + 1, limeW * Math.min(1, e1 * 1.2), LH - 2, 10); }
       ctx.fillStyle = rgb(C.num); ctx.textAlign = 'right'; ctx.font = `400 ${FS * 0.8}px ${MONO}`; ctx.fillText(n, GUT - 14, y + lerp(LH * 0.5, LH, e1) - up);
-      // labels, in the voice of the site's tags
-      ctx.font = `500 ${FS * 0.62}px ${MONO}`; ctx.textAlign = 'right';
+      // labels, sentence case Geist
+      ctx.font = `500 ${Math.max(12, FS * 0.8)}px ${SANS}`; ctx.textAlign = 'right';
       const lab = (txt, yy, col) => { ctx.fillStyle = rgb(col); ctx.fillText(txt, W - 14, yy); };
-      if (e1 < 0.999) { lab('YOURS', y + LH * 0.5 - up + e1 * LH * 0.25, C.num); lab("SERA'S", y + LH * 1.5 - up - e1 * LH * 0.25, C.num); }
-      if (p2 > 0.02 && p3 < 0.5) lab('MERGED', y + LH * 0.5 + (1 - p2) * LH * 0.5, C.ink);
+      if (e1 < 0.999) { lab('Yours', y + LH * 0.5 - up + e1 * LH * 0.25, C.num); lab("Sera's", y + LH * 1.5 - up - e1 * LH * 0.25, C.num); }
+      if (p2 > 0.02 && p3 < 0.5) lab('Merged', y + LH * 0.5 + (1 - p2) * LH * 0.5, C.ink);
       ctx.textAlign = 'left'; ctx.font = font;
       const place = (arr, yy) => { let x = GUT; arr.forEach((k) => { k.x = x; k.y = yy; k.wd = ctx.measureText(k.w).width; x += k.wd + SP; }); };
       place(l.o, LH * 0.5); place(l.h, LH * 1.5);

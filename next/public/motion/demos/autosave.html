@@ -39,17 +39,17 @@
 </script>
 <style data-code>
 /* A save state: one sleeve, words that roll through it. data-state on .as picks the visible row. */
-.as { display: inline-flex; align-items: center; height: 32px; padding: 0 12px 0 10px; gap: 10px; background: var(--fill, rgba(18,20,23,.05)); font: 500 13px/1 var(--font-sans, 'Geist', sans-serif); letter-spacing: -0.005em; color: var(--fg, #121417); }
+.as { display: inline-flex; align-items: center; height: 32px; padding: 0 12px 0 10px; gap: 10px; background: var(--fill, rgba(11, 12, 13,.05)); font: 500 13px/1 var(--font-sans, 'Geist', sans-serif); letter-spacing: -0.005em; color: var(--fg, #0B0C0D); }
 .as-sleeve { position: relative; height: 18px; overflow: hidden; width: var(--w, 52px); transition: width 320ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
 .as-row { position: absolute; left: 0; top: 0; height: 18px; display: flex; align-items: center; gap: 8px; white-space: nowrap; transform: translateY(110%); transition: transform 320ms var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1)); }
 .as-row.is-in { transform: translateY(0); }
 .as-row.is-out { transform: translateY(-110%); }
 .as-row.is-park { transition: none; transform: translateY(110%); }
-.as-row[data-s='edited'] { color: var(--fg2, rgba(18,20,23,.64)); }
+.as-row[data-s='edited'] { color: var(--fg2, rgba(11, 12, 13,.64)); }
 /* the mark before the word: three squares, or the lime tick */
 .as-mark { position: relative; width: 16px; height: 16px; flex: none; }
 .as-dots { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; }
-.as-dots i { width: 4px; height: 4px; background: var(--fg, #121417); opacity: .22; }
+.as-dots i { width: 4px; height: 4px; background: var(--fg, #0B0C0D); opacity: .22; }
 .as[data-state='saving'] .as-dots i { animation: as-step 480ms steps(1, end) infinite; }
 .as[data-state='saving'] .as-dots i:nth-child(2) { animation-delay: 160ms; }
 .as[data-state='saving'] .as-dots i:nth-child(3) { animation-delay: 320ms; }
@@ -68,7 +68,7 @@
   .head h2 { font-size: 30px; letter-spacing: -0.03em; line-height: 1.1; }
   .doc p.body { font-size: 17px; line-height: 1.6; color: var(--fg); outline: none; min-height: 1.6em; }
   .doc p.body + p.body { margin-top: -6px; }
-  .doc .sec { font: 500 11px/16px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg2); }
+  .doc .sec { font: 500 11px/16px var(--font-sans); letter-spacing: 0; color: var(--fg2); }
   .live::after { content: ''; display: inline-block; width: 2px; height: 1.15em; background: var(--fg); vertical-align: -0.2em; margin-left: 1px; animation: blink 1060ms steps(1, end) infinite; }
   .live:focus::after { display: none; }
   .live:focus { caret-color: var(--fg); }

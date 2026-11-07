@@ -9,11 +9,11 @@
   "id": "button-to-bar", "title": "Button to bar", "group": "studio", "cat": "loading", "order": 30,
   "kind": "loop", "tone": "paper", "added": "2026-11-05", "shot": 3900,
   "line": "520 ms ease-move · 3 files · 600 ms a stretch",
-  "summary": "An Upload moodboard button is pressed: its label slides out through the top, the black body narrows into a pale bar of its own height and fills with ink, the count 0, 1, 2, 3 rolling in its sleeve. The last stretch fills lime, then the bar opens back out into a button that reads 3 files uploaded, with a tick drawn.",
+  "summary": "An Upload moodboard button is pressed: its label slides out through the top, the black body narrows into a sage bar of its own height and fills with ink, the count 0, 1, 2, 3 rolling in its sleeve. The last stretch fills lime, then the bar opens back out into a button that reads 3 files uploaded, with a tick drawn.",
   "spec": [
     ["Narrow", "width 16em → 11em and ink → pale, 520 ms ease-move, label out through the top 480 ms expo"],
     ["Fill", "three stretches of 600 ms ease-soft, 700 ms apart; the count rolls one digit a stretch"],
-    ["Two texts", "the count is set twice, ink on the pale track and paper on the fill, so it flips as the fill passes"],
+    ["Two texts", "the count is set twice, ink on the sage track and white on the fill, so it flips as the fill passes"],
     ["Last stretch", "the fill turns lime and its text ink, the one lime of the piece"],
     ["Open", "width back to 16em, ink body, 3 files uploaded rises in, tick stroke drawn 480 ms expo"],
     ["Script", "press at 1.2 s, done at about 5 s, held 2.2 s; a real click runs it too"]
@@ -31,12 +31,12 @@
 <style data-code>
 /* Button to bar: one control, three states, one height */
 .bb { --cut: 1.1em; position: relative; display: block; height: 4.5em; width: 16em; padding: 0; border: 0; cursor: pointer; overflow: hidden;
-  background: #121417; color: #f4f5f2; font: 500 1.05em/1 Geist, system-ui, sans-serif; letter-spacing: -.011em;
+  background: #0B0C0D; color: #f4f5f2; font: 500 1.05em/1 Geist, system-ui, sans-serif; letter-spacing: -.011em;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
   transition: width 520ms cubic-bezier(.65, 0, .35, 1), background-color 360ms cubic-bezier(.65, 0, .35, 1), transform 300ms cubic-bezier(.22, 1, .36, 1); }
 .bb:active { transform: translateY(2px); transition-duration: 520ms, 360ms, 140ms; }
 .bb.press { transform: translateY(2px); }
-.bb[data-s='bar'] { width: 11em; background: #eceef0; color: #121417; }
+.bb[data-s='bar'] { width: 11em; background: #E3E8DA; color: #0B0C0D; }
 .bb-l { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .6em; white-space: nowrap;
   transition: transform 480ms cubic-bezier(.16, 1, .3, 1); }
 .bb-idle { transform: none; }
@@ -50,11 +50,11 @@
 .bb-done svg { width: 1.2em; height: 1.2em; fill: none; stroke: #f4f5f2; stroke-width: 2.4; stroke-linecap: square; stroke-linejoin: miter; }
 .bb-done path { stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset 480ms cubic-bezier(.16, 1, .3, 1) .2s; }
 .bb[data-s='done'] .bb-done path { stroke-dashoffset: 0; }
-.bb-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; overflow: hidden; background: #121417; color: #f4f5f2;
+.bb-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; overflow: hidden; background: #0B0C0D; color: #f4f5f2;
   transition: width 600ms cubic-bezier(.45, 0, .25, 1), background-color 300ms cubic-bezier(.45, 0, .25, 1), color 300ms cubic-bezier(.45, 0, .25, 1); }
 .bb-fill.is-lime { background: #B8FF00; color: #0c1300; }
 .bb-cnt { position: absolute; left: 0; top: 0; bottom: 0; width: 11em; display: flex; align-items: center; justify-content: center; gap: .3em;
-  font: 500 .8em/1 'Encode Sans', Geist, sans-serif; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+  font: 500 .8em/1 'Geist Mono', Geist, sans-serif; letter-spacing: 0; font-variant-numeric: tabular-nums; }
 .bb-dg { display: block; height: 1.2em; overflow: hidden; }
 .bb-dg > span { display: block; transition: transform 480ms cubic-bezier(.16, 1, .3, 1); }
 .bb-dg b { display: block; height: 1.2em; line-height: 1.2em; font-weight: 500; }
@@ -64,10 +64,10 @@
 <style>
   .sd { font-size: clamp(11px, min(2vw, 3.2vh), 26px); display: grid; gap: 1.1em; justify-items: start; }
   .sd .kicker { font-size: .75em; }
-  .bb-card { --cut: 1em; width: 31em; padding: 1.6em 1.6em 1.8em; background: #fff; color: #121417;
+  .bb-card { --cut: 1em; width: 31em; padding: 1.6em 1.6em 1.8em; background: #EEF1E8; color: #0B0C0D;
     clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
-  .bb-card h2 { font: 400 2em/1.05 Eurostile, Geist, sans-serif; letter-spacing: -.03em; }
-  .bb-card .m { margin: .7em 0 1.7em; font: 400 .78em/1.4 'Encode Sans', Geist, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: rgba(18, 20, 23, .64); }
+  .bb-card h2 { font: 400 2em/1.05 Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+  .bb-card .m { margin: .7em 0 1.7em; font: 400 .78em/1.4 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
 </style>
 </head>
 <body>

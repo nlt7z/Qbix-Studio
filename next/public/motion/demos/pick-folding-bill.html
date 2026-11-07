@@ -19,7 +19,7 @@
   "spec": [
     ["Fold", "the corner c0 is carried to p; the crease passes through their midpoint M, its normal n = (p − c0) / |p − c0|"],
     ["Front", "the sheet kept where (X − M) · n ≥ 0, cut from the sheet's four corners; the folded tip is the other side, reflected: X′ = X − 2((X − M) · n) n"],
-    ["Back", "the flap is the page's back: a flat tone with the print showing through, mirrored, at 9%; shaded by one linear gradient from the crease"],
+    ["Back", "the flap is the page's back: a flat sage tone with the print showing through, mirrored, at 9%; shaded by one linear gradient from the crease"],
     ["Grab", "the nearest corner within 70 units of the pointer, anywhere on the stage; the grab keeps its offset"],
     ["Reach", "the corner stays within 0.92 × the sheet's diagonal of where it started"],
     ["Release", "a spring to the corner: stiffness 150, damping 2√150 × 1.02 (critical), semi-implicit Euler, dt capped at 1/30 s, until it is within 0.3 and slower than 4"],
@@ -35,7 +35,7 @@
     "The physics is the release only: the corner follows the pointer 1:1 while held.",
     "Real figures on the page: the invoice adds up."
   ],
-  "tags": ["fold", "paper", "canvas", "drag", "spring"],
+  "tags": ["fold", "sheet", "canvas", "drag", "spring"],
   "shot": 3400
 }
 </script>
@@ -64,6 +64,7 @@ const W = 440, H = 560;
 const C = [[0, 0], [W, 0], [W, H], [0, H]];
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FONT = '"Geist", ui-sans-serif, system-ui, sans-serif';
+const HEAD = '"Outfit", "Geist", ui-sans-serif, system-ui, sans-serif', MONO = '"Geist Mono", ui-monospace, Menlo, monospace';
 const root = getComputedStyle(document.documentElement);
 const css = (n) => root.getPropertyValue(n).trim();
 const money = (n) => (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -83,26 +84,26 @@ const lines = [['Practice Website Refresh', 1, 800], ['Exclusive offer', 1, -200
 function print(g) {
   const ink = css('--fg'), mute = css('--fg2'), rule = css('--fg4');
   g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
-  g.fillStyle = '#121417'; g.fillRect(36, 34, 78, 32);
+  g.fillStyle = '#0B0C0D'; g.fillRect(36, 34, 78, 32);
   g.save(); g.translate(36 + (78 - 46) / 2, 34 + (32 - 17) / 2); g.scale(17 / 342, 17 / 342); g.fillStyle = '#B8FF00'; g.fill(WORDMARK); g.restore();
   g.fillStyle = ink; g.textBaseline = 'alphabetic';
-  g.font = `400 28px ${FONT}`; g.fillText('Invoice', 36, 112);
-  g.font = `400 15px ${FONT}`; g.fillStyle = mute; g.fillText('INV-2026-0418', 36, 136);
-  g.textAlign = 'right'; g.fillText('Issued Nov 3, 2026', W - 36, 112); g.fillText('Live by Nov 10, 2026', W - 36, 136); g.textAlign = 'left';
-  const col = (x, label, a, b) => { g.font = `500 12px ${FONT}`; g.fillStyle = mute; g.fillText(label, x, 190); g.font = `400 15px ${FONT}`; g.fillStyle = ink; g.fillText(a, x, 214); g.fillStyle = mute; g.fillText(b, x, 234); };
-  col(36, 'BILL TO', 'Willow Counseling', 'Dana Reyes, LMFT');
-  col(246, 'FROM', 'Qbix', 'Seattle, WA');
+  g.font = `300 28px ${HEAD}`; g.letterSpacing = '-1px'; g.fillText('Invoice', 36, 112); g.letterSpacing = '0px';
+  g.font = `400 13px ${MONO}`; g.fillStyle = mute; g.fillText('INV-2026-0418', 36, 136);
+  g.font = `400 14px ${FONT}`; g.textAlign = 'right'; g.fillText('Issued Nov 3, 2026', W - 36, 112); g.fillText('Live by Nov 10, 2026', W - 36, 136); g.textAlign = 'left';
+  const col = (x, label, a, b) => { g.font = `500 13px ${FONT}`; g.fillStyle = mute; g.fillText(label, x, 190); g.font = `400 14px ${FONT}`; g.fillStyle = ink; g.fillText(a, x, 214); g.fillStyle = mute; g.fillText(b, x, 234); };
+  col(36, 'Bill to', 'Willow Counseling', 'Dana Reyes, LMFT');
+  col(246, 'From', 'Qbix', 'Seattle, WA');
   g.fillStyle = rule; g.fillRect(36, 270, W - 72, 1);
-  g.font = `500 12px ${FONT}`; g.fillStyle = mute; g.fillText('ITEM', 36, 296); g.textAlign = 'right'; g.fillText('QTY', 262, 296); g.fillText('UNIT', 330, 296); g.fillText('AMOUNT', W - 36, 296); g.textAlign = 'left';
+  g.font = `500 13px ${FONT}`; g.fillStyle = mute; g.fillText('Item', 36, 296); g.textAlign = 'right'; g.fillText('Qty', 262, 296); g.fillText('Unit', 330, 296); g.fillText('Amount', W - 36, 296); g.textAlign = 'left';
   let y = 328, total = 0;
   for (const [d, q, u] of lines) {
     g.font = `400 14px ${FONT}`; g.fillStyle = ink; g.fillText(d, 36, y);
-    g.textAlign = 'right'; g.fillText(String(q), 262, y); g.fillText(money(u), 330, y); g.fillText(money(q * u), W - 36, y); g.textAlign = 'left';
+    g.font = `400 13px ${MONO}`; g.textAlign = 'right'; g.fillText(String(q), 262, y); g.fillText(money(u), 330, y); g.fillText(money(q * u), W - 36, y); g.textAlign = 'left';
     total += q * u; y += 34;
   }
   g.fillStyle = rule; g.fillRect(36, y - 14, W - 72, 1);
-  g.font = `500 15px ${FONT}`; g.fillStyle = mute; g.fillText('Total due', 36, y + 32);
-  g.font = `400 34px ${FONT}`; g.fillStyle = ink; g.textAlign = 'right'; g.fillText(money(total), W - 36, y + 36); g.textAlign = 'left';
+  g.font = `500 14px ${FONT}`; g.fillStyle = mute; g.fillText('Total due', 36, y + 32);
+  g.font = `300 28px ${HEAD}`; g.letterSpacing = '-1px'; g.fillStyle = ink; g.textAlign = 'right'; g.fillText(money(total), W - 36, y + 34); g.textAlign = 'left'; g.letterSpacing = '0px';
   g.fillStyle = rule; g.fillRect(36, H - 84, 190, 1);
   g.font = `400 14px ${FONT}`; g.fillStyle = mute; g.fillText('Approved by Dana Reyes', 36, H - 62);
   g.fillText('Flat price · Live in 7 days', 36, H - 38);
@@ -131,7 +132,7 @@ function draw() {
   const c0 = grip.k >= 0 ? C[grip.k] : null;
   let d = 0, n = [1, 0], M = [0, 0];
   if (c0) { const dx = grip.x - c0[0], dy = grip.y - c0[1]; d = Math.hypot(dx, dy); if (d > 0.5) { n = [dx / d, dy / d]; M = [(c0[0] + grip.x) / 2, (c0[1] + grip.y) / 2]; } }
-  const shadow = (blur, oy2, a) => { ctx.shadowColor = `rgba(18,20,23,${a})`; ctx.shadowBlur = blur * s; ctx.shadowOffsetY = oy2 * s; };
+  const shadow = (blur, oy2, a) => { ctx.shadowColor = `rgba(11, 12, 13,${a})`; ctx.shadowBlur = blur * s; ctx.shadowOffsetY = oy2 * s; };
   if (d < 0.8) {
     shadow(36, 14, .16); path(ctx, C); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
     stamp(ctx);
@@ -140,16 +141,16 @@ function draw() {
     shadow(36, 14, .16); path(ctx, front); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowColor = 'transparent';
     ctx.save(); path(ctx, front); ctx.clip(); stamp(ctx);
     const g1 = ctx.createLinearGradient(M[0], M[1], M[0] + n[0] * 70, M[1] + n[1] * 70);   // the flap's shade on the page under it
-    g1.addColorStop(0, 'rgba(18,20,23,.12)'); g1.addColorStop(1, 'rgba(18,20,23,0)');
+    g1.addColorStop(0, 'rgba(11, 12, 13,.12)'); g1.addColorStop(1, 'rgba(11, 12, 13,0)');
     ctx.fillStyle = g1; ctx.fillRect(-W, -H, W * 3, H * 3); ctx.restore();
     // the back of the page: the flap reflected across the crease
     const refl = flap.map((p) => { const k = 2 * ((p[0] - M[0]) * n[0] + (p[1] - M[1]) * n[1]); return [p[0] - k * n[0], p[1] - k * n[1]]; });
-    shadow(18, 6, .22); path(ctx, refl); ctx.fillStyle = '#f7f8f9'; ctx.fill(); ctx.shadowColor = 'transparent';
+    shadow(18, 6, .22); path(ctx, refl); ctx.fillStyle = '#EEF1E8'; ctx.fill(); ctx.shadowColor = 'transparent';
     ctx.save(); path(ctx, refl); ctx.clip();
     const a = 1 - 2 * n[0] * n[0], b = -2 * n[0] * n[1], dd = 1 - 2 * n[1] * n[1], mn = M[0] * n[0] + M[1] * n[1];
     ctx.save(); ctx.transform(a, b, b, dd, 2 * mn * n[0], 2 * mn * n[1]); ctx.globalAlpha = .09; stamp(ctx); ctx.restore();   // the print shows through, mirrored
     const g2 = ctx.createLinearGradient(M[0], M[1], M[0] - n[0] * 90, M[1] - n[1] * 90);
-    g2.addColorStop(0, 'rgba(18,20,23,.07)'); g2.addColorStop(.5, 'rgba(18,20,23,.03)'); g2.addColorStop(1, 'rgba(255,255,255,0)');
+    g2.addColorStop(0, 'rgba(11, 12, 13,.07)'); g2.addColorStop(.5, 'rgba(11, 12, 13,.03)'); g2.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = g2; ctx.fillRect(-W, -H, W * 3, H * 3); ctx.restore();
   }
   ctx.restore();
@@ -196,7 +197,7 @@ cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', 
 
 size();
 // the print needs the fonts in: bake again when they have loaded
-Promise.all([document.fonts.load('400 28px Geist'), document.fonts.load('500 12px Geist')]).catch(() => {}).then(() => { bake(); wake(); });
+Promise.all([document.fonts.load('400 28px Geist'), document.fonts.load('500 12px Geist'), document.fonts.load('300 28px Outfit'), document.fonts.load('400 13px "Geist Mono"')]).catch(() => {}).then(() => { bake(); wake(); });
 bake();
 if (still) { grip.k = 2; grip.x = W * 0.52; grip.y = H * 0.56; grip.held = true; wake(); }
 </script>

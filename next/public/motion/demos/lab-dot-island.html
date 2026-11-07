@@ -27,7 +27,7 @@
   "where": "A status bar at the top of a Qbix project screen: the launch clock, a voice note, an upload, the site going live.",
   "rules": [
     "Dots are squares on the 8px-family grid; the frame has the cut corner, never a radius.",
-    "Lime marks what is live (the voice note, the done check). Everything else is chalk on ink, and the island is the one black object on the paper.",
+    "Lime marks what is live (the voice note, the done check). Everything else is chalk on ink, and the island is the one black object on the white.",
     "A dot's brightness is a step of colour on the island, never an opacity on the page."
   ],
   "tags": ["status", "dot matrix", "canvas", "spring", "click", "launch"],
@@ -38,13 +38,13 @@
 /* Dot-matrix island: a canvas, and two captions that slide out of sleeves */
 .isle { position: absolute; inset: 0; }
 .isle canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: manipulation; }
-.isle-cap { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; color: #121417; }
+.isle-cap { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; color: #0B0C0D; }
 .isle-row { position: relative; overflow: hidden; margin: 0 auto; }
 .isle-row span { position: absolute; left: 0; right: 0; top: 0; white-space: nowrap; transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 .isle-row span.in { transform: translateY(105%); }
 .isle-row span.out { transform: translateY(-105%); }
-.isle-t { font: 400 clamp(26px, 5vw, 44px)/1.2 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; height: 1.2em; }
-.isle-s { font-size: clamp(14px, 2.2vw, 17px); line-height: 1.4; height: 1.4em; color: rgba(18, 20, 23, 0.64); margin-top: 4px; }
+.isle-t { font: 300 clamp(26px, 5vw, 44px)/1.2 'Outfit', 'Geist', sans-serif; letter-spacing: -0.035em; height: 1.2em; }
+.isle-s { font-size: clamp(14px, 2.2vw, 17px); line-height: 1.4; height: 1.4em; color: rgba(11, 12, 13, 0.64); margin-top: 4px; }
 @media (prefers-reduced-motion: reduce) { .isle-row span { transition: none; } }
 </style>
 <style>
@@ -67,7 +67,7 @@ function dotIsland(root) {
   const cv = root.querySelector('canvas'), ctx = cv.getContext('2d'), capEl = root.querySelector('.isle-cap');
   const tEl = root.querySelector('.isle-t'), sEl = root.querySelector('.isle-s');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const INK = '#121417', GROUND = '#f3f4f5', CHALK = [244, 245, 242], LIME = [184, 255, 0], OFF = '#1d2024';
+  const INK = '#0B0C0D', GROUND = '#ffffff', CHALK = [244, 245, 242], LIME = [184, 255, 0], OFF = '#18191B';
   const MAXC = 64, MAXR = 24, N = MAXC * MAXR, LV = 10;
   const G = {
     '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'], '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],

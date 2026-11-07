@@ -22,14 +22,14 @@
     ["Stagger", "0.15 s × the line's index (plus an optional delay)"],
     ["Move", "line clip-path inset(0 100% 0 0) → inset(0 0 0 0) · bar scaleX 1 → 0, origin right"],
     ["Bar timing", "starts halfway through the clip (delay + duration / 2)"],
-    ["Bar colour", "the page's ink on paper (the default here) · the chalk on black"],
+    ["Bar colour", "the page's ink on white (the default here) · near-white on black"],
     ["Trigger", "in view, once (margin 0 0 −4% 0)"]
   ],
   "source": ["components/Reveal.tsx · Wipe", "components/StrataIntro.tsx · pd-title-line", "app/globals.css · PRODUCT INTRO"],
-  "where": "/products/strata: the hero's two title lines, and the “Everything a system needs.” heading on the paper panel.",
+  "where": "/products/strata: the hero's two title lines, and the “Everything a system needs.” heading on the white panel.",
   "rules": [
     "No fade, no blur: the line is covered, then uncovered. The bar is the only thing that is ever seen moving.",
-    "The bar is a solid of the page's own ink (or paper): never lime. The screen's lime belongs to the button.",
+    "The bar is a solid of the page's own ink (or white): never lime. The screen's lime belongs to the button.",
     "The clip is the line box, so keep line-height at 1 or more and let a title be display: block; a wipe on an inline run breaks across lines.",
     "Lines go together when they are one thought: the stagger is 0.15 s, not more."
   ],
@@ -53,7 +53,7 @@
   content: '';
   position: absolute; inset: 0; z-index: 5;
   pointer-events: none;
-  background: var(--wipe-color, #121417);
+  background: var(--wipe-color, #0B0C0D);
   transform-origin: right center;
   transition: transform var(--wipe-dur) cubic-bezier(0.42, 0, 0.58, 1) calc(var(--wipe-at) + var(--wipe-dur) / 2);
 }
@@ -94,8 +94,8 @@
   </div>
   <div class="qm-ui" id="ui">
     <span>Bar</span>
-    <button data-v="paper" class="is-on">On paper</button>
-    <button data-v="black">On black</button>
+    <button data-v="paper" class="is-on">On white</button>
+    <button data-v="black">On dark</button>
   </div>
 </main>
 <script src="../kit/stage.js"></script>
@@ -123,14 +123,14 @@ document.querySelectorAll('.wipe').forEach(wipe);
   const kicker = document.getElementById('kicker');
   const lines = () => Array.from(document.querySelectorAll('.wipe'));
   const VARIANTS = {
-    // the library's default: Strata's hero title on paper, the bar in the page's ink
+    // the library's default: Strata's hero title on white, the bar in the page's ink
     paper: {
-      tone: 'paper', color: '#121417', kicker: 'Qbix Labs · Strata · Live', tag: 'h1',
+      tone: 'paper', color: '#0B0C0D', kicker: 'Qbix Labs · Strata · Live', tag: 'h1',
       lines: ['One image in.', 'A working <span class="pd-signal">system</span> out.'], delay: 0,
     },
-    // the site's other use: a heading on a panel, here on black with the chalk bar
+    // the site's other use: a heading on a panel, here on the dark with a near-white bar
     black: {
-      tone: 'dark', color: '#f7f8f8', kicker: 'FIG 02 · What you get', tag: 'h1',
+      tone: 'dark', color: '#f7f8f8', kicker: 'Fig 02 · What you get', tag: 'h1',
       lines: ['Everything a system needs.'], delay: 100,
     },
   };

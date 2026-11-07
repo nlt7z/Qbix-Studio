@@ -15,19 +15,19 @@
   "kind": "pointer",
   "tone": "paper",
   "line": "height map · CPU normals · point light · 32-step shadow",
-  "summary": "A height map is built from the word and a field of vertical reeds, its normals computed on the CPU and passed to WebGL. The pointer is a point light: the fragment shader does diffuse lighting and marches the height field toward the light for soft cast shadows. The raised letters take the lime; the reeded panel is white plaster, and its shadows are the only grey.",
+  "summary": "A height map is built from the word and a field of vertical reeds, its normals computed on the CPU and passed to WebGL. The pointer is a point light: the fragment shader does diffuse lighting and marches the height field toward the light for soft cast shadows. The raised letters take the lime; the reeded panel is white plaster on a white ground, and its shadows are the only grey.",
   "spec": [
     ["Map", "RGBA texture: normal xy, height, letter mask; reeds 5% of the short side, letters raised 0.9 against 0.07"],
     ["Light", "point light at 0.3 of the short side above the panel, following the pointer at 1 − e^(−9 dt)"],
     ["Shadow", "32 steps along the ray to the light, jittered per pixel, soft penumbra"],
-    ["Shading", "diffuse read against a flat panel under the same light (relief ±16% around paper), a faint specular, a touch of noise against banding"],
+    ["Shading", "diffuse read against a flat panel under the same light (relief ±16% around white), a faint specular, a touch of noise against banding"],
     ["Trigger", "the pointer; the ghost light drifts on a Lissajous loop"]
   ],
   "source": ["Qbix studio library · relight"],
   "where": "The wordmark chapter: the studio's name cast in plaster, lit by the visitor.",
   "rules": [
     "The light is the only moving thing; the relief never changes.",
-    "Lime lives on the raised letters only; the plaster is paper white.",
+    "Lime lives on the raised letters only; the plaster is white.",
     "Falls back to a flat panel where WebGL is missing."
   ],
   "tags": ["webgl", "relief", "light", "pointer"],
@@ -35,10 +35,10 @@
 }
 </script>
 <style data-code>
-.rl { position: absolute; inset: 0; background: #f3f4f5; }
+.rl { position: absolute; inset: 0; background: #ffffff; }
 .rl canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.rl-foot { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px clamp(16px, 4vmin, 48px); background: #f3f4f5; display: flex; justify-content: space-between; gap: 16px; pointer-events: none;
-  font: 400 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+.rl-foot { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px clamp(16px, 4vmin, 48px); background: #ffffff; display: flex; justify-content: space-between; gap: 16px; pointer-events: none;
+  font: 500 13px/16px 'Geist', sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13,.66); }
 </style>
 </head>
 <body>
@@ -127,12 +127,12 @@ void main(){
     const c = document.createElement('canvas'); c.width = w; c.height = h;
     const x = c.getContext('2d');
     x.fillStyle = '#000'; x.fillRect(0, 0, w, h); x.fillStyle = '#fff';
-    const FONT = 'Eurostile, Geist, sans-serif';
-    x.font = `400 100px ${FONT}`;
+    const FONT = "'Outfit', 'Geist', sans-serif";
+    x.font = `300 100px ${FONT}`;
     const one = x.measureText('qbix').width, two = Math.max(x.measureText('qb').width, x.measureText('ix').width);
     const s1 = Math.min(w * 0.78 / one * 100, h * 0.6 / 0.92), s2 = Math.min(w * 0.7 / two * 100, h * 0.74 / 1.7);
     const lines = s2 > s1 * 1.2 ? ['qb', 'ix'] : ['qbix'], fs = lines.length === 2 ? s2 : s1;
-    x.font = `400 ${fs}px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+    x.font = `300 ${fs}px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
     const lh = fs * 1.0, total = fs * 0.7 + lh * (lines.length - 1) + (lines.length === 2 ? 0.02 : 0.22) * fs;
     let y = h * 0.47 - total / 2 + fs * 0.7;
     lines.forEach((l) => { x.fillText(l, w / 2, y); y += lh; });
@@ -165,7 +165,7 @@ void main(){
   let rebuildT = 0;
   build();
   addEventListener('resize', () => { clearTimeout(rebuildT); rebuildT = setTimeout(build, 120); });
-  if (document.fonts) document.fonts.load('400 100px Eurostile').then(build, () => {});
+  if (document.fonts) document.fonts.load('300 100px Outfit').then(build, () => {});
   let tx = innerWidth * 0.3, ty = innerHeight * 0.4, lx = tx, ly = ty, last = performance.now();
   (function frame(now) {
     requestAnimationFrame(frame);

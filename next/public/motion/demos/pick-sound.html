@@ -39,10 +39,10 @@
 </script>
 <style data-code>
 /* Film player · idea: bencho.dev sound (MIT), redrawn for Qbix.
-   Layout, sizes, radii and motion are the original's; colours are Qbix's: paper, white, ink, one lime. */
+   Layout, sizes, radii and motion are the original's; colours are Qbix's: white ground, sage player, ink, one lime. */
 .pk {
   --radius-sm: 8px; --duration-fast: 120ms; --ease-out: cubic-bezier(.16, 1, .3, 1);
-  --muted: var(--fg2); --surface-muted: var(--sunk); --control-track: var(--fg4);
+  --muted: var(--fg2); --surface-muted: var(--sunk); --control-track: #D3DAC5;
   font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
 }
 .film { position: relative; width: 520px; height: 480px; }
@@ -51,19 +51,19 @@
 .pl > * { position: absolute; }
 .poster { background: var(--sunk); overflow: hidden; }
 .poster .sc { position: absolute; inset: 0; background: center 62% / cover no-repeat; }
-.ttl { white-space: nowrap; font-size: 16px; letter-spacing: -0.01em; line-height: 1.2; }
+.ttl { white-space: nowrap; font-family: var(--font-headline); font-weight: 300; font-size: 16px; letter-spacing: -0.03em; line-height: 1.2; }
 .sub { white-space: nowrap; color: var(--muted); font-size: 14px; }
 .circ { border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
 .play { background: var(--signal); color: var(--on-lime); }
 .play:hover, .play.is-hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
 .skip { background: transparent; color: var(--fg); width: 48px; height: 48px; }
 .skip:hover, .skip.is-hover { background: var(--surface-muted); }
-.min { background: rgba(22, 25, 27, .55); color: #fff; width: 32px; height: 32px; }
-.min:hover, .min.is-hover { background: rgba(22, 25, 27, .75); }
+.min { background: #0B0C0D; color: #fff; width: 32px; height: 32px; }
+.min:hover, .min.is-hover { background: #222427; }
 .bar { height: 6px; border-radius: 3px; background: var(--control-track); cursor: pointer; touch-action: none; }
 .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--fg); }
 .bar b { position: absolute; top: -4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--fg); }
-.tm { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.tm { color: var(--muted); font-family: var(--font-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
 .hit { position: absolute; left: 0; right: 0; top: -10px; bottom: -10px; }
 </style>
 <style>

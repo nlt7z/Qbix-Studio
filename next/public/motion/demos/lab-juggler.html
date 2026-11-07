@@ -27,7 +27,7 @@
   "where": "A Design service section: design, code and launch in the air at once, never dropped.",
   "rules": [
     "Everything on the beat is a function of time, never of a keyframe: a knocked ball can rejoin at any moment.",
-    "Hands and balls are flat shapes: one ink ball, one white, one lime, each ringed in ink; the hands are a light tint.",
+    "Hands and balls are flat shapes: one ink ball, one white, one lime, each ringed in ink; the hands are sage.",
     "The arc is dotted, in the site's dotted-pad language, never a stroke."
   ],
   "tags": ["canvas", "physics", "pointer", "character", "loop"],
@@ -62,7 +62,7 @@ function juggler(root) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const cv = root.querySelector('canvas'), ctx = cv.getContext('2d'), head = root.querySelector('.jug-head');
-  const INK = '#121417', COLS = [INK, '#ffffff', '#B8FF00'], HAND = '#d3d5d8', FLOOR = '#d3d5d8', DOT = 'rgba(18,20,23,0.5)';   // ink, white and lime balls, each ringed in ink
+  const INK = '#0B0C0D', COLS = [INK, '#ffffff', '#B8FF00'], HAND = '#E3E8DA', FLOOR = '#E3E8DA', DOT = 'rgba(11, 12, 13,0.5)';   // ink, white and lime balls, each ringed in ink
   let W = 0, H = 0, dpr = 1, S = 0, cx = 0, hy = 0, ti = 0, co = 0, r = 10, G = 4000, floorY = 0;
   const b = 0.34, F = 1.8 * b, DW = 1.2 * b;
   function resize() {

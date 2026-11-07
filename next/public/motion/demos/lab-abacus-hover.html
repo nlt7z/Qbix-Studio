@@ -26,7 +26,7 @@
   "source": ["Qbix studio library · abacus-hover"],
   "where": "A tally on a studio dashboard: tasks done, pages shipped, briefs in.",
   "rules": [
-    "Beads are told apart by colour alone: a pale tint at rest, lime once counted.",
+    "Beads are told apart by colour alone: a sage tint at rest, lime once counted.",
     "The number always agrees with the beads; the digits roll in the direction the total moved.",
     "Digits are covered and uncovered through a mask, never faded."
   ],
@@ -38,14 +38,14 @@
 .ab { position: absolute; inset: 0; }
 .ab canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .ab-head { position: absolute; left: var(--pad); top: var(--pad); right: var(--pad); display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; pointer-events: none; }
-.ab-total { display: flex; font-family: Eurostile, Geist, sans-serif; font-size: clamp(52px, 9vw, 120px); line-height: .9; letter-spacing: -.03em; font-variant-numeric: lining-nums; margin-top: 6px; }
+.ab-total { display: flex; font-family: Outfit, Geist, sans-serif; font-weight: 200; font-size: clamp(52px, 9vw, 120px); line-height: .9; letter-spacing: -.04em; font-variant-numeric: lining-nums; margin-top: 6px; }
 .ab-total .c { display: inline-block; overflow: hidden; position: relative; height: 1em; line-height: 1; }
 .ab-total .c span { display: block; }
 .ab-total .c span.in { animation: ab-up .55s cubic-bezier(.16, 1, .3, 1) both; }
 .ab-total .c span.dn { animation: ab-down .55s cubic-bezier(.16, 1, .3, 1) both; }
 @keyframes ab-up { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes ab-down { from { transform: translateY(-100%); } to { transform: none; } }
-.ab-side { text-align: right; font: 400 12px/1.5 'Encode Sans', Geist, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: rgba(18,20,23,.64); }
+.ab-side { text-align: right; font: 400 13px/1.5 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13,.64); }
 </style>
 </head>
 <body>
@@ -67,7 +67,7 @@ const abacus = (() => {
   const totalEl = document.getElementById('total'), headEl = document.getElementById('head'), sideEl = document.getElementById('side');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const N = 9, RODS = 4;
-  const REST = [220, 224, 226], LIME = [184, 255, 0];
+  const REST = [227, 232, 218], LIME = [184, 255, 0];
   const counts = [3, 4, 8, 2];
   const beads = [];
   for (let r = 0; r < RODS; r++) { beads.push([]); for (let i = 0; i < N; i++) beads[r].push({ a: 0, v: 0, target: 0, next: undefined, delay: 0 }); }
@@ -157,13 +157,13 @@ const abacus = (() => {
     // drawn in rod space; a swap transform turns it upright for tall frames
     if (vert) ctx.setTransform(0, dpr, dpr, 0, 0, 0);
     const c0 = rodC[0] - rodGap * 0.5, c1 = rodC[RODS - 1] + rodGap * 0.5;
-    ctx.fillStyle = '#121417';
+    ctx.fillStyle = '#0B0C0D';
     ctx.fillRect(A0 - postW, c0, postW, c1 - c0);
     ctx.fillRect(A1, c0, postW, c1 - c0);
     const w = bw * 0.47, h = bh / 2, cc = Math.min(w, h) * 0.42;
     for (let r = 0; r < RODS; r++) {
       const c = rodC[r];
-      ctx.fillStyle = 'rgba(18,20,23,.2)'; ctx.fillRect(A0, c - 1, A1 - A0, 2);
+      ctx.fillStyle = 'rgba(11, 12, 13,.2)'; ctx.fillRect(A0, c - 1, A1 - A0, 2);
       for (let i = 0; i < N; i++) {
         const b = beads[r][i], p = b.a;
         const t = Math.max(0, Math.min(1, (p - lowA(i)) / (highA(i) - lowA(i))));
@@ -177,14 +177,14 @@ const abacus = (() => {
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const fs = Math.max(10, Math.min(13, rodGap * 0.15));
-    ctx.font = `500 ${fs}px 'Encode Sans', Geist, sans-serif`;
+    ctx.font = `500 ${fs}px 'Geist Mono', Geist, sans-serif`;
     const names = ['×1000', '×100', '×10', '×1'];
     for (let r = 0; r < RODS; r++) {
       const [x, y] = gxy(A0 - postW - 12, rodC[r]);
-      ctx.fillStyle = 'rgba(18,20,23,.64)';
+      ctx.fillStyle = 'rgba(11, 12, 13,.64)';
       if (vert) { ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(names[r], rodC[r], A0 - postW - 8); }
       else if (A0 - postW - 12 > fs * 3.4) { ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(names[r], x, y); }
-      ctx.fillStyle = '#121417';
+      ctx.fillStyle = '#0B0C0D';
       if (vert) { ctx.textAlign = 'center'; ctx.textBaseline = 'top'; if (H - (A1 + postW) > fs * 1.6) ctx.fillText(String(counts[r]), rodC[r], A1 + postW + 6); }
       else if (W - A1 - postW - 12 > fs * 1.4) { ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(String(counts[r]), A1 + postW + 12, rodC[r]); }
     }

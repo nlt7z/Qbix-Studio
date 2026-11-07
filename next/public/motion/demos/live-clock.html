@@ -15,12 +15,12 @@
   "kind": "loop",
   "tone": "paper",
   "line": "Pacific time · ticks each second",
-  "summary": "A small caps label over one 40px line: the time where the studio works, hours and minutes, the seconds a step dimmer, the zone small. It ticks once a second and nothing animates: the numbers change in place, tabular so the line never shifts.",
+  "summary": "A small sentence-case label over one 40px line: the time where the studio works, hours and minutes, the seconds a step dimmer, the zone small. It ticks once a second and nothing animates: the numbers change in place, tabular so the line never shifts.",
   "spec": [
     ["Time", "Intl.DateTimeFormat('en-US', America/Los_Angeles, 12 hour, short zone name)"],
     ["Tick", "setInterval 1000 ms, started once mounted"],
-    ["Line", "label 12 / 16px caps, 0.12em · 14px gap · time on one 40px line"],
-    ["Type", "hours:minutes Eurostile 30px −0.02em · seconds 30px, dimmed · AM/PM and zone Encode Sans 12px, 0.12em, 10px in"],
+    ["Line", "label Geist 500 13 / 16px, sentence case · 14px gap · time on one 40px line"],
+    ["Type", "hours:minutes Outfit 200 30px −0.03em · seconds 30px, dimmed · AM/PM and zone Geist Mono 12px, 10px in"],
     ["Motion", "none: a text swap each second (tabular figures keep the width still)"],
     ["Before mount", "a neutral placeholder, --:--, so the first paint matches the server's"]
   ],
@@ -41,29 +41,29 @@
 .studio { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; min-width: 0; }
 .studio-label {
   max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-size: 12px; line-height: 16px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--fg2, rgba(18, 20, 23, 0.64));
+  font: 500 13px/16px 'Geist', system-ui, sans-serif; letter-spacing: 0;
+  color: var(--fg2, rgba(11, 12, 13, 0.64));
 }
 .studio-time {
   height: 40px; margin: 0;
   display: flex; align-items: center; gap: 2px;
   line-height: 1;
-  color: var(--fg, #121417);
+  color: var(--fg, #0B0C0D);
 }
 .studio-hm, .studio-s {
-  font-family: var(--font-headline, 'Eurostile', sans-serif);
+  font-family: var(--font-headline, 'Outfit', sans-serif); font-weight: 200;
   font-size: 30px;
   font-variant-numeric: tabular-nums;   /* the width stays put as the digits change */
 }
-.studio-hm { letter-spacing: -0.02em; }
-.studio-s { color: var(--fg2, rgba(18, 20, 23, 0.64)); }
-.studio-ampm { margin-left: 10px; font-size: 12px; letter-spacing: 0.12em; color: var(--fg2, rgba(18, 20, 23, 0.64)); }
+.studio-hm { letter-spacing: -0.03em; }
+.studio-s { color: var(--fg2, rgba(11, 12, 13, 0.64)); }
+.studio-ampm { margin-left: 10px; font-family: var(--font-mono, 'Geist Mono', monospace); font-size: 12px; letter-spacing: 0; color: var(--fg2, rgba(11, 12, 13, 0.64)); }
 </style>
 <style>
   /* the site's band is 30px; the library draws it larger so it fills a tile */
   .lc { width: min(100%, 980px); }
   .lc .studio { gap: clamp(14px, 3.4vmin, 30px); }
-  .lc .studio-label { font-size: clamp(11px, 2.3vmin, 20px); line-height: 1.4; }
+  .lc .studio-label { font-size: clamp(13px, 2.3vmin, 18px); line-height: 1.4; }
   .lc .studio-time { height: auto; gap: 0.04em; font-size: clamp(64px, min(15vw, 26vh), 230px); }
   .lc .studio-hm, .lc .studio-s { font-size: 1em; }
   .lc .studio-ampm { margin-left: 0.14em; font-size: clamp(12px, 0.12em, 28px); }
@@ -74,7 +74,7 @@
   <div class="lc">
 <!-- code -->
 <div class="studio">
-  <span class="studio-label mono">Seattle, WA · San Francisco Bay Area</span>
+  <span class="studio-label">Seattle, WA · San Francisco Bay Area</span>
   <span class="studio-time" role="timer" aria-label="Studio time">
     <span class="studio-hm">--:--</span><span class="studio-s"></span><span class="studio-ampm mono"></span>
   </span>

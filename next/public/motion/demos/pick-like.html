@@ -30,7 +30,7 @@
   "where": "Qbix's work list: bookmark the projects you want to see next, and see how many others have shortlisted each.",
   "rules": [
     "The pop is a moment, spent once on the way in; letting go only rolls the count back.",
-    "Hover is a colour block (paper on white); shortlisted is a soft lime tint with ink; the lime itself is only the pop.",
+    "Hover is a deeper sage block (sage on sage); shortlisted is a soft lime tint with ink; the lime itself is only the pop.",
     "Only the digits that change turn, the ones first; the comma and the digits that stay do not move.",
     "A real button with aria-pressed and a label that names the project; focus is a 2px ink ring."
   ],
@@ -40,17 +40,17 @@
 </script>
 <style data-code>
 /* Work shortlist · Idea: bencho.dev like (MIT).
-   O2's roles in qbix colours: ink on paper, and one lime, spent on the pop. Radii, spacing and type are the O2 library's own. */
+   O2's roles in qbix colours: ink on white, and one lime, spent on the pop. Radii, spacing and type are the O2 library's own. */
 .sl {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
-  --surface: #ffffff; --surface-muted: #f3f4f5; --divider: rgba(18, 20, 23, 0.08); --secondary-border: rgba(18, 20, 23, 0.38);
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64); --faint: rgba(11, 12, 13, 0.58);
+  --surface: #EEF1E8; --surface-muted: #E3E8DA; --divider: #E3E8DA; --secondary-border: rgba(11, 12, 13, 0.38);
   --selected: #e4ff9e; --on-selected: #0c1300;                                       /* O2's soft green block: a soft lime tint, with the ink that goes on lime */
-  --pop: #B8FF00; --pop-soft: #cfff4d; --pop-ink: #121417; --pop-grey: rgba(18, 20, 23, 0.38);   /* the one lime: the ring and its flecks */
+  --pop: #B8FF00; --pop-soft: #cfff4d; --pop-ink: #0B0C0D; --pop-grey: rgba(11, 12, 13, 0.38);   /* the one lime: the ring and its flecks */
   --radius-sm: 8px; --radius-lg: 14px; --duration-fast: 120ms; --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   display: grid; gap: 16px; align-content: start; width: 640px; max-width: 100%;
   font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
 }
-.sl-heading { margin: 0; font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.sl-heading { margin: 0; font-family: var(--font-headline); font-size: 28px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.35; }   /* headline: Outfit Light */
 .sl-meta { margin: 0; font-size: 12px; color: var(--faint); }
 .sl-card { background: var(--surface); border-radius: var(--radius-lg); padding: 8px 20px; }
 .sl-row { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 16px; padding: 12px 8px; margin: 0 -8px; transition: background-color var(--duration-fast) var(--ease-out); }
@@ -61,7 +61,7 @@
 .sl-note { color: var(--muted); }
 
 /* the shortlist button: a bookmark and an odometer count */
-.sl-bm { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--secondary-border); background: var(--surface); color: var(--text); font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+.sl-bm { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--secondary-border); background: transparent; color: var(--text); font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
 .sl-bm:hover, .sl-bm.is-hot { background: var(--surface-muted); }
 .sl-bm[aria-pressed="true"] { background: var(--selected); color: var(--on-selected); border-color: transparent; }
 .sl-bm:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
@@ -99,9 +99,9 @@
    ones first, a beat apart (1,299 to 1,300 turns three). A press also pops once: a ring and a spray of flecks leave
    the icon, and the glyph overshoots as it fills. */
 const WORK = [
-  { n: 'Forma · Launch site', t: 'Design service · 3 weeks · forma.studio', c: 1299, pic: 'vase' },
-  { n: 'Kova · Brand upgrade', t: 'Money app · 8 weeks · Merged into the repo', c: 2406, pic: 'ring' },
-  { n: 'Willow Counseling · Website', t: 'Practice Website Refresh · Live in 7 days', c: 318, pic: 'calla' },
+  { n: 'Forma · Launch site', t: 'Design service · 3 weeks · forma.studio', c: 1299, pic: 'lime-bloom' },
+  { n: 'Kova · Brand upgrade', t: 'Money app · 8 weeks · Merged into the repo', c: 2406, pic: 'lime-arc' },
+  { n: 'Willow Counseling · Website', t: 'Practice Website Refresh · Live in 7 days', c: 318, pic: 'lime-swirl' },
   { n: 'Strata · Design system', t: 'Qbix Labs · Tokens, components and code', c: 87, pic: 'cross' },
   { n: 'Juniper Yoga · Launch site', t: 'Design service · 2 weeks · Moodboard to domain', c: 604, pic: 'block' },
 ];

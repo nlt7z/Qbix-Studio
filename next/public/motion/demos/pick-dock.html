@@ -29,7 +29,7 @@
   "where": "A product film: the homepage's five ways in and the four Labs products on one shelf.",
   "rules": [
     "Scale on hover is allowed here, flat fills only, no shadow.",
-    "One lime: the label of the nearest tile. Tiles are ink and paper.",
+    "One lime: the label of the nearest tile. Tiles are ink and sage.",
     "Icons at a 1.8 stroke."
   ],
   "tags": ["dock", "pointer", "spring", "magnify", "icons"],
@@ -39,10 +39,10 @@
 <style data-code>
 /* Magnifying dock. Idea: bencho.dev dock (MIT). */
 .dk-stage { position: fixed; inset: 0; display: grid; place-items: center; touch-action: none; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
-.dk-kick { position: fixed; left: 24px; top: 24px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg2); }
+.dk-kick { position: fixed; left: 24px; top: 24px; font-family: var(--font-sans); font-weight: 500; font-size: 13px; letter-spacing: 0; color: var(--fg2); }
 .dk { position: relative; display: flex; align-items: flex-end; gap: var(--gap, 12px); padding: var(--pad, 14px); height: calc(var(--base) + var(--pad) * 2); border-radius: calc(var(--base) * 0.46); background: var(--surface); }
-.dk-sep { width: 1px; align-self: center; height: calc(var(--base) * 0.8); background: rgba(18, 20, 23, 0.14); flex: none; margin: 0 2px; }
-.dk-tile { position: relative; flex: none; width: var(--base); height: var(--base); border-radius: calc(var(--base) * 0.26); display: grid; place-items: center; background: #121417; color: #f4f5f2; transform-origin: 50% 100%; will-change: transform; cursor: pointer; border: 0; padding: 0; }
+.dk-sep { width: 1px; align-self: center; height: calc(var(--base) * 0.8); background: rgba(11, 12, 13, 0.14); flex: none; margin: 0 2px; }
+.dk-tile { position: relative; flex: none; width: var(--base); height: var(--base); border-radius: calc(var(--base) * 0.26); display: grid; place-items: center; background: #0B0C0D; color: #f4f5f2; transform-origin: 50% 100%; will-change: transform; cursor: pointer; border: 0; padding: 0; }
 .dk-tile svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .dk-tile.tool { background: var(--sunk); color: var(--fg); }
 .dk-label { position: absolute; left: 0; top: 0; padding: 8px 12px; border-radius: 8px; background: var(--signal); color: var(--on-lime); font-size: 14px; white-space: nowrap; pointer-events: none; opacity: 0; transform: translate(-50%, 0); }

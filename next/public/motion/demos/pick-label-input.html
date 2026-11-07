@@ -39,18 +39,18 @@
 </script>
 <style data-code>
 /* Notched label · Idea: bencho.dev label-input (MIT).
-   O2's roles in qbix colours: ink on paper; the one lime is the halo of the field you are in. Radii, spacing and type are the O2 library's own. */
+   O2's roles in qbix colours: ink on white; the one lime is the halo of the field you are in. Radii, spacing and type are the O2 library's own. */
 .lf {
-  --text: #121417; --muted: rgba(18, 20, 23, 0.64); --faint: rgba(18, 20, 23, 0.58);
-  --surface: #ffffff; --field-border: rgba(18, 20, 23, 0.52);
-  --focus: #121417; --focus-ring: #B8FF00;                      /* O2's focus green: an ink edge, and the lime as its halo */
-  --primary: #121417; --on-primary: #f3f4f5;                    /* the button: ink on paper (the lime is already spent on the field) */
+  --text: #0B0C0D; --muted: rgba(11, 12, 13, 0.64); --faint: rgba(11, 12, 13, 0.58);
+  --surface: #EEF1E8; --field-border: rgba(11, 12, 13, 0.52);
+  --focus: #0B0C0D; --focus-ring: #B8FF00;                      /* O2's focus green: an ink edge, and the lime as its halo */
+  --primary: #0B0C0D; --on-primary: #ffffff;                    /* the button: ink on paper (the lime is already spent on the field) */
   --radius-sm: 8px; --radius-lg: 14px;
   --duration-fast: 120ms; --duration-base: 200ms; --duration-slower: 320ms; --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   display: grid; gap: 20px; align-content: start; width: 480px; max-width: 100%;
   font-family: 'Geist', system-ui, sans-serif; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--text);
 }
-.lf-heading { margin: 0; font-family: inherit; font-size: 28px; font-weight: 400; letter-spacing: -0.03em; line-height: 1.35; }   /* O2's headings are Geist */
+.lf-heading { margin: 0; font-family: var(--font-headline); font-size: 28px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.35; }   /* headline: Outfit Light */
 .lf-meta { margin: 0; font-size: 12px; color: var(--faint); }
 .lf-card { background: var(--surface); border-radius: var(--radius-lg); padding: 32px 24px 24px; display: grid; gap: 24px; }
 .lf-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -72,7 +72,7 @@
 .nf[data-focus] label span { animation: nf-hop var(--duration-slower) var(--ease-out) both; animation-delay: calc(var(--i) * 18ms); }
 @keyframes nf-hop { 0% { transform: translateY(0); } 40% { transform: translateY(-3px); } 100% { transform: translateY(0); } }
 .nf input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0 92px 0 var(--lx); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text); outline: 0; font: inherit; font-variant-numeric: tabular-nums; }
-.nf .unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; opacity: 0; transition: opacity var(--duration-base) var(--ease-out); }
+.nf .unit { font-family: var(--font-mono); font-size: 12px; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; opacity: 0; transition: opacity var(--duration-base) var(--ease-out); }
 .nf[data-filled] .unit { opacity: 1; }
 .lf-two .nf input { padding-right: 62px; }
 

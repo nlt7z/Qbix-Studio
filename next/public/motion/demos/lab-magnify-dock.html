@@ -27,7 +27,7 @@
   "where": "A product page's picture strip, and its fine print: anywhere a row of pictures or a block of small type needs a closer look.",
   "rules": [
     "The pictures stay on a common baseline; only the width and height grow.",
-    "The loupe is the one lime on the screen; the text inside it is the same words at 2.2×.",
+    "The loupe is the one lime mark on the screen; the text inside it is the same words at 2.2×.",
     "Captions are covered and uncovered, not faded."
   ],
   "tags": ["dock", "magnify", "loupe", "pointer"],
@@ -37,27 +37,27 @@
 <style data-code>
 .md { display: grid; gap: clamp(14px, 3.4vh, 34px); width: min(100%, 920px); }
 .md-dock { position: relative; width: 100%; }
-.md-tile { position: absolute; bottom: 0; overflow: hidden; background: #e6e8ea; will-change: left, width, height;
+.md-tile { position: absolute; bottom: 0; overflow: hidden; background: #E3E8DA; will-change: left, width, height;
   clip-path: polygon(0 0, calc(100% - var(--c, 8px)) 0, 100% var(--c, 8px), 100% 100%, 0 100%); }
 .md-tile img { width: 100%; height: 100%; object-fit: cover; }
-.md-cap { height: 1.6em; overflow: hidden; margin-top: 12px; position: relative; font-family: 'Encode Sans', Geist, sans-serif; font-size: clamp(11px, 1.3vw, 13px); letter-spacing: .1em; text-transform: uppercase; }
+.md-cap { height: 1.6em; overflow: hidden; margin-top: 12px; position: relative; font-family: 'Geist', Geist, sans-serif; font-size: 13px; letter-spacing: 0; }
 .md-cap span { position: absolute; left: 0; top: 0; white-space: nowrap; }
-.md-cap b { font-weight: 500; color: #121417; }
-.md-cap i { color: rgba(18,20,23,.64); }
+.md-cap b { font-weight: 500; color: #0B0C0D; }
+.md-cap i { color: rgba(11, 12, 13,.64); }
 .md-cap span.in { animation: md-in .34s cubic-bezier(.16, 1, .3, 1) .14s both; }
 .md-cap span.out { animation: md-out .2s cubic-bezier(.5, 0, .75, 0) both; }
 @keyframes md-in { from { transform: translateY(105%); } to { transform: none; } }
 @keyframes md-out { to { transform: translateY(-105%); } }
 .md-fine { position: relative; max-width: 560px; }
-.md-fine p { font-size: clamp(11px, 1.2vw, 13.5px); line-height: 1.5; color: rgba(18,20,23,.64); }
-.md-fine p em { color: #121417; font-weight: 500; }
+.md-fine p { font-size: 13px; line-height: 1.5; color: rgba(11, 12, 13,.64); }
+.md-fine p em { color: #0B0C0D; font-weight: 500; }
 .md-lens { position: absolute; left: 0; top: 0; overflow: hidden; background: #B8FF00; border-radius: 50%; pointer-events: none; transform: scale(0); will-change: transform; }
 .md-lens p { position: absolute; left: 0; top: 0; transform-origin: 0 0; color: #0c1300; }
 .md-lens p em { color: #0c1300; font-weight: 600; }
 </style>
 <style>
   .qm-stage { place-items: center; }
-  .md-head .title { font-size: clamp(34px, min(5.4vw, 9vh), 64px); margin-top: 8px; }
+  .md-head .title { font-weight: 300; font-size: clamp(34px, min(5.4vw, 9vh), 64px); margin-top: 8px; }
 </style>
 </head>
 <body>

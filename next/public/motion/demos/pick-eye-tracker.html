@@ -15,7 +15,7 @@
   "kind": "pointer",
   "tone": "paper",
   "line": "yaw and pitch springs · 130 / 15 · blinks when you come near",
-  "summary": "Two eyes on a flat lime board block turn with a spring to follow the cursor, narrowing as they turn away, and blink when the cursor comes near. The block leans a few pixels toward the pointer too. It is AI Bidding's table block: the model reads your hand.",
+  "summary": "Two lime eyes on a flat ink board block turn with a spring to follow the cursor, narrowing as they turn away, and blink when the cursor comes near. The block leans a few pixels toward the pointer too. It is AI Bidding's table block: the model reads your hand.",
   "spec": [
     ["Aim", "from the board's centre: angle a = atan2(dy, dx), m = min(1, d / max(board width, 240)); yaw = cos a · m · 1.05, pitch = sin a · m · 0.62"],
     ["Springs", "yaw and pitch: stiffness 130, damping 15, semi-implicit Euler, dt capped at 1/30 s"],
@@ -28,7 +28,7 @@
   "source": ["motion.ui.o2tech.ai · Watching board (ix-eye-tracker)", "Idea: bencho.dev eye-tracker (MIT)"],
   "where": "Qbix Labs: AI Bidding, where the model reads your hand. Any landing block that should notice a visitor.",
   "rules": [
-    "Flat fills, one lime: the board. Landing display type for the one line.",
+    "Flat fills, one lime: the eyes, on an ink board. Outfit Light for the one line.",
     "No new character: the eyes sit on a board block, not on a mascot.",
     "Hover motion on a landing page only. Springs, no easing curves."
   ],
@@ -40,7 +40,7 @@
 /* Watching board. Idea: bencho.dev eye-tracker (MIT). */
 .eye-page { position: fixed; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 40px; padding: 40px clamp(24px, 6vw, 96px); font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
 .eye-copy { display: grid; gap: 20px; justify-items: start; }
-.eye-copy h1 { font-family: var(--font-headline); font-weight: 400; font-size: clamp(36px, calc(17.6px + 5vw), 56px); letter-spacing: -0.03em; line-height: 1.15; }
+.eye-copy h1 { font-family: var(--font-headline); font-weight: 300; font-size: clamp(36px, calc(17.6px + 5vw), 56px); letter-spacing: -0.035em; line-height: 1.05; }
 .eye-copy p { color: var(--fg2); font-size: 16px; max-width: 30em; line-height: 1.35; }
 .eye-btn { height: 40px; padding: 0 20px; border: 1px solid transparent; border-radius: 8px; background: var(--fg); color: #fff; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
 .eye-btn:hover { background: color-mix(in oklab, var(--fg) 82%, #fff); }
@@ -48,7 +48,7 @@
 .eye-stage { display: grid; place-items: center; min-height: 0; }
 .eye-board { width: min(100%, 420px, 58vh); aspect-ratio: 1; }
 .eye-board svg { width: 100%; height: 100%; overflow: visible; }
-.eye { fill: #0c1300; }
+.eye { fill: #B8FF00; }
 @media (max-width: 760px) {
   .eye-page { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 16px; padding: 20px 16px; align-items: center; }
   .eye-stage { order: -1; }
@@ -75,18 +75,18 @@
   </section>
   <section class="eye-stage">
     <div class="eye-board" id="board">
-      <svg viewBox="0 0 320 320" role="img" aria-label="A lime board block with two eyes that follow the cursor">
-        <rect id="body" width="320" height="320" rx="64" fill="#B8FF00"/>
-        <g fill="none" stroke="#0c1300" stroke-opacity=".28" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 320 320" role="img" aria-label="An ink board block with two lime eyes that follow the cursor">
+        <rect id="body" width="320" height="320" rx="64" fill="#0B0C0D"/>
+        <g fill="none" stroke="#f4f5f2" stroke-opacity=".16" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M28 76 H96 L120 52 H196"/><path d="M292 96 H236 L214 118 H176"/>
           <path d="M28 244 H88 L112 268 H190"/><path d="M292 236 H240 L222 254 H168"/>
           <path d="M52 28 V60"/><path d="M268 28 V70"/><path d="M60 292 V262"/><path d="M262 292 V268"/>
         </g>
-        <g fill="#0c1300" fill-opacity=".34">
+        <g fill="#f4f5f2" fill-opacity=".2">
           <circle cx="28" cy="76" r="6"/><circle cx="196" cy="52" r="6"/><circle cx="292" cy="96" r="6"/><circle cx="176" cy="118" r="6"/>
           <circle cx="28" cy="244" r="6"/><circle cx="190" cy="268" r="6"/><circle cx="292" cy="236" r="6"/><circle cx="168" cy="254" r="6"/>
         </g>
-        <g fill="#0c1300" fill-opacity=".16">
+        <g fill="#f4f5f2" fill-opacity=".07">
           <rect x="36" y="112" width="34" height="22" rx="4"/><rect x="250" y="168" width="34" height="22" rx="4"/><rect x="40" y="190" width="22" height="34" rx="4"/><rect x="262" y="212" width="22" height="22" rx="4"/>
         </g>
         <g id="eyes">

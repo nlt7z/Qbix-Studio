@@ -39,7 +39,7 @@
 .mo-head .title { font-size: clamp(26px, 4vw, 48px); }
 .mo-strip { position: relative; margin: clamp(14px, 3vh, 28px) 0; overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none; }
 .mo-strip.is-drag { cursor: grabbing; }
-.mo-tile { position: absolute; left: 0; top: 0; height: 100%; width: clamp(150px, 27vw, 290px); overflow: hidden; background: #e6e8ea; will-change: transform;
+.mo-tile { position: absolute; left: 0; top: 0; height: 100%; width: clamp(150px, 27vw, 290px); overflow: hidden; background: #E3E8DA; will-change: transform;
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
 .mo-tile img { max-width: none; position: absolute; top: 0; left: -15%; width: 130%; height: 100%; object-fit: cover; pointer-events: none; }
 .mo-under { padding: 0 clamp(20px, 5vw, 56px); display: flex; justify-content: space-between; align-items: end; gap: 16px; }
@@ -47,7 +47,7 @@
 .mo-cap span { display: block; transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1); }
 .mo-cap span.is-out { position: absolute; left: 0; top: 0; transform: translateY(-110%); }
 .mo-cap span.is-in { transform: translateY(110%); transition: none; }
-.mo-count { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em; color: var(--fg2); }
+.mo-count { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0; color: var(--fg2); }
 </style>
 <style>.qm-stage { padding: 0; }</style>
 </head>
@@ -126,8 +126,8 @@ function createStrip(strip, items, { capEl, countEl, reduce = false } = {}) {
 </script>
 <script>
   const A = '../assets/art/';
-  const items = [['Forma · Homepage', A + 'objects.webp'], ['Kova · App', A + 'curves.webp'], ['Strata · Design system', A + 'ribbon.webp'], ['Willow Counseling · Practice site', A + 'calla.webp'],
-    ['Halo lamp · Product page', A + 'ring.webp'], ['Knot stool · Product page', A + 'cross.webp'], ['Prism block · Product page', A + 'block.webp'], ['Carafe · Product page', A + 'bottle.webp'], ['Kova · Brand', A + 'wall.webp']];
+  const items = [['Forma · Homepage', A + 'objects.webp'], ['Kova · App', A + 'curves.webp'], ['Strata · Design system', A + 'ribbon.webp'], ['Willow Counseling · Practice site', A + 'lime-bloom.webp'],
+    ['Halo lamp · Product page', A + 'ring.webp'], ['Knot stool · Product page', A + 'lime-lattice.webp'], ['Prism block · Product page', A + 'block.webp'], ['Carafe · Product page', A + 'lime-tube.webp'], ['Kova · Brand', A + 'lime-waves.webp']];
   const root = document.getElementById('mo'), strip = root.querySelector('.mo-strip');
   const s = createStrip(strip, items, { capEl: root.querySelector('.mo-cap'), countEl: root.querySelector('.mo-count'), reduce: QM.reduced });
   strip.addEventListener('pointerdown', (e) => { s.down(e.clientX); strip.setPointerCapture(e.pointerId); });

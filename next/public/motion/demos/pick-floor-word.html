@@ -15,7 +15,7 @@
   "kind": "loop",
   "tone": "paper",
   "line": "fitted by measuring · 560 ms rise · 34 ms a letter",
-  "summary": "“Design. Code. Ship.” is measured to fill the page's width in Eurostile and sits on the bottom edge, its last pixels running off the page. The letters rise in once, each out of its own sleeve; letters near the pointer darken from faint to ink. Colour only, no lift.",
+  "summary": "“Design. Code. Ship.” is measured to fill the page's width in Outfit ExtraLight and sits on the bottom edge, its last pixels running off the page. The letters rise in once, each out of its own sleeve; letters near the pointer darken from faint to ink. Colour only, no lift.",
   "spec": [
     ["Fit", "the line is laid out, measured, and its font-size set to size × (page − 2 gutters) / width: it fills the page; refit on resize and when the fonts land"],
     ["Gutter", "clamp(20px, 4vw, 64px) either side"],
@@ -31,7 +31,7 @@
   "rules": [
     "Display type for this line only. Fit it by measuring, never by guessing a size.",
     "Pointer proximity is colour only: no lift, no scale.",
-    "One lime: the button. The letters stay in ink and paper."
+    "One lime: the button. The letters stay in ink on white."
   ],
   "tags": ["type", "display", "letters", "pointer", "landing"],
   "shot": 3600
@@ -44,16 +44,16 @@
 .fw-top { height: 76px; display: flex; align-items: center; justify-content: space-between; }
 .fw-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 500; }
 .fw-brand svg { display: block; fill: var(--fg); }
-.fw-brand .meta { color: var(--fg2); font-weight: 400; font-size: 12px; }
+.fw-brand .meta { color: var(--fg2); font-weight: 400; font-size: 13px; }
 .fw-signin { display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border: 0; border-radius: 8px; font: inherit; font-weight: 500; color: #fff; background: var(--fg); cursor: pointer; transition: background 120ms cubic-bezier(0.16, 1, 0.3, 1); }
 .fw-signin:hover, .fw-signin.is-hot { background: color-mix(in oklab, var(--fg) 82%, #fff); }
 .fw-mid { align-self: center; display: grid; gap: 20px; justify-items: start; }
-.fw-sub { margin: 0; font-size: 20px; letter-spacing: -0.02em; color: var(--fg2); max-width: 24ch; text-wrap: balance; line-height: 1.35; }
+.fw-sub { margin: 0; font-family: var(--font-headline); font-weight: 300; font-size: 20px; letter-spacing: -0.03em; color: var(--fg2); max-width: 24ch; text-wrap: balance; line-height: 1.35; }
 .fw-cta { min-height: 46px; padding: 0 24px; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 8px; font: inherit; font-weight: 500; color: var(--on-lime); background: var(--signal); cursor: pointer; transition: background 120ms cubic-bezier(0.16, 1, 0.3, 1); }
 .fw-cta:hover, .fw-cta.is-hot { background: color-mix(in oklab, var(--signal) 88%, #000); }
 /* the word sits on the bottom edge: its last pixels run off the page */
 .fw-floor { position: relative; overflow: hidden; margin: 0 calc(var(--gutter) * -1); padding: 0 var(--gutter); height: calc(var(--fs, 120px) * 0.84); }
-.fw-word { position: absolute; left: var(--gutter); top: 0; white-space: nowrap; font-family: var(--font-headline); font-weight: 400; font-size: var(--fs, 120px); letter-spacing: -0.03em; line-height: 1; margin: 0; cursor: default; }
+.fw-word { position: absolute; left: var(--gutter); top: 0; white-space: nowrap; font-family: var(--font-headline); font-weight: 200; font-size: var(--fs, 120px); letter-spacing: -0.04em; line-height: 1; margin: 0; cursor: default; }
 .fw-l { display: inline-block; overflow: hidden; vertical-align: top; height: 1.2em; margin-top: -0.1em; padding-top: 0.1em; }
 .fw-l i { display: inline-block; font-style: normal; translate: 0 110%; color: color-mix(in srgb, var(--fg) 16%, var(--ground)); transition: translate 560ms cubic-bezier(0.16, 1, 0.3, 1), color 200ms cubic-bezier(0.16, 1, 0.3, 1); transition-delay: calc(var(--i) * 34ms), 0s; }
 .fw-word.is-in .fw-l i { translate: 0 0; color: color-mix(in srgb, var(--fg) calc(var(--n, 0) * 100%), color-mix(in srgb, var(--fg) 16%, var(--ground))); }

@@ -28,7 +28,7 @@
   "rules": [
     "The grid never changes cell count; only the weights move.",
     "Every cell keeps one motion of its own, so the page is alive before anyone points at it.",
-    "One lime cell. The rest are white cells on the paper ground."
+    "One near-black cell with a lime number. The rest are sage cells on the white ground."
   ],
   "tags": ["bento", "dashboard", "spring", "hover", "canvas", "studio"],
   "shot": 3000
@@ -44,19 +44,20 @@
   --cut: 14px;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
 }
-.cell .lab { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; white-space: nowrap; }
-.cell .big { font-family: 'Eurostile', 'Geist', sans-serif; font-size: clamp(32px, 4.8vw, 62px); line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
-.c-pic { padding: 0; background: #ffffff; }
+.cell .lab { font: 400 11px/16px 'Geist', sans-serif; letter-spacing: 0; opacity: 0.7; white-space: nowrap; }
+.cell .big { font-family: 'Outfit', 'Geist', sans-serif; font-weight: 300; font-size: clamp(32px, 4.8vw, 62px); line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
+.c-pic { padding: 0; background: #EEF1E8; }
 .c-pic canvas, .c-chart canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.c-pic .cap { position: absolute; left: clamp(12px, 1.8vw, 20px); bottom: clamp(10px, 1.6vw, 18px); color: #121417; }
-.c-pic .cap b { display: block; font: 400 clamp(22px, 3vw, 38px)/1 'Eurostile', 'Geist', sans-serif; letter-spacing: -0.03em; }
-.c-pic .cap span { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; }
-.c-count { background: #ffffff; color: #121417; }
-.c-rate { background: #B8FF00; color: #0c1300; }
-.c-chart { background: #ffffff; color: #121417; }
+.c-pic .cap { position: absolute; left: clamp(12px, 1.8vw, 20px); bottom: clamp(10px, 1.6vw, 18px); color: #0B0C0D; }
+.c-pic .cap b { display: block; font: 300 clamp(22px, 3vw, 38px)/1 'Outfit', 'Geist', sans-serif; letter-spacing: -0.03em; }
+.c-pic .cap span { font: 400 11px/16px 'Geist', sans-serif; letter-spacing: 0; opacity: 0.7; }
+.c-count { background: #EEF1E8; color: #0B0C0D; }
+.c-rate { background: #0B0C0D; color: #f4f5f2; }
+.c-rate .big { color: #B8FF00; }
+.c-chart { background: #EEF1E8; color: #0B0C0D; }
 .c-chart .top { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 8px; }
-.c-leads { background: #ffffff; color: #121417; }
-.c-open { background: #ffffff; color: #121417; }
+.c-leads { background: #EEF1E8; color: #0B0C0D; }
+.c-open { background: #EEF1E8; color: #0B0C0D; }
 .roll { display: inline-flex; overflow: hidden; height: 1.05em; line-height: 1.05; }
 .roll .col { display: flex; flex-direction: column; transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 .roll .col span, .roll > span { display: block; height: 1.05em; text-align: center; white-space: pre; }
@@ -64,10 +65,10 @@
 .feed li { overflow: hidden; }
 .feed li div { padding: 3px 0 5px; display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; }
 .feed li span { overflow: hidden; text-overflow: ellipsis; }
-.feed li em { flex: none; font: 400 0.82em 'Encode Sans', sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(18, 20, 23, 0.55); }
+.feed li em { flex: none; font: 400 0.82em 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.55); }
 .quote { font-size: clamp(13px, 1.3vw, 15px); height: 1.35em; overflow: hidden; position: relative; }
 .quote span { display: block; white-space: nowrap; }
-.sub { font: 400 11px/16px 'Encode Sans', sans-serif; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; }
+.sub { font: 400 11px/16px 'Geist', sans-serif; letter-spacing: 0; opacity: 0.7; }
 @media (prefers-reduced-motion: reduce) { .roll .col { transition: none; } }
 </style>
 <style>
@@ -196,7 +197,7 @@ function liveBento(root) {
       let bh = (bars[i] / mx) * (h - top - p); if (i === bars.length - 1) bh *= e;
       if (bh < 1) continue;
       const first = i === 0;
-      x.fillStyle = i === bars.length - 1 ? '#121417' : 'rgba(18,20,23,0.12)';
+      x.fillStyle = i === bars.length - 1 ? '#0B0C0D' : 'rgba(11, 12, 13,0.12)';
       let bx = xi + bw * 0.18, bwid = bw * 0.64;
       if (first) { const clip = Math.max(0, p - bx); bx += clip; bwid -= clip; if (bwid <= 0) continue; }   // the oldest bar is cut off at the edge, not faded
       x.fillRect(bx, h - p - bh, bwid, bh);

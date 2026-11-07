@@ -27,7 +27,7 @@
   "where": "A Forma chapter: the page a founder sees as a pencil plan first, then as the finished homepage.",
   "rules": [
     "Both states read from the same boxes, so nothing in the sketch can drift from the final.",
-    "Only the final's “Shop the drop” is lime; the pen ring in the sketch is its draft.",
+    "Lime is a point: the lamp's ring in the final, and the pen ring in the sketch around the button. The final's button is ink.",
     "Reveal is a clip, never an opacity."
   ],
   "tags": ["draw", "sketch", "layout", "forma"],
@@ -39,14 +39,14 @@
 .s2f { position: absolute; }
 .s2f-el { position: absolute; overflow: hidden; }
 .s2f-el svg { display: block; width: 100%; height: 100%; }
-.s2f-title { font-family: var(--font-headline, 'Eurostile', sans-serif); letter-spacing: -0.03em; line-height: 1; white-space: nowrap; color: var(--fg); }
+.s2f-title { font-family: var(--font-headline, 'Outfit', sans-serif); font-weight: 300; letter-spacing: -0.035em; line-height: 1; white-space: nowrap; color: var(--fg); }
 .s2f-price { font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; color: var(--fg); }
 .s2f-facts, .s2f-links { color: var(--fg2); white-space: nowrap; }
 .s2f-links { display: flex; justify-content: flex-end; align-items: center; gap: 1.4em; }
 .s2f-logo { display: flex; align-items: center; gap: 0.5em; font-weight: 600; white-space: nowrap; color: var(--fg); }
 .s2f-logo b { display: block; width: 0.8em; height: 0.8em; background: var(--fg); }
 .s2f-para { color: var(--fg2); line-height: 1.45; }
-.s2f-btn { background: #B8FF00; color: #0c1300; display: flex; align-items: center; justify-content: center; font-weight: 500; white-space: nowrap; --cut: 12px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.s2f-btn { background: #0B0C0D; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 500; white-space: nowrap; --cut: 12px; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
 .s2f-ink { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 .s2f-ink path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 </style>
@@ -54,8 +54,8 @@
   .sf { width: 100%; height: calc(100svh - clamp(40px, 9vmin, 96px)); display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 16px; }
   html:not(.qm-tile) .sf { height: calc(100svh - clamp(40px, 9vmin, 96px) - 46px); }
   .sf-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .sf-tog { position: relative; display: flex; background: var(--fill); flex: none; }
-  .sf-tog button { all: unset; cursor: pointer; position: relative; z-index: 1; height: 32px; padding: 0 16px; display: flex; align-items: center; font: 500 12px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg2); transition: color 350ms var(--ease); }
+  .sf-tog { position: relative; display: flex; background: #EEF1E8; flex: none; }
+  .sf-tog button { all: unset; cursor: pointer; position: relative; z-index: 1; height: 32px; padding: 0 16px; display: flex; align-items: center; font: 500 13px/1 var(--font-sans); letter-spacing: -.006em; color: var(--fg2); transition: color 350ms var(--ease); }
   .sf-tog button[aria-pressed='true'] { color: var(--ground); }
   .sf-tog i { position: absolute; top: 0; bottom: 0; left: 0; background: var(--fg); transition: transform 550ms var(--ease-move), width 550ms var(--ease-move); }
   .sf-box { position: relative; min-height: 0; }
@@ -85,11 +85,11 @@ function sketchToFinal(root, { reduce = false } = {}) {
   const stage = root.querySelector('.s2f-stage');
   const ink = root.querySelector('.s2f-ink');
   const NS = 'http://www.w3.org/2000/svg';
-  const SCENE = `<g><rect width="400" height="260" fill="#eceef0"/><rect y="202" width="400" height="58" fill="#ffffff"/>
-    <ellipse cx="118" cy="205" rx="42" ry="5" fill="#dde0e3"/><ellipse cx="214" cy="205" rx="34" ry="5" fill="#dde0e3"/><ellipse cx="312" cy="207" rx="54" ry="6" fill="#dde0e3"/>
-    <circle cx="118" cy="126" r="50" fill="#B8FF00"/><circle cx="118" cy="126" r="25" fill="#eceef0"/><rect x="111" y="176" width="14" height="22" fill="#121417"/><rect x="98" y="196" width="40" height="6" fill="#121417"/>
-    <path d="M186 202V134Q186 114 202 108V90H226V108Q242 114 242 134V202Z" fill="#121417"/>
-    <rect x="268" y="152" width="76" height="50" fill="#f7f8f9"/><path d="M268 152L282 140H358L344 152Z" fill="#ffffff"/><path d="M344 152L358 140V190L344 202Z" fill="#d3d7db"/></g>`;
+  const SCENE = `<g><rect width="400" height="260" fill="#EEF1E8"/><rect y="202" width="400" height="58" fill="#E3E8DA"/>
+    <ellipse cx="118" cy="205" rx="42" ry="5" fill="#D3DAC8"/><ellipse cx="214" cy="205" rx="34" ry="5" fill="#D3DAC8"/><ellipse cx="312" cy="207" rx="54" ry="6" fill="#D3DAC8"/>
+    <circle cx="118" cy="126" r="50" fill="#B8FF00"/><circle cx="118" cy="126" r="25" fill="#EEF1E8"/><rect x="111" y="176" width="14" height="22" fill="#0B0C0D"/><rect x="98" y="196" width="40" height="6" fill="#0B0C0D"/>
+    <path d="M186 202V134Q186 114 202 108V90H226V108Q242 114 242 134V202Z" fill="#0B0C0D"/>
+    <rect x="268" y="152" width="76" height="50" fill="#ffffff"/><path d="M268 152L282 140H358L344 152Z" fill="#ffffff"/><path d="M344 152L358 140V190L344 202Z" fill="#D3DAC8"/></g>`;
   let mode = 'final', items = [], lastInput = -1e9, lastSwitch = 0, W = 0, H = 0;
 
   // a seeded random so the draft looks the same every time it is drawn
@@ -249,7 +249,7 @@ function sketchToFinal(root, { reduce = false } = {}) {
           pe.style.strokeDasharray = len;
           return { el: pe, len };
         };
-        return p.pen ? [stroke('#121417', 6), stroke('#B8FF00', 3)] : [stroke('rgba(18, 20, 23, 0.72)', 1.4)];
+        return p.pen ? [stroke('#0B0C0D', 6), stroke('#B8FF00', 3)] : [stroke('rgba(11, 12, 13, 0.72)', 1.4)];
       });
       return { ...it, el, paths };
     });

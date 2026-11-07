@@ -35,11 +35,12 @@
 </script>
 <style data-code>
 .fm { position: absolute; inset: 0; overflow: hidden; }
-.fm-card { position: absolute; left: 0; top: 0; overflow: hidden; background: #e6e8ea; will-change: transform;
+.fm-card { position: absolute; left: 0; top: 0; overflow: hidden; background: #E3E8DA; will-change: transform;
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
 .fm-card img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .fm-copy { position: absolute; left: clamp(20px, 5vw, 56px); top: 50%; width: min(30%, 300px); transform: translateY(-50%); display: grid; gap: 14px; z-index: 500; }
 .fm-copy .title { font-size: clamp(24px, 3.2vw, 40px); }
+.fm-copy .kicker { font-family: var(--font-mono); font-weight: 400; font-size: 13px; }
 .fm-mask { position: relative; overflow: hidden; }
 .fm-step { transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1); }
 .fm-step.is-off { position: absolute; left: 0; top: 0; width: 100%; transform: translateY(110%); }
@@ -127,8 +128,8 @@ function createFormations(root, pictures, steps, { reduce = false } = {}) {
     ['Leave room in the middle.', 'The headline needs a clearing.'],
     ['End on one.', 'The picture you want them to remember, at full size.'],
   ];
-  // object renders and three portraits; a portrait is cropped around its face. Card 6 ends as the hero.
-  const pictures = [['cross'], ['ava'], ['glass'], ['curves'], ['sam', '27% 30%'], ['objects'], ['block'], ['ring'], ['you'], ['wall'], ['bottle'], ['vase']].map(([n, pos]) => [A + n + '.webp', pos]);
+  // lime renders and three portraits; a portrait is cropped around its face. Card 6 ends as the hero.
+  const pictures = [['cross'], ['ava'], ['lime-swirl'], ['curves'], ['sam', '27% 30%'], ['objects'], ['block'], ['ring'], ['you'], ['lime-dune'], ['lime-arc'], ['lime-slice']].map(([n, pos]) => [A + n + '.webp', pos]);
   const fm = createFormations(document.getElementById('fm'), pictures, STEPS, { reduce: QM.reduced });
   fm.at(QM.reduced ? 3 : 0);
   QM.demo({ kind: 'states', n: 5, dwell: 2200, first: 2200, hold: 800, rewind: 1600, seek(t) { fm.at(t); } });

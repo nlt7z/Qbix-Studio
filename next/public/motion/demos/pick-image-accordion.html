@@ -42,7 +42,7 @@
 /* Scene accordion. Idea: bencho.dev image-accordion (MIT).
    A row of panels that is always the same width. The one under the pointer grows, the others pay. */
 .acc-page { position: fixed; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 24px; padding: 32px clamp(24px, 5vw, 72px); font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
-.acc-page h1 { max-width: 18em; font-family: var(--font-headline); font-weight: 400; font-size: clamp(28px, calc(18.4px + 2.6vw), 42px); letter-spacing: -0.03em; line-height: 1.15; }
+.acc-page h1 { max-width: 18em; font-family: var(--font-headline); font-weight: 300; font-size: clamp(28px, calc(18.4px + 2.6vw), 42px); letter-spacing: -0.035em; line-height: 1.05; }
 .acc-strip { display: flex; gap: 8px; min-height: 0; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
 /* flex-basis 0 so nothing is reserved before the negotiation; min-width 0 so a picture can't hold a panel open */
 .acc-cell { position: relative; flex: 1 1 0; min-width: 0; min-height: 0; overflow: hidden; background: var(--surface); border-radius: 14px; }
@@ -51,7 +51,7 @@
 .acc-box img { display: block; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: var(--pos, 50% 50%); -webkit-user-drag: none; }
 .acc-shade { position: absolute; left: 0; right: 0; bottom: 0; height: 44%; background: linear-gradient(to top, var(--surface) 28%, transparent); pointer-events: none; }
 .acc-lab { position: absolute; left: 20px; bottom: 20px; width: 280px; display: grid; gap: 4px; pointer-events: none; }
-.acc-lab .n { color: var(--fg2); font-variant-numeric: tabular-nums; }
+.acc-lab .n { color: var(--fg2); font: 400 13px var(--font-mono); font-variant-numeric: tabular-nums; }
 .acc-lab h2 { font-family: var(--font-sans); font-size: 16px; letter-spacing: -0.01em; font-weight: 500; line-height: 1.35; white-space: nowrap; }
 .acc-lab p { color: var(--fg2); line-height: 1.35; }
 .acc-lab .more { opacity: 0; }
@@ -76,11 +76,11 @@
   <h1>Five ways to work with us.</h1>
   <div class="acc-strip" id="acc">
     <div class="acc-cell" style="--pos: 50% 55%">
-      <div class="acc-box"><img src="../assets/art/calla.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
+      <div class="acc-box"><img src="../assets/art/lime-fold.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
       <div class="acc-lab"><span class="n">01</span><h2>Design service</h2><p class="more">From moodboard to a live domain, in one to three weeks.</p></div>
     </div>
     <div class="acc-cell" style="--pos: 50% 50%">
-      <div class="acc-box"><img src="../assets/art/ring.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
+      <div class="acc-box"><img src="../assets/art/lime-chrome.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
       <div class="acc-lab"><span class="n">02</span><h2>Brand upgrade</h2><p class="more">Your product already runs. We take it from usable to worth sharing.</p></div>
     </div>
     <div class="acc-cell" style="--pos: 50% 50%">
@@ -92,7 +92,7 @@
       <div class="acc-lab"><span class="n">04</span><h2>Strata</h2><p class="more">A moodboard in, a working design system out: tokens, components and code.</p></div>
     </div>
     <div class="acc-cell" style="--pos: 50% 62%">
-      <div class="acc-box"><img src="../assets/art/bottle.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
+      <div class="acc-box"><img src="../assets/art/lime-bloom.webp" alt="" draggable="false"></div><i class="acc-shade"></i>
       <div class="acc-lab"><span class="n">05</span><h2>Practice Website Refresh</h2><p class="more">A calm website for your practice, rebuilt in one week.</p></div>
     </div>
   </div>

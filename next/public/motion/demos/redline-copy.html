@@ -35,24 +35,24 @@
 <style data-code>
 /* Redline. One function of time, redlineRender(t), draws every frame. */
 .rl-wrap { --pad: min(4.4vw, 52px); position: relative; width: min(72vw, 880px); }
-.rl { --cut: 16px; position: relative; z-index: 2; width: 100%; background: var(--surface, #fff); color: var(--fg, #121417); padding: var(--pad); padding-top: min(3.8vw, 44px); }
+.rl { --cut: 16px; position: relative; z-index: 2; width: 100%; background: var(--surface, #fff); color: var(--fg, #0B0C0D); padding: var(--pad); padding-top: min(3.8vw, 44px); }
 .rl-row { position: relative; margin: 0; padding-top: 1.35em; font: 400 min(3.4vw, 28px)/1.2 Geist, system-ui, sans-serif; letter-spacing: -0.011em; white-space: nowrap; }
-.rl-row.h { font: 400 min(4.7vw, 60px)/1.2 'Eurostile', Geist, sans-serif; font-synthesis-weight: none; letter-spacing: -0.02em; padding-top: 1.3em; }
+.rl-row.h { font: 300 min(4.7vw, 60px)/1.2 'Outfit', Geist, sans-serif; font-synthesis-weight: none; letter-spacing: -0.035em; padding-top: 1.3em; }
 .rl-row.h .rl-bar { top: 1.3em; }
-.rl-bar { position: absolute; left: calc(var(--pad) * -1); top: 1.35em; height: 1.2em; width: 3px; background: #121417; transform: scaleY(0); transform-origin: 50% 0; }
+.rl-bar { position: absolute; left: calc(var(--pad) * -1); top: 1.35em; height: 1.2em; width: 3px; background: #0B0C0D; transform: scaleY(0); transform-origin: 50% 0; }
 /* the slot: the phrase's place in the line. Its width is set from the phrase showing. */
 .rl-slot { position: relative; display: inline-block; vertical-align: top; height: 1.2em; }
 .rl-old, .rl-sleeve { position: absolute; left: 0; top: 0; }
 .rl-old { right: 0; bottom: 0; }
 .rl-old > span { position: absolute; left: 0; top: 0; line-height: 1.2em; }
-.rl-strike { position: absolute; left: 0; top: 0.62em; height: max(2px, 0.06em); width: 0; background: #121417; }
+.rl-strike { position: absolute; left: 0; top: 0.62em; height: max(2px, 0.06em); width: 0; background: #0B0C0D; }
 /* the sleeve sits one line above the slot; the new words rise inside it, then it drops into the line */
 .rl-sleeve { top: -1.2em; height: 1.2em; overflow: hidden; }
-.rl-sleeve > span { position: absolute; left: 0; top: 0; line-height: 1.2em; background: rgba(18, 20, 23, 0.07); transform: translateY(calc(100% + 2px)); }
-.rl-foot { margin-top: min(2.4vw, 28px); display: flex; align-items: center; gap: 12px; font: 12px/16px 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(18, 20, 23, 0.64); font-variant-numeric: tabular-nums; }
+.rl-sleeve > span { position: absolute; left: 0; top: 0; line-height: 1.2em; background: rgba(11, 12, 13, 0.07); transform: translateY(calc(100% + 2px)); }
+.rl-foot { margin-top: min(2.4vw, 28px); display: flex; align-items: center; gap: 12px; font: 400 14px/16px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; color: rgba(11, 12, 13, 0.66); font-variant-numeric: tabular-nums; }
 .rl-num { display: inline-block; vertical-align: bottom; height: 16px; overflow: hidden; }
 .rl-num i { display: block; font-style: normal; height: 16px; }
-.rl-ok { position: absolute; z-index: 1; right: calc(var(--pad) + 8px); bottom: 100%; height: 32px; padding: 0 14px; display: flex; align-items: center; background: #B8FF00; color: #0c1300; font: 500 13px/1 'Encode Sans', Geist, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; transform: translateY(calc(100% + 2px)); }
+.rl-ok { position: absolute; z-index: 1; right: calc(var(--pad) + 8px); bottom: 100%; height: 32px; padding: 0 14px; display: flex; align-items: center; background: #B8FF00; color: #0c1300; font: 500 14px/1 'Geist', Geist, sans-serif; letter-spacing: 0; transform: translateY(calc(100% + 2px)); }
 </style>
 <style>
   .rlw { padding-top: 32px; }

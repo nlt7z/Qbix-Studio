@@ -38,20 +38,20 @@
 </script>
 <style data-code>
 /* Thinking · redrawn for Qbix (Idea: library/demos/thinking.html).
-   Layout, sizes and motion are the original's; colours are Qbix's: paper, ink, one lime. */
+   Layout, sizes and motion are the original's; colours are Qbix's: white, sage, ink, one lime. */
 .pk {
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
   --radius-sm: 8px; --radius-lg: 14px; --radius-pill: 999px;
   --duration-fast: 120ms; --duration-base: 200ms;
   --ease-out: cubic-bezier(.16, 1, .3, 1); --ease-in: cubic-bezier(.7, 0, .84, 0); --ease-in-out: cubic-bezier(.65, 0, .35, 1);
-  --text: var(--fg); --muted: var(--fg2); --faint: rgba(18, 20, 23, .56);
-  --surface-muted: var(--sunk); --divider-strong: rgba(18, 20, 23, .2); --field-border: rgba(18, 20, 23, .5);
+  --text: var(--fg); --muted: var(--fg2); --faint: rgba(11, 12, 13, .56);
+  --surface-muted: var(--sunk); --divider-strong: rgba(11, 12, 13, .2); --field-border: rgba(11, 12, 13, .5);
   font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--text);
 }
 .ct { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
 .thread { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: min(760px, 100%); height: min(600px, 100%); background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; }
 .head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); padding: var(--space-5) var(--space-6) var(--space-4); }
-.head h1 { font: 400 16px/1.35 var(--font-sans); letter-spacing: -0.01em; }
+.head h1 { font: 500 16px/1.35 var(--font-sans); letter-spacing: -0.01em; }
 .head .meta { font-size: 12px; color: var(--faint); }
 .msgs { display: flex; flex-direction: column; gap: var(--space-5); padding: var(--space-2) var(--space-6); overflow: hidden; justify-content: flex-end; min-height: 0; }
 .you { align-self: flex-end; max-width: 78%; padding: var(--space-2) var(--space-4); background: var(--surface-muted); color: var(--text); border-radius: var(--radius-lg); animation: rise var(--duration-base) var(--ease-out) both; }
@@ -72,7 +72,7 @@
 @keyframes emote-dot { 0%, to { opacity: .25; } 40% { opacity: 1; } }
 .col { min-width: 0; display: grid; gap: var(--space-3); padding-top: var(--space-1); }
 .answer { display: grid; gap: var(--space-2); animation: rise var(--duration-base) var(--ease-out) both; }
-.answer .lead { font-size: 20px; letter-spacing: -0.02em; line-height: 1.35; }
+.answer .lead { font-family: var(--font-headline); font-weight: 300; font-size: 20px; letter-spacing: -0.03em; line-height: 1.3; }
 .answer .rest { color: var(--muted); }
 /* the activity timeline */
 .tl { display: grid; }
@@ -93,7 +93,7 @@
 .tl.is-live .lbl span:not(.out) { color: transparent; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 38%, var(--text) 50%, var(--muted) 62%, var(--muted) 100%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: shim 3s linear infinite; }
 .tl.is-live .lbl .in { animation: lin var(--duration-base) var(--ease-out) both, shim 3s linear infinite; }
 @keyframes shim { from { background-position: 100% 0; } to { background-position: 0 0; } }
-.sum .cnt { margin-left: auto; color: var(--faint); font-variant-numeric: tabular-nums; }
+.sum .cnt { margin-left: auto; color: var(--faint); font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
 .sum .chev { color: var(--faint); transition: transform var(--duration-base) var(--ease-out); }
 .tl.is-open .chev { transform: rotate(180deg); }
 .wrap { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; transition: grid-template-rows var(--duration-base) var(--ease-out), opacity var(--duration-base) var(--ease-out), visibility 0s linear var(--duration-base); }
@@ -109,7 +109,7 @@
 .st .line { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--space-2); line-height: 20px; }
 .st .l { color: var(--muted); }
 .st.is-running .l { color: var(--text); }
-.st .d { color: var(--faint); font-variant-numeric: tabular-nums; }
+.st .d { color: var(--faint); font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
 .st .note { margin: 0; color: var(--faint); line-height: 1.35; }
 .chips { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: 2px 0 0; padding: 0; list-style: none; }
 .chips li { padding: 0 6px; line-height: 18px; color: var(--muted); background: var(--surface-muted); border-radius: var(--radius-sm); }
@@ -118,7 +118,7 @@
 .composer .clip { color: var(--muted); display: grid; place-items: center; width: 36px; height: 36px; }
 .composer input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; height: 36px; font: inherit; color: inherit; }
 .composer input::placeholder { color: var(--faint); }
-.send { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: var(--radius-pill); background: rgba(18, 20, 23, .22); color: #fff; }
+.send { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: var(--radius-pill); background: rgba(11, 12, 13, .22); color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .you, .bot, .answer, .st, .lbl .in, .companion .bob, .companion .emote, .companion .emote rect, .dots i, .st.is-running .m::after { animation: none; }
   .tl.is-live .lbl span:not(.out) { animation: none; }
@@ -168,8 +168,8 @@ $('#clip').innerHTML = icon('Paperclip', 20);
 $('#send').innerHTML = icon('ArrowUp', 20);
 /* the companion: a cube with a lime top, and a thinking emote */
 const COMPANION = `<svg class="cube" width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
-  <g class="bob"><path d="M28 14 47 25 28 36 9 25Z" fill="#B8FF00"/><path d="M9 25 28 36V56L9 45Z" fill="#121417"/><path d="M28 36 47 25V45L28 56Z" fill="#363a40"/></g>
-  <g class="emote"><rect x="36" y="1" width="4" height="4" fill="#121417"/><rect x="42" y="1" width="4" height="4" fill="#121417"/><rect x="48" y="1" width="4" height="4" fill="#121417"/></g></svg>`;
+  <g class="bob"><path d="M28 14 47 25 28 36 9 25Z" fill="#B8FF00"/><path d="M9 25 28 36V56L9 45Z" fill="#0B0C0D"/><path d="M28 36 47 25V45L28 56Z" fill="#363a40"/></g>
+  <g class="emote"><rect x="36" y="1" width="4" height="4" fill="#0B0C0D"/><rect x="42" y="1" width="4" height="4" fill="#0B0C0D"/><rect x="48" y="1" width="4" height="4" fill="#0B0C0D"/></g></svg>`;
 
 const STEPS = [
   { icon: 'Lightbulb', label: 'Reading the moodboard', thought: 'Nine pictures of ceramic objects. Chalk white, soft mist, one sharp lime.' },

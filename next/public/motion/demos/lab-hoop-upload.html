@@ -14,7 +14,7 @@
   "kind": "loop",
   "tone": "paper",
   "line": "parabola solved to the rim · Verlet net · swish",
-  "summary": "A moodboard file flies along a parabola; for the scripted shot its launch velocity is solved so it passes through the hoop. The net is a Verlet point mesh, drawn in ink on paper, that the file pushes aside as it passes, which gives the swish. A score starts the upload.",
+  "summary": "A moodboard file flies along a parabola; for the scripted shot its launch velocity is solved so it passes through the hoop. The net is a Verlet point mesh, drawn in ink on white, that the file pushes aside as it passes, which gives the swish. A score starts the upload.",
   "spec": [
     ["Flight", "gravity 1900 px/s² (scaled), 4 physics sub-steps a frame; the rim ends are 3 px circles with restitution 0.55, the backboard 0.5, the floor 0.42"],
     ["Aim", "v = ((target − p) ÷ T, (target − p − ½ g T²) ÷ T) with T from 0.78 to 1.1 s by distance, so the arc drops through the rim"],
@@ -27,8 +27,8 @@
   "where": "The upload step of a Qbix design brief: toss in the moodboard.",
   "rules": [
     "The scripted shot is solved, not tuned: it works at every size.",
-    "The one lime is the rim, the thing you aim at, with an ink edge so it reads on paper.",
-    "Net strands are drawn as plain 2px ink lines; the file is a white sheet with a folded corner."
+    "The one lime is the rim, the thing you aim at, with an ink edge so it reads on white.",
+    "Net strands are drawn as plain 2px ink lines; the file is a white sheet with a folded corner, and the floor is sage."
   ],
   "tags": ["upload", "canvas", "physics", "verlet", "drag", "moodboard"],
   "shot": 3300
@@ -40,11 +40,11 @@
 .hoop canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .hoop-copy { position: absolute; left: clamp(24px, 5vw, 56px); top: clamp(22px, 6vh, 52px); pointer-events: none; max-width: 60%; display: grid; gap: 10px; }
 .hoop-copy .title { font-size: clamp(28px, 4.6vw, 54px); }
-.hoop-st { height: 1.4em; line-height: 1.4em; overflow: hidden; position: relative; font-size: clamp(14px, 2vw, 16px); color: rgba(18, 20, 23, 0.64); font-variant-numeric: tabular-nums; width: min(340px, 58vw); }
+.hoop-st { height: 1.4em; line-height: 1.4em; overflow: hidden; position: relative; font-size: clamp(14px, 2vw, 16px); color: rgba(11, 12, 13, 0.66); font-variant-numeric: tabular-nums; width: min(340px, 58vw); }
 .hoop-st span { position: absolute; left: 0; top: 0; white-space: nowrap; transition: transform 550ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 .hoop-st .in { transform: translateY(110%); } .hoop-st .out { transform: translateY(-110%); }
-.hoop-bar { width: min(200px, 42vw); height: 6px; background: rgba(18, 20, 23, 0.14); overflow: hidden; }
-.hoop-bar i { display: block; height: 100%; background: #121417; transform-origin: left; transform: scaleX(0); }
+.hoop-bar { width: min(200px, 42vw); height: 6px; background: #E3E8DA; overflow: hidden; }
+.hoop-bar i { display: block; height: 100%; background: #0B0C0D; transform-origin: left; transform: scaleX(0); }
 @media (prefers-reduced-motion: reduce) { .hoop-st span { transition: none; } }
 </style>
 <style>
@@ -66,7 +66,7 @@
 function hoopUpload(root) {
   const cv = root.querySelector('canvas'), ctx = cv.getContext('2d'), stEl = root.querySelector('#hoop-st'), barEl = root.querySelector('#hoop-bar');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const INK = '#121417', LIME = '#B8FF00', WHITE = '#ffffff', TINT = 'rgba(18, 20, 23, 0.14)';   // ink and one lime on paper; the floor is a white surface
+  const INK = '#0B0C0D', LIME = '#B8FF00', WHITE = '#ffffff', TINT = '#E3E8DA', SAGE = '#EEF1E8';   // ink and one lime on white; the floor is a sage surface
   let W, H, dpr, s, hx, hy, rw, R, floorY, start = { x: 0, y: 0 }, plate, g;
   const ball = { x: 0, y: 0, vx: 0, vy: 0, a: -0.12, w: 0, held: false, sc: 1, live: false };
   let net = [], links = [];
@@ -182,14 +182,14 @@ function hoopUpload(root) {
     ctx.restore();
   }
   function drawNet(alpha) {
-    ctx.strokeStyle = `rgba(18,20,23,${alpha})`; ctx.lineWidth = Math.max(1.5, 1.6 * s); ctx.lineCap = 'butt'; ctx.beginPath();
+    ctx.strokeStyle = `rgba(11, 12, 13,${alpha})`; ctx.lineWidth = Math.max(1.5, 1.6 * s); ctx.lineCap = 'butt'; ctx.beginPath();
     for (const [a, b] of links) { ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); }
     const lr = net[NR - 1]; ctx.moveTo(lr[0].x, lr[0].y); for (const p of lr) ctx.lineTo(p.x, p.y);
     ctx.stroke();
   }
   function draw() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = WHITE; ctx.fillRect(0, floorY, W, H - floorY);                         // the floor: a white surface on the paper
+    ctx.fillStyle = SAGE; ctx.fillRect(0, floorY, W, H - floorY);                          // the floor: a sage surface on the white
     ctx.fillStyle = INK;
     ctx.fillRect(plate.x + plate.w - 2, hy - 46 * s, W - plate.x, 9 * s);                  // the wall arm
     ctx.fillRect(plate.x, plate.y, plate.w, plate.h);                                          // the backboard
