@@ -28,8 +28,12 @@
 (function () {
   const qs = new URLSearchParams(location.search);
   const TILE = qs.has('tile');
+  // ?live: a card in the gallery's grid. It plays like a tile (no controls shown) but a real
+  // pointer or key takes over, as in the detail view, and it loops again when left alone
+  const LIVE = qs.has('live');
   const root = document.documentElement;
-  if (TILE) root.classList.add('qm-tile');
+  if (TILE || LIVE) root.classList.add('qm-tile');
+  if (LIVE) root.classList.add('qm-live');
   const embedded = window.parent !== window;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -44,7 +48,7 @@
   const easeMove = bezier(0.65, 0, 0.35, 1);
 
   const QM = (window.QM = {
-    tile: TILE, embedded, reduced, wait, clamp01, smooth, easeInOut, bezier,
+    tile: TILE, live: LIVE, embedded, reduced, wait, clamp01, smooth, easeInOut, bezier,
     id: (location.pathname.split('/').pop() || '').replace(/\.html$/, ''),
   });
 

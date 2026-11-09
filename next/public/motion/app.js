@@ -25,6 +25,7 @@
   const ORIGIN = { site: 'qbix.space', lab: 'Lab', picks: 'Picks', studio: 'Studio' };
   const MARK = '<span class="mark" aria-hidden="true"><svg viewBox="0 0 12 16"><path d="M1.5 1.5H10.5V14.3L6 10.9L1.5 14.3Z"/></svg></span>';
   const FILM = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.75" y="3.25" width="9.5" height="9.5" rx="2"/><path d="M11.25 6.5 14.25 4.75v6.5L11.25 9.5"/></svg>';
+  const EXPAND = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2.75h3.75V6.5M13.25 2.75 9 7M6.5 13.25H2.75V9.5M2.75 13.25 7 9"/></svg>';
   const EXPORT = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 10.25V2.25M5 5.25l3-3 3 3M2.75 9.25v3.5c0 .55.45 1 1 1h8.5c.55 0 1-.45 1-1v-3.5"/></svg>';
   const HEART = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6S2 10.1 2 6.1A3.1 3.1 0 0 1 8 4.6a3.1 3.1 0 0 1 6 1.5c0 4-6 7.5-6 7.5Z"/></svg>';
   const FORK = '<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><circle cx="4" cy="3.5" r="1.6"/><circle cx="12" cy="3.5" r="1.6"/><circle cx="8" cy="12.5" r="1.6"/><path d="M4 5.1v1.4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5.1M8 8.5v2.4"/></svg>';
@@ -102,16 +103,29 @@
   });
   // a card: the still (its preview plays on hover), save, remix and tweak on the picture, the
   // name, the like under it. r, when given, is a member's remix of the piece.
+  // the picture keeps the piece's content box (tools/boxes.cjs): the card takes that shape, and the
+  // 800 × 500 tile inside it is placed so the box fills the card
+  function boxStyle(it) {
+    const b = it.box;
+    if (!b) return { view: '', zoom: '' };
+    const [x, y, w, h] = b;
+    return {
+      view: ` style="aspect-ratio: ${w} / ${h}"`,
+      zoom: ` style="left: ${(-x / w * 100).toFixed(3)}%; top: ${(-y / h * 100).toFixed(3)}%; width: ${(800 / w * 100).toFixed(3)}%; height: ${(500 / h * 100).toFixed(3)}%; right: auto; bottom: auto"`,
+    };
+  }
   function cardHTML(it, r) {
     const title = r ? r.title : it.title;
+    const bs = boxStyle(it);
     const line = r ? `by ${r.author ? r.author.name : 'a member'}` : (it.line || (it.spec && it.spec[0] ? it.spec[0][1] : ''));
     return `
       <a class="card-hit" href="${r ? `#/r/${esc(r.rid)}` : `#/${esc(it.id)}`}" aria-label="${esc(title)}: ${esc(r ? (r.note || `A remix of ${it.title}`) : (it.summary || ''))}"></a>
-      <div class="card-view" data-tone="${esc(it.tone || 'dark')}">
-        <div class="card-zoom">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy" decoding="async">` : ''}<video class="card-vid" muted loop playsinline preload="none" disablepictureinpicture aria-hidden="true" tabindex="-1"></video></div>
+      <div class="card-view" data-tone="${esc(it.tone || 'dark')}"${bs.view}>
+        <div class="card-zoom"${bs.zoom}>${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy" decoding="async">` : ''}</div>
         <div class="card-acts">
           <button class="ca save" type="button" aria-pressed="false" aria-label="Save ${esc(title)}" title="Save">${MARK}</button>
           <span class="ca-row">
+            <button class="ca ca--open" type="button" aria-label="Open ${esc(title)}" title="Open">${EXPAND}</button>
             <button class="ca ca--remix" type="button" aria-label="Remix ${esc(title)}" title="Remix">${FORK}</button>
             <button class="ca ca--tweak" type="button" aria-label="Tweak ${esc(title)}" title="Tweak the details">${SLIDERS}</button>
           </span>
@@ -131,6 +145,7 @@
     card.dataset.id = it.id;               // the piece: its still, its preview
     card.dataset.key = r ? r.rid : it.id;  // what is liked and saved
     card.dataset.cat = it.cat || '';
+    card.dataset.kind = it.kind || '';
     if (it.fresh && !r) card.dataset.fresh = '1';
     card.innerHTML = cardHTML(it, r);
     return card;
@@ -225,51 +240,110 @@
     }
   });
   scaleObs.observe($('#stage-frame'));
-  let playing = null;
-  function playPreview(card) {
-    const it = byId.get(card.dataset.id);
-    if (!it || sheetOpen || card.hidden) return;
-    if (playing && playing !== card) stopPreview(playing);
-    playing = card;
-    if (it.preview) {
-      const v = $('.card-vid', card);
-      if (!v.getAttribute('src')) v.src = it.preview;
-      v.onplaying = () => { if (playing === card) card.classList.add('is-playing'); };
-      try { v.currentTime = 0; } catch (e) { /* not loaded yet: it starts at 0 anyway */ }
-      const pr = v.play();
-      if (pr) pr.catch(() => {});
-    } else if (!card.querySelector('iframe')) {
-      scaleObs.observe(card.querySelector('.card-view'));
-      const f = document.createElement('iframe');
-      f.title = it.title;
-      f.tabIndex = -1;
-      f.setAttribute('aria-hidden', 'true');
-      f.addEventListener('load', () => setTimeout(() => f.classList.add('is-live'), 200));
-      f.src = `${it.demo}?tile`;
-      card.querySelector('.card-zoom').appendChild(f);
-    }
-  }
-  function stopPreview(card) {
-    if (!card) return;
-    if (playing === card) playing = null;
-    card.classList.remove('is-playing');
-    const v = $('.card-vid', card);
-    if (v && !v.paused) v.pause();
-    card.querySelector('iframe')?.remove();
-  }
-  // any card on the page (the library, the community, the bench) plays the same way
+  /* --- live cards (as transitions.dev's community): the pieces near the screen run in the grid and
+     answer the pointer; the rest show their still. A card wakes as it nears the viewport and sleeps
+     when it leaves, at most MAX_LIVE at a time; nothing runs while a sheet is up. Scroll pieces play
+     but take no input, so the page still scrolls over them. --- */
+  let playing = null;   // old call sites: nothing plays on hover any more
+  const MAX_LIVE = matchMedia('(hover: hover) and (pointer: fine)').matches ? 9 : 4;
+  const live = new Set();
   const main = $('#main');
-  const canHover = matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const seen = canHover ? null : new IntersectionObserver((es) => es.forEach((e) => (e.intersectionRatio >= 0.6 ? playPreview : stopPreview)(e.target)), { threshold: [0, 0.6] });
-  if (canHover) {
-    main.addEventListener('pointerover', (e) => { const c = e.target.closest('.card'); if (c && !c.contains(e.relatedTarget)) playPreview(c); });
-    main.addEventListener('pointerout', (e) => { const c = e.target.closest('.card'); if (c && !c.contains(e.relatedTarget)) stopPreview(c); });
-    main.addEventListener('focusin', (e) => { const c = e.target.closest('.card'); if (c) playPreview(c); });
-    main.addEventListener('focusout', (e) => { const c = e.target.closest('.card'); if (c && !c.contains(e.relatedTarget)) stopPreview(c); });
-  } else {
-    // phones have no hover: the piece that is well in view plays
-    cards.forEach((c) => seen.observe(c));
+  function goLive(card) {
+    const it = byId.get(card.dataset.id);
+    if (!it || sheetOpen || card.hidden || live.has(card) || live.size >= MAX_LIVE || root.classList.contains('is-locked')) return;
+    live.add(card);
+    const zoom = card.querySelector('.card-zoom');
+    scaleObs.observe(zoom);
+    const f = document.createElement('iframe');
+    f.title = `${it.title}, live`;
+    if (card.dataset.kind === 'scroll') { f.tabIndex = -1; f.setAttribute('scrolling', 'no'); }
+    f.addEventListener('load', () => setTimeout(() => { if (live.has(card)) card.classList.add('is-live'); }, 250));
+    f.src = `${it.demo}?live`;
+    zoom.appendChild(f);
   }
+  function sleep(card) {
+    if (!live.has(card)) return;
+    live.delete(card);
+    card.classList.remove('is-live');
+    card.querySelector('.card-zoom iframe')?.remove();
+    scaleObs.unobserve(card.querySelector('.card-zoom'));
+    clearTimeout(sleep.t);
+    sleep.t = setTimeout(wakeVisible, 120);   // a slot is free: the next card in view takes it
+  }
+  const sleepAll = () => [...live].forEach((c) => { live.delete(c); c.classList.remove('is-live'); c.querySelector('.card-zoom iframe')?.remove(); });
+  function wakeVisible() {
+    if (sheetOpen) return;
+    $$('.card').forEach((c) => { if (!c.hidden && c.offsetParent && onScreen(c)) goLive(c); });
+  }
+  const near = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? goLive : sleep)(e.target)), { rootMargin: '120px 0px' });
+  function playPreview(card) { goLive(card); }
+  function stopPreview(card) { if (card) sleep(card); }
+  cards.forEach((c) => near.observe(c));
+
+  /* --- masonry: every card keeps its piece's shape, so the grid packs them like transitions.dev's
+     community: each card spans as many 4px rows as it is tall (its own height, set by the picture's
+     aspect), and the grid's auto-placement drops it into the first column with room. --- */
+  const ROW = 4, ROW_GAP = 32;
+  function masonry(g) {
+    if (!g || g.offsetParent === null) return;
+    const cs = [...g.children].filter((c) => c.classList.contains('card') && !c.hidden);
+    g.classList.add('grid--masonry');
+    const hs = cs.map((c) => c.getBoundingClientRect().height);
+    cs.forEach((c, i) => { c.style.gridRowEnd = `span ${Math.max(1, Math.ceil((hs[i] + ROW_GAP) / ROW))}`; });
+  }
+  const gridObs = new ResizeObserver((es) => es.forEach((e) => masonry(e.target)));
+  $$('.grid').forEach((g) => gridObs.observe(g));
+
+  /* --- sort and published (as transitions.dev's community): Featured is the library's own shuffled
+     order; Newest by the day a piece was added; Most saved and Most liked from the community's counts
+     (localhost only); published any time, in the past week, or the past month. --- */
+  const SORT_KEY = 'qbix-motion.sort';
+  let sortBy = 'featured', when = 'any';
+  try { const v = JSON.parse(store.get(SORT_KEY) || '{}'); if (v.sort) sortBy = v.sort; if (v.when) when = v.when; } catch (e) { /* defaults */ }
+  const featured = items.map((it) => it.id);
+  const SORTS = { featured: 'Featured', newest: 'Newest', saved: 'Most saved', liked: 'Most liked' };
+  const WHENS = { any: 'Any time', week: 'Past week', month: 'Past month' };
+  const ageDays = (it) => (it && it.added ? (Date.now() - Date.parse(`${it.added}T12:00:00`)) / 864e5 : Infinity);
+  const inWhen = (id) => when === 'any' || ageDays(byId.get(id)) <= (when === 'week' ? 7 : 31);
+  function sortedIds() {
+    const pos = new Map(featured.map((id, i) => [id, i]));
+    const by = (f) => featured.slice().sort((a, b) => f(b) - f(a) || pos.get(a) - pos.get(b));
+    if (sortBy === 'newest') return by((id) => { const a = byId.get(id).added; return a ? Date.parse(a) : 0; });
+    if (sortBy === 'saved' && C.full) return by((id) => C.saves[id] || 0);
+    if (sortBy === 'liked' && C.full) return by((id) => C.likes[id] || 0);
+    return featured;
+  }
+  function applySort() { sortedIds().forEach((id) => { const c = cardOf(id); if (c) grid.appendChild(c); }); }
+  const sortEl = $('#sort'), sortPop = $('#sort-pop'), sortBtn = $('#sort-btn');
+  function paintSort() {
+    if (!C.full && (sortBy === 'saved' || sortBy === 'liked')) sortBy = 'featured';
+    $$('[data-sort]', sortPop).forEach((b) => {
+      b.hidden = (b.dataset.sort === 'saved' || b.dataset.sort === 'liked') && !C.full;
+      const on = b.dataset.sort === sortBy; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', String(on));
+    });
+    $$('[data-when]', sortPop).forEach((b) => { const on = b.dataset.when === when; b.classList.toggle('is-on', on); b.setAttribute('aria-checked', String(on)); });
+    $('#sort-label').textContent = SORTS[sortBy] + (when === 'any' ? '' : ` · ${WHENS[when]}`);
+  }
+  const setSortPop = (open) => {
+    sortPop.hidden = !open;
+    sortBtn.setAttribute('aria-expanded', String(open));
+    if (open) play(sortPop, [{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0)' }], { duration: 260 });
+  };
+  sortBtn.addEventListener('click', (e) => { e.stopPropagation(); setSortPop(sortPop.hidden); });
+  document.addEventListener('click', (e) => { if (!sortPop.hidden && !e.target.closest('#sort')) setSortPop(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sortPop.hidden) setSortPop(false); });
+  sortPop.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sort], [data-when]');
+    if (!b) return;
+    if (b.dataset.sort) sortBy = b.dataset.sort;
+    if (b.dataset.when) when = b.dataset.when;
+    store.set(SORT_KEY, JSON.stringify({ sort: sortBy, when }));
+    paintSort();
+    flip(() => { applySort(); filter(); });
+    masonry(grid);
+  });
+  // after the whole script has run (paintSort reads the community state, set up further down)
+  setTimeout(() => { paintSort(); if (sortBy !== 'featured' || when !== 'any') { applySort(); filter(); } }, 0);
   const onScreen = (el) => { const r = el.getBoundingClientRect(); return r.bottom > -160 && r.top < innerHeight + 160; };
 
   /* --- what is showing: the strip (a category, or saved) and the search ---------------- */
@@ -309,7 +383,7 @@
     const more = [];
     cards.forEach((c) => {
       const id = c.dataset.id;
-      const inView = (view === 'all' || c.dataset.cat === view || (view === 'new' && !!c.dataset.fresh)) && matches(id, words);
+      const inView = (view === 'all' || c.dataset.cat === view || (view === 'new' && !!c.dataset.fresh)) && matches(id, words) && inWhen(id);
       const ok = inView && (!locked(id) || (view === 'new' && !!c.dataset.fresh));
       if (inView && !ok) more.push(byId.get(id));
       c.hidden = !ok;
@@ -507,6 +581,8 @@
     paintSaved();
     renderCommunity();
     renderBench();
+    paintSort();
+    if (sortBy !== 'featured') { applySort(); filter(); }
     counts();
   }
   // filming is the admin's: with accounts, only an admin account sees the film buttons
@@ -645,10 +721,11 @@
     return r && byId.has(r.base) ? makeCard(byId.get(r.base), r) : null;
   }
   function fillGrid(grid, keys, empty) {
-    grid.querySelectorAll('.card').forEach((c) => { if (playing === c) stopPreview(c); if (seen) seen.unobserve(c); });
+    grid.querySelectorAll('.card').forEach((c) => { sleep(c); near.unobserve(c); });
     grid.textContent = '';
-    keys.forEach((k) => { const c = cardFor(k); if (c) { paintCard(c); grid.appendChild(c); if (seen) seen.observe(c); } });
+    keys.forEach((k) => { const c = cardFor(k); if (c) { paintCard(c); grid.appendChild(c); near.observe(c); } });
     if (empty) $(empty).hidden = !!grid.children.length;
+    masonry(grid);
   }
   function renderCommunity() {
     if (!C.full) return;
@@ -978,7 +1055,7 @@
     $('[data-replay]', sheet).classList.toggle('is-on', !p);
   }
   // what the sheet steps through: the pieces showing, in the grid's order
-  const order = () => items.filter((it) => { const c = cardOf(it.id); return c && !c.hidden; });
+  const order = () => $$('#all .card').filter((c) => !c.hidden).map((c) => byId.get(c.dataset.id)).filter(Boolean);
 
   function fill(it, r) {
     curRemix = r || null;
@@ -1091,7 +1168,7 @@
       sheet.setAttribute('aria-hidden', 'false');
       root.classList.add('is-locked');
       // the cards rest while the sheet is up
-      stopPreview(playing);
+      sleepAll();
       setTimeout(() => $('[data-close]', sheet).focus({ preventScroll: true }), 40);
     }
   }
@@ -1108,6 +1185,7 @@
   }
   function closeNow(push) {
     sheetOpen = false;
+    setTimeout(wakeVisible, 400);
     sheet.classList.remove('is-open');
     sheet.setAttribute('aria-hidden', 'true');
     root.classList.remove('is-locked');
@@ -1442,7 +1520,7 @@
     rxEl.classList.add('is-open');
     rxEl.setAttribute('aria-hidden', 'false');
     root.classList.add('is-locked');
-    stopPreview(playing);
+    sleepAll();
     setTimeout(() => rxText.focus({ preventScroll: true }), 60);
   }
   function setPart(part) {
@@ -1531,6 +1609,14 @@
     if (like) {
       e.preventDefault();
       toggleLike(like.closest('.card') ? like.closest('.card').dataset.key : curKey());
+      return;
+    }
+    const op = e.target.closest('.ca--open');
+    if (op) {
+      e.preventDefault();
+      const c = op.closest('.card');
+      if (c.dataset.key !== c.dataset.id) openRemix(c.dataset.key, true);
+      else open(c.dataset.id, true);
       return;
     }
     const rm = e.target.closest('.ca--remix');

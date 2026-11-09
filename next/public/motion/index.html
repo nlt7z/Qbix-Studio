@@ -69,6 +69,21 @@
         <!-- one tab per category, from data.js (app.js) -->
       </div>
       <p class="toolbar-count" id="toolbar-count"></p>
+      <!-- sort and published, as transitions.dev's community -->
+      <div class="sort" id="sort">
+        <button class="sort-btn" id="sort-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="sort-pop"><span id="sort-label">Featured</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
+        <div class="sort-pop" id="sort-pop" role="group" aria-label="Sort and published" hidden>
+          <p class="sort-k">Sort by</p>
+          <button type="button" role="menuitemradio" data-sort="featured">Featured</button>
+          <button type="button" role="menuitemradio" data-sort="newest">Newest</button>
+          <button type="button" role="menuitemradio" data-sort="saved">Most saved</button>
+          <button type="button" role="menuitemradio" data-sort="liked">Most liked</button>
+          <p class="sort-k">Published</p>
+          <button type="button" role="menuitemradio" data-when="any">Any time</button>
+          <button type="button" role="menuitemradio" data-when="week">Past week</button>
+          <button type="button" role="menuitemradio" data-when="month">Past month</button>
+        </div>
+      </div>
       <!-- two ways to look: the grid, or one piece at a time to swipe through (keep right, pass left) -->
       <div class="mode" id="mode" role="radiogroup" aria-label="Layout">
         <button type="button" role="radio" data-mode="grid" aria-checked="true" class="is-on" title="Grid"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5h4.5v4.5H2.5ZM9 2.5h4.5v4.5H9ZM2.5 9h4.5v4.5H2.5ZM9 9h4.5v4.5H9Z"/></svg><span class="sr-only">Grid</span></button>
