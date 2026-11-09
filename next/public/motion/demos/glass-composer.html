@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glass composer · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "glass-composer",
+  "title": "Glass composer",
+  "group": "studio",
+  "added": "2026-11-09",
+  "cat": "agent",
+  "order": 100,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "frost 26 px · grows 520 ms move · capsule 560 ms · page change 700 ms",
+  "summary": "A composer of frosted glass floats in the lower middle of a drawn Forma homepage. Typing grows it line by line, its height gliding. On send it slims into a frosted status capsule, Updating the hero with a counter of changes, and the page behind changes where the change lands: the hero block grows and its headline swaps. Then the capsule opens back into the composer and the page settles back.",
+  "spec": [
+    ["Glass", "a copy of the page blurred 26 px, clipped to the composer's own rectangle every frame, a white tint at 50%, grain at 10%, a lit top edge. No border, no shadow"],
+    ["Grow", "box height 64 px plus 22 px a line, up to three lines, 520 ms on the move curve"],
+    ["Send", "the box slims from 400 × 64 to a 300 × 44 capsule in 560 ms (move); the field fades out, the status fades in 240 ms later"],
+    ["Counter", "Geist Mono ticks 0, 1, 2 changes as each change lands"],
+    ["Change", "the hero grows 172 to 210 px in 700 ms on the move curve; the headline lifts out and the new one arrives in 420 ms expo out"],
+    ["Reset", "the capsule opens back to the composer, then the page settles back, calm"],
+    ["Ghost", "types the request, sends, waits. Real typing works and the script resumes after a few idle seconds"],
+    ["Reduced motion", "a still state: the composer with a typed line over the page"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "Strata or a build agent's composer on a page being edited: the glass lets the page it is changing show through, and the change lands in plain sight.",
+  "rules": [
+    "The frost is a blurred copy of the page behind, clipped to the composer, so it always matches what is under it and renders everywhere.",
+    "The composer and the capsule are one glass slab changing shape, never two objects.",
+    "The page change is shown sharp, in the place it lands, and the capsule names it.",
+    "Nothing bounces. Height glides, the capsule slims, the page settles."
+  ],
+  "tags": ["frost", "glass", "composer", "agent", "capsule", "status"],
+  "shot": 4600
+}
+</script>
+<style data-code>
+/* Glass composer. A blurred copy of the page, clipped to the box, sits under a tint and grain. */
+.gc { position: relative; width: 640px; height: 400px; background: #fff; overflow: hidden; color: #0B0C0D; user-select: none; }
+.gc-pg { position: absolute; left: 0; top: 0; width: 640px; height: 400px; padding: 22px 32px 0; box-sizing: border-box; background: #fff; overflow: hidden; display: flex; flex-direction: column; gap: 14px; }
+.gc-nav { display: flex; align-items: center; justify-content: space-between; height: 32px; flex: none; font: 400 13px/18px Geist, sans-serif; color: rgba(11, 12, 13, .66); }
+.gc-nav b { font: 300 22px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; color: #0B0C0D; font-synthesis-weight: none; }
+.gc-nav span { display: flex; gap: 22px; }
+.gc-hero { position: relative; flex: none; height: 172px; background: #EEF1E8; overflow: hidden; transition: height 700ms var(--ease-move, cubic-bezier(.65, 0, .35, 1)); }
+.gc.is-grown .gc-hero { height: 210px; }
+.gc-tx { position: absolute; left: 28px; top: 28px; }
+.gc-k { font: 500 13px/18px Geist, sans-serif; color: rgba(11, 12, 13, .66); }
+.gc-hl { margin: 10px 0 0; width: 300px; font: 300 46px/.95 Outfit, Geist, sans-serif; letter-spacing: -.035em; font-synthesis-weight: none; }
+.gc-art { position: absolute; right: 0; top: 0; bottom: 0; width: 230px; background: #EEF1E8 url("../assets/art/lime-fold.webp") center / cover; }
+.gc-row { display: flex; gap: 14px; flex: none; }
+.gc-card { flex: 1; height: 170px; background: #EEF1E8; padding: 14px; box-sizing: border-box; font: 500 13px/18px Geist, sans-serif; }
+.gc-card.is-ink { background: #0B0C0D; color: #fff; }
+.gc-glass { position: absolute; z-index: 2; bottom: 36px; overflow: hidden; --cut: 14px;
+  transition: left 560ms var(--ease-move, cubic-bezier(.65, 0, .35, 1)), width 560ms var(--ease-move, cubic-bezier(.65, 0, .35, 1)), height 520ms var(--ease-move, cubic-bezier(.65, 0, .35, 1)); }
+.gc-copy { position: absolute; left: 0; top: 0; width: 760px; height: 520px; background: #fff; filter: blur(26px); }
+.gc-copy .gc-pg { left: 60px; top: 60px; }
+.gc-tint { position: absolute; inset: 0; background: rgba(255, 255, 255, .5); }
+.gc-grain { position: absolute; inset: 0; opacity: .1; background-size: 160px 160px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.6 -.3'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); }
+.gc-edge { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8); }
+.gc-in, .gc-st { position: absolute; left: 0; top: 0; right: 0; bottom: 0; transition: opacity 240ms var(--ease, ease); }
+.gc-in { opacity: 1; }
+.gc-ta { all: unset; box-sizing: border-box; position: absolute; left: 22px; top: 21px; width: 310px; height: 22px; font: 400 15px/22px Geist, sans-serif; letter-spacing: -.011em; color: #0B0C0D; caret-color: #0B0C0D; white-space: pre-wrap; overflow: hidden; resize: none; }
+.gc-ta::placeholder { color: rgba(11, 12, 13, .5); }
+.gc-go { all: unset; box-sizing: border-box; position: absolute; right: 14px; bottom: 14px; width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer; background: rgba(11, 12, 13, .38); --cut: 9px; transition: background 160ms var(--ease, ease), transform 300ms var(--ease-out-expo, ease); }
+.gc-go.has-text { background: #0B0C0D; }
+.gc-go:active { transform: translateY(2px); }
+.gc-go:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+.gc-go svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: square; }
+.gc-st { opacity: 0; display: flex; align-items: center; justify-content: center; gap: 10px; font: 500 14px/20px Geist, sans-serif; white-space: nowrap; pointer-events: none; }
+.gc-n { font: 400 12px/16px 'Geist Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+.gc-dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(11, 12, 13, .38); }
+.gc.is-busy .gc-in { opacity: 0; pointer-events: none; }
+.gc.is-busy .gc-st { opacity: 1; transition-delay: 240ms; }
+@media (prefers-reduced-motion: reduce) { .gc *, .gc { transition: none !important; } }
+</style>
+<style>
+  .fit { position: fixed; z-index: 1; display: grid; gap: 16px; }
+  .fit > .kicker { padding-left: 2px; }
+  .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
+</style>
+</head>
+<body>
+<span class="qm-hint">Type, Enter to send</span>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Agent · Glass composer</p>
+<!-- code -->
+<section class="gc" id="gc" aria-label="Glass composer over the Forma homepage">
+  <div class="gc-pg" id="pg" aria-hidden="true">
+    <div class="gc-nav"><b>Forma</b><span><i>Shop</i><i>Studio</i><i>Journal</i></span></div>
+    <div class="gc-hero">
+      <div class="gc-tx"><div class="gc-k">New in the studio</div><h2 class="gc-hl">Ceramics, made slowly.</h2></div>
+      <div class="gc-art"></div>
+    </div>
+    <div class="gc-row"><div class="gc-card">Bowls</div><div class="gc-card">Cups</div><div class="gc-card is-ink">Vases</div></div>
+  </div>
+  <div class="gc-glass cut" id="box">
+    <div class="gc-copy" id="copy"></div>
+    <div class="gc-tint"></div><div class="gc-grain"></div><div class="gc-edge"></div>
+    <div class="gc-in">
+      <textarea class="gc-ta" id="ta" rows="1" placeholder="Ask Qbix to change the page…" aria-label="Message" spellcheck="false"></textarea>
+      <button class="gc-go cut" id="go" type="button" aria-label="Send"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14V3M3 7.5 8 2.5l5 5"/></svg></button>
+    </div>
+    <div class="gc-st"><span id="stx">Updating the hero</span><i class="gc-dot"></i><span class="gc-n" id="stn">0 changes</span></div>
+  </div>
+</section>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Agent · Glass composer</span><span class="qm-sep">/</span><span>Type a change, press Enter</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Glass composer. The copy of the page inside the box is moved by the box's own offsets each frame,
+   so the frost always matches what is under it. Everything the page changes is a class on .gc. */
+const $ = (s) => document.querySelector(s);
+const gc = $('#gc'), box = $('#box'), copy = $('#copy'), ta = $('#ta'), go = $('#go');
+const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const OLD = 'Ceramics, made slowly.', NEW = 'Pots made to be used.';
+let timers = [], busy = false, until = 0, raf = 0;
+
+copy.append($('#pg').cloneNode(true));          // the page, twice: sharp, and under the glass
+function sync() {
+  copy.style.transform = `translate(${-(box.offsetLeft + 60)}px, ${-(box.offsetTop + 60)}px)`;
+  if (performance.now() < until) raf = requestAnimationFrame(sync); else raf = 0;
+}
+function kick(ms = 900) { until = performance.now() + ms; if (!raf) raf = requestAnimationFrame(sync); }
+function setBox(w, h) {
+  box.style.width = w + 'px'; box.style.height = h + 'px'; box.style.left = (640 - w) / 2 + 'px';
+  kick(); if (still) sync();
+}
+function fitText() {
+  ta.style.height = '0px';
+  const h = Math.min(66, Math.max(22, ta.scrollHeight));
+  ta.style.height = h + 'px';
+  if (!busy) setBox(400, h + 42);
+}
+function headline(text) {
+  document.querySelectorAll('.gc-hl').forEach((h) => {
+    if (still) { h.textContent = text; return; }
+    h.animate([{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-10px)' }], { duration: 200, easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards' }).finished.then(() => {
+      h.textContent = text;
+      h.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 420, easing: OUT, fill: 'both' });
+    });
+  });
+}
+const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+function send() {
+  if (busy || !ta.value.trim()) return;
+  busy = true; ta.blur(); gc.classList.add('is-busy');
+  $('#stx').textContent = 'Updating the hero'; $('#stn').textContent = '0 changes';
+  setBox(300, 44);
+  at(900, () => { gc.classList.add('is-grown'); $('#stn').textContent = '1 change'; kick(1000); });
+  at(1700, () => { headline(NEW); $('#stn').textContent = '2 changes'; });
+  at(2700, () => { $('#stx').textContent = 'Updated the hero'; });
+  at(4200, () => { gc.classList.remove('is-busy'); ta.value = ''; go.classList.remove('has-text'); ta.style.height = '22px'; setBox(400, 64); });
+  at(5200, () => { gc.classList.remove('is-grown'); headline(OLD); kick(1000); busy = false; });
+}
+ta.addEventListener('input', () => { go.classList.toggle('has-text', ta.value.length > 0); fitText(); });
+ta.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); send(); } });
+go.addEventListener('click', send);
+setBox(400, 64);
+</script>
+<script src="../assets/picks/p3-ghost.js"></script>
+<script>
+  PickGhost.fit($('#fit'), 640, 440, { max: 1.5, gutter: 90 });
+  function rest() {
+    timers.forEach(clearTimeout); timers = []; busy = false;
+    document.getAnimations().forEach((a) => a.cancel());
+    gc.classList.remove('is-busy', 'is-grown');
+    document.querySelectorAll('.gc-hl').forEach((h) => { h.textContent = OLD; });
+    ta.value = ''; go.classList.remove('has-text'); ta.style.height = '22px';
+    box.style.transition = 'none'; setBox(400, 64); box.offsetWidth; box.style.transition = ''; sync();
+  }
+  const WORDS = 'Make the hero taller, and change the headline to Pots made to be used';
+  const type = async (g, str, ms) => { for (const ch of str) { ta.value += ch; go.classList.add('has-text'); fitText(); await g.wait(ms / str.length); } };
+  PickGhost.start({
+    hot: '.gc-go',
+    reset: rest,
+    still() { rest(); ta.value = 'Make the hero taller, and change the headline'; go.classList.add('has-text'); fitText(); },
+    async script(g) {
+      await g.wait(500);
+      await g.to('.gc-ta', { ms: 700, fx: 0.3 });
+      ta.focus({ preventScroll: true });
+      await g.wait(200);
+      await type(g, WORDS, 1900);
+      await g.wait(500);
+      await g.click('#go', { ms: 600 });
+      await g.wait(5800);
+    },
+  });
+  QM.demo({ kind: 'loop', restart: PickGhost.restart });
+</script>
+</body>
+</html>

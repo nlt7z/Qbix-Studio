@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frost tilt · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "frost-tilt",
+  "title": "Frost tilt",
+  "group": "studio",
+  "added": "2026-11-09",
+  "cat": "cards",
+  "order": 60,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "tilt 9° · persp 1100 px · blur 30 px · settle 900 ms expo out",
+  "summary": "One frosted card floats over three solid shapes: a lime circle, an ink block and a sage block. The pointer tilts the card a few degrees in perspective while the shapes behind slide the other way, each by its own amount, so the frost on the card shows the shapes shifting under it and the pane reads as glass at a distance. The lit top edge brightens on the side that faces up. On leave the card settles flat with expo out.",
+  "spec": [
+    ["Glass", "a blurred copy of the shapes, 30 px, under a white tint at 50%, fine grain at 10%, a 1 px lit top edge. No border, no shadow"],
+    ["Tilt", "up to 9° on each axis in a 1100 px perspective; the card faces the pointer; chased with 1 − e^(−7 dt), no spring"],
+    ["Parallax", "the shapes move against the tilt, 6 to 20 px by depth; the copy under the glass moves with them"],
+    ["Lit edge", "top edge 55% white, up to 95% when the card faces up; a side edge lights toward the side that faces up"],
+    ["Settle", "on leave the tilt eases to flat in 900 ms, cubic-bezier(0.16, 1, 0.3, 1)"],
+    ["Ghost", "a slow loop across the scene, 9 s; a real pointer takes over in the detail view"],
+    ["Reduced motion", "a still, flat card; the pointer does nothing"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A launch page's pricing: the Design service card tilts under the cursor, and the frost shows the page's shapes behind it.",
+  "rules": [
+    "The frost is a blurred copy of what is behind, moved with it. If the copy and the shapes disagree the glass looks painted on.",
+    "Tilt and parallax run on the same value in opposite directions. Nothing bounces and nothing sweeps across the glass.",
+    "The lit edge is the only highlight. No glare, no border, no drop shadow.",
+    "Keep the tilt small, under 10°. More than that turns the card into a toy."
+  ],
+  "tags": ["frost", "glass", "tilt", "card", "parallax", "pointer"],
+  "shot": 2300
+}
+</script>
+<style data-code>
+/* Frost tilt. A scene of solid shapes, and a card of frosted glass tilting over it. */
+.ft { position: relative; width: 640px; height: 400px; background: #fff; perspective: 1100px; user-select: none; touch-action: none;
+  --tx: 0; --ty: 0; }
+.ft-shapes { position: absolute; inset: 0; }
+.ft-shapes i { position: absolute; display: block; will-change: transform; }
+.ft-lime { left: 134px; top: 64px; width: 132px; height: 132px; border-radius: 50%; background: #B8FF00; }
+.ft-ink { left: 400px; top: 210px; width: 130px; height: 110px; background: #0B0C0D; }
+.ft-sage { left: 330px; top: 50px; width: 170px; height: 150px; background: #E3E8DA; }
+
+.ft-card { position: absolute; left: 150px; top: 100px; width: 340px; height: 200px; overflow: hidden; --cut: 16px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  transform: rotateX(calc(var(--ty) * -9deg)) rotateY(calc(var(--tx) * 9deg)); will-change: transform; }
+/* the frost: a copy of the shapes, blurred, then tint and grain */
+.ft-under { position: absolute; left: -210px; top: -160px; width: 760px; height: 520px; background: #fff; filter: blur(30px); }
+.ft-under .ft-shapes { left: 60px; top: 60px; width: 640px; height: 400px; }
+.ft-tint { position: absolute; inset: 0; background: rgba(255, 255, 255, .5); }
+.ft-grain { position: absolute; inset: 0; opacity: .1; background-size: 160px 160px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.6 -.3'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); }
+/* the glass's own edge: a lit top line that follows the tilt, nothing else */
+.ft-edge { position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, calc(.55 + .4 * max(0, var(--ty) * -1))),
+              inset calc(max(0, var(--tx) * -1) * 1px) 0 0 rgba(255, 255, 255, calc(.7 * max(0, var(--ty) * -1) + .15)),
+              inset calc(max(0, var(--tx)) * -1px) 0 0 rgba(255, 255, 255, calc(.7 * max(0, var(--ty) * -1) + .15)); }
+.ft-copy { position: absolute; left: 28px; right: 28px; top: 26px; bottom: 26px; pointer-events: none; color: #0B0C0D; }
+.ft-copy .t { font: 300 36px/.95 Outfit, Geist, sans-serif; letter-spacing: -.035em; font-synthesis-weight: none; }
+.ft-copy .p { position: absolute; left: 0; top: 52px; font: 500 15px/16px 'Geist Mono', ui-monospace, monospace; }
+.ft-copy .l { position: absolute; left: 0; bottom: 0; font: 400 13px/18px Geist, sans-serif; color: rgba(11, 12, 13, .66); }
+</style>
+<style>
+  .fit { width: 640px; transform: scale(var(--s, 1)); transform-origin: center; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+<!-- code -->
+  <div class="ft" id="ft" aria-label="A frosted card over three shapes; move the pointer to tilt it">
+    <div class="ft-shapes" data-shapes><i class="ft-sage" data-d="6"></i><i class="ft-lime" data-d="12"></i><i class="ft-ink" data-d="20"></i></div>
+    <div class="ft-card" id="ft-card">
+      <div class="ft-under"><div class="ft-shapes" data-shapes><i class="ft-sage" data-d="6"></i><i class="ft-lime" data-d="12"></i><i class="ft-ink" data-d="20"></i></div></div>
+      <div class="ft-tint"></div>
+      <div class="ft-grain"></div>
+      <div class="ft-edge"></div>
+      <div class="ft-copy"><div class="t">Design service</div><div class="p">From $500</div><div class="l">From moodboard to a live domain.</div></div>
+    </div>
+  </div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Move the pointer to tilt the glass</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Frost tilt. One value per axis (-1..1) chased toward the pointer; it drives the card's tilt and,
+   the other way, the shapes behind (and their blurred copy under the glass). */
+const Tilt = (() => {
+  const box = document.getElementById('ft');
+  const shapes = [...box.querySelectorAll('[data-shapes] i')];
+  const W = 640, H = 400, RATE = 7, SETTLE = 900;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const expo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+  let tx = 0, ty = 0, cx = 0, cy = 0, leaving = false, t0 = 0, fx = 0, fy = 0, last = 0;
+
+  function apply() {
+    box.style.setProperty('--tx', cx.toFixed(4)); box.style.setProperty('--ty', cy.toFixed(4));
+    for (const s of shapes) { const d = +s.dataset.d; s.style.transform = 'translate(' + (-cx * d).toFixed(2) + 'px,' + (-cy * d * 0.8).toFixed(2) + 'px)'; }
+  }
+  // pointer in client px -> -1..1 around the scene's centre (the sheet may be scaled)
+  function move(x, y) {
+    if (still) return;
+    const b = box.getBoundingClientRect(), k = b.width / W;
+    tx = Math.max(-1, Math.min(1, ((x - b.left) / k - W / 2) / (W / 2)));
+    ty = Math.max(-1, Math.min(1, ((y - b.top) / k - H / 2) / (H / 2)));
+    leaving = false;
+  }
+  function leave() { if (leaving) return; leaving = true; t0 = performance.now(); fx = cx; fy = cy; tx = ty = 0; }
+  function frame(now) {
+    const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+    if (!still) {
+      if (leaving) { const e = expo((now - t0) / SETTLE); cx = fx * (1 - e); cy = fy * (1 - e); }
+      else { const a = 1 - Math.exp(-RATE * dt); cx += (tx - cx) * a; cy += (ty - cy) * a; }
+      apply();
+    }
+    requestAnimationFrame(frame);
+  }
+  apply(); requestAnimationFrame(frame);
+  return { move, leave, box, W, H };
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+
+  addEventListener('pointermove', (e) => Tilt.move(e.clientX, e.clientY), { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => Tilt.leave());
+
+  const PERIOD = 9;
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y, ghost) => { if (ghost) Tilt.move(x, y); },
+    leave: () => Tilt.leave(),
+    path(t) {
+      const r = Tilt.box.getBoundingClientRect(), k = r.width / Tilt.W;
+      const th = (Math.max(0, t) % PERIOD) / PERIOD * Math.PI * 2;
+      const x = Tilt.W * 0.5 + 250 * Math.sin(th), y = Tilt.H * 0.5 + 130 * Math.sin(th * 2) * 0.8;
+      return [r.left + x * k, r.top + y * k];
+    },
+  });
+</script>
+</body>
+</html>

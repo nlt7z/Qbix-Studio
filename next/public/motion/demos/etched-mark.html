@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etched mark · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "etched-mark",
+  "title": "Etched mark",
+  "group": "studio",
+  "added": "2026-11-09",
+  "cat": "brand",
+  "order": 80,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "blur 32 px · tint 50% · grain 10% · drift 16 s and 20 s",
+  "summary": "A pane of frosted glass fills the frame and the qbix wordmark is etched into it as clear glass. Behind the pane a lime circle and an ink block drift slowly on closed loops. Outside the letters they show as soft frosted colour; inside the letters they show sharp, so the mark is only read where something passes behind it. With nothing behind, the letters stay findable: the glass is clear there, without the pane's grain, and a very light line follows the cut.",
+  "spec": [
+    ["Frost", "a copy of the shapes blurred 32 px, a white tint at 50%, fine grain at 10%"],
+    ["Etch", "the wordmark path as a clip over a sharp copy of the same shapes, about 66% of the pane's width, centred; no grain inside the letters"],
+    ["Edge", "a 1 px line at 12% ink along the cut, the only mark when nothing is behind"],
+    ["Circle", "a 140 px lime circle on a 16 s closed loop (x on 16 s, y on 8 s)"],
+    ["Block", "a 150 × 104 px ink block on a 20 s closed loop (x on 20 s, y on 10 s)"],
+    ["Pause", "the loop stops off screen and in a hidden tab"],
+    ["Reduced motion", "a still frame with the circle behind the q and the ink block behind the i and the x"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A launch page's sign-off or a loading screen: the wordmark etched into a glass pane, coming alive as the page's shapes pass behind it.",
+  "rules": [
+    "The sharp copy and the frosted copy run on the same positions, so the letters are a true window.",
+    "The mark is read through what is behind it, never drawn on the glass. The only drawn parts are the grain's absence and one faint line.",
+    "Drift is slow and closed: 12 s or more a cycle, no bounce, no stop.",
+    "One lime circle, one ink block, one word: qbix.space."
+  ],
+  "tags": ["frost", "glass", "wordmark", "etch", "brand", "loop"],
+  "shot": 9000
+}
+</script>
+<style data-code>
+/* Etched mark. A frosted pane (blurred copy + tint + grain) with the wordmark cut out as clear glass. */
+.em { position: relative; width: 640px; height: 400px; background: #fff; overflow: hidden; user-select: none; }
+.em-under { position: absolute; left: -100px; top: -100px; width: 840px; height: 600px; filter: blur(32px); }
+.em-under svg, .em-sharp { display: block; position: absolute; }
+.em-tint { position: absolute; inset: 0; background: rgba(255, 255, 255, .5); }
+.em-grain { position: absolute; inset: 0; opacity: .12; background-size: 160px 160px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.6 -.3'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); }
+.em-sharp { inset: 0; width: 640px; height: 400px; }
+.em-edge { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
+.em-url { position: absolute; left: 0; right: 0; bottom: 24px; text-align: center; font: 400 13px/18px Geist, sans-serif; color: rgba(11, 12, 13, .66); }
+</style>
+<style>
+  .fit { width: 640px; transform: scale(var(--s, 1)); transform-origin: center; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+<!-- code -->
+  <div class="em" id="em" role="img" aria-label="The qbix wordmark etched as clear glass into a frosted pane, a lime circle and an ink block drifting behind">
+    <div class="em-under">
+      <svg width="840" height="600" viewBox="-100 -100 840 600" aria-hidden="true">
+        <circle data-c r="70" fill="#B8FF00"/><rect data-b width="150" height="104" fill="#0B0C0D"/>
+      </svg>
+    </div>
+    <div class="em-tint"></div>
+    <div class="em-grain"></div>
+    <svg class="em-sharp" viewBox="0 0 640 400" aria-hidden="true">
+      <defs>
+        <clipPath id="em-clip"><path id="em-mark" transform="translate(110 121.5) scale(.4575)" d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 0H616.5V34H583.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/></clipPath>
+      </defs>
+      <g clip-path="url(#em-clip)">
+        <rect width="640" height="400" fill="#fff"/>
+        <circle data-c r="70" fill="#B8FF00"/><rect data-b width="150" height="104" fill="#0B0C0D"/>
+      </g>
+      <use href="#em-mark" fill="none" stroke="#0B0C0D" stroke-opacity=".12" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div class="em-edge"></div>
+    <div class="em-url">qbix.space</div>
+  </div>
+<!-- /code -->
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Etched mark. One pair of positions drives both copies of the shapes: the blurred one under the
+   tint and the sharp one seen through the letters. Closed sinusoid loops, 16 s and 20 s. */
+(() => {
+  const box = document.getElementById('em');
+  const cs = [...box.querySelectorAll('[data-c]')], bs = [...box.querySelectorAll('[data-b]')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2, P1 = 16, P2 = 20;
+  let t0 = performance.now(), raf = 0, onScreen = true, held = 0;
+
+  function show(t) {
+    const cx = 300 + 190 * Math.sin(TAU * (t / P1) + 0.9), cy = 196 + 52 * Math.sin(TAU * (t / (P1 / 2)) + 0.4);
+    const bx = 330 + 175 * Math.sin(TAU * (t / P2) + 3.9) - 75, by = 196 + 46 * Math.cos(TAU * (t / (P2 / 2)) + 1.2) - 52;
+    for (const c of cs) { c.setAttribute('cx', cx.toFixed(2)); c.setAttribute('cy', cy.toFixed(2)); }
+    for (const b of bs) { b.setAttribute('x', bx.toFixed(2)); b.setAttribute('y', by.toFixed(2)); }
+  }
+  function frame(now) {
+    raf = 0;
+    if (!document.hidden && onScreen) show((now - t0) / 1000);
+    raf = requestAnimationFrame(frame);
+  }
+  if (reduced) show(9);
+  else {
+    show(0); raf = requestAnimationFrame(frame);
+    if ('IntersectionObserver' in window) new IntersectionObserver((e) => {
+      const was = onScreen; onScreen = e[e.length - 1].isIntersecting;
+      if (!onScreen) held = performance.now(); else if (!was) t0 += performance.now() - held;
+    }).observe(box);
+  }
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+  QM.demo({ kind: 'loop', restart() { t0 = performance.now(); } });
+})();
+</script>
+</body>
+</html>

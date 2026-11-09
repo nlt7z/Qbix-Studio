@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rising frost · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "rising-frost",
+  "title": "Rising frost",
+  "group": "studio",
+  "added": "2026-11-09",
+  "cat": "buttons",
+  "order": 30,
+  "kind": "loop",
+  "tone": "paper",
+  "line": "rise 1.6 s · expo out · sink 1.1 s · move ease",
+  "summary": "A frosted sheet rises over a lime render, and the higher it goes the thicker its frost: the blur is a function of the sheet's height, so the picture behind is nearly sharp at the bottom edge and soft at the top. On the sheet sit one line, Forma launch site, a live mark and one ink button. It sinks and rises again. In the detail view, drag the handle to set the height yourself; idle, it loops again after a few seconds.",
+  "spec": [
+    ["Rise", "1600 ms, cubic-bezier(0.16, 1, 0.3, 1) on the sheet's height"],
+    ["Sink", "1100 ms, cubic-bezier(0.65, 0, 0.35, 1)"],
+    ["Frost", "backdrop blur = 3 px + 31 px × height, saturate 1.3, white tint .5, grain at 12%"],
+    ["Edge", "a 1 px lit top edge only. No border, no shadow"],
+    ["Drag", "the handle sets the height directly, 0 to 1; the frost follows at once"],
+    ["Idle", "rise, hold 2.4 s, sink, rest 1 s; resumes 4 s after the last touch"],
+    ["Reduced motion", "the sheet stays up, still"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A case study's project card on a launch page: the details sheet slides up over the work and the work softens as the sheet takes over.",
+  "rules": [
+    "The blur is driven by one variable, the sheet's height. Never animate the blur on its own clock.",
+    "The sheet rises on expo out and sinks on the move easing. Nothing bounces.",
+    "The picture behind stays sharp and calm; the glass is the only thing that changes.",
+    "No border, no drop shadow; the lit top edge is the glass's own."
+  ],
+  "tags": ["sheet", "frost", "glass", "blur", "drag", "buttons"],
+  "shot": 1500
+}
+</script>
+<style data-code>
+/* Rising frost. A frosted sheet; its blur grows with its height (--h, 0 to 1). */
+.rf { --h: 0; --cut: 16px;
+  --rf-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 1.4 -.2'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  position: absolute; left: 0; right: 0; bottom: 0; height: 180px;
+  transform: translateY(calc((1 - var(--h)) * 100%));
+  background: rgba(255, 255, 255, .5);
+  -webkit-backdrop-filter: blur(calc(3px + var(--h) * 31px)) saturate(1.3); backdrop-filter: blur(calc(3px + var(--h) * 31px)) saturate(1.3);
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  color: #0B0C0D; font-family: 'Geist', Geist, sans-serif; }
+.rf::after { content: ''; position: absolute; inset: 0; background: var(--rf-grain) 0 0 / 140px; opacity: .12; pointer-events: none; }
+.rf::before { content: ''; position: absolute; inset: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); pointer-events: none; z-index: 2; }
+.rf-grip { position: absolute; left: 0; right: 0; top: 0; height: 30px; cursor: grab; touch-action: none; z-index: 1; }
+.rf-grip:active { cursor: grabbing; }
+.rf-grip i { position: absolute; left: 50%; top: 11px; width: 40px; height: 4px; margin-left: -20px; background: rgba(11, 12, 13, .38); }
+.rf-body { position: absolute; left: 28px; right: 28px; top: 44px; z-index: 1; }
+.rf-t { font: 300 34px/1 'Outfit', sans-serif; letter-spacing: -.035em; }
+.rf-s { margin-top: 12px; display: flex; align-items: center; gap: 8px; font: 500 14px/1 'Geist', Geist, sans-serif; color: rgba(11, 12, 13, .66); }
+.rf-s i { width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; }
+.rf-b { all: unset; box-sizing: border-box; position: absolute; right: 0; top: 4px; height: 40px; padding: 0 20px; display: grid; place-items: center; cursor: pointer;
+  background: #0B0C0D; color: #fff; font: 600 14px/1 'Geist', Geist, sans-serif; --c: 10px;
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
+.rf-b:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+</style>
+<style>
+  .fit { width: 592px; transform: scale(var(--s, 1)); transform-origin: center; }
+  .st { position: relative; width: 592px; height: 340px; background: #fff; }
+  .kk { position: absolute; left: 86px; top: 22px; font: 500 13px/14px 'Geist', Geist, sans-serif; color: rgba(11, 12, 13, .66); }
+  .win { position: absolute; left: 86px; top: 48px; width: 420px; height: 264px; overflow: hidden; background: #EEF1E8; }
+  .pic { position: absolute; inset: 0; background: url('../assets/art/lime-bloom.webp') center / cover; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <div class="st">
+    <div class="kk">Project details</div>
+    <div class="win">
+      <div class="pic"></div>
+<!-- code -->
+      <div class="rf" id="rf">
+        <div class="rf-grip" id="rfGrip"><i></i></div>
+        <div class="rf-body">
+          <div class="rf-t">Forma launch site</div>
+          <div class="rf-s"><i></i>Live</div>
+          <button class="rf-b" type="button">Open site</button>
+        </div>
+      </div>
+<!-- /code -->
+    </div>
+  </div>
+</div>
+<div class="qm-ui"><span>Drag the handle to raise or lower the sheet</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const rf = document.getElementById('rf'), grip = document.getElementById('rfGrip');
+  const expoOut = (t) => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);          // ~ cubic-bezier(.16, 1, .3, 1)
+  const move = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;  // move easing
+  let h = 0, raf = 0, drag = false;
+  function set(v) { h = Math.max(0, Math.min(1, v)); rf.style.setProperty('--h', h.toFixed(4)); }
+  function go(to, ms, ease) {
+    cancelAnimationFrame(raf);
+    const from = h, t0 = performance.now();
+    return new Promise((res) => {
+      (function step(now) {
+        const t = Math.min(1, (now - t0) / ms);
+        set(from + (to - from) * ease(t));
+        if (t < 1) raf = requestAnimationFrame(step); else res();
+      })(t0);
+    });
+  }
+  const rise = () => go(1, 1600, expoOut), sink = () => go(0, 1100, move);
+  grip.addEventListener('pointerdown', (e) => { drag = true; grip.setPointerCapture(e.pointerId); cancelAnimationFrame(raf); });
+  grip.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const box = rf.parentNode.getBoundingClientRect(), k = box.height / rf.parentNode.offsetHeight;
+    set((box.bottom - e.clientY + 15 * k) / (rf.offsetHeight * k));
+  });
+  const end = () => { drag = false; };
+  grip.addEventListener('pointerup', end); grip.addEventListener('pointercancel', end);
+  window.RisingFrost = { set, rise, sink, go, get h() { return h; }, get dragging() { return drag; } };
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+
+  let lastReal = -1e9, running = false, stop = false;
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const busy = () => RisingFrost.dragging || (!QM.tile && performance.now() - lastReal < 4000);
+  async function nap(ms) { const t0 = performance.now(); while (performance.now() - t0 < ms) { await wait(80); if (busy()) throw 0; } }
+  if (QM.reduced) RisingFrost.set(1);
+  else {
+    if (!QM.tile) ['pointerdown', 'pointermove', 'keydown'].forEach((n) => addEventListener(n, (e) => {
+      if (!e.isTrusted || (n === 'pointermove' && e.pointerType !== 'mouse' && !RisingFrost.dragging)) return;
+      if (n === 'pointermove' && !RisingFrost.dragging) return;
+      lastReal = performance.now(); if (running) { stop = true; }
+    }, { capture: true, passive: true }));
+    (async function idle() {
+      await wait(500);
+      for (;;) {
+        await wait(200);
+        if (document.hidden || busy()) continue;
+        running = true; stop = false;
+        try {
+          if (RisingFrost.h > .02) await RisingFrost.sink();
+          await nap(700); await RisingFrost.rise(); await nap(2400); await RisingFrost.sink(); await nap(1000);
+        } catch (e) { if (e !== 0) throw e; }
+        running = false;
+      }
+    })();
+  }
+  QM.demo({ kind: 'loop', restart() { lastReal = -1e9; RisingFrost.set(0); } });
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Behind the glass · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "behind-glass",
+  "title": "Behind the glass",
+  "group": "studio",
+  "added": "2026-11-09",
+  "cat": "text",
+  "order": 90,
+  "kind": "play",
+  "tone": "paper",
+  "shot": 2000,
+  "line": "blur 8 px · tint 40% · grain 10% · 2.8 s · move curve",
+  "summary": "The headline Design that ships. sits behind a pane of frosted glass that covers all of it. The pane's left edge sweeps across on the move curve; each word comes out sharp as the glass passes, and the pane, narrowed to a slab, slides off the right edge. A small lime block under the last word is part of the line, so it is frosted and cleared with it. Scrubbing the detail view moves the glass back and forth.",
+  "spec": [
+    ["Line", "Outfit 300, 92 px in the tile, tracking −0.03em, one kicker above in Geist 500"],
+    ["Frost", "a copy of the whole block blurred 8 px, a white tint at 40%, grain at 10%, a 1 px lit edge on top"],
+    ["Window", "the frosted copy is shown only inside the pane's rectangle by clip-path, so the sharp copy under it is exact"],
+    ["Pane", "taller than the line; its left edge goes 0 to the far side, its right edge stays at the end of the line until the slab (200 px) is left, then goes with it"],
+    ["Motion", "two legs of 1.2 s on cubic-bezier(0.65, 0, 0.35, 1) with a 400 ms beat when the edge reaches the middle of the line; nothing bounces"],
+    ["Scrub", "one function of one value draws every frame, so the scrubber goes from fully frosted to fully clear"],
+    ["Reduced motion", "the clear headline, no pane"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A hero's headline reveal, or a case-study opener: the line is there from the start, held behind glass, and the glass moves off it.",
+  "rules": [
+    "Both copies share one layout: the sharp one and the frosted one are the same markup, so the window is exact.",
+    "Type dissolves faster than pictures: blur 7 to 9 px for headlines so the words stay readable shapes, not 30.",
+    "One lime block, one job: it marks the last word and sits under the glass like the words do.",
+    "The pane is only ever clipped, never faded; nothing bounces."
+  ],
+  "tags": ["frost", "glass", "headline", "reveal", "clip", "scrub"]
+}
+</script>
+<style data-code>
+/* Behind the glass. A sharp copy of the block, and a blurred copy with tint and grain shown only inside the pane. */
+.bgl { position: relative; width: 800px; height: 500px; background: #fff; overflow: hidden; user-select: none; }
+.bgl-copy { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 22px; text-align: center; }
+.bgl-k { font: 500 14px/18px Geist, sans-serif; letter-spacing: -0.006em; color: rgba(11, 12, 13, .66); }
+.bgl-h { margin: 0; font: 300 92px/1 Outfit, Geist, sans-serif; font-synthesis-weight: none; letter-spacing: -0.03em; color: #0B0C0D; white-space: nowrap; }
+.bgl-h i { font-style: normal; position: relative; display: inline-block; }
+.bgl-h i::after { content: ''; position: absolute; left: 0; bottom: -10px; width: 52px; height: 10px; background: #B8FF00; }
+.bgl-frost { position: absolute; inset: 0; background: #eef0ec; clip-path: inset(80px 0 80px 0); }
+.bgl-frost .bgl-copy { filter: blur(8px); }
+.bgl-tint { position: absolute; inset: 0; background: rgba(255, 255, 255, .4); }
+.bgl-grain { position: absolute; inset: 0; opacity: .10; background-size: 160px 160px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.6 -.3'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); }
+.bgl-lit { position: absolute; left: 0; top: 0; height: 100%; width: 100%; pointer-events: none; }
+.bgl-lit::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(255, 255, 255, .95); }
+.bgl-lit::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(11, 12, 13, .08); }
+</style>
+<style>
+  .fit { width: 800px; transform: scale(var(--s, 1)); transform-origin: center; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+<!-- code -->
+  <div class="bgl" id="bgl">
+    <div class="bgl-copy" id="bgl-sharp">
+      <span class="bgl-k">Design studio · Ship it</span>
+      <h2 class="bgl-h">Design that <i>ships.</i></h2>
+    </div>
+    <div class="bgl-frost" id="bgl-frost" aria-hidden="true">
+      <div class="bgl-copy">
+        <span class="bgl-k">Design studio · Ship it</span>
+        <h2 class="bgl-h">Design that <i>ships.</i></h2>
+      </div>
+      <div class="bgl-tint"></div>
+      <div class="bgl-grain"></div>
+      <div class="bgl-lit"></div>
+    </div>
+  </div>
+<!-- /code -->
+</div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* One function of one value, bgRender(v) with v 0..1, draws every frame. The pane's left edge L eases
+   across; its right edge R waits at the line's end until the slab (PW px) is left, then leaves with it. */
+(() => {
+  const DUR = 2800, PW = 200, PAD = 28, W = 800, LEG = 1200 / 2800, BEAT = 400 / 2800;
+  const frost = document.getElementById('bgl-frost'), h = document.querySelector('#bgl-sharp .bgl-h');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  function bez(x1, y1, x2, y2) {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+    return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; } return sy(clamp(t)); };
+  }
+  const move = bez(0.65, 0, 0.35, 1);
+  let x0 = 0, x1 = W, top = 80, bot = 80, xm = 400;
+  function measure() {
+    const b = document.getElementById('bgl').getBoundingClientRect(), r = h.getBoundingClientRect(), s = b.width / W || 1;
+    x0 = (r.left - b.left) / s - PAD; x1 = (r.right - b.left) / s + PAD; xm = (x0 + x1) / 2;
+    const ct = (r.top - b.top) / s, cb = (b.bottom - r.bottom) / s;
+    top = Math.max(0, ct - 90); bot = Math.max(0, cb - 90);
+  }
+  function bgRender(v) {
+    const L = v < LEG + BEAT / 2 ? x0 + move(clamp(v / LEG)) * (xm - x0) : xm + move(clamp((v - LEG - BEAT) / LEG)) * (W - xm), R = Math.max(x1, L + PW) + 0;
+    const Rr = v >= 1 ? W : Math.min(W, R);
+    const l = Math.max(0, L), r = Math.max(0, W - Rr);
+    frost.style.clipPath = v >= 1 ? 'inset(50% 50% 50% 50%)' : `inset(${top}px ${r.toFixed(1)}px ${bot}px ${l.toFixed(1)}px)`;
+  }
+  let raf = 0;
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+  function reset() { stop(); measure(); bgRender(reduced ? 1 : 0); }
+  function play() {
+    stop();
+    if (reduced) return bgRender(1);
+    measure();
+    const t0 = performance.now();
+    const step = (now) => { const v = (now - t0) / DUR; bgRender(Math.min(v, 1)); if (v < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+  }
+  QM.demo({ kind: 'play', lead: 900, dur: DUR, hold: 2200, reset, play, seekPlay(v) { stop(); bgRender(QM.clamp01(v)); } });
+  const fit = () => { document.getElementById('fit').style.setProperty('--s', Math.max(0.4, Math.min(1.8, innerWidth / 900, innerHeight / 500)).toFixed(3)); };
+  addEventListener('resize', fit); fit();
+  if (document.fonts) document.fonts.ready.then(() => { if (!raf) reset(); });
+  reset();
+})();
+</script>
+</body>
+</html>

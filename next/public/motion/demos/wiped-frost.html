@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wiped frost · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "wiped-frost",
+  "title": "Wiped frost",
+  "group": "studio",
+  "added": "2026-11-09",
+  "cat": "cursor",
+  "order": 10,
+  "kind": "pointer",
+  "tone": "paper",
+  "line": "wipe 44 px · fog back 2.4 s · canvas mask",
+  "summary": "A lime render sits behind one large pane of frosted glass. The pointer wipes the frost away like a hand on a misted window: a soft clear trail follows it and slowly fogs back over, so the picture is only ever seen where the hand has just been. The frost is a blurred copy of the picture with a white tint and fine matte grain, drawn on a canvas, so it needs no backdrop-filter.",
+  "spec": [
+    ["Glass", "the picture blurred about 16 px, a white tint at 56%, a fine matte grain at 6%, a lit top edge of 1 px white. No border, no shadow"],
+    ["Wipe", "a soft round stamp of 44 px radius, stamped every 6 px along the pointer's path, erasing the frost from the canvas"],
+    ["Fog back", "the frost is drawn back over the canvas at 7% every 50 ms, so a clear trail is gone in about 2.4 s"],
+    ["Ghost", "a slow S across the pane, down and back up, 9 s"],
+    ["Input", "a real pointer drives the wipe in the detail view; the script resumes when it is idle"],
+    ["Reduced motion", "a still pane with one wiped patch; the pointer does nothing"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A case study's cover: the Forma launch site sits behind the glass, and the visitor wipes the frost to see the work.",
+  "rules": [
+    "Fog is the same layer as the frost, drawn back over the hole. Never fade the hole with opacity.",
+    "The trail clears slowly and the wipe is soft edged. Nothing bounces, nothing glows.",
+    "The grain belongs to the frost: it goes where the frost goes, so the clear glass is clean.",
+    "Type sits on the glass and stays readable on frost and on clear."
+  ],
+  "tags": ["frost", "glass", "wipe", "cursor", "canvas", "mask"],
+  "shot": 3600
+}
+</script>
+<style data-code>
+/* Wiped frost. A picture, and a canvas of frost over it that the pointer erases and that fogs back. */
+.wf { position: relative; width: 592px; height: 340px; background: #EEF1E8; overflow: hidden; user-select: none; touch-action: none; --cut: 16px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.wf-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.wf-frost { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* the glass's own edge: a lit top line, nothing else */
+.wf-edge { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); }
+.wf-k { position: absolute; left: 24px; top: 20px; font: 500 13px/14px 'Geist', Geist, sans-serif; letter-spacing: 0; color: #0B0C0D; pointer-events: none; }
+.wf-t { position: absolute; left: 24px; bottom: 20px; font: 300 44px/.95 Outfit, Geist, sans-serif; letter-spacing: -.035em; font-synthesis-weight: none; color: #0B0C0D; pointer-events: none; }
+</style>
+<style>
+  .fit { width: 592px; transform: scale(var(--s, 1)); transform-origin: center; display: grid; gap: 14px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+<!-- code -->
+  <div class="wf" id="wf" aria-label="A lime render behind frosted glass; move the pointer to wipe it clear">
+    <img class="wf-img" id="wf-img" src="../assets/art/lime-bloom.webp" alt="">
+    <canvas class="wf-frost" id="wf-frost" width="592" height="340"></canvas>
+    <div class="wf-edge"></div>
+    <span class="wf-k">Forma · Behind the glass</span>
+    <span class="wf-t">Forma</span>
+  </div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Wipe the glass with the pointer</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Wiped frost. frost = the picture blurred + tint + grain, kept offscreen. The visible canvas starts as frost;
+   the pointer erases it (destination-out), and a little frost is drawn back over it on a timer. */
+const Wipe = (() => {
+  const box = document.getElementById('wf'), img = document.getElementById('wf-img');
+  const cv = document.getElementById('wf-frost'), ctx = cv.getContext('2d');
+  const W = 592, H = 340, R = 44, STEP = 6, FOG = 0.07, FOG_MS = 50;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const src = document.createElement('canvas'); src.width = W; src.height = H;
+  let ready = false, px = null, py = null, lastFog = 0;
+
+  function buildFrost() {
+    const s = src.getContext('2d');
+    // object-fit: cover, drawn by hand so the copy lines up with the picture
+    const k = Math.max(W / img.naturalWidth, H / img.naturalHeight), dw = img.naturalWidth * k, dh = img.naturalHeight * k;
+    const dx = (W - dw) / 2, dy = (H - dh) / 2;
+    if ('filter' in s) { s.filter = 'blur(16px)'; s.drawImage(img, dx - 32, dy - 32, dw + 64, dh + 64); s.filter = 'none'; }
+    else { // no canvas filter: down and up twice
+      const a = document.createElement('canvas'); a.width = 48; a.height = 28;
+      const c = a.getContext('2d'); c.imageSmoothingQuality = 'high'; c.drawImage(img, dx / 12, dy / 12, dw / 12, dh / 12);
+      s.imageSmoothingQuality = 'high'; s.drawImage(a, 0, 0, W, H);
+    }
+    s.fillStyle = 'rgba(255, 255, 255, .56)'; s.fillRect(0, 0, W, H);
+    // matte grain: a small noise tile at 6%
+    const t = document.createElement('canvas'); t.width = t.height = 128;
+    const tc = t.getContext('2d'), d = tc.createImageData(128, 128);
+    for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+    tc.putImageData(d, 0, 0);
+    s.globalAlpha = 0.06; s.fillStyle = s.createPattern(t, 'repeat'); s.fillRect(0, 0, W, H); s.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over'; ctx.clearRect(0, 0, W, H); ctx.drawImage(src, 0, 0);
+    ready = true;
+    if (still) stamp(W * 0.64, H * 0.46, 1.5);
+  }
+
+  function stamp(x, y, scale) {
+    const r = R * (scale || 1), g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.55, 'rgba(0,0,0,.85)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  // pointer in client px -> pane px (the sheet may be scaled)
+  function move(cx, cy) {
+    if (!ready || still) return;
+    const b = box.getBoundingClientRect(), k = b.width / W;
+    const x = (cx - b.left) / k, y = (cy - b.top) / k;
+    if (px === null) { px = x; py = y; }
+    const dx = x - px, dy = y - py, n = Math.max(1, Math.ceil(Math.hypot(dx, dy) / STEP));
+    for (let i = 1; i <= n; i++) stamp(px + dx * i / n, py + dy * i / n);
+    px = x; py = y;
+  }
+  function leave() { px = py = null; }
+  function frame(now) {
+    if (ready && !still && !document.hidden && now - lastFog > FOG_MS) {
+      lastFog = now;
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = FOG; ctx.drawImage(src, 0, 0); ctx.globalAlpha = 1;
+    }
+    requestAnimationFrame(frame);
+  }
+  if (img.complete && img.naturalWidth) buildFrost(); else img.addEventListener('load', buildFrost);
+  requestAnimationFrame(frame);
+  return { move, leave, box, W, H };
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+
+  // a real pointer anywhere in the sheet wipes (the harness hands over from the ghost)
+  addEventListener('pointermove', (e) => Wipe.move(e.clientX, e.clientY), { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => Wipe.leave());
+
+  // the ghost's hand: a slow S down the pane and back up
+  const ez = QM.bezier(0.65, 0, 0.35, 1), PERIOD = 9;
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y, ghost) => { if (ghost) Wipe.move(x, y); },
+    leave: () => Wipe.leave(),
+    path(t) {
+      const r = Wipe.box.getBoundingClientRect(), k = r.width / Wipe.W;
+      const f = (Math.max(0, t) % PERIOD) / PERIOD, tri = f < 0.5 ? f * 2 : 2 - f * 2, th = ez(tri) * Math.PI * 2;
+      const x = Wipe.W * 0.5 + 215 * Math.sin(th), y = Wipe.H * 0.5 - 118 * Math.cos(th / 2);
+      return [r.left + x * k, r.top + y * k];
+    },
+  });
+</script>
+</body>
+</html>

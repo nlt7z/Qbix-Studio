@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Focus pull · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "focus-pull",
+  "title": "Focus pull",
+  "group": "studio",
+  "added": "2026-11-09",
+  "cat": "scroll",
+  "order": 40,
+  "kind": "scroll",
+  "tone": "paper",
+  "shot": 3100,
+  "line": "scroll is the playhead · blur 0 to 34 px by depth · chase 6.5",
+  "summary": "Five lime renders stand in a calm stack, each behind more frost than the one before. Scrolling pulls focus through them: the card coming forward loses its frost and sharpens, the one it passes frosts over and sinks away. A small Geist Mono readout, f/2.0 · 03 / 05, counts the card in focus.",
+  "spec": [
+    ["Playhead", "the real scroll, 0 to 1 over four steps; smoothed with the site's chase, 1 − e^(−6.5 dt)"],
+    ["Depth", "per card: offset −46 px and scale −4.5% for each step behind the front"],
+    ["Frost", "blur 10 px per step up to 34 px on the picture, white tint .3 to .62 so dark pictures still read as pale glass, grain 7% rising to 14%"],
+    ["Pass", "a passed card stays in front, frosts to white, sinks 22 px and grows 5% as it leaves"],
+    ["Edge", "a lit top edge only (inset 0 1px 0 rgba(255,255,255,.7)); no border, no shadow"],
+    ["Readout", "Geist Mono, f/2.0 · 03 / 05, the number follows the nearest card"],
+    ["Reduced motion", "the first card sharp, the rest frosted, still"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A work index on a launch page: scrolling through the selected projects pulls each one into focus while the others soften behind it.",
+  "rules": [
+    "Blur is a function of one number, the card's distance from the front. Never its own clock.",
+    "Small steps: the stack is calm, not a carousel. Nothing bounces, nothing overshoots.",
+    "The frost sits on the card itself (a blurred picture, a tint, a grain layer), so it renders everywhere.",
+    "No border, no drop shadow; one lit top edge."
+  ],
+  "tags": ["scroll", "focus", "frost", "glass", "depth", "stack"]
+}
+</script>
+<style data-code>
+/* Focus pull. --d is a card's distance from the front: 0 sharp, bigger is deeper and frostier. */
+.fp { --cut: 18px;
+  --fp-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 1.4 -.2'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  position: relative; width: 290px; height: 182px; }
+.fp-c { position: absolute; inset: 0; overflow: hidden; background: #fff; will-change: transform;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.fp-p { position: absolute; inset: -40px; background-size: cover; background-position: center; }
+.fp-t { position: absolute; inset: 0; background: #fff; opacity: 0; }
+.fp-g { position: absolute; inset: 0; background: var(--fp-grain) 0 0 / 140px; opacity: .07; pointer-events: none; }
+.fp-c::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7); pointer-events: none; }
+.fp-r { position: absolute; left: 0; right: 0; top: 212px; text-align: center; font: 500 13px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; color: rgba(11, 12, 13, .66); }
+</style>
+<style>
+  .fit { width: 592px; transform: scale(var(--s, 1)); transform-origin: center; }
+  .st { position: relative; width: 592px; height: 440px; background: #fff; display: grid; place-items: center; }
+  .kk { position: absolute; left: 0; right: 0; top: 10px; text-align: center; font: 500 13px/14px 'Geist', Geist, sans-serif; color: rgba(11, 12, 13, .66); }
+  .mid { margin-top: 112px; }
+  .pin { position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden; background: #fff; }
+  .run { height: 500vh; }
+  .qm-hint { position: fixed; right: clamp(16px, 3vw, 28px); top: clamp(12px, 2.4vmin, 24px); z-index: 5; }
+</style>
+</head>
+<body>
+<div class="run">
+<div class="pin">
+<div class="fit" id="fit">
+  <div class="st">
+    <div class="kk">Selected work</div>
+    <div class="mid">
+<!-- code -->
+      <div class="fp" id="fp">
+        <div class="fp-c"><div class="fp-p" style="background-image:url('../assets/art/lime-fold.webp')"></div><div class="fp-t"></div><div class="fp-g"></div></div>
+        <div class="fp-c"><div class="fp-p" style="background-image:url('../assets/art/lime-bloom.webp')"></div><div class="fp-t"></div><div class="fp-g"></div></div>
+        <div class="fp-c"><div class="fp-p" style="background-image:url('../assets/art/lime-tube.webp')"></div><div class="fp-t"></div><div class="fp-g"></div></div>
+        <div class="fp-c"><div class="fp-p" style="background-image:url('../assets/art/lime-chrome.webp')"></div><div class="fp-t"></div><div class="fp-g"></div></div>
+        <div class="fp-c"><div class="fp-p" style="background-image:url('../assets/art/lime-lattice.webp')"></div><div class="fp-t"></div><div class="fp-g"></div></div>
+        <div class="fp-r" id="fpR">f/2.0 · 01 / 05</div>
+      </div>
+<!-- /code -->
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<span class="qm-hint">Scroll ↓</span>
+<div class="qm-ui"><span>Scroll the page</span><span class="qm-sep">/</span><span>Focus pulls through the stack</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+(function () {
+  const root = document.getElementById('fp'), read = document.getElementById('fpR');
+  const cards = [...root.querySelectorAll('.fp-c')];
+  const parts = cards.map((c) => ({ c, p: c.querySelector('.fp-p'), t: c.querySelector('.fp-t'), g: c.querySelector('.fp-g') }));
+  const N = cards.length, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  let shown = -1;
+  function draw(p) {                       // p: 0..N-1, the card in focus
+    parts.forEach((o, i) => {
+      const d = i - p;
+      const ad = Math.abs(d);
+      const depth = d >= 0 ? d : 0;
+      const frost = d >= 0 ? clamp(d / 2.8, 0, 1) : clamp(ad * 2.4, 0, 1);   // a passed card frosts over fast
+      const y = d >= 0 ? -depth * 46 : ad * 22;
+      const s = d >= 0 ? 1 - depth * 0.045 : 1 + ad * 0.05;
+      const gone = d < 0 ? clamp(1 - (ad - 0.35) / 0.5, 0, 1) : 1;           // once frosted white it leaves
+      o.c.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0) scale(${s.toFixed(4)})`;
+      o.c.style.zIndex = String(d < 0 ? 200 : 100 - Math.round(ad * 10));
+      o.c.style.visibility = gone <= 0 ? 'hidden' : 'visible';
+      o.c.style.opacity = gone.toFixed(3);
+      o.p.style.filter = `blur(${(frost * 34).toFixed(2)}px) saturate(${(1 + frost * 0.3).toFixed(2)})`;
+      o.t.style.opacity = (d < 0 ? Math.min(0.9, frost * 0.9) : Math.min(1, d * 2.5) * (0.3 + frost * 0.32)).toFixed(3);
+      o.g.style.opacity = (0.07 + frost * 0.07).toFixed(3);
+    });
+    const n = clamp(Math.round(p), 0, N - 1) + 1;
+    if (n !== shown) { shown = n; read.textContent = `f/2.0 · 0${n} / 0${N}`; }
+  }
+  // the scroll is the playhead, smoothed with the site's chase
+  let target = 0, cur = 0, raf = 0, last = 0;
+  const maxY = () => Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  const aim = () => { target = clamp(scrollY / maxY(), 0, 1) * (N - 1); if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    cur += (target - cur) * (1 - Math.exp(-6.5 * dt));
+    if (Math.abs(target - cur) < 0.0008) cur = target;
+    draw(cur);
+    raf = cur === target ? 0 : requestAnimationFrame(tick);
+  }
+  if (reduce) draw(0);
+  else { addEventListener('scroll', aim, { passive: true }); addEventListener('resize', aim); draw(0); aim(); }
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+  QM.demo({ kind: 'scroll', lead: 1200, dur: 6400, hold: 1200, back: 2200, pause: 900, stops: [0.25, 0.5, 0.75, 1] });
+</script>
+</body>
+</html>
