@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lens teardown · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lens-teardown", "title": "Lens teardown", "group": "studio", "added": "2026-11-10", "cat": "scenes", "order": 70,
+  "kind": "states", "n": 5, "tone": "paper", "shot": 14500,
+  "line": "55 parts · 5 states · one axis",
+  "summary": "A precision camera lens, modelled like a product render, takes itself apart along its optical axis and goes back together. Satin white ceramic barrel, an ink focus ring knurled with 112 instanced ribs, a printed distance scale, a lime glaze ring, seven glass elements, a nine-blade iris that really opens and closes, a threaded helicoid and a brushed steel bayonet mount. Five states from one number t: assembled, front group, elements, iris, reassembled.",
+  "spec": [
+    ["Model", "55 parts: ceramic barrel and liner, focus ring with 112 instanced ribs, scale band (canvas, Geist Mono), lime ring, hood, bezel with a stepped inner thread, 7 glass elements as lathe sections with different curvature, 7 black spacers, iris of 9 extruded blades each on its own pin, a helical helicoid thread, steel mount with 3 bayonet tabs and 4 instanced screws, rear cap"],
+    ["Glass", "MeshPhysicalMaterial, transmission 1, thickness 0.5–1.2, ior 1.5, one cemented element tinted lime with a thin-film coating"],
+    ["State 1", "assembled, three-quarter, the camera drifts and the iris breathes between 8° and 26° of blade angle; the parts seat from a hair apart in the first beat"],
+    ["State 2", "front group (hood, bezel, lock ring) unscrews 1.25 turns while it travels 1.7 along the axis, then hood, bezel, lock ring, spacer, element 1 and element 2 separate front to back, 70 ms apart"],
+    ["State 3", "the barrel slides back 11 units, 17 parts fan out along the axis with equal 0.72 gaps, 17 ms stagger front to rear, each element turning at its own rate; the camera dollies to a side-on view and the focus racks to the middle element"],
+    ["State 4", "the iris group lifts toward the camera and turns 70° about the vertical, the nine blades close to 0.8 of a unit and open again (move curve, then expo out), the focus ring turns back while the helicoid screws out 0.9 along its real pitch"],
+    ["State 5", "reverse order with overlap: iris, helicoid, elements rear to front, barrel, front group screws on last; expo out, no bounce; ends assembled from a new angle with the lime ring catching the light"],
+    ["Easing", "expo out (0.16, 1, 0.3, 1) for arrivals, move (0.65, 0, 0.35, 1) for moves"],
+    ["Render", "studio environment from emissive panels (PMREM), one soft key with shadow, ACESFilmic, GTAO, bokeh depth of field with a rack focus, SMAA"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-10"],
+  "where": "A product page for a Qbix build kit or a case study chapter that explains how something is made: the object takes itself apart, each part is named by the state readout, and it goes back together.",
+  "rules": [
+    "Needs three.js r160 and the extras bundle (kit/three-plus.js, global THREE: EffectComposer, GTAOPass, BokehPass, OutputPass, SMAAPass, RoundedBoxGeometry); classic script, nothing else. Falls back to a plain render if a pass fails.",
+    "Everything is drawn from one number t (0 to 5) through seek(t); the only wall-clock terms are the idle breathing of the iris and the camera drift in the assembled states.",
+    "Lime is a glaze: #B8FF00 must read as vivid lime in the lit faces, never pastel or whitish; shade leans pale green, never grey.",
+    "Parts are authored on one axis (Y) and rolled about it; the exploded gaps are computed from the parts' own extents so they stay equal.",
+    "Nothing bounces. Under reduced motion the lens rests as a still frame and the scrubber still seeks."
+  ],
+  "tags": ["three.js", "3D", "product", "camera lens", "exploded view", "teardown", "iris", "glass", "lime glaze", "depth of field"]
+}
+</script>
+<style data-code>
+/* Lens teardown. Ink #0B0C0D. Easings: move (.65,0,.35,1). */
+.lz { position: absolute; inset: 0; background: #fff; color: #0B0C0D; font: 400 15px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.011em; overflow: hidden; }
+.lz canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+.lz-kick { position: absolute; left: 28px; top: 24px; margin: 0; font-size: 14px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.lz-read { position: absolute; left: 28px; bottom: 24px; margin: 0; display: flex; gap: 22px; font: 400 13px/1.5 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: #0B0C0D; }
+.lz-roll { position: relative; display: block; height: 1.5em; overflow: hidden; white-space: nowrap; }
+.lz-roll i { font-style: normal; display: block; transition: transform 520ms cubic-bezier(.65, 0, .35, 1); }
+.lz-roll i.in { position: absolute; left: 0; top: 0; transform: translateY(100%); }
+.lz-roll i.in.go { transform: none; }
+.lz-roll i.out { position: absolute; left: 0; top: 0; }
+.lz-roll i.out.go { transform: translateY(-100%); }
+.lz-count { width: 7ch; } .lz-label { width: 14ch; color: rgba(11, 12, 13, .66); }
+@media (prefers-reduced-motion: reduce) { .lz-roll i { transition: none; } }
+</style>
+<style>
+  html, body { height: 100%; background: #fff; }
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<section class="lz" id="lz" aria-label="Lens teardown">
+  <canvas id="lz-cv" aria-hidden="true"></canvas>
+  <p class="lz-kick">Qbix Labs · Lens teardown</p>
+  <p class="lz-read" aria-live="off"><span class="lz-roll lz-count" id="lz-count"><i>01 / 05</i></span><span class="lz-roll lz-label" id="lz-label"><i>Assembled</i></span></p>
+</section>
+<!-- /code -->
+</main>
+<script src="../kit/three-plus.js"></script>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Lens teardown. Every part is authored on one axis (Y, front is +Y) in millimetres / 10, then
+   moved and rolled about that axis by tracks of one number t (0..5). */
+const LENS = (() => {
+  const T = THREE, qs = new URLSearchParams(location.search);
+  const host = document.getElementById('lz'), canvas = document.getElementById('lz-cv');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const xo = QM.bezier(0.16, 1, 0.3, 1), mv = QM.bezier(0.65, 0, 0.35, 1);   // the qbix curves
+  const EZ = { x: xo, m: mv, l: (v) => v };
+  const seg = (t, s, e, k = 'x') => (t <= s ? 0 : t >= e ? 1 : EZ[k]((t - s) / (e - s)));
+  const mix = (a, b, k) => a + (b - a) * k;
+  const deg = Math.PI / 180;
+
+  /* ------------------------------------------------------------------ geometry kit */
+  // a closed (r, y) outline with optional fillet radii -> points; 's' marks a smooth point that is not filleted
+  function fillet(pts, n) {
+    const L = pts.length, out = [];
+    for (let i = 0; i < L; i++) {
+      const p0 = pts[(i + L - 1) % L], p1 = pts[i], p2 = pts[(i + 1) % L], rad = p1[2];
+      if (!rad || rad === 's') { out.push([p1[0], p1[1], rad === 's' ? 0 : 1]); continue; }
+      const ax = p0[0] - p1[0], ay = p0[1] - p1[1], bx = p2[0] - p1[0], by = p2[1] - p1[1];
+      const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
+      if (la < 1e-9 || lb < 1e-9) { out.push([p1[0], p1[1], 1]); continue; }
+      const ux = ax / la, uy = ay / la, vx = bx / lb, vy = by / lb;
+      const ang = Math.acos(clamp(ux * vx + uy * vy, -1, 1));
+      if (ang > 3.1 || ang < 0.02) { out.push([p1[0], p1[1], 1]); continue; }
+      let t = rad / Math.tan(ang / 2); const tm = Math.min(la, lb) * 0.5;
+      if (t > tm) t = tm;
+      const r = t * Math.tan(ang / 2);
+      const sx = p1[0] + ux * t, sy = p1[1] + uy * t, ex = p1[0] + vx * t, ey = p1[1] + vy * t;
+      let bx2 = ux + vx, by2 = uy + vy; const bl = Math.hypot(bx2, by2); bx2 /= bl; by2 /= bl;
+      const d = r / Math.sin(ang / 2), cx = p1[0] + bx2 * d, cy = p1[1] + by2 * d;
+      const a0 = Math.atan2(sy - cy, sx - cx); let da = Math.atan2(ey - cy, ex - cx) - a0;
+      while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+      const steps = Math.max(2, Math.round(n * Math.abs(da) / (Math.PI / 2)));
+      for (let k = 0; k <= steps; k++) out.push([cx + r * Math.cos(a0 + da * k / steps), cy + r * Math.sin(a0 + da * k / steps), 0]);
+    }
+    return out;
+  }
+  // a solid of revolution about Y from a closed outline; hard corners split the normals, fillets and 's' points are smooth
+  function lathe(pts, o = {}) {
+    const seg = o.seg || 96, n = o.n || 5, P = fillet(pts, n), M = P.length;
+    let area = 0; for (let i = 0; i < M; i++) { const a = P[i], b = P[(i + 1) % M]; area += a[0] * b[1] - b[0] * a[1]; }
+    const sg = area >= 0 ? 1 : -1, sn = [];
+    for (let i = 0; i < M; i++) {
+      const a = P[i], b = P[(i + 1) % M], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy);
+      sn.push(l < 1e-7 ? null : [dy / l * sg, -dx / l * sg]);
+    }
+    const near = (i, d) => { for (let k = 1; k < M; k++) { const s = sn[(i + d * k + M * 8) % M]; if (s) return s; } return [1, 0]; };
+    const V = [], vin = [], vout = [];
+    const ymin = o.v ? o.v[0] : Math.min(...P.map((p) => p[1])), ymax = o.v ? o.v[1] : Math.max(...P.map((p) => p[1]));
+    for (let i = 0; i < M; i++) {
+      const sp = sn[(i + M - 1) % M] || near(i, -1), sx = sn[i] || near(i, 1);
+      if (P[i][2]) { vin[i] = V.length; V.push([P[i][0], P[i][1], sp[0], sp[1]]); vout[i] = V.length; V.push([P[i][0], P[i][1], sx[0], sx[1]]); }
+      else { let nx = sp[0] + sx[0], ny = sp[1] + sx[1]; const l = Math.hypot(nx, ny) || 1; vin[i] = vout[i] = V.length; V.push([P[i][0], P[i][1], nx / l, ny / l]); }
+    }
+    const W = seg + 1, pos = new Float32Array(V.length * W * 3), nor = new Float32Array(V.length * W * 3), uv = new Float32Array(V.length * W * 2);
+    const a0 = o.a0 || 0, al = o.alen == null ? Math.PI * 2 : o.alen, uo = o.uo || 0;
+    for (let j = 0; j < V.length; j++) for (let k = 0; k < W; k++) {
+      const ph = a0 + al * k / seg, s = Math.sin(ph), c = Math.cos(ph), q = j * W + k;
+      pos[q * 3] = V[j][0] * s; pos[q * 3 + 1] = V[j][1]; pos[q * 3 + 2] = V[j][0] * c;
+      nor[q * 3] = V[j][2] * s; nor[q * 3 + 1] = V[j][3]; nor[q * 3 + 2] = V[j][2] * c;
+      uv[q * 2] = k / seg + uo; uv[q * 2 + 1] = clamp((V[j][1] - ymin) / (ymax - ymin || 1));
+    }
+    const idx = [];
+    for (let i = 0; i < M; i++) {
+      if (!sn[i]) continue;
+      const A = vout[i], B = vin[(i + 1) % M];
+      if (P[i][0] < 1e-6 && P[(i + 1) % M][0] < 1e-6) continue;
+      for (let k = 0; k < seg; k++) { const a = A * W + k, b = B * W + k, c = B * W + k + 1, d = A * W + k + 1; idx.push(a, b, c, a, c, d); }
+    }
+    // winding: make the first triangle face along its vertex normal
+    for (let q = 0; q < idx.length; q += 3) {
+      const a = idx[q], b = idx[q + 1], c = idx[q + 2];
+      const ux = pos[b * 3] - pos[a * 3], uy = pos[b * 3 + 1] - pos[a * 3 + 1], uz = pos[b * 3 + 2] - pos[a * 3 + 2];
+      const vx = pos[c * 3] - pos[a * 3], vy = pos[c * 3 + 1] - pos[a * 3 + 1], vz = pos[c * 3 + 2] - pos[a * 3 + 2];
+      const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx;
+      const dt = cx * nor[a * 3] + cy * nor[a * 3 + 1] + cz * nor[a * 3 + 2];
+      if (Math.abs(dt) > 1e-9) { if (dt < 0) for (let r = 0; r < idx.length; r += 3) { const t = idx[r + 1]; idx[r + 1] = idx[r + 2]; idx[r + 2] = t; } break; }
+    }
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('normal', new T.BufferAttribute(nor, 3)); g.setAttribute('uv', new T.BufferAttribute(uv, 2));
+    g.setIndex(idx); return g;
+  }
+  // a ring cross-section: [rin, y0, rout, y1] with chamfer / fillet c
+  const ringP = (ri, y0, ro, y1, c = 0.03, c2 = c) => [[ri, y0, c2], [ro, y0, c], [ro, y1, c], [ri, y1, c2]];
+  // saw teeth on a straight wall: from y0 to y1, n teeth, between radius r and r + dep (outward or inward by sign of dep)
+  const teeth = (r, y0, y1, n, dep) => { const o = []; for (let i = 0; i < n; i++) { const a = y0 + (y1 - y0) * i / n, b = y0 + (y1 - y0) * (i + 1) / n; o.push([r, a, 0], [r + dep, a + (b - a) * 0.15, 0], [r + dep, a + (b - a) * 0.6, 0], [r, b - (b - a) * 0.02, 0]); } return o; };
+  const merge = (list) => T.BufferGeometryUtils.mergeGeometries(list.map((g) => (g.index ? g.toNonIndexed() : g)), false);
+
+  // a glass element: sections of two spheres. sf: forward bulge at the axis (negative = concave), sb: rearward bulge; edge: thickness at the clear radius a
+  function element(e) {
+    const a = e.a, rr = e.rr, ed = e.edge, K = 16, bv = 0.045;
+    const mag = (s, r) => { const R = (a * a + s * s) / (2 * Math.abs(s || 1e-6)); return R - Math.sqrt(Math.max(0, R * R - r * r)); };
+    const dF = (r) => (e.sf === 0 ? 0 : Math.sign(e.sf) * (Math.abs(e.sf) - mag(e.sf, r)));
+    const dB = (r) => (e.sb === 0 ? 0 : Math.sign(e.sb) * (Math.abs(e.sb) - mag(e.sb, r)));
+    const yf = (r) => ed / 2 + dF(r), yb = (r) => -ed / 2 - dB(r), P = [];
+    for (let i = 0; i <= K; i++) { const r = a * (i / K) ** 0.85; P.push([r, yf(r), i === 0 ? 0 : 's']); }
+    P.push([rr, yf(a), bv]); P.push([rr, yb(a), bv]);
+    for (let i = K; i >= 0; i--) { const r = a * (i / K) ** 0.85; P.push([r, yb(r), i === 0 ? 0 : 's']); }
+    const g = lathe(P, { seg: 120, n: 3 });
+    g.userData = { top: ed / 2 + Math.max(e.sf, 0), bottom: -ed / 2 - Math.max(e.sb, 0), edge: ed };
+    return g;
+  }
+  // a helical thread wound on a core: crest radius rc, pitch p, from y0, over turns; trapezoid section tapering out at both ends
+  function thread(rcore, rcrest, pitch, turns, y0, steps = 72) {
+    const N = Math.round(turns * steps), prof = [[-0.44, 0], [-0.32, 0.7], [-0.13, 1], [0.13, 1], [0.32, 0.7], [0.44, 0]], np = prof.length;
+    const pos = [], idx = [];
+    for (let i = 0; i <= N; i++) {
+      const u = i / N, ph = u * turns * Math.PI * 2, s = Math.min(1, Math.min(u, 1 - u) * turns * 2.2);
+      const ys = y0 + pitch * u * turns, h = (rcrest - rcore) * Math.sin(s * Math.PI / 2);
+      for (let j = 0; j < np; j++) {
+        const r = rcore - 0.03 + (h + 0.03) * prof[j][1], yy = ys + prof[j][0] * pitch;
+        pos.push(r * Math.sin(ph), yy, r * Math.cos(ph));
+      }
+    }
+    for (let i = 0; i < N; i++) for (let j = 0; j < np; j++) { const a = i * np + j, b = i * np + (j + 1) % np, c = (i + 1) * np + (j + 1) % np, d = (i + 1) * np + j; idx.push(a, b, c, a, c, d); }
+    // outward winding: test a crest triangle against the radial direction
+    const q = (N >> 2) * np + 2, A = [pos[q * 3], pos[q * 3 + 1], pos[q * 3 + 2]], B = q + 1, C = q + np + 1;
+    const ux = pos[B * 3] - A[0], uy = pos[B * 3 + 1] - A[1], uz = pos[B * 3 + 2] - A[2], vx = pos[C * 3] - A[0], vy = pos[C * 3 + 1] - A[1], vz = pos[C * 3 + 2] - A[2];
+    const dt = (uy * vz - uz * vy) * A[0] + (uz * vx - ux * vz) * 0 + (ux * vy - uy * vx) * A[2];
+    if (dt < 0) for (let k = 0; k < idx.length; k += 3) { const t = idx[k + 1]; idx[k + 1] = idx[k + 2]; idx[k + 2] = t; }
+    const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  }
+  // an annular sector (a bayonet tab) extruded along Y
+  function sector(r0, r1, a0, a1, y0, h) {
+    const n = 14, pt = (r, a) => [r * Math.sin(a), -r * Math.cos(a)], sh = new T.Shape(), o = [];
+    for (let i = 0; i <= n; i++) o.push(pt(r1, a0 + (a1 - a0) * i / n));
+    for (let i = n; i >= 0; i--) o.push(pt(r0, a0 + (a1 - a0) * i / n));
+    sh.moveTo(o[0][0], o[0][1]); for (let i = 1; i < o.length; i++) sh.lineTo(o[i][0], o[i][1]);
+    const g = new T.ExtrudeGeometry(sh, { depth: h, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.03, bevelSegments: 2, curveSegments: 1 });
+    g.rotateX(-Math.PI / 2); g.translate(0, y0, 0);    // shape (x, y) -> (x, ., -y): the angle convention of the lathes (0 = +Z) is kept by pt()
+    return g;
+  }
+
+  /* ------------------------------------------------------------------ renderer, scene, studio environment */
+  const gl = document.createElement('canvas').getContext('webgl2');
+  let SOFT = !!navigator.webdriver;          // headless SwiftShader: lighter settings unless ?hq
+  if (qs.has('hq')) SOFT = false;
+  const renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
+  const EXPO = 0.66, BG = 1.0;   // WebGL clamps the clear colour to 1, so the page white is 1.0 and the last pass divides what the curve makes of it
+  renderer.outputColorSpace = T.SRGBColorSpace;
+  renderer.toneMapping = T.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = EXPO;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.VSMShadowMap;
+  renderer.setClearColor(new T.Color(BG, BG, BG), 1);
+  let PR = SOFT ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
+  renderer.setPixelRatio(PR);
+  const scene = new T.Scene();
+  const cam = new T.PerspectiveCamera(22, 1.6, 1, 400);
+
+  const envScene = new T.Scene();
+  envScene.add(new T.Mesh(new T.SphereGeometry(60, 32, 16), new T.MeshBasicMaterial({ color: new T.Color(0.35, 0.35, 0.35), side: T.BackSide })));
+  const panel = (w, h, x, y, z, k, tint) => {
+    const c = new T.Color(tint || 0xffffff).multiplyScalar(k);
+    const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ color: c, side: T.DoubleSide }));
+    m.position.set(x, y, z); m.lookAt(0, 0, 0); envScene.add(m);
+  };
+  panel(40, 16, -14, 30, 22, 7.5);            // the key softbox, high front left
+  panel(60, 5, 0, 26, -18, 9);                // a long strip behind and above (cylinders pick up a hard line)
+  panel(6, 34, 38, 8, 10, 5.2);               // a tall strip right
+  panel(6, 30, -40, 6, -6, 3.2);              // a tall strip left rim
+  panel(50, 26, 0, -22, 14, 0.5, 0xE4E8DE);   // low sage fill (the floor bounce)
+  panel(30, 30, 0, 44, 0, 2.2);               // overhead
+  panel(34, 26, 34, -4, 28, 0.015, 0x000000); // black flags: glass and ink need something dark to reflect
+  panel(34, 26, -36, -2, 24, 0.015, 0x000000);
+  panel(60, 14, 0, 0, -40, 0.02, 0x000000);
+  const pm = new T.PMREMGenerator(renderer);
+  const envMap = pm.fromScene(envScene, 0.035).texture;
+  scene.environment = envMap;
+
+  const key = new T.DirectionalLight(0xffffff, 1.1);
+  key.position.set(-14, 26, 20); key.castShadow = true;
+  key.shadow.mapSize.set(SOFT ? 1024 : 2048, SOFT ? 1024 : 2048); key.shadow.bias = -0.0008; key.shadow.normalBias = 0.05; key.shadow.radius = 7; key.shadow.blurSamples = 12;
+  Object.assign(key.shadow.camera, { left: -30, right: 30, top: 18, bottom: -18, near: 5, far: 90 });
+  scene.add(key); scene.add(key.target);
+  scene.add(new T.HemisphereLight(0xffffff, 0xCFDDB4, 0.34));
+
+  /* ------------------------------------------------------------------ materials */
+  const M = {
+    ceramic: new T.MeshPhysicalMaterial({ color: 0xF1F2EC, roughness: 0.46, clearcoat: 0.22, clearcoatRoughness: 0.3, envMapIntensity: 0.62 }),
+    ink: new T.MeshPhysicalMaterial({ color: 0x15181b, metalness: 0.85, roughness: 0.3, envMapIntensity: 1.0 }),
+    lacquer: new T.MeshPhysicalMaterial({ color: 0x0B0C0D, roughness: 0.2, clearcoat: 0.7, clearcoatRoughness: 0.12, envMapIntensity: 0.9 }),
+    steel: new T.MeshPhysicalMaterial({ color: 0xBDBBB3, metalness: 1, roughness: 0.36, anisotropy: 0.7, anisotropyRotation: Math.PI / 2, envMapIntensity: 0.62 }),
+    steelTwo: new T.MeshPhysicalMaterial({ color: 0xBDBBB3, metalness: 1, roughness: 0.38, envMapIntensity: 0.62, side: T.DoubleSide }),
+    lime: new T.MeshPhysicalMaterial({ color: 0x8FE000, roughness: 0.26, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 0.55 }),
+    glass: new T.MeshPhysicalMaterial({ color: 0xffffff, transmission: 1, thickness: 0.9, ior: 1.5, roughness: 0.02, metalness: 0, envMapIntensity: 1.5, attenuationColor: new T.Color(0xDDDFDD), attenuationDistance: 2.4, side: T.DoubleSide }),
+    glassLime: new T.MeshPhysicalMaterial({ color: 0xffffff, transmission: 1, thickness: 1.5, ior: 1.52, roughness: 0.02, metalness: 0, envMapIntensity: 1.2, attenuationColor: new T.Color(0xE6FF00), attenuationDistance: 0.45, iridescence: 0.7, iridescenceIOR: 1.38, iridescenceThicknessRange: [140, 380], side: T.DoubleSide }),
+    blade: new T.MeshPhysicalMaterial({ color: 0x9A9FA3, metalness: 0.9, roughness: 0.3, anisotropy: 0.6, envMapIntensity: 0.9, side: T.DoubleSide }),
+  };
+
+  /* the engraved scale band: tick marks and numerals in Geist Mono on the ceramic */
+  const bandTex = new T.CanvasTexture(document.createElement('canvas'));
+  const bandBump = new T.CanvasTexture(document.createElement('canvas'));
+  function drawBand() {
+    const W = 4096, H = 160, c = bandTex.image, b = bandBump.image;
+    c.width = b.width = W; c.height = b.height = H;
+    const g = c.getContext('2d'), h = b.getContext('2d');
+    g.fillStyle = '#F3F4EE'; g.fillRect(0, 0, W, H); h.fillStyle = '#fff'; h.fillRect(0, 0, W, H);
+    const ink = '#0B0C0D', lime = '#6FA800';
+    const both = (fn) => { fn(g, ink); fn(h, '#000'); };
+    const cx = W / 2, span = W * 0.5;                      // the scale covers half the circumference, centred on the index
+    const vals = [[0.45, 'm'], [0.5], [0.6], [0.8], [1], [1.5], [3], [10]];
+    const pos = (d) => cx - span / 2 + (Math.log(d / 0.4) / Math.log(40 / 0.4)) * span * 0.9;
+    both((x, col) => {
+      x.strokeStyle = col; x.fillStyle = col; x.lineCap = 'butt';
+      x.font = '500 44px "Geist Mono", ui-monospace, monospace'; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+      for (let d = 0.4; d < 40; d *= 1.0) { break; }
+      const labels = [[0.45, '0.45'], [0.5, '0.5'], [0.6, '0.6'], [0.8, '0.8'], [1, '1'], [1.5, '1.5'], [3, '3'], [10, '∞']];
+      // minor ticks every few percent in log space
+      for (let d = 0.4; d <= 14; d *= 1.045) { const px = pos(d); x.lineWidth = 2; x.beginPath(); x.moveTo(px, 10); x.lineTo(px, 30); x.stroke(); }
+      labels.forEach(([d, s]) => { const px = pos(d); x.lineWidth = 4; x.beginPath(); x.moveTo(px, 10); x.lineTo(px, 50); x.stroke(); x.fillText(s, px, 100); });
+      // feet row, finer
+      x.font = '400 28px "Geist Mono", ui-monospace, monospace';
+      [[1.5, '1.5'], [2, '2'], [3, '3'], [5, '5'], [10, '10'], [30, '∞']].forEach(([f, s]) => { const px = pos(f * 0.3048 * 1.0) ; x.lineWidth = 3; x.beginPath(); x.moveTo(px, 150); x.lineTo(px, 120); x.stroke(); x.fillText(s, px, 112); });
+      // depth-of-field marks either side of the centre index
+      x.font = '400 22px "Geist Mono", ui-monospace, monospace';
+      const dof = ['16', '11', '8', '5.6', '4'];
+      dof.forEach((s, i) => { const o = 60 + i * 64; x.lineWidth = 3; [-1, 1].forEach((sgn) => { x.beginPath(); x.moveTo(cx + sgn * o, 136); x.lineTo(cx + sgn * o, 150); x.stroke(); x.fillText(s, cx + sgn * o, 128); }); });
+      // brand and spec around the back
+      x.font = '500 34px "Geist Mono", ui-monospace, monospace'; x.textAlign = 'left';
+      x.fillText('QBIX  50mm  1:1.4  Ø 77', 40, 70); x.fillText('9 BLADES  ·  MADE IN SEATTLE', cx + span * 0.6, 70);
+      x.textAlign = 'center';
+    });
+    g.fillStyle = lime; g.fillRect(cx - 3, 0, 6, 12);
+    bandTex.colorSpace = T.SRGBColorSpace; bandTex.anisotropy = 16; bandTex.wrapS = T.RepeatWrapping; bandTex.needsUpdate = true;
+    bandBump.wrapS = T.RepeatWrapping; bandBump.anisotropy = 8; bandBump.needsUpdate = true;
+  }
+  drawBand();
+  M.band = new T.MeshPhysicalMaterial({ color: 0xffffff, map: bandTex, bumpMap: bandBump, bumpScale: 1.2, roughness: 0.46, clearcoat: 0.15, clearcoatRoughness: 0.3, envMapIntensity: 0.62 });
+  if (document.fonts && document.fonts.load) Promise.all([document.fonts.load('500 44px "Geist Mono"'), document.fonts.load('400 22px "Geist Mono"')]).then(() => { drawBand(); if (api.dirty) api.dirty(); }).catch(() => {});
+
+  /* ------------------------------------------------------------------ the model */
+  const lens = new T.Group(); scene.add(lens);   // local Y is the optical axis; front is +Y
+  const P = {};                                   // name -> { node, y0, y1 }
+  function mesh(geo, mat, parent, o = {}) {
+    const m = new T.Mesh(geo, mat); m.castShadow = o.cast !== false; m.receiveShadow = o.recv !== false; if (parent) parent.add(m); return m;
+  }
+  const node = (name, parent) => { const g = new T.Group(); g.name = name; (parent || lens).add(g); return g; };
+  const lathMesh = (pts, mat, parent, o) => mesh(lathe(pts, o), mat, parent, o);
+  const Y0 = 1.3;   // the glass stack starts here
+
+  // --- the glass stack, rear to front: [kind, params]
+  const E = {
+    E6: { a: 2.30, rr: 2.52, edge: 0.55, sf: 0.55, sb: 0 },
+    E5: { a: 2.50, rr: 2.72, edge: 0.30, sf: 0.40, sb: -0.25 },
+    E4: { a: 2.62, rr: 2.84, edge: 0.80, sf: -0.35, sb: -0.35 },
+    E3b: { a: 2.80, rr: 3.02, edge: 0.35, sf: 0.45, sb: 0 },
+    E3a: { a: 2.80, rr: 3.02, edge: 0.50, sf: 0.35, sb: -0.45 },
+    E2: { a: 2.92, rr: 3.12, edge: 0.35, sf: 0.50, sb: -0.20 },
+    E1: { a: 2.96, rr: 3.16, edge: 0.55, sf: 0.55, sb: -0.30 },
+  };
+  const spacerH = (rear, front) => Math.max(0.28, (rear ? Math.max(rear.sf, 0) : 0) + (front ? Math.max(front.sb, 0) : 0) + 0.2);
+  const spacerGeo = (rIn, rOut, h, keys, seed) => {
+    const body = lathe([[rIn + 0.14, 0, 0.025], [rOut, 0, 0.05], [rOut, h, 0.05], [rIn, h, 0.03], [rIn, h * 0.5, 0.02], [rIn + 0.14, h * 0.5, 0.02]], { seg: 96, n: 3 });
+    if (!keys) return body;
+    const list = [body];
+    for (let k = 0; k < 3; k++) {
+      const b = new T.RoundedBoxGeometry(0.34, h * 0.8, 0.16, 2, 0.045);
+      b.translate(0, h * 0.5, rOut + 0.02); b.rotateY(seed + k * 2.2 + k * k * 0.15); list.push(b);
+    }
+    return merge(list);
+  };
+  (function buildStack() {
+    const order = ['S0', 'E6', 'S6', 'E5', 'S5', 'E4', 'S4', 'IRIS', 'S3b', 'E3b', 'E3a', 'S3', 'E2', 'S2', 'E1', 'S1'];
+    let y = Y0; const place = {};
+    const spec = { S6: [E.E6, E.E5], S5: [E.E5, E.E4], S4: [E.E4, null], S3b: [null, E.E3b], S3: [E.E3a, E.E2], S2: [E.E2, E.E1], S1: [E.E1, null] };
+    const hs = { S6: spacerH(E.E6, E.E5), S5: 0.28, S4: 0.28, S3b: 0.2, S3: 0.28, S2: 0.38, S1: 0.35, S0: 0 };
+    // elements sit with their rear shoulder plane at y
+    order.forEach((k) => {
+      if (k === 'S0') return;
+      if (k === 'IRIS') { place.IRIS = y + 0.12; y += 0.82; return; }
+      if (E[k]) { place[k] = y + E[k].edge / 2; y += E[k].edge; return; }
+      place[k] = y; y += hs[k];
+    });
+    // glass
+    Object.keys(E).forEach((k) => {
+      const e = E[k], g = element(e), tinted = k === 'E3a';
+      const n = node(k); const m = mesh(g, tinted ? M.glassLime : M.glass, n, { cast: false, recv: false });
+      m.position.y = place[k];
+      // a tiny engraved mark on the rim so a turn can be read
+      const mk = mesh(new T.RoundedBoxGeometry(0.1, e.edge * 0.6, 0.04, 1, 0.012), M.lacquer, n, { cast: false, recv: false });
+      mk.position.set(0, place[k], e.rr + 0.005); mk.rotation.y = 0.4 + Object.keys(E).indexOf(k) * 0.9;
+      mk.position.set(Math.sin(mk.rotation.y) * (e.rr + 0.005), place[k], Math.cos(mk.rotation.y) * (e.rr + 0.005));
+      P[k] = { node: n };
+    });
+    // spacers
+    const sp = { S6: [2.2, 2.78], S5: [2.46, 2.94], S4: [2.55, 3.06], S3b: [2.70, 3.14], S3: [2.78, 3.28], S2: [2.88, 3.3], S1: [2.9, 3.34] };
+    Object.keys(sp).forEach((k, i) => {
+      const n = node(k); const h = hs[k];
+      const m = mesh(spacerGeo(sp[k][0], sp[k][1], h, true, 0.7 * i + 0.3), M.ink, n);
+      m.position.y = place[k]; P[k] = { node: n };
+    });
+    P.__iris = place.IRIS;
+  })();
+
+  // --- the iris: base plate, 9 blades each on its own pin, cam ring with lever, retainer
+  (function buildIris() {
+    const yc = P.__iris, n = node('IRIS'); n.position.y = yc;   // the group turns about its own centre
+    const base = lathMesh([[2.96, -0.12, 0.02], [3.42, -0.12, 0.04], [3.42, 0.0, 0.03], [2.96, 0.0, 0.02]], M.ink, n, { seg: 96, n: 3 });
+    const cam = lathMesh([[3.06, 0.50, 0.02], [3.40, 0.50, 0.025], [3.40, 0.58, 0.025], [3.06, 0.58, 0.02]], M.steel, n, { seg: 96, n: 3 });
+    const ret = lathMesh([[2.98, 0.59, 0.02], [3.40, 0.59, 0.03], [3.40, 0.69, 0.03], [3.12, 0.69, 0.03], [2.98, 0.64, 0.02]], M.ink, n, { seg: 96, n: 3 });
+    const camG = node('cam', n); camG.add(cam); n.remove(cam);
+    const lever = mesh(new T.RoundedBoxGeometry(0.34, 0.1, 0.5, 2, 0.04), M.steel, camG); lever.position.set(0, 0.54, 3.52);
+    // drive pins on the cam ring: 9 small ink studs, so its turn can be read
+    const drive = new T.InstancedMesh(new T.CylinderGeometry(0.045, 0.045, 0.1, 10), M.ink, 9); drive.castShadow = true;
+    const d = new T.Object3D(); for (let i = 0; i < 9; i++) { const a = i * Math.PI * 2 / 9; d.position.set(Math.sin(a) * 3.23, 0.63, Math.cos(a) * 3.23); d.updateMatrix(); drive.setMatrixAt(i, d.matrix); } camG.add(drive);
+    // blade: a crescent between the outer circle and a flatter inner arc, pinned near one tip
+    const Ro = 3.40, Ri = 2.80, R2 = 20, cxx = Ri - R2, Rp = 3.17, pa = -30 * deg;
+    const A = Math.acos(clamp((R2 * R2 - Ro * Ro - cxx * cxx) / (2 * Ro * -cxx), -1, 1));
+    const inR = (al) => { const dx = Math.cos(al), dy = Math.sin(al), bq = -(cxx * dx), cq = cxx * cxx - R2 * R2; return -bq - 0 + 0 ? (-bq + Math.sqrt(bq * bq - cq)) : 0; };
+    // radius along a ray from the origin to the inner circle (centre (cxx, 0)): r^2 - 2 r cxx cos(al) + cxx^2 = R2^2
+    const rin = (al) => cxx * Math.cos(al) + Math.sqrt(Math.max(0, R2 * R2 - cxx * cxx * Math.sin(al) ** 2));
+    let aEnd = A; for (let al = 0; al < A; al += 0.002) { if (Ro - rin(al) < 0.15) { aEnd = al; break; } }
+    const pin2 = [Rp * Math.cos(pa), Rp * Math.sin(pa)];
+    const sh = new T.Shape(), K = 36, pts = [];
+    for (let i = 0; i <= K; i++) { const al = -aEnd + 2 * aEnd * i / K; pts.push([Ro * Math.cos(al), Ro * Math.sin(al)]); }
+    // rounded cap at the leading tip
+    const ta = [Ro * Math.cos(aEnd), Ro * Math.sin(aEnd)], tb = [rin(aEnd) * Math.cos(aEnd), rin(aEnd) * Math.sin(aEnd)];
+    const mid = [(ta[0] + tb[0]) / 2, (ta[1] + tb[1]) / 2], rad = Math.hypot(ta[0] - tb[0], ta[1] - tb[1]) / 2, ang0 = Math.atan2(ta[1] - mid[1], ta[0] - mid[0]);
+    for (let i = 1; i < 6; i++) { const a = ang0 - Math.PI * i / 6 * 1; pts.push([mid[0] + rad * Math.cos(a), mid[1] + rad * Math.sin(a)]); }
+    for (let i = K; i >= 0; i--) { const al = -aEnd + 2 * aEnd * i / K; const r = rin(al); pts.push([r * Math.cos(al), r * Math.sin(al)]); }
+    const ta2 = [Ro * Math.cos(-aEnd), Ro * Math.sin(-aEnd)], tb2 = [rin(-aEnd) * Math.cos(-aEnd), rin(-aEnd) * Math.sin(-aEnd)];
+    const mid2 = [(ta2[0] + tb2[0]) / 2, (ta2[1] + tb2[1]) / 2], ang2 = Math.atan2(tb2[1] - mid2[1], tb2[0] - mid2[0]);
+    for (let i = 1; i < 6; i++) { const a = ang2 - Math.PI * i / 6; pts.push([mid2[0] + rad * Math.cos(a), mid2[1] + rad * Math.sin(a)]); }
+    sh.moveTo(pts[0][0] - pin2[0], pts[0][1] - pin2[1]); for (let i = 1; i < pts.length; i++) sh.lineTo(pts[i][0] - pin2[0], pts[i][1] - pin2[1]);
+    const hole = new T.Path(); hole.absarc(0, 0, 0.075, 0, Math.PI * 2, true); sh.holes.push(hole);
+    const bg = new T.ExtrudeGeometry(sh, { depth: 0.022, bevelEnabled: true, bevelThickness: 0.007, bevelSize: 0.011, bevelSegments: 1, curveSegments: 6 });
+    bg.rotateX(Math.PI / 2);   // shape (x, y) -> (x, ., y); extrusion now runs toward -Y
+    const blades = [];
+    for (let k = 0; k < 9; k++) {
+      const ph = k * Math.PI * 2 / 9, pg = node('pin' + k, n);
+      // the pin position in lens space: shape x -> lens x, shape y -> lens z; rotate the frame by phi about Y
+      const px = pin2[0], pz = pin2[1];
+      const c = Math.cos(ph), s = Math.sin(ph);
+      pg.position.set(px * c + pz * s, 0.03 + k * 0.047 + 0.026, -px * s + pz * c);
+      pg.rotation.y = ph; pg.userData.phi = ph;
+      const pivot = node('blade' + k, pg), bm = mesh(bg, M.blade, pivot, { recv: false }); pivot.userData = { base: ph };
+      blades.push({ pivot, pg, ph });
+    }
+    // pins: a steel shaft and a domed head for each
+    const pinG = new T.CylinderGeometry(0.058, 0.058, 0.78, 14); pinG.translate(0, 0.27, 0);
+    const pinH = lathe([[0, 0.66, 0], [0.1, 0.66, 0.012], [0.1, 0.69, 0.02], [0.05, 0.72, 's'], [0, 0.73, 0]], { seg: 20, n: 3 });
+    const pins = new T.InstancedMesh(merge([pinG, pinH]), M.steel, 9); pins.castShadow = true;
+    for (let k = 0; k < 9; k++) { const b = blades[k]; d.position.set(b.pg.position.x, -0.02, b.pg.position.z); d.rotation.set(0, 0, 0); d.updateMatrix(); pins.setMatrixAt(k, d.matrix); } n.add(pins);
+    P.IRIS = { node: n, blades, camG };
+  })();
+
+  // --- front group: hood with liner, bezel with stepped threads, lock ring
+  (function buildFront() {
+    let n = node('hood');
+    lathMesh([[3.42, 8.55, 0.03], [3.62, 8.55, 0.05], [3.64, 8.85, 0.0], [3.76, 9.17, 's'], [3.93, 9.42, 0.13], [3.74, 9.42, 0.07], [3.46, 8.80, 0.0]], M.ceramic, n, { seg: 120, n: 5 });
+    lathMesh([[3.28, 8.50, 0.02], [3.45, 8.50, 0.02], [3.72, 9.34, 0.03], [3.60, 9.34, 0.03]], M.lacquer, n, { seg: 120 });
+    // the lime lip line inside the hood: a thin ring
+    P.hood = { node: n };
+    n = node('bezel');
+    const bz = [[3.0, 7.88, 0.03], [3.18, 7.88, 0.02]].concat(teeth(3.30, 7.90, 8.40, 7, 0.05)).concat([[3.40, 8.44, 0.025], [3.40, 8.55, 0.03], [3.12, 8.55, 0.04], [3.0, 8.45, 0.0]]).concat(teeth(3.0, 8.40, 7.95, 5, 0.06).map((p) => p));
+    lathMesh(bz.filter((p, i, a) => i === 0 || Math.hypot(p[0] - a[i - 1][0], p[1] - a[i - 1][1]) > 1e-4), M.ink, n, { seg: 120, n: 2 });
+    P.bezel = { node: n };
+    n = node('lock');
+    const lk = []; lk.push([3.0, 7.58, 0.02], [3.30, 7.58, 0.03]); for (let i = 0; i < 2; i++) { lk.push([3.30, 7.64 + i * 0.1, 0.0]); }
+    lk.push([3.30, 7.86, 0.03], [3.0, 7.86, 0.02]);
+    lathMesh([[3.0, 7.58, 0.025], [3.30, 7.58, 0.04], [3.30, 7.70, 0.0], [3.24, 7.70, 0.0], [3.24, 7.74, 0.0], [3.30, 7.74, 0.0], [3.30, 7.86, 0.04], [3.0, 7.86, 0.025]], M.steel, n, { seg: 120, n: 3 });
+    P.lock = { node: n };
+  })();
+
+  // --- helicoid: a threaded sleeve in a ring
+  (function buildHelicoid() {
+    let n = node('helI');
+    lathMesh(ringP(2.98, 2.2, 3.13, 4.4, 0.025), M.steel, n, { seg: 96 });
+    mesh(thread(3.13, 3.32, 0.5, 4.0, 2.38), M.steelTwo, n, { recv: false });
+    P.helI = { node: n };
+    n = node('helO');
+    lathMesh([[3.30, 2.0, 0.03], [3.44, 2.0, 0.04], [3.44, 2.55, 0.02], [3.40, 2.62, 0.0], [3.44, 2.70, 0.0], [3.44, 3.4, 0.04], [3.30, 3.4, 0.03]], M.steel, n, { seg: 120 });
+    const sc = new T.InstancedMesh(new T.CylinderGeometry(0.1, 0.1, 0.14, 16), M.ink, 3); sc.castShadow = true; const d = new T.Object3D();
+    for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + 0.5; d.position.set(Math.sin(a) * 3.47, 2.66, Math.cos(a) * 3.47); d.rotation.set(Math.PI / 2, 0, -a + Math.PI / 2 * 0); d.rotation.set(0, 0, 0); d.lookAt(Math.sin(a) * 10, 2.66, Math.cos(a) * 10); d.rotateX(Math.PI / 2); d.updateMatrix(); sc.setMatrixAt(i, d.matrix); }
+    n.add(sc);
+    P.helO = { node: n };
+  })();
+
+  // --- barrel group: shell, liner, focus ring with ribs, trims, scale band, lime ring, index dot
+  (function buildBarrel() {
+    const n = node('barrel');
+    const sh = [[3.47, 1.0, 0.04], [3.74, 1.0, 0.16], [3.74, 6.78, 0.1], [3.60, 6.88, 0.1], [3.60, 7.35, 0.02], [3.57, 7.35, 0.02], [3.57, 7.46, 0.02], [3.60, 7.46, 0.02], [3.60, 8.55, 0.08], [3.40, 8.55, 0.04], [3.40, 8.0, 0.0]]
+      .concat(teeth(3.40, 8.0, 7.55, 4, -0.04).map((p) => [p[0], p[1], 0])).concat([[3.47, 7.45, 0.02], [3.47, 1.0, 0.04]]);
+    lathMesh(sh.filter((p, i, a) => i === 0 || Math.hypot(p[0] - a[i - 1][0], p[1] - a[i - 1][1]) > 1e-4), M.ceramic, n, { seg: 160, n: 5 });
+    // liner with baffle ribs
+    const ln = [[3.40, 1.05, 0.015], [3.47, 1.05, 0.015], [3.47, 7.5, 0.015], [3.40, 7.5, 0.015]];
+    const rib = []; for (let i = 0; i < 7; i++) { const yy = 1.3 + i * 0.9; rib.push([3.40, yy - 0.05, 0], [3.34, yy - 0.04, 0], [3.34, yy + 0.04, 0], [3.40, yy + 0.05, 0]); }
+    const liner = [[3.40, 1.05, 0.015], [3.47, 1.05, 0.015], [3.47, 7.5, 0.015], [3.40, 7.5, 0.015]].slice(0, 4);
+    const lpts = [[3.47, 1.05, 0.015], [3.47, 7.5, 0.015], [3.40, 7.5, 0.015]];
+    rib.slice().reverse().forEach((p) => lpts.push(p)); lpts.push([3.40, 1.05, 0.015]);
+    lathMesh(lpts, M.lacquer, n, { seg: 96, n: 2 });
+    // the focus group turns as one: core, ribs, trims, scale band
+    const f = node('focus', n);
+    lathMesh([[3.70, 2.45, 0.03], [3.80, 2.45, 0.05], [3.80, 4.95, 0.05], [3.70, 4.95, 0.03]], M.lacquer, f, { seg: 160, n: 4 });
+    const rg = new T.RoundedBoxGeometry(0.105, 2.12, 0.15, 2, 0.032);
+    const N = 112, ribs = new T.InstancedMesh(rg, M.lacquer, N); ribs.castShadow = true; ribs.receiveShadow = false; ribs.userData.noAO = true;
+    const d = new T.Object3D();
+    for (let i = 0; i < N; i++) { const a = i * Math.PI * 2 / N; d.position.set(Math.sin(a) * 3.83, 3.70, Math.cos(a) * 3.83); d.rotation.set(0, a, 0); d.updateMatrix(); ribs.setMatrixAt(i, d.matrix); }
+    f.add(ribs);
+    lathMesh([[3.72, 2.30, 0.02], [3.85, 2.30, 0.045], [3.85, 2.45, 0.02], [3.72, 2.45, 0.0]], M.steel, f, { seg: 160, n: 4 });
+    lathMesh([[3.72, 4.95, 0.0], [3.85, 4.95, 0.02], [3.85, 5.10, 0.045], [3.72, 5.10, 0.02]], M.steel, f, { seg: 160, n: 4 });
+    lathMesh([[3.70, 5.14, 0.02], [3.765, 5.14, 0.03], [3.765, 5.88, 0.03], [3.70, 5.88, 0.02]], M.band, f, { seg: 200, n: 3, v: [5.14, 5.88], uo: 0.5 });
+    // lime glaze ring and the index
+    lathMesh([[3.70, 6.02, 0.0], [3.82, 6.02, 0.07], [3.82, 6.40, 0.07], [3.70, 6.40, 0.0]], M.lime, n, { seg: 160, n: 6 });
+    const dot = mesh(new T.SphereGeometry(0.1, 20, 12), M.lime, n); dot.scale.set(1, 1, 0.45); dot.position.set(0, 6.65, 3.72);
+    P.barrel = { node: n, focus: f };
+  })();
+
+  // --- rear: cap, mount with bayonet tabs and screws
+  (function buildRear() {
+    let n = node('cap');
+    lathMesh([[2.0, 0.36, 0.03], [3.38, 0.36, 0.05], [3.38, 0.60, 0.0], [3.34, 0.62, 0.0], [3.34, 0.70, 0.0], [3.40, 0.72, 0.0], [3.42, 1.0, 0.05], [2.0, 1.0, 0.03]], M.ink, n, { seg: 120 });
+    P.cap = { node: n };
+    n = node('mount');
+    lathMesh([[2.05, 0.0, 0.03], [2.2, 0.0, 0.03], [2.2, 0.16, 0.0], [3.28, 0.16, 0.05], [3.28, 0.36, 0.05], [2.05, 0.36, 0.03]], M.steel, n, { seg: 140, n: 4 });
+    [[20, 62], [150, 198], [262, 300]].forEach(([a, b]) => mesh(sector(2.15, 2.98, a * deg, b * deg, 0.02, 0.12), M.steel, n));
+    const hg = lathe([[0, 0, 0], [0.13, 0, 0.012], [0.13, 0.03, 0.025], [0.07, 0.07, 's'], [0, 0.08, 0]], { seg: 24, n: 3 });
+    const heads = new T.InstancedMesh(hg, M.steel, 4), slots = new T.InstancedMesh(new T.BoxGeometry(0.16, 0.02, 0.03), M.ink, 4);
+    const d = new T.Object3D();
+    for (let i = 0; i < 4; i++) { const a = (i + 0.5) * Math.PI / 2; d.position.set(Math.sin(a) * 3.1, 0.16, Math.cos(a) * 3.1); d.rotation.set(Math.PI, a, 0); d.updateMatrix(); heads.setMatrixAt(i, d.matrix); d.position.set(Math.sin(a) * 3.1, 0.155 - 0.075, Math.cos(a) * 3.1); d.rotation.set(0, a + 0.6, 0); d.updateMatrix(); slots.setMatrixAt(i, d.matrix); }
+    heads.castShadow = true; n.add(heads); n.add(slots);
+    const ld = mesh(new T.SphereGeometry(0.085, 16, 10), M.lime, n); ld.scale.set(1, 0.5, 1); ld.rotation.x = 0; ld.position.set(0, 0.26, 3.285); ld.scale.set(1, 1, 0.45);
+    P.mount = { node: n };
+  })();
+
+  /* ------------------------------------------------------------------ layout: the exploded positions come from the parts' own extents */
+  const CHAIN = ['hood', 'bezel', 'lock', 'S1', 'E1', 'S2', 'E2', 'S3', 'E3', 'S3b', 'IRIS', 'S4', 'E4', 'S5', 'E5', 'S6', 'E6', 'helI', 'helO', 'cap', 'mount', 'barrel'];
+  // E3 is the cemented pair; give it one node
+  (function joinE3() { const n = node('E3'); n.add(P.E3a.node, P.E3b.node); P.E3 = { node: n }; delete P.E3a; delete P.E3b; })();
+  const box = new T.Box3();
+  CHAIN.forEach((k) => { box.setFromObject(P[k].node); P[k].y0 = box.min.y; P[k].y1 = box.max.y; });
+  const GAP = 0.6, tgt = {}, off3 = {};
+  (function layout() {
+    const idx = (k) => CHAIN.indexOf(k);
+    tgt.cap = P.cap.y0;
+    tgt.mount = P.cap.y0 - GAP - (P.mount.y1 - P.mount.y0);
+    tgt.barrel = tgt.mount - GAP - (P.barrel.y1 - P.barrel.y0);
+    let cur = P.cap.y1 + GAP;
+    for (let i = idx('cap') - 1; i >= 0; i--) { const k = CHAIN[i]; tgt[k] = cur; cur += (P[k].y1 - P[k].y0) + GAP; }
+    CHAIN.forEach((k) => { off3[k] = tgt[k] - P[k].y0; });
+  })();
+  const ASM_C = 4.72;                     // the assembled lens centre (local Y)
+  const expMin = Math.min(...CHAIN.map((k) => tgt[k])), expMax = Math.max(...CHAIN.map((k) => tgt[k] + P[k].y1 - P[k].y0));
+  const EXP_C = (expMin + expMax) / 2;
+
+  /* ------------------------------------------------------------------ the tracks (all of t) */
+  const U = 1.7, UROLL = -Math.PI * 2 * 1.25;                                  // the unscrew
+  const off2 = { hood: 5.2, bezel: 3.8, lock: 2.7, S1: 2.0, E1: 1.4, S2: 0.8, E2: 0.4, S3: 0.12 };
+  const FRONT = ['hood', 'bezel', 'lock', 'S1', 'E1', 'S2', 'E2', 'S3'];
+  const erate = { E1: 0.9, E2: -0.7, E3: 1.15, E4: -0.8, E5: 0.6, E6: -1.0 };   // radians the elements turn in the fan
+  const idxC = (k) => CHAIN.indexOf(k);
+  const pose = {};   // name -> { dy, roll }
+  function solve(t) {
+    CHAIN.forEach((k, i) => {
+      const p = pose[k] = { dy: 0, roll: 0 }, rearRank = CHAIN.length - 1 - i;
+      const isF = k === 'hood' || k === 'bezel' || k === 'lock', inFront = FRONT.includes(k);
+      const r12 = k === 'E1' ? 0.6 : k === 'E2' ? -0.5 : k === 'S2' ? 0.6 : 0;
+      // 0 -> 1: seat from a hair apart (expo out), rear first
+      const pre = k === 'barrel' ? 0.25 : 0.11 * (P[k].y0 + 0.6);
+      const ie = seg(t, 0.012 * rearRank, Math.min(0.97, 0.72 + 0.012 * rearRank), 'x');
+      p.dy += pre * (1 - ie); if (isF) p.roll += 0.7 * (1 - ie);
+      // 1 -> 2: the front group unscrews, then the front items separate in order
+      let base2 = 0;
+      if (inFront) {
+        const j = FRONT.indexOf(k), s = 1.34 + 0.07 * j, e = s + 0.55;
+        if (isF) { const a = seg(t, 1.02, 1.52, 'm'); p.dy += U * a; p.roll += UROLL * a; }
+        p.dy += (off2[k] - (isF ? U : 0)) * seg(t, s, e, 'x');
+        p.roll += r12 * seg(t, s, e, 'x');
+        base2 = off2[k];
+      }
+      // 2 -> 3: the barrel slides back, then the fan, front first, with equal gaps
+      const fs = 2.06 + 0.017 * i;
+      const wf = k === 'barrel' ? seg(t, 2.0, 2.66, 'm') : seg(t, fs, fs + 0.56, 'x');
+      p.dy += (off3[k] - base2) * wf;
+      if (erate[k] != null) p.roll += erate[k] * seg(t, fs + 0.04, fs + 0.9, 'm');
+      // 4 -> 5: reverse, rear first, everything seats on expo out
+      const rs = 4.10 + 0.017 * rearRank;
+      const back = k === 'barrel' ? seg(t, 4.38, 4.94, 'x') : seg(t, rs, rs + 0.5, 'x');
+      p.dy -= off3[k] * back;
+      p.roll -= ((isF ? UROLL : 0) + (erate[k] || 0) + r12) * back;
+    });
+    return pose;
+  }
+  // iris, helicoid, focus: the state 4 work
+  function work(t) {
+    const w = {};
+    const out = seg(t, 3.04, 3.64, 'x') - seg(t, 4.0, 4.55, 'x');
+    const turn = seg(t, 3.12, 3.78, 'm') - seg(t, 4.0, 4.55, 'x');
+    w.dz = 9.0 * out; w.rx = 82 * deg * turn;
+    // blade angle: breathing aside, 14 deg at rest, close to 45, open to 2, back to 14
+    w.theta = 14 * deg + (52 - 14) * deg * seg(t, 3.5, 3.80, 'm') - (52 - 2) * deg * seg(t, 3.80, 4.06, 'x') + (14 - 2) * deg * seg(t, 4.5, 4.98, 'x');
+    const ext = seg(t, 3.2, 3.98, 'm') - seg(t, 4.05, 4.62, 'x');
+    w.helI = 0.45 * ext; w.helIroll = -(2 * Math.PI * 0.45 / 0.5) * ext; w.helO = -0.45 * ext;
+    w.focus = -5.2 * (seg(t, 3.12, 3.98, 'm') - seg(t, 4.1, 4.7, 'x'));
+    return w;
+  }
+
+  /* ------------------------------------------------------------------ camera tracks: [t, az, el, dist, targetY (local), roll, focusY, focusDz, aperture] */
+  const IRIS_T = 0;   // set below
+  const CK = [
+    [0.0, 20, 24, 40, ASM_C, 0, 8.6, 0, 0.00012],
+    [1.0, 36, 16, 37, ASM_C, 0, 8.6, 0, 0.00012],
+    [2.0, 31, 13, 41, ASM_C + 2.6, 0, 7.5, 0, 0.00014],
+    [3.0, 32, 14, 68, EXP_C, -12, 0, 0, 0.00040],
+    [4.0, 12, 5, 40, 0, -3, 0, 0, 0.00046],
+    [5.0, 20, 4, 36, ASM_C, 0, 6.2, 0, 0.00014],
+  ];
+  const eCenter = (k) => tgt[k] + (P[k].y1 - P[k].y0) / 2;
+  CK[3][6] = eCenter('E3'); CK[4][4] = tgt.IRIS + (P.IRIS.y1 - P.IRIS.y0) / 2 + 0.2; CK[4][6] = CK[4][4]; CK[4][7] = 9.0;
+  CK[3][4] = EXP_C;
+  function camAt(t) {
+    const k = clamp(Math.floor(t), 0, 4), f = clamp(t - k, 0, 1), a = CK[k], b = CK[Math.min(5, k + 1)];
+    // the move starts a hair after the parts and settles before the next state
+    const e = mv(clamp((f - 0.04) / 0.92));
+    return a.map((v, i) => (i === 0 ? t : mix(v, b[i], e)));
+  }
+
+  /* ------------------------------------------------------------------ floor and contact shadow */
+  const FLOOR_Y = -4.35;
+  const floor = new T.Mesh(new T.PlaneGeometry(400, 400), new T.ShadowMaterial({ color: 0x4F7A22, opacity: 0.26 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = FLOOR_Y; floor.receiveShadow = true; scene.add(floor);
+  const sc = document.createElement('canvas'); sc.width = sc.height = 256;
+  { const g = sc.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gr.addColorStop(0, 'rgba(96,140,52,.55)'); gr.addColorStop(0.35, 'rgba(110,152,66,.28)'); gr.addColorStop(0.7, 'rgba(130,170,88,.08)'); gr.addColorStop(1, 'rgba(140,180,100,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 256); }
+  const shTex = new T.CanvasTexture(sc); shTex.colorSpace = T.SRGBColorSpace;
+  const contact = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false, toneMapped: false }));
+  contact.rotation.x = -Math.PI / 2; contact.position.y = FLOOR_Y + 0.01; contact.renderOrder = -1; scene.add(contact);
+
+  /* ------------------------------------------------------------------ apply a state */
+  lens.rotation.z = -Math.PI / 2; lens.position.x = -ASM_C;     // local Y -> world X
+  const ES = {};   // current explosion extents
+  let breath = 0;
+  function apply(t, idle) {
+    const ps = solve(t), w = work(t);
+    CHAIN.forEach((k) => {
+      const nd = P[k].node, p = ps[k];
+      nd.position.y = p.dy; nd.rotation.y = p.roll;
+    });
+    const I = P.IRIS.node, ip = ps.IRIS;
+    I.position.y = P.__iris + ip.dy; I.position.z = w.dz; I.rotation.x = w.rx; I.rotation.y = ip.roll;
+    const th = w.theta + breath;
+    P.IRIS.blades.forEach((b) => { b.pivot.rotation.y = -th; });
+    P.IRIS.camG.rotation.y = th * 0.45;
+    P.helI.node.position.y = ps.helI.dy + w.helI; P.helI.node.rotation.y = ps.helI.roll + w.helIroll;
+    P.helO.node.position.y = ps.helO.dy + w.helO;
+    P.barrel.focus.rotation.y = w.focus;
+    // the contact shadow follows the parts
+    let lo = 1e9, hi = -1e9;
+    CHAIN.forEach((k) => { if (k === 'IRIS') return; const o = P[k].node.position.y; lo = Math.min(lo, P[k].y0 + o); hi = Math.max(hi, P[k].y1 + o); });
+    const len = hi - lo, c = (lo + hi) / 2 - ASM_C;
+    contact.position.x = c; contact.scale.set(len * 0.84 + 6, 8.5 + len * 0.05, 1);
+    ES.len = len; ES.c = c;
+  }
+
+  /* ------------------------------------------------------------------ post */
+  let composer = null, bokeh = null, gtao = null, wpPass = null, smaa = null;
+  // ACES filmic curve on luminance with the chroma kept: the per-channel ACES pulls a lit #B8FF00 to (206,227,97); this keeps it lime
+  const fitS = (x) => (x * (x + 0.0245786) - 0.000090537) / (x * (0.983729 * x + 0.432951) + 0.238081);
+  const srgb = (v) => (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+  const WP = srgb(clamp(fitS(BG * EXPO / 0.6)));   // what the white page comes out as; the last pass divides it away so the ground is exactly 255
+  let W = 2, H = 2;
+  function buildPost() {
+    try {
+      const rt = new T.WebGLRenderTarget(W * PR, H * PR, { type: T.HalfFloatType, samples: SOFT ? 0 : 4 });
+      composer = new T.EffectComposer(renderer, rt);
+      composer.setPixelRatio(PR); composer.setSize(W, H);
+      composer.addPass(new T.RenderPass(scene, cam));
+      if (!qs.has('noao')) {
+        gtao = new T.GTAOPass(scene, cam, W, H);
+        gtao.output = T.GTAOPass.OUTPUT.Default; gtao.blendIntensity = 0.55;
+        gtao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.6, thickness: 1.0, scale: 1.0, samples: 16, distanceFallOff: 1.0, screenSpaceRadius: false });
+        gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+        const hide = [];
+        gtao.overrideVisibility = function () { scene.traverse((o) => { hide.push([o, o.visible]); if (o.isPoints || o.isLine || o === floor || o === contact || o.userData.noAO || (o.material && o.material.transmission > 0)) o.visible = false; }); };
+        gtao.restoreVisibility = function () { hide.forEach(([o, v]) => { o.visible = v; }); hide.length = 0; };
+        composer.addPass(gtao);
+      }
+      if (!qs.has('nodof')) {
+        bokeh = new T.BokehPass(scene, cam, { focus: 40, aperture: 0.0002, maxblur: 0.012 });
+        composer.addPass(bokeh);
+      }
+      wpPass = new T.ShaderPass({ uniforms: { tDiffuse: { value: null }, wp: { value: WP }, expo: { value: EXPO } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }', fragmentShader: `uniform sampler2D tDiffuse; uniform float wp; uniform float expo; varying vec2 vUv;
+        float fitS(float x){ return (x * (x + 0.0245786) - 0.000090537) / (x * (0.983729 * x + 0.4329510) + 0.238081); }
+        void main(){
+          vec3 c = max(texture2D(tDiffuse, vUv).rgb, vec3(0.0)) * expo / 0.6;
+          float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+          vec3 r = c * (fitS(l) / max(l, 1e-4));
+          float m = max(r.r, max(r.g, r.b)); if (m > 1.0) r /= m;
+          r = mix(r * 12.92, 1.055 * pow(r, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, r)) / wp;
+          gl_FragColor = vec4(min(r, vec3(1.0)), 1.0);
+        }` });
+      composer.addPass(wpPass);
+      if (!SOFT && !qs.has('nosmaa')) { smaa = new T.SMAAPass(W * PR, H * PR); composer.addPass(smaa); }
+    } catch (err) { console.warn('post stack off:', err && err.message); composer = null; }
+  }
+
+  /* ------------------------------------------------------------------ size, camera, frame */
+  const rig = { az: 0, el: 0, ox: 0, oy: 0, tx: 0, ty: 0 };
+  const tgtV = new T.Vector3(), camV = new T.Vector3(), fpt = new T.Vector3();
+  function placeCamera(t, idle) {
+    const c = camAt(t);
+    if (qs.has('cam')) { const o = qs.get('cam').split(',').map(Number); c[1] = o[0]; c[2] = o[1]; c[3] = o[2]; c[4] = o[3]; c[5] = o[4] || 0; c[6] = o[5] != null ? o[5] : c[4]; c[7] = o[6] || 0; c[8] = o[7] != null ? o[7] : c[8]; }
+    const az = (c[1] + (rig.ox * 20) + idle.az) * deg, el = (c[2] + rig.oy * 8) * deg, D = c[3] * (W / H >= 1.6 ? 1 : Math.min(1.55, 1.6 / (W / H) * 0.9 + 0.1));
+    const wx = c[4] - ASM_C;
+    tgtV.set(wx, 0, 0);
+    camV.set(wx + Math.sin(az) * Math.cos(el) * D, Math.sin(el) * D, Math.cos(az) * Math.cos(el) * D);
+    cam.position.copy(camV); cam.up.set(0, 1, 0); cam.lookAt(tgtV); cam.rotateZ(c[5] * deg);
+    cam.updateMatrixWorld();
+    // focus: the distance along the view to the focus point
+    fpt.set(c[6] - ASM_C, 0, c[7]);
+    if (c[6] === 0) fpt.set(wx, 0, 0);
+    const dir = new T.Vector3(); cam.getWorldDirection(dir);
+    const dist = Math.max(5, fpt.clone().sub(camV).dot(dir));
+    if (bokeh) { bokeh.uniforms.focus.value = dist; bokeh.uniforms.aperture.value = c[8]; bokeh.uniforms.maxblur.value = 0.010; }
+    // the key follows the target so its shadow frame stays on the parts
+    key.position.set(wx - 14, 26, 20); key.target.position.set(wx, 0, 0); key.target.updateMatrixWorld();
+  }
+  function size() {
+    W = Math.max(2, host.clientWidth); H = Math.max(2, host.clientHeight);
+    renderer.setSize(W, H, false); cam.aspect = W / H; cam.updateProjectionMatrix();
+    if (composer) { composer.setPixelRatio(PR); composer.setSize(W, H); if (gtao) gtao.setSize(W * PR, H * PR); if (bokeh) bokeh.setSize(W * PR, H * PR); if (smaa) smaa.setSize(W * PR, H * PR); }
+  }
+  function draw(t, dt) {
+    const k = 1 - Math.exp(-dt * 5);
+    rig.ox += (rig.tx - rig.ox) * k; rig.oy += (rig.ty - rig.oy) * k;
+    const idleT = api.idleT, asm = clamp(1 - seg(t, 1.02, 1.3, 'm') + seg(t, 4.8, 5.0, 'm'), 0, 1) * seg(t, 0.25, 0.8, 'm') + (t < 0.25 ? 0 : 0);
+    const aw = clamp((1 - seg(t, 1.02, 1.3, 'm')) * seg(t, 0.5, 0.95, 'm') + seg(t, 4.8, 5.0, 'm'), 0, 1);
+    breath = 12 * deg * Math.sin(idleT * 1.3) * aw;
+    apply(t, idleT);
+    placeCamera(t, { az: 7 * Math.sin(idleT * 0.33) * aw });
+    if (composer) composer.render(); else renderer.render(scene, cam);
+  }
+
+  /* ------------------------------------------------------------------ run: a rate-limited chase of the harness's t */
+  let target = 0, u = 0, vel = 0, last = 0, raf = 0, visible = true, lost = 0, pausedAt = 0;
+  const api = { idleT: 0, still: false, dirty: null };
+  const VMAX = 0.62, VBACK = 2.3;
+  const clock = () => (performance.now() - lost) / 1000;
+  function step(dt) {
+    const d = target - u;
+    if (Math.abs(d) < 1e-4) { u = target; vel = 0; return; }
+    const vm = d > 0 ? VMAX : VBACK, want = Math.sign(d) * Math.min(vm, 2.4 * Math.abs(d) + 0.02);
+    vel += (want - vel) * (1 - Math.exp(-dt * 7));
+    let nu = u + vel * dt; if ((nu - target) * (u - target) < 0) nu = target; u = nu;
+  }
+  function loop() {
+    raf = 0; if (!visible || document.hidden) return;
+    const now = clock(), dt = Math.min(SOFT ? 1.5 : 0.25, Math.max(0.001, now - last)); last = now;
+    adapt(now - (loop.prev || now)); loop.prev = now;
+    api.idleT += dt; step(dt); draw(u, dt); updateReadout(u);
+    raf = requestAnimationFrame(loop);
+  }
+  // adaptive quality: if frames run over ~24 ms for 20 in a row, drop depth of field, then ambient occlusion, then pixel ratio
+  let slow = 0, level = 0;
+  function adapt(ms) {
+    if (SOFT || !composer || ms > 0.5 || ms <= 0) return;
+    slow = ms * 1000 > 24 ? slow + 1 : Math.max(0, slow - 1);
+    if (slow < 20 || level >= 3) return;
+    slow = 0; level++;
+    if (level === 1 && bokeh) bokeh.enabled = false;
+    else if (level === 2 && gtao) gtao.enabled = false;
+    else if (level === 3 && PR > 1) { PR = 1; renderer.setPixelRatio(1); size(); }
+  }
+  function play() { if (reduced || qs.has('still') || raf || !visible || document.hidden) return; if (pausedAt) { lost += performance.now() - pausedAt; pausedAt = 0; } last = clock(); raf = requestAnimationFrame(loop); }
+  function halt() { if (raf) { cancelAnimationFrame(raf); raf = 0; } if (!pausedAt) pausedAt = performance.now(); }
+  new ResizeObserver(() => { size(); if (!raf) { draw(u, 0.016); } }).observe(host);
+  new IntersectionObserver((e) => { visible = e[0].isIntersecting; visible ? play() : halt(); }).observe(host);
+  document.addEventListener('visibilitychange', () => { document.hidden ? halt() : play(); });
+  host.addEventListener('pointermove', (e) => { if (reduced || (e.pointerType && e.pointerType !== 'mouse')) return; const r = host.getBoundingClientRect(); rig.tx = ((e.clientX - r.left) / r.width - 0.5) * 2 * 0.9; rig.ty = -((e.clientY - r.top) / r.height - 0.5) * 2 * 0.6; });
+  host.addEventListener('pointerleave', () => { rig.tx = rig.ty = 0; });
+
+  /* ------------------------------------------------------------------ readout */
+  const labels = ['Assembled', 'Front group', 'Elements', 'Iris', 'Reassembled'];
+  const countEl = document.getElementById('lz-count'), labelEl = document.getElementById('lz-label'), shown = new Map();
+  function roll(el, text) {
+    if (shown.get(el) === text) return; shown.set(el, text);
+    const old = el.lastElementChild; if (!old) { el.innerHTML = '<i></i>'; el.firstChild.textContent = text; return; }
+    if (reduced) { old.textContent = text; return; }
+    el.querySelectorAll('i.out').forEach((n) => n.remove());
+    const nu = document.createElement('i'); nu.className = 'in'; nu.textContent = text; el.appendChild(nu);
+    old.className = 'out'; void el.offsetWidth; old.classList.add('go'); nu.classList.add('go');
+    setTimeout(() => { if (old.parentNode) old.remove(); nu.className = ''; }, 560);
+  }
+  function updateReadout(t) {
+    const s = clamp(Math.floor(t + 0.5), 1, 5);
+    roll(countEl, String(s).padStart(2, '0') + ' / 05'); roll(labelEl, labels[s - 1]);
+  }
+
+  /* ------------------------------------------------------------------ public */
+  api.seek = (t) => { if (qs.has('still')) return; target = t; if (reduced || !raf) { u = t; draw(u, 0.016); updateReadout(u); } };
+  api.show = (t, o = {}) => { target = u = t; vel = 0; api.idleT = o.idle || 0; if (o.az != null) { CK.forEach((c) => { c[1] = o.az; }); } draw(u, 0.016); updateReadout(u); };
+  api.dirty = () => { if (!raf) draw(u, 0.016); };
+  api.parts = P; api.size = size; api.chain = CHAIN; api.tgt = tgt; api.camKeys = CK; api.setCam = (i, vals) => { Object.assign(CK[i], vals); };
+  api.info = () => ({ composer: !!composer, gtao: !!gtao, bokeh: !!bokeh, soft: SOFT, tris: renderer.info.render.triangles, calls: renderer.info.render.calls, explode: [expMin, expMax], gap: GAP, parts: (() => { let n = 0; lens.traverse((o) => { if (o.isMesh) n++; }); return n; })() });
+  size(); buildPost(); size();
+  api.show(qs.has('t') ? parseFloat(qs.get('t')) : 1);
+  if (!reduced && !qs.has('still')) play();
+  return api;
+})();
+QM.demo({ kind: 'states', n: 5, first: 3600, dwell: 3200, hold: 700, rewind: 2800, seek(t) { LENS.seek(t); } });
+</script>
+</body>
+</html>

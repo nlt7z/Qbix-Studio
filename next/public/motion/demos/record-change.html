@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Record change · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "record-change",
+  "title": "Record change",
+  "group": "studio",
+  "added": "2026-11-10",
+  "cat": "scenes",
+  "order": 80,
+  "kind": "states",
+  "n": 6,
+  "tone": "paper",
+  "shot": 34000,
+  "line": "110 parts · 2 records · 6 states",
+  "summary": "A belt-drive turntable, modelled like a product render, changes its record. Satin white ceramic plinth with a recessed deck, a platter with a polished chamfer and a strobe edge, a felt mat, a tonearm on a gimbal with a cueing platform that really lifts it, and two 12-inch records with drawn grooves, a streak that turns with the disc and printed labels. Six states from one number t: playing, lift, record off and out of frame, the next record in and down onto the mat, start and cue, playing again.",
+  "spec": [
+    [
+      "Model",
+      "110 meshes: ceramic plinth (extruded rounded slab with a rim, 3.5 mm bevels), ink base layer, four feet with rubber rings and knurled nuts, recessed deck; platter with polished chamfers, 318 instanced strobe dots, felt mat with fine ribs, polished spindle; belt and motor pulley; tonearm tower with a bearing stack, gimbal yoke and rings, tapered S tube, counterweight with a numbered dial and a lime ring, lift pad, headshell with finger lift, cartridge, four pins, cantilever and tip; arm rest with a ring clip and hinged gate; speed knob, start button, status light"
+    ],
+    [
+      "Records",
+      "12 inch lathe profiles with a raised rim, groove canvas (2048 px: bump, roughness, anisotropy map with circular tangents, track gaps, lead-in, run-out), canvas labels (lime and white, ring text, Geist Mono and Outfit), a conic streak that turns with the disc and brightens with its speed, a 0.14 degree warp the stylus rides"
+    ],
+    [
+      "State 1",
+      "playing at 33 1/3 rpm (3.49 rad/s on a wall clock), the arm tracks inward, the camera drifts"
+    ],
+    [
+      "State 2",
+      "the cue lever flips and the platform lifts the arm 1.8 cm at the stylus, the arm swings to the rest, lowers into the ring clip and the gate closes; the platter coasts down on expo out, the light goes dark"
+    ],
+    [
+      "State 3",
+      "record A lifts straight up 3.5 cm to clear the spindle, tips its label 34 degrees to the camera as it rises, and is carried out of frame to the left; the camera stays on the deck"
+    ],
+    [
+      "State 4",
+      "record B comes in from the left with its lime label tipped to the camera, levels while it travels over the platter, lines up with the spindle and lowers on expo out with a 1.7 degree seating tilt; the camera comes in close and low with depth of field on the label"
+    ],
+    [
+      "State 5",
+      "the button presses 2.2 mm and the lime light comes on, the platter spins up on the move curve, the clip opens, the lever lifts the arm, it swings over the lead-in groove and the lever lowers it slowly until the stylus touches; close camera on the headshell, focus racked to the stylus"
+    ],
+    [
+      "State 6",
+      "a wider view from a new angle, record B turning with its lime label, arm tracking; the spin, the wobble and the streak run on a wall clock so the state loops while held"
+    ],
+    [
+      "Easing",
+      "expo out (0.16, 1, 0.3, 1) for arrivals, move (0.65, 0, 0.35, 1) for moves; nothing bounces"
+    ],
+    [
+      "Render",
+      "studio environment from emissive panels (PMREM), one soft key with a shadow frame that follows the shot, ACESFilmic with a luminance-preserving last pass, GTAO, bokeh with a focus track, SMAA; lighter settings in headless"
+    ]
+  ],
+  "source": [
+    "Qbix Motion · Studio · 2026-11-10"
+  ],
+  "where": "A launch page for a Qbix product with two modes or two versions: the object changes one for the other with real mechanics, and the state readout names each step.",
+  "rules": [
+    "Needs three.js r160 and the extras bundle (kit/three-plus.js, global THREE: EffectComposer, GTAOPass, BokehPass, OutputPass, SMAAPass, RoundedBoxGeometry); classic script, nothing else. Falls back to a plain render if a pass fails.",
+    "Everything is drawn from one number t (0 to 6) through seek(t); the only wall-clock terms are the platter's turn, the warp wobble and the streak while it spins, and the idle camera drift.",
+    "Parts must never pass through each other: the record rises 3.5 cm before it moves, the arm is parked before a record moves, and a record only moves sideways once it is above the spindle.",
+    "Lime is a glaze: #B8FF00 must read as vivid lime in the lit faces, never pastel or whitish; shade leans pale green, never grey.",
+    "Nothing bounces. Under reduced motion the deck rests as a still frame and the scrubber still seeks."
+  ],
+  "tags": [
+    "three.js",
+    "3D",
+    "product",
+    "turntable",
+    "vinyl",
+    "tonearm",
+    "depth of field",
+    "lime glaze",
+    "states"
+  ]
+}
+</script>
+<style data-code>
+/* Record change. Ink #0B0C0D. Easings: move (.65,0,.35,1). */
+.rc { position: absolute; inset: 0; background: #fff; color: #0B0C0D; font: 400 15px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.011em; overflow: hidden; }
+.rc canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+.rc-kick { position: absolute; left: 28px; top: 24px; margin: 0; font-size: 14px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.rc-read { position: absolute; left: 28px; bottom: 24px; margin: 0; display: flex; gap: 22px; font: 400 13px/1.5 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: #0B0C0D; }
+.rc-roll { position: relative; display: block; height: 1.5em; overflow: hidden; white-space: nowrap; }
+.rc-roll i { font-style: normal; display: block; transition: transform 520ms cubic-bezier(.65, 0, .35, 1); }
+.rc-roll i.in { position: absolute; left: 0; top: 0; transform: translateY(100%); }
+.rc-roll i.in.go { transform: none; }
+.rc-roll i.out { position: absolute; left: 0; top: 0; }
+.rc-roll i.out.go { transform: translateY(-100%); }
+.rc-count { width: 7ch; } .rc-label { width: 14ch; color: rgba(11, 12, 13, .66); }
+@media (prefers-reduced-motion: reduce) { .rc-roll i { transition: none; } }
+</style>
+<style>
+  html, body { height: 100%; background: #fff; }
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<section class="rc" id="rc" aria-label="Record change">
+  <canvas id="rc-cv" aria-hidden="true"></canvas>
+  <p class="rc-kick">Qbix Labs · Record change</p>
+  <p class="rc-read" aria-live="off"><span class="rc-roll rc-count" id="rc-count"><i>01 / 06</i></span><span class="rc-roll rc-label" id="rc-label"><i>Playing</i></span></p>
+</section>
+<!-- /code -->
+</main>
+<script src="../kit/three-plus.js"></script>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Record change. World units are centimetres, Y up, the deck's front toward +Z. Every pose is a function of one number t (0..6);
+   the spin, the warp wobble and the streak run on a wall-clock term while the platter turns. */
+const REC = (() => {
+  const T = THREE, qs = new URLSearchParams(location.search);
+  const host = document.getElementById('rc'), canvas = document.getElementById('rc-cv');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const xo = QM.bezier(0.16, 1, 0.3, 1), mv = QM.bezier(0.65, 0, 0.35, 1);   // the qbix curves
+  const EZ = { x: xo, m: mv, l: (v) => v };
+  const seg = (t, s, e, k = 'x') => (t <= s ? 0 : t >= e ? 1 : EZ[k]((t - s) / (e - s)));
+  const mix = (a, b, k) => a + (b - a) * k;
+  const deg = Math.PI / 180;
+
+  /* ------------------------------------------------------------------ geometry kit */
+  // a closed (r, y) outline with optional fillet radii -> points; 's' marks a smooth point that is not filleted
+  function fillet(pts, n) {
+    const L = pts.length, out = [];
+    for (let i = 0; i < L; i++) {
+      const p0 = pts[(i + L - 1) % L], p1 = pts[i], p2 = pts[(i + 1) % L], rad = p1[2];
+      if (!rad || rad === 's') { out.push([p1[0], p1[1], rad === 's' ? 0 : 1]); continue; }
+      const ax = p0[0] - p1[0], ay = p0[1] - p1[1], bx = p2[0] - p1[0], by = p2[1] - p1[1];
+      const la = Math.hypot(ax, ay), lb = Math.hypot(bx, by);
+      if (la < 1e-9 || lb < 1e-9) { out.push([p1[0], p1[1], 1]); continue; }
+      const ux = ax / la, uy = ay / la, vx = bx / lb, vy = by / lb;
+      const ang = Math.acos(clamp(ux * vx + uy * vy, -1, 1));
+      if (ang > 3.1 || ang < 0.02) { out.push([p1[0], p1[1], 1]); continue; }
+      let t = rad / Math.tan(ang / 2); const tm = Math.min(la, lb) * 0.5;
+      if (t > tm) t = tm;
+      const r = t * Math.tan(ang / 2);
+      const sx = p1[0] + ux * t, sy = p1[1] + uy * t, ex = p1[0] + vx * t, ey = p1[1] + vy * t;
+      let bx2 = ux + vx, by2 = uy + vy; const bl = Math.hypot(bx2, by2); bx2 /= bl; by2 /= bl;
+      const d = r / Math.sin(ang / 2), cx = p1[0] + bx2 * d, cy = p1[1] + by2 * d;
+      const a0 = Math.atan2(sy - cy, sx - cx); let da = Math.atan2(ey - cy, ex - cx) - a0;
+      while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+      const steps = Math.max(2, Math.round(n * Math.abs(da) / (Math.PI / 2)));
+      for (let k = 0; k <= steps; k++) out.push([cx + r * Math.cos(a0 + da * k / steps), cy + r * Math.sin(a0 + da * k / steps), 0]);
+    }
+    return out;
+  }
+  // a solid of revolution about Y from a closed outline; hard corners split the normals, fillets and 's' points are smooth
+  function lathe(pts, o = {}) {
+    const seg = o.seg || 96, n = o.n || 5, P = fillet(pts, n), M = P.length;
+    let area = 0; for (let i = 0; i < M; i++) { const a = P[i], b = P[(i + 1) % M]; area += a[0] * b[1] - b[0] * a[1]; }
+    const sg = area >= 0 ? 1 : -1, sn = [];
+    for (let i = 0; i < M; i++) {
+      const a = P[i], b = P[(i + 1) % M], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy);
+      sn.push(l < 1e-7 ? null : [dy / l * sg, -dx / l * sg]);
+    }
+    const near = (i, d) => { for (let k = 1; k < M; k++) { const s = sn[(i + d * k + M * 8) % M]; if (s) return s; } return [1, 0]; };
+    const V = [], vin = [], vout = [];
+    const ymin = o.v ? o.v[0] : Math.min(...P.map((p) => p[1])), ymax = o.v ? o.v[1] : Math.max(...P.map((p) => p[1]));
+    for (let i = 0; i < M; i++) {
+      const sp = sn[(i + M - 1) % M] || near(i, -1), sx = sn[i] || near(i, 1);
+      if (P[i][2]) { vin[i] = V.length; V.push([P[i][0], P[i][1], sp[0], sp[1]]); vout[i] = V.length; V.push([P[i][0], P[i][1], sx[0], sx[1]]); }
+      else { let nx = sp[0] + sx[0], ny = sp[1] + sx[1]; const l = Math.hypot(nx, ny) || 1; vin[i] = vout[i] = V.length; V.push([P[i][0], P[i][1], nx / l, ny / l]); }
+    }
+    const W = seg + 1, pos = new Float32Array(V.length * W * 3), nor = new Float32Array(V.length * W * 3), uv = new Float32Array(V.length * W * 2);
+    const a0 = o.a0 || 0, al = o.alen == null ? Math.PI * 2 : o.alen, uo = o.uo || 0;
+    for (let j = 0; j < V.length; j++) for (let k = 0; k < W; k++) {
+      const ph = a0 + al * k / seg, s = Math.sin(ph), c = Math.cos(ph), q = j * W + k;
+      pos[q * 3] = V[j][0] * s; pos[q * 3 + 1] = V[j][1]; pos[q * 3 + 2] = V[j][0] * c;
+      nor[q * 3] = V[j][2] * s; nor[q * 3 + 1] = V[j][3]; nor[q * 3 + 2] = V[j][2] * c;
+      if (o.planar) { uv[q * 2] = 0.5 + pos[q * 3] / (2 * o.planar); uv[q * 2 + 1] = 0.5 - pos[q * 3 + 2] / (2 * o.planar); } else { uv[q * 2] = k / seg + uo; uv[q * 2 + 1] = clamp((V[j][1] - ymin) / (ymax - ymin || 1)); }
+    }
+    const idx = [];
+    for (let i = 0; i < M; i++) {
+      if (!sn[i]) continue;
+      const A = vout[i], B = vin[(i + 1) % M];
+      if (P[i][0] < 1e-6 && P[(i + 1) % M][0] < 1e-6) continue;
+      for (let k = 0; k < seg; k++) { const a = A * W + k, b = B * W + k, c = B * W + k + 1, d = A * W + k + 1; idx.push(a, b, c, a, c, d); }
+    }
+    // winding: make the first triangle face along its vertex normal
+    for (let q = 0; q < idx.length; q += 3) {
+      const a = idx[q], b = idx[q + 1], c = idx[q + 2];
+      const ux = pos[b * 3] - pos[a * 3], uy = pos[b * 3 + 1] - pos[a * 3 + 1], uz = pos[b * 3 + 2] - pos[a * 3 + 2];
+      const vx = pos[c * 3] - pos[a * 3], vy = pos[c * 3 + 1] - pos[a * 3 + 1], vz = pos[c * 3 + 2] - pos[a * 3 + 2];
+      const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx;
+      const dt = cx * nor[a * 3] + cy * nor[a * 3 + 1] + cz * nor[a * 3 + 2];
+      if (Math.abs(dt) > 1e-9) { if (dt < 0) for (let r = 0; r < idx.length; r += 3) { const t = idx[r + 1]; idx[r + 1] = idx[r + 2]; idx[r + 2] = t; } break; }
+    }
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('normal', new T.BufferAttribute(nor, 3)); g.setAttribute('uv', new T.BufferAttribute(uv, 2));
+    g.setIndex(idx); return g;
+  }
+  // a ring cross-section: [rin, y0, rout, y1] with chamfer / fillet c
+  const ringP = (ri, y0, ro, y1, c = 0.03, c2 = c) => [[ri, y0, c2], [ro, y0, c], [ro, y1, c], [ri, y1, c2]];
+  // saw teeth on a straight wall: from y0 to y1, n teeth, between radius r and r + dep (outward or inward by sign of dep)
+  const teeth = (r, y0, y1, n, dep) => { const o = []; for (let i = 0; i < n; i++) { const a = y0 + (y1 - y0) * i / n, b = y0 + (y1 - y0) * (i + 1) / n; o.push([r, a, 0], [r + dep, a + (b - a) * 0.15, 0], [r + dep, a + (b - a) * 0.6, 0], [r, b - (b - a) * 0.02, 0]); } return o; };
+  const merge = (list) => T.BufferGeometryUtils.mergeGeometries(list.map((g) => (g.index ? g.toNonIndexed() : g)), false);
+
+
+  /* ------------------------------------------------------------------ renderer, scene, studio environment */
+  let SOFT = !!navigator.webdriver;          // headless SwiftShader: lighter settings unless ?hq
+  if (qs.has('hq')) SOFT = false;
+  const renderer = new T.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
+  const EXPO = 0.66, BG = 1.0;   // WebGL clamps the clear colour to 1, so the page white is 1.0 and the last pass divides what the curve makes of it
+  renderer.outputColorSpace = T.SRGBColorSpace;
+  renderer.toneMapping = T.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = EXPO;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.VSMShadowMap;
+  renderer.setClearColor(new T.Color(BG, BG, BG), 1);
+  let PR = SOFT ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
+  if (qs.has('pr')) PR = parseFloat(qs.get('pr'));
+  renderer.setPixelRatio(PR);
+  const scene = new T.Scene();
+  const cam = new T.PerspectiveCamera(22, 1.6, 1, 800);
+
+  const envScene = new T.Scene();
+  envScene.add(new T.Mesh(new T.SphereGeometry(60, 32, 16), new T.MeshBasicMaterial({ color: new T.Color(0.35, 0.35, 0.35), side: T.BackSide })));
+  const panel = (w, h, x, y, z, k, tint) => {
+    const c = new T.Color(tint || 0xffffff).multiplyScalar(k);
+    const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ color: c, side: T.DoubleSide }));
+    m.position.set(x, y, z); m.lookAt(0, 0, 0); envScene.add(m);
+  };
+  panel(40, 16, -14, 30, 22, 7.5);            // the key softbox, high front left
+  panel(60, 5, 0, 26, -18, 9);                // a long strip behind and above (cylinders pick up a hard line)
+  panel(6, 34, 38, 8, 10, 5.2);               // a tall strip right
+  panel(6, 30, -40, 6, -6, 3.2);              // a tall strip left rim
+  panel(50, 26, 0, -22, 14, 0.5, 0xE4E8DE);   // low sage fill (the floor bounce)
+  panel(30, 30, 0, 44, 0, 2.2);               // overhead
+  panel(34, 26, 34, -4, 28, 0.015, 0x000000); // black flags: glass and ink need something dark to reflect
+  panel(34, 26, -36, -2, 24, 0.015, 0x000000);
+  panel(60, 14, 0, 0, -40, 0.02, 0x000000);
+  const pm = new T.PMREMGenerator(renderer);
+  const envMap = pm.fromScene(envScene, 0.035).texture;
+  scene.environment = envMap;
+
+  const key = new T.DirectionalLight(0xffffff, 1.1);
+  key.position.set(-30, 52, 40); key.castShadow = true;
+  key.shadow.mapSize.set(SOFT ? 1024 : 2048, SOFT ? 1024 : 2048); key.shadow.bias = -0.0008; key.shadow.normalBias = 0.05; key.shadow.radius = 6; key.shadow.blurSamples = 12;
+  Object.assign(key.shadow.camera, { left: -50, right: 50, top: 36, bottom: -36, near: 5, far: 200 });
+  scene.add(key); scene.add(key.target);
+  scene.add(new T.HemisphereLight(0xffffff, 0xCFDDB4, 0.34));
+
+  /* ------------------------------------------------------------------ materials */
+  const M = {
+    ceramic: new T.MeshPhysicalMaterial({ color: 0xF1F2EC, roughness: 0.46, clearcoat: 0.22, clearcoatRoughness: 0.3, envMapIntensity: 0.62 }),
+    deck: new T.MeshPhysicalMaterial({ color: 0xE9ECE2, roughness: 0.55, clearcoat: 0.12, clearcoatRoughness: 0.4, envMapIntensity: 0.55 }),
+    ink: new T.MeshPhysicalMaterial({ color: 0x15181b, metalness: 0.85, roughness: 0.3, envMapIntensity: 1.0 }),
+    lacquer: new T.MeshPhysicalMaterial({ color: 0x0B0C0D, roughness: 0.2, clearcoat: 0.7, clearcoatRoughness: 0.12, envMapIntensity: 0.9 }),
+    rubber: new T.MeshPhysicalMaterial({ color: 0x15181a, roughness: 0.78, envMapIntensity: 0.45 }),
+    steel: new T.MeshPhysicalMaterial({ color: 0xBDBBB3, metalness: 1, roughness: 0.36, anisotropy: 0.7, anisotropyRotation: Math.PI / 2, envMapIntensity: 0.62 }),
+    polished: new T.MeshPhysicalMaterial({ color: 0xC9C7BF, metalness: 1, roughness: 0.14, envMapIntensity: 0.8 }),
+    lime: new T.MeshPhysicalMaterial({ color: 0x8FE000, roughness: 0.26, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 0.55 }),
+    led: new T.MeshPhysicalMaterial({ color: 0x1b2208, roughness: 0.15, clearcoat: 1, clearcoatRoughness: 0.04, envMapIntensity: 0.8, emissive: 0x000000 }),
+    paper: new T.MeshPhysicalMaterial({ color: 0xF4F3EC, roughness: 0.86, envMapIntensity: 0.4 }),
+    card: new T.MeshPhysicalMaterial({ color: 0xE7E8E0, roughness: 0.82, envMapIntensity: 0.4 }),
+    glass: new T.MeshPhysicalMaterial({ color: 0xffffff, transmission: 1, thickness: 0.9, ior: 1.5, roughness: 0.02, metalness: 0, envMapIntensity: 1.5, attenuationColor: new T.Color(0xDDDFDD), attenuationDistance: 2.4, side: T.DoubleSide }),
+    belt: new T.MeshPhysicalMaterial({ color: 0x1a1d1f, roughness: 0.6, envMapIntensity: 0.4 }),
+  };
+
+  /* ------------------------------------------------------------------ canvas textures: grooves, labels, covers, engravings */
+  const FONT_M = '"Geist Mono", ui-monospace, monospace', FONT_O = 'Outfit, "Geist", system-ui, sans-serif';
+  const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h || w; return c; };
+  const tex = (c, srgb, rep) => { const t = new T.CanvasTexture(c); if (srgb) t.colorSpace = T.SRGBColorSpace; t.anisotropy = 16; if (rep) t.wrapS = T.RepeatWrapping; t.needsUpdate = true; return t; };
+  const rng = (s) => () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+
+  // the record's top: concentric grooves with track gaps, lead-in and run-out. 1 px = 15.24 / 1024 cm.
+  const GR = { bump: tex(cv(2048)), rough: tex(cv(2048)), aniso: tex(cv(512)) };
+  const TRACKS = [12.95, 11.35, 9.95, 8.5, 7.35];                       // gap centres (cm from the centre)
+  const inGap = (r) => TRACKS.some((g) => Math.abs(r - g) < 0.17);
+  function drawGrooves() {
+    const S = 2048, C = S / 2, px = (r) => (r / 15.24) * (S / 2), R = rng(7);
+    const b = GR.bump.image.getContext('2d'), g = GR.rough.image.getContext('2d');
+    b.fillStyle = '#808080'; b.fillRect(0, 0, S, S); g.fillStyle = 'rgb(40,40,40)'; g.fillRect(0, 0, S, S);
+    const ring = (ctx, r, w, col) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(C, C, px(r), 0, Math.PI * 2); ctx.stroke(); };
+    // roughness bands first: groove areas are satin, gaps and the lead-in are glossy, dead wax is mirror-smooth
+    g.fillStyle = 'rgb(128,128,128)'; g.beginPath(); g.arc(C, C, px(14.55), 0, Math.PI * 2); g.arc(C, C, px(6.3), 0, Math.PI * 2, true); g.fill('evenodd');
+    TRACKS.forEach((r) => ring(g, r, px(0.34), 'rgb(56,56,56)'));
+    g.fillStyle = 'rgb(76,76,76)'; g.beginPath(); g.arc(C, C, px(14.55), 0, Math.PI * 2); g.arc(C, C, px(14.2), 0, Math.PI * 2, true); g.fill('evenodd');
+    g.fillStyle = 'rgb(46,46,46)'; g.beginPath(); g.arc(C, C, px(6.5), 0, Math.PI * 2); g.arc(C, C, px(6.2), 0, Math.PI * 2, true); g.fill('evenodd');
+    // grooves: one hairline per 0.075 cm, its depth following the music
+    for (let r = 14.2; r > 6.5; r -= 0.075) {
+      if (inGap(r)) continue;
+      const lvl = 0.55 + 0.45 * Math.sin(r * 9.3 + Math.sin(r * 2.1) * 2) * Math.sin(r * 3.7 + 1);
+      const d = 40 + 70 * Math.abs(lvl) * (0.6 + 0.8 * R());
+      ring(b, r, 2.1, `rgb(${128 - d * 0.5},${128 - d * 0.5},${128 - d * 0.5})`); ring(b, r - 0.036, 1.2, `rgb(${128 + d * 0.45},${128 + d * 0.45},${128 + d * 0.45})`);
+      ring(g, r, 1.6, `rgb(${96 + 30 * R()},${96 + 30 * R()},${96 + 30 * R()})`);
+    }
+    for (let r = 14.55; r > 14.2; r -= 0.27) { ring(b, r, 2.4, 'rgb(86,86,86)'); ring(b, r - 0.1, 1.4, 'rgb(170,170,170)'); }   // lead-in: wide, quiet
+    for (let r = 6.45; r > 6.2; r -= 0.42) ring(b, r, 2.4, 'rgb(90,90,90)');                                             // run-out groove
+    [GR.bump, GR.rough].forEach((t) => { const im = t.image, tmp = cv(S), tg = tmp.getContext('2d'); tg.drawImage(im, 0, 0); const cx = im.getContext('2d'); cx.filter = 'blur(0.9px)'; cx.drawImage(tmp, 0, 0); cx.filter = 'none'; });
+    GR.bump.needsUpdate = GR.rough.needsUpdate = true;
+    // anisotropy: the groove direction is the tangent of each circle, in the texture's own (u, v)
+    const A = GR.aniso.image, a = A.getContext('2d'), N = A.width, id = a.createImageData(N, N), d = id.data;
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const u = (i + 0.5) / N - 0.5, v = 0.5 - (j + 0.5) / N, rr = Math.hypot(u, v) * 2 * 15.24 || 1e-6, o = (j * N + i) * 4;
+      const tx = -v / (rr / 30.48), ty = u / (rr / 30.48), l = Math.hypot(tx, ty) || 1;
+      d[o] = 128 + 127 * (tx / l); d[o + 1] = 128 + 127 * (ty / l);
+      d[o + 2] = rr > 6.3 && rr < 14.6 ? (inGap(rr) ? 110 : 255) : 70; d[o + 3] = 255;
+    }
+    a.putImageData(id, 0, 0); GR.aniso.needsUpdate = true;
+  }
+  drawGrooves();
+  GR.bump.colorSpace = T.NoColorSpace;
+  M.vinyl = new T.MeshPhysicalMaterial({ color: 0x08090b, roughness: 1, roughnessMap: GR.rough, bumpMap: GR.bump, bumpScale: 1.4, anisotropy: 1, anisotropyMap: GR.aniso, clearcoat: 0.16, clearcoatRoughness: 0.28, envMapIntensity: 1.0 });
+
+  // the streak: two soft opposite wedges, drawn as a conic gradient, turning with the record and brightening with its speed
+  const streakTex = (() => {
+    const c = cv(1024), g = c.getContext('2d');
+    const cg = g.createConicGradient(-0.35, 512, 512);
+    const stops = [[0, 0], [0.012, 0.05], [0.035, 0.34], [0.05, 0.62], [0.065, 0.34], [0.09, 0.05], [0.12, 0], [0.5, 0], [0.512, 0.05], [0.535, 0.24], [0.55, 0.44], [0.565, 0.24], [0.59, 0.05], [0.62, 0], [1, 0]];
+    stops.forEach(([p, a]) => cg.addColorStop(p, `rgba(255,255,255,${a})`));
+    g.fillStyle = cg; g.fillRect(0, 0, 1024, 1024);
+    g.globalCompositeOperation = 'destination-in';
+    const rg = g.createRadialGradient(512, 512, 0, 512, 512, 512);
+    const f = (r) => r / 15.24;
+    rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(f(6.3), 'rgba(0,0,0,0)'); rg.addColorStop(f(7.4), 'rgba(0,0,0,0.7)'); rg.addColorStop(f(10), 'rgba(0,0,0,1)'); rg.addColorStop(f(13.8), 'rgba(0,0,0,0.75)'); rg.addColorStop(f(14.6), 'rgba(0,0,0,0)'); rg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = rg; g.fillRect(0, 0, 1024, 1024);
+    const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 4; return t;
+  })();
+
+  // label art. 1 px = 5.05 / 512 cm. kind 'lime' or 'white'
+  const LB = { lime: tex(cv(1024), true), white: tex(cv(1024), true) };
+  function fracText(g, x, y, size, col) {                        // 33⅓ without relying on a font glyph: "33" then a small 1/3
+    g.fillStyle = col; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+    g.font = `500 ${size}px ${FONT_M}`; const w = g.measureText('33').width; g.fillText('33', x, y);
+    g.font = `500 ${size * 0.42}px ${FONT_M}`; g.fillText('1', x + w + size * 0.04, y - size * 0.4); g.fillText('3', x + w + size * 0.26, y - size * 0.02);
+    g.strokeStyle = col; g.lineWidth = size * 0.04; g.beginPath(); g.moveTo(x + w + size * 0.07, y - size * 0.12); g.lineTo(x + w + size * 0.36, y - size * 0.5); g.stroke();
+    return w + size * 0.5;
+  }
+  function ringText(g, str, r, size, col, a0, span) {
+    g.save(); g.translate(512, 512); g.fillStyle = col; g.font = `500 ${size}px ${FONT_M}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const n = str.length; for (let i = 0; i < n; i++) { const a = a0 + span * (i + 0.5) / n; g.save(); g.rotate(a); g.translate(0, -r); g.fillText(str[i], 0, 0); g.restore(); }
+    g.restore();
+  }
+  function drawLabels() {
+    const ink = '#0B0C0D';
+    const common = (g, name, side, no) => {
+      g.strokeStyle = ink; g.lineWidth = 3; [498, 478, 296].forEach((r) => { g.beginPath(); g.arc(512, 512, r, 0, Math.PI * 2); g.stroke(); });
+      ringText(g, `${name.toUpperCase()} · SIDE ${side} · 33 RPM · STEREO · QBIX LABS · `, 388, 30, ink, 0.2, Math.PI * 2 - 0.4);
+      g.fillStyle = ink; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.font = `500 38px ${FONT_M}`; g.fillText(`SIDE ${side}`, 512, 392);
+      g.font = `300 150px ${FONT_O}`; g.fillText(name, 512, 650);
+      g.fillRect(372, 684, 280, 3);
+      fracText(g, 512 - 62, 756, 60, ink);
+      g.font = `400 22px ${FONT_M}`; g.fillText(`SESSIONS ${no}`, 512, 800);
+    };
+    let c = LB.lime.image, g = c.getContext('2d');
+    g.fillStyle = '#B8FF00'; g.fillRect(0, 0, 1024, 1024); common(g, 'Forma', 'A', '01');
+    g.beginPath(); g.arc(512, 512, 40, 0, Math.PI * 2); g.fillStyle = '#B8FF00'; g.fill(); g.strokeStyle = ink; g.lineWidth = 3; g.stroke();
+    c = LB.white.image; g = c.getContext('2d');
+    g.fillStyle = '#F7F8F3'; g.fillRect(0, 0, 1024, 1024); common(g, 'Kova', 'B', '02');
+    g.fillStyle = '#B8FF00'; g.beginPath(); g.arc(512, 300, 30, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.arc(512, 512, 40, 0, Math.PI * 2); g.fillStyle = '#F7F8F3'; g.fill(); g.strokeStyle = ink; g.stroke();
+    LB.lime.needsUpdate = LB.white.needsUpdate = true;
+  }
+  M.labelLime = new T.MeshPhysicalMaterial({ color: 0xffffff, map: LB.lime, roughness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.2, envMapIntensity: 0.45 });
+  M.labelWhite = new T.MeshPhysicalMaterial({ color: 0xffffff, map: LB.white, roughness: 0.55, clearcoat: 0.3, clearcoatRoughness: 0.3, envMapIntensity: 0.5 });
+
+
+  // engraved marks on the deck, flat decals: speed selector, start / stop, anti-skate
+  const DC = { speed: tex(cv(1024), true), start: tex(cv(512, 256), true), skate: tex(cv(512), true), weight: tex(cv(2048, 160), true), front: tex(cv(1024, 160), true) };
+  function drawDecals() {
+    const ink = '#0B0C0D';
+    let g = DC.speed.image.getContext('2d'); g.clearRect(0, 0, 1024, 1024);
+    g.fillStyle = ink; g.strokeStyle = ink; g.textAlign = 'center'; g.textBaseline = 'middle';
+    // the dial: 33 at -38 deg, 45 at +38 deg from straight up; ticks between
+    const at = (a, r) => [512 + Math.sin(a * deg) * r, 512 - Math.cos(a * deg) * r];
+    for (let a = -52; a <= 52; a += 4) { const [x0, y0] = at(a, 330), [x1, y1] = at(a, a % 38 === 0 || Math.abs(a) === 52 ? 372 : 352); g.lineWidth = Math.abs(a) === 36 || a === -36 ? 7 : 4; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); }
+    g.font = `500 76px ${FONT_M}`; let p = at(-40, 450); g.fillText('33', p[0], p[1]); p = at(40, 450); g.fillText('45', p[0], p[1]);
+    g.font = `500 38px ${FONT_M}`; g.fillText('RPM', 512, 118);
+    g = DC.start.image.getContext('2d'); g.clearRect(0, 0, 512, 256); g.fillStyle = ink; g.font = `500 44px ${FONT_M}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('START · STOP', 256, 128);
+    g = DC.skate.image.getContext('2d'); g.clearRect(0, 0, 512, 512); g.fillStyle = ink; g.strokeStyle = ink; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let a = -90; a <= 90; a += 15) { const x0 = 256 + Math.sin(a * deg) * 150, y0 = 256 - Math.cos(a * deg) * 150, x1 = 256 + Math.sin(a * deg) * (a % 45 === 0 ? 190 : 175), y1 = 256 - Math.cos(a * deg) * (a % 45 === 0 ? 190 : 175); g.lineWidth = 4; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); }
+    g.font = `500 38px ${FONT_M}`; [[-90, '0'], [-45, '1'], [0, '2'], [45, '3'], [90, '4']].forEach(([a, s]) => g.fillText(s, 256 + Math.sin(a * deg) * 224, 256 - Math.cos(a * deg) * 224));
+    g.font = `500 28px ${FONT_M}`; g.fillText('ANTI-SKATE', 256, 462);
+    // the counterweight dial: white on ink, a band around the ring (u runs around the circumference)
+    g = DC.weight.image.getContext('2d'); g.fillStyle = '#14171a'; g.fillRect(0, 0, 2048, 160); g.fillStyle = '#F2F3EE'; g.strokeStyle = '#F2F3EE'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    for (let i = 0; i <= 40; i++) { const x = 2048 * (0.75 + (i - 20) / 120); g.lineWidth = i % 10 === 0 ? 5 : 3; g.beginPath(); g.moveTo(x, 20); g.lineTo(x, i % 10 === 0 ? 76 : 54); g.stroke(); }
+    g.font = `500 52px ${FONT_M}`; [0, 1, 2, 3, 4].forEach((n) => g.fillText(String(n), 2048 * (0.75 + (n * 10 - 20) / 120), 134));
+    g.font = `400 30px ${FONT_M}`; g.fillText('g', 2048 * (0.75 + 22 / 120), 134);
+    // the plinth's front: a small wordmark
+    g = DC.front.image.getContext('2d'); g.clearRect(0, 0, 1024, 160); g.fillStyle = 'rgba(11,12,13,.85)'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.font = `500 56px ${FONT_M}`; g.fillText('QBIX  RC-1', 40, 84);
+    g.font = `400 34px ${FONT_M}`; g.textAlign = 'right'; g.fillText('BELT DRIVE · 33 / 45', 984, 84);
+    DC.speed.needsUpdate = DC.start.needsUpdate = DC.skate.needsUpdate = DC.weight.needsUpdate = DC.front.needsUpdate = true;
+  }
+  const decalMat = (t) => new T.MeshPhysicalMaterial({ color: 0xffffff, map: t, transparent: true, roughness: 0.55, envMapIntensity: 0.4, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  M.dSpeed = decalMat(DC.speed); M.dStart = decalMat(DC.start); M.dSkate = decalMat(DC.skate); M.dFront = decalMat(DC.front);
+  M.weightBand = new T.MeshPhysicalMaterial({ color: 0xffffff, map: DC.weight, roughness: 0.4, metalness: 0.2, envMapIntensity: 0.7 });
+
+  // the felt mat: fine concentric ribs, bump only. 1 px = 14.5 / 512 cm
+  const matBump = (() => {
+    const c = cv(1024), g = c.getContext('2d'); g.fillStyle = '#808080'; g.fillRect(0, 0, 1024, 1024);
+    for (let r = 4; r < 512; r += 4.4) { g.strokeStyle = r % 8.8 < 4.4 ? '#a8a8a8' : '#585858'; g.lineWidth = 2; g.beginPath(); g.arc(512, 512, r, 0, Math.PI * 2); g.stroke(); }
+    [90, 250, 420].forEach((r) => { g.strokeStyle = '#303030'; g.lineWidth = 6; g.beginPath(); g.arc(512, 512, r, 0, Math.PI * 2); g.stroke(); });
+    const t = new T.CanvasTexture(c); t.anisotropy = 16; return t;
+  })();
+  M.mat = new T.MeshPhysicalMaterial({ color: 0x1d2023, roughness: 0.82, bumpMap: matBump, bumpScale: 1.2, envMapIntensity: 0.4 });
+
+  function drawAllText() { drawLabels(); drawDecals(); }
+  drawAllText();
+
+  /* ------------------------------------------------------------------ the model */
+  const root = new T.Group(); scene.add(root);
+  function mesh(geo, mat, parent, o = {}) {
+    const m = new T.Mesh(geo, mat); m.castShadow = o.cast !== false; m.receiveShadow = o.recv !== false; if (o.noAO) m.userData.noAO = true; if (parent) parent.add(m); return m;
+  }
+  const node = (parent, x = 0, y = 0, z = 0) => { const g = new T.Group(); g.position.set(x, y, z); (parent || root).add(g); return g; };
+  const lathMesh = (pts, mat, parent, o) => mesh(lathe(pts, o), mat, parent, o);
+  const rbox = (w, h, d, r, mat, parent, x, y, z, o) => { const m = mesh(new T.RoundedBoxGeometry(w, h, d, o && o.s || 3, r), mat, parent, o); m.position.set(x, y, z); return m; };
+  const rrect = (w, h, r, P) => {
+    P = P || new T.Shape(); const x = -w / 2, y = -h / 2;
+    P.moveTo(x + r, y); P.lineTo(x + w - r, y); P.absarc(x + w - r, y + r, r, -Math.PI / 2, 0, false); P.lineTo(x + w, y + h - r); P.absarc(x + w - r, y + h - r, r, 0, Math.PI / 2, false);
+    P.lineTo(x + r, y + h); P.absarc(x + r, y + h - r, r, Math.PI / 2, Math.PI, false); P.lineTo(x, y + r); P.absarc(x + r, y + r, r, Math.PI, Math.PI * 1.5, false); return P;
+  };
+  const crease = (g, a = 0.62) => T.BufferGeometryUtils.toCreasedNormals(g, a);
+  const alongX = (g) => { g.rotateZ(-Math.PI / 2); return g; };   // a lathe's Y becomes +X
+
+  const DECK = 4.8, MAT = 8.8;                      // deck surface and the felt mat's top
+  const SPX = -4.5, SPZ = -0.3;                     // the spindle
+  const PX = 16.2, PZ = -8.2;                       // the tonearm's pivot
+  const GROOVE = 8.8 + 0.1 + 0.03;                  // the groove plane of a seated record
+  const TIPDROP = 2.05, HA = GROOVE + TIPDROP, HAR = HA - DECK;   // arm axis height, and relative to the deck
+
+  // --- plinth: feet, ink base, ceramic slab with a recessed deck
+  const feet = [];
+  (function buildPlinth() {
+    const n = node(root);
+    [[-19.8, -14], [19.8, -14], [-19.8, 14], [19.8, 14]].forEach(([x, z]) => {
+      const f = node(n, x, 0, z);
+      lathMesh([[0, 0, 0], [1.55, 0, 0.12], [1.55, 0.42, 0.12], [0, 0.42, 0]], M.rubber, f, { seg: 48, n: 4 });                      // rubber ring
+      lathMesh([[0, 0.42, 0], [0.86, 0.42, 0.02], [0.86, 0.78, 0.02], [0, 0.78, 0]], M.steel, f, { seg: 40 });                       // adjuster stem
+      lathMesh([[0, 0.7, 0], [1.3, 0.7, 0.05], [1.3, 0.74, 0], [1.22, 0.78, 0], [1.3, 0.82, 0], [1.3, 0.9, 0], [1.22, 0.94, 0], [1.3, 0.98, 0.05], [1.3, 1.02, 0.02], [0, 1.02, 0]], M.ink, f, { seg: 56, n: 3 });   // knurled lock nut
+      feet.push(f);
+    });
+    rbox(46, 0.5, 34, 0.22, M.lacquer, n, 0, 1.25, 0);                                   // the thin ink base layer
+    const sh = rrect(47.3, 35.3, 2.6), hole = rrect(44.7, 32.7, 1.6); sh.holes.push(hole);
+    const pg = new T.ExtrudeGeometry(sh, { depth: 3.1, bevelEnabled: true, bevelThickness: 0.35, bevelSize: 0.35, bevelSegments: 6, curveSegments: 14, steps: 1 });
+    pg.rotateX(-Math.PI / 2); pg.translate(0, 1.85, 0);
+    mesh(crease(pg), M.ceramic, n);                                                      // the slab, rim 1.3 cm wide, edges rounded 3.5 mm
+    rbox(43.8, 2.6, 31.8, 0.1, M.lacquer, n, 0, 2.8, 0, { cast: false });                // the well under the deck
+    rbox(43.6, 0.7, 31.6, 0.24, M.deck, n, 0, DECK - 0.35, 0, { s: 4 });                 // the recessed deck
+    // front wordmark and a lime inlay
+    const dec = mesh(new T.PlaneGeometry(15, 15 * 160 / 1024), M.dFront, n, { cast: false, recv: false }); dec.position.set(-8.2, 3.4, 18.012);
+    rbox(1.7, 0.36, 0.14, 0.06, M.lime, n, 17.6, 3.4, 18.0, { s: 2 });
+  })();
+
+  // --- platter: bearing, sub-platter, belt, heavy disc with strobe edge, felt mat, spindle
+  const platter = node(root, SPX, DECK, SPZ);
+  const spinG = platter;       // the whole group turns about its Y axis
+  (function buildPlatter() {
+    lathMesh([[0, 0, 0], [3.5, 0, 0.05], [3.5, 0.5, 0.05], [0, 0.5, 0]], M.steel, platter, { seg: 64, n: 3 });
+    lathMesh([[0, 0.5, 0], [10.55, 0.5, 0.06], [10.55, 1.45, 0.06], [0, 1.45, 0]], M.ink, platter, { seg: 128, n: 3 });
+    lathMesh([[0, 1.45, 0], [14.55, 1.45, 0.02], [14.55, 3.6, 0.02], [0, 3.6, 0]], M.ink, platter, { seg: 160, n: 3 });
+    lathMesh([[13.2, 1.45, 0.05], [14.1, 1.45, 0.05], [14.78, 2.15, 0.06], [14.78, 2.28, 0.04], [13.2, 2.28, 0.0]], M.polished, platter, { seg: 200, n: 4 });   // polished chamfer, lower
+    lathMesh([[13.2, 2.95, 0.0], [14.78, 2.95, 0.04], [14.78, 3.1, 0.05], [14.1, 3.65, 0.06], [13.2, 3.65, 0.0]], M.polished, platter, { seg: 200, n: 4 });      // and upper
+    // strobe dots: three rows, instanced
+    const rows = [[2.46, 90], [2.62, 108], [2.78, 120]], total = rows.reduce((s, r) => s + r[1], 0);
+    const dg = new T.RoundedBoxGeometry(0.2, 0.1, 0.07, 1, 0.02), dots = new T.InstancedMesh(dg, M.polished, total), d = new T.Object3D(); let q = 0;
+    rows.forEach(([y, nn]) => { for (let i = 0; i < nn; i++) { const a = (i + (y > 2.5 ? 0.5 : 0)) * Math.PI * 2 / nn; d.position.set(Math.sin(a) * 14.57, y, Math.cos(a) * 14.57); d.rotation.set(0, a, 0); d.scale.set(90 / nn * 0.95, 1, 1); d.updateMatrix(); dots.setMatrixAt(q++, d.matrix); } });
+    dots.castShadow = false; dots.userData.noAO = true; platter.add(dots);
+    lathMesh([[0.38, 3.65, 0], [14.45, 3.65, 0.1], [14.45, 4.0, 0.1], [0.38, 4.0, 0.04]], M.mat, platter, { seg: 160, n: 4, planar: 14.45 });                  // the felt mat
+    // spindle: polished, a fine groove, a domed tip
+    lathMesh([[0, 4.0, 0], [0.355, 4.0, 0], [0.355, 4.5, 0], [0.30, 4.54, 0], [0.30, 4.6, 0], [0.355, 4.64, 0], [0.355, 6.05, 0], [0.31, 6.17, 's'], [0.18, 6.25, 's'], [0, 6.28, 0]], M.polished, platter, { seg: 36, n: 3 });
+  })();
+  // belt drive: a pulley and a flat belt round the sub-platter, seen through the gap under the rim
+  (function buildBelt() {
+    const n = node(root, SPX, DECK, SPZ), ang = 78 * deg, dist = 12.4, px = Math.sin(ang) * dist, pz = Math.cos(ang) * dist;
+    const motor = node(n, px, 0, pz);
+    lathMesh([[0, 0, 0], [1.7, 0, 0.1], [1.7, 0.5, 0.08], [0, 0.5, 0]], M.lacquer, motor, { seg: 48, n: 3 });
+    lathMesh([[0, 0.5, 0], [1.2, 0.5, 0.04], [1.2, 0.62, 0.02], [0.82, 0.62, 0.0], [0.82, 1.2, 0.0], [1.2, 1.2, 0.02], [1.2, 1.32, 0.04], [0, 1.32, 0]], M.steel, motor, { seg: 48, n: 3 });
+    const R1 = 10.7, R2 = 0.84, dx = px, dz = pz, D = Math.hypot(dx, dz), ph = Math.atan2(dz, dx), be = Math.acos((R1 - R2) / D);
+    const stadium = (r1, r2) => {
+      const s = new T.Shape(), c = (a, r, cx, cz) => [cx + r * Math.cos(a), cz + r * Math.sin(a)];
+      let p = c(ph + be, r1, 0, 0); s.moveTo(p[0], p[1]); p = c(ph + be, r2, dx, dz); s.lineTo(p[0], p[1]);
+      s.absarc(dx, dz, r2, ph + be, ph - be + Math.PI * 2, false);
+      p = c(ph - be, r1, 0, 0); s.lineTo(p[0], p[1]);
+      s.absarc(0, 0, r1, ph - be, ph + be - Math.PI * 2, false);
+      return s;
+    };
+    const o = stadium(R1 + 0.1, R2 + 0.1); o.holes.push(stadium(R1, R2));
+    const bg = new T.ExtrudeGeometry(o, { depth: 0.5, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 1, curveSegments: 24 });
+    bg.rotateX(-Math.PI / 2); bg.translate(0, 0.66, 0);
+    mesh(crease(bg, 0.5), M.belt, n, { recv: false });
+  })();
+
+  // --- records: 12", grooves, label, raised rim, a streak that turns with the disc
+  const recs = {};
+  function makeRecord(name, labelMat) {
+    const g = node(root), spin = node(g), warp = node(spin);
+    const prof = [[0.39, -0.1, 0.02], [15.24, -0.1, 0.05], [15.24, 0.1, 0.06], [14.85, 0.1, 0.04], [14.55, 0.03, 0.02], [6.3, 0.03, 0.03], [5.95, 0.08, 0.02], [5.5, 0.1, 0.03], [5.12, 0.1, 0.02], [5.12, 0.07, 0.01], [0.39, 0.07, 0.03]];
+    const body = lathMesh(prof, M.vinyl, warp, { seg: 192, n: 4, planar: 15.24 });
+    const lab = lathMesh([[0.39, 0.06, 0.0], [5.07, 0.06, 0.0], [5.07, 0.085, 0.02], [0.39, 0.085, 0.01]], labelMat, warp, { seg: 96, n: 3, planar: 5.07 });
+    lab.castShadow = false;
+    const rg = new T.RingGeometry(6.3, 15.24, 160, 1); rg.rotateX(-Math.PI / 2);
+    const sheen = new T.Mesh(rg, new T.MeshBasicMaterial({ map: streakTex, transparent: true, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false, opacity: 0.5, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    sheen.position.y = 0.045; sheen.renderOrder = 5; warp.add(sheen);
+    recs[name] = { g, spin, warp, sheen };
+    return recs[name];
+  }
+  makeRecord('A', M.labelWhite); makeRecord('B', M.labelLime);
+
+  // --- tonearm geometry: where the stylus lands on the record decides everything
+  const LE = Math.hypot(SPX - PX, SPZ - PZ) + 0.95;                   // effective length (pivot to stylus), 0.95 cm of overhang
+  const ARMD = Math.hypot(SPX - PX, SPZ - PZ);
+  const BASEA = Math.atan2(SPZ - PZ, SPX - PX);
+  // the arm group's Y rotation that puts the stylus at radius r from the spindle, on the front side of the line pivot-spindle
+  function yawFor(r) {
+    const g = Math.acos(clamp((LE * LE + ARMD * ARMD - r * r) / (2 * LE * ARMD), -1, 1));
+    const c = [BASEA + g, BASEA - g];
+    const al = (PZ + LE * Math.sin(c[0]) > PZ + LE * Math.sin(c[1])) ? c[0] : c[1];
+    return -al;
+  }
+  const R_REST = 19.6, R_LEAD = 14.32;
+  const YAW_REST = yawFor(R_REST);
+  // which side of the arm's axis the spindle lies on decides the bow of the tube and the headshell's offset
+  const SIDE = (() => {
+    const a = yawFor(11), dx = SPX - PX, dz = SPZ - PZ;
+    const lx = dx * Math.cos(a) - dz * Math.sin(a), lz = dx * Math.sin(a) + dz * Math.cos(a);   // the spindle in arm-local (x forward, z lateral)
+    return lz > 0 ? -1 : 1;
+  })();
+
+  // a tapered tube along a curve
+  function sweep(curve, rf, nu, nv) {
+    const fr = curve.computeFrenetFrames(nu, false), pos = [], idx = [];
+    for (let i = 0; i <= nu; i++) {
+      const u = i / nu, p = curve.getPointAt(u), N = fr.normals[i], B = fr.binormals[i], r = rf(u);
+      for (let j = 0; j < nv; j++) { const a = j * Math.PI * 2 / nv; pos.push(p.x + (N.x * Math.cos(a) + B.x * Math.sin(a)) * r, p.y + (N.y * Math.cos(a) + B.y * Math.sin(a)) * r, p.z + (N.z * Math.cos(a) + B.z * Math.sin(a)) * r); }
+    }
+    for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) { const a = i * nv + j, b = i * nv + (j + 1) % nv, c = (i + 1) * nv + (j + 1) % nv, d = (i + 1) * nv + j; idx.push(a, b, c, a, c, d); }
+    const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+  }
+
+  // --- the tonearm tower: ceramic plate, ink drum with a groove for the cue platform, neck, bearing rings
+  const tower = node(root, PX, DECK, PZ);
+  const cueRing = node(tower, 0, 0, 0);          // the cueing platform: rises out of its groove
+  const leverP = {};
+  (function buildTower() {
+    lathMesh([[0, 0, 0], [5.0, 0, 0.1], [5.0, 0.35, 0.1], [0, 0.35, 0]], M.ceramic, tower, { seg: 96, n: 4 });
+    lathMesh([[0, 0.35, 0], [4.5, 0.35, 0.05], [4.5, 2.1, 0.12], [4.25, 2.1, 0.06], [4.25, 1.78, 0.04], [2.3, 1.78, 0.04], [2.3, 2.9, 0.1], [0, 2.9, 0]], M.lacquer, tower, { seg: 112, n: 4 });
+    lathMesh([[4.34, 2.0, 0.0], [4.58, 2.0, 0.03], [4.58, 2.14, 0.05], [4.34, 2.14, 0.0]], M.steel, tower, { seg: 112, n: 3 });
+    lathMesh([[1.0, 2.9, 0], [1.5, 2.9, 0.05], [1.5, 3.04, 0.04], [1.36, 3.08, 0], [1.36, 4.3, 0], [1.0, 4.3, 0]], M.steel, tower, { seg: 64, n: 3 });   // neck
+    // gimbal bearing stack: ink, steel, ink, each a fine ring
+    lathMesh(ringP(0.9, 4.3, 1.74, 4.5, 0.04), M.lacquer, tower, { seg: 72, n: 3 });
+    lathMesh(ringP(0.9, 4.5, 1.58, 4.6, 0.025), M.polished, tower, { seg: 72, n: 3 });
+    lathMesh(ringP(0.9, 4.6, 1.78, 4.95, 0.07), M.ink, tower, { seg: 72, n: 4 });
+    // three screws on the ceramic plate
+    const hg = lathe([[0, 0, 0], [0.26, 0, 0.012], [0.26, 0.07, 0.03], [0.14, 0.14, 's'], [0, 0.15, 0]], { seg: 20, n: 3 }), hs = new T.InstancedMesh(hg, M.steel, 3), d = new T.Object3D();
+    for (let i = 0; i < 3; i++) { const a = (i * 120 + 50) * deg; d.position.set(Math.sin(a) * 4.5, 0.35, Math.cos(a) * 4.5); d.rotation.set(0, 0, 0); d.updateMatrix(); hs.setMatrixAt(i, d.matrix); }
+    hs.castShadow = true; tower.add(hs);
+    // the cueing platform: a ring with a rubber top
+    lathMesh([[2.4, 1.78, 0.04], [4.1, 1.78, 0.04], [4.1, 2.1, 0.08], [2.4, 2.1, 0.08]], M.steel, cueRing, { seg: 96, n: 3 });
+    lathMesh([[2.5, 2.06, 0.0], [4.0, 2.06, 0.02], [4.0, 2.12, 0.03], [2.5, 2.12, 0.03]], M.rubber, cueRing, { seg: 96, n: 2 });
+    // the cue lever: a boss in the drum wall, a steel rod, an ink ball
+    const la = 62 * deg, lv = node(tower, Math.cos(la) * 4.5, 1.25, Math.sin(la) * 4.5); lv.rotation.y = -la;
+    mesh(new T.CylinderGeometry(0.46, 0.46, 1.1, 24).rotateX(Math.PI / 2), M.polished, lv, { recv: false });
+    const lp = node(lv); leverP.p = lp;
+    mesh(new T.CylinderGeometry(0.14, 0.16, 2.9, 16).rotateZ(-Math.PI / 2).translate(1.55, 0, 0), M.polished, lp, { recv: false });
+    mesh(new T.SphereGeometry(0.5, 28, 16).scale(1.15, 0.8, 0.8).translate(3.05, 0, 0), M.lacquer, lp, { recv: false });
+  })();
+
+  // --- the arm itself: a yaw group at the pivot, a pitch group on the gimbal axis
+  const armYaw = node(root, PX, DECK, PZ), armPitch = node(armYaw, 0, HAR, 0);
+  const clipG = {};
+  (function buildArm() {
+    const y = armYaw;
+    // yoke: a disc on the bearing stack, two cheeks, bearing rings and caps either side
+    lathMesh(ringP(0.0, 4.97, 1.9, 5.22, 0.06), M.ink, y, { seg: 72, n: 3 });
+    [-1, 1].forEach((s) => {
+      rbox(2.4, 1.9, 0.5, 0.16, M.ink, y, 0.1, 5.22 + 0.95, s * 1.15, { s: 3 });
+      const ring = lathMesh(ringP(0.34, 0, 0.86, 0.16, 0.05), M.polished, y, { seg: 56, n: 3 });
+      ring.geometry.rotateX(Math.PI / 2); ring.position.set(0, HAR, s > 0 ? 1.4 : -1.56);
+      const cap = lathMesh([[0, 0, 0], [0.5, 0, 0.03], [0.5, 0.12, 0.04], [0.3, 0.22, 's'], [0, 0.24, 0]], M.lacquer, y, { seg: 40, n: 3 });
+      cap.geometry.rotateX(s > 0 ? Math.PI / 2 : -Math.PI / 2); cap.position.set(0, HAR, s * 1.56);
+    });
+    // pitch group: hub, rear rod, counterweight with dial, tube, headshell
+    const p = armPitch, X = (g) => g.rotateZ(-Math.PI / 2);
+    const hubG = lathe([[0.5, -1.7, 0.05], [0.9, -1.7, 0.08], [0.9, -0.2, 0.0], [0.82, -0.14, 0], [0.82, -0.02, 0], [0.9, 0.04, 0.0], [0.9, 2.0, 0.08], [0.5, 2.0, 0.05]], { seg: 56, n: 3 });
+    mesh(X(hubG), M.ink, p);
+    mesh(X(lathe([[0.5, 1.7, 0.03], [0.98, 1.7, 0.05], [0.98, 2.3, 0.05], [0.5, 2.3, 0.03]], { seg: 56, n: 3 })), M.polished, p);                    // steel collar where the tube enters
+    mesh(X(lathe([[0, -6.9, 0.04], [0.3, -6.9, 0.05], [0.3, -1.6, 0.0], [0, -1.6, 0]], { seg: 28, n: 3 })), M.polished, p);                             // rear rod
+    mesh(X(lathe([[0.3, -6.0, 0.05], [1.8, -6.0, 0.12], [1.8, -3.0, 0.12], [0.3, -3.0, 0.05]], { seg: 72, n: 4 })), M.steel, p);                        // counterweight
+    mesh(X(lathe([[1.76, -4.0, 0.02], [1.9, -4.0, 0.04], [1.9, -3.1, 0.04], [1.76, -3.1, 0.02]], { seg: 160, n: 3, v: [-4.0, -3.1] })), M.weightBand, p);   // the dial ring
+    mesh(X(lathe([[1.76, -4.5, 0.0], [1.86, -4.5, 0.05], [1.86, -4.2, 0.05], [1.76, -4.2, 0.0]], { seg: 112, n: 4 })), M.lime, p);                       // the lime ring
+    mesh(X(lathe([[0.5, -6.0, 0.0], [1.82, -6.0, 0.12], [1.82, -5.5, 0.0], [1.72, -5.5, 0.0], [1.72, -5.2, 0.0], [1.82, -5.2, 0.0], [1.82, -4.8, 0.0], [0.5, -4.8, 0]], { seg: 72, n: 3 })), M.lacquer, p);   // ink rear cap with a grip groove
+    // the lift pad: a rod that hangs down onto the cueing platform
+    const rd = mesh(lathe([[0, -0.4, 0.0], [0.2, -0.4, 0.0], [0.2, -3.68, 0.0], [0, -3.68, 0]], { seg: 20, n: 2 }), M.polished, p); rd.position.x = 3.3;
+    const tp = mesh(lathe([[0, -3.68, 0.0], [0.3, -3.68, 0.06], [0.3, -4.08, 0.1], [0, -4.08, 0.0]], { seg: 28, n: 3 }), M.rubber, p); tp.position.x = 3.3;
+    // the tube: a gentle S from the hub to the headshell, tapering
+    const E = new T.Vector3(LE - 3.9, 0, SIDE * 1.9), S = new T.Vector3(LE, 0, 0), dh = S.clone().sub(E).normalize();
+    const curve = new T.CubicBezierCurve3(new T.Vector3(2.2, 0, 0), new T.Vector3(8.4, 0, 0), E.clone().sub(dh.clone().multiplyScalar(6.4)), E);
+    mesh(sweep(curve, (u) => 0.5 - 0.1 * u, 90, 28), M.polished, p);
+    // headshell: ink plate, ferrule, cartridge with pins, cantilever and a diamond tip, a finger lift. Its origin is the stylus tip in plan; +X runs along the cartridge.
+    const hsG = node(p, S.x, 0, 0); hsG.rotation.y = -Math.atan2(dh.z, dh.x);
+    const pg = new T.ExtrudeGeometry(rrect(4.4, 1.9, 0.5), { depth: 0.2, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3, curveSegments: 10 });
+    pg.rotateX(-Math.PI / 2); pg.translate(-1.7, -0.64, 0);
+    mesh(crease(pg), M.lacquer, hsG);
+    const fe = mesh(X(lathe([[0.42, -0.4, 0.03], [0.62, -0.4, 0.04], [0.62, 0.4, 0.04], [0.42, 0.4, 0.03]], { seg: 40, n: 3 })), M.polished, hsG); fe.position.set(-4.1, 0, 0);
+    rbox(1.6, 0.34, 1.0, 0.1, M.lacquer, hsG, -3.2, -0.5, 0, { s: 3 });
+    rbox(1.9, 0.95, 1.5, 0.14, M.ink, hsG, -2.1, -1.165, 0, { s: 4 });                      // cartridge body
+    rbox(0.95, 0.31, 0.9, 0.09, M.lacquer, hsG, -1.0, -1.795, 0, { s: 3 });                  // nose
+    rbox(1.0, 0.08, 0.2, 0.03, M.lime, hsG, -1.0, -0.35, 0, { s: 2, recv: false });          // a lime tick on the headshell
+    [[-0.95, -0.3], [-0.95, 0.3], [-1.35, -0.3], [-1.35, 0.3]].forEach(([yy, zz]) => mesh(new T.CylinderGeometry(0.07, 0.07, 0.62, 12).rotateZ(Math.PI / 2).translate(-3.35, yy, zz), M.polished, hsG, { recv: false }));   // four pins
+    mesh(new T.CylinderGeometry(0.03, 0.055, 1.1, 8).rotateZ(Math.PI / 2 + 0.085).translate(-0.52, -1.98, 0), M.polished, hsG, { recv: false });   // cantilever
+    mesh(lathe([[0, -0.12, 0.0], [0.02, -0.12, 0.0], [0.07, 0, 's'], [0.07, 0.02, 0], [0, 0.02, 0]], { seg: 14, n: 2 }), M.polished, hsG, { recv: false, cast: false }).position.set(0, -1.93, 0);   // stylus tip, bottom at -2.05
+    const fc = new T.CatmullRomCurve3([new T.Vector3(-0.1, -0.5, -0.8), new T.Vector3(0.15, -0.5, -1.15), new T.Vector3(0.45, -0.32, -1.4), new T.Vector3(0.7, -0.05, -1.5), new T.Vector3(0.82, 0.1, -1.5)]);
+    mesh(sweep(fc, () => 0.1, 20, 10), M.polished, hsG, { recv: false });                      // finger lift
+    mesh(new T.SphereGeometry(0.17, 14, 10).scale(1.3, 0.5, 1), M.polished, hsG, { recv: false }).position.set(0.9, 0.12, -1.5);
+    armPitch.userData.curve = curve; armPitch.userData.hsG = hsG;
+  })();
+
+  // --- arm rest with a ring clip, set under the tube where the arm parks
+  (function buildRest() {
+    const a = YAW_REST, curve = armPitch.userData.curve;
+    let best = null; for (let i = 0; i <= 200; i++) { const p = curve.getPointAt(i / 200); if (!best || Math.abs(p.x - 13.4) < Math.abs(best.x - 13.4)) best = p; }
+    const wx = PX + best.x * Math.cos(a) + best.z * Math.sin(a), wz = PZ - best.x * Math.sin(a) + best.z * Math.cos(a);
+    const n = node(root, wx, DECK, wz);
+    lathMesh([[0, 0, 0], [1.9, 0, 0.1], [1.9, 0.4, 0.1], [0.9, 0.55, 0.1], [0, 0.55, 0]], M.ceramic, n, { seg: 56, n: 4 });
+    lathMesh([[0, 0.5, 0], [0.7, 0.5, 0.04], [0.7, HAR - 1.0, 0.04], [0, HAR - 1.0, 0]], M.polished, n, { seg: 32, n: 3 });
+    const head = node(n, 0, HAR, 0); head.rotation.y = a;       // the ring sits on the tube's axis, turned with the arm
+    const R = 0.95;
+    mesh(new T.TorusGeometry(R, 0.2, 14, 30, Math.PI * 1.25).rotateZ(Math.PI * 0.875).rotateY(Math.PI / 2), M.lacquer, head, { recv: false });   // the cradle, open at the top
+    const ah = Math.PI * 0.1, hinge = [R * Math.cos(ah), R * Math.sin(ah)];
+    const gate = node(head, 0, hinge[1], -hinge[0]);
+    mesh(new T.TorusGeometry(R, 0.15, 12, 24, Math.PI * 0.82).rotateZ(ah).translate(-hinge[0], -hinge[1], 0).rotateY(Math.PI / 2), M.polished, gate, { recv: false });   // the gate, hinged at one end
+    mesh(new T.CylinderGeometry(0.2, 0.2, 0.5, 16).rotateZ(Math.PI / 2), M.polished, gate, { recv: false });
+    clipG.gate = gate;
+  })();
+
+  // --- controls: speed selector with its engraved dial, a start / stop button with a status light
+  const ctrl = {};
+  (function buildControls() {
+    const KX = 16.6, KZ = 12.6, BX = 20.4, BZ = 12.6, LZ = 8.9;
+    const dec = mesh(new T.PlaneGeometry(7.6, 7.6), M.dSpeed, root, { cast: false, recv: false }); dec.rotation.x = -Math.PI / 2; dec.position.set(KX, DECK + 0.012, KZ);
+    const k = node(root, KX, DECK, KZ);
+    lathMesh([[1.9, 0, 0.0], [2.3, 0, 0.04], [2.3, 0.12, 0.04], [1.9, 0.12, 0.0]], M.polished, k, { seg: 64, n: 3 });
+    lathMesh([[0, 0, 0], [1.6, 0, 0.05], [1.6, 0.14, 0], [1.5, 0.18, 0], [1.5, 0.3, 0], [1.6, 0.34, 0], [1.6, 0.46, 0], [1.5, 0.5, 0], [1.6, 0.54, 0], [1.6, 1.4, 0.06], [0, 1.4, 0]], M.ink, k, { seg: 72, n: 3 });
+    lathMesh([[0, 1.4, 0], [1.34, 1.4, 0.03], [1.34, 1.52, 0.05], [0, 1.52, 0]], M.rubber, k, { seg: 56, n: 3 });
+    lathMesh([[1.4, 1.36, 0.0], [1.66, 1.36, 0.04], [1.66, 1.46, 0.05], [1.4, 1.46, 0.0]], M.polished, k, { seg: 72, n: 3 });
+    const ptrG = node(k); rbox(0.14, 0.05, 0.95, 0.04, M.lime, ptrG, 0, 1.55, -0.62, { s: 2, recv: false }); ptrG.rotation.y = 38 * deg;   // the lime pointer sits on 33
+    const da = mesh(new T.PlaneGeometry(5, 2.5), M.dStart, root, { cast: false, recv: false }); da.rotation.x = -Math.PI / 2; da.position.set(BX, DECK + 0.012, BZ + 3.3);
+    const bez = node(root, BX, DECK, BZ);
+    lathMesh([[1.18, 0, 0.0], [1.7, 0, 0.05], [1.7, 0.16, 0.05], [1.18, 0.16, 0]], M.polished, bez, { seg: 64, n: 3 });
+    lathMesh([[0, 0, 0], [1.2, 0, 0.0], [1.2, 0.08, 0.0], [0, 0.08, 0]], M.lacquer, bez, { seg: 48, n: 2 });
+    const btn = node(root, BX, DECK, BZ);
+    lathMesh([[0, 0.08, 0], [1.04, 0.08, 0.02], [1.04, 0.5, 0.1], [0.85, 0.62, 's'], [0.4, 0.68, 's'], [0, 0.7, 0]], M.lacquer, btn, { seg: 64, n: 4 });
+    const led = node(root, BX, DECK, LZ);
+    lathMesh([[0.44, 0, 0.0], [0.74, 0, 0.04], [0.74, 0.14, 0.05], [0.44, 0.14, 0.0]], M.polished, led, { seg: 36, n: 3 });
+    const dome = mesh(new T.SphereGeometry(0.4, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), M.led, led, { recv: false, cast: false }); dome.position.y = 0.06; dome.scale.set(1, 0.7, 1);
+    Object.assign(ctrl, { btn, k, led, dome, ptrG, lever: leverP.p });
+  })();
+
+  /* ------------------------------------------------------------------ floor, contact shadows */
+  const floor = new T.Mesh(new T.PlaneGeometry(800, 800), new T.ShadowMaterial({ color: 0x4F7A22, opacity: 0.24 }));
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+  const shTex = (() => {
+    const c = cv(256), g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gr.addColorStop(0, 'rgba(96,140,52,.55)'); gr.addColorStop(0.35, 'rgba(110,152,66,.28)'); gr.addColorStop(0.7, 'rgba(130,170,88,.08)'); gr.addColorStop(1, 'rgba(140,180,100,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 256); const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; return t;
+  })();
+  const blob = (w, d, x, z, ry) => {
+    const m = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false, toneMapped: false }));
+    m.rotation.set(-Math.PI / 2, 0, ry || 0, 'YXZ'); m.rotation.order = 'YXZ'; m.rotation.set(-Math.PI / 2, 0, 0); m.position.set(x, 0.015, z); m.scale.set(w, d, 1); m.renderOrder = -1; scene.add(m); return m;
+  };
+  blob(66, 52, 0, 0);
+
+  /* ------------------------------------------------------------------ the tracks (all of t) */
+  // The record change stays on the deck, so the turntable is always the subject: record A lifts
+  // off the spindle, tips its label to the camera and is carried out of frame to the left; record B comes in
+  // from the left, levels as it travels, lines up with the spindle and lowers.
+  const REC_Y = 8.9, OUT_X = -92, CARRY_Y = 21, TILT = 34 * deg;
+
+  // the platter's turn: full speed, coasts down after the stop, spins up after the button
+  const OMEGA0 = 2 * Math.PI * 100 / 180;          // 33 1/3 rpm
+  const omega = (t) => (t < 4.0 ? 1 - seg(t, 1.14, 1.64, 'x') : seg(t, 4.1, 4.85, 'm'));
+
+  const pose = { A: { x: SPX, y: REC_Y, z: SPZ, rx: 0, ry: 0 }, B: { x: 0, y: 0, z: 0, rx: 0, ry: 0 } };
+  function poseA(t) {
+    const o = pose.A;
+    const up = seg(t, 2.0, 2.28, 'x'), tip = seg(t, 2.18, 2.6, 'm'), go = seg(t, 2.34, 2.96, 'm');
+    o.x = SPX + (OUT_X - SPX) * go;
+    o.y = REC_Y + 3.5 * up + (CARRY_Y - REC_Y - 3.5) * seg(t, 2.2, 2.7, 'm');   // straight up 3.5 cm first, clear of the spindle
+    o.z = SPZ + 7 * go;
+    o.rx = TILT * tip; o.ry = 0.22 * go;
+  }
+  const HOVER_B = 13.9;
+  function poseB(t) {
+    const o = pose.B;
+    const come = seg(t, 3.08, 3.74, 'x'), level = seg(t, 3.3, 3.82, 'm'), kL = seg(t, 3.84, 4.0, 'x');
+    o.x = OUT_X + (SPX - OUT_X) * come;
+    o.y = CARRY_Y + (HOVER_B - CARRY_Y) * seg(t, 3.2, 3.8, 'm') + (REC_Y - HOVER_B) * kL;
+    o.z = SPZ - 6 * (1 - come);
+    o.rx = TILT * (1 - level) + 0.03 * seg(t, 3.6, 3.86, 'm') * (1 - seg(t, 3.86, 4.0, 'x'));   // a 1.7 degree seating tilt as it lowers
+    o.ry = -0.2 * (1 - come);
+  }
+
+  // the arm: yaw over the record or at rest, lift from the cue lever, a clip that closes on the tube
+  const PHI_UP = 4.7 * deg, WARP = 0.0025;
+  const R1 = (t) => 11.0 + 0.6 * (1 - clamp(t, 0, 1));
+  const armYawAt = (t) => (t < 4.3 ? mix(yawFor(R1(t)), YAW_REST, seg(t, 1.16, 1.62, 'm')) : mix(YAW_REST, yawFor(R_LEAD - 0.6 * clamp(t - 5, 0, 1)), seg(t, 4.38, 4.74, 'm')));
+  const leverAt = (t) => seg(t, 1.0, 1.17, 'm') - seg(t, 1.62, 1.86, 'm') + seg(t, 4.28, 4.42, 'm') - seg(t, 4.7, 5.0, 'm');
+  const clipAt = (t) => seg(t, 1.8, 2.0, 'm') * (1 - seg(t, 4.2, 4.36, 'm'));
+  const ledAt = (t) => (t < 3 ? 1 - seg(t, 1.2, 1.34, 'x') : seg(t, 4.1, 4.24, 'x'));
+  const pressAt = (t) => seg(t, 1.02, 1.1, 'x') - seg(t, 1.1, 1.3, 'm') + seg(t, 4.02, 4.1, 'x') - seg(t, 4.1, 4.3, 'm');
+  const STY = (a) => new T.Vector3(PX + LE * Math.cos(a), 0, PZ - LE * Math.sin(a));
+  const STY_LEAD = STY(yawFor(R_LEAD)).setY(GROOVE), STY_REST = STY(YAW_REST).setY(HA - 1);
+
+  const ledOn = new T.Color(0xA6F500), ledOff = new T.Color(0x1b2208), emOn = new T.Color(0x2e5800);
+  let spin = 0.7, wall = 0;
+  function apply(t, dt) {
+    const w = omega(t);
+    spin += OMEGA0 * w * dt;
+    platter.rotation.y = spin;
+    poseA(t); poseB(t);
+    ['A', 'B'].forEach((k) => {
+      const r = recs[k], p = pose[k];
+      r.g.position.set(p.x, p.y, p.z); r.g.rotation.set(p.rx, p.ry, 0, 'YXZ');
+      r.spin.rotation.y = spin; r.warp.rotation.x = WARP; r.sheen.material.opacity = 0.14 + 0.5 * w;
+    });
+    recs.A.g.visible = t < 3.0; recs.B.g.visible = t >= 3.0;   // each is out of frame at the hand-over
+    // arm
+    const a = armYawAt(t), L = leverAt(t), lift = PHI_UP * L;
+    const sx = PX + LE * Math.cos(a) - SPX, sz = PZ - LE * Math.sin(a) - SPZ, rad = Math.hypot(sx, sz);
+    const onRec = 1 - clamp((rad - 14.4) / 1.2), h = -WARP * (sx * Math.sin(spin) + sz * Math.cos(spin));
+    armYaw.rotation.y = a; armPitch.rotation.z = lift + (h / LE) * (1 - L) * onRec;
+    cueRing.position.y = 3.3 * Math.sin(lift);
+    ctrl.lever.rotation.z = -0.1 + 0.72 * L;
+    clipG.gate.rotation.x = -1.7 * (1 - clipAt(t));
+    // controls
+    ctrl.btn.position.y = DECK - 0.22 * clamp(pressAt(t), 0, 1);
+    const lo = ledAt(t); M.led.color.copy(ledOff).lerp(ledOn, lo); M.led.emissive.set(0x000000).lerp(emOn, lo); M.led.emissiveIntensity = lo;
+  }
+
+  /* ------------------------------------------------------------------ camera tracks: [t, az, el, dist, target xyz, focus xyz, aperture] */
+  const CK = [
+    [0.0, 22, 29, 150, 0, 6, 0, SPX, 9, SPZ, 0.00003],
+    [1.0, 28, 27, 128, 0, 6, -1, SPX, 9, SPZ, 0.00004],
+    [1.14, 28, 27, 128, 0, 6, -1, SPX, 9, SPZ, 0.00004],
+    [2.0, 40, 22, 80, 9, 9, 2, STY_REST.x, STY_REST.y, STY_REST.z, 0.00012],
+    [2.14, 40, 22, 80, 9, 9, 2, STY_REST.x, STY_REST.y, STY_REST.z, 0.00012],
+    [2.5, 20, 25, 134, -5, 10, 0, SPX, 13, SPZ, 0.00004],
+    [3.05, 14, 25, 134, -5, 10, 0, SPX, 10, SPZ, 0.00004],
+    [3.6, 12, 19, 112, -3, 11, 0, SPX, 13, SPZ, 0.00006],
+    [3.98, 12, 12, 90, -1, 10, 0, SPX, 9.2, SPZ, 0.0001],
+    [4.3, 12, 12, 90, -1, 10, 0, SPX, 9.2, SPZ, 0.0001],
+    [4.62, -30, 22, 62, 4, 9.5, 5, SPX + 10, 9.4, SPZ + 6, 0.0001],
+    [5.0, -140, 12, 22, STY_LEAD.x, 9.4, STY_LEAD.z, STY_LEAD.x, STY_LEAD.y, STY_LEAD.z, 0.0003],
+    [6.0, -30, 28, 116, 0, 5, 0, SPX, 9, SPZ, 0.00003],
+  ];
+  function camAt(t) {
+    let i = 0; while (i < CK.length - 2 && t >= CK[i + 1][0]) i++;
+    const a = CK[i], b = CK[i + 1], f = clamp((t - a[0]) / (b[0] - a[0])), e = mv(f);
+    return a.map((v, k) => (k === 0 ? t : mix(v, b[k], e)));
+  }
+
+  /* ------------------------------------------------------------------ post */
+  let composer = null, bokeh = null, gtao = null, wpPass = null, smaa = null;
+  // ACES filmic curve on luminance with the chroma kept: the per-channel ACES pulls a lit #B8FF00 to (206,227,97); this keeps it lime
+  const fitS = (x) => (x * (x + 0.0245786) - 0.000090537) / (x * (0.983729 * x + 0.432951) + 0.238081);
+  const srgb = (v) => (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+  const WP = srgb(clamp(fitS(BG * EXPO / 0.6)));   // what the white page comes out as; the last pass divides it away so the ground is exactly 255
+  let W = 2, H = 2;
+  function buildPost() {
+    try {
+      const rt = new T.WebGLRenderTarget(W * PR, H * PR, { type: T.HalfFloatType, samples: SOFT ? 0 : 4 });
+      composer = new T.EffectComposer(renderer, rt);
+      composer.setPixelRatio(PR); composer.setSize(W, H);
+      composer.addPass(new T.RenderPass(scene, cam));
+      if (!qs.has('noao')) {
+        gtao = new T.GTAOPass(scene, cam, W, H);
+        gtao.output = T.GTAOPass.OUTPUT.Default; gtao.blendIntensity = 0.55;
+        gtao.updateGtaoMaterial({ radius: 1.6, distanceExponent: 1.6, thickness: 1.0, scale: 1.0, samples: 16, distanceFallOff: 1.0, screenSpaceRadius: false });
+        gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+        const hide = [];
+        gtao.overrideVisibility = function () { scene.traverse((o) => { hide.push([o, o.visible]); if (o.isPoints || o.isLine || o === floor || o.userData.noAO || (o.material && (o.material.transmission > 0 || o.material.transparent))) o.visible = false; }); };
+        gtao.restoreVisibility = function () { hide.forEach(([o, v]) => { o.visible = v; }); hide.length = 0; };
+        composer.addPass(gtao);
+      }
+      if (!qs.has('nodof')) {
+        bokeh = new T.BokehPass(scene, cam, { focus: 100, aperture: 0.00004, maxblur: 0.012 });
+        composer.addPass(bokeh);
+      }
+      wpPass = new T.ShaderPass({ uniforms: { tDiffuse: { value: null }, wp: { value: WP }, expo: { value: EXPO } }, vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }', fragmentShader: `uniform sampler2D tDiffuse; uniform float wp; uniform float expo; varying vec2 vUv;
+        float fitS(float x){ return (x * (x + 0.0245786) - 0.000090537) / (x * (0.983729 * x + 0.4329510) + 0.238081); }
+        void main(){
+          vec3 c = max(texture2D(tDiffuse, vUv).rgb, vec3(0.0)) * expo / 0.6;
+          float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+          vec3 r = c * (fitS(l) / max(l, 1e-4));
+          float m = max(r.r, max(r.g, r.b)); if (m > 1.0) r /= m;
+          r = mix(r * 12.92, 1.055 * pow(r, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, r)) / wp;
+          gl_FragColor = vec4(min(r, vec3(1.0)), 1.0);
+        }` });
+      composer.addPass(wpPass);
+      if (!SOFT && !qs.has('nosmaa')) { smaa = new T.SMAAPass(W * PR, H * PR); composer.addPass(smaa); }
+    } catch (err) { console.warn('post stack off:', err && err.message); composer = null; }
+  }
+
+  /* ------------------------------------------------------------------ size, camera, frame */
+  const rig = { az: 0, el: 0, ox: 0, oy: 0, tx: 0, ty: 0 };
+  const tgtV = new T.Vector3(), camV = new T.Vector3(), fpt = new T.Vector3(), dirV = new T.Vector3();
+  function placeCamera(t, idle) {
+    const c = camAt(t);
+    if (qs.has('cam')) { const o = qs.get('cam').split(',').map(Number); [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach((i, k) => { if (o[k] != null && !isNaN(o[k])) c[i] = o[k]; }); }
+    const az = (c[1] + rig.ox * 20 + idle.az) * deg, el = (c[2] + rig.oy * 8) * deg, D = c[3] * (W / H >= 1.6 ? 1 : Math.min(1.55, 1.6 / (W / H) * 0.9 + 0.1));
+    tgtV.set(c[4], c[5], c[6]);
+    camV.set(c[4] + Math.sin(az) * Math.cos(el) * D, c[5] + Math.sin(el) * D, c[6] + Math.cos(az) * Math.cos(el) * D);
+    cam.position.copy(camV); cam.up.set(0, 1, 0); cam.lookAt(tgtV); cam.updateMatrixWorld();
+    fpt.set(c[7], c[8], c[9]); cam.getWorldDirection(dirV);
+    const dist = Math.max(5, fpt.clone().sub(camV).dot(dirV));
+    if (bokeh) { bokeh.uniforms.focus.value = dist; bokeh.uniforms.aperture.value = c[10]; bokeh.uniforms.maxblur.value = 0.010; }
+    // the key follows the target; its shadow frame grows with the shot
+    const S = clamp(D * 0.5, 36, 84);
+    key.position.set(c[4] - 30, c[5] + 46, c[6] + 40); key.target.position.set(c[4], c[5] - 6, c[6]); key.target.updateMatrixWorld();
+    Object.assign(key.shadow.camera, { left: -S, right: S, top: S * 0.7, bottom: -S * 0.7 }); key.shadow.camera.updateProjectionMatrix();
+  }
+  function size() {
+    W = Math.max(2, host.clientWidth); H = Math.max(2, host.clientHeight);
+    renderer.setSize(W, H, false); cam.aspect = W / H; cam.updateProjectionMatrix();
+    if (composer) { composer.setPixelRatio(PR); composer.setSize(W, H); if (gtao) gtao.setSize(W * PR, H * PR); if (bokeh) bokeh.setSize(W * PR, H * PR); if (smaa) smaa.setSize(W * PR, H * PR); }
+  }
+  function draw(t, dt) {
+    const k = 1 - Math.exp(-dt * 5);
+    rig.ox += (rig.tx - rig.ox) * k; rig.oy += (rig.ty - rig.oy) * k;
+    wall += dt;
+    const calm = clamp(seg(t, 0.2, 0.9, 'm') * (1 - seg(t, 1.1, 1.4, 'm')) + seg(t, 5.4, 6, 'm'));
+    apply(t, dt);
+    placeCamera(t, { az: 4 * Math.sin(wall * 0.3) * calm });
+    if (composer) composer.render(); else renderer.render(scene, cam);
+    api.frames++;
+  }
+
+  /* ------------------------------------------------------------------ run: a rate-limited chase of the harness's t */
+  let target = 0, u = 0, vel = 0, last = 0, raf = 0, visible = true, lost = 0, pausedAt = 0;
+  const api = { still: false, dirty: null, frames: 0 };
+  const VMAX = 0.33, VBACK = 2.0;
+  const clock = () => (performance.now() - lost) / 1000;
+  function step(dt) {
+    const d = target - u;
+    if (Math.abs(d) < 1e-4) { u = target; vel = 0; return; }
+    const vm = d > 0 ? VMAX : VBACK, want = Math.sign(d) * Math.min(vm, 4 * Math.abs(d) + 0.03);
+    vel += (want - vel) * (1 - Math.exp(-dt * 7));
+    let nu = u + vel * dt; if ((nu - target) * (u - target) < 0) nu = target; u = nu;
+  }
+  function loop() {
+    raf = 0; if (!visible || document.hidden) return;
+    const now = clock(), dt = Math.min(SOFT ? 3 : 0.25, Math.max(0.001, now - last)); last = now;
+    adapt(now - (loop.prev || now)); loop.prev = now;
+    step(dt); draw(u, dt); updateReadout(u);
+    raf = requestAnimationFrame(loop);
+  }
+  // adaptive quality: if frames run over ~24 ms for 20 in a row, drop depth of field, then ambient occlusion, then pixel ratio
+  let slow = 0, level = 0;
+  function adapt(ms) {
+    if (SOFT || !composer || ms > 0.5 || ms <= 0) return;
+    slow = ms * 1000 > 24 ? slow + 1 : Math.max(0, slow - 1);
+    if (slow < 20 || level >= 3) return;
+    slow = 0; level++;
+    if (level === 1 && bokeh) bokeh.enabled = false;
+    else if (level === 2 && gtao) gtao.enabled = false;
+    else if (level === 3 && PR > 1) { PR = 1; renderer.setPixelRatio(1); size(); }
+  }
+  function play() { if (reduced || qs.has('still') || raf || !visible || document.hidden || !api.ready) return; if (pausedAt) { lost += performance.now() - pausedAt; pausedAt = 0; } last = clock(); raf = requestAnimationFrame(loop); }
+  function halt() { if (raf) { cancelAnimationFrame(raf); raf = 0; } if (!pausedAt) pausedAt = performance.now(); }
+  new ResizeObserver(() => { size(); if (api.ready && !raf) draw(u, 0); }).observe(host);
+  new IntersectionObserver((e) => { visible = e[0].isIntersecting; visible ? play() : halt(); }).observe(host);
+  document.addEventListener('visibilitychange', () => { document.hidden ? halt() : play(); });
+  host.addEventListener('pointermove', (e) => { if (reduced || (e.pointerType && e.pointerType !== 'mouse')) return; const r = host.getBoundingClientRect(); rig.tx = ((e.clientX - r.left) / r.width - 0.5) * 2 * 0.9; rig.ty = -((e.clientY - r.top) / r.height - 0.5) * 2 * 0.6; });
+  host.addEventListener('pointerleave', () => { rig.tx = rig.ty = 0; });
+
+  /* ------------------------------------------------------------------ readout */
+  const labels = ['Playing', 'Lift', 'Record off', 'Record on', 'Cue', 'Playing'];
+  const countEl = document.getElementById('rc-count'), labelEl = document.getElementById('rc-label'), shown = new Map();
+  function roll(el, text) {
+    if (shown.get(el) === text) return; shown.set(el, text);
+    const old = el.lastElementChild; if (!old) { el.innerHTML = '<i></i>'; el.firstChild.textContent = text; return; }
+    if (reduced) { old.textContent = text; return; }
+    el.querySelectorAll('i.out').forEach((n) => n.remove());
+    const nu = document.createElement('i'); nu.className = 'in'; nu.textContent = text; el.appendChild(nu);
+    old.className = 'out'; void el.offsetWidth; old.classList.add('go'); nu.classList.add('go');
+    setTimeout(() => { if (old.parentNode) old.remove(); nu.className = ''; }, 560);
+  }
+  function updateReadout(t) {
+    const s = clamp(Math.floor(t + 0.5), 1, 6);
+    roll(countEl, String(s).padStart(2, '0') + ' / 06'); roll(labelEl, labels[s - 1]);
+  }
+
+  /* ------------------------------------------------------------------ public */
+  api.ready = false;
+  api.seek = (t) => { if (qs.has('still')) return; target = t; if (!api.ready) return; if (reduced || !raf) { u = t; draw(u, 0.016); updateReadout(u); } };
+  api.show = (t, o = {}) => { target = u = t; vel = 0; if (o.spin != null) spin = o.spin; draw(u, 0.0); updateReadout(u); };
+  api.dirty = () => { if (api.ready && !raf) draw(u, 0); };
+  api.info = () => ({ composer: !!composer, gtao: !!gtao, bokeh: !!bokeh, soft: SOFT, tris: renderer.info.render.triangles, calls: renderer.info.render.calls, parts: (() => { let n = 0; root.traverse((o) => { if (o.isMesh) n++; }); return n; })() });
+  api.pose = pose; api.CK = CK; api.u = () => u;
+  // the scene compiles with the first plain draw (that belongs to the load); the post stack and the engraved text follow once the page has loaded
+  size();
+  api.ready = true;
+  api.show(qs.has('t') ? parseFloat(qs.get('t')) : 0, qs.has('spin') ? { spin: parseFloat(qs.get('spin')) } : {});
+  if (!reduced && !qs.has('still')) play();
+  const fontsReady = (document.fonts && document.fonts.load)
+    ? Promise.race([Promise.all([document.fonts.load('500 40px "Geist Mono"'), document.fonts.load('300 100px Outfit'), document.fonts.load('400 22px "Geist Mono"')]), new Promise((r) => setTimeout(r, 1800))]) : Promise.resolve();
+  const late = () => { buildPost(); size(); fontsReady.then(() => { try { drawAllText(); } catch (e) { /* keep the first text */ } api.dirty(); window.__rcReady = true; }).catch(() => { window.__rcReady = true; }); };
+  if (document.readyState === 'complete') setTimeout(late, 0); else window.addEventListener('load', () => setTimeout(late, 0), { once: true });
+
+  return api;
+})();
+QM.demo({ kind: 'states', n: 6, first: 3800, dwell: 5200, hold: 7500, rewind: 2800, seek(t) { REC.seek(t); } });
+</script>
+</body>
+</html>
