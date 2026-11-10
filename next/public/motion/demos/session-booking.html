@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session booking · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "session-booking", "title": "Session booking", "group": "studio", "added": "2026-11-09", "cat": "inputs", "order": 20,
+  "kind": "loop", "tone": "paper", "shot": 9600,
+  "line": "76 px plate glide · 30 ms slot stagger · 560 ms footer roll",
+  "summary": "Willow Counseling's booking card for Dana Reyes, LMFT. Choosing a day glides an ink plate across the five day tiles while the old slots leave upward and the new ones arrive from below, 30 ms apart. Choosing a slot rolls the footer to a confirmation line with a Book session button, and booking rolls it again to a drawn tick and Booked, see you Wednesday.",
+  "spec": [
+    ["Day plate", "one ink block translateX 76 px per day, 480 ms ease-move; text colour follows in 200 ms"],
+    ["Slots", "each cell clips its slot: old translateY -110%, new from 110%, 520 ms expo out, 30 ms stagger per cell"],
+    ["Footer", "three rows (hint, confirm, booked) roll in one clip, translateY 560 ms expo out"],
+    ["Time line", "old line leaves up, new line arrives from below, 520 ms expo out"],
+    ["Tick", "stroke drawn 420 ms expo out, 200 ms after the row arrives"],
+    ["Press", "Book session translateY 2px, 150 ms"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A practice website Qbix builds for a clinic like Willow Counseling: the booking card beside a clinician's profile, and the last step of the Book a session page.",
+  "rules": [
+    "Nothing fades and nothing bounces: plates glide, slots and lines roll up, the footer is a clip.",
+    "The card never changes height: the footer always holds its row, so the page below never jumps.",
+    "Changing the day clears the chosen slot and a booking; every state is reachable by click and keys.",
+    "Days are a radio group (arrow keys); slots, Book session and Change are real buttons.",
+    "Under reduced motion every state still changes, with no transition."
+  ],
+  "tags": ["card", "booking", "calendar", "slots", "time picker", "confirmation", "practice"]
+}
+</script>
+<style data-code>
+/* Session booking. Ink #0B0C0D, near-white #F5F7F1, one lime, no card behind point. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1). */
+.sb { width: 420px; padding: 24px; background: #fff; color: #0B0C0D; font: 400 15px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+:where(.sb button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.sb button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+
+.sb-top { display: flex; align-items: center; gap: 14px; }
+.sb-av { flex: none; width: 48px; height: 48px; border-radius: 50%; background: #F5F7F1; display: flex; align-items: center; justify-content: center; font: 300 20px/1 Outfit, Geist, sans-serif; letter-spacing: -.02em; }
+.sb-kick { margin: 0; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.sb-title { margin: 2px 0 0; font: 300 26px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.sb-meta { margin: 14px 0 0; display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.sb-meta span:last-child { font-family: 'Geist Mono', ui-monospace, monospace; font-weight: 400; }
+
+/* days: white tiles, one ink plate that glides under the text */
+.sb-days { position: relative; display: grid; grid-template-columns: repeat(5, 68px); gap: 8px; margin-top: 10px; }
+.sb-tile { height: 76px; background: #F5F7F1; }
+.sb-plate { position: absolute; left: 0; top: 0; width: 68px; height: 76px; background: #0B0C0D; pointer-events: none;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  transform: translateX(calc(var(--d, 0) * 76px)); transition: transform 480ms cubic-bezier(.65, 0, .35, 1); }
+.sb-day { position: absolute; top: 0; width: 68px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: color 200ms cubic-bezier(.65, 0, .35, 1); }
+.sb-day b { font: 500 13px/1 Geist, system-ui, sans-serif; }
+.sb-day i { font: 400 20px/1 'Geist Mono', ui-monospace, monospace; font-style: normal; letter-spacing: -.03em; }
+.sb-day span { font: 400 13px/1 Geist, system-ui, sans-serif; color: rgba(11, 12, 13, .66); transition: color 200ms cubic-bezier(.65, 0, .35, 1); }
+.sb-day[aria-checked="true"] { color: #fff; }
+.sb-day[aria-checked="true"] span { color: rgba(255, 255, 255, .66); }
+
+/* slots: four cells; each clips its own slot so they can change one after another */
+.sb-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.sb-cell { position: relative; height: 44px; overflow: hidden; }
+.sb-slot { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: #F5F7F1;
+  transition: transform 520ms cubic-bezier(.16, 1, .3, 1), background 160ms, color 160ms; }
+.sb-slot b { font: 400 15px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; }
+.sb-slot span { font: 400 13px/1 'Geist Mono', ui-monospace, monospace; color: rgba(11, 12, 13, .38); transition: color 160ms; }
+.sb-slot:hover { background: #ECF0E6; }
+.sb-slot[aria-pressed="true"] { background: #0B0C0D; color: #fff; }
+.sb-slot[aria-pressed="true"] span { color: rgba(255, 255, 255, .66); }
+
+/* footer: a fixed row; three layers (hint, confirm, booked) roll through one clip */
+.sb-foot { display: grid; grid-template-columns: 1fr 124px; gap: 8px; align-items: center; height: 56px; margin-top: 16px; --s: 0; }
+.sb-l, .sb-r { position: relative; height: 56px; overflow: hidden; }
+.sb-row { position: absolute; inset: 0; display: flex; align-items: center; gap: 10px; white-space: nowrap;
+  transform: translateY(calc((var(--k) - var(--s)) * 110%)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.sb-hint { font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.sb-pt { flex: none; width: 8px; height: 8px; background: #B8FF00; }
+.sb-line { position: relative; display: inline-grid; overflow: hidden; height: 1.3em; font: 400 15px/1.3 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; }
+.sb-line b { grid-area: 1 / 1; font-weight: 400; white-space: nowrap; transition: transform 520ms cubic-bezier(.16, 1, .3, 1); }
+.sb-tick { flex: none; width: 24px; height: 24px; display: block; }
+.sb-tick path { stroke-dasharray: 18; stroke-dashoffset: 18; transition: stroke-dashoffset 420ms cubic-bezier(.16, 1, .3, 1); }
+.sb-foot[style*="--s:2"] .sb-tick path, .sb-foot.is-done .sb-tick path { stroke-dashoffset: 0; transition-delay: 200ms; }
+.sb-done { font-weight: 500; }
+.sb-book { width: 124px; height: 48px; background: #0B0C0D; color: #fff; font-weight: 600; text-align: center; white-space: nowrap;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); transition: transform 150ms cubic-bezier(.22, 1, .36, 1); }
+.sb-row.r { justify-content: flex-end; }
+.sb-book:active, .sb-book.is-press { transform: translateY(2px); }
+.sb-chg { height: 48px; padding: 0 4px; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); text-decoration: underline; text-underline-offset: 3px; }
+
+.sb.still *, .sb.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .sb *, .sb *::before { transition: none !important; } }
+</style>
+<style>
+  .sbw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sbw">
+    <p class="kicker">Willow Counseling · Booking card</p>
+<!-- code -->
+<article class="sb" id="sb" aria-label="Book a session with Dana Reyes">
+  <div class="sb-top">
+    <div class="sb-av" aria-hidden="true">DR</div>
+    <div>
+      <p class="sb-kick">Licensed therapist</p>
+      <h3 class="sb-title">Dana Reyes, LMFT</h3>
+    </div>
+  </div>
+  <p class="sb-meta"><span>50 min video session</span><span>Nov 9 – 13</span></p>
+  <div class="sb-days" id="sb-days" role="radiogroup" aria-label="Day" style="--d:0"></div>
+  <div class="sb-slots" id="sb-slots" aria-label="Times"></div>
+  <div class="sb-foot" id="sb-foot" style="--s:0">
+    <div class="sb-l" aria-live="polite">
+      <div class="sb-row" style="--k:0"><span class="sb-hint">Choose a day and a time</span></div>
+      <div class="sb-row" style="--k:1"><span class="sb-pt"></span><span class="sb-line" id="sb-line"><b class="cur"></b></span></div>
+      <div class="sb-row" style="--k:2">
+        <svg class="sb-tick" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#B8FF00"/><path d="M7 12.5l3.4 3.4L17 9" fill="none" stroke="#0B0C0D" stroke-width="2"/></svg>
+        <span class="sb-done" id="sb-done">Booked, see you Wednesday</span>
+      </div>
+    </div>
+    <div class="sb-r">
+      <div class="sb-row r" style="--k:1"><button type="button" class="sb-book" id="sb-book">Book session</button></div>
+      <div class="sb-row r" style="--k:2"><button type="button" class="sb-chg" id="sb-chg" tabindex="-1">Change</button></div>
+    </div>
+  </div>
+</article>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Pick a day, pick a time, book the session</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Session booking. State is {d, t, booked}; render() reads it, so a click, a key and the ghost all go the same way. */
+const sb = document.getElementById('sb');
+const SB = {
+  days: [['Mon', 9, 'Monday'], ['Tue', 10, 'Tuesday'], ['Wed', 11, 'Wednesday'], ['Thu', 12, 'Thursday'], ['Fri', 13, 'Friday']],
+  slots: [['09:00', '10:30', '13:00', '15:30'], ['11:00', '14:00', '16:30'], ['09:00', '10:00', '11:00', '14:00'], ['10:30', '13:30', '15:00', '17:00'], ['09:00', '12:00']]
+};
+const sbS = { d: 0, t: -1, booked: false };
+const sbEnd = (t) => { const [h, m] = t.split(':').map(Number), e = h * 60 + m + 50; return String(Math.floor(e / 60)).padStart(2, '0') + ':' + String(e % 60).padStart(2, '0'); };
+
+const sbDays = document.getElementById('sb-days');
+sbDays.insertAdjacentHTML('beforeend', SB.days.map(() => '<span class="sb-tile"></span>').join('') + '<span class="sb-plate"></span>');
+SB.days.forEach((d, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'sb-day'; b.setAttribute('role', 'radio'); b.dataset.i = i; b.style.left = i * 76 + 'px';
+  b.innerHTML = '<b>' + d[0] + '</b><i>' + d[1] + '</i><span>' + SB.slots[i].length + ' open</span>';
+  b.setAttribute('aria-label', d[2] + ' ' + d[1] + ', ' + SB.slots[i].length + ' times open');
+  sbDays.appendChild(b);
+});
+const sbSlots = document.getElementById('sb-slots');
+const sbCells = [0, 1, 2, 3].map(() => { const c = document.createElement('div'); c.className = 'sb-cell'; sbSlots.appendChild(c); return c; });
+let sbShown = -1;
+
+function sbMake(day, i) {
+  const t = SB.slots[day][i];
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'sb-slot'; b.dataset.i = i; b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = '<b>' + t + '</b><span>to ' + sbEnd(t) + '</span>';
+  b.addEventListener('click', () => sbPick(i));
+  return b;
+}
+function sbSwap(day) {                               // old slots leave up, new arrive from below, 30 ms apart
+  const still = sb.classList.contains('still');
+  sbCells.forEach((c, i) => {
+    const old = c.querySelector('.sb-slot:not(.gone)');
+    const nw = SB.slots[day][i] ? sbMake(day, i) : null;
+    const delay = still ? '0ms' : i * 30 + 'ms';
+    if (old) {
+      old.classList.add('gone'); old.tabIndex = -1;
+      if (still) old.remove();
+      else { old.style.transitionDelay = delay; old.style.transform = 'translateY(-110%)'; setTimeout(() => old.remove(), 900); }
+    }
+    if (nw) {
+      if (!still) nw.style.transform = 'translateY(110%)';
+      c.appendChild(nw);
+      if (!still) { nw.getBoundingClientRect(); nw.style.transitionDelay = delay; nw.style.transform = 'none'; }
+    }
+  });
+}
+function sbLine(text) {                              // the confirmation line rolls like a word
+  const host = document.getElementById('sb-line');
+  const old = host.querySelector('.cur');
+  if (old.textContent === text) return;
+  if (!old.textContent || sb.classList.contains('still')) { old.textContent = text; return; }
+  const nw = document.createElement('b'); nw.className = 'cur'; nw.textContent = text; nw.style.transform = 'translateY(110%)';
+  host.appendChild(nw); nw.getBoundingClientRect(); nw.style.transform = 'none';
+  old.classList.remove('cur'); old.style.transform = 'translateY(-110%)';
+  setTimeout(() => old.remove(), 600);
+}
+function sbRender() {
+  const day = SB.days[sbS.d];
+  if (sbShown !== sbS.d) { sbSwap(sbS.d); sbShown = sbS.d; }
+  sbDays.style.setProperty('--d', sbS.d);
+  sbDays.querySelectorAll('.sb-day').forEach((b, i) => { b.setAttribute('aria-checked', i === sbS.d); b.tabIndex = i === sbS.d ? 0 : -1; });
+  sbSlots.querySelectorAll('.sb-slot:not(.gone)').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.i === sbS.t));
+  const s = sbS.t < 0 ? 0 : sbS.booked ? 2 : 1;
+  if (sbS.t >= 0) sbLine(day[0] + ' ' + day[1] + ' · ' + SB.slots[sbS.d][sbS.t] + ' · Video');
+  document.getElementById('sb-done').textContent = 'Booked, see you ' + day[2];
+  const foot = document.getElementById('sb-foot');
+  foot.style.setProperty('--s', s);
+  foot.classList.toggle('is-done', s === 2);
+  document.getElementById('sb-book').tabIndex = s === 1 ? 0 : -1;
+  document.getElementById('sb-chg').tabIndex = s === 2 ? 0 : -1;
+}
+function sbDay(i) { if (i === sbS.d || i < 0 || i > 4) return; sbS.d = i; sbS.t = -1; sbS.booked = false; sbRender(); }
+function sbPick(i) { if (sbS.t === i && !sbS.booked) return; sbS.t = i; sbS.booked = false; sbRender(); }
+function sbBook() { if (sbS.t < 0) return; sbS.booked = true; sbRender(); }
+function sbChange() { sbS.t = -1; sbS.booked = false; sbRender(); }
+function sbStill(fn) { sb.classList.add('still'); fn(); sb.getBoundingClientRect(); sb.classList.remove('still'); }
+
+sbDays.querySelectorAll('.sb-day').forEach((b) => b.addEventListener('click', () => sbDay(+b.dataset.i)));
+sbDays.addEventListener('keydown', (e) => {
+  const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+  if (!d) return;
+  e.preventDefault();
+  sbDay(Math.min(4, Math.max(0, sbS.d + d)));
+  sbDays.querySelectorAll('.sb-day')[sbS.d].focus();
+});
+document.getElementById('sb-book').addEventListener('click', sbBook);
+document.getElementById('sb-chg').addEventListener('click', sbChange);
+sbStill(sbRender);
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const $ = (s) => document.querySelector(s);
+  const day = (i) => document.querySelectorAll('.sb-day')[i];
+  const slot = (i) => document.querySelectorAll('.sb-slot:not(.gone)')[i];
+  async function tap(my, el, hold = 220) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.55, 760))) throw 0;
+    if (my !== epoch) throw 0;
+    await gap(my, 160);
+    el.classList.add('is-press');
+    await gap(my, 140);
+    el.classList.remove('is-press');
+    el.click();
+    await gap(my, hold);
+  }
+  function reset() { sbStill(() => { sbS.d = 0; sbS.t = -1; sbS.booked = false; sbRender(); }); $('#sb-book').classList.remove('is-press'); }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 900);
+        await tap(my, day(2), 1100);
+        await tap(my, slot(1), 1300);          // Wed 11 · 10:00
+        await tap(my, slot(2), 1100);          // 11:00: the line rolls
+        await tap(my, $('#sb-book'), 2600);    // booked
+        await tap(my, $('#sb-chg'), 900);
+        await tap(my, day(3), 1000);
+        await tap(my, slot(0), 1200);
+        await tap(my, day(0), 1200);           // back to Mon, nothing chosen
+        await QM.ghostTo(innerWidth * 0.8, innerHeight * 0.88, 600);
+        await gap(my, 600);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!sb.matches(':hover')) { reset(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

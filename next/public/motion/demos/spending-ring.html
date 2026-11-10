@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spending ring · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "spending-ring", "title": "Spending ring", "group": "studio", "added": "2026-11-09", "cat": "data", "order": 100,
+  "kind": "loop", "tone": "paper", "shot": 6200,
+  "line": "4 arcs · 6 px pull · 520 ms move · 560 ms roll · rows 30 ms apart",
+  "summary": "Kova's month card. A donut of spending by category in ink, two greys and one lime point; choosing a segment or its legend row pulls that arc out along its angle, the middle rolls from the month total to the category's name and amount, and the three transactions below swap row by row. The ring is the control: the middle or the same segment returns to the month.",
+  "spec": [
+    ["Ring", "true circle, SVG arcs at r 84, 28 wide, 4 degrees between segments, sized by share of $3,630"],
+    ["Pull", "selected arc translates 6 px along its mid angle, 520 ms ease-move; back the same way"],
+    ["Middle", "name and sub line slide up in a clipped window, amount rolls digit by digit, 560 ms expo out"],
+    ["Rows", "old rows leave up (260 ms ease-in), then new rows rise in (560 ms expo out, from 220 ms), 30 ms apart"],
+    ["Keys", "the legend is a radio group: arrows choose and wrap, Escape or the middle returns to the month"],
+    ["Loop", "a ghost taps four categories and the middle; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "Kova's month view: the card a user opens at the end of the month to see where the studio account's money went, then drills into one category.",
+  "rules": [
+    "Segment angles come from the amounts, so the ring always adds up to the month total in the middle.",
+    "Segments and legend rows are the same control: one selected category at a time, the same one again returns to the month.",
+    "The legend is a real radio group with a roving tab stop; arrows select, so the ring never needs the pointer.",
+    "Nothing bounces: pulls on the move curve, rolls and rows on expo out, exits on ease-in.",
+    "Lime marks one segment only; under reduced motion every change still happens, without transitions."
+  ],
+  "tags": ["donut", "ring", "category", "spending", "digit roll", "radio group", "Kova", "list"]
+}
+</script>
+<style data-code>
+/* Spending ring. Ink #0B0C0D on white, no card; ring greys #9EA88C / #D9E0CC, one lime point. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0). */
+.sr { width: 620px; padding: 28px; background: #fff; color: #0B0C0D; font: 400 14px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.01em; }
+:where(.sr button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; text-align: left; }
+.sr button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+.sr-kick { margin: 0; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.sr-title { margin: 4px 0 0; font: 300 30px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.sr-body { display: grid; grid-template-columns: 240px 1fr; column-gap: 36px; align-items: center; margin-top: 24px; }
+
+.sr-ring { position: relative; width: 240px; height: 240px; }
+.sr-ring svg { display: block; width: 240px; height: 240px; overflow: visible; }
+.sr-seg { transition: transform 520ms cubic-bezier(.65, 0, .35, 1); }
+.sr-seg path { fill: none; stroke-width: 28; cursor: pointer; }
+.sr-mid { position: absolute; left: 50px; top: 50px; width: 140px; height: 140px; border-radius: 50%; display: grid; place-content: center; justify-items: center; cursor: default; }
+.sr.on .sr-mid { cursor: pointer; }
+.sr-mid:focus-visible { outline-offset: -2px; }
+.rl { position: relative; overflow: hidden; width: 130px; height: 20px; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.rl.mono { font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; }
+.rl span { position: absolute; left: 0; right: 0; top: 0; line-height: 20px; text-align: center; white-space: nowrap; transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.sr-amt { display: flex; justify-content: center; font: 300 30px/1.25 Outfit, Geist, sans-serif; letter-spacing: -.03em; height: 37px; }
+.dg { display: block; width: .6em; height: 1.25em; overflow: hidden; transition: width 520ms cubic-bezier(.16, 1, .3, 1); }
+.dg.off { width: 0; }
+.dg .st { display: block; transform: translateY(calc(var(--d, 0) * -1.25em)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.dg i { display: block; height: 1.25em; line-height: 1.25em; font-style: normal; text-align: center; }
+.cm { display: block; width: .26em; text-align: center; transition: width 520ms cubic-bezier(.16, 1, .3, 1); overflow: hidden; }
+.cm.off { width: 0; }
+
+.sr-side { min-width: 0; }
+.sr-leg { display: grid; gap: 2px; }
+.sr-row { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; column-gap: 12px; height: 36px; padding: 0 12px; width: 100%;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); transition: background-color 160ms; }
+.sr-row[aria-checked='true'] { background: #F5F7F1; }
+.sr-sw { width: 10px; height: 10px; }
+.sr-row b { font-weight: 500; }
+.sr-v { font: 400 14px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -.03em; }
+.sr-head { position: relative; height: 20px; margin-top: 20px; overflow: hidden; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.sr-head span { position: absolute; left: 12px; top: 0; line-height: 20px; white-space: nowrap; transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.sr-list { position: relative; height: 96px; margin-top: 4px; overflow: hidden; }
+.sr-lay { position: absolute; inset: 0; }
+.sr-tx { display: grid; grid-template-columns: 1fr 48px 56px; column-gap: 8px; align-items: center; height: 32px; padding: 0 12px;
+  transform: translateY(var(--y, 0)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1) var(--dl, 0ms); }
+.sr-lay.out .sr-tx { transition-delay: 0ms; transition-duration: 260ms; transition-timing-function: cubic-bezier(.5, 0, .75, 0); }
+.sr-tx .d { font: 400 13px/1 'Geist Mono', ui-monospace, monospace; color: rgba(11, 12, 13, .66); letter-spacing: -.02em; }
+.sr-tx .a { font: 400 14px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -.03em; text-align: right; }
+
+.sr.still *, .sr.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .sr *, .sr *::before { transition: none !important; } }
+</style>
+<style>
+  .srw { display: grid; justify-items: start; align-content: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="srw" id="srw">
+<!-- code -->
+<section class="sr" id="sr" aria-label="Spending by category">
+  <p class="sr-kick">Kova · Studio account</p>
+  <h3 class="sr-title">November</h3>
+  <div class="sr-body">
+    <div class="sr-ring">
+      <svg viewBox="0 0 240 240" id="sr-svg" aria-hidden="true"></svg>
+      <button type="button" class="sr-mid" id="sr-mid" aria-label="Show the month total">
+        <span class="rl" id="sr-lab"></span>
+        <span class="sr-amt" id="sr-amt"></span>
+        <span class="rl mono" id="sr-sub"></span>
+      </button>
+    </div>
+    <div class="sr-side">
+      <div class="sr-leg" id="sr-leg" role="radiogroup" aria-label="Category"></div>
+      <div class="sr-head" id="sr-head"></div>
+      <div class="sr-list" id="sr-list" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Tap a segment or a legend row, arrows choose, the middle returns</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Spending ring. One state: the chosen category index, or -1 for the month. Arcs are sized by amount;
+   everything else (pull, middle, legend, rows) is drawn from that one number. */
+const sr = document.getElementById('sr');
+const SR_CATS = [
+  { n: 'Studio rent', v: 2400, c: '#0B0C0D', tx: [['Desk lease', 'Nov 1', 1800], ['Meeting room', 'Nov 1', 450], ['Parking', 'Nov 1', 150]] },
+  { n: 'Software', v: 640, c: '#9EA88C', tx: [['Figma', 'Nov 3', 240], ['Vercel', 'Nov 7', 220], ['Linear', 'Nov 5', 180]] },
+  { n: 'Materials', v: 380, c: '#D9E0CC', tx: [['Paper stock', 'Nov 4', 150], ['Print proofs', 'Nov 6', 130], ['Sample boards', 'Nov 2', 100]] },
+  { n: 'Travel', v: 210, c: '#B8FF00', tx: [['Train to Portland', 'Nov 5', 86], ['Hotel night', 'Nov 5', 94], ['Taxi', 'Nov 8', 30]] },
+];
+const SR_LATEST = [['Taxi', 'Nov 8', 30], ['Vercel', 'Nov 7', 220], ['Print proofs', 'Nov 6', 130]];
+const SR_TOTAL = SR_CATS.reduce((s, c) => s + c.v, 0);
+const SR_R = 84, SR_GAP = 4, SR_PULL = 6, SR_NS = 'http://www.w3.org/2000/svg';
+let srSel = -1;
+const money = (n) => '$' + n.toLocaleString('en-US');
+
+/* arcs: true circle, small gaps between segments */
+const srSvg = document.getElementById('sr-svg');
+const srSegs = [];
+(() => {
+  const span = 360 - SR_GAP * SR_CATS.length;
+  let a = -90 + SR_GAP / 2;
+  SR_CATS.forEach((c, i) => {
+    const sweep = span * c.v / SR_TOTAL, a0 = a * Math.PI / 180, a1 = (a + sweep) * Math.PI / 180, mid = (a + sweep / 2) * Math.PI / 180;
+    const p = (t) => (120 + SR_R * Math.cos(t)).toFixed(2) + ' ' + (120 + SR_R * Math.sin(t)).toFixed(2);
+    const g = document.createElementNS(SR_NS, 'g'); g.setAttribute('class', 'sr-seg');
+    const path = document.createElementNS(SR_NS, 'path');
+    path.setAttribute('d', 'M' + p(a0) + ' A' + SR_R + ' ' + SR_R + ' 0 ' + (sweep > 180 ? 1 : 0) + ' 1 ' + p(a1));
+    path.setAttribute('stroke', c.c);
+    g.appendChild(path); srSvg.appendChild(g);
+    srSegs.push({ g, mid, x: 120 + SR_R * Math.cos(mid), y: 120 + SR_R * Math.sin(mid) });
+    path.addEventListener('click', () => srPick(i));
+    a += sweep + SR_GAP;
+  });
+})();
+
+/* legend: a radio group */
+const srLeg = document.getElementById('sr-leg');
+const srRows = SR_CATS.map((c, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'sr-row'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', 'false');
+  b.tabIndex = i === 0 ? 0 : -1;
+  b.innerHTML = '<i class="sr-sw" style="background:' + c.c + '"></i><b>' + c.n + '</b><span class="sr-v">' + money(c.v) + '</span>';
+  b.addEventListener('click', () => srPick(i));
+  b.addEventListener('keydown', (e) => {
+    const k = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 0;
+    if (!k) return;
+    e.preventDefault();
+    const j = (i + k + SR_CATS.length) % SR_CATS.length;
+    srRows[j].focus(); srSelect(j);
+  });
+  srLeg.appendChild(b);
+  return b;
+});
+srLeg.addEventListener('keydown', (e) => { if (e.key === 'Escape') srSelect(-1); });
+
+/* a text window that slides the old words up and the new ones in from below */
+function srRoll(host, text, still) {
+  const old = host.lastElementChild;
+  if (old && old.textContent === text) return;
+  const n = document.createElement('span'); n.textContent = text;
+  if (old && !still) { n.style.transform = 'translateY(100%)'; }
+  host.appendChild(n);
+  if (old) {
+    host.offsetHeight;
+    old.style.transform = 'translateY(-100%)'; n.style.transform = 'translateY(0)';
+    setTimeout(() => old.remove(), 700);
+  }
+}
+/* rolling money: digit slots with a comma that closes below $1,000 */
+function srNum(host) {
+  const slots = [], cm = document.createElement('span');
+  cm.className = 'cm'; cm.textContent = ',';
+  host.innerHTML = '<span>$</span>';
+  for (let i = 0; i < 4; i++) {
+    const d = document.createElement('span');
+    d.className = 'dg'; d.innerHTML = '<span class="st">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x) => '<i>' + x + '</i>').join('') + '</span>';
+    host.appendChild(d); slots.push(d);
+    if (i === 0) host.appendChild(cm);
+  }
+  return (v) => {
+    slots.forEach((d, i) => { const place = Math.pow(10, 3 - i); d.firstChild.style.setProperty('--d', Math.floor(v / place) % 10); d.classList.toggle('off', i < 1 && v < place); });
+    cm.classList.toggle('off', v < 1000);
+  };
+}
+const srSetAmt = srNum(document.getElementById('sr-amt'));
+const srLab = document.getElementById('sr-lab'), srSub = document.getElementById('sr-sub'), srHead = document.getElementById('sr-head'), srList = document.getElementById('sr-list');
+
+/* the list: a layer of three rows, old one leaves up, new one rises, 30 ms apart */
+function srRows3(rows, first) {
+  const old = srList.lastElementChild;
+  const lay = document.createElement('div'); lay.className = 'sr-lay';
+  rows.forEach((r, i) => {
+    const t = document.createElement('div'); t.className = 'sr-tx';
+    t.innerHTML = '<span>' + r[0] + '</span><span class="d">' + r[1] + '</span><span class="a">' + money(r[2]) + '</span>';
+    // the new rows wait for the old ones to clear the window, so two rows never sit on top of each other
+    t.style.setProperty('--dl', (first ? 0 : 220) + i * 30 + 'ms');
+    if (!first) t.style.setProperty('--y', '110px');
+    lay.appendChild(t);
+  });
+  srList.appendChild(lay);
+  if (first) { while (srList.children.length > 1) srList.firstChild.remove(); return; }
+  srList.offsetHeight;
+  lay.querySelectorAll('.sr-tx').forEach((t) => t.style.setProperty('--y', '0px'));
+  if (old) {
+    old.classList.add('out');
+    old.querySelectorAll('.sr-tx').forEach((t) => t.style.setProperty('--y', '-110px'));
+    setTimeout(() => old.remove(), 800);
+  }
+}
+
+function srRender(first) {
+  const c = SR_CATS[srSel];
+  srSegs.forEach((s, i) => {
+    const on = i === srSel;
+    s.g.style.transform = on ? 'translate(' + (Math.cos(s.mid) * SR_PULL).toFixed(2) + 'px,' + (Math.sin(s.mid) * SR_PULL).toFixed(2) + 'px)' : 'translate(0,0)';
+  });
+  srRows.forEach((b, i) => { b.setAttribute('aria-checked', i === srSel ? 'true' : 'false'); b.tabIndex = i === srSel || (srSel < 0 && i === 0) ? 0 : -1; });
+  sr.classList.toggle('on', srSel >= 0);
+  srRoll(srLab, c ? c.n : 'Month total', first);
+  srSetAmt(c ? c.v : SR_TOTAL);
+  srRoll(srSub, c ? Math.round(c.v / SR_TOTAL * 100) + '% of the month' : '4 categories', first);
+  srRoll(srHead, c ? c.n + ' · 3 transactions' : 'Latest', first);
+  srRows3(c ? c.tx : SR_LATEST, first);
+  document.getElementById('sr-mid').setAttribute('aria-label', c ? 'Back to the month total' : 'Month total');
+}
+function srSelect(i) { if (i === srSel) return; srSel = i; srRender(); }
+function srPick(i) { srSelect(i === srSel ? -1 : i); }   // the same one again returns to the month
+function srStill(fn) { sr.classList.add('still'); fn(); sr.getBoundingClientRect(); sr.classList.remove('still'); }
+document.getElementById('sr-mid').addEventListener('click', () => srSelect(-1));
+/* heads and labels start inside their windows; rows are drawn once with no motion */
+srRoll(srLab, 'Month total', true); srRoll(srSub, '4 categories', true); srRoll(srHead, 'Latest', true);
+(() => { srSetAmt(SR_TOTAL); srRows3(SR_LATEST, true); })();
+srStill(() => {});
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const $ = (s) => document.querySelector(s);
+  async function moveTo(my, x, y, ms) { if (!(await QM.ghostTo(x, y, ms))) throw 0; if (my !== epoch) throw 0; }
+  async function press(my, x, y, fn) {
+    await moveTo(my, x, y, 820);
+    await gap(my, 200); fn(); await gap(my, 160);
+  }
+  const segXY = (i) => { const r = $('#sr-svg').getBoundingClientRect(), k = r.width / 240, s = srSegs[i]; return [r.left + s.x * k, r.top + s.y * k]; };
+  const tapSeg = (my, i) => { const [x, y] = segXY(i); return press(my, x, y, () => srPick(i)); };
+  const tapRow = (my, i) => { const r = srRows[i].getBoundingClientRect(); return press(my, r.left + r.width * .5, r.top + r.height * .5, () => srPick(i)); };
+  const tapMid = (my) => { const r = $('#sr-mid').getBoundingClientRect(); return press(my, r.left + r.width * .5, r.top + r.height * .5, () => srSelect(-1)); };
+  function reset() { srStill(() => { srSel = -1; srRender(true); }); }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 1000);
+        await tapSeg(my, 1); await gap(my, 2300);
+        await tapRow(my, 2); await gap(my, 2300);
+        await tapSeg(my, 3); await gap(my, 2300);
+        await tapSeg(my, 0); await gap(my, 2300);
+        await tapMid(my); await gap(my, 2200);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!$('#sr').matches(':hover') && !$('#sr').contains(document.activeElement)) { reset(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { if (!reduced) setTimeout(script, 300); });
+})();
+</script>
+</body>
+</html>

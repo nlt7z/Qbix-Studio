@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brief extract · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "brief-extract", "title": "Brief extract", "group": "studio", "added": "2026-11-09", "cat": "agent", "order": 80,
+  "kind": "loop", "tone": "paper", "shot": 4100,
+  "line": "5 fields · 600 ms ink chip · move easing · digits roll",
+  "summary": "An agent card that turns a client's email into a brief. The agent reads one phrase at a time: a lime underline wipes across it, an ink chip with its value lifts out and slides into the matching field on the move easing, the field's row is uncovered in white and its label turns ink. Pages and Budget land as Geist Mono digits that roll into place. With all five in, a Brief ready chip and a Start project button are uncovered.",
+  "spec": [
+    ["Underline", "lime, 4px, wipes in across the phrase in 380 ms ease-move and wipes out to the right as the chip leaves"],
+    ["Chip", "ink, 28px; uncovered over the phrase in 200 ms, then travels to the field in 600 ms ease-move, growing or shrinking to the value's width"],
+    ["Field", "row uncovered in white from the left, 560 ms expo out; the chip is wiped away to reveal the value; label turns ink"],
+    ["Digits", "Pages and Budget in Geist Mono, a strip of 0 to 9 per digit, 560 ms expo out"],
+    ["Ready", "chip and button uncovered left to right, 560 ms expo out, 80 ms apart"],
+    ["Real use", "a field click replays its source underline, Extract again replays the run, Start project presses; a real pointer or key takes over and the loop resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "Qbix's start-a-project flow: the first screen of a new client engagement, where the email they sent becomes the brief the design team works from.",
+  "rules": [
+    "Every value is visibly taken from a phrase in the email: the underline and the chip start on that phrase.",
+    "Nothing streams word by word; the email is static and the agent only marks what it takes.",
+    "Chips and rows are uncovered with clips, never faded; nothing bounces.",
+    "Clicking a filled field shows its source phrase again; unfilled fields do nothing.",
+    "Under reduced motion the finished brief is shown at once, with no transitions."
+  ],
+  "tags": ["agent", "extract", "email", "brief", "chip", "fields", "Geist Mono", "underline", "form"]
+}
+</script>
+<style data-code>
+/* Brief extract. Ink #0B0C0D on white, no card; brief fields #F5F7F1, filled #ECF0E6, one lime point. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1). */
+.be { position: relative; display: grid; grid-template-columns: 300px 336px; column-gap: 32px; width: 668px; color: #0B0C0D; background: #fff;
+  font: 400 14px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.01em; }
+:where(.be button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; text-align: left; }
+.be button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+.be-kick { margin: 0; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+
+/* the email */
+.be-mail { display: flex; flex-direction: column; padding: 4px 0 0; }
+.be-text { margin: 18px 0 0; font-size: 16px; line-height: 1.7; letter-spacing: -.012em; }
+.be-text p { margin: 0 0 10px; }
+.be-ph { white-space: nowrap; color: #0B0C0D; padding-bottom: 1px; background: linear-gradient(#B8FF00, #B8FF00) no-repeat 0 100% / 0 4px;
+  transition: background-size 380ms cubic-bezier(.65, 0, .35, 1), color 200ms cubic-bezier(.65, 0, .35, 1); }
+.be-ph.on { background-size: 100% 4px; background-position: 0 100%; }
+.be-ph.out { background-size: 0 4px; background-position: 100% 100%; }
+.be-ph.taken { color: rgba(11, 12, 13, .38); }
+.be-ph.hl { color: #0B0C0D; }
+.be-act { margin-top: auto; display: flex; align-items: center; gap: 16px; font-size: 13px; color: rgba(11, 12, 13, .66); }
+.be-again { font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; color: #0B0C0D; }
+
+/* the brief */
+.be-panel { padding: 24px; }
+.be-head { display: flex; align-items: flex-end; justify-content: space-between; }
+.be-title { margin: 4px 0 0; font: 300 28px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.be-ct { display: flex; font: 400 13px/1.25 'Geist Mono', ui-monospace, monospace; color: rgba(11, 12, 13, .66); letter-spacing: 0; padding-bottom: 3px; }
+.be-rows { display: grid; gap: 6px; margin-top: 18px; }
+.be-row { position: relative; display: grid; grid-template-columns: 84px 1fr; align-items: center; height: 40px; padding: 0 12px; background: #F5F7F1; overflow: hidden; width: 100%; }
+.be-row::before { content: ''; position: absolute; inset: 0; background: #ECF0E6; transform: scaleX(0); transform-origin: 0 50%; transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.be-row.in::before { transform: scaleX(1); }
+.be-lab, .be-val { position: relative; }
+.be-lab { font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .38); transition: color 200ms cubic-bezier(.65, 0, .35, 1); }
+.be-row.in .be-lab { color: #0B0C0D; }
+.be-val { display: inline-flex; align-items: center; justify-self: start; height: 28px; padding: 0 8px; margin-left: -8px; font-size: 16px; font-weight: 500; letter-spacing: -.01em; white-space: nowrap; visibility: hidden; }
+.be-val.mono { font: 400 16px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; }
+.be-row.in .be-val { visibility: visible; }
+.be-row:not(.in) { cursor: default; }
+
+/* the chip that carries a value; uncovered, then wiped away over the field's own value */
+.be-chip { position: absolute; left: 0; top: 0; z-index: 3; height: 28px; padding: 0 8px; display: flex; align-items: center; box-sizing: border-box; background: #0B0C0D; color: #fff;
+  font-size: 16px; font-weight: 500; letter-spacing: -.01em; white-space: nowrap; pointer-events: none; clip-path: inset(0 100% 0 0); }
+.be-chip.mono { font: 400 16px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; }
+
+.be-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; height: 44px; }
+.be-ready { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; clip-path: inset(0 100% 0 0); transition: clip-path 560ms cubic-bezier(.16, 1, .3, 1); }
+.be-mk { width: 8px; height: 8px; background: #B8FF00; flex: none; }
+.be-go { position: relative; height: 44px; padding: 0 22px; background: #0B0C0D; color: #fff; font-size: 14px; font-weight: 600; overflow: hidden; text-align: center;
+  clip-path: inset(0 100% 0 0); transition: clip-path 560ms cubic-bezier(.16, 1, .3, 1) 80ms, transform 120ms cubic-bezier(.65, 0, .35, 1); }
+.be-go .l { display: block; height: 44px; line-height: 44px; transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.be-go.done .l { transform: translateY(-44px); }
+.be-go:active, .be-go.press { transform: translateY(2px); }
+.be.ready .be-ready, .be.ready .be-go { clip-path: inset(0); }
+.be-go::after { content: ''; position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: linear-gradient(225deg, #fff 50%, transparent 50%); }
+.be-go[disabled] { cursor: default; }
+
+/* a digit: a clipped slot over a strip of 0 to 9 that rolls to --d */
+.dg { display: block; width: .6em; height: 1.25em; overflow: hidden; }
+.dg .st { display: block; transform: translateY(calc(var(--d, 0) * -1.25em)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.dg i { display: block; height: 1.25em; line-height: 1.25em; font-style: normal; text-align: center; }
+
+.be.still *, .be.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .be *, .be *::before { transition: none !important; } }
+</style>
+<style>
+  .bew { display: grid; justify-items: start; align-content: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="bew" id="bew">
+<!-- code -->
+<section class="be" id="be" aria-label="Brief extract">
+  <div class="be-mail">
+    <p class="be-kick">Inbox · Ana at Juniper Yoga</p>
+    <div class="be-text" id="be-text">
+      <p>Hi! I run <span class="be-ph" data-f="0">Juniper Yoga</span> in <span class="be-ph" data-f="1">Portland</span>.</p>
+      <p>We need a new site <span class="be-ph" data-f="3">before March 1</span>, <span class="be-ph" data-f="2">about 4 pages</span>, and our budget is <span class="be-ph" data-f="4">around $3,000</span>.</p>
+      <p>Can you help?</p>
+    </div>
+    <div class="be-act"><button type="button" class="be-again" id="be-again">Extract again</button><span>Click a field to see its source.</span></div>
+  </div>
+  <div class="be-panel">
+    <div class="be-head">
+      <div><p class="be-kick">New project</p><h3 class="be-title">Brief</h3></div>
+      <div class="be-ct" aria-hidden="true"><span id="be-n"></span><span>&nbsp;/ 5</span></div>
+    </div>
+    <div class="be-rows" id="be-rows"></div>
+    <div class="be-foot">
+      <div class="be-ready"><span class="be-mk"></span>Brief ready</div>
+      <button type="button" class="be-go" id="be-go" disabled><span class="l">Start project</span><span class="l">Project started</span></button>
+    </div>
+  </div>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Click a field to see its source, Extract again, Start project</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Brief extract. Each field has a source phrase in the email and a value. extractField() plays one:
+   underline in, chip uncovered on the phrase, chip travels to the field, row uncovered, chip wiped to reveal the value. */
+const be = document.getElementById('be');
+const BE_EASE_MOVE = 'cubic-bezier(.65,0,.35,1)';
+const BE_FIELDS = [
+  { label: 'Client', val: 'Juniper Yoga' },
+  { label: 'City', val: 'Portland' },
+  { label: 'Pages', val: '4 pages', mono: true },
+  { label: 'Deadline', val: 'Mar 1' },
+  { label: 'Budget', val: '$3,000', mono: true },
+];
+const bePh = Array.from(be.querySelectorAll('.be-ph')).sort((a, b) => a.dataset.f - b.dataset.f);
+const beRows = [], beRolls = [];
+BE_FIELDS.forEach((f, i) => {
+  const row = document.createElement('button');
+  row.type = 'button'; row.className = 'be-row';
+  row.setAttribute('aria-label', f.label + ' field, show source phrase');
+  row.innerHTML = '<span class="be-lab">' + f.label + '</span><span class="be-val' + (f.mono ? ' mono' : '') + '"></span>';
+  const val = row.querySelector('.be-val'), rolls = [];
+  if (f.mono) {                                          // digits roll from 0 to their value
+    f.val.split('').forEach((c) => {
+      if (/\d/.test(c)) {
+        const d = document.createElement('span');
+        d.className = 'dg';
+        d.dataset.t = c;
+        d.innerHTML = '<span class="st">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x) => '<i>' + x + '</i>').join('') + '</span>';
+        val.appendChild(d); rolls.push(d.firstChild);
+      } else val.insertAdjacentHTML('beforeend', '<span>' + c.replace(' ', '&nbsp;') + '</span>');
+    });
+  } else val.textContent = f.val;
+  document.getElementById('be-rows').appendChild(row);
+  beRows.push(row); beRolls.push(rolls);
+});
+const beCt = document.createElement('span');
+beCt.className = 'dg'; beCt.innerHTML = '<span class="st">' + [0, 1, 2, 3, 4, 5].map((x) => '<i>' + x + '</i>').join('') + '</span>';
+document.getElementById('be-n').appendChild(beCt);
+
+function beRoll(i) { beRolls[i].forEach((st) => st.style.setProperty('--d', st.parentNode.dataset.t)); }
+function beCount(n) { beCt.firstChild.style.setProperty('--d', n); }
+function beStill(fn) { be.classList.add('still'); fn(); be.getBoundingClientRect(); be.classList.remove('still'); }
+function beReset() {
+  beStill(() => {
+    be.classList.remove('ready');
+    bePh.forEach((p) => p.classList.remove('on', 'out', 'taken', 'hl'));
+    beRows.forEach((r, i) => { r.classList.remove('in'); beRolls[i].forEach((st) => st.style.setProperty('--d', 0)); });
+    be.querySelectorAll('.be-chip').forEach((c) => c.remove());
+    beCount(0);
+    const go = document.getElementById('be-go'); go.classList.remove('done'); go.disabled = true;
+  });
+}
+function beFinish() {                                   // the finished brief, instantly
+  beStill(() => {
+    be.querySelectorAll('.be-chip').forEach((c) => c.remove());
+    bePh.forEach((p) => { p.classList.remove('on', 'out', 'hl'); p.classList.add('taken'); });
+    beRows.forEach((r, i) => { r.classList.add('in'); beRoll(i); });
+    beCount(5); be.classList.add('ready'); document.getElementById('be-go').disabled = false;
+  });
+}
+const beWait = (ms) => new Promise((r) => setTimeout(r, ms));
+const bePos = (el) => { const a = el.getBoundingClientRect(), b = be.getBoundingClientRect(); return { x: a.left - b.left, y: a.top - b.top, w: a.width, h: a.height }; };
+
+/* one field: returns once the chip has landed. `alive()` lets a caller cancel between steps. */
+async function beExtract(i, alive) {
+  const ph = bePh[i], row = beRows[i], val = row.querySelector('.be-val'), f = BE_FIELDS[i];
+  ph.classList.remove('out'); ph.classList.add('on', 'hl');
+  await beWait(300); if (!alive()) return false;
+  const chip = document.createElement('div');
+  chip.className = 'be-chip' + (f.mono ? ' mono' : '');
+  chip.textContent = f.val;
+  be.appendChild(chip);
+  const a = bePos(ph), t = bePos(val);
+  const y0 = a.y + (a.h - 28) / 2, y1 = t.y + (t.h - 28) / 2;
+  chip.style.width = a.w + 'px';
+  chip.style.transform = 'translate(' + a.x + 'px,' + y0 + 'px)';
+  chip.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)' }], { duration: 200, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+  await beWait(220); if (!alive()) return false;
+  row.classList.add('in'); row.querySelector('.be-val').style.visibility = 'hidden';     // row uncovered under the chip
+  ph.classList.remove('hl'); ph.classList.add('taken', 'out');                            // underline leaves with the chip
+  chip.animate([
+    { transform: 'translate(' + a.x + 'px,' + y0 + 'px)', width: a.w + 'px' },
+    { transform: 'translate(' + t.x + 'px,' + y1 + 'px)', width: t.w + 'px' },
+  ], { duration: 600, easing: BE_EASE_MOVE, fill: 'forwards' });
+  await beWait(600); if (!alive()) return false;
+  val.style.visibility = '';                                                              // value sits under the chip
+  beRoll(i); beCount(i + 1);
+  chip.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 100%)' }], { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+  setTimeout(() => chip.remove(), 400);
+  return true;
+}
+function beReady() { be.classList.add('ready'); document.getElementById('be-go').disabled = false; }
+
+/* a field click shows where its value came from */
+const beHlT = [];
+function beSource(i) {
+  if (!beRows[i].classList.contains('in')) return;
+  const ph = bePh[i];
+  clearTimeout(beHlT[i]);
+  ph.classList.remove('out'); ph.classList.add('on', 'hl');
+  beHlT[i] = setTimeout(() => { ph.classList.remove('hl'); ph.classList.add('out'); }, 1300);
+}
+beRows.forEach((r, i) => r.addEventListener('click', () => beSource(i)));
+document.getElementById('be-go').addEventListener('click', (e) => { e.currentTarget.classList.add('done'); });
+beFinish();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let epoch = 0, resumeT = 0, userRun = false, running = false;
+  const $ = (s) => document.querySelector(s);
+  const gap = async (my, ms) => { await beWait(ms); if (my !== epoch) throw 0; };
+  async function moveTo(my, x, y, ms) { if (!(await QM.ghostTo(x, y, ms))) throw 0; if (my !== epoch) throw 0; }
+  async function tap(my, el) {
+    const r = el.getBoundingClientRect();
+    await moveTo(my, r.left + r.width * 0.5, r.top + r.height * 0.55, 780);
+    await gap(my, 160);
+    el.classList.add('press'); await gap(my, 130); el.click(); await gap(my, 140); el.classList.remove('press');
+  }
+  async function extractAll(my) {                       // five fields, each underline starting just before the last chip lands
+    running = true;
+    try {
+      await gap(my, 700);
+      for (let i = 0; i < 5; i++) { if (!(await beExtract(i, () => my === epoch))) throw 0; }
+      await gap(my, 300); beReady();
+    } finally { running = false; }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  function cleanStop() { stopScript(); if (running || $('.be-chip')) beFinish(); }
+  async function loop(skip) {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        if (!skip) { beReset(); await extractAll(my); }
+        await gap(my, skip ? 200 : 1300);
+        await tap(my, beRows[4]); await gap(my, 2000);
+        await tap(my, beRows[1]); await gap(my, 1600);
+        await tap(my, $('#be-again'));                  // the click replays the run on its own epoch, this loop ends
+        return;
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function replay(fromUser) {                           // Extract again
+    const my = ++epoch; QM.ghostHide(); userRun = !!fromUser;
+    beReset();
+    (async () => {
+      try { await extractAll(my); if (!fromUser) { await gap(my, 1100); loop(true); } } catch (e) { /* cancelled */ } finally { if (my === epoch) userRun = false; }
+    })();
+  }
+  document.getElementById('be-again').addEventListener('click', (e) => { replay(e.isTrusted); });
+  function reset() { stopScript(); beReset(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      if (!userRun) cleanStop();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => {
+        if (running || userRun || $('#be').matches(':hover')) touch({});
+        else { reset(); loop(); }
+      }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); beFinish(); if (!reduced) { beReset(); loop(); } } });
+  const fix = () => { const h = $('#bew').offsetHeight; if (h) $('#bew').style.minHeight = h + 'px'; };
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fix(); if (!reduced) setTimeout(() => { beReset(); loop(); }, 300); });
+})();
+</script>
+</body>
+</html>

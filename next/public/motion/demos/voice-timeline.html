@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice timeline · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "voice-timeline", "title": "Voice timeline", "group": "studio", "added": "2026-11-09", "cat": "text", "order": 90,
+  "kind": "loop", "tone": "paper", "shot": 4300,
+  "line": "9 words · 1.4 px per 10 ms · min 0.12 s · 340 ms glide",
+  "summary": "The TTS Editor's line as an editing tool. A sentence is laid out as word blocks under a time ruler, each block as wide as its duration. Play runs a lime playhead across in real time and the word under it turns ink. Pulling a block's right edge stretches that word and every block after it glides along, the total rolls digit by digit, and a pause chip slips a 0.3 s gap in after the selected word.",
+  "spec": [
+    ["Scale", "1.4 px per 10 ms; blocks are positioned from their durations, the ruler runs to 4.4 s"],
+    ["Playhead", "real time (rAF clock); the word under it is ink with white text, the rest near-white with ink text"],
+    ["Stretch", "pointer drag on the right edge with capture, or arrow keys 0.05 s (Shift 0.25 s); minimum 0.12 s, the line stops at 4.4 s"],
+    ["Follow", "blocks after the edited one chase their target during a drag (1 − e^(−14 dt)); after a key, insert or delete they glide 340 ms ease-move"],
+    ["Total", "Geist Mono digit strips, translateY 560 ms expo out, always two decimals"],
+    ["Pause", "+ pause inserts a 0.30 s block after the selected one: it opens from width 0 while the rest glide; Delete removes it"],
+    ["Loop", "a ghost plays, stretches the last word by 0.6 s, plays again, then glides it back; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "Qbix Labs' TTS Editor, in a product page's walkthrough: the step where a founder tunes how a line of copy is read aloud.",
+  "rules": [
+    "A block's width is its duration and nothing else; every position is the sum of the durations before it.",
+    "The playhead is the only lime. Lit is ink with white text; every other word is near-white with ink text.",
+    "Durations are whole hundredths of a second, at least 0.12 s, and the whole line stays within 4.4 s.",
+    "Edges are real handles: pointer capture, arrow keys on the focused block, aria labels with the duration.",
+    "Nothing bounces: blocks glide on the move curve or chase, digits roll on expo out. No sound.",
+    "Under reduced motion everything still edits, with no glide."
+  ],
+  "tags": ["timeline", "tts", "words", "playhead", "stretch", "pause", "ruler", "editor", "Qbix Labs"]
+}
+</script>
+<style data-code>
+/* Voice timeline. Ink #0B0C0D on white, no card; blocks #F5F7F1, pauses #ECF0E6, one lime point #B8FF00 (the playhead). Easings: expo out (.16,1,.3,1), move (.65,0,.35,1). */
+.vt { width: 672px; padding: 28px; background: #fff; color: #0B0C0D; font: 400 13px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+:where(.vt button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.vt button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+.vt-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.vt-kick { margin: 0; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.vt-title { margin: 4px 0 0; font: 300 26px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.vt-tot { text-align: right; }
+.vt-num { display: flex; justify-content: flex-end; margin-top: 4px; font: 400 26px/1.25 'Geist Mono', ui-monospace, monospace; letter-spacing: -.04em; }
+.vt-num .u { margin-left: .35em; color: rgba(11, 12, 13, .38); }
+
+.vt-bar { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+.vt-play { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 22px 0 18px; background: #0B0C0D; color: #fff; font-weight: 600; font-size: 13px;
+  transition: transform 120ms cubic-bezier(.65, 0, .35, 1); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+.vt-play:active { transform: translateY(2px); }
+.vt-play.press { transform: translateY(2px); }
+.vt-ico { width: 10px; height: 12px; background: #fff; clip-path: polygon(0 0, 100% 50%, 0 100%); transition: clip-path 280ms cubic-bezier(.65, 0, .35, 1); }
+.vt.on .vt-ico { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); width: 10px; height: 10px; }
+.vt-chip { height: 32px; padding: 0 14px; background: #F5F7F1; font-weight: 500; transition: transform 120ms cubic-bezier(.65, 0, .35, 1), color 160ms; }
+.vt-chip:active, .vt-chip.press { transform: translateY(2px); }
+.vt-chip[disabled] { color: rgba(11, 12, 13, .38); cursor: default; transform: none; }
+.vt-sel { margin-left: auto; font: 400 13px/1.3 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); white-space: nowrap; }
+
+/* the timeline: a ruler over a track; the playhead crosses both */
+.vt-tl { position: relative; margin-top: 22px; width: 616px; }
+.vt-ruler { position: relative; height: 24px; font: 400 13px/16px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); }
+.vt-tk { position: absolute; bottom: 0; width: 1px; height: 6px; background: rgba(11, 12, 13, .66); transition: background-color 280ms cubic-bezier(.65, 0, .35, 1); }
+.vt-tk.m { height: 15px; }
+.vt-tk.out { background: rgba(11, 12, 13, .2); }
+.vt-tl .vt-lb { position: absolute; top: 0; margin-left: 5px; transition: color 280ms cubic-bezier(.65, 0, .35, 1); }
+.vt-tl .vt-lb.out { color: rgba(11, 12, 13, .38); }
+.vt-track { position: relative; height: 64px; margin-top: 8px; margin-bottom: 18px; }
+.vt-b { position: absolute; left: 0; top: 0; height: 64px; background: #F5F7F1; color: #0B0C0D; font-weight: 500; font-size: 13px; text-align: left; will-change: transform, width; }
+.vt-b.on { background: #0B0C0D; color: #fff; }
+.vt-b.pause { background: #ECF0E6; }
+.vt-b.pause.on { background: #0B0C0D; }
+.vt-b .lb { display: block; overflow: hidden; white-space: nowrap; padding: 0 3px 0 6px; line-height: 64px; }
+.vt-b.pause .lb::before, .vt-b.pause .lb::after { content: ''; display: inline-block; width: 3px; height: 16px; margin: 24px 0 0 0; background: currentColor; opacity: .45; vertical-align: top; }
+.vt-b.pause .lb::after { margin-left: 5px; }
+.vt-b.pause .lb { padding-left: 6px; }
+.vt-b::after { content: ''; position: absolute; left: 0; right: 2px; bottom: -11px; height: 3px; background: #0B0C0D; clip-path: inset(0 100% 0 0); transition: clip-path 320ms cubic-bezier(.16, 1, .3, 1); }
+.vt-b.sel::after { clip-path: inset(0); }
+/* the right edge: a 14px grip straddling it, with a short bar that says "pull" */
+.eh { position: absolute; top: 0; bottom: 0; right: -7px; width: 14px; cursor: ew-resize; touch-action: none; z-index: 2; }
+.eh::before { content: ''; position: absolute; right: 6px; top: 20px; bottom: 20px; width: 3px; background: currentColor; opacity: 0; transition: opacity 160ms; }
+.vt-b:hover .eh::before { opacity: .38; }
+.vt-b.sel .eh::before { opacity: .7; }
+.vt-b.drag .eh::before { opacity: 1; }
+.vt-head { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; margin-left: -2px; background: #B8FF00; pointer-events: none; z-index: 3; }
+.vt-head::before { content: ''; position: absolute; left: -3px; top: 0; width: 10px; height: 10px; background: #B8FF00; }
+.vt-hint { margin: 0; color: rgba(11, 12, 13, .66); }
+
+/* a digit: a clipped slot over a strip of 0 to 9 that rolls to --d */
+.dg { display: block; width: .6em; height: 1.25em; overflow: hidden; }
+.dg .st { display: block; transform: translateY(calc(var(--d, 0) * -1.25em)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.dg i { display: block; height: 1.25em; line-height: 1.25em; font-style: normal; text-align: center; }
+
+.vt.still *, .vt.still *::before, .vt.still *::after { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .vt *, .vt *::before, .vt *::after { transition: none !important; } }
+</style>
+<style>
+  .vtw { display: grid; justify-items: start; align-content: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="vtw" id="vtw">
+<!-- code -->
+<section class="vt" id="vt" aria-label="Voice timeline">
+  <div class="vt-top">
+    <div><p class="vt-kick">Qbix Labs · TTS Editor</p><h3 class="vt-title">Forma intro</h3></div>
+    <div class="vt-tot"><p class="vt-kick">Total</p><div class="vt-num"><span id="vt-total" style="display:flex"></span><span class="u">s</span></div></div>
+  </div>
+  <div class="vt-bar">
+    <button type="button" class="vt-play" id="vt-play" aria-label="Play"><i class="vt-ico"></i><span id="vt-playl">Play</span></button>
+    <button type="button" class="vt-chip" id="vt-pause">+ pause</button>
+    <span class="vt-sel" id="vt-sel" aria-live="off"></span>
+  </div>
+  <div class="vt-tl" id="vt-tl">
+    <div class="vt-ruler" id="vt-ruler" aria-hidden="true"></div>
+    <div class="vt-track" id="vt-track" role="group" aria-label="Words"></div>
+    <i class="vt-head" id="vt-head"></i>
+  </div>
+  <p class="vt-hint">Drag a block's right edge, or press the arrow keys on a word.</p>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Play or stop, drag a block's right edge, arrow keys move 0.05 s, + pause, Delete removes a pause</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Voice timeline. The model is a list of blocks with a duration in hundredths of a second; a block's left is the sum before it.
+   Geometry is drawn by one rAF loop: during a drag the followers chase their target, otherwise they glide on the move curve. */
+const vt = document.getElementById('vt');
+const VT_S = 1.4, VT_MAX = 440, VT_MIN = 12, VT_GLIDE = 340, VT_CHASE = 14;     // px per cs, caps in cs, ms, 1/s
+const VT_WORDS = [['Welcome', 60], ['to', 20], ['Forma,', 50], ['where', 35], ['every', 35], ['piece', 35], ['is', 15], ['made', 35], ['slowly.', 75]];
+const vtTrack = document.getElementById('vt-track'), vtHead = document.getElementById('vt-head');
+const vtMove = (function (x1, y1, x2, y2) {                                      // cubic-bezier as a function (the move curve)
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x;
+    for (let i = 0; i < 8; i++) { const e = ((ax * t + bx) * t + cx) * t - x, d = (3 * ax * t + 2 * bx) * t + cx; if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; }
+    return ((ay * t + by) * t + cy) * t; };
+})(0.65, 0, 0.35, 1);
+
+let vtBlocks = [], vtDead = [], vtSel = null, vtTotal = 0, vtT = 0, vtPlaying = false, vtDrag = null, vtRaf = 0, vtLast = 0, vtLit = null;
+const vtReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function vtDigits(host, n) {                                                     // n digit slots, a dot after the first
+  host.innerHTML = '';
+  const slots = Array.from({ length: n }, (_, i) => {
+    const d = document.createElement('span');
+    d.className = 'dg';
+    d.innerHTML = '<span class="st">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x) => '<i>' + x + '</i>').join('') + '</span>';
+    host.appendChild(d);
+    if (i === 0) host.insertAdjacentHTML('beforeend', '<span>.</span>');
+    return d;
+  });
+  return (v) => slots.forEach((d, i) => d.firstChild.style.setProperty('--d', Math.floor(v / Math.pow(10, n - 1 - i)) % 10));
+}
+const vtSetTotal = vtDigits(document.getElementById('vt-total'), 3);
+
+// the ruler: a tick every 0.1 s, a label every 0.5 s
+const vtRuler = document.getElementById('vt-ruler'), vtTicks = [], vtLabels = [];
+for (let i = 0; i <= VT_MAX / 10; i++) {
+  const k = document.createElement('i'); k.className = 'vt-tk' + (i % 5 === 0 ? ' m' : ''); k.style.left = (i * 10 * VT_S) + 'px';
+  vtRuler.appendChild(k); vtTicks.push(k);
+  if (i % 5 === 0) {
+    const l = document.createElement('span'); l.className = 'vt-lb'; l.style.left = (i * 10 * VT_S) + 'px'; l.textContent = (i / 10).toFixed(1) + (i === 0 ? ' s' : '');
+    vtRuler.appendChild(l); vtLabels.push([l, i * 10]);
+  }
+}
+
+function vtMake(label, cs, pause) {
+  const el = document.createElement('button');
+  el.type = 'button'; el.className = 'vt-b' + (pause ? ' pause' : '');
+  el.innerHTML = '<span class="lb">' + (pause ? '' : label) + '</span><i class="eh"></i>';
+  const b = { el, label: pause ? 'pause' : label, cs, pause, cur: { l: 0, w: 0 }, from: { l: 0, w: 0 }, to: { l: 0, w: 0 }, t0: 0 };
+  el.addEventListener('click', () => vtSelect(b));
+  el.addEventListener('focus', () => vtSelect(b));
+  el.addEventListener('keydown', (e) => {
+    const k = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0;
+    if (k) { e.preventDefault(); vtSetCs(b, b.cs + k * (e.shiftKey ? 25 : 5), true); }
+    else if ((e.key === 'Delete' || e.key === 'Backspace') && b.pause) { e.preventDefault(); vtRemove(b); }
+  });
+  const eh = el.querySelector('.eh'); let x0 = 0, c0 = 0;
+  eh.addEventListener('pointerdown', (e) => {
+    eh.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation();
+    vtSelect(b); el.focus({ preventScroll: true }); x0 = e.clientX; c0 = b.cs; vtGrab(b);
+  });
+  eh.addEventListener('pointermove', (e) => { if (vtDrag === b) vtSetCs(b, c0 + (e.clientX - x0) / VT_S, false); });
+  const up = () => { if (vtDrag === b) vtRelease(); };
+  eh.addEventListener('pointerup', up); eh.addEventListener('pointercancel', up);
+  vtTrack.appendChild(el);
+  return b;
+}
+
+function vtLayout(mode) {                                                        // mode: 'snap' | 'tween' | 'set' (a drag: only the targets)
+  let x = 0;
+  vtBlocks.forEach((b) => { b.to = { l: x * VT_S, w: Math.max(0, b.cs * VT_S - 2) }; x += b.cs; });
+  vtTotal = x;
+  vtDead.forEach((b) => { b.to = { l: b.cur.l, w: 0 }; });
+  const now = performance.now(), snap = mode === 'snap' || vtReduced || vt.classList.contains('still');
+  [...vtBlocks, ...vtDead].forEach((b) => {
+    if (snap) b.cur = { l: b.to.l, w: b.to.w };
+    else if (mode === 'tween') { b.from = { l: b.cur.l, w: b.cur.w }; b.t0 = now; }
+  });
+  vtSetTotal(vtTotal);
+  vtTicks.forEach((k, i) => k.classList.toggle('out', i * 10 > vtTotal));
+  vtLabels.forEach(([l, c]) => l.classList.toggle('out', c > vtTotal));
+  document.getElementById('vt-pause').disabled = vtTotal + 30 > VT_MAX;
+  vtReadout(); vtPaint(); vtLight();
+  if (!snap) vtKick(); else vtSweep();
+}
+function vtPaint() {
+  [...vtBlocks, ...vtDead].forEach((b) => { b.el.style.transform = 'translateX(' + b.cur.l.toFixed(2) + 'px)'; b.el.style.width = b.cur.w.toFixed(2) + 'px'; });
+}
+function vtSweep() { vtDead = vtDead.filter((b) => { if (b.cur.w < 0.5) { b.el.remove(); return false; } return true; }); }
+function vtReadout() {
+  if (!vtSel) return;
+  document.getElementById('vt-sel').textContent = (vtSel.pause ? 'pause' : vtSel.label) + ' · ' + (vtSel.cs / 100).toFixed(2) + ' s';
+  vtBlocks.forEach((b) => b.el.setAttribute('aria-label', (b.pause ? 'Pause' : b.label) + ', ' + (b.cs / 100).toFixed(2) + ' seconds. Arrow keys change it by 0.05 seconds.'));
+}
+function vtSelect(b) {
+  if (vtSel === b) return;
+  vtSel = b; vtBlocks.forEach((x) => x.el.classList.toggle('sel', x === b)); vtReadout();
+}
+function vtLight() {                                                             // the word under the playhead is the lit one
+  let x = 0, hit = null;
+  if (vtT > 0 || vtPlaying) for (const b of vtBlocks) { if (vtT >= x && vtT < x + b.cs) { hit = b; break; } x += b.cs; }
+  if (hit === vtLit) return;
+  vtLit = hit; vtBlocks.forEach((b) => b.el.classList.toggle('on', b === hit));
+}
+function vtHeadAt() { vtHead.style.transform = 'translateX(' + (vtT * VT_S).toFixed(2) + 'px)'; }
+
+function vtBusy(now) {
+  return [...vtBlocks, ...vtDead].some((b) => b.cur.l !== b.to.l || b.cur.w !== b.to.w);
+}
+function vtFrame(now) {
+  const dt = Math.min(0.05, (now - vtLast) / 1000); vtLast = now;
+  if (vtPlaying) {
+    vtT += dt * 100;
+    if (vtT >= vtTotal) { vtT = vtTotal; vtPlay(false); }
+    vtHeadAt(); vtLight();
+  }
+  const k = 1 - Math.exp(-dt * VT_CHASE);
+  [...vtBlocks, ...vtDead].forEach((b) => {
+    if (b === vtDrag) { b.cur = { l: b.to.l, w: b.to.w }; return; }
+    if (vtDrag) {
+      b.cur.l += (b.to.l - b.cur.l) * k; b.cur.w += (b.to.w - b.cur.w) * k;
+      if (Math.abs(b.to.l - b.cur.l) < 0.05) b.cur.l = b.to.l;
+      if (Math.abs(b.to.w - b.cur.w) < 0.05) b.cur.w = b.to.w;
+    } else {
+      const e = vtMove(Math.min(1, (now - b.t0) / VT_GLIDE));
+      b.cur = { l: b.from.l + (b.to.l - b.from.l) * e, w: b.from.w + (b.to.w - b.from.w) * e };
+      if (now - b.t0 >= VT_GLIDE) b.cur = { l: b.to.l, w: b.to.w };
+    }
+  });
+  vtPaint();
+  vtRaf = 0;
+  if (!vtDrag) vtSweep();
+  if (vtPlaying || vtBusy()) vtRaf = requestAnimationFrame(vtFrame);
+}
+function vtKick() { if (!vtRaf) { vtLast = performance.now(); vtRaf = requestAnimationFrame(vtFrame); } }
+
+function vtPlay(on) {
+  if (on === vtPlaying) return;
+  if (on && vtT >= vtTotal - 1) vtT = 0;
+  vtPlaying = on;
+  vt.classList.toggle('on', on);
+  document.getElementById('vt-playl').textContent = on ? 'Stop' : 'Play';
+  document.getElementById('vt-play').setAttribute('aria-label', on ? 'Stop' : 'Play');
+  vtHeadAt(); vtLight();
+  if (on) vtKick();
+}
+function vtSetCs(b, v, tween) {                                                  // a duration changes; everything after it moves
+  v = Math.round(v);
+  v = Math.max(VT_MIN, Math.min(v, VT_MAX - (vtTotal - b.cs)));
+  if (v === b.cs) return;
+  b.cs = v; vtLayout(tween ? 'tween' : 'set');
+  if (tween) { b.from = { l: b.cur.l, w: b.cur.w }; }
+}
+function vtGrab(b) { vtDrag = b; b.el.classList.add('drag'); vtKick(); }
+function vtRelease() {
+  const b = vtDrag; if (!b) return;
+  vtDrag = null; b.el.classList.remove('drag'); vtLayout('tween');
+}
+function vtInsert() {
+  if (vtTotal + 30 > VT_MAX) return;
+  const at = vtBlocks.indexOf(vtSel) + 1, b = vtMake('', 30, true), x = vtBlocks.slice(0, at).reduce((s, q) => s + q.cs, 0);
+  b.cur = { l: x * VT_S, w: 0 };
+  vtBlocks.splice(at, 0, b); vtSelect(b); vtLayout('tween');
+}
+function vtRemove(b) {
+  const i = vtBlocks.indexOf(b); if (i < 0) return;
+  vtBlocks.splice(i, 1); vtDead.push(b); vtSelect(vtBlocks[Math.max(0, i - 1)]); vtLayout('tween');
+  vtBlocks.forEach((q) => { if (q === vtSel) q.el.focus({ preventScroll: true }); });
+}
+function vtStart() {                                                             // the sentence as it was written
+  vtPlay(false); vtDrag = null;
+  [...vtBlocks, ...vtDead].forEach((b) => b.el.remove());
+  vtBlocks = VT_WORDS.map(([w, cs]) => vtMake(w, cs, false)); vtDead = []; vtSel = null;
+  vtSelect(vtBlocks[8]); vtT = 0; vtHeadAt(); vtLit = null; vtLayout('snap');
+}
+function vtMend() {                                                              // back to the sentence, gliding (a loop's reset)
+  vtPlay(false); vtT = 0; vtHeadAt();
+  vtBlocks.filter((b) => b.pause).forEach((b) => { vtBlocks.splice(vtBlocks.indexOf(b), 1); vtDead.push(b); });
+  vtBlocks.forEach((b, i) => { b.cs = VT_WORDS[i][1]; });
+  vtSelect(vtBlocks[8]); vtLayout('tween');
+}
+
+document.getElementById('vt-play').addEventListener('click', () => vtPlay(!vtPlaying));
+document.getElementById('vt-pause').addEventListener('click', vtInsert);
+addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && !/^(BUTTON|INPUT|TEXTAREA)$/.test(document.activeElement && document.activeElement.tagName)) { e.preventDefault(); vtPlay(!vtPlaying); }
+});
+vtStart();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const $ = (s) => document.querySelector(s);
+  async function moveTo(my, x, y, ms) { if (!(await QM.ghostTo(x, y, ms))) throw 0; if (my !== epoch) throw 0; }
+  async function tap(my, el) {
+    const r = el.getBoundingClientRect();
+    await moveTo(my, r.left + r.width * 0.5, r.top + r.height * 0.55, 780);
+    await gap(my, 160);
+    el.classList.add('press'); await gap(my, 130); el.click(); await gap(my, 140); el.classList.remove('press');
+  }
+  async function until(my, fn) { while (!fn()) await gap(my, 60); }
+  async function stretch(my, b, to, ms) {                                        // the ghost takes the right edge and pulls it
+    const eh = b.el.querySelector('.eh').getBoundingClientRect(), y = eh.top + eh.height * 0.5, x0 = eh.left + eh.width * 0.5, c0 = b.cs;
+    await moveTo(my, x0, y, 780);
+    await gap(my, 200);
+    vtSelect(b); vtGrab(b);
+    const t0 = performance.now();
+    await new Promise((res, rej) => {
+      const step = (now) => {
+        if (my !== epoch) { vtRelease(); return rej(0); }
+        const p = Math.min(1, (now - t0) / ms), c = c0 + (to - c0) * QM.easeInOut(p);
+        QM.ghostAt(x0 + (c - c0) * VT_S, y);
+        vtSetCs(b, c, false);
+        p < 1 ? requestAnimationFrame(step) : res();
+      };
+      requestAnimationFrame(step);
+    });
+    vtRelease();
+  }
+  function reset() { vtStart(); }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 700);
+        await tap(my, $('#vt-play'));
+        await until(my, () => !vtPlaying); await gap(my, 700);
+        await stretch(my, vtBlocks[vtBlocks.length - 1], 135, 1500); await gap(my, 900);
+        await tap(my, $('#vt-play'));
+        await until(my, () => !vtPlaying); await gap(my, 900);
+        await QM.ghostTo(innerWidth * 0.85, innerHeight * 0.9, 600);
+        await gap(my, 300);
+        vtMend();
+        await gap(my, 900);
+      }
+    } catch (e) { vtRelease(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => {
+        if (vtPlaying || vtDrag || $('#vt').matches(':hover') || $('#vt').contains(document.activeElement)) touch({});
+        else { reset(); script(); }
+      }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  // the card keeps its height; a still for reduced motion: the playhead stands on "Forma,"
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+    if (reduced) { vtT = 120; vtHeadAt(); vtLight(); } else setTimeout(script, 300);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Split bill · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "split-bill", "title": "Split bill", "group": "studio", "added": "2026-11-09", "cat": "inputs", "order": 60,
+  "kind": "loop", "tone": "paper", "shot": 7000,
+  "line": "1 bar · 2 dividers · 560 ms digit roll · sums to the cent",
+  "summary": "Kova's split card for a dinner. One bar is cut into three shares by two dividers; dragging a divider moves money between its two neighbours, each amount rolls digit by digit and the three always add up to $128.40, the last cent going to the last person. Even split glides the dividers back to thirds, Request folds the bar into a single Requests sent line.",
+  "spec": [
+    ["Dividers", "pointer drag with capture, or arrow keys: 1%, Shift 5%; each share keeps at least 5%"],
+    ["Digits", "a strip of 0 to 9 per slot in a clipped window, translateY 560 ms expo out; the hundreds slot closes below $100"],
+    ["Rounding", "first two shares round to the cent, the last takes the remainder, so the sum is exact"],
+    ["Even split", "segments and dividers glide to 33 / 34 / 33, 520 ms ease-move"],
+    ["Request", "bar, people and button fold away on a grid row, 560 ms expo out; the sent line opens in their place"],
+    ["Loop", "a ghost pulls both dividers, evens the split and sends; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "Kova's shared expenses: the card a user opens after a team dinner to decide who owes what before sending the requests.",
+  "rules": [
+    "The three amounts are computed from whole-percent shares of the total in cents; the last person takes the remainder, never a rounded guess.",
+    "Dividers are real sliders: pointer capture, arrow keys, aria values; neighbours cannot be pushed below 5%.",
+    "Money moves only between the two shares beside the divider; the third share never changes.",
+    "Nothing bounces: shares glide on the move curve, digits and folds on expo out.",
+    "Under reduced motion every value still changes, with no transition."
+  ],
+  "tags": ["split", "slider", "divider", "money", "digit roll", "Kova", "request", "bar"]
+}
+</script>
+<style data-code>
+/* Split bill. Ink #0B0C0D on white, no card; bar greys #9EA88C / #D9E0CC, one lime point. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1). */
+.sb { width: 560px; padding: 28px; background: #fff; color: #0B0C0D; font: 400 14px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.01em; }
+:where(.sb button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.sb button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+.sb-div:focus-visible { outline: 0; }
+.sb-div:focus-visible::after { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+.sb-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.sb-kick { margin: 0; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.sb-title { margin: 4px 0 0; font: 300 30px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; white-space: nowrap; }
+.sb-title span { color: rgba(11, 12, 13, .38); }
+.sb-even { font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); text-decoration: underline; text-underline-offset: 3px; transition: color 160ms; }
+.sb-top .sb-even { clip-path: inset(0); transition: color 160ms, clip-path 560ms cubic-bezier(.16, 1, .3, 1); }
+.sb.sent .sb-top .sb-even { clip-path: inset(0 0 100% 0); pointer-events: none; }
+.sb-even[disabled] { color: rgba(11, 12, 13, .38); text-decoration: none; cursor: default; }
+
+/* a fold: a grid row that closes to nothing; used by the form and by the sent line */
+.sb-fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 560ms cubic-bezier(.16, 1, .3, 1); }
+.sb-fold > div { min-height: 0; overflow: hidden; }
+.sb.sent .sb-form { grid-template-rows: 0fr; }
+.sb-done { grid-template-rows: 0fr; }
+.sb.sent .sb-done { grid-template-rows: 1fr; }
+
+.sb-people { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 28px; }
+.sb-p { display: grid; grid-template-columns: 32px 1fr; column-gap: 10px; align-items: center; }
+.sb-av { grid-row: span 2; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 600; }
+.sb-nm { font-weight: 500; }
+.sb-pc { display: flex; font: 400 13px/1.25 'Geist Mono', ui-monospace, monospace; color: rgba(11, 12, 13, .66); letter-spacing: -.02em; }
+.sb-amt { grid-column: 1 / -1; margin-top: 10px; display: flex; font: 400 22px/1.25 'Geist Mono', ui-monospace, monospace; letter-spacing: -.04em; }
+
+/* the bar: three shares, two dividers. A divider is a 4px cut in the bar with a white grip */
+.sb-bar { position: relative; height: 48px; margin-top: 20px; --a: 33; --b: 67; }
+.sb-s { position: absolute; top: 0; height: 100%; }
+.sb-s1 { left: 0; width: calc(var(--a) * 1%); background: #0B0C0D; }
+.sb-s2 { left: calc(var(--a) * 1%); width: calc((var(--b) - var(--a)) * 1%); background: #9EA88C; }
+.sb-s3 { left: calc(var(--b) * 1%); width: calc((100 - var(--b)) * 1%); background: #D9E0CC; }
+.sb-div { position: absolute; top: -6px; bottom: -6px; width: 28px; margin-left: -14px; cursor: ew-resize; touch-action: none; }
+.sb-div::before { content: ''; position: absolute; left: 12px; top: 6px; bottom: 6px; width: 4px; background: #fff; }
+.sb-div::after { content: ''; position: absolute; left: 8px; top: 12px; width: 12px; height: 36px; background: #fff;
+  background-image: linear-gradient(#0B0C0D, #0B0C0D), linear-gradient(#0B0C0D, #0B0C0D); background-size: 2px 14px, 2px 14px; background-position: 3px 11px, 7px 11px; background-repeat: no-repeat; }
+.sb-div.d1 { left: calc(var(--a) * 1%); }
+.sb-div.d2 { left: calc(var(--b) * 1%); }
+.sb-bar.glide .sb-s1, .sb-bar.glide .sb-s2, .sb-bar.glide .sb-s3, .sb-bar.glide .sb-div { transition: left 520ms cubic-bezier(.65, 0, .35, 1), width 520ms cubic-bezier(.65, 0, .35, 1); }
+
+.sb-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; }
+.sb-hint { margin: 0; font-size: 13px; color: rgba(11, 12, 13, .66); }
+.sb-go { height: 48px; padding: 0 28px; background: #0B0C0D; color: #fff; font-weight: 600; font-size: 15px; transition: transform 120ms cubic-bezier(.65, 0, .35, 1);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.sb-go:active, .sb-go.press { transform: translateY(2px); }
+
+.sb-sent { display: flex; align-items: center; gap: 12px; padding-top: 24px; }
+.sb-mk { width: 8px; height: 8px; background: #B8FF00; flex: none; }
+.sb-sent b { font-weight: 500; font-size: 15px; }
+.sb-sent .m { font: 400 13px/1.25 'Geist Mono', ui-monospace, monospace; color: rgba(11, 12, 13, .66); letter-spacing: -.02em; }
+.sb-sent .sb-even { margin-left: auto; }
+
+/* a digit: a clipped slot over a strip of 0 to 9 that rolls to --d */
+.dg { display: block; width: .6em; height: 1.25em; overflow: hidden; transition: width 520ms cubic-bezier(.16, 1, .3, 1); }
+.dg.off { width: 0; }
+.dg .st { display: block; transform: translateY(calc(var(--d, 0) * -1.25em)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.dg i { display: block; height: 1.25em; line-height: 1.25em; font-style: normal; text-align: center; }
+
+.sb.still *, .sb.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .sb *, .sb *::before { transition: none !important; } }
+</style>
+<style>
+  .sbw { display: grid; justify-items: start; align-content: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sbw" id="sbw">
+<!-- code -->
+<section class="sb" id="sb" aria-label="Split bill">
+  <div class="sb-top">
+    <div><p class="sb-kick">Kova · Split bill</p><h3 class="sb-title">Studio dinner <span>· $128.40</span></h3></div>
+    <button type="button" class="sb-even" id="sb-even">Even split</button>
+  </div>
+  <div class="sb-fold sb-form" id="sb-form"><div>
+    <div class="sb-people" id="sb-people"></div>
+    <div class="sb-bar glide" id="sb-bar">
+      <i class="sb-s sb-s1"></i><i class="sb-s sb-s2"></i><i class="sb-s sb-s3"></i>
+      <div class="sb-div d1" role="slider" tabindex="0" aria-orientation="horizontal" aria-valuemin="5" aria-valuemax="90" aria-label="Divider between Sera and Mina"></div>
+      <div class="sb-div d2" role="slider" tabindex="0" aria-orientation="horizontal" aria-valuemin="10" aria-valuemax="95" aria-label="Divider between Mina and Ravi"></div>
+    </div>
+    <div class="sb-foot">
+      <p class="sb-hint">Drag a divider, or use the arrow keys.</p>
+      <button type="button" class="sb-go" id="sb-go">Request</button>
+    </div>
+  </div></div>
+  <div class="sb-fold sb-done"><div>
+    <div class="sb-sent"><span class="sb-mk"></span><b>Requests sent · 2</b><span class="m" id="sb-req"></span><button type="button" class="sb-even" id="sb-edit">Edit split</button></div>
+  </div></div>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Drag a divider, arrow keys move 1%, Even split, Request</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Split bill. State: two divider positions in whole percent. Shares are percentages of the total in cents;
+   the first two round, the last takes the remainder, so the three always add up exactly. */
+const sb = document.getElementById('sb');
+const SB_TOTAL = 12840, SB_MIN = 5;
+const SB_PEOPLE = [
+  { n: 'Sera', bg: '#0B0C0D', fg: '#fff' },
+  { n: 'Mina', bg: '#9EA88C', fg: '#0B0C0D' },
+  { n: 'Ravi', bg: '#D9E0CC', fg: '#0B0C0D' },
+];
+const sbP = [33, 67];
+const sbBar = document.getElementById('sb-bar');
+const sbDiv = sbBar.querySelectorAll('.sb-div');
+
+function sbShares() {                                   // [{pct, cents}] that sum to SB_TOTAL
+  const pct = [sbP[0], sbP[1] - sbP[0], 100 - sbP[1]];
+  const c0 = Math.round(SB_TOTAL * pct[0] / 100), c1 = Math.round(SB_TOTAL * sbP[1] / 100) - c0;
+  const cents = [c0, c1, SB_TOTAL - c0 - c1];
+  return pct.map((p, i) => ({ pct: p, cents: cents[i] }));
+}
+function sbNum(host, n, fmt) {                          // n digit slots; fmt(slot index) may add separators after it
+  host.innerHTML = '';
+  const slots = Array.from({ length: n }, (_, i) => {
+    const d = document.createElement('span');
+    d.className = 'dg';
+    d.innerHTML = '<span class="st">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x) => '<i>' + x + '</i>').join('') + '</span>';
+    host.appendChild(d);
+    const sep = fmt && fmt(i);
+    if (sep) host.insertAdjacentHTML('beforeend', '<span>' + sep + '</span>');
+    return d;
+  });
+  return (v, lead) => slots.forEach((d, i) => {
+    const place = Math.pow(10, n - 1 - i);
+    d.firstChild.style.setProperty('--d', Math.floor(v / place) % 10);
+    d.classList.toggle('off', i < n - lead && v < place);
+  });
+}
+const sbSetAmt = [], sbSetPc = [];
+SB_PEOPLE.forEach((p, i) => {
+  const el = document.createElement('div');
+  el.className = 'sb-p';
+  el.innerHTML = '<span class="sb-av" style="background:' + p.bg + ';color:' + p.fg + '">' + p.n[0] + '</span><span class="sb-nm">' + p.n +
+    '</span><span class="sb-pc"></span><div class="sb-amt" aria-live="off"><span>$</span><span class="a" style="display:flex"></span></div>';
+  document.getElementById('sb-people').appendChild(el);
+  sbSetPc[i] = sbNum(el.querySelector('.sb-pc'), 2, null);
+  el.querySelector('.sb-pc').insertAdjacentHTML('beforeend', '<span>%</span>');
+  sbSetAmt[i] = sbNum(el.querySelector('.a'), 5, (k) => (k === 2 ? '.' : ''));
+  el.setAttribute('role', 'group');
+});
+
+function sbRender() {
+  sbBar.style.setProperty('--a', sbP[0]);
+  sbBar.style.setProperty('--b', sbP[1]);
+  const s = sbShares();
+  s.forEach((x, i) => { sbSetAmt[i](x.cents, 3); sbSetPc[i](x.pct, 1); });
+  sbDiv[0].setAttribute('aria-valuenow', sbP[0]); sbDiv[0].setAttribute('aria-valuetext', sbP[0] + '% for Sera');
+  sbDiv[1].setAttribute('aria-valuenow', sbP[1]); sbDiv[1].setAttribute('aria-valuetext', sbP[1] + '% for Sera and Mina');
+  document.getElementById('sb-even').disabled = sbP[0] === 33 && sbP[1] === 67;
+}
+function sbSet(i, v) {                                  // a divider moves money between its two neighbours only
+  v = Math.round(v);
+  const lo = i === 0 ? SB_MIN : sbP[0] + SB_MIN, hi = i === 0 ? sbP[1] - SB_MIN : 100 - SB_MIN;
+  v = Math.min(hi, Math.max(lo, v));
+  if (sbP[i] === v) return;
+  sbP[i] = v; sbRender();
+}
+function sbEven() { sbBar.classList.add('glide'); sbP[0] = 33; sbP[1] = 67; sbRender(); }
+function sbStill(fn) { sb.classList.add('still'); fn(); sb.getBoundingClientRect(); sb.classList.remove('still'); }
+function sbRequest() {
+  const s = sbShares();
+  document.getElementById('sb-req').textContent = '$' + ((s[1].cents + s[2].cents) / 100).toFixed(2) + ' from Mina and Ravi';
+  sb.classList.add('sent');
+}
+function sbEdit() { sb.classList.remove('sent'); }
+
+sbDiv.forEach((d, i) => {
+  const at = (e) => { const r = sbBar.getBoundingClientRect(); return ((e.clientX - r.left) / r.width) * 100; };
+  d.addEventListener('pointerdown', (e) => { d.setPointerCapture(e.pointerId); d.dataset.on = 1; sbBar.classList.remove('glide'); d.focus(); e.preventDefault(); });
+  d.addEventListener('pointermove', (e) => { if (d.dataset.on) sbSet(i, at(e)); });
+  const up = () => { delete d.dataset.on; };
+  d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
+  d.addEventListener('keydown', (e) => {
+    const k = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0;
+    if (!k) return;
+    e.preventDefault(); sbBar.classList.remove('glide');
+    sbSet(i, sbP[i] + k * (e.shiftKey ? 5 : 1));
+  });
+});
+document.getElementById('sb-even').addEventListener('click', sbEven);
+document.getElementById('sb-go').addEventListener('click', sbRequest);
+document.getElementById('sb-edit').addEventListener('click', sbEdit);
+sbStill(sbRender);
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const $ = (s) => document.querySelector(s);
+  async function moveTo(my, x, y, ms) { if (!(await QM.ghostTo(x, y, ms))) throw 0; if (my !== epoch) throw 0; }
+  const barX = (v) => { const r = $('#sb-bar').getBoundingClientRect(); return r.left + r.width * v / 100; };
+  const barY = () => { const r = $('#sb-bar').getBoundingClientRect(); return r.top + r.height * 0.5; };
+  async function drag(my, i, to, ms = 1100) {            // the ghost takes the grip and pulls it
+    const from = sbP[i], y = barY();
+    await moveTo(my, barX(from), y, 780);
+    await gap(my, 180);
+    $('#sb-bar').classList.remove('glide');
+    const t0 = performance.now();
+    await new Promise((res, rej) => {
+      const step = (now) => {
+        if (my !== epoch) return rej(0);
+        const p = Math.min(1, (now - t0) / ms), e = QM.easeInOut(p), v = from + (to - from) * e;
+        QM.ghostAt(barX(v), y);
+        sbSet(i, v);
+        p < 1 ? requestAnimationFrame(step) : res();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+  async function tap(my, el) {
+    const r = el.getBoundingClientRect();
+    await moveTo(my, r.left + r.width * 0.5, r.top + r.height * 0.55, 780);
+    await gap(my, 160);
+    el.classList.add('press'); await gap(my, 130); el.click(); await gap(my, 140); el.classList.remove('press');
+  }
+  function reset() { sbStill(() => { sbEdit(); sbBar.classList.remove('glide'); sbP[0] = 33; sbP[1] = 67; sbRender(); }); }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 900);
+        await drag(my, 0, 52); await gap(my, 1200);
+        await drag(my, 1, 84, 1000); await gap(my, 1300);
+        await tap(my, $('#sb-even')); await gap(my, 1500);
+        await drag(my, 0, 22, 1000); await gap(my, 1000);
+        await tap(my, $('#sb-go')); await gap(my, 1900);
+        await tap(my, $('#sb-edit')); await gap(my, 1200);
+        await QM.ghostTo(innerWidth * 0.85, innerHeight * 0.9, 600);
+        await gap(my, 300);
+        sbStill(sbEven);
+        await gap(my, 600);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!$('#sb').matches(':hover') && !$('#sb').contains(document.activeElement)) { reset(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  // the card keeps its open height so the folded card does not jump the stage
+  const fix = () => { const h = $('#sbw').offsetHeight; if (h) $('#sbw').style.minHeight = h + 'px'; };
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fix(); if (!reduced) setTimeout(script, 300); });
+})();
+</script>
+</body>
+</html>

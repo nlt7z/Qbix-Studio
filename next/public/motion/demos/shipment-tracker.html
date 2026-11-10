@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shipment tracker · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "shipment-tracker", "title": "Shipment tracker", "group": "studio", "added": "2026-11-09", "cat": "data", "order": 50,
+  "kind": "loop", "tone": "paper", "shot": 4200,
+  "line": "640 to 1000 ms marker · 560 ms headline roll · 560 ms rows, 40 ms stagger",
+  "summary": "Forma's order tracking card for two Morning mugs: a route with four stops, Packed, Shipped, Out for delivery and Delivered. Tap a stop and one lime marker travels the track to it with the move curve while the ink line fills behind it, the Arrives headline rolls to the new estimate, and the stop's three detail rows (time, place, note) slide in from the side, each row 40 ms after the last, replacing the previous stage's.",
+  "spec": [
+    ["Marker", "left over the track, 640 ms + 120 ms per stop travelled, cubic-bezier(.65, 0, .35, 1); the ink line scales with it"],
+    ["Stops", "square flips from light grey to ink as the marker reaches it, 240 ms, delayed to the marker's arrival"],
+    ["Headline", "four lines in a clipped window, translateY to the new estimate, 560 ms expo out"],
+    ["Detail rows", "three clipped rows, each a strip of four stages translated 100% per stage, 560 ms expo out, 40 ms between rows"],
+    ["Idle", "a ghost taps Out for delivery, Delivered, Packed and Shipped; real pointer or keys take over and it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A case study's delivery timeline, or the order page Qbix builds for a shop like Forma: the one card a customer opens to ask where their parcel is.",
+  "rules": [
+    "The marker is the only lime and always sits on the stop shown; the line behind it is ink, the line ahead stays light grey.",
+    "Stops are real buttons in a tab group (arrow keys move, Home and End jump); the headline, the marker and the rows all read one state.",
+    "Rows replace each other by sliding, never by fading; the direction follows the stage order, so going back slides back.",
+    "Nothing bounces: the marker uses the move curve, text and rows use expo out.",
+    "Under reduced motion the stage still changes, with no transition."
+  ],
+  "tags": ["tracking", "order", "route", "marker", "tabs", "headline roll", "Forma", "shipping", "details"]
+}
+</script>
+<style data-code>
+/* Shipment tracker. Ink #0B0C0D, near-white #F5F7F1 / #ECF0E6, one lime, no card behind point. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1). */
+.sp { width: 600px; padding: 24px; background: #fff; color: #0B0C0D; font: 400 15px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+:where(.sp button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.sp button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+
+/* header: order line, the rolling headline, the order's render */
+.sp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.sp-kick { margin: 0; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.sp-win { height: 52px; margin-top: 6px; overflow: hidden; }
+.sp-hl { transform: translateY(calc(var(--h, 1) * -52px)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.sp-hl h3 { margin: 0; height: 52px; overflow: hidden; font: 300 44px/52px Outfit, Geist, sans-serif; letter-spacing: -.035em; white-space: nowrap; }
+.sp-pic { flex: none; width: 72px; height: 72px; object-fit: cover; display: block; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+
+/* the route: a track with four stops and one marker */
+.sp-route { position: relative; margin-top: 22px; }
+.sp-trk { position: absolute; left: 12.5%; right: 12.5%; top: 8px; height: 4px; background: #ECF0E6; }
+.sp-fill { position: absolute; inset: 0; background: #0B0C0D; transform-origin: 0 50%; transform: scaleX(calc(var(--p, 1) / 3)); transition: transform var(--dur, 640ms) cubic-bezier(.65, 0, .35, 1); }
+.sp-stop { position: absolute; top: -4px; width: 12px; height: 12px; margin-left: -6px; background: #ECF0E6; transition: background-color 240ms cubic-bezier(.65, 0, .35, 1) var(--dl, 0ms); }
+.sp-stop.on { background: #0B0C0D; }
+.sp-mk { position: absolute; top: -8px; left: calc(var(--p, 1) / 3 * 100%); width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 2px #0B0C0D;
+  transition: left var(--dur, 640ms) cubic-bezier(.65, 0, .35, 1); }
+.sp-tabs { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); }
+.sp-tab { padding: 28px 4px 8px; font-size: 13px; font-weight: 500; text-align: center; color: rgba(11, 12, 13, .66); transition: color 240ms cubic-bezier(.65, 0, .35, 1); }
+.sp-tab[aria-selected='true'] { color: #0B0C0D; }
+
+/* the rows: three windows, each a strip of four stages that slides one stage at a time */
+.sp-rows { display: grid; gap: 4px; margin-top: 8px; }
+.sp-row { height: 44px; overflow: hidden; background: #F5F7F1; }
+.sp-strip { display: flex; height: 100%; transform: translateX(calc(var(--c, 1) * -100%)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1) calc(var(--i) * 40ms); }
+.sp-cell { flex: none; width: 100%; display: grid; grid-template-columns: 104px 168px 1fr; align-items: center; gap: 8px; padding: 0 16px; white-space: nowrap; }
+.sp-t { font: 400 13px/1.25 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; }
+.sp-p { font-weight: 500; }
+.sp-n { font-size: 13px; color: rgba(11, 12, 13, .66); overflow: hidden; }
+
+.sp.still *, .sp.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .sp *, .sp *::before { transition: none !important; } }
+</style>
+<style>
+  .spw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="spw">
+    <p class="kicker">Forma · Order tracking</p>
+<!-- code -->
+<section class="sp" id="sp" aria-label="Order tracking">
+  <div class="sp-head">
+    <div>
+      <p class="sp-kick">Order #1042 · Two Morning mugs</p>
+      <div class="sp-win" aria-live="polite"><div class="sp-hl" id="sp-hl"></div></div>
+    </div>
+    <img class="sp-pic" src="../assets/art/lime-bloom.webp" alt="">
+  </div>
+  <div class="sp-route" id="sp-route">
+    <div class="sp-trk" id="sp-trk"><div class="sp-fill"></div></div>
+    <div class="sp-tabs" id="sp-tabs" role="tablist" aria-label="Delivery stages"></div>
+  </div>
+  <div class="sp-rows" id="sp-rows"></div>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Tap a stage, or use the arrow keys</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Shipment tracker. One state {cur}; the marker, the line, the stops, the headline and the rows all read it through spRender(). */
+const sp = document.getElementById('sp');
+const SP = [
+  { name: 'Packed', hl: 'Arrives Friday', rows: [
+    ['Mon 09:12', 'Forma studio', 'Two Morning mugs wrapped in paper'],
+    ['Mon 09:40', 'Packing bench', 'Boxed and sealed, 1.4 kg'],
+    ['Mon 10:05', 'Dock 2', 'Label printed, ready for pickup'] ] },
+  { name: 'Shipped', hl: 'Arrives Thursday', rows: [
+    ['Mon 16:30', 'Portland hub', 'Picked up by Hollis Freight'],
+    ['Tue 02:10', 'Boise sort centre', 'Left on the night run'],
+    ['Tue 14:45', 'Salt Lake City hub', 'Scanned, on schedule'] ] },
+  { name: 'Out for delivery', hl: 'Arrives by 1 pm', rows: [
+    ['Thu 06:20', 'Denver depot', 'Loaded onto route 14'],
+    ['Thu 09:05', 'Capitol Hill', 'Six stops before yours'],
+    ['Thu 11:40', 'Pearl Street', 'Driver is two stops away'] ] },
+  { name: 'Delivered', hl: 'Delivered Thursday', rows: [
+    ['Thu 12:08', '1180 Pearl Street', 'Left at the front door'],
+    ['Thu 12:08', 'Photo on file', 'Signed for by Lena'],
+    ['Thu 12:10', 'Forma studio', 'Delivery confirmed to the studio'] ] },
+];
+const spS = { cur: 1 };
+const spTabs = document.getElementById('sp-tabs'), spTrk = document.getElementById('sp-trk');
+document.getElementById('sp-hl').innerHTML = SP.map((s) => '<h3>' + s.hl + '</h3>').join('');
+spTabs.innerHTML = SP.map((s, i) => '<button type="button" class="sp-tab" role="tab" data-i="' + i + '">' + s.name + '</button>').join('');
+SP.forEach((s, i) => { const d = document.createElement('i'); d.className = 'sp-stop'; d.style.left = (i / 3) * 100 + '%'; spTrk.appendChild(d); });
+spTrk.insertAdjacentHTML('beforeend', '<span class="sp-mk"></span>');
+document.getElementById('sp-rows').innerHTML = [0, 1, 2].map((r) => '<div class="sp-row"><div class="sp-strip" style="--i:' + r + '">' +
+  SP.map((s) => '<div class="sp-cell"><span class="sp-t">' + s.rows[r][0] + '</span><span class="sp-p">' + s.rows[r][1] + '</span><span class="sp-n">' + s.rows[r][2] + '</span></div>').join('') + '</div></div>').join('');
+
+function spRender(from) {
+  const i = spS.cur, hops = from == null ? 0 : Math.abs(i - from), dur = 640 + 120 * hops;
+  sp.style.setProperty('--dur', dur + 'ms');
+  sp.style.setProperty('--p', i);
+  sp.style.setProperty('--h', i);
+  sp.style.setProperty('--c', i);
+  spTrk.querySelectorAll('.sp-stop').forEach((d, j) => {
+    const f = from == null || from === i ? 0 : (j - from) / (i - from);   // when the marker passes this stop
+    d.style.setProperty('--dl', Math.max(0, Math.round(dur * f - 120)) + 'ms');
+    d.classList.toggle('on', j <= i);
+  });
+  spTabs.querySelectorAll('button').forEach((b, j) => { b.setAttribute('aria-selected', j === i); b.tabIndex = j === i ? 0 : -1; });
+}
+function spGo(i) { i = Math.max(0, Math.min(3, i)); if (i === spS.cur) return; const from = spS.cur; spS.cur = i; spRender(from); }
+function spStill(fn) { sp.classList.add('still'); fn(); sp.getBoundingClientRect(); sp.classList.remove('still'); }
+
+spTabs.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) spGo(+b.dataset.i); });
+spTabs.addEventListener('keydown', (e) => {
+  const to = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? spS.cur + 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? spS.cur - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? 3 : null;
+  if (to == null) return;
+  e.preventDefault();
+  spGo(to);
+  spTabs.querySelectorAll('button')[spS.cur].focus();
+});
+spStill(() => spRender());
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const tab = (i) => document.querySelectorAll('#sp-tabs button')[i];
+  async function tap(my, i) {
+    const r = tab(i).getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.7, 760))) throw 0;
+    if (my !== epoch) throw 0;
+    await gap(my, 160);
+    tab(i).click();
+  }
+  function reset() { spStill(() => { spS.cur = 1; spRender(); }); }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 1100);
+        await tap(my, 2); await gap(my, 2200);
+        await tap(my, 3); await gap(my, 2400);
+        await tap(my, 0); await gap(my, 2200);
+        await tap(my, 1); await gap(my, 1600);
+        await QM.ghostTo(innerWidth * 0.85, innerHeight * 0.9, 600);
+        await gap(my, 500);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { const el = document.getElementById('sp'); if (!el.matches(':hover') && !el.contains(document.activeElement)) { reset(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

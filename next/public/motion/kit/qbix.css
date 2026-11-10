@@ -1,7 +1,7 @@
 /* =============================================================================
    QBIX MOTION — the shared kit every demo stands on.
    The Blocks look (qbix.space since 2026-11-06, app/blocks.css): grounds white or
-   near-black #0B0C0D, tiles and fields the sage #EEF1E8, lime only as a point.
+   near-black #0B0C0D, tiles and fields the pale sage #EEF1E8 (never grey), lime only as a point.
    Headlines in Outfit (Light; ExtraLight for the biggest), body in Geist, small
    technical lines (code, hex, counters) in Geist Mono. Labels are sentence case,
    never tracked caps. No hairlines, no radii, no glass, no blur; the corner that
@@ -36,7 +36,7 @@
   /* the page's two tones, and the one lime */
   --paper: #ffffff;
   --paper-ink: #0B0C0D;
-  --sage: #EEF1E8;      /* tiles and fields on white */
+  --sage: #EEF1E8;      /* tiles and fields on white (2026-11-09: pale green yes, grey no) */
   --sage-2: #E3E8DA;
   --chalk: #f4f5f2;
   --signal: #B8FF00;

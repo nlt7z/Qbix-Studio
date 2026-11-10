@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product scrub · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "product-scrub", "title": "Product scrub", "group": "studio", "added": "2026-11-09", "cat": "images", "order": 30,
+  "kind": "pointer", "tone": "paper", "shot": 8600,
+  "line": "4 bands · 460 ms slide · 4 ticks",
+  "summary": "Forma's Fold vessel in a small shop grid. The picture is split into four invisible bands, and moving across it slides between four photographs of the bowl while four thin ticks along the foot fill to the one you are on. Leaving slides back to the first photo. The two neighbour tiles stay quiet.",
+  "spec": [
+    ["Bands", "the picture's width in four equal bands; the band under the pointer is the photo, floor(x / w × 4)"],
+    ["Slide", "the four photos sit in one strip, translateX 460 ms expo out; crossing two bands in one move slides through both, never a fade"],
+    ["Ticks", "four ticks of 3 px in the tile's foot; ticks up to the current photo fill ink, scaleX 320 ms ease-move"],
+    ["Leave", "pointer out of the picture: back to the first photo with the same slide, a touch quicker (360 ms)"],
+    ["Label", "\"4 photos\" in Geist Mono on a white chip, top left of the picture"],
+    ["Input", "the ghost sweeps the four bands and leaves; a real pointer or finger scrubs, and left and right arrow keys step when the tile has focus"],
+    ["Reduced motion", "no slide and no tick glide: the photo and ticks change at once, and the ghost does not move"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "A shop grid Qbix builds for a maker like Forma: every product tile shows its photos without a click, where a hover is the only gesture a buyer needs.",
+  "rules": [
+    "Photos slide, ticks fill. Nothing fades.",
+    "No arrows, dots or buttons on the picture: the bands are invisible and the ticks only report.",
+    "One tile is the subject. The neighbours are the same size, sit still, one render each, in secondary ink.",
+    "The four renders must read as views of one piece, so they share a family (fold, arc, sphere, bloom) and a green.",
+    "Touch scrubs too (pan-y stays free for the page); arrow keys step when the tile has focus."
+  ],
+  "tags": ["product", "image", "scrub", "hover", "gallery", "shop", "ticks"]
+}
+</script>
+<style data-code>
+/* Product scrub. Picture frame #F5F7F1, ink #0B0C0D, Outfit Light / Geist / Geist Mono. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1). */
+.ps-grid { display: grid; grid-template-columns: repeat(3, 228px); gap: 16px; align-items: start; color: #0B0C0D; font: 400 14px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+.ps-tile { display: block; }
+.ps-pic { position: relative; height: 260px; background: #F5F7F1; overflow: hidden; --cut: 16px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+
+/* the four photographs in one strip; the strip slides */
+.ps-view { position: absolute; left: 0; top: 0; width: 228px; height: 232px; overflow: hidden; touch-action: pan-y; cursor: ew-resize; outline: 0; }
+.ps-strip { display: flex; width: 912px; height: 100%; transform: translateX(calc(var(--i, 0) * -228px)); transition: transform var(--ms, 460ms) cubic-bezier(.16, 1, .3, 1); will-change: transform; }
+.ps-strip img { flex: none; width: 228px; height: 232px; object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; }
+.ps-chip { position: absolute; left: 12px; top: 12px; padding: 5px 8px 4px; background: #fff; font: 400 13px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -.01em; pointer-events: none; }
+.ps-pic:has(.ps-view:focus-visible) { box-shadow: inset 0 0 0 2px #0B0C0D; }
+
+/* ticks in the picture's foot: they only report where you are */
+.ps-ticks { position: absolute; left: 16px; right: 16px; bottom: 0; height: 28px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; align-content: center; pointer-events: none; }
+.ps-ticks i { display: block; height: 3px; background: #ECF0E6; overflow: hidden; }
+.ps-ticks b { display: block; height: 100%; background: #0B0C0D; transform: scaleX(0); transform-origin: left; transition: transform 320ms cubic-bezier(.65, 0, .35, 1); }
+.ps-ticks i.on b { transform: none; }
+
+.ps-info { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 14px; }
+.ps-name { margin: 0; font: 300 22px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; font-synthesis-weight: none; }
+.ps-sub { margin: 6px 0 0; font-size: 14px; font-weight: 400; color: rgba(11, 12, 13, .66); }
+.ps-price { font: 400 14px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; }
+
+/* quiet neighbours: same tile, one still render each, secondary ink */
+.ps-quiet .ps-name, .ps-quiet .ps-sub, .ps-quiet .ps-price { color: rgba(11, 12, 13, .66); }
+.ps-still { position: absolute; left: 0; top: 0; width: 228px; height: 232px; object-fit: cover; display: block; }
+
+@media (prefers-reduced-motion: reduce) { .ps-strip, .ps-ticks b { transition: none !important; } }
+</style>
+<style>
+  .fit { transform: scale(var(--s, 1)); transform-origin: center; display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="fit" id="fit">
+  <p class="kicker">Forma shop · Vessels</p>
+<!-- code -->
+<div class="ps-grid">
+  <article class="ps-tile ps-quiet">
+    <div class="ps-pic">
+      <img class="ps-still" src="../assets/art/lime-tube.webp" alt="Tube vase" draggable="false" style="object-position: 50% 50%">
+      <div class="ps-ticks" aria-hidden="true"></div>
+    </div>
+    <div class="ps-info"><div><h3 class="ps-name">Tube vase</h3><p class="ps-sub">Moss glaze</p></div><span class="ps-price">$38</span></div>
+  </article>
+
+  <article class="ps-tile" id="ps">
+    <div class="ps-pic">
+      <div class="ps-view" id="ps-view" tabindex="0" role="group" aria-roledescription="photo scrub" aria-label="Fold vessel, 4 photos. Move across or use the arrow keys.">
+        <div class="ps-strip" id="ps-strip" style="--i:0">
+          <img src="../assets/art/lime-fold.webp" alt="Fold vessel, photo 1 of 4" draggable="false" style="object-position: 30% 50%">
+          <img src="../assets/art/lime-arc.webp" alt="Fold vessel, photo 2 of 4" draggable="false" style="object-position: 60% 50%">
+          <img src="../assets/art/lime-sphere.webp" alt="Fold vessel, photo 3 of 4" draggable="false" style="object-position: 100% 0%">
+          <img src="../assets/art/lime-bloom.webp" alt="Fold vessel, photo 4 of 4" draggable="false" style="object-position: 45% 50%">
+        </div>
+        <span class="ps-chip">4 photos</span>
+      </div>
+      <div class="ps-ticks" id="ps-ticks" aria-hidden="true"><i class="on"><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+    </div>
+    <div class="ps-info"><div><h3 class="ps-name">Fold vessel</h3><p class="ps-sub">Ash glaze</p></div><span class="ps-price">$54</span></div>
+  </article>
+
+  <article class="ps-tile ps-quiet">
+    <div class="ps-pic">
+      <img class="ps-still" src="../assets/art/lime-chrome.webp" alt="Chrome dish" draggable="false" style="object-position: 50% 50%">
+      <div class="ps-ticks" aria-hidden="true"></div>
+    </div>
+    <div class="ps-info"><div><h3 class="ps-name">Chrome dish</h3><p class="ps-sub">Silver glaze</p></div><span class="ps-price">$72</span></div>
+  </article>
+</div>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Move across the picture</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Product scrub. The photo is the band under the pointer; the strip slides, the ticks fill up to it. */
+const Scrub = (() => {
+  const view = document.getElementById('ps-view'), strip = document.getElementById('ps-strip');
+  const ticks = [...document.querySelectorAll('#ps-ticks i')];
+  const N = 4;
+  let cur = 0, over = false;
+  const set = (i, ms) => {
+    i = Math.max(0, Math.min(N - 1, i));
+    if (i === cur) return;
+    cur = i;
+    strip.style.setProperty('--ms', ms + 'ms');
+    strip.style.setProperty('--i', i);
+    ticks.forEach((t, k) => t.classList.toggle('on', k <= i));
+    view.setAttribute('aria-label', 'Fold vessel, photo ' + (i + 1) + ' of 4. Move across or use the arrow keys.');
+  };
+  // client x -> band; null when the pointer is outside the picture
+  function at(cx, cy) {
+    const r = view.getBoundingClientRect();
+    if (cx < r.left || cx >= r.right || cy < r.top || cy >= r.bottom) return null;
+    return Math.floor(((cx - r.left) / r.width) * N);
+  }
+  const back = () => set(0, 360);
+  function ghost(x, y) { const b = at(x, y); if (b === null) back(); else set(b, 460); }
+  // a real pointer: on the picture only; leaving slides back to the first photo
+  view.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') over = true; });
+  view.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') over = true; const b = at(e.clientX, e.clientY); if (b !== null) set(b, 460); });
+  view.addEventListener('pointerdown', (e) => { const b = at(e.clientX, e.clientY); if (b !== null) set(b, 460); });
+  view.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') over = false; if (e.pointerType === 'mouse' || e.pointerType === 'touch') back(); });
+  view.addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') back(); });
+  view.addEventListener('keydown', (e) => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (d) { e.preventDefault(); set(cur + d, 460); }
+  });
+  view.addEventListener('blur', back);
+  return { view, ghost, back, get over() { return over; } };
+})();
+</script>
+<script>
+  const fit = () => document.getElementById('fit').style.setProperty('--s', Math.max(0.5, Math.min(1.8, innerWidth / 800, innerHeight / 500)).toFixed(3));
+  addEventListener('resize', fit); fit();
+
+  // the ghost's hand: [seconds, x, y] as fractions of the picture, stop to stop; it leaves below, comes back along the foot
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ez = QM.bezier(0.65, 0, 0.35, 1);
+  const KEYS = [
+    [0, 0.12, 1.55], [1.0, 0.12, 0.55], [2.4, 0.12, 0.55],
+    [3.3, 0.37, 0.5], [4.7, 0.37, 0.5],
+    [5.6, 0.62, 0.55], [7.0, 0.62, 0.55],
+    [7.9, 0.88, 0.5], [9.3, 0.88, 0.5],
+    [10.2, 0.88, 1.55], [11.2, 0.88, 1.55], [12.2, 0.12, 1.55],
+  ];
+  const PERIOD = KEYS[KEYS.length - 1][0];
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y, ghost) => { if (ghost && !reduced && !Scrub.over) Scrub.ghost(x, y); },
+    leave: () => { if (!Scrub.over) Scrub.back(); },
+    path(t) {
+      const r = Scrub.view.getBoundingClientRect();
+      const u = Math.max(0, t) % PERIOD;
+      let i = 0; while (i < KEYS.length - 2 && u >= KEYS[i + 1][0]) i++;
+      const a = KEYS[i], b = KEYS[i + 1], p = ez(Math.min(1, Math.max(0, (u - a[0]) / (b[0] - a[0]))));
+      // a little drift while it rests, so the hand is never dead still
+      const wob = Math.sin(t * 2.1) * 0.012;
+      return [r.left + (a[1] + (b[1] - a[1]) * p + wob) * r.width, r.top + (a[2] + (b[2] - a[2]) * p + wob * 2) * r.height];
+    },
+  });
+</script>
+</body>
+</html>

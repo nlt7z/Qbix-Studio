@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrast check · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "contrast-check", "title": "Contrast check", "group": "studio", "added": "2026-11-09", "cat": "feedback", "order": 70,
+  "kind": "loop", "tone": "paper", "shot": 4800,
+  "line": "WCAG ratio · 560 ms digit roll · 360 ms badge flip",
+  "summary": "A Strata contrast check: a large Aa and a line of text on a neutral grey swatch, one lightness control for the text colour. Drag it and the colour glides, the ratio is computed from the real WCAG formula and rolls digit by digit, and the AA and AAA badges flip between pass (ink, a drawn tick) and fail (light grey, a drawn cross) the moment the ratio crosses 4.5 and 7. One lime point marks 4.5 on the control.",
+  "spec": [
+    ["Ratio", "(L1 + 0.05) / (L2 + 0.05) from the sRGB relative luminance of the rendered colours, shown to two decimals"],
+    ["Digits", "each digit is a strip of 0 to 9 in a clipped slot, translateY 560 ms expo out"],
+    ["Text colour", "color glides 200 ms expo out to the control's value"],
+    ["Badge flip", "an ink block uncovers left to right in 360 ms expo out; tick or cross draws with stroke-dashoffset 260 ms, 100 ms late"],
+    ["Marker", "one lime bar on the track at the lightness where the ratio is exactly 4.5; an ink tick marks 7"],
+    ["Trigger", "range input (drag, arrow keys); idle, a ghost drags across both thresholds"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-09"],
+  "where": "Strata's colour step: the check a client runs on their text and brand colour before the palette is signed off.",
+  "rules": [
+    "The ratio is computed, never looked up: parse both colours, linearise sRGB, weight 0.2126 / 0.7152 / 0.0722, divide.",
+    "A badge passes at or above its threshold (4.5 and 7) and the displayed number is the same value the badges read.",
+    "The control is a real range input, so keys and drag both work; the lime point is the only lime and sits at 4.5.",
+    "Nothing bounces: digits and badges use expo out, the colour glide is short so it never lags a drag.",
+    "Under reduced motion every value still changes, with no transition."
+  ],
+  "tags": ["contrast", "WCAG", "accessibility", "slider", "badge", "digit roll", "Strata", "colour"]
+}
+</script>
+<style data-code>
+/* Contrast check. Ink #0B0C0D on white, no card; neutral swatch, fields #F5F7F1 / #ECF0E6, one lime point. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1). */
+.cc { width: 360px; padding: 8px; background: #fff; color: #0B0C0D; font: 400 15px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+.cc input:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+
+/* the sample: a large Aa and a line on the background swatch */
+.cc-sw { position: relative; height: 176px; padding: 18px 20px; background: var(--bg); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); display: flex; flex-direction: column; justify-content: space-between; }
+.cc-aa { margin: 0; font: 300 104px/.8 Outfit, Geist, sans-serif; letter-spacing: -.04em; color: var(--fg); padding-top: 12px;
+  transition: color 200ms cubic-bezier(.16, 1, .3, 1); }
+.cc-line { margin: 0; font: 300 28px/1 Outfit, Geist, sans-serif; letter-spacing: -.03em; color: var(--fg); transition: color 200ms cubic-bezier(.16, 1, .3, 1); }
+.cc-hex { position: absolute; right: 16px; top: 14px; font: 400 13px/1.25 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); text-align: right; }
+
+/* the result row: the ratio and its two badges */
+.cc-res { display: flex; align-items: flex-end; justify-content: space-between; padding: 16px 12px 0 12px; }
+.cc-kick { margin: 0; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.cc-ratio { display: flex; margin-top: 2px; font: 400 28px/1.25 'Geist Mono', ui-monospace, monospace; letter-spacing: -.04em; }
+.cc-ratio .sfx { color: rgba(11, 12, 13, .38); }
+.cc-bds { display: flex; gap: 6px; padding-bottom: 3px; }
+.cc-bd { position: relative; display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; background: #F5F7F1; color: rgba(11, 12, 13, .66);
+  font-size: 13px; font-weight: 600; transition: color 240ms cubic-bezier(.16, 1, .3, 1) 60ms; }
+.cc-bd::before { content: ''; position: absolute; inset: 0; background: #0B0C0D; clip-path: inset(0 100% 0 0); transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1); }
+.cc-bd > * { position: relative; }
+.cc-bd.pass { color: #fff; }
+.cc-bd.pass::before { clip-path: inset(0); }
+.cc-bd i { font: 400 13px/1 'Geist Mono', ui-monospace, monospace; font-style: normal; letter-spacing: -.02em; opacity: .66; }
+.cc-bd svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; overflow: visible; }
+.cc-bd path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 260ms cubic-bezier(.16, 1, .3, 1); }
+.cc-bd .x { stroke-dashoffset: 0; }
+.cc-bd.pass .x { stroke-dashoffset: 1; }
+.cc-bd.pass .t { stroke-dashoffset: 0; transition-delay: 100ms; }
+
+/* the control: a native range input with the 4.5 marker (lime) and the 7 tick */
+.cc-ctl { padding: 14px 12px 8px; }
+.cc-lab { display: flex; align-items: baseline; justify-content: space-between; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.cc-val { display: flex; font: 400 13px/1.25 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: #0B0C0D; }
+.cc-trk { position: relative; margin-top: 4px; }
+.cc-rng { -webkit-appearance: none; appearance: none; position: relative; display: block; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; }
+.cc-rng::-webkit-slider-runnable-track { height: 8px; background: linear-gradient(90deg, #0B0C0D var(--f, 50%), #ECF0E6 var(--f, 50%)); }
+.cc-rng::-moz-range-track { height: 8px; background: #ECF0E6; }
+.cc-rng::-moz-range-progress { height: 8px; background: #0B0C0D; }
+.cc-rng::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 24px; margin-top: -8px; background: #0B0C0D; border: 0; }
+.cc-rng::-moz-range-thumb { width: 16px; height: 24px; background: #0B0C0D; border: 0; border-radius: 0; }
+.cc-mk { position: absolute; top: 2px; width: 4px; height: 24px; margin-left: -2px; pointer-events: none; z-index: 0; }
+.cc-mk.aa { background: #B8FF00; }
+.cc-mk.aaa { top: 10px; height: 8px; width: 2px; margin-left: -1px; background: rgba(11, 12, 13, .38); }
+.cc-tk { position: absolute; top: 0; transform: translateX(-50%); font: 400 13px/1.25 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); pointer-events: none; }
+.cc-tks { position: relative; height: 20px; }
+
+/* a digit: a clipped slot over a strip of 0 to 9 that rolls to --d */
+.dg { display: block; width: .6em; height: 1.25em; overflow: hidden; transition: width 520ms cubic-bezier(.16, 1, .3, 1); }
+.dg.off { width: 0; }
+.dg .st { display: block; transform: translateY(calc(var(--d, 0) * -1.25em)); transition: transform 560ms cubic-bezier(.16, 1, .3, 1); }
+.dg i { display: block; height: 1.25em; line-height: 1.25em; font-style: normal; text-align: center; }
+.dot { display: block; width: .3em; margin-left: -.07em; text-align: center; }
+
+.cc.still *, .cc.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .cc *, .cc *::before { transition: none !important; } }
+</style>
+<style>
+  .ccw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="ccw">
+    <p class="kicker">Strata · Colour check</p>
+<!-- code -->
+<section class="cc" id="cc" aria-label="Contrast check">
+  <div class="cc-sw" id="cc-sw">
+    <p class="cc-aa" aria-hidden="true">Aa</p>
+    <p class="cc-line">Book a session</p>
+    <span class="cc-hex" id="cc-hex"></span>
+  </div>
+  <div class="cc-res">
+    <div>
+      <p class="cc-kick">Contrast ratio</p>
+      <div class="cc-ratio" id="cc-ratio" aria-live="polite"></div>
+    </div>
+    <div class="cc-bds">
+      <div class="cc-bd" id="cc-aa"><svg viewBox="0 0 12 12" aria-hidden="true"><path class="x" pathLength="1" d="M2 2 L10 10 M10 2 L2 10"/><path class="t" pathLength="1" d="M1.5 6.5 L4.8 9.8 L10.5 2.5"/></svg><span>AA</span><i>4.5</i></div>
+      <div class="cc-bd" id="cc-aaa"><svg viewBox="0 0 12 12" aria-hidden="true"><path class="x" pathLength="1" d="M2 2 L10 10 M10 2 L2 10"/><path class="t" pathLength="1" d="M1.5 6.5 L4.8 9.8 L10.5 2.5"/></svg><span>AAA</span><i>7</i></div>
+    </div>
+  </div>
+  <div class="cc-ctl">
+    <label class="cc-lab" for="cc-l">Text lightness <span class="cc-val" id="cc-lv"></span></label>
+    <div class="cc-trk" id="cc-trk">
+      <span class="cc-mk aaa" id="cc-mk7"></span><span class="cc-mk aa" id="cc-mk45"></span>
+      <input class="cc-rng" id="cc-l" type="range" min="0" max="45" step="1" value="21">
+    </div>
+    <div class="cc-tks"><span class="cc-tk" id="cc-t45">4.5</span><span class="cc-tk" id="cc-t7">7</span></div>
+  </div>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Drag the lightness, or use the arrow keys</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Contrast check. One state: the text lightness L (0..45). The colour, the WCAG ratio, the digits, the badges and the hex all read it through ccRender(). */
+const cc = document.getElementById('cc');
+const CC_BG = '#A8B298', CC_DEF = 21, CC_MAX = 45;
+
+function ccHsl(h, s, l) {                              // hsl -> [r, g, b] 0..255
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l), f = (n) => { const k = (n + h / 30) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  return [f(0), f(8), f(4)].map((x) => Math.round(x * 255));
+}
+function ccLum(rgb) {                                  // WCAG relative luminance
+  const [r, g, b] = rgb.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const ccBgRgb = [1, 3, 5].map((i) => parseInt(CC_BG.substr(i, 2), 16));
+const ccTextRgb = (L) => ccHsl(0, 0, L);
+function ccRatio(L) {
+  const a = ccLum(ccBgRgb), b = ccLum(ccTextRgb(L)), hi = Math.max(a, b), lo = Math.min(a, b);
+  return (hi + 0.05) / (lo + 0.05);
+}
+const ccHex = (rgb) => '#' + rgb.map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+function ccAt(t) { let L = 0; for (let i = 0; i <= CC_MAX * 10; i++) { if (ccRatio(i / 10) >= t) L = i / 10; } return L; }   // last lightness that still passes
+
+function ccNum(host, spec) {                           // spec: [{d:1}|{dot:1}|{pct:1}...] -> setter(value)
+  host.innerHTML = '';
+  const slots = [];
+  spec.forEach((s) => {
+    if (s.t) { host.insertAdjacentHTML('beforeend', '<span class="' + (s.c || '') + '">' + s.t + '</span>'); return; }
+    const d = document.createElement('span');
+    d.className = 'dg';
+    d.innerHTML = '<span class="st">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((x) => '<i>' + x + '</i>').join('') + '</span>';
+    host.appendChild(d);
+    slots.push([d, s.p]);
+  });
+  return (v, lead) => slots.forEach(([d, place]) => {
+    d.firstChild.style.setProperty('--d', Math.floor(v / place) % 10);
+    d.classList.toggle('off', !!lead && place >= 10 && v < place);
+  });
+}
+const ccSetRatio = ccNum(document.getElementById('cc-ratio'), [{ p: 100 }, { t: '.', c: 'dot' }, { p: 10 }, { p: 1 }, { t: ':1', c: 'sfx' }]);
+const ccSetL = ccNum(document.getElementById('cc-lv'), [{ p: 10 }, { p: 1 }, { t: '%' }]);
+const ccL = document.getElementById('cc-l');
+let ccL0 = CC_DEF;
+
+function ccPlace() {                                   // marker positions from the real thresholds
+  const w = document.getElementById('cc-trk').clientWidth;
+  [['45', 4.5], ['7', 7]].forEach(([k, t]) => {
+    const x = 8 + (w - 16) * (ccAt(t) + 0.5) / CC_MAX;
+    document.getElementById('cc-mk' + k).style.left = x + 'px';
+    document.getElementById('cc-t' + k).style.left = x + 'px';
+  });
+}
+function ccRender() {
+  const L = ccL0, rgb = ccTextRgb(L), r = ccRatio(L), r2 = Math.round(r * 100) / 100;
+  cc.style.setProperty('--bg', CC_BG);
+  cc.style.setProperty('--fg', ccHex(rgb));
+  document.getElementById('cc-sw').style.setProperty('--bg', CC_BG);
+  document.getElementById('cc-sw').style.setProperty('--fg', ccHex(rgb));
+  document.getElementById('cc-hex').innerHTML = 'Background ' + CC_BG + '<br>Text ' + ccHex(rgb);
+  ccSetRatio(Math.round(r * 100));
+  ccSetL(L, true);
+  document.getElementById('cc-aa').classList.toggle('pass', r2 >= 4.5);
+  document.getElementById('cc-aaa').classList.toggle('pass', r2 >= 7);
+  ccL.value = L;
+  ccL.style.setProperty('--f', ((L + 0.5) / CC_MAX) * 100 + '%');
+  ccL.setAttribute('aria-valuetext', L + '%, contrast ' + r2.toFixed(2) + ' to 1');
+}
+function ccSet(v) { v = Math.max(0, Math.min(CC_MAX, +v)); if (v === ccL0) return; ccL0 = v; ccRender(); }
+function ccStill(fn) { cc.classList.add('still'); fn(); cc.getBoundingClientRect(); cc.classList.remove('still'); }
+
+ccL.addEventListener('input', (e) => ccSet(e.target.value));
+ccPlace();
+ccStill(ccRender);
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const $ = (s) => document.querySelector(s);
+  const thumbX = (v) => { const r = ccL.getBoundingClientRect(); return r.left + 8 + (r.width - 16) * (v / CC_MAX); };
+  async function moveTo(my, x, y, ms) { if (!(await QM.ghostTo(x, y, ms))) throw 0; if (my !== epoch) throw 0; }
+  async function drag(my, to, ms = 1400) {               // the ghost takes the thumb and pulls it
+    const r = ccL.getBoundingClientRect(), y = r.top + r.height * 0.5, from = ccL0;
+    await moveTo(my, thumbX(from), y, 760);
+    await gap(my, 180);
+    const x0 = thumbX(from), x1 = thumbX(to), t0 = performance.now();
+    await new Promise((res, rej) => {
+      const step = (now) => {
+        if (my !== epoch) return rej(0);
+        const p = Math.min(1, (now - t0) / ms), e = QM.easeInOut(p);
+        QM.ghostAt(x0 + (x1 - x0) * e, y);
+        ccSet(Math.round(from + (to - from) * e));
+        p < 1 ? requestAnimationFrame(step) : res();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+  function reset() { ccStill(() => { ccL0 = CC_DEF; ccRender(); }); }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 900);
+        await drag(my, 3, 1500); await gap(my, 1500);       // both pass
+        await drag(my, 29, 1900); await gap(my, 1500);      // both fail
+        await drag(my, 16, 1200); await gap(my, 1500);      // AA only
+        await drag(my, CC_DEF, 800); await gap(my, 1400);
+        await QM.ghostTo(innerWidth * 0.85, innerHeight * 0.9, 600);
+        await gap(my, 400);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!$('#cc').matches(':hover') && !$('#cc').contains(document.activeElement)) { reset(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { ccPlace(); if (!reduced) setTimeout(script, 300); });
+})();
+</script>
+</body>
+</html>
