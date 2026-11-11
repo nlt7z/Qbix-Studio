@@ -16,21 +16,58 @@
   "n": 7,
   "tone": "paper",
   "shot": 20000,
+  "preview": {
+    "secs": 12.2,
+    "speed": 3.3,
+    "skip": 400
+  },
   "line": "70 parts · 7 states · sketch to sound",
   "summary": "A compact hi-fi bookshelf speaker followed through its whole making in seven states from one number t: a pencil sketch drawn stroke by stroke, the sketch lifting into a CAD wireframe that closes into clay, the clay exploding into its real parts that take their materials under a scan line, three productions (milled cabinet, pressed cone, turned knob), finishing (glaze, lime dip, perforated grille), assembly with real fasteners, and the finished speaker switching on.",
   "spec": [
-    ["Model", "Satin white ceramic cabinet (extruded rounded shell with filleted rims, separate front baffle with a shadow gap, recessed ink rear panel), 6.5 inch woofer with spoked basket, rubber roll surround, concave ink cone, lime glazed dust cap, trim ring with four hex socket screws, metal dome tweeter in a waveguide behind a perforated grille, knurled aluminium knob, status light, engraved wordmark, flared port, two knurled binding posts, crossover board with coil, capacitors and resistor, wiring, damping wool, four rubber feet"],
-    ["State 1", "ink strokes draw a front elevation and a three-quarter view with construction lines, centre lines, dimension ticks and measurements, each stroke with its own pressure and a little overshoot"],
-    ["State 2", "the three-quarter strokes lift off the sheet into the model's real edges, the sheet slides away, a front sweeps the wire into matte clay, a section plane cuts the cabinet wall and port in ink hatch"],
-    ["State 3", "the clay separates along the front-back axis in even steps, a scan line gives each part its true material"],
-    ["State 4", "three makings in turn: a tool head mills the cabinet from a block layer by layer, two dies press the cone, a cutter turns the knob on a lathe"],
-    ["State 5", "a glaze front travels over the cabinet, the dust cap is dipped in lime, holes appear across the grille in a wave"],
-    ["State 6", "crossover and wiring, wool, binding posts, rear panel, driver with four screws driving in, tweeter and grille, knob, feet"],
-    ["State 7", "the status light comes on, the cone pulses with concentric ripples and the dust cap follows, slow push"],
-    ["Easing", "expo out (0.16, 1, 0.3, 1) for arrivals, move (0.65, 0, 0.35, 1) for moves; nothing bounces"],
-    ["Render", "studio environment from emissive panels (PMREM), one soft key with shadows, ACESFilmic with a luminance-preserving last pass, GTAO, bokeh with a focus track, SMAA; lighter settings in headless"]
+    [
+      "Model",
+      "Satin white ceramic cabinet (extruded rounded shell with filleted rims, separate front baffle with a shadow gap, recessed ink rear panel), 6.5 inch woofer with spoked basket, rubber roll surround, concave ink cone, lime glazed dust cap, trim ring with four hex socket screws, metal dome tweeter in a waveguide behind a perforated grille, knurled aluminium knob, status light, engraved wordmark, flared port, two knurled binding posts, crossover board with coil, capacitors and resistor, wiring, damping wool, four rubber feet"
+    ],
+    [
+      "State 1",
+      "ink strokes draw a front elevation and a three-quarter view with construction lines, centre lines, dimension ticks and measurements, each stroke with its own pressure and a little overshoot"
+    ],
+    [
+      "State 2",
+      "the three-quarter strokes lift off the sheet into the model's real edges, the sheet slides away, a front sweeps the wire into matte clay, a section plane cuts the cabinet wall and port in ink hatch"
+    ],
+    [
+      "State 3",
+      "the clay separates along the front-back axis in even steps, a scan line gives each part its true material"
+    ],
+    [
+      "State 4",
+      "three makings in turn: a tool head mills the cabinet from a block layer by layer, two dies press the cone, a cutter turns the knob on a lathe"
+    ],
+    [
+      "State 5",
+      "a glaze front travels over the cabinet, the dust cap is dipped in lime, holes appear across the grille in a wave"
+    ],
+    [
+      "State 6",
+      "crossover and wiring, wool, binding posts, rear panel, driver with four screws driving in, tweeter and grille, knob, feet"
+    ],
+    [
+      "State 7",
+      "the status light comes on, the cone pulses with concentric ripples and the dust cap follows, slow push"
+    ],
+    [
+      "Easing",
+      "expo out (0.16, 1, 0.3, 1) for arrivals, move (0.65, 0, 0.35, 1) for moves; nothing bounces"
+    ],
+    [
+      "Render",
+      "studio environment from emissive panels (PMREM), one soft key with shadows, ACESFilmic with a luminance-preserving last pass, GTAO, bokeh with a focus track, SMAA; lighter settings in headless"
+    ]
   ],
-  "source": ["Qbix Motion · Studio · 2026-11-10"],
+  "source": [
+    "Qbix Motion · Studio · 2026-11-10"
+  ],
   "where": "A case study's process section or a hardware product's launch page: one object followed from sketch to finished product, with the state readout naming each step.",
   "rules": [
     "Needs three.js r160 and the extras bundle (kit/three-plus.js, global THREE); classic script, nothing else. Falls back to a plain render if a pass fails.",
@@ -38,7 +75,18 @@
     "Lime is a glaze: #B8FF00 must read as vivid lime in the lit faces, never pastel or whitish; shade leans pale green, never grey.",
     "Nothing bounces. Under reduced motion the speaker rests as a still frame and the scrubber still seeks."
   ],
-  "tags": ["three.js", "3D", "product", "speaker", "sketch", "CAD", "manufacturing", "assembly", "lime glaze", "states"]
+  "tags": [
+    "three.js",
+    "3D",
+    "product",
+    "speaker",
+    "sketch",
+    "CAD",
+    "manufacturing",
+    "assembly",
+    "lime glaze",
+    "states"
+  ]
 }
 </script>
 <style data-code>
@@ -295,14 +343,14 @@ const SPK = (() => {
   const key = new T.DirectionalLight(0xffffff, 1.1);
   key.position.set(-30, 52, 40); key.castShadow = true;
   key.shadow.mapSize.set(SOFT ? 1024 : 2048, SOFT ? 1024 : 2048); key.shadow.bias = -0.0008; key.shadow.normalBias = 0.05; key.shadow.radius = 6; key.shadow.blurSamples = 12;
-  Object.assign(key.shadow.camera, { left: -50, right: 50, top: 36, bottom: -36, near: 5, far: 300 });
+  Object.assign(key.shadow.camera, { left: -50, right: 50, top: 36, bottom: -36, near: 10, far: 220 });
   scene.add(key); scene.add(key.target);
   scene.add(new T.HemisphereLight(0xffffff, 0xD6E4BC, 0.5));
 
   /* ------------------------------------------------------------------ materials. Every part's materials share one patched shader:
      a front (a world-space plane, uF = normal and offset) splits the part into "done" (behind it: its true material) and "not yet"
      (ahead of it: clay, or raw stock). The band is soft, a thin lime line rides on it. */
-  const CLAY = 0xE5E9DC, STOCK = 0xE3D3BB, LIME = 0x8FE000;
+  const CLAY = 0xE5E9DC, STOCK = 0xDDE5CF, LIME = 0x8FE000;
   const B = {
     ceramic: { color: 0xF2F4EE, roughness: 0.44, clearcoat: 0.24, clearcoatRoughness: 0.3, envMapIntensity: 0.8 },
     ink: { color: 0x15181b, metalness: 0.8, roughness: 0.32, envMapIntensity: 1.0 },
@@ -640,7 +688,7 @@ const SPK = (() => {
 
   /* ------------------------------------------------------------------ production: stations, tools and work pieces */
   const MODEL = plist.slice();
-  const STX = [112, 154, 194];            // cabinet mill, cone press, lathe
+  const STX = [112, 182, 252];            // cabinet mill, cone press, lathe
   const stockOf = (P) => { P.setAlt(STOCK); P.U.uAltR.value = 0.92; return P; };
   const shellGeo = shell.meshes[0].geometry;
   // a work piece group (own part, own plane) hung under a parent
@@ -726,16 +774,16 @@ const SPK = (() => {
   knob.meshes.forEach((m) => { const mm = wknob.add(m.geometry, m.userData.key, { nowire: true, pos: m.position.toArray(), rot: [m.rotation.x, m.rotation.y, m.rotation.z] }); void mm; });
   wknob.g.children.forEach((c) => { c.position.y += 0; }); wknob.U.uCut.value = -1;
   // work pieces for finishing: the dust cap and the grille
-  const RX1 = 136, RX2 = 172, RZ = 23;
+  const RX1 = 217, RX2 = 217, RZ = 42, RZ2 = 80;
   const wcap = part('wcap', [RX1, 14, RZ]); wcap.g.rotation.x = Math.PI / 2;
-  wcap.add(cap.meshes[0].geometry.clone().translate(0, 0, -10.05), 'lime', { nowire: true }); stockOf(wcap); wcap.raw();
-  const wrod = part('wrod', [RX1, 14, RZ]); wrod.done(); wrod.add(new T.CylinderGeometry(0.3, 0.3, 14, 14), 'steel', { pos: [0, 8.2, 0], nowire: true });
-  const wgrille = part('wgrille', [RX2, 3.6, RZ]); wgrille.g.rotation.x = -Math.PI / 2;
+  wcap.add(cap.meshes[0].geometry.clone().translate(0, 0, -10.05), 'lime', { nowire: true, mat: { clearcoat: 0.5, clearcoatRoughness: 0.2, roughness: 0.3, envMapIntensity: 0.3 } }); stockOf(wcap); wcap.raw();
+  const wrod = part('wrod', [RX1, 14, RZ]); wrod.done(); wrod.add(new T.CylinderGeometry(0.3, 0.3, 9, 14), 'steel', { pos: [0, 5.7, 0], nowire: true });
+  const wgrille = part('wgrille', [RX2, 3.6, RZ2]); wgrille.g.rotation.x = -Math.PI / 2;
   grille.meshes.forEach((m, i) => { wgrille.add(m.geometry.clone().translate(0, 0, -12.5), m.userData.key, i === 1 ? { nowire: true, cast: false, noAO: true, mat: { side: T.DoubleSide }, extra: grilleExtra } : { nowire: true }); });
   const bath = part('bath', [RX1, 0, RZ]); bath.done();
   { bath.add(lathe([[0, 0, 0], [3.4, 0, 0.2], [3.4, 2.0, 0.15], [3.0, 2.0, 0.05], [3.0, 0.4, 0.1], [0, 0.4, 0]], { seg: 56, n: 3 }), 'ink', { nowire: true });
     bath.add(lathe([[0, 1.5, 0], [3.0, 1.5, 0], [3.0, 1.62, 0.04], [0, 1.62, 0]], { seg: 56, n: 2 }), 'lime', { nowire: true, cast: false }); }
-  const plinth = part('plinth', [RX2, 0, RZ]); plinth.done();
+  const plinth = part('plinth', [RX2, 0, RZ2]); plinth.done();
   plinth.add(lathe([[0, 0, 0], [3.6, 0, 0.2], [3.6, 3.4, 0.15], [0, 3.4, 0]], { seg: 56, n: 3 }), 'white', { nowire: true });
 
   /* ------------------------------------------------------------------ the sketch: a sheet, a pencil, strokes with their own pressure */
@@ -1087,9 +1135,9 @@ const SPK = (() => {
     wshell.g.rotation.set(-Math.PI / 2 * (1 - fl), 0, 0);
     wshell.g.position.set(STX[0], mix(12, -1, fl) + 9 * Math.sin(Math.PI * fl), mix(16.5, 0, fl));
     // glaze (finish)
-    const gz = seg(t, 4.1, 4.5, 'm');
+    const gz = seg(t, 4.08, 4.34, 'm');
     wshell.setPlane([0, 0, 1], mix(-13, 11, gz), 0.7); wshell.U.uCut.value = 0; wshell.U.uGlow.value = gz > 0 && gz < 1 ? 0.8 : 0;
-    if (t < 4.1) wshell.raw(); else if (gz >= 1) wshell.done();
+    if (t < 4.08) wshell.raw(); else if (gz >= 1) wshell.done();
     if (fl >= 1) { slices.forEach((s) => { s.g.visible = false; }); corners.forEach((c) => { c.g.visible = false; }); }
     // --- 2. pressing
     const cl = seg(t, 3.62, 3.72, 'm'), op = seg(t, 3.76, 3.82, 'm'), h = 13 * (1 - cl) + 13 * op * cl;
@@ -1106,13 +1154,13 @@ const SPK = (() => {
     carr.g.position.set(xc + 0.3 - STX[2] + STX[2] + (t > 3.96 ? 5 * seg(t, 3.96, 4.02, 'm') : 0), 0, 0);
     // the blank is parked at x of the chuck; the carriage rides to the chuck as the cut proceeds
     // --- finish: the cap dip and the grille
-    const dn = seg(t, 4.26, 4.46, 'm'), up = seg(t, 4.52, 4.68, 'x'), yc = mix(14, 1.4, dn) + (14 - 1.4) * up * 1;
+    const dn = seg(t, 4.4, 4.52, 'm'), up = seg(t, 4.54, 4.64, 'x'), yc = mix(14, 1.4, dn) + (14 - 1.4) * up * 1;
     wcap.g.position.set(RX1, yc, RZ); wrod.g.position.set(RX1, yc, RZ);
-    const zc = clamp(Math.min(t < 4.5 ? yc : 1.4, 99) - 1.62, 0, 1);
-    wcap.setPlane([0, 1, 0], yc - zc, 0.06); wcap.U.uCut.value = 0; wcap.U.uGlow.value = 0;
-    if (t < 4.26) wcap.raw();
+    const zc = clamp(Math.min(t < 4.53 ? yc : 1.4, 99) - 1.62, 0, 1);
+    wcap.setPlane([0, 1, 0], t >= 4.53 ? yc + 0.6 : yc - zc, 0.06); wcap.U.uCut.value = 0; wcap.U.uGlow.value = 0;
+    if (t < 4.4) wcap.raw();
     wcap.g.visible = t > 4.0; wrod.g.visible = t > 4.0;
-    holeU.uHole.value = seg(t, 4.66, 4.98, 'm');
+    holeU.uHole.value = seg(t, 4.72, 4.98, 'm');
     // --- the pieces fly home
     const fl0 = (a, b) => seg(t, a, b, 'm');
     if (t >= 5.0) {
@@ -1122,11 +1170,15 @@ const SPK = (() => {
       fly(wcone, co, [STX[1], 4, 0], [0, 0, 0], [0, WY + LIFT, Z('cone') - off], [Math.PI / 2, 0, 0], 26);
       fly(wknob, kn, [KX0, LTY, 0], [0, Math.PI / 2, spin], [0, KY + LIFT, Z('knob')], [0, 0, 0], 24);
       fly(wcap, cp, [RX1, 14, RZ], [Math.PI / 2, 0, 0], [0, WY + LIFT, Z('cap') + 10.05], [0, 0, 0], 28);
-      fly(wgrille, gr, [RX2, 3.6, RZ], [-Math.PI / 2, 0, 0], [0, TY + LIFT, Z('grille') + 12.5], [0, 0, 0], 26);
+      fly(wgrille, gr, [RX2, 3.6, RZ2], [-Math.PI / 2, 0, 0], [0, TY + LIFT, Z('grille') + 12.5], [0, 0, 0], 26);
       wrod.g.visible = t < 5.02; wblank.g.visible = true;
       if (sh >= 1) wshell.g.visible = false; if (co >= 1) wcone.g.visible = false; if (kn >= 1) { wknob.g.visible = false; } if (cp >= 1) wcap.g.visible = false; if (gr >= 1) wgrille.g.visible = false;
       WORKPOSE.arrived = { shell: sh >= 1, cone: co >= 1, knob: kn >= 1, cap: cp >= 1, grille: gr >= 1 };
     } else WORKPOSE.arrived = {};
+    const hide = (...ps) => ps.forEach((P) => { P.g.visible = false; });
+    if (t > 3.7) hide(mill, bridge, slide, head, cutter);
+    if (t > 4.06 && t < 5.0) hide(ldie, udie, lathePart, carr, wblank, wknob, wcone);
+    if (t >= 4.44 && t < 5.0) hide(wshell);
   }
 
   /* ------------------------------------------------------------------ the whole apply */
@@ -1169,11 +1221,13 @@ const SPK = (() => {
     const sx = mix(13, 0, seg(t, 1.62, 1.72, 'm')) + 13 * seg(t, 1.84, 1.96, 'm') * 0 + 13 * seg(t, 1.84, 1.96, 'm');
     const secOn = t > 1.6 && t < 1.97;
     SEC.constant = secOn ? (t < 1.84 ? sx : mix(0, 14, seg(t, 1.84, 1.96, 'm'))) : 1e5;
-    parts.wool.vis(!secOn); secG.visible = secOn; secG.position.x = secOn ? SEC.constant : 0;
+    if (secOn) parts.wool.vis(false);
+    secG.visible = secOn; secG.position.x = secOn ? SEC.constant : 0;
     secG.userData.hatch.visible = secOn && SEC.constant < 9.6 && SEC.constant > -1;
     MODEL.forEach((P) => { if (secOn) P.g.position.y += 0; });
     // the lift moves the section frame with the model
     secG.position.y = lift;
+    { const away = t > 3.22 && t < 5.04; MODEL.forEach((P) => { P.g.visible = !away; }); }
     production(t);
     sketchUpdate(t); mainBlob.visible = t > 1.2;
     // screws: spin while travelling
@@ -1205,14 +1259,18 @@ const SPK = (() => {
     [2.0, 30, 15, 118, 0, 16, 0, 0, 15, 12, 0.00004],
     [2.3, 36, 16, 150, 0, 22, 4, 0, 24, 4, 0.00004],
     [3.0, 56, 20, 215, 4, 27, 4, 4, 24, 4, 0.00002],
-    [3.2, 22, 30, 125, 112, 12, 2, 112, 12, 0, 0.00003],
-    [3.56, 22, 30, 125, 112, 12, 2, 112, 12, 0, 0.00003],
-    [3.66, 14, 28, 82, 154, 8, 3, 154, 8, 3, 0.00004],
-    [3.84, 14, 28, 82, 154, 8, 3, 154, 8, 3, 0.00004],
-    [3.92, 8, 22, 70, 192, 6, 2, 192, 6, 2, 0.00004],
-    [3.98, 8, 22, 70, 192, 6, 2, 192, 6, 2, 0.00004],
-    [4.0, 10, 22, 240, 154, 14, 9, 154, 12, 9, 0.00002],
-    [5.0, 10, 22, 240, 154, 14, 9, 154, 12, 9, 0.00002],
+    [3.2, 24, 24, 175, 112, 22, 0, 112, 12, 0, 0.00003],
+    [3.56, 24, 24, 175, 112, 22, 0, 112, 12, 0, 0.00003],
+    [3.68, 16, 22, 160, 182, 20, 2, 182, 14, 2, 0.00003],
+    [3.8, 16, 22, 160, 182, 20, 2, 182, 14, 2, 0.00003],
+    [3.92, 10, 22, 74, 250, 6, 3, 250, 6, 2, 0.00004],
+    [4.04, 10, 22, 74, 250, 6, 3, 250, 6, 2, 0.00004],
+    [4.12, 20, 22, 135, 112, 15, 0, 112, 14, 0, 0.00003],
+    [4.36, 20, 22, 135, 112, 15, 0, 112, 14, 0, 0.00003],
+    [4.46, 16, 22, 60, 217, 7, 42, 217, 6, 42, 0.00004],
+    [4.66, 16, 22, 60, 217, 7, 42, 217, 6, 42, 0.00004],
+    [4.76, 14, 22, 23.5, 217, 1.9, 80, 217, 1.9, 80, 0.00005],
+    [5.0, 14, 22, 23.5, 217, 1.9, 80, 217, 1.9, 80, 0.00005],
     [5.3, 54, 18, 215, 4, 27, 4, 4, 24, 4, 0.00002],
     [5.7, 38, 16, 175, 0, 22, 2, 0, 20, 2, 0.00003],
     [6.0, 30, 12, 138, 0, 16, 0, 0, 15, 12, 0.00004],
