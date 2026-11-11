@@ -6,22 +6,59 @@
 <link rel="stylesheet" href="../kit/qbix.css">
 <script type="application/json" id="qm-meta">
 {
-  "id": "lens-teardown", "title": "Lens teardown", "group": "studio", "added": "2026-11-10", "cat": "scenes", "order": 70,
-  "kind": "states", "n": 5, "tone": "paper", "shot": 14500,
+  "id": "lens-teardown",
+  "title": "Lens teardown",
+  "group": "studio",
+  "added": "2026-11-10",
+  "cat": "scenes",
+  "order": 70,
+  "kind": "states",
+  "n": 5,
+  "tone": "paper",
+  "shot": 14500,
   "line": "55 parts · 5 states · one axis",
   "summary": "A precision camera lens, modelled like a product render, takes itself apart along its optical axis and goes back together. Satin white ceramic barrel, an ink focus ring knurled with 112 instanced ribs, a printed distance scale, a lime glaze ring, seven glass elements, a nine-blade iris that really opens and closes, a threaded helicoid and a brushed steel bayonet mount. Five states from one number t: assembled, front group, elements, iris, reassembled.",
   "spec": [
-    ["Model", "55 parts: ceramic barrel and liner, focus ring with 112 instanced ribs, scale band (canvas, Geist Mono), lime ring, hood, bezel with a stepped inner thread, 7 glass elements as lathe sections with different curvature, 7 black spacers, iris of 9 extruded blades each on its own pin, a helical helicoid thread, steel mount with 3 bayonet tabs and 4 instanced screws, rear cap"],
-    ["Glass", "MeshPhysicalMaterial, transmission 1, thickness 0.5–1.2, ior 1.5, one cemented element tinted lime with a thin-film coating"],
-    ["State 1", "assembled, three-quarter, the camera drifts and the iris breathes between 8° and 26° of blade angle; the parts seat from a hair apart in the first beat"],
-    ["State 2", "front group (hood, bezel, lock ring) unscrews 1.25 turns while it travels 1.7 along the axis, then hood, bezel, lock ring, spacer, element 1 and element 2 separate front to back, 70 ms apart"],
-    ["State 3", "the barrel slides back 11 units, 17 parts fan out along the axis with equal 0.72 gaps, 17 ms stagger front to rear, each element turning at its own rate; the camera dollies to a side-on view and the focus racks to the middle element"],
-    ["State 4", "the iris group lifts toward the camera and turns 70° about the vertical, the nine blades close to 0.8 of a unit and open again (move curve, then expo out), the focus ring turns back while the helicoid screws out 0.9 along its real pitch"],
-    ["State 5", "reverse order with overlap: iris, helicoid, elements rear to front, barrel, front group screws on last; expo out, no bounce; ends assembled from a new angle with the lime ring catching the light"],
-    ["Easing", "expo out (0.16, 1, 0.3, 1) for arrivals, move (0.65, 0, 0.35, 1) for moves"],
-    ["Render", "studio environment from emissive panels (PMREM), one soft key with shadow, ACESFilmic, GTAO, bokeh depth of field with a rack focus, SMAA"]
+    [
+      "Model",
+      "55 parts: ceramic barrel and liner, focus ring with 112 instanced ribs, scale band (canvas, Geist Mono), lime ring, hood, bezel with a stepped inner thread, 7 glass elements as lathe sections with different curvature, 7 black spacers, iris of 9 extruded blades each on its own pin, a helical helicoid thread, steel mount with 3 bayonet tabs and 4 instanced screws, rear cap"
+    ],
+    [
+      "Glass",
+      "MeshPhysicalMaterial, transmission 1, thickness 0.5–1.2, ior 1.5, one cemented element tinted lime with a thin-film coating"
+    ],
+    [
+      "State 1",
+      "assembled, three-quarter, the camera drifts and the iris breathes between 8° and 26° of blade angle; the parts seat from a hair apart in the first beat"
+    ],
+    [
+      "State 2",
+      "front group (hood, bezel, lock ring) unscrews 1.25 turns while it travels 1.7 along the axis, then hood, bezel, lock ring, spacer, element 1 and element 2 separate front to back, 70 ms apart"
+    ],
+    [
+      "State 3",
+      "the barrel slides back 11 units, 17 parts fan out along the axis with equal 0.72 gaps, 17 ms stagger front to rear, each element turning at its own rate; the camera dollies to a side-on view and the focus racks to the middle element"
+    ],
+    [
+      "State 4",
+      "the iris group lifts toward the camera and turns 70° about the vertical, the nine blades close to 0.8 of a unit and open again (move curve, then expo out), the focus ring turns back while the helicoid screws out 0.9 along its real pitch"
+    ],
+    [
+      "State 5",
+      "reverse order with overlap: iris, helicoid, elements rear to front, barrel, front group screws on last; expo out, no bounce; ends assembled from a new angle with the lime ring catching the light"
+    ],
+    [
+      "Easing",
+      "expo out (0.16, 1, 0.3, 1) for arrivals, move (0.65, 0, 0.35, 1) for moves"
+    ],
+    [
+      "Render",
+      "studio environment from emissive panels (PMREM), one soft key with shadow, ACESFilmic, GTAO, bokeh depth of field with a rack focus, SMAA"
+    ]
   ],
-  "source": ["Qbix Motion · Studio · 2026-11-10"],
+  "source": [
+    "Qbix Motion · Studio · 2026-11-10"
+  ],
   "where": "A product page for a Qbix build kit or a case study chapter that explains how something is made: the object takes itself apart, each part is named by the state readout, and it goes back together.",
   "rules": [
     "Needs three.js r160 and the extras bundle (kit/three-plus.js, global THREE: EffectComposer, GTAOPass, BokehPass, OutputPass, SMAAPass, RoundedBoxGeometry); classic script, nothing else. Falls back to a plain render if a pass fails.",
@@ -30,7 +67,23 @@
     "Parts are authored on one axis (Y) and rolled about it; the exploded gaps are computed from the parts' own extents so they stay equal.",
     "Nothing bounces. Under reduced motion the lens rests as a still frame and the scrubber still seeks."
   ],
-  "tags": ["three.js", "3D", "product", "camera lens", "exploded view", "teardown", "iris", "glass", "lime glaze", "depth of field"]
+  "tags": [
+    "three.js",
+    "3D",
+    "product",
+    "camera lens",
+    "exploded view",
+    "teardown",
+    "iris",
+    "glass",
+    "lime glaze",
+    "depth of field"
+  ],
+  "preview": {
+    "secs": 11,
+    "speed": 1.7,
+    "skip": 400
+  }
 }
 </script>
 <style data-code>
