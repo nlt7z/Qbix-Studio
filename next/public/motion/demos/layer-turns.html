@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layer turns · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "layer-turns", "title": "Layer turns", "group": "studio", "added": "2026-11-10", "cat": "loading", "order": 60,
+  "kind": "loop", "tone": "paper", "shot": 3050,
+  "line": "27 cubes · 12 turns · solves itself",
+  "summary": "A loader made of a three by three by three block of heavy ceramic cubes, nine in lime glaze, four in ink, fourteen in white. It starts scrambled and solves itself, one layer at a time: a quarter turn about x, y or z, 420 ms on the move curve, a short rest between. The readout counts with the turns, and on the twelfth the nine lime cubes sit as one full layer on top. Then it scrambles again, fast. Click the block or press Space to take the next turn at once.",
+  "spec": [
+    ["Block", "27 bevelled cubes on a pitch of 1 with 0.07 gaps; a logical model keeps which cube sits in which cell, so every turn moves exactly the nine cubes of one layer"],
+    ["Plan", "planned backwards: from the solved block twelve random legal turns are applied, that scramble is shown first, then the inverse turns are played in reverse order, so it always ends solved"],
+    ["Turn", "the nine cubes are parented to a pivot, turned a quarter about x, y or z on the move curve (0.65, 0, 0.35, 1) in 420 ms, then the transform is baked and positions and rotations snap to exact values, so nothing drifts"],
+    ["Rhythm", "420 ms turn, 160 ms rest, no bounce; the readout in Geist Mono rolls from 01 / 12 to 12 / 12, then to Ready for 1.4 s; the re-scramble runs at 200 ms a turn"],
+    ["Light", "sage hemisphere light, one soft key from upper left with soft shadow, a softbox environment for the glaze, a sage contact shadow; linear tone mapping, sRGB output"],
+    ["Pointer", "the block orbits up to 20° with damping; a click or Space takes the next turn at once, a click mid-turn drops the rest after it"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-10"],
+  "where": "A loading state for a Qbix build or a deploy step: the block that solves itself while forma.studio is built, in place of a spinner on an onboarding or a case-study hand-off.",
+  "rules": [
+    "Needs three.js r160 (kit/three.min.js, global THREE); loaded as a classic script, nothing else.",
+    "Always planned backwards from the solved block, so the twelfth turn always leaves nine lime cubes as the full top layer.",
+    "Three materials only: matte white ceramic, ink, lime glaze; shade is pale green (sage hemisphere ground, sage contact shadow), never grey.",
+    "One clock drives everything; nothing bounces; every turn is baked and snapped to exact values.",
+    "Under reduced motion the block rests as a still frame and a click or Space turns one layer at once."
+  ],
+  "tags": ["three.js", "3D", "loader", "cubes", "puzzle", "layers", "ceramic", "lime glaze", "progress"]
+}
+</script>
+<style data-code>
+/* Layer turns. Ink #0B0C0D. Easing: move (.65,0,.35,1). */
+.lt { position: absolute; inset: 0; background: #fff; color: #0B0C0D; font: 400 15px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.011em; cursor: pointer; }
+.lt canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+.lt-kick { position: absolute; left: 28px; top: 24px; margin: 0; font-size: 14px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.lt-read { position: absolute; left: 28px; bottom: 24px; margin: 0; display: flex; gap: 22px; font: 400 13px/1.5 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: #0B0C0D; }
+.lt-roll { position: relative; display: block; height: 1.5em; overflow: hidden; white-space: nowrap; }
+.lt-roll i { font-style: normal; display: block; transition: transform 420ms cubic-bezier(.65, 0, .35, 1); }
+.lt-roll i.in { position: absolute; left: 0; top: 0; transform: translateY(100%); }
+.lt-roll i.in.go { transform: none; }
+.lt-roll i.out { position: absolute; left: 0; top: 0; }
+.lt-roll i.out.go { transform: translateY(-100%); }
+.lt-label { width: 22ch; } .lt-count { width: 7ch; color: rgba(11, 12, 13, .66); }
+@media (prefers-reduced-motion: reduce) { .lt-roll i { transition: none; } }
+</style>
+<style>
+  html, body { height: 100%; background: #fff; }
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<section class="lt" id="lt" aria-label="Layer turns">
+  <canvas id="lt-cv" aria-hidden="true"></canvas>
+  <p class="lt-kick">Qbix · Build loader</p>
+  <p class="lt-read" aria-live="off"><span class="lt-roll lt-label" id="lt-label"><i>Building forma.studio</i></span><span class="lt-roll lt-count" id="lt-count"><i>00 / 12</i></span></p>
+</section>
+<!-- /code -->
+</main>
+<script src="../kit/three.min.js"></script>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Layer turns. 27 cubes in a logical 3 x 3 x 3 model. A turn parents one layer to a pivot, turns it a quarter, bakes it and snaps to exact values. The plan runs backwards from the solved block, so it always ends solved. */
+const LT = (() => {
+  const PITCH = 1, SIZE = 0.93, TURNS = 12, TURN_MS = 420, REST_MS = 160, FAST_MS = 200, HOLD_MS = 1400;
+  const host = document.getElementById('lt'), canvas = document.getElementById('lt-cv');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const move = QM.bezier(0.65, 0, 0.35, 1);              // the qbix move curve
+  let seed = 11; const srnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  let rnd = srnd;                                         // the first scramble is seeded, later ones are free
+
+  /* ---- scene ---- */
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+  renderer.setClearColor(0xffffff, 1);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.LinearToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+  const cam = new THREE.PerspectiveCamera(24, 1.6, 1, 60);
+
+  // a studio environment for the glaze: sage room, one big softbox, a strip, a low fill
+  const envScene = new THREE.Scene();
+  envScene.add(new THREE.Mesh(new THREE.SphereGeometry(20, 24, 12), new THREE.MeshBasicMaterial({ color: 0xDCE6CC, side: THREE.BackSide })));
+  const box = (w, h, x, y, z, k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k, k), side: THREE.DoubleSide })); m.position.set(x, y, z); m.lookAt(0, 0, 0); envScene.add(m); };
+  box(9, 7, -7, 8, 8, 9); box(2.5, 11, 10, 2, 3, 5); box(10, 2.5, 0, -6, 9, 1.4); box(6, 6, 0, 12, -4, 2.5);
+  const pm = new THREE.PMREMGenerator(renderer);
+  const envMap = pm.fromScene(envScene, 0.04).texture;
+
+  const white = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.6, metalness: 0, envMap, envMapIntensity: 0.2 });
+  const ink = new THREE.MeshPhysicalMaterial({ color: 0x0B0C0D, roughness: 0.16, metalness: 0, clearcoat: 0.4, clearcoatRoughness: 0.1, envMap, envMapIntensity: 0.6 });
+  const lime = new THREE.MeshPhysicalMaterial({ color: 0xB8FF00, emissive: 0xB8FF00, emissiveIntensity: 0.12, roughness: 0.22, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06, envMap, envMapIntensity: 0.55 });
+  scene.add(new THREE.HemisphereLight(0xFFFFFF, 0xCFDDB4, 1.5));
+  const key = new THREE.DirectionalLight(0xFFFFFF, 2.2);
+  key.position.set(-5, 6, 4); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.002; key.shadow.normalBias = 0.04; key.shadow.radius = 5;
+  Object.assign(key.shadow.camera, { left: -3.4, right: 3.4, top: 3.4, bottom: -3.4, near: 2, far: 18 });
+  scene.add(key);
+  const geo = (() => {                                    // a cube with a soft bevel, so the glaze catches a highlight on every edge
+    const g = new THREE.BoxGeometry(1, 1, 1, 3, 3, 3), P = g.attributes.position, Nn = g.attributes.normal, r = 0.08, h = 0.5 - r, v = new THREE.Vector3();
+    for (let i = 0; i < P.count; i++) {
+      v.set(P.getX(i), P.getY(i), P.getZ(i));
+      [0, 1, 2].forEach((a) => { const c = v.getComponent(a); if (Math.abs(c) < 0.49) v.setComponent(a, Math.sign(c) * h); });
+      const inner = new THREE.Vector3(Math.max(-h, Math.min(h, v.x)), Math.max(-h, Math.min(h, v.y)), Math.max(-h, Math.min(h, v.z)));
+      const d = v.clone().sub(inner), l = d.length();
+      if (l > 1e-6) { d.divideScalar(l); v.copy(inner).addScaledVector(d, r); Nn.setXYZ(i, d.x, d.y, d.z); }
+      P.setXYZ(i, v.x, v.y, v.z);
+    }
+    g.scale(SIZE, SIZE, SIZE);
+    return g;
+  })();
+
+  const view = new THREE.Group(); view.rotation.order = 'YXZ'; view.position.y = 0.02; scene.add(view);
+  const root = new THREE.Group(); view.add(root);         // the block
+  const pivot = new THREE.Group(); view.add(pivot);       // a layer lives here during its turn
+
+  // the contact shadow: a blurred sage ellipse on the floor
+  const sc = document.createElement('canvas'); sc.width = sc.height = 256;
+  const sg = sc.getContext('2d'), gr = sg.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gr.addColorStop(0, 'rgba(120,150,92,.62)'); gr.addColorStop(0.35, 'rgba(132,160,104,.36)'); gr.addColorStop(0.7, 'rgba(150,176,124,.1)'); gr.addColorStop(1, 'rgba(160,184,134,0)');
+  sg.fillStyle = gr; sg.fillRect(0, 0, 256, 256);
+  const shTex = new THREE.CanvasTexture(sc); shTex.colorSpace = THREE.SRGBColorSpace;
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false, toneMapped: false }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = -1.2; scene.add(shadow);
+  shadow.position.y = -(PITCH + SIZE / 2) - 0.02; shadow.scale.set(5.6, 5.6, 1);
+
+  /* ---- the logical model: cube -> cell ---- */
+  const cubes = [];
+  for (let y = 1; y >= -1; y--) for (let x = -1; x <= 1; x++) for (let z = -1; z <= 1; z++) {
+    const kind = y === 1 ? 'lime' : (y === 0 && x !== 0 && z !== 0) ? 'ink' : 'white';   // solved: lime on top, ink at the four corners of the middle layer
+    const mesh = new THREE.Mesh(geo, kind === 'lime' ? lime : kind === 'ink' ? ink : white);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    const c = { mesh, cell: new THREE.Vector3(x, y, z), kind };
+    mesh.position.set(x * PITCH, y * PITCH, z * PITCH); root.add(mesh); cubes.push(c);
+  }
+  const AX = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)];
+  const snapQ = (q) => { const m = new THREE.Matrix4().makeRotationFromQuaternion(q), e = m.elements; for (let i = 0; i < 16; i++) e[i] = Math.round(e[i]); q.setFromRotationMatrix(m); };
+  const solved = () => cubes.every((c) => c.kind !== 'lime' || c.cell.y === 1);
+
+  let cur = null;                                         // the turn in flight
+  function begin(t, dur) {
+    const list = cubes.filter((c) => c.cell.getComponent(t.a) === t.l);
+    pivot.quaternion.identity(); list.forEach((c) => pivot.attach(c.mesh));
+    cur = { t, list, dur, time: 0 };
+  }
+  function pose(e) { pivot.quaternion.setFromAxisAngle(AX[cur.t.a], cur.t.d * Math.PI / 2 * e); }
+  function bake() {
+    pivot.updateMatrixWorld(true);
+    const ang = cur.t.d * Math.PI / 2;
+    cur.list.forEach((c) => {
+      root.attach(c.mesh);
+      c.cell.applyAxisAngle(AX[cur.t.a], ang); c.cell.set(Math.round(c.cell.x), Math.round(c.cell.y), Math.round(c.cell.z));
+      c.mesh.position.copy(c.cell).multiplyScalar(PITCH);
+      snapQ(c.mesh.quaternion);
+    });
+    pivot.quaternion.identity(); cur = null;
+  }
+  const instant = (t) => { begin(t, 1); pose(1); bake(); };
+
+  const plan = () => {                                    // twelve legal turns, never the same layer twice in a row
+    for (;;) {
+      const out = []; let pa = -1, pl = 9;
+      while (out.length < TURNS) {
+        const a = Math.floor(rnd() * 3), l = Math.floor(rnd() * 3) - 1, d = rnd() < 0.5 ? -1 : 1;
+        if (a === pa && l === pl) continue;
+        out.push({ a, l, d }); pa = a; pl = l;
+      }
+      return out;
+    }
+  };
+  const inverse = (list) => list.slice().reverse().map((t) => ({ a: t.a, l: t.l, d: -t.d }));
+
+  /* ---- readout: the digits roll ---- */
+  const labelEl = document.getElementById('lt-label'), countEl = document.getElementById('lt-count');
+  const shown = new Map();
+  function roll(el, text) {
+    if (shown.get(el) === text) return; shown.set(el, text);
+    const old = el.lastElementChild; if (!old) { el.innerHTML = '<i></i>'; el.firstChild.textContent = text; return; }
+    if (reduced) { old.textContent = text; return; }
+    el.querySelectorAll('i.out').forEach((n) => n.remove());
+    const nu = document.createElement('i'); nu.className = 'in'; nu.textContent = text; el.appendChild(nu);
+    old.className = 'out'; void el.offsetWidth;
+    old.classList.add('go'); nu.classList.add('go');
+    setTimeout(() => { if (old.parentNode) old.remove(); nu.className = ''; }, 460);
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  const setCount = (n) => roll(countEl, pad(n) + ' / ' + pad(TURNS));
+  const setLabel = (s) => roll(labelEl, s);
+
+  /* ---- the run: scramble (shown), solve (12 inverse turns), ready (hold), scramble fast, again ---- */
+  let phase = 'solve', todo = [], done = 0, wait = 0, skip = false, scrambleQ = [];
+  function newRound(fast) {
+    const fwd = plan(); todo = inverse(fwd); done = 0;
+    if (fast) { scrambleQ = fwd.slice(); phase = 'scramble'; setLabel('Building forma.studio'); setCount(0); }
+    else { fwd.forEach(instant); phase = 'solve'; setLabel('Building forma.studio'); setCount(0); wait = 650; }
+  }
+  function next() {
+    if (phase === 'scramble') {
+      if (scrambleQ.length) { begin(scrambleQ.shift(), reduced ? 1 : FAST_MS); return; }
+      phase = 'solve'; wait = 650; return;
+    }
+    if (phase === 'solve') {
+      if (done < TURNS) { begin(todo[done], reduced ? 1 : TURN_MS); done++; setCount(done); return; }
+      phase = 'ready'; setLabel('Ready'); wait = HOLD_MS; return;
+    }
+    if (phase === 'ready') { rnd = Math.random; newRound(true); }
+  }
+  function finishTurn() {
+    const fast = cur.dur === FAST_MS || (reduced && phase === 'scramble'); bake();
+    wait = (fast || skip) ? 0 : REST_MS; skip = false;
+    if (phase === 'solve' && done === TURNS) { phase = 'ready'; setLabel('Ready'); wait = HOLD_MS; }   // the last turn leaves the full lime layer: hold
+  }
+  function step(ms) {                                     // advance the run by ms
+    for (let guard = 0; guard < 60; guard++) {
+      if (cur) {
+        const left = cur.dur - cur.time;
+        if (ms < left) { cur.time += ms; pose(move(cur.time / cur.dur)); return; }
+        ms -= left; finishTurn(); continue;
+      }
+      if (wait > ms) { wait -= ms; return; }
+      ms -= wait; wait = 0; next();
+      if (!cur && wait === 0) return;
+    }
+  }
+  function nudge() {                                      // click or Space: the next turn at once
+    if (cur) { skip = true; return; }
+    wait = 0; if (reduced) step(2);
+  }
+
+  /* ---- clock, size, pointer ---- */
+  let last = 0, raf = 0, visible = true, pausedAt = 0, lost = 0, ox = 0, oy = 0, tx = 0, ty = 0;
+  const YAW = 0.6, ELEV = 0.4;
+  const clock = () => (performance.now() - lost) / 1000;
+  let need = 20;
+  function size() {
+    const w = Math.max(2, host.clientWidth), h = Math.max(2, host.clientHeight);
+    renderer.setSize(w, h, false); cam.aspect = w / h;
+    const vis = Math.max(5.9, 5.6 / cam.aspect);                           // the block fills about 70% of the shorter side
+    need = vis / (2 * Math.tan((cam.fov * Math.PI) / 360)); cam.updateProjectionMatrix();
+  }
+  function frame(dt) {
+    const k = 1 - Math.exp(-dt * 5);
+    ox += (tx - ox) * k; oy += (ty - oy) * k;
+    view.rotation.y = YAW + ox;
+    const e = ELEV + oy;
+    cam.position.set(0, -0.1 + Math.sin(e) * need, Math.cos(e) * need); cam.lookAt(0, -0.1, 0);
+    renderer.render(scene, cam);
+  }
+  function loop() {
+    raf = 0; if (!visible || document.hidden) return;
+    const now = clock(), dt = Math.min(0.6, Math.max(0.001, now - last)); last = now;
+    step(dt * 1000); frame(Math.min(dt, 0.1)); raf = requestAnimationFrame(loop);
+  }
+  function play() { if (reduced || raf || !visible || document.hidden) return; if (pausedAt) { lost += performance.now() - pausedAt; pausedAt = 0; } last = clock(); raf = requestAnimationFrame(loop); }
+  function halt() { if (raf) { cancelAnimationFrame(raf); raf = 0; } if (!pausedAt) pausedAt = performance.now(); }
+  new ResizeObserver(() => { size(); if (reduced || !raf) frame(0.016); }).observe(host);
+  new IntersectionObserver((e) => { visible = e[0].isIntersecting; visible ? play() : halt(); }).observe(host);
+  document.addEventListener('visibilitychange', () => { document.hidden ? halt() : play(); });
+  host.addEventListener('pointermove', (e) => { if (reduced || (e.pointerType && e.pointerType !== 'mouse')) return; const r = host.getBoundingClientRect(); tx = ((e.clientX - r.left) / r.width - 0.5) * 2 * 0.35; ty = -((e.clientY - r.top) / r.height - 0.5) * 2 * 0.1; });
+  host.addEventListener('pointerleave', () => { tx = ty = 0; });
+  host.addEventListener('click', () => { nudge(); if (reduced) frame(0.016); });
+  addEventListener('keydown', (e) => { if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); nudge(); if (reduced) frame(0.016); } });
+
+  /* ---- start: the scrambled block ---- */
+  function restart() {
+    if (cur) bake();
+    cubes.forEach((c) => { c.cell.set(0, 0, 0); });      // rebuild the solved block
+    let n = 0; for (let y = 1; y >= -1; y--) for (let x = -1; x <= 1; x++) for (let z = -1; z <= 1; z++) {
+      const c = cubes[n++]; c.cell.set(x, y, z); c.mesh.position.set(x, y, z); c.mesh.quaternion.identity();
+    }
+    skip = false; seed = 11; rnd = srnd; newRound(false);
+    if (reduced) { done = 0; wait = 0; todo.forEach((t) => instant(t)); done = TURNS; phase = 'ready'; setLabel('Ready'); setCount(TURNS); wait = 1e9; }
+  }
+  size(); restart(); frame(0.016);
+  if (!reduced) play();
+  return { restart, nudge, get solved() { return solved(); }, get phase() { return phase; }, get done() { return done; } };
+})();
+QM.demo({ kind: 'loop', restart() { LT.restart(); } });
+</script>
+</body>
+</html>

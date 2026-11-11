@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flip plinth · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "flip-plinth", "title": "Flip plinth", "group": "studio", "added": "2026-11-10", "cat": "images", "order": 40,
+  "kind": "loop", "tone": "paper", "shot": 4300,
+  "line": "3 objects · 900 ms flip · move curve",
+  "summary": "A white ceramic plinth floats in a studio with one handmade object standing on it: a fluted lime vessel, a white knotted tube with lime inside, or a stack of seven offset discs. Pick another name and the whole plinth turns over like a page: the old object goes under, the next one comes up, the camera never moves, and the caption rolls to the new name and price. Idle, it turns by itself.",
+  "spec": [
+    ["Objects", "fold vessel: a lathe profile whose radius is cut into nine spiralling flutes (128 × 70 grid, lime glaze); tube vase: a thick tube on an open trefoil with lime inside each end (white ceramic); disc stack: seven bevelled discs of different radii, offset, white and ink with one lime"],
+    ["Plinth", "a 2.3 × 0.34 × 2.3 slab with a soft bevel, white ceramic, floating above a sage contact shadow"],
+    ["Flip", "the plinth turns 180° about its horizontal axis in 900 ms on the move curve (0.65, 0, 0.35, 1), nothing bounces; the camera holds still"],
+    ["Under side", "the object going under tucks away as the slab passes edge-on and the next grows out of the other face, so the side below is always empty at rest and the swap is never seen"],
+    ["Caption", "name in Outfit Light, price in Geist Mono; the old line leaves upward and the new one rises in on the same 900 ms curve"],
+    ["Tabs", "three text tabs switch for real; a far tab still flips once, a tab pressed mid-flip is taken when the flip lands"],
+    ["Light", "sage hemisphere light, one soft key from the upper left with soft shadow, a softbox environment for the glaze, a sage contact shadow on the floor"],
+    ["Pointer", "orbits the plinth up to 20° with damping; the objects turn slowly on their own axis"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-10"],
+  "where": "A shop or product page in a Qbix client build: the object hero beside its name and price, where choosing the next piece turns the display over instead of cross-fading a photo.",
+  "rules": [
+    "Needs three.js r160 (kit/three.min.js, global THREE); loaded as a classic script, nothing else.",
+    "Three materials only: matte white ceramic, ink, lime glaze; lime is one object, or the inside of one, never the plinth.",
+    "Shade is pale green: a sage hemisphere ground and a sage contact shadow, never grey.",
+    "The flip is 900 ms on (0.65, 0, 0.35, 1) with no bounce; the camera holds still and the side underneath is empty at rest.",
+    "Under reduced motion the plinth stands still and a tab swaps the object and caption at once."
+  ],
+  "tags": ["three.js", "3D", "plinth", "flip", "ceramic", "lime glaze", "product", "caption", "tabs"]
+}
+</script>
+<style data-code>
+/* Flip plinth. Ink #0B0C0D, sage #EEF1E8. Easing: move (.65,0,.35,1). */
+.fp { position: absolute; inset: 0; background: #fff; color: #0B0C0D; font: 400 15px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.011em; overflow: hidden; }
+.fp canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
+.fp-kick { position: absolute; left: 28px; top: 24px; margin: 0; font-size: 14px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.fp-cap { position: absolute; left: 0; right: 0; bottom: 74px; height: 36px; overflow: hidden; pointer-events: none; }
+.fp-line { position: absolute; left: 0; right: 0; top: 0; text-align: center; white-space: nowrap; font-size: 28px; line-height: 36px; font-weight: 300; letter-spacing: -.03em; font-family: Outfit, Geist, system-ui, sans-serif; transition: transform 900ms cubic-bezier(.65, 0, .35, 1); }
+.fp-line b { font-weight: 300; }
+.fp-line i { font: 400 15px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); margin-left: 12px; vertical-align: 3px; }
+.fp-line.in { transform: translateY(100%); }
+.fp-line.out { transform: translateY(-100%); }
+.fp-tabs { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); display: flex; gap: 28px; }
+.fp-tabs button { position: relative; font: inherit; font-size: 14px; font-weight: 500; letter-spacing: inherit; color: rgba(11, 12, 13, .38); background: none; border: 0; margin: 0; padding: 6px 0 8px; cursor: pointer; transition: color 420ms cubic-bezier(.65, 0, .35, 1); }
+.fp-tabs button[aria-selected='true'] { color: #0B0C0D; }
+.fp-tabs button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.fp-bar { position: absolute; left: 0; bottom: 0; height: 2px; width: var(--w, 40px); background: #0B0C0D; transform: translateX(var(--x, 0px)); transition: transform 420ms cubic-bezier(.65, 0, .35, 1), width 420ms cubic-bezier(.65, 0, .35, 1); }
+@media (prefers-reduced-motion: reduce) { .fp-tabs button, .fp-bar, .fp-line { transition: none; } }
+</style>
+<style>
+  html, body { height: 100%; background: #fff; }
+  .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<section class="fp" id="fp" aria-label="Flip plinth">
+  <canvas id="fp-cv" aria-hidden="true"></canvas>
+  <p class="fp-kick">Forma · Vessels</p>
+  <div class="fp-cap" id="fp-cap" aria-live="polite"></div>
+  <div class="fp-tabs" id="fp-tabs" role="tablist" aria-label="Object">
+    <button type="button" role="tab" aria-selected="true" data-f="0">Fold vessel</button>
+    <button type="button" role="tab" aria-selected="false" tabindex="-1" data-f="1">Tube vase</button>
+    <button type="button" role="tab" aria-selected="false" tabindex="-1" data-f="2">Disc stack</button>
+    <i class="fp-bar" id="fp-bar"></i>
+  </div>
+</section>
+<!-- /code -->
+</main>
+<script src="../kit/three.min.js"></script>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Flip plinth. A slab on a pivot; two slots (top face, underside), one object in each. The flip is one angle on one clock. */
+const FP = (() => {
+  const ITEMS = [['Fold vessel', '$54'], ['Tube vase', '$38'], ['Disc stack', '$72']];
+  const FLIP = 0.9;
+  const host = document.getElementById('fp'), canvas = document.getElementById('fp-cv'), capEl = document.getElementById('fp-cap');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const move = QM.bezier(0.65, 0, 0.35, 1);
+
+  /* ---- scene ---- */
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+  renderer.setClearColor(0xffffff, 1);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.LinearToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+  const cam = new THREE.PerspectiveCamera(24, 1.6, 1, 40);
+
+  const envScene = new THREE.Scene();
+  envScene.add(new THREE.Mesh(new THREE.SphereGeometry(20, 24, 12), new THREE.MeshBasicMaterial({ color: 0xDCE6CC, side: THREE.BackSide })));
+  const box = (w, h, x, y, z, k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k, k), side: THREE.DoubleSide })); m.position.set(x, y, z); m.lookAt(0, 0, 0); envScene.add(m); };
+  box(9, 7, -7, 8, 8, 9); box(2.5, 11, 10, 2, 3, 5); box(10, 2.5, 0, -6, 9, 1.4); box(6, 6, 0, 12, -4, 2.5);
+  const pm = new THREE.PMREMGenerator(renderer);
+  const envMap = pm.fromScene(envScene, 0.04).texture;
+
+  const white = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.6, metalness: 0, envMap, envMapIntensity: 0.2 });
+  const ink = new THREE.MeshPhysicalMaterial({ color: 0x0B0C0D, roughness: 0.16, metalness: 0, clearcoat: 0.4, clearcoatRoughness: 0.1, envMap, envMapIntensity: 0.6 });
+  const lime = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(0xB8FF00).multiplyScalar(0.8), emissive: 0xB8FF00, emissiveIntensity: 0.03, roughness: 0.22, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06, envMap, envMapIntensity: 0.8 });
+  const limeV = lime.clone(); limeV.clearcoat = 0; limeV.roughness = 0.14; limeV.envMapIntensity = 1.0;   // the vessel's folds graze the clearcoat black, so its glaze is one glossy layer
+  const whiteTwo = white.clone(); whiteTwo.side = THREE.DoubleSide;
+  scene.add(new THREE.HemisphereLight(0xF2F8E6, 0xCADAAA, 1.45));
+  const key = new THREE.DirectionalLight(0xFFFFFF, 2.2);
+  key.position.set(-5, 6, 4); key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.002; key.shadow.normalBias = 0.04; key.shadow.radius = 5;
+  Object.assign(key.shadow.camera, { left: -2.8, right: 2.8, top: 2.8, bottom: -2.8, near: 2, far: 16 });
+  scene.add(key);
+
+  const mesh = (g, m) => { const o = new THREE.Mesh(g, m); o.castShadow = true; o.receiveShadow = true; return o; };
+
+  /* ---- the plinth: a slab with a soft bevel ---- */
+  const roundBox = (w, h, d, r) => {
+    const g = new THREE.BoxGeometry(w, h, d, 3, 3, 3), P = g.attributes.position, Nn = g.attributes.normal, e = [w / 2, h / 2, d / 2], v = new THREE.Vector3();
+    for (let i = 0; i < P.count; i++) {
+      v.set(P.getX(i), P.getY(i), P.getZ(i));
+      [0, 1, 2].forEach((a) => { const c = v.getComponent(a); if (Math.abs(c) < e[a] - 0.001) v.setComponent(a, Math.sign(c) * (e[a] - r)); });
+      const inner = new THREE.Vector3(Math.max(-e[0] + r, Math.min(e[0] - r, v.x)), Math.max(-e[1] + r, Math.min(e[1] - r, v.y)), Math.max(-e[2] + r, Math.min(e[2] - r, v.z)));
+      const dd = v.clone().sub(inner), l = dd.length();
+      if (l > 1e-6) { dd.divideScalar(l); v.copy(inner).addScaledVector(dd, r); Nn.setXYZ(i, dd.x, dd.y, dd.z); }
+      P.setXYZ(i, v.x, v.y, v.z);
+    }
+    return g;
+  };
+  const SLAB = 0.34, SW = 2.3;
+
+  /* ---- object a: the fold vessel, a lathe grid whose radius is cut into spiralling flutes ---- */
+  const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  function foldVessel() {
+    const H = 1.75, rr = [], yy = [], aa = [], tt = [];
+    const R = (t) => 0.17 + 0.33 * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.72)), 1.4) + 0.1 * sstep(0.86, 1, t);
+    const A = (t) => 0.3 * sstep(0.02, 0.25, t) * (1 - 0.8 * sstep(0.84, 1, t));
+    rr.push(0, 0.1, 0.2); yy.push(0, 0, 0); aa.push(0, 0, 0); tt.push(0, 0, 0);
+    for (let i = 0; i <= 56; i++) { const t = i / 56; rr.push(R(t)); yy.push(H * t); aa.push(A(t)); tt.push(t); }
+    const rim = R(1), w = 0.05;
+    for (let i = 1; i <= 7; i++) { const f = (i / 7) * Math.PI; rr.push(rim - w + w * Math.cos(f)); yy.push(H + w * Math.sin(f)); aa.push(A(1) * (1 - i / 7)); tt.push(1); }
+    for (let i = 1; i <= 12; i++) { const s = i / 12; rr.push(rim - 2 * w - 0.1 * s - 0.1 * s * s); yy.push(H - 0.5 * s); aa.push(0); tt.push(1); }
+    for (let i = 1; i <= 4; i++) { const s = i / 4; rr.push((rim - 2 * w - 0.2) * (1 - s)); yy.push(H - 0.5 - 0.02 * s); aa.push(0); tt.push(1); }
+    const M = 128, Rn = rr.length, pos = new Float32Array(M * Rn * 3), idx = [];
+    for (let j = 0; j < Rn; j++) for (let i = 0; i < M; i++) {
+      const th = (i / M) * Math.PI * 2, c = Math.cos(7 * th + 5.2 * tt[j]);
+      const wv = Math.pow((1 + c) / 2, 1.6) * 2 - 1, r = rr[j] * (1 + aa[j] * wv), k = (j * M + i) * 3;
+      pos[k] = r * Math.cos(th); pos[k + 1] = yy[j]; pos[k + 2] = r * Math.sin(th);
+    }
+    for (let j = 0; j < Rn - 1; j++) for (let i = 0; i < M; i++) {
+      const a = j * M + i, b = j * M + (i + 1) % M, c = (j + 1) * M + i, d = (j + 1) * M + (i + 1) % M;
+      idx.push(a, c, b, b, c, d);
+    }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+    const vm = mesh(g, limeV); vm.receiveShadow = false; const o = new THREE.Group(); o.add(vm); o.userData.h = H; return o;
+  }
+
+  /* ---- object b: the tube vase, an open trefoil, white, lime inside each end ---- */
+  function tubeVase() {
+    const S = 0.225, TR = 0.14, u0 = 1.445 + 0.5, u1 = 1.445 + Math.PI * 2 - 0.5;
+    const raw = (u) => new THREE.Vector3(Math.sin(u) + 2 * Math.sin(2 * u), Math.cos(u) - 2 * Math.cos(2 * u), -Math.sin(3 * u)).multiplyScalar(S);
+    class Knot extends THREE.Curve { constructor(a, b) { super(); this.a = a; this.b = b; } getPoint(t, out) { const p = raw(u0 + (u1 - u0) * (this.a + (this.b - this.a) * t)); return (out || new THREE.Vector3()).copy(p); } }
+    const curve = new Knot(0, 1), o = new THREE.Group(), LE = 0.07;
+    o.add(mesh(new THREE.TubeGeometry(new Knot(LE, 1 - LE), 220, TR, 28, false), whiteTwo));
+    o.add(mesh(new THREE.TubeGeometry(new Knot(0, LE + 0.002), 20, TR * 1.012, 28, false), lime));
+    o.add(mesh(new THREE.TubeGeometry(new Knot(1 - LE - 0.002, 1), 20, TR * 1.012, 28, false), lime));
+    [0, 1].forEach((e) => {
+      const p = curve.getPoint(e), tg = curve.getTangent(e).multiplyScalar(e ? -1 : 1);   // tg points into the tube
+      const cap = mesh(new THREE.CircleGeometry(TR * 0.985, 40), lime);
+      cap.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tg.clone().negate());
+      cap.position.copy(p).addScaledVector(tg, 0.13); cap.castShadow = false; o.add(cap);
+      const inner = mesh(new THREE.CylinderGeometry(TR * 0.985, TR * 0.985, 0.13, 40, 1, true), lime);   // lime wall inside the mouth
+      inner.castShadow = false; inner.material = lime.clone(); inner.material.side = THREE.BackSide;
+      inner.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tg); inner.position.copy(p).addScaledVector(tg, 0.065); o.add(inner);
+    });
+    let minY = 1e9; for (let i = 0; i <= 240; i++) minY = Math.min(minY, curve.getPoint(i / 240).y);
+    o.children.forEach((c) => { c.position.y += TR - minY; });
+    o.userData.h = 1.3; return o;
+  }
+
+  /* ---- object c: seven offset discs ---- */
+  function discStack() {
+    const o = new THREE.Group(), cols = [white, ink, white, lime, white, ink, white];
+    const rad = [0.76, 0.56, 0.68, 0.46, 0.6, 0.5, 0.36], off = [[0, 0], [0.1, -0.06], [-0.12, 0.06], [0.1, 0.1], [-0.08, -0.1], [0.12, 0.02], [-0.06, 0.06]];
+    const h = 0.205, b = 0.045; let y = 0;
+    rad.forEach((r, n) => {
+      const pts = [new THREE.Vector2(0, 0)];
+      for (let i = 0; i <= 6; i++) { const a = -Math.PI / 2 + (i / 6) * (Math.PI / 2); pts.push(new THREE.Vector2(r - b + b * Math.cos(a), b + b * Math.sin(a))); }
+      for (let i = 0; i <= 6; i++) { const a = (i / 6) * (Math.PI / 2); pts.push(new THREE.Vector2(r - b + b * Math.cos(a), h - b + b * Math.sin(a))); }
+      pts.push(new THREE.Vector2(0, h));
+      const m = mesh(new THREE.LatheGeometry(pts, 72), cols[n]);
+      m.position.set(off[n][0], y, off[n][1]); o.add(m); y += h + 0.002;
+    });
+    o.userData.h = y; return o;
+  }
+  const OBJ = [foldVessel(), tubeVase(), discStack()];
+  OBJ.forEach((ob, i) => { ob.userData.ph = i * 1.3; });
+
+  /* ---- the plinth on its pivot, two slots ---- */
+  const FLOOR = -1.05;
+  const orbit = new THREE.Group(); orbit.rotation.order = 'YXZ'; scene.add(orbit);
+  const pivot = new THREE.Group(); orbit.add(pivot);
+  pivot.add(mesh(roundBox(SW, SLAB, SW, 0.07), white));
+  const slotTop = new THREE.Group(); slotTop.position.y = SLAB / 2; pivot.add(slotTop);
+  const slotUnder = new THREE.Group(); slotUnder.position.y = -SLAB / 2; slotUnder.rotation.x = Math.PI; pivot.add(slotUnder);
+
+  const sc = document.createElement('canvas'); sc.width = sc.height = 256;
+  const sg = sc.getContext('2d'), gr = sg.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gr.addColorStop(0, 'rgba(120,150,92,.55)'); gr.addColorStop(0.35, 'rgba(132,160,104,.3)'); gr.addColorStop(0.7, 'rgba(150,176,124,.09)'); gr.addColorStop(1, 'rgba(160,184,134,0)');
+  sg.fillStyle = gr; sg.fillRect(0, 0, 256, 256);
+  const shTex = new THREE.CanvasTexture(sc); shTex.colorSpace = THREE.SRGBColorSpace;
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false, toneMapped: false }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = FLOOR; shadow.scale.set(4.2, 2.7, 1); scene.add(shadow);
+
+  /* ---- state ---- */
+  let frozen = null, cur = 0, want = 0, flips = 0, flipping = false, target = 0, t0 = -10, last = 0, raf = 0, visible = true, pausedAt = 0, lost = 0, ox = 0, oy = 0, tx = 0, ty = 0;
+  const top = () => (flips % 2 ? slotUnder : slotTop), under = () => (flips % 2 ? slotTop : slotUnder);
+  const slotOf = (s, ob) => { s.add(ob); };
+  slotOf(slotTop, OBJ[0]);
+  const clock = () => (performance.now() - lost) / 1000;
+
+  function roll(i, instant) {
+    const n = document.createElement('div'); n.className = 'fp-line' + (instant ? '' : ' in');
+    n.innerHTML = '<b>' + ITEMS[i][0] + '</b><i>' + ITEMS[i][1] + '</i>';
+    const old = capEl.querySelector('.fp-line:not(.out)'); capEl.appendChild(n);
+    if (instant) { capEl.querySelectorAll('.fp-line.out, .fp-line:not(:last-child)').forEach((e) => e.remove()); return; }
+    if (old) old.classList.add('out');
+    n.getBoundingClientRect(); n.classList.remove('in');
+    setTimeout(() => { capEl.querySelectorAll('.fp-line.out').forEach((e) => e.remove()); }, FLIP * 1000 + 60);
+  }
+  function startFlip(T) {
+    target = want; flipping = true; t0 = T;
+    const u = under(); while (u.children.length) u.remove(u.children[0]);
+    u.add(OBJ[target]); OBJ[target].scale.setScalar(0.0001);
+    roll(target, reduced);
+  }
+  function land() {
+    flips++; cur = target; flipping = false;
+    const u = under(); while (u.children.length) u.remove(u.children[0]);
+    top().children[0].scale.setScalar(1);
+    if (want !== cur) startFlip(clock());
+  }
+  function pose(T, dt) {
+    OBJ.forEach((ob) => { ob.rotation.y = T * 0.28 + ob.userData.ph; });
+    if (flipping) {
+      const p = Math.min(1, (T - t0) / FLIP), e = move(p), tp = top().children[0], un = under().children[0];
+      pivot.rotation.x = Math.PI * (flips + e);
+      if (un) un.scale.setScalar(Math.max(0.0001, sstep(0, 0.5, e)));
+      if (tp) tp.scale.setScalar(Math.max(0.0001, 1 - sstep(0.5, 1, e)));
+      shadow.scale.x = 4.2 - 0.4 * Math.sin(Math.PI * e); shadow.scale.y = 2.7 - 0.25 * Math.sin(Math.PI * e);
+      if (p >= 1) land();
+    } else pivot.rotation.x = Math.PI * flips;
+    const k = 1 - Math.exp(-dt * 5); ox += (tx - ox) * k; oy += (ty - oy) * k;
+    orbit.rotation.y = ox + 0.1 * Math.sin(T * 0.45); orbit.rotation.x = oy;
+  }
+
+  /* ---- size, loop, pointer ---- */
+  const hostEl = host;
+  function size() {
+    const w = Math.max(2, hostEl.clientWidth), h = Math.max(2, hostEl.clientHeight);
+    renderer.setSize(w, h, false); cam.aspect = w / h;
+    const vis = cam.aspect >= 1.2 ? 4.5 : 4.5 * 1.2 / cam.aspect;
+    const need = vis / (2 * Math.tan((cam.fov * Math.PI) / 360));
+    const el = 0.2;
+    cam.position.set(0, 0.1 + Math.sin(el) * need, Math.cos(el) * need); cam.lookAt(0, 0.1, 0);
+    cam.setViewOffset(w, h, 0, h * 0.02, w, h);
+    cam.updateProjectionMatrix();
+  }
+  function frame(T, dt) { pose(T, dt); renderer.render(scene, cam); }
+  function loop() {
+    raf = 0; if (!visible || document.hidden) return;
+    const now = frozen === null ? clock() : frozen, dt = Math.min(0.1, Math.max(0.001, now - last)); last = now;
+    frame(now, dt); raf = requestAnimationFrame(loop);
+  }
+  function play() { if (reduced || raf || !visible || document.hidden) return; if (pausedAt) { lost += performance.now() - pausedAt; pausedAt = 0; } last = clock(); raf = requestAnimationFrame(loop); }
+  function halt() { if (raf) { cancelAnimationFrame(raf); raf = 0; } if (!pausedAt) pausedAt = performance.now(); }
+  new ResizeObserver(() => { size(); if (reduced || !raf) frame(clock(), 0.016); }).observe(hostEl);
+  new IntersectionObserver((e) => { visible = e[0].isIntersecting; visible ? play() : halt(); }).observe(hostEl);
+  document.addEventListener('visibilitychange', () => { document.hidden ? halt() : play(); });
+  if (!reduced) {
+    hostEl.addEventListener('pointermove', (e) => { if (e.pointerType && e.pointerType !== 'mouse') return; const r = hostEl.getBoundingClientRect(); tx = ((e.clientX - r.left) / r.width - 0.5) * 2 * 0.35; ty = ((e.clientY - r.top) / r.height - 0.5) * 2 * 0.1; });
+    hostEl.addEventListener('pointerleave', () => { tx = ty = 0; });
+  }
+
+  /* ---- tabs ---- */
+  const tabs = Array.from(document.querySelectorAll('#fp-tabs button')), bar = document.getElementById('fp-bar');
+  function markTab() {
+    const b = tabs[want]; bar.style.setProperty('--x', b.offsetLeft + 'px'); bar.style.setProperty('--w', b.offsetWidth + 'px');
+    tabs.forEach((t, i) => { t.setAttribute('aria-selected', i === want); t.tabIndex = i === want ? 0 : -1; });
+  }
+  function go(i) {
+    if (i === want && !flipping) return;
+    want = i; markTab();
+    if (flipping) return;
+    if (i === cur) return;
+    startFlip(clock());
+    if (reduced) { land(); frame(clock(), 0.016); }
+  }
+  tabs.forEach((b, i) => b.addEventListener('click', () => go(i)));
+  document.getElementById('fp-tabs').addEventListener('keydown', (e) => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault();
+    const i = (want + d + 3) % 3; go(i); tabs[i].focus();
+  });
+
+  size();
+  roll(0, true);
+  document.fonts && document.fonts.ready.then(markTab); markTab();
+  frame(clock(), 0.016);
+  if (!reduced) play();
+  return { peek(p) { if (!flipping) return; frozen = t0 + p * FLIP; }, thaw() { frozen = null; }, go, tabs, get want() { return want; }, get flipping() { return flipping; }, frame, clock };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function tap(my, i) {
+    const el = FP.tabs[i], r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.6, 820))) throw 0;
+    if (my !== epoch) throw 0;
+    await gap(my, 150); el.click();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 1200); await tap(my, 1);
+        await gap(my, 3200); await tap(my, 2);
+        await gap(my, 3200); await tap(my, 0);
+        await gap(my, 2600);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  const host = document.getElementById('fp');
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript(); clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!host.matches(':hover') && !host.contains(document.activeElement)) script(); else touch({}); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); FP.go(0); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>
