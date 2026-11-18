@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intent prefetch · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "intent-prefetch", "title": "Intent prefetch", "group": "studio", "added": "2026-11-16", "cat": "cursor", "order": 70,
+  "kind": "pointer", "tone": "paper", "shot": 1850,
+  "line": "last 100 ms of motion · line extended 240 px · bar fills in 200–260 ms · opens in 0 ms",
+  "summary": "A row of three Qbix work cards that prepares the one you are heading for. The piece reads the last 100 ms of the pointer's motion, projects that line 240 px ahead (drawn as a faint dotted line with a ring where it meets a card) and starts fetching the first card on it: a thin lime line fills along the card's foot and a Ready tag is uncovered when it is done. When the pointer lands, the preview is uncovered at once, because it is already there. A card the line has left drains back.",
+  "spec": [
+    ["Prediction", "velocity = displacement over the last 100 ms; it counts as heading somewhere above 0.08 px/ms; the ray (240 px) is tested against each card grown by 8 px and the nearest hit wins"],
+    ["Confidence", "cos³ of the angle between the heading and the card's centre, 35 to 99 %; a pointer inside a card is 100 %"],
+    ["Prefetch", "the bar fills in the card's own fetch time (Forma 240 ms, Kova 200 ms, Willow 260 ms), a 2 px ink cap leads it, the Ready tag rolls in from below; a target is held for 400 ms after the line stops"],
+    ["Drain", "350 ms after a card stops being wanted its bar drains back over 500 ms and its tag leaves"],
+    ["Landing", "inside a card at under 0.5 px/ms; a fast pass over a card does not land; the preview layer is uncovered from the bottom, 360 ms expo out"],
+    ["Readout", "Geist Mono: Kova · 91% likely, then Kova ready · 200 ms, then Opened Kova in 0 ms (a cold landing shows the real wait)"],
+    ["Line", "dotted ink at 36 %, 2.4 px round dots every 7 px; it grows from the pointer when it moves and withdraws into it when it stops"],
+    ["Loop", "the ghost makes four approaches (a straight one, one that changes its mind, one straight down, one retreat); a real pointer takes over and the ghost returns after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "The work index on a Qbix studio page: three case-study cards whose previews are fetched while the visitor is still moving toward them, so the one they pick opens with no wait.",
+  "rules": [
+    "Predict from motion, not position: a pointer that rests over nothing prefetches nothing.",
+    "Hold the prediction for a moment after the line stops, so a slowing approach does not cancel its own fetch.",
+    "The preview never shows a spinner: it opens when it is ready, and a cold landing waits for the bar and says so.",
+    "A fast pass over a card does not count as landing, so crossing the row never flashes previews.",
+    "Keyboard focus lands the same way a pointer does; the bar then fills and the preview opens when it is ready.",
+    "Leaving the component closes the preview and drains every bar; the loop runs only while something moves.",
+    "Reduced motion rests on Kova ready and open, with the predicted line drawn once and still."
+  ],
+  "tags": ["predictive", "prefetch", "intent", "pointer", "hover", "cards", "progress", "preview"]
+}
+</script>
+<style data-code>
+/* Intent prefetch. White surfaces with soft rings, no ink fills, one lime point (the bar). Easings: expo out (.16,1,.3,1), in (.5,0,.75,0), ui (.4,0,.2,1). */
+.ip { position: relative; width: 648px; color: #0B0C0D; font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+:where(.ip button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; text-align: left; }
+.ip p, .ip h3 { margin: 0; }
+
+.ip-hd { display: flex; align-items: center; justify-content: space-between; height: 24px; }
+.ip-k { font-weight: 500; color: rgba(11, 12, 13, .66); }
+.ip-st { display: flex; align-items: center; gap: 8px; width: 232px; font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ip-led { flex: none; width: 8px; height: 8px; border-radius: 50%; background: rgba(11, 12, 13, .18); transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.ip.is-live .ip-led { background: rgba(11, 12, 13, .66); }
+
+/* the cards: white with a soft ring; the bar lives on the foot of each */
+.ip-row { display: grid; grid-template-columns: repeat(3, 208px); gap: 12px; margin-top: 16px; }
+.ip-c { position: relative; display: block; height: 132px; padding: 16px 16px 0; background: #fff; overflow: hidden; border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.ip-c.is-on { box-shadow: 0 0 0 1px rgba(11, 12, 13, .28), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.ip-c:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.ip-n { display: block; font: 300 22px/24px Outfit, Geist, sans-serif; letter-spacing: -.035em; white-space: nowrap; }
+.ip-d { display: block; margin-top: 2px; color: rgba(11, 12, 13, .66); }
+.ip-tag { position: absolute; left: 16px; bottom: 14px; height: 20px; overflow: hidden; font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; white-space: nowrap; }
+.ip-tag span { display: block; transform: translateY(110%); transition: transform 220ms cubic-bezier(.5, 0, .75, 0); }
+.ip-c.is-ready .ip-tag span { transform: none; transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.ip-ar { position: absolute; right: 14px; bottom: 16px; width: 16px; height: 16px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; transition: transform 300ms cubic-bezier(.16, 1, .3, 1); }
+.ip-c.is-on .ip-ar { transform: translate(2px, -2px); }
+.ip-c:active .ip-ar { transform: translate(2px, -1px); transition-duration: 90ms; }
+.ip-bar { position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: #B8FF00; transform: scaleX(0); transform-origin: 0 50%; }
+.ip-cap { position: absolute; left: 0; bottom: 0; width: 2px; height: 3px; background: #0B0C0D; visibility: hidden; }
+
+/* the preview: one white panel, a layer per card; the newest layer is uncovered from its bottom edge, nothing fades */
+.ip-pv { position: relative; height: 136px; margin-top: 12px; background: #fff; color: #0B0C0D; overflow: hidden; border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.ip-l { position: absolute; inset: 0; display: flex; align-items: center; gap: 20px; padding: 0 24px; background: #fff;
+  clip-path: inset(0); transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1); }
+.ip-l.is-hid { clip-path: inset(100% 0 0 0); }
+.ip-l.is-under { visibility: hidden; }
+.ip-l.snap { transition: none; }
+.ip-pic { flex: none; width: 80px; height: 80px; border-radius: 16px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); display: grid; place-items: center; }
+.ip-pic svg { display: block; width: 48px; height: 48px; fill: none; stroke: rgba(11, 12, 13, .38); stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.ip-tx { min-width: 0; }
+.ip-tt { font: 300 22px/26px Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.ip-ln { margin-top: 4px; color: rgba(11, 12, 13, .66); }
+.ip-mt { margin-top: 10px; font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); white-space: nowrap; }
+
+/* the predicted line: dotted ink at 36 %, drawn over the page */
+.ip-ov { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 30; }
+.ip-ov line { stroke: rgba(11, 12, 13, .36); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 0.1 7; }
+.ip-ov circle { fill: none; stroke: rgba(11, 12, 13, .34); stroke-width: 1.5; }
+.ip-ov [hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) { .ip *, .ip *::before { transition: none !important; } }
+</style>
+<style>
+  .ipw { display: grid; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="ipw">
+<!-- code -->
+<section class="ip" id="ip" aria-label="Selected work">
+  <div class="ip-hd">
+    <p class="ip-k">Qbix · Selected work</p>
+    <p class="ip-st" aria-hidden="true"><i class="ip-led"></i><span id="ip-st">Prefetch idle</span></p>
+  </div>
+  <div class="ip-row">
+    <button type="button" class="ip-c" aria-label="Forma, ceramics store">
+      <span class="ip-n">Forma</span><span class="ip-d">Ceramics store</span>
+      <span class="ip-tag"><span>Ready · 240 ms</span></span>
+      <svg class="ip-ar" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg>
+      <i class="ip-bar"></i><i class="ip-cap"></i>
+    </button>
+    <button type="button" class="ip-c" aria-label="Kova, money app">
+      <span class="ip-n">Kova</span><span class="ip-d">Money app</span>
+      <span class="ip-tag"><span>Ready · 200 ms</span></span>
+      <svg class="ip-ar" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg>
+      <i class="ip-bar"></i><i class="ip-cap"></i>
+    </button>
+    <button type="button" class="ip-c" aria-label="Willow Counseling, practice site">
+      <span class="ip-n">Willow Counseling</span><span class="ip-d">Practice site</span>
+      <span class="ip-tag"><span>Ready · 260 ms</span></span>
+      <svg class="ip-ar" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg>
+      <i class="ip-bar"></i><i class="ip-cap"></i>
+    </button>
+  </div>
+  <div class="ip-pv" id="ip-pv" aria-live="polite">
+    <div class="ip-l" data-k="idle">
+      <div class="ip-tx"><h3 class="ip-tt">Move toward a card.</h3><p class="ip-ln">Its preview is fetched before you arrive.</p></div>
+    </div>
+    <div class="ip-l is-hid is-under" data-k="0" aria-hidden="true">
+      <div class="ip-pic" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M6 20h36c0 12-8 20-18 20S6 32 6 20z"/><path d="M14 40h20"/></svg></div>
+      <div class="ip-tx"><h3 class="ip-tt">A shop that feels handmade.</h3><p class="ip-ln">Forma, ceramics. Shop, studio and journal, live in 12 days.</p><p class="ip-mt">forma.studio · 14 pages</p></div>
+    </div>
+    <div class="ip-l is-hid is-under" data-k="1" aria-hidden="true">
+      <div class="ip-pic" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="7" y="12" width="34" height="24" rx="5"/><path d="M7 20h34M14 29h8"/></svg></div>
+      <div class="ip-tx"><h3 class="ip-tt">A money app that stays calm.</h3><p class="ip-ln">Kova, finance. Accounts, cards and a quiet first screen.</p><p class="ip-mt">kova.app · 9 screens</p></div>
+    </div>
+    <div class="ip-l is-hid is-under" data-k="2" aria-hidden="true">
+      <div class="ip-pic" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M10 38C10 20 22 10 38 10c0 18-10 28-28 28z"/><path d="M10 38C18 28 26 21 34 14"/></svg></div>
+      <div class="ip-tx"><h3 class="ip-tt">Booking in three taps.</h3><p class="ip-ln">Willow Counseling, practice. Sessions with Dana Reyes, LMFT.</p><p class="ip-mt">willowcounseling.com · 6 pages</p></div>
+    </div>
+  </div>
+  <svg class="ip-ov" aria-hidden="true"><line id="ip-line" x1="0" y1="0" x2="0" y2="0" hidden/><circle id="ip-ring" cx="0" cy="0" r="0" hidden/></svg>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Intent prefetch</span><span class="qm-sep">/</span><span>Move toward a card: it is ready before you land</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Intent prefetch. The pointer's last 100 ms give a heading; the first card on that line is fetched at once. Everything is drawn from one tick that runs only while something moves. */
+const IP = { SPAN: 240, WIN: 100, MOVE: 0.08, LAND: 0.5, HOLD: 400, DELAY: 350, DRAIN: 500, PAD: 8 };
+const ipBox = document.getElementById('ip'), ipSt = document.getElementById('ip-st'), ipLine = document.getElementById('ip-line'), ipRing = document.getElementById('ip-ring');
+const ipReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ipCards = [...ipBox.querySelectorAll('.ip-c')].map((el, i) => ({
+  el, i, ms: [240, 200, 260][i], name: ['Forma', 'Kova', 'Willow'][i],
+  bar: el.querySelector('.ip-bar'), cap: el.querySelector('.ip-cap'),
+  p: 0, ready: false, readyAt: 0, needAt: -1e9, shownP: -1,
+}));
+const ipLayers = {};
+ipBox.querySelectorAll('.ip-l').forEach((l) => { ipLayers[l.dataset.k] = l; });
+let ipPtr = null, ipSamples = [], ipTgt = -1, ipTgtAt = 0, ipConf = 0, ipLanded = -1, ipLandT = 0, ipOpened = -1, ipOpenMs = 0;
+let ipFocus = -1, ipStill = -1, ipDir = [0, 1], ipLen = 0, ipRingR = 0, ipRingAt = null, ipRaf = 0, ipLast = 0;
+let ipShownLayer = 'idle', ipZ = 1, ipText = '', ipTextAt = 0, ipUnder = 0;
+
+// ray (point p, unit direction d) against a rect: distance to the entry point within max, or null
+function ipRay(p, d, r, max) {
+  let t0 = 0, t1 = max;
+  for (const [pos, dir, lo, hi] of [[p.x, d[0], r.left, r.right], [p.y, d[1], r.top, r.bottom]]) {
+    if (Math.abs(dir) < 1e-9) { if (pos < lo || pos > hi) return null; continue; }
+    let a = (lo - pos) / dir, b = (hi - pos) / dir;
+    if (a > b) [a, b] = [b, a];
+    t0 = Math.max(t0, a); t1 = Math.min(t1, b);
+    if (t0 > t1) return null;
+  }
+  return t0;
+}
+const ipVis = (el, on) => { if (on) el.removeAttribute('hidden'); else el.setAttribute('hidden', ''); };   // SVG elements have no .hidden property
+const ipGrow = (r, g) => ({ left: r.left - g, right: r.right + g, top: r.top - g, bottom: r.bottom + g });
+
+// the preview: the newest layer is uncovered from its bottom edge over the one before it
+function ipShow(k) {
+  k = String(k);
+  if (k === ipShownLayer) return;
+  ipShownLayer = k;
+  const el = ipLayers[k];
+  el.classList.remove('is-under'); el.setAttribute('aria-hidden', 'false');
+  el.classList.add('snap', 'is-hid'); el.style.zIndex = ++ipZ; el.getBoundingClientRect(); el.classList.remove('snap', 'is-hid');
+  for (const o in ipLayers) if (o !== k) ipLayers[o].setAttribute('aria-hidden', 'true');
+  const mine = ++ipUnder;                                          // once uncovered, whatever lies under it stops drawing
+  setTimeout(() => { if (mine === ipUnder) for (const o in ipLayers) if (o !== ipShownLayer) { ipLayers[o].classList.add('is-under'); ipLayers[o].classList.add('is-hid'); } }, ipReduced ? 0 : 400);
+}
+
+function ipPush(x, y) {
+  const now = performance.now();
+  ipPtr = { x, y };
+  ipSamples.push({ x, y, t: now });
+  ipWake();
+}
+function ipLeave() {
+  ipPtr = null; ipSamples = [];
+  if (ipBox.contains(document.activeElement)) document.activeElement.blur();
+  ipWake();
+}
+function ipWake() { if (!ipRaf) { ipLast = performance.now(); ipRaf = requestAnimationFrame(ipTick); } }
+
+function ipTick() {
+  ipRaf = 0;
+  const now = performance.now(), dt = Math.min(50, now - ipLast); ipLast = now;
+  const rects = ipCards.map((c) => c.el.getBoundingClientRect());
+  const box = ipBox.getBoundingClientRect();
+  let moving = false, inside = -1, vx = 0, vy = 0, speed = 0;
+
+  if (ipPtr) {
+    while (ipSamples.length > 2 && now - ipSamples[0].t > 400) ipSamples.shift();
+    let ref = ipSamples[0];
+    for (const s of ipSamples) { if (now - s.t >= IP.WIN) ref = s; else break; }
+    const dtv = Math.max(1, now - ref.t);
+    vx = (ipPtr.x - ref.x) / dtv; vy = (ipPtr.y - ref.y) / dtv; speed = Math.hypot(vx, vy);
+    moving = dtv >= 50 && speed >= IP.MOVE;
+    inside = rects.findIndex((r) => ipPtr.x >= r.left && ipPtr.x <= r.right && ipPtr.y >= r.top && ipPtr.y <= r.bottom);
+  }
+
+  // landing: inside a card, slowly enough; it stays until the pointer leaves the whole component
+  let want = ipLanded;
+  if (ipPtr) {
+    const inComp = ipPtr.x >= box.left && ipPtr.x <= box.right && ipPtr.y >= box.top && ipPtr.y <= box.bottom;
+    if (inside >= 0 && (inside === ipLanded || speed < IP.LAND)) want = inside;
+    else if (inside < 0 && !inComp) want = -1;
+  } else want = ipFocus >= 0 ? ipFocus : ipStill;
+  if (want !== ipLanded) { ipLanded = want; ipLandT = now; }
+
+  // prediction: the first card on the heading
+  let entry = null;
+  if (moving) {
+    const m = Math.hypot(vx, vy);
+    ipDir = [vx / m, vy / m];
+    let best = -1, bestT = 1e9;
+    rects.forEach((r, i) => { const t = ipRay(ipPtr, ipDir, ipGrow(r, IP.PAD), IP.SPAN); if (t !== null && t < bestT) { best = i; bestT = t; } });
+    if (inside >= 0) { best = inside; bestT = 0; }
+    if (best >= 0) {
+      ipTgt = best; ipTgtAt = now;
+      const r = rects[best], cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+      const dx = cx - ipPtr.x, dy = cy - ipPtr.y, dm = Math.hypot(dx, dy) || 1;
+      const conf = inside >= 0 ? 100 : Math.min(99, Math.max(35, Math.round(100 * Math.pow(Math.max(0, (dx * ipDir[0] + dy * ipDir[1]) / dm), 3))));
+      ipConf += (conf - ipConf) * Math.min(1, ipConf ? dt / 120 : 1);
+      const hit = ipRay(ipPtr, ipDir, r, IP.SPAN);
+      const tt = hit === null ? bestT : hit;
+      entry = { x: ipPtr.x + ipDir[0] * tt, y: ipPtr.y + ipDir[1] * tt };
+    }
+  }
+  if (ipTgt >= 0 && now - ipTgtAt > IP.HOLD) ipTgt = -1;
+
+  // prefetch: a card that is wanted fills in its own time; one that is not drains back after a pause
+  let busy = false;
+  for (const c of ipCards) {
+    const need = ipLanded === c.i || ipTgt === c.i;
+    if (need) {
+      c.needAt = now;
+      if (c.p < 1) { c.p = ipReduced ? 1 : Math.min(1, c.p + dt / c.ms); busy = true; }
+    } else if (c.p > 0 && now - c.needAt > IP.DELAY) { c.p = ipReduced ? 0 : Math.max(0, c.p - dt / IP.DRAIN); busy = true; }
+    else if (c.p > 0 && c.p < 1) busy = true;
+    if (c.p >= 1 && !c.ready) { c.ready = true; c.readyAt = now; }
+    else if (c.p < 1 && c.ready && now - c.needAt > IP.DELAY) c.ready = false;
+    if (c.p !== c.shownP) {
+      c.shownP = c.p;
+      c.bar.style.transform = `scaleX(${c.p.toFixed(4)})`;
+      const w = rects[c.i].width, x = Math.round(c.p * w);
+      c.cap.style.visibility = c.p > 0 && c.p < 1 ? 'visible' : 'hidden';
+      c.cap.style.transform = `translateX(${Math.max(0, x - 2)}px)`;
+    }
+    c.el.classList.toggle('is-on', ipLanded === c.i);
+    c.el.classList.toggle('is-ready', c.ready);
+  }
+
+  // the preview opens the moment the landed card is ready (at once if it was, after the wait if it was not)
+  if (ipLanded >= 0 && ipCards[ipLanded].ready) {
+    if (ipOpened !== ipLanded) { ipOpened = ipLanded; ipOpenMs = Math.round(Math.max(0, ipCards[ipLanded].readyAt - ipLandT)); ipShow(ipLanded); }
+  } else if (ipLanded < 0 && ipOpened !== -1) { ipOpened = -1; ipShow('idle'); }
+
+  // the readout (at most every 100 ms, so the numbers can be read)
+  let txt, live = true;
+  if (ipLanded >= 0) txt = ipOpened === ipLanded ? `Opened ${ipCards[ipLanded].name} in ${ipOpenMs} ms` : `Opening ${ipCards[ipLanded].name}`;
+  else if (ipTgt >= 0) txt = ipCards[ipTgt].ready ? `${ipCards[ipTgt].name} ready · ${ipCards[ipTgt].ms} ms` : `${ipCards[ipTgt].name} · ${Math.round(ipConf)}% likely`;
+  else { txt = ipPtr ? 'Watching the pointer' : 'Prefetch idle'; live = false; }
+  if (txt !== ipText && (now - ipTextAt > 100 || ipTgt < 0 || ipLanded >= 0)) { ipText = txt; ipTextAt = now; ipSt.textContent = txt; }
+  ipBox.classList.toggle('is-live', live);
+
+  // the line and its ring: growing from the pointer while it moves, withdrawing into it when it stops
+  const wantLen = ipPtr && moving ? IP.SPAN : 0;
+  ipLen += (wantLen - ipLen) * (1 - Math.exp(-dt / (wantLen ? 70 : 110)));
+  if (Math.abs(wantLen - ipLen) < 0.5) ipLen = wantLen;
+  if (entry) ipRingAt = entry;
+  const wantR = ipPtr && moving && entry ? 7 : 0;
+  ipRingR += (wantR - ipRingR) * (1 - Math.exp(-dt / 90));
+  if (Math.abs(wantR - ipRingR) < 0.05) ipRingR = wantR;
+  if (ipPtr && ipLen > 0.5) {
+    ipVis(ipLine, true);
+    ipLine.setAttribute('x1', ipPtr.x.toFixed(1)); ipLine.setAttribute('y1', ipPtr.y.toFixed(1));
+    ipLine.setAttribute('x2', (ipPtr.x + ipDir[0] * ipLen).toFixed(1)); ipLine.setAttribute('y2', (ipPtr.y + ipDir[1] * ipLen).toFixed(1));
+  } else if (!(ipReduced && !ipPtr && ipStill >= 0)) ipVis(ipLine, false);
+  if (ipRingR > 0.2 && ipRingAt) {
+    ipVis(ipRing, true);
+    ipRing.setAttribute('cx', ipRingAt.x.toFixed(1)); ipRing.setAttribute('cy', ipRingAt.y.toFixed(1)); ipRing.setAttribute('r', ipRingR.toFixed(2));
+  } else if (!(ipReduced && !ipPtr && ipStill >= 0)) ipVis(ipRing, false);
+
+  if (busy || ipPtr || ipLen > 0 || ipRingR > 0 || ipOpened !== ipLanded) ipRaf = requestAnimationFrame(ipTick);
+}
+
+// keyboard: focus lands on a card like a pointer does
+ipCards.forEach((c) => {
+  c.el.addEventListener('focus', () => { if (c.el.matches(':focus-visible')) { ipFocus = c.i; ipPtr = null; ipSamples = []; ipWake(); } });  /* the keyboard takes over from a parked pointer */
+  c.el.addEventListener('blur', () => { if (ipFocus === c.i) { ipFocus = -1; ipWake(); } });
+});
+// real pointers: a mouse, a pen or a finger
+addEventListener('pointermove', (e) => ipPush(e.clientX, e.clientY), { passive: true });
+addEventListener('pointerdown', (e) => ipPush(e.clientX, e.clientY), { passive: true });
+document.documentElement.addEventListener('mouseleave', () => ipLeave());
+
+// reduced motion: rest on Kova ready and open, the predicted line drawn once
+function ipRest() {
+  const r = ipCards[1].el.getBoundingClientRect(), box = ipBox.getBoundingClientRect();
+  ipStill = 1;
+  const x1 = r.left + r.width * 0.3, y1 = box.top - 44, x2 = r.left + r.width * 0.5, y2 = r.top;
+  ipVis(ipLine, true); ipVis(ipRing, true);
+  ipLine.setAttribute('x1', x1); ipLine.setAttribute('y1', y1); ipLine.setAttribute('x2', x2); ipLine.setAttribute('y2', y2);
+  ipRing.setAttribute('cx', x2); ipRing.setAttribute('cy', y2); ipRing.setAttribute('r', 7);
+  ipWake();
+}
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let idleT = 0;
+  // the ghost: a straight approach to Forma from above, one that heads for Kova and changes its mind for Willow, a straight drop onto Kova
+  function path(t) {
+    const R = ipBox.getBoundingClientRect(), top = R.top;
+    const c = ipCards.map((k) => { const r = k.el.getBoundingClientRect(); return [r.left + r.width * 0.5, r.top + r.height * 0.56]; });
+    const lerp = (a, b) => (u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+    const S0 = [R.left + 30, top - 66], S4 = [R.left - 60, top - 56], S1 = [c[1][0] - 10, top - 60], S2 = [c[1][0] + 6, top - 56], S3 = [c[1][0], top - 56];
+    const bez = (p0, p1, p2, p3) => (u) => { const v = 1 - u; return [0, 1].map((k) => v * v * v * p0[k] + 3 * v * v * u * p1[k] + 3 * v * u * u * p2[k] + u * u * u * p3[k]); };
+    const E = (a, b, u) => a + (b - a) * u;
+    const ease = QM.bezier(0.65, 0, 0.35, 1);
+    const seq = [
+      { d: 0.5, f: () => S0 },
+      { d: 1.9, f: lerp(S0, c[0]) },                                                         // straight at Forma
+      { d: 1.9, f: () => c[0] },
+      { d: 0.9, f: lerp(c[0], S1) },                                                         // back up out of the card
+      { d: 2.2, f: bez(S1, [c[1][0] + 6, top + 10], [c[1][0] + 200, top - 20], c[2]) },      // toward Kova, then over to Willow
+      { d: 1.7, f: () => c[2] },
+      { d: 0.9, f: lerp(c[2], S2) },
+      { d: 1.4, f: lerp(S2, c[1]) },                                                         // straight down onto Kova
+      { d: 1.9, f: () => c[1] },
+      { d: 0.8, f: lerp(c[1], S3) },
+      { d: 1.0, f: lerp(S3, S4) },                                                           // out over the top, back to the start
+      { d: 0.6, f: lerp(S4, S0) },
+      { d: 0.5, f: () => S0 },
+    ];
+    const total = seq.reduce((a, s) => a + s.d, 0);
+    let u = t % total;
+    for (const s of seq) { if (u <= s.d) return s.f(ease(u / s.d)); u -= s.d; }
+    return S0;
+  }
+  // a real mouse that rests for 4.5 s hands the row back to the ghost
+  const idle = (e) => {
+    if (QM.tile || reduced || (e.pointerType && e.pointerType !== 'mouse')) return;
+    clearTimeout(idleT);
+    idleT = setTimeout(() => window.dispatchEvent(new MessageEvent('message', { data: { qm: 'cmd', cmd: 'replay' } })), 4500);
+  };
+  addEventListener('pointermove', idle, { passive: true });
+  QM.demo({
+    kind: 'pointer',
+    move: (x, y, isGhost) => { if (!(reduced && isGhost)) ipPush(x, y); },
+    leave: () => ipLeave(),
+    path,
+  });
+  if (reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(ipRest));
+})();
+</script>
+</body>
+</html>

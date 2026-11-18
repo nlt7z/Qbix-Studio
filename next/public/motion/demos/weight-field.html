@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weight field · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "weight-field", "title": "Weight field", "group": "studio", "added": "2026-11-16", "cat": "text", "order": 50,
+  "kind": "pointer", "tone": "paper", "shot": 3400,
+  "line": "wght 200 → 600 · swell by distance · attack 90 ms, release 240 ms · line width fixed",
+  "summary": "A Qbix headline in the variable Outfit. Every letter takes its weight from the pointer's distance: ExtraLight at rest, up to 600 under the pointer, with a smooth falloff over about 140 px. Each letter chases its own target, quick to swell and slower to let go, so the weight trails the pointer like a wake. The line never reflows: each letter sits in a cell measured for its widest weight and grows around its own centre.",
+  "spec": [
+    ["Weight", "wght 200 at rest, 600 at the pointer; distance is measured to each letter's centre"],
+    ["Falloff", "a Gaussian, exp(−(d / R)²), R = 1.1 × the font size (73 px at 66 px type); vertical distance counts 1.7 times, so the other line stays at rest"],
+    ["Wake", "each letter eases toward its target with its own clock: attack 90 ms, release 240 ms, so the swell trails the pointer"],
+    ["Layout", "one cell per letter, width = the widest of the advances measured at wght 200, 400 and 600 (kerning included), the glyph centred; the line is the same width to the pixel at any weight"],
+    ["Readout", "Geist Mono, the heaviest letter's weight, tabular so the number does not jitter; the lime dot is its point"],
+    ["Loop", "the ghost sweeps line one left to right, drops to line two and sweeps back; a real pointer takes over and the ghost returns after 4.5 s of rest"],
+    ["Reduced motion", "a still swell around the word detail; the pointer, if used, moves the weights without easing"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "The hero of a Qbix studio page or a case study's closing line: a headline that answers the visitor's pointer without moving a single letter off its place.",
+  "rules": [
+    "The font must be variable on the wght axis. The kit's Outfit face declares 100 to 300 only, so this piece declares the same file again as Outfit VF with 100 to 900.",
+    "Never let the weight change the line's width: measure each letter at the lightest and heaviest weight, take the widest, and centre the glyph in that cell.",
+    "Cell widths are in em and measured once the font is in, so the headline scales with its font size and nothing shifts when it loads.",
+    "Smooth per letter, not per pointer: the wake is each letter's own easing, with a slower release than attack.",
+    "Idle frames cost nothing: the loop runs only while a letter is still moving.",
+    "The headline keeps its text for assistive tech (aria-label); the letter cells are hidden from it."
+  ],
+  "tags": ["variable font", "weight", "type", "pointer", "wake", "proximity", "Outfit"]
+}
+</script>
+<style data-code>
+/* Weight field. Outfit is variable on wght; the same file is declared again with the full range (the kit's own face stops at 300). */
+@font-face { font-family: 'Outfit VF'; src: url('../kit/fonts/Outfit-var.woff2') format('woff2'); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+.wf { --wf-fs: 66px; position: relative; width: min(640px, calc(100vw - 48px)); padding: 28px 40px 30px; background: #fff; color: #0B0C0D; border-radius: 20px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.wf-k { margin: 0; font: 500 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+
+/* the headline: a fixed cell per letter, widths in em (set from script), the glyph centred in it, so the weight can change and nothing moves */
+.wf-h { margin: 22px 0 0; font-family: 'Outfit VF', Outfit, Geist, sans-serif; font-size: var(--wf-fs); line-height: 1.06; font-weight: 200; font-synthesis-weight: none;
+  letter-spacing: 0; white-space: nowrap; user-select: none; -webkit-user-select: none; cursor: default; }
+.wf-l { display: block; height: 1.06em; }
+.wf-c { display: inline-flex; justify-content: center; vertical-align: top; height: 1.06em; white-space: pre; font-variation-settings: 'wght' 200; }
+
+.wf-f { margin-top: 26px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.wf-p { margin: 0; max-width: 310px; font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); text-wrap: pretty; }
+.wf-n { flex: none; display: flex; align-items: center; gap: 8px; font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: #0B0C0D; }
+.wf-n i { width: 8px; height: 8px; background: #B8FF00; border-radius: 50%; }
+</style>
+<style>
+  .wfw { display: grid; justify-items: center; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="wfw">
+<!-- code -->
+<section class="wf" id="wf" aria-label="Weight field">
+  <p class="wf-k">Qbix Studio · Type</p>
+  <h2 class="wf-h" id="wf-h" aria-label="Design and build, one detail at a time."></h2>
+  <div class="wf-f">
+    <p class="wf-p">Move across the line. Letters swell as you near them and ease back behind you.</p>
+    <p class="wf-n"><i></i><span id="wf-n">wght 200</span></p>
+  </div>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Weight field</span><span class="qm-sep">/</span><span>Move the pointer across the headline</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Weight field. build() measures every letter at wght 200, 400 and 600 and sets one em-wide cell per letter;
+   tick() eases each letter's weight toward its target and runs only while something is still moving. */
+const WF = { LINES: ['Design and build,', 'one detail at a time.'], MIN: 200, MAX: 600, ATTACK: 90, RELEASE: 240, TRACK: -0.03, SQUASH: 1.7, FS_MAX: 66 };
+const wfCard = document.getElementById('wf'), wfHead = document.getElementById('wf-h'), wfOut = document.getElementById('wf-n');
+const wfReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let wfLetters = [];            // { el, cx, cy, w, tw }
+let wfPtr = null;              // { x, y } in client px, or null at rest
+let wfR = 110;                 // falloff radius in px, 1.1 × the font size
+let wfRaf = 0, wfLast = 0, wfStill = null, wfShown = '';
+
+function wfBuild() {
+  // a hidden ruler: the prefix width of each line at three weights, kerning and tracking included; a letter's cell is the widest of its advances
+  const ruler = document.createElement('span');
+  ruler.style.cssText = `position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre;font:200 100px 'Outfit VF';letter-spacing:${WF.TRACK}em`;
+  document.body.appendChild(ruler);
+  const widthOf = (s, w) => { ruler.style.fontVariationSettings = `'wght' ${w}`; ruler.textContent = s; return ruler.getBoundingClientRect().width / 100; };
+  wfHead.textContent = '';
+  wfLetters = [];
+  let widest = 0;
+  WF.LINES.forEach((line) => {
+    const row = document.createElement('span');
+    row.className = 'wf-l'; row.setAttribute('aria-hidden', 'true');
+    let total = 0;
+    [...line].forEach((ch, i) => {
+      const cell = Math.max(...[WF.MIN, 400, WF.MAX].map((w) => widthOf(line.slice(0, i + 1), w) - widthOf(line.slice(0, i), w)));
+      const el = document.createElement('span');
+      el.className = 'wf-c'; el.style.width = `${cell.toFixed(4)}em`; el.textContent = ch;
+      row.appendChild(el);
+      total += cell;
+      if (ch !== ' ') wfLetters.push({ el, cx: 0, cy: 0, w: WF.MIN, tw: WF.MIN });
+    });
+    wfHead.appendChild(row);
+    widest = Math.max(widest, total);
+  });
+  ruler.remove();
+  wfHead.dataset.em = widest.toFixed(4);
+  wfFit();
+}
+// font size from the card's width: the widest line fills the card's inside; the cells are in em, so they follow
+function wfFit() {
+  const inner = wfCard.clientWidth - 80, em = parseFloat(wfHead.dataset.em) || 10;
+  const fs = Math.min(WF.FS_MAX, Math.floor(inner / em * 100) / 100);
+  wfCard.style.setProperty('--wf-fs', `${fs}px`);
+  wfR = fs * 1.1;
+  wfMeasure();
+}
+// letter centres in client px, cached (the weights never move them, so they only change on resize)
+function wfMeasure() {
+  wfLetters.forEach((l) => { const r = l.el.getBoundingClientRect(); l.cx = r.left + r.width / 2; l.cy = r.top + r.height / 2 + r.height * 0.04; });
+  if (wfReduced) wfAim(wfStill = wfStillPoint());
+}
+// the pointer's pull on a letter: a Gaussian falloff, exp(−(d / R)²); vertical distance counts 1.7 times, so the line below stays at rest while you work the line above
+function wfPull(l, p) {
+  const d = Math.hypot(l.cx - p.x, (l.cy - p.y) * WF.SQUASH), k = d / wfR;
+  return WF.MIN + (WF.MAX - WF.MIN) * Math.exp(-k * k);
+}
+function wfAim(p) {
+  wfPtr = p;
+  wfLetters.forEach((l) => { l.tw = p ? wfPull(l, p) : WF.MIN; });
+  if (wfReduced) { wfLetters.forEach((l) => { l.w = l.tw; }); wfDraw(); }
+  else if (!wfRaf) { wfLast = performance.now(); wfRaf = requestAnimationFrame(wfTick); }
+}
+function wfDraw() {
+  let peak = WF.MIN;
+  wfLetters.forEach((l) => { l.el.style.fontVariationSettings = `'wght' ${l.w.toFixed(1)}`; if (l.w > peak) peak = l.w; });
+  const s = `wght ${Math.round(peak)}`;
+  if (s !== wfShown) { wfShown = s; wfOut.textContent = s; }
+}
+function wfTick(now) {
+  const dt = Math.min(64, now - wfLast); wfLast = now;
+  let moving = false;
+  wfLetters.forEach((l) => {
+    const diff = l.tw - l.w;
+    if (Math.abs(diff) < 0.05) { l.w = l.tw; return; }
+    l.w += diff * (1 - Math.exp(-dt / (diff > 0 ? WF.ATTACK : WF.RELEASE)));
+    moving = true;
+  });
+  wfDraw();
+  wfRaf = moving ? requestAnimationFrame(wfTick) : 0;
+}
+// a still swell for reduced motion: the pointer parked on the word "detail"
+function wfStillPoint() {
+  const row = wfHead.lastElementChild, cells = [...row.children].slice(4, 10);   // d e t a i l
+  if (cells.length < 6) return null;
+  const a = cells[0].getBoundingClientRect(), b = cells[5].getBoundingClientRect();
+  return { x: (a.left + b.right) / 2, y: a.top + a.height / 2 };
+}
+
+// real pointers: a mouse, a pen or a finger over the page
+addEventListener('pointermove', (e) => { wfAim({ x: e.clientX, y: e.clientY }); }, { passive: true });
+addEventListener('pointerdown', (e) => { wfAim({ x: e.clientX, y: e.clientY }); }, { passive: true });
+document.documentElement.addEventListener('mouseleave', () => wfAim(wfReduced ? wfStill : null));
+addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') wfAim(wfReduced ? wfStill : null); });
+new ResizeObserver(() => { if (wfLetters.length) wfFit(); }).observe(wfCard);
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let idleT = 0;
+  // the ghost: along line one left to right, down at the right end, back along line two
+  function path(t) {
+    const rows = wfHead.children, a = rows[0].getBoundingClientRect(), b = rows[1].getBoundingClientRect();
+    const y1 = a.top + a.height * 0.54, y2 = b.top + b.height * 0.54;
+    const x0 = b.left + 8, x1 = b.left + wfCard.clientWidth - 88;
+    const u = ((t + 0.4) % 11) / 11, c = -Math.cos(u * 2 * Math.PI);       // 0 to 1 and back, still at both ends
+    const side = Math.tanh(3.2 * Math.sin(u * 2 * Math.PI));                // +1 on line one, −1 on line two
+    return [x0 + (x1 - x0) * (c + 1) / 2, (y1 + y2) / 2 + (y2 - y1) / 2 * -side];
+  }
+  // a real mouse that rests for 4.5 s hands the field back to the ghost
+  const idle = (e) => {
+    if (QM.tile || reduced || (e.pointerType && e.pointerType !== 'mouse')) return;
+    clearTimeout(idleT);
+    idleT = setTimeout(() => window.dispatchEvent(new MessageEvent('message', { data: { qm: 'cmd', cmd: 'replay' } })), 4500);
+  };
+  addEventListener('pointermove', idle, { passive: true });
+  (document.fonts ? document.fonts.load("200 20px 'Outfit VF'") : Promise.resolve()).catch(() => {}).then(() => {
+    wfBuild();
+    QM.demo({
+      kind: 'pointer',
+      move: (x, y, isGhost) => { if (!(reduced && isGhost)) wfAim({ x, y }); },
+      leave: () => wfAim(reduced ? wfStill : null),
+      path,
+    });
+    if (reduced) wfAim(wfStill = wfStillPoint());
+  });
+})();
+</script>
+</body>
+</html>

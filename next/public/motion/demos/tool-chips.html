@@ -15,15 +15,15 @@
   "order": 10,
   "kind": "loop",
   "tone": "paper",
-  "line": "1 quarter turn per 500 ms · tick drawn in 200 ms · chip uncovered in 420 ms",
+  "line": "a quarter turn per 500 ms · 1.4 s, 2.9 s, 1.9 s, 2.4 s · chip uncovered in 420 ms",
   "summary": "An agent's run as one live line. A square turns a quarter per beat while the step works. Done, the square takes a drawn tick and the step is uncovered as a compact chip in the row above, while the next step's words roll up into the line. Four steps, then one summary line and a Run again.",
   "spec": [
-    ["Working", "an ink square turns 90° every 500 ms, 360 ms on the move curve"],
+    ["Working", "an ink square turns 90° every 500 ms, 360 ms on the move curve; the steps take 1.4, 2.9, 1.9 and 2.4 s, each ending between two turns so the tick never lands on a square that is moving"],
     ["Done", "a tick drawn in one stroke, 200 ms (stroke-dashoffset 20 → 0), 220 ms hold"],
     ["Chip", "uncovered left to right by clip-path inset, 420 ms, expo out; 28px tall, 8px gaps"],
-    ["Next step", "the words roll up out of a sleeve, the next roll in from below, 380 ms, expo out"],
+    ["Next step", "the old words leave up in 190 ms (ease in), the next roll in from below 84 ms later, 380 ms, expo out; the sleeve width glides"],
     ["Live marker", "a 2px lime bar on the line's left edge: the one lime. It leaves when the run ends"],
-    ["End", "the line becomes “4 steps · 9s” (the run's real total); the header's counter becomes Run again"],
+    ["End", "after a 700 ms pause the line becomes “4 steps · 9s” (the run's real total); the header's counter becomes Run again. Run again folds the chips away (180 ms, ease in, 40 ms apart) and starts over"],
     ["Reduced motion", "three chips, the last step live, nothing turns"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-05"],
@@ -32,23 +32,25 @@
     "One live line at a time. Finished steps become chips and keep their order.",
     "The lime bar marks the live step only; it is never on a chip.",
     "Things are uncovered, not faded: chips by a clip, words by a sleeve.",
-    "Rows are real buttons where they act: Run again restarts the run."
+    "Rows are real buttons where they act: Run again restarts the run. The four chips share one row, so nothing below them moves when a chip arrives.",
+    "Status changes are said once, in a hidden status line, not by the rolling words."
   ],
   "tags": ["agent", "steps", "chips", "tick", "sleeve"],
   "deps": [],
-  "shot": 5200
+  "shot": 11200
 }
 </script>
 <style data-code>
 /* Agent tool calls: finished steps are chips, the live step is one line. */
-.tc { width: 480px; background: var(--surface); padding: 24px; display: grid; gap: 16px; color: var(--fg); --cut: 16px; }
+.tc { width: 560px; background: var(--surface); padding: 24px; display: grid; gap: 16px; color: var(--fg); --cut: 16px; }
 .tc-top { display: flex; align-items: center; justify-content: space-between; height: 24px; font: 500 13px/1 var(--font-sans); letter-spacing: -0.006em; color: var(--fg2); }
-.tc-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; height: 24px; padding: 0 8px; margin-right: -8px; color: var(--fg); transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.tc-btn:active { transform: translateY(2px); }
-.tc-btn:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
-.tc-btn[disabled] { cursor: default; pointer-events: none; color: var(--fg2); }
-.tc-chips { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; min-height: 28px; margin-bottom: -8px; }
-.tc-chip { display: inline-flex; height: 28px; background: var(--sunk); }
+.tc-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; height: 24px; padding: 0 8px; margin-right: -8px; color: var(--fg); font-variant-numeric: tabular-nums; transition: transform 300ms var(--ease-portfolio), background 160ms var(--ease); }
+.tc-btn:hover { background: var(--sunk); }
+.tc-btn:active { transform: translateY(2px); transition-duration: 100ms; }
+.tc-btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.tc-btn[disabled] { cursor: default; pointer-events: none; color: var(--fg2); background: none; }
+.tc-chips { display: flex; flex-wrap: nowrap; gap: 8px; height: 28px; margin-bottom: -8px; overflow: hidden; }
+.tc-chip { display: inline-flex; flex: none; height: 28px; background: var(--sunk); }
 .tc-chip > span { display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 13px; line-height: 1; white-space: nowrap; }
 .tc-sq { position: relative; display: block; width: 14px; height: 14px; flex: none; }
 .tc-sq s { position: absolute; inset: 0; background: var(--fg); }
@@ -61,9 +63,10 @@
 .tc-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--signal); transform-origin: 50% 0; }
 .tc-live .tc-sq { width: 16px; height: 16px; }
 .tc-live .tc-sq svg { width: 16px; height: 16px; }
-.sl { position: relative; display: inline-block; overflow: hidden; height: 24px; line-height: 24px; vertical-align: top; }
+.sl { position: relative; display: inline-block; overflow: hidden; height: 24px; line-height: 24px; vertical-align: top; font-variant-numeric: tabular-nums; }
 .sl-t { position: absolute; left: 0; top: 0; display: block; white-space: nowrap; }
 .tc-live .sl { height: 24px; }
+.tc.is-reset *, .tc.is-reset { transition: none !important; }
 @media (prefers-reduced-motion: reduce) { .tc * { transition: none !important; } }
 </style>
 <style>
@@ -79,12 +82,13 @@
   <p class="kicker">Agent · Tool calls</p>
 <!-- code -->
 <section class="tc cut" id="tc" aria-label="Agent run">
-  <div class="tc-top"><span>Forma · Build</span><button class="tc-btn" id="btn" type="button" disabled><span class="sl" id="side"></span></button></div>
+  <div class="tc-top"><span>Forma · Build</span><button class="tc-btn" id="btn" type="button" disabled><span class="sl" id="side" aria-hidden="true"></span><span class="sr-only" id="btnl">Run</span></button></div>
   <div class="tc-chips" id="chips" aria-label="Finished steps"></div>
-  <div class="tc-live" id="live" aria-live="polite">
+  <p class="sr-only" id="say" role="status" aria-live="polite"></p>
+  <div class="tc-live" id="live">
     <i class="tc-bar" id="bar"></i>
     <span class="tc-sq" id="sq"><s></s><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 7.4 5.9 10 11 4"/></svg></span>
-    <span class="sl" id="txt"></span>
+    <span class="sl" id="txt" aria-hidden="true"></span>
   </div>
 </section>
 <!-- /code -->
@@ -93,34 +97,38 @@
 </main>
 <script src="../kit/stage.js"></script>
 <script data-code>
-/* A step is a text, a chip label and a duration. The run walks them with one live line. */
+/* A step is a text, a chip label and a duration. The run walks them with one live line.
+   Each duration ends between two turns of the square (a turn is 360 ms every 500), so the tick
+   is never drawn on a square that is moving. Paced like work: quick, long, middling, long. */
 const STEPS = [
-  ['Reading brief.pdf', 'Read brief.pdf', 1600],
-  ['Pulling 6 references', 'Pulled 6 references', 1700],
-  ['Writing tokens.json', 'Wrote tokens.json', 1800],
-  ['Building preview', 'Built preview', 2000],
+  ['Reading brief.pdf', 'Read brief.pdf', 1400],
+  ['Pulling 6 references', 'Pulled 6 references', 2900],
+  ['Writing tokens.json', 'Wrote tokens.json', 1900],
+  ['Building preview', 'Built preview', 2400],
 ];
 const $ = (s) => document.querySelector(s);
-const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)', MOVE = 'cubic-bezier(0.65, 0, 0.35, 1)';
+const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)', MOVE = 'cubic-bezier(0.65, 0, 0.35, 1)', IN = 'cubic-bezier(0.5, 0, 0.75, 0)';
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let token = 0, turns = 0, t0 = 0;
+let token = 0, turns = 0, t0 = 0, finished = false;
 
-/* a sleeve: the old words leave upward, the new come from below, the width glides */
-function put(sl, text) { sl.innerHTML = ''; const t = document.createElement('span'); t.className = 'sl-t'; t.textContent = text; sl.append(t); sl.style.width = t.offsetWidth + 'px'; }
+/* a sleeve: the old words leave upward (quicker), the new come from below a beat later, the width glides */
+function put(sl, text) { sl.getAnimations().forEach((a) => a.cancel()); sl.innerHTML = ''; const t = document.createElement('span'); t.className = 'sl-t'; t.textContent = text; sl.append(t); sl.style.width = t.offsetWidth + 'px'; }
 function roll(sl, text, ms = 380) {
   if (still) return put(sl, text);
   const old = sl.lastElementChild, next = document.createElement('span');
   next.className = 'sl-t'; next.textContent = text; sl.append(next);
   const w0 = sl.offsetWidth, w1 = next.offsetWidth, o = { duration: ms, easing: OUT, fill: 'both' };
-  if (old) old.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-110%)' }], o).finished.then(() => old.remove());
-  next.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], o);
+  if (old) old.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-110%)' }], { duration: Math.round(ms * 0.5), easing: IN, fill: 'both' }).finished.then(() => old.remove(), () => {});
+  next.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], { ...o, delay: Math.round(ms * 0.22) });
   sl.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], { duration: ms, easing: OUT });
   sl.style.width = w1 + 'px';
 }
+function say(text) { $('#say').textContent = text; }
+function side(text, label) { roll($('#side'), text); $('#btnl').textContent = label || text; }
 function tick(on, ms = 200) {
   const p = $('#sq path');
   if (still) { p.style.strokeDashoffset = on ? 0 : 20; return; }
-  p.animate([{ strokeDashoffset: on ? 20 : 0 }, { strokeDashoffset: on ? 0 : 20 }], { duration: ms, easing: OUT, fill: 'both' });
+  p.animate([{ strokeDashoffset: on ? 20 : 0 }, { strokeDashoffset: on ? 0 : 20 }], { duration: ms, easing: on ? OUT : IN, fill: 'both' });
 }
 function turn() { turns++; const b = $('#sq s'); b.style.transition = 'transform 360ms ' + MOVE; b.style.transform = `rotate(${turns * 90}deg)`; }
 function addChip(label) {
@@ -130,21 +138,33 @@ function addChip(label) {
   $('#chips').append(c);
   if (!still) c.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 420, easing: OUT });
 }
+/* the chips fold away (quicker, in order) when a finished run is run again */
+function foldChips() {
+  const cs = [...$('#chips').children];
+  if (still || !cs.length) { $('#chips').innerHTML = ''; return Promise.resolve(); }
+  cs.forEach((c, i) => c.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 100%)' }], { duration: 180, delay: i * 40, easing: IN, fill: 'forwards' }));
+  return new Promise((r) => setTimeout(() => { $('#chips').innerHTML = ''; r(); }, 180 + (cs.length - 1) * 40));
+}
 function clean() { $('#sq path').getAnimations().forEach((a) => a.cancel()); $('#bar').getAnimations().forEach((a) => a.cancel()); }
 function rest() {                                  // an empty run, ready
-  token++; clearInterval(window.__beat); clean();
+  token++; clearInterval(window.__beat); clean(); finished = false;
+  const tc = $('#tc'); tc.classList.add('is-reset');
   $('#chips').innerHTML = ''; turns = 0;
   $('#sq s').style.cssText = ''; $('#sq path').style.strokeDashoffset = 20;
   $('#bar').style.transform = 'scaleY(1)';
-  put($('#txt'), 'Ready to run'); put($('#side'), 'Run');
+  put($('#txt'), 'Ready to run'); put($('#side'), 'Run'); $('#btnl').textContent = 'Run'; say('');
   $('#btn').disabled = false;
+  void tc.offsetWidth; tc.classList.remove('is-reset');
 }
 async function run(sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
   const my = ++token, live = () => my === token;
-  t0 = performance.now();
-  $('#btn').disabled = true; $('#chips').innerHTML = ''; turns = 0; clean();
-  $('#sq s').style.cssText = ''; $('#sq path').style.strokeDashoffset = 20; $('#bar').style.transform = 'scaleY(1)';
-  roll($('#side'), '1 / 4'); roll($('#txt'), STEPS[0][0]);
+  t0 = performance.now(); finished = false;
+  $('#btn').disabled = true; turns = 0; clean();
+  const folding = foldChips();
+  $('#sq s').style.cssText = ''; $('#sq path').style.strokeDashoffset = 20;
+  $('#bar').style.transform = 'scaleY(1)';
+  side('1 / 4', 'Step 1 of 4, running'); roll($('#txt'), STEPS[0][0]); say(STEPS[0][0]);
+  await folding; if (!live()) return;
   for (let i = 0; i < STEPS.length; i++) {
     clearInterval(window.__beat);
     window.__beat = setInterval(() => { if (live()) turn(); }, 500);
@@ -152,33 +172,37 @@ async function run(sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
     clearInterval(window.__beat);
     tick(true); await sleep(420); if (!live()) return;
     addChip(STEPS[i][1]);
-    if (i < STEPS.length - 1) { tick(false, 160); roll($('#txt'), STEPS[i + 1][0]); roll($('#side'), (i + 2) + ' / 4'); await sleep(200); }
+    if (i < STEPS.length - 1) { tick(false, 160); roll($('#txt'), STEPS[i + 1][0]); side((i + 2) + ' / 4', 'Step ' + (i + 2) + ' of 4, running'); say(STEPS[i + 1][0]); await sleep(200); }
   }
-  await sleep(320); if (!live()) return;
-  roll($('#txt'), '4 steps · ' + Math.round((performance.now() - t0) / 1000) + 's'); roll($('#side'), 'Run again');
+  await sleep(700); if (!live()) return;            // a beat before the result
+  const total = Math.round((performance.now() - t0) / 1000);
+  roll($('#txt'), '4 steps · ' + total + 's'); side('Run again'); say('Done. 4 steps in ' + total + ' seconds.');
   if (!still) $('#bar').animate([{ transform: 'scaleY(1)' }, { transform: 'scaleY(0)' }], { duration: 360, easing: MOVE, fill: 'both' });
   $('#bar').style.transform = 'scaleY(0)';
-  $('#btn').disabled = false;
+  $('#btn').disabled = false; finished = true;
 }
 $('#btn').addEventListener('click', () => run());
 </script>
 <script src="../assets/picks/p3-ghost.js"></script>
 <script>
-  PickGhost.fit($('#fit'), 480, 230, { max: 1.5, gutter: 100 });
+  PickGhost.fit($('#fit'), 560, 230, { max: 1.5, gutter: 100 });
+  rest();                                           // drawn from the first frame
   PickGhost.start({
     hot: '.tc-btn',
-    reset: rest,
+    // a finished run is the start of the next one: the loop's seam is the Run again click, not a reset
+    reset() { if (!finished) rest(); },
     still() {                                       // three chips, the fourth step live
-      rest(); STEPS.slice(0, 3).forEach((s) => addChip(s[1]));
+      finished = false; rest(); STEPS.slice(0, 3).forEach((s) => addChip(s[1]));
       put($('#txt'), STEPS[3][0]); put($('#side'), '4 / 4'); $('#btn').disabled = true;
     },
     async script(g) {
-      await g.wait(700);
-      await run(g.wait);
-      await g.wait(1300);
-      await g.click('#btn', { ms: 650 });
-      await g.wait(600);
-      token++; clearInterval(window.__beat);        // the second pass restarts through reset
+      await g.wait(finished ? 500 : 900);
+      await g.click('#btn', { ms: 700 });
+      await g.wait(60);
+      g.to('#btn', { dx: 80, dy: 90, ms: 700 }).catch(() => {});   // the pointer leaves the button while it works
+      // the click started the run; wait for it to end, then hold the result
+      while (!finished) await g.wait(120);
+      await g.wait(2200);
     },
   });
   QM.demo({ kind: 'loop', restart: PickGhost.restart });

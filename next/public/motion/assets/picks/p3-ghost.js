@@ -29,6 +29,7 @@
   const easeMove = QM.bezier(0.65, 0, 0.35, 1);
   const REJOIN = 2200;          // ms after the viewer's pointer leaves before the ghost plays again
   const REJOIN_TOUCH = 6000;    // …after a touch or a key, which have no "leave"
+  const REJOIN_IDLE = 8000;     // …after a mouse that stays over the piece but stops moving (2026-11-16)
 
   let run = 0;                  // each begin() cancels the pass before it
   let cfg = null;
@@ -187,12 +188,18 @@
       if (cfg.reset) cfg.reset();                   // and the piece is put back, so the viewer starts from rest
     }
     clearTimeout(rejoin);
-    if (ms) rejoin = setTimeout(begin, ms);
+    if (ms) rejoin = setTimeout(rejoinWhenFree, ms);
+  }
+  /** Give the piece back to the ghost, unless the viewer is still in a text field. */
+  function rejoinWhenFree() {
+    const a = document.activeElement;
+    if (a && a.matches && a.matches('input, textarea, [contenteditable="true"]')) { rejoin = setTimeout(rejoinWhenFree, REJOIN_IDLE); return; }
+    begin();
   }
 
   if (!QM.tile) {
-    window.addEventListener('pointermove', (e) => { if (e.isTrusted && e.pointerType === 'mouse') takeOver(0); }, { passive: true });
-    window.addEventListener('pointerdown', (e) => { if (e.isTrusted) takeOver(e.pointerType === 'mouse' ? 0 : REJOIN_TOUCH); }, { passive: true });
+    window.addEventListener('pointermove', (e) => { if (e.isTrusted && e.pointerType === 'mouse') takeOver(REJOIN_IDLE); }, { passive: true });
+    window.addEventListener('pointerdown', (e) => { if (e.isTrusted) takeOver(e.pointerType === 'mouse' ? REJOIN_IDLE : REJOIN_TOUCH); }, { passive: true });
     window.addEventListener('keydown', (e) => { if (e.isTrusted) takeOver(REJOIN_TOUCH); });
     document.documentElement.addEventListener('mouseleave', () => {
       if (!cfg || paused || playing || QM.reduced) return;      // only a viewer who took over is given the piece back

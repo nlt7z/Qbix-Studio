@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Selection bar · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "selection-bar", "title": "Selection bar", "group": "studio", "added": "2026-11-17", "cat": "buttons", "order": 20,
+  "kind": "loop", "tone": "paper", "shot": 6400,
+  "line": "bar up 420 ms expo out · down 240 ms · count rolls 420 ms · width 320 ms ease-move",
+  "summary": "A Strata file list of five components with round checkboxes. Checking a row slides an ink pill bar up from the bottom of the card: a rolling count, then Rename, Move, Duplicate and Delete. Checking more rows rolls the number up; Rename is only for one file, so it is uncovered and covered as the bar's width follows on the move curve and never jumps. Shift-click selects a range with a 30 ms row stagger. A checked row thickens its ring to 1.5 px ink, draws a tick in one stroke and sets its name in 500 weight. Clearing sends the bar down, quicker than it came up.",
+  "spec": [
+    ["Bar in", "slides up from under the card's bottom edge, 420 ms expo out; the hint line above it leaves up 6 px under a clip"],
+    ["Bar out", "down in 240 ms ease-in, about 0.6× of the way in; the hint is uncovered again 120 ms behind"],
+    ["Count", "the digit rolls up when it grows and down when it shrinks, 420 ms expo out, Geist Mono tabular figures"],
+    ["Width", "Rename is uncovered when one row is selected and closes at two; the bar's width and Rename's slot change together, 320 ms ease-move"],
+    ["Check", "ring 1 px at 28% to 1.5 px ink in 160 ms; the tick is one stroke drawn in 260 ms expo out and drawn back in 140 ms ease-in; the name goes to 500 weight; only the row under the pointer gets a pale sage hover wash, never a selected block"],
+    ["Range", "shift-click checks every row between the last one and this one, 30 ms apart"],
+    ["Delete", "the rows close on the move curve, 320 ms, and the hint line becomes a count with Undo"],
+    ["Loop", "a ghost checks two rows, shift-selects to four and clears; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-17"],
+  "where": "The component list of a Strata kit, when a designer picks a few files to move into another kit, copy, or remove.",
+  "rules": [
+    "The bar is the only ink element, so a checked row is told apart by its ring, tick and heavier name, never by a fill or a black circle; sage appears only as a hover wash on one row.",
+    "The bar's width and its slots are measured, not guessed: a label that changes never shoves its neighbours, and the count is in tabular figures.",
+    "Nothing fades and nothing bounces: the bar travels on expo out and leaves quicker, rows are uncovered under clips, the tick is drawn.",
+    "Every row is a real checkbox button: Space or Enter toggles it, shift plus click takes a range, Escape clears the selection. A polite live region says how many files are selected.",
+    "Interrupting is safe: checking or clearing mid-roll reverses from where things are, and a second click on an action while it confirms does nothing.",
+    "Under reduced motion the bar rests up with two files selected and every change is instant."
+  ],
+  "tags": ["button", "toolbar", "selection", "bulk", "checkbox", "list", "Strata", "files"]
+}
+</script>
+<style data-code>
+/* Selection bar. The ink pill is the one heavy thing; rows are white with a pale sage wash only on hover. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0). */
+.sb { position: relative; width: 480px; padding: 20px 12px 0; overflow: hidden; background: #fff; color: #0B0C0D; border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+:where(.sb button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.sb-hd { margin: 0 12px 10px; font: 300 22px/26px Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.sb-list { list-style: none; margin: 0; padding: 0; }
+.sb-li { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 320ms cubic-bezier(.65, 0, .35, 1); }
+.sb-li > div { min-height: 0; overflow: hidden; }
+.sb-li.gone { grid-template-rows: 0fr; }
+
+/* a row: a real checkbox; the wash is a tiny sage fill */
+.sb-row { display: flex; align-items: center; gap: 14px; width: 100%; height: 44px; padding: 0 12px; margin: 1px 0; border-radius: 12px; text-align: left; user-select: none;
+  background: rgba(238, 241, 232, 0); transition: background 160ms cubic-bezier(.4, 0, .2, 1) var(--d, 0ms); }
+.sb-row:hover { background: #EEF1E8; transition-delay: 0ms; }
+.sb-row:active { transform: translateY(1px); }
+.sb-row:focus-visible { outline: 2px solid #0B0C0D; outline-offset: -2px; }
+.sb-ck { position: relative; flex: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .28);
+  transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1) var(--d, 0ms); }
+.sb-row:hover .sb-ck { box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .5); }
+.sb-row[aria-checked="true"] .sb-ck { box-shadow: inset 0 0 0 1.5px #0B0C0D; }
+.sb-ck svg { position: absolute; inset: 0; width: 20px; height: 20px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.sb-ck path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 140ms cubic-bezier(.5, 0, .75, 0) var(--d, 0ms); }
+.sb-row[aria-checked="true"] .sb-ck path { stroke-dashoffset: 0; transition: stroke-dashoffset 260ms cubic-bezier(.16, 1, .3, 1) var(--d, 0ms); }
+.sb-name { flex: 1; min-width: 0; font-weight: 400; transition: color 160ms cubic-bezier(.4, 0, .2, 1) var(--d, 0ms); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-row[aria-checked="true"] .sb-name { font-weight: 500; }
+.sb-size { flex: none; font: 400 11px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; color: rgba(11, 12, 13, .66); font-variant-numeric: tabular-nums; }
+
+/* the foot: a hint the bar covers, and the deleted line */
+.sb-foot { position: relative; height: 76px; margin: 0 -12px; }
+.sb-hint { position: absolute; left: 0; right: 0; top: 0; bottom: 0; padding: 0 24px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(11, 12, 13, .66); letter-spacing: -.006em;
+  visibility: hidden; clip-path: inset(100% 0 0 0); transform: translateY(6px);
+  transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1) 120ms, transform 360ms cubic-bezier(.16, 1, .3, 1) 120ms; }
+.sb-hint[data-p="in"] { visibility: visible; clip-path: inset(0); transform: none; }
+.sb-hint[data-p="above"] { clip-path: inset(0 0 100% 0); transform: translateY(-6px);
+  transition: clip-path 150ms cubic-bezier(.5, 0, .75, 0), transform 150ms cubic-bezier(.5, 0, .75, 0), visibility 0s 150ms; }
+.sb-hint.snap { transition: none !important; }
+.sb-undo { height: 28px; padding: 0 12px; margin-left: auto; border-radius: 999px; font-size: 13px; font-weight: 600; letter-spacing: -.006em; color: #0B0C0D;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .14); background: #fff; transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.sb-undo:hover { background: #EEF1E8; }
+.sb-undo:active { transform: translateY(1px); }
+.sb-n2 { font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+
+/* the bar: one ink pill, content-sized by script so its width travels */
+.sb-bar { position: absolute; left: 50%; bottom: 14px; height: 48px; width: 360px; margin-left: -180px; overflow: hidden; background: #0B0C0D; color: #fff; border-radius: 24px;
+  transform: translateY(calc(100% + 24px)); visibility: hidden;
+  transition: transform 240ms cubic-bezier(.5, 0, .75, 0), margin-left 320ms cubic-bezier(.65, 0, .35, 1), width 320ms cubic-bezier(.65, 0, .35, 1), visibility 0s 240ms; }
+.sb-bar[data-s="on"] { transform: none; visibility: visible; transition: transform 420ms cubic-bezier(.16, 1, .3, 1), margin-left 320ms cubic-bezier(.65, 0, .35, 1), width 320ms cubic-bezier(.65, 0, .35, 1); }
+.sb-bar.snap { transition: none !important; }
+.sb-in { display: flex; align-items: center; height: 48px; padding: 0 6px; width: max-content; }
+.sb-bar button { flex: none; height: 36px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 500; letter-spacing: -.011em; color: #fff; white-space: nowrap;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.sb-bar button:hover { background: rgba(255, 255, 255, .12); }
+.sb-bar button:active { transform: translateY(1px); }
+.sb-bar button:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+.sb-x { display: grid; place-items: center; width: 36px; padding: 0 !important; color: rgba(255, 255, 255, .66) !important; }
+.sb-x:hover { color: #fff !important; }
+.sb-x svg { display: block; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; }
+.sb-lab { position: relative; flex: none; width: 100px; height: 36px; overflow: hidden; margin: 0 2px; font-weight: 500; }
+.sb-lab > span { position: absolute; left: 6px; top: 0; height: 36px; display: flex; align-items: center; gap: 5px; white-space: nowrap; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.sb-lab > .sb-l2 { transform: translateY(110%); }
+.sb-lab.is-done > .sb-l1 { transform: translateY(-110%); }
+.sb-lab.is-done > .sb-l2 { transform: none; }
+.sb-n { position: relative; display: block; width: 8px; height: 20px; overflow: hidden; font: 500 14px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.sb-n b { position: absolute; left: 0; top: 0; width: 8px; font-weight: 500; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.sb-ren { flex: none; width: 0; overflow: hidden; transition: width 320ms cubic-bezier(.65, 0, .35, 1); }
+.sb-ren button { margin-left: 0; }
+.sb-ren[data-open="1"] { width: var(--rw, 76px); }
+.sb-bar.snap .sb-ren, .sb-bar.snap .sb-lab > span, .sb-bar.snap .sb-n b { transition: none !important; }
+.sb-bar:not([data-s="on"]) .sb-ren { pointer-events: none; }
+
+.sb.still *, .sb.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .sb *, .sb *::before { transition: none !important; } }
+</style>
+<style>
+  .sbw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sbw">
+    <p class="kicker">Strata · Forma kit</p>
+<!-- code -->
+<div class="sb" id="sb">
+  <h3 class="sb-hd">Components</h3>
+  <ul class="sb-list" id="sb-list">
+    <li class="sb-li"><div><button type="button" class="sb-row" role="checkbox" aria-checked="false"><span class="sb-ck"><svg viewBox="0 0 20 20" aria-hidden="true"><path pathLength="1" d="M5.8 10.4l2.9 2.9 5.6-6.1"/></svg></span><span class="sb-name">Tokens.css</span><span class="sb-size">4.2 KB</span></button></div></li>
+    <li class="sb-li"><div><button type="button" class="sb-row" role="checkbox" aria-checked="false"><span class="sb-ck"><svg viewBox="0 0 20 20" aria-hidden="true"><path pathLength="1" d="M5.8 10.4l2.9 2.9 5.6-6.1"/></svg></span><span class="sb-name">Buttons.tsx</span><span class="sb-size">2.8 KB</span></button></div></li>
+    <li class="sb-li"><div><button type="button" class="sb-row" role="checkbox" aria-checked="false"><span class="sb-ck"><svg viewBox="0 0 20 20" aria-hidden="true"><path pathLength="1" d="M5.8 10.4l2.9 2.9 5.6-6.1"/></svg></span><span class="sb-name">Cards.tsx</span><span class="sb-size">3.1 KB</span></button></div></li>
+    <li class="sb-li"><div><button type="button" class="sb-row" role="checkbox" aria-checked="false"><span class="sb-ck"><svg viewBox="0 0 20 20" aria-hidden="true"><path pathLength="1" d="M5.8 10.4l2.9 2.9 5.6-6.1"/></svg></span><span class="sb-name">Theme.json</span><span class="sb-size">1.6 KB</span></button></div></li>
+    <li class="sb-li"><div><button type="button" class="sb-row" role="checkbox" aria-checked="false"><span class="sb-ck"><svg viewBox="0 0 20 20" aria-hidden="true"><path pathLength="1" d="M5.8 10.4l2.9 2.9 5.6-6.1"/></svg></span><span class="sb-name">Icons.svg</span><span class="sb-size">12 KB</span></button></div></li>
+  </ul>
+
+  <div class="sb-foot">
+    <p class="sb-hint" id="sb-hint" data-p="in">Select files to move, duplicate or delete</p>
+    <p class="sb-hint" id="sb-del" data-p="below"><span id="sb-del-t">2 files deleted</span><button type="button" class="sb-undo" id="sb-undo">Undo</button></p>
+  </div>
+
+  <div class="sb-bar" id="sb-bar" data-s="off" role="toolbar" aria-label="Selection actions" inert>
+    <div class="sb-in" id="sb-in">
+      <button type="button" class="sb-x" id="sb-clear" aria-label="Clear selection"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg></button>
+      <span class="sb-lab" id="sb-lab"><span class="sb-l1"><span class="sb-n" id="sb-n" aria-hidden="true"><b>1</b></span>selected</span><span class="sb-l2" id="sb-l2" aria-hidden="true">Moved 2</span></span>
+      <span class="sb-ren" id="sb-ren" data-open="1"><button type="button" data-act="Renaming">Rename</button></span>
+      <button type="button" data-act="Moved">Move</button>
+      <button type="button" data-act="Duplicated">Duplicate</button>
+      <button type="button" id="sb-delete">Delete</button>
+    </div>
+  </div>
+  <p class="sr-only" id="sb-live" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Check rows · shift-click takes a range · Esc clears the selection</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Selection bar. The selection is a Set of row indexes; render() derives the bar, the count, Rename's slot and the foot line from it. */
+const sb = document.getElementById('sb'), sbBar = document.getElementById('sb-bar'), sbIn = document.getElementById('sb-in');
+const sbLis = [...sb.querySelectorAll('.sb-li')], sbRows = [...sb.querySelectorAll('.sb-row')];
+const sbLab = document.getElementById('sb-lab'), sbN = document.getElementById('sb-n'), sbL2 = document.getElementById('sb-l2'), sbRen = document.getElementById('sb-ren');
+const sbHint = document.getElementById('sb-hint'), sbDel = document.getElementById('sb-del'), sbDelT = document.getElementById('sb-del-t'), sbLive = document.getElementById('sb-live');
+const sel = new Set(); let sbAnchor = -1, sbBusy = null, sbBase = 0, sbRenW = 76;
+const sbGone = new Set();
+
+function sbSnap(el, fn) { el.classList.add('snap'); fn(); el.getBoundingClientRect(); el.classList.remove('snap'); }
+function sbMeasure() {                              // widths of the bar with and without Rename's slot
+  const ren = sbRen.firstElementChild;
+  sbRenW = Math.ceil(ren.getBoundingClientRect().width) || 76;
+  sbRen.style.setProperty('--rw', sbRenW + 'px');
+  const w0 = sbRen.getBoundingClientRect().width;
+  sbBase = Math.ceil(sbIn.getBoundingClientRect().width - w0);
+}
+function sbRoll(n, animate) {                       // the count's digit rolls up when it grows, down when it shrinks
+  const old = sbN.lastElementChild, from = Number(old.textContent);
+  if (n === from) return;
+  if (!animate) { while (sbN.children.length > 1) sbN.firstElementChild.remove(); old.style.transition = 'none'; old.style.transform = 'none'; old.textContent = n; old.getBoundingClientRect(); old.style.transition = ''; return; }
+  const up = n > from;
+  const nu = document.createElement('b'); nu.textContent = n;
+  nu.style.transition = 'none'; nu.style.transform = `translateY(${up ? 110 : -110}%)`;
+  sbN.appendChild(nu); nu.getBoundingClientRect();
+  nu.style.transition = ''; nu.style.transform = 'none';
+  old.style.transform = `translateY(${up ? -110 : 110}%)`;
+  setTimeout(() => { if (old.parentNode && old !== sbN.lastElementChild) old.remove(); }, 460);
+  while (sbN.children.length > 3) sbN.firstElementChild.remove();
+}
+function sbLayer(el, show) {                        // a foot line is below, in, or above (left)
+  const p = el.dataset.p, now = performance.now();
+  if (show) {
+    if (p !== 'in') {
+      if (p === 'above' && now - (el._left || 0) > 240) sbSnap(el, () => { el.dataset.p = 'below'; });
+      el.dataset.p = 'in';
+    }
+  } else if (p === 'in') { el.dataset.p = 'above'; el._left = now; }
+  el.inert = !show;
+}
+function sbRender() {
+  const n = sel.size, on = n > 0, wasOn = sbBar.dataset.s === 'on', one = n === 1;
+  if (on) {
+    const w = sbBase + (one ? sbRenW : 0);
+    const put = () => {
+      sbRen.dataset.open = one ? '1' : '0'; sbRen.firstElementChild.tabIndex = one ? 0 : -1;
+      sbBar.style.width = w + 'px'; sbBar.style.marginLeft = (-w / 2) + 'px';
+      if (!wasOn) { sbLab.classList.remove('is-done'); sbBusy = null; sbRoll(n, false); }
+    };
+    if (wasOn) { put(); sbRoll(n, true); } else sbSnap(sbBar, put);   // coming up, the bar is already the right width
+  }
+  sbBar.dataset.s = on ? 'on' : 'off'; sbBar.inert = !on;
+  sbLayer(sbHint, !on && !sbGone.size);              // the foot: the hint, or the deleted line, or nothing while the bar is up
+  sbLayer(sbDel, !on && sbGone.size > 0);
+  sbDelT.textContent = `${sbGone.size} file${sbGone.size === 1 ? '' : 's'} deleted`;
+  sbLive.textContent = on ? `${n} file${n === 1 ? '' : 's'} selected` : (sbGone.size ? sbDelT.textContent : '');
+}
+function sbSet(i, on, delay = 0) {
+  const r = sbRows[i];
+  r.style.setProperty('--d', delay + 'ms');
+  r.setAttribute('aria-checked', String(on));
+  on ? sel.add(i) : sel.delete(i);
+}
+function sbClick(i, shift) {
+  if (sbGone.has(i)) return;
+  if (sbBusy) { clearTimeout(sbBusy); sbBusy = null; sbLab.classList.remove('is-done'); }
+  if (shift && sbAnchor >= 0 && sbAnchor !== i) {
+    const a = Math.min(sbAnchor, i), b = Math.max(sbAnchor, i); let k = 0;
+    for (let j = a; j <= b; j++) if (!sbGone.has(j)) { if (!sel.has(j)) sbSet(j, true, 30 * k++); }
+  } else {
+    sbSet(i, !sel.has(i));
+    sbAnchor = i;
+  }
+  sbRender();
+}
+function sbClear() { clearTimeout(sbBusy); sbBusy = null; [...sel].forEach((j) => sbSet(j, false)); sbAnchor = -1; sbRender(); }
+sbRows.forEach((r, i) => r.addEventListener('click', (e) => sbClick(i, e.shiftKey)));
+document.getElementById('sb-clear').addEventListener('click', sbClear);
+sb.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !sel.size) return;
+  e.stopPropagation(); sbClear();
+  const r = sbRows.find((_, j) => !sbGone.has(j)); if (r) r.focus({ preventScroll: true });
+});
+sbBar.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => {   // a done label rolls in, then the selection clears
+  if (sbBusy || !sel.size) return;
+  sbL2.textContent = b.dataset.act === 'Renaming' ? 'Renaming' : `${b.dataset.act} ${sel.size}`;
+  sbLab.classList.add('is-done');
+  sbBusy = setTimeout(() => { sbBusy = null; sbClear(); }, 1200);
+}));
+document.getElementById('sb-delete').addEventListener('click', () => {
+  if (!sel.size) return;
+  [...sel].sort().forEach((j) => { sbGone.add(j); sbSet(j, false); sbLis[j].classList.add('gone'); sbLis[j].inert = true; });
+  sbAnchor = -1; sbRender();
+});
+document.getElementById('sb-undo').addEventListener('click', () => {
+  [...sbGone].forEach((j, k) => setTimeout(() => { sbLis[j].classList.remove('gone'); sbLis[j].inert = false; }, 30 * k));
+  sbGone.clear(); sbRender();
+});
+document.fonts && document.fonts.ready.then(() => { sbSnap(sbBar, () => { sbMeasure(); sbRender(); }); });
+sbMeasure(); sbSnap(sbBar, () => sbRender());
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function tap(my, el, hold = 240, shift = false) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + Math.min(r.width * 0.5, 30), r.top + r.height * 0.55, 720))) throw 0;
+    if (my !== epoch) throw 0;
+    el.classList.add('is-hot');
+    await gap(my, 160);
+    el.style.transform = 'translateY(1px)';
+    await gap(my, 110);
+    el.style.transform = '';
+    el.classList.remove('is-hot');
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: shift }));
+    await gap(my, hold);
+  }
+  function rest() {                                   // clean list; reduced motion rests with two rows selected
+    sb.classList.add('still');
+    if (sbBusy) { clearTimeout(sbBusy); sbBusy = null; }
+    sbLab.classList.remove('is-done');
+    [...sbGone].forEach((j) => { sbLis[j].classList.remove('gone'); sbLis[j].inert = false; });
+    sbGone.clear();
+    [...sel].forEach((j) => sbSet(j, false)); sbAnchor = -1;
+    sbSnap(sbBar, () => sbRender());
+    if (reduced) { sbSet(0, true); sbSet(1, true); sbAnchor = 1; sbSnap(sbBar, () => sbRender()); }
+    sb.getBoundingClientRect(); sb.classList.remove('still');
+    if (document.activeElement && sb.contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 900);
+        await tap(my, sbRows[0], 800);                        // one selected: Rename is there
+        await tap(my, sbRows[1], 1000);                       // two: the count rolls, Rename closes
+        await tap(my, sbRows[3], 1600, true);                 // shift-click: a range of four
+        await tap(my, document.getElementById('sb-clear'), 1500);   // the bar goes down
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!sb.matches(':hover') && !sb.contains(document.activeElement)) { rest(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(); if (!reduced) script(); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (reduced) rest(); else script(); }, 300));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passkey sign-in · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "passkey-sign", "title": "Passkey sign-in", "group": "studio", "added": "2026-11-17", "cat": "feedback", "order": 60,
+  "kind": "loop", "tone": "paper", "shot": 4700,
+  "line": "pill to circle 520 ms ease-move · strokes trace centre out as the ring fills over 900 ms · tick drawn in 360 ms · cancel runs it back",
+  "summary": "A Kova sign-in card with the email already filled and one ink pill, Sign in with passkey. Pressing it, the pill narrows into a round fingerprint button: it turns white, concentric strokes trace in from the centre outward while a thin ring fills around it over 900 ms. Then an ink disc opens in the circle and a tick is drawn in one stroke, the title rolls to Welcome back, Dana, and the line under it is uncovered with a lime dot beside Signed in. Cancel, or Escape, during the scan runs everything back from where it is. Sign out glides the card back to the start.",
+  "spec": [
+    ["Morph", "the pill's width goes from the full 344 px to a 52 px circle on 520 ms ease-move; the label rolls up under a clip in 200 ms; the ink fill steps down to white with a ring in 240 ms"],
+    ["Scan", "starts 380 ms in, once the pill is a circle; one progress value p from 0 to 1 over 900 ms, linear because it tracks time; it drives the ring (stroke offset) and five fingerprint strokes that trace in from the centre outward, each over 40% of p, 14% apart"],
+    ["Cancel", "p runs back at 600 ms from full, so the strokes untrace outward in and the ring drains from where it stopped; then the circle widens back into the pill"],
+    ["Welcome", "an ink disc opens in the circle (clip, 360 ms expo out), the white tick is drawn in one stroke (360 ms, 140 ms behind); the title and the line roll up 420 ms expo out, 80 ms apart; the lime dot is the only point"],
+    ["Sign out", "the disc closes in 220 ms ease-in, the tick is gone, the title rolls back, the circle widens to the pill on the move curve"],
+    ["Footer", "three lines under the button, one at a time: a hint, Touch your sensor with Cancel, and Sign out; they roll 420 ms expo out"],
+    ["Loop", "a ghost signs in, reads the welcome, signs out and waits; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-17"],
+  "where": "The sign-in card of Kova, the money app, where a returning customer proves it is them with a passkey instead of typing a password.",
+  "rules": [
+    "At every moment there is one heavy thing: the ink pill, then the thin ink strokes while it scans, then the ink disc with its tick. The pill steps down to white the instant it is pressed.",
+    "The lime point exists only for Signed in; nothing else on the card is lime or filled.",
+    "The scan is one progress value, so the ring and the strokes can never disagree and cancelling is just running it backwards.",
+    "The tick is drawn in one stroke and the fingerprint is drawn centre outward, as a hand would; nothing fades and nothing bounces.",
+    "The email is a real field (autocomplete username webauthn); the welcome uses the name before the @, and an empty email asks for one instead of scanning.",
+    "The button is a real button whose label follows its state; the title and status lines are polite live regions; Escape cancels a scan; focus returns to the button after Cancel.",
+    "Under reduced motion the card rests signed in and every change is instant."
+  ],
+  "tags": ["passkey", "sign in", "fingerprint", "auth", "morph", "button", "Kova", "feedback"]
+}
+</script>
+<style data-code>
+/* Passkey sign-in. One heavy thing at a time: the ink pill, the thin strokes, the ink disc. Lime is only the Signed in dot.
+   Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0), ui (.4,0,.2,1). */
+.pk { position: relative; width: 400px; max-width: 100%; padding: 28px; background: #fff; color: #0B0C0D; border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+:where(.pk button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* title and line roll under a clip */
+.pk-roll { position: relative; overflow: hidden; }
+.pk-roll > span { position: absolute; left: 0; top: 0; right: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.pk-roll > .b { transform: translateY(110%); }
+.pk[data-s="ok"] .pk-roll > .a { transform: translateY(-110%); }
+.pk[data-s="ok"] .pk-roll > .b { transform: none; }
+.pk-title { height: 36px; margin: 0; font: 300 28px/36px Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.pk-sub { height: 20px; margin: 4px 0 0; font-weight: 500; font-size: 14px; color: rgba(11, 12, 13, .66); }
+.pk-sub > .b { color: #0B0C0D; }
+.pk[data-s="ok"] .pk-sub > span { transition-delay: 80ms; }
+.pk-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16); }
+
+/* email */
+.pk-f { display: block; margin-top: 24px; }
+.pk-lbl { display: block; height: 16px; margin-bottom: 6px; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+.pk-in { display: block; width: 100%; height: 48px; padding: 0 16px; border: 0; border-radius: 12px; background: #fff; color: #0B0C0D; font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.011em;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), inset 0 0 0 1px rgba(11, 12, 13, .07); transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.pk-in:hover { box-shadow: 0 0 0 1px rgba(11, 12, 13, .16), inset 0 0 0 1px rgba(11, 12, 13, .07); }
+.pk-in:focus-visible { outline: none; box-shadow: 0 0 0 1.5px #0B0C0D; }
+.pk-in[aria-invalid="true"] { box-shadow: 0 0 0 1.5px #0B0C0D; }
+.pk-in:read-only { color: rgba(11, 12, 13, .66); cursor: default; }
+
+/* the action: a pill that becomes a round fingerprint button, with a ring around it */
+.pk-act { position: relative; display: flex; align-items: center; justify-content: center; height: 68px; margin-top: 16px; }
+.pk-btn { position: relative; flex: none; width: 100%; height: 52px; overflow: hidden; border-radius: 999px; background: #0B0C0D; color: #fff; font-size: 15px; font-weight: 600; letter-spacing: -.011em;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, 0);
+  transition: width 520ms cubic-bezier(.65, 0, .35, 1), background 240ms cubic-bezier(.4, 0, .2, 1), box-shadow 240ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.pk-btn:hover:not([aria-disabled="true"]), .pk-btn.is-hot { background: #26282C; }
+.pk-btn:active { transform: translateY(1px); }
+.pk-btn:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.pk.m .pk-btn { width: 52px; background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .14); }
+.pk.m .pk-btn:hover:not([aria-disabled="true"]), .pk.m .pk-btn.is-hot { background: #fff; }
+.pk[data-s="ok"] .pk-btn { cursor: default; }
+.pk-lab { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; transition: transform 320ms cubic-bezier(.16, 1, .3, 1); }
+.pk.m .pk-lab { transform: translateY(-110%); transition: transform 200ms cubic-bezier(.5, 0, .75, 0); }
+.pk-gl, .pk-tick { position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px; fill: none; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.pk-gl { stroke: #0B0C0D; stroke-width: 1.5; }
+.pk-gl path { stroke-dasharray: 1 2; stroke-dashoffset: 1; }
+.pk-disc { position: absolute; inset: 0; border-radius: 50%; background: #0B0C0D; clip-path: circle(0 at 50% 50%); transition: clip-path 220ms cubic-bezier(.5, 0, .75, 0); }
+.pk[data-s="ok"] .pk-disc { clip-path: circle(50% at 50% 50%); transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1); }
+.pk-tick { stroke: #fff; stroke-width: 2; }
+.pk-tick path { stroke-dasharray: 1 2; stroke-dashoffset: 1; transition: stroke-dashoffset 120ms cubic-bezier(.5, 0, .75, 0); }
+.pk[data-s="ok"] .pk-tick path { stroke-dashoffset: 0; transition: stroke-dashoffset 360ms cubic-bezier(.65, 0, .35, 1) 140ms; }
+.pk-ring { position: absolute; left: 50%; top: 50%; width: 68px; height: 68px; margin: -34px 0 0 -34px; fill: none; stroke: #0B0C0D; stroke-width: 2; transform: rotate(-90deg); pointer-events: none; }
+.pk-ring circle { stroke-dasharray: 1 2; stroke-dashoffset: 1; }
+/* once signed in the ring runs on past its end and is gone, so the disc is the only heavy thing */
+.pk[data-s="ok"] .pk-ring circle { stroke-dashoffset: -1 !important; transition: stroke-dashoffset 360ms cubic-bezier(.65, 0, .35, 1); }
+
+/* the line under the button: a hint, the scan's cancel, and sign out */
+.pk-ft { position: relative; height: 20px; margin-top: 8px; overflow: hidden; font-size: 12px; line-height: 20px; font-weight: 500; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+.pk-ft > p { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; white-space: nowrap; transform: translateY(110%);
+  transition: transform 260ms cubic-bezier(.5, 0, .75, 0); }
+.pk[data-s="idle"] .pk-ft > .f1, .pk[data-s="scan"] .pk-ft > .f2, .pk[data-s="ok"] .pk-ft > .f3 { transform: none; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.pk[data-s="scan"] .pk-ft > .f1, .pk[data-s="ok"] .pk-ft > .f1, .pk[data-s="ok"] .pk-ft > .f2 { transform: translateY(-110%); }
+.pk-txt { position: relative; font-weight: 600; color: #0B0C0D; }
+.pk-txt::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left center; transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.pk-txt:hover::after, .pk-txt:focus-visible::after, .pk-txt.is-hot::after { transform: scaleX(1); }
+.pk-txt:active { transform: translateY(1px); }
+.pk-txt:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; border-radius: 4px; }
+
+.pk.still *, .pk.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .pk *, .pk *::before { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<section class="pk" id="pk" data-s="idle" aria-label="Sign in to Kova">
+  <h3 class="pk-title pk-roll"><span class="a" id="pk-t1">Sign in to Kova</span><span class="b" id="pk-t2" aria-hidden="true">Welcome back, Dana</span></h3>
+  <p class="pk-sub pk-roll"><span class="a">Use your passkey, no password.</span><span class="b" aria-hidden="true"><i class="pk-dot"></i>Signed in</span></p>
+
+  <label class="pk-f"><span class="pk-lbl">Email</span><input class="pk-in" id="pk-in" type="email" name="email" value="dana@kova.app" autocomplete="username webauthn" spellcheck="false"></label>
+
+  <div class="pk-act">
+    <button type="button" class="pk-btn" id="pk-btn" aria-label="Sign in with passkey">
+      <span class="pk-lab" aria-hidden="true">Sign in with passkey</span>
+      <svg class="pk-gl" id="pk-gl" viewBox="0 -2 32 32" aria-hidden="true">
+        <path pathLength="1" d="M13.5 22V17a2.5 2.5 0 0 1 5 0v4"/>
+        <path pathLength="1" d="M11 23V17a5 5 0 0 1 10 0v5"/>
+        <path pathLength="1" d="M8.5 22V17a7.5 7.5 0 0 1 15 0v6"/>
+        <path pathLength="1" d="M6 24V17a10 10 0 0 1 20 0v4"/>
+        <path pathLength="1" d="M5 10.5A13 13 0 0 1 27 10.5"/>
+      </svg>
+      <i class="pk-disc" aria-hidden="true"></i>
+      <svg class="pk-tick" viewBox="0 0 32 32" aria-hidden="true"><path pathLength="1" d="M10 16.5l4.2 4.2 8-8.7"/></svg>
+    </button>
+    <svg class="pk-ring" viewBox="0 0 68 68" aria-hidden="true"><circle id="pk-ring" pathLength="1" cx="34" cy="34" r="32"/></svg>
+  </div>
+
+  <div class="pk-ft">
+    <p class="f1" id="pk-hint">Your passkey stays on this device.</p>
+    <p class="f2"><span>Touch your sensor</span><button type="button" class="pk-txt" id="pk-cancel" inert>Cancel</button></p>
+    <p class="f3"><button type="button" class="pk-txt" id="pk-out" inert>Sign out</button></p>
+  </div>
+  <p class="sr-only" id="pk-live" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  <div class="qm-ui"><span>Press Sign in with passkey · Cancel or Escape during the scan runs it back · Sign out resets</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Passkey sign-in. The state is one attribute (idle, scan, ok) plus a morph class; the scan is one progress value p that
+   draws the ring and the five strokes together, so cancelling is just running p backwards from wherever it is. */
+const pk = document.getElementById('pk'), pkBtn = document.getElementById('pk-btn'), pkIn = document.getElementById('pk-in');
+const pkRing = document.getElementById('pk-ring'), pkArcs = Array.from(document.querySelectorAll('#pk-gl path'));
+const pkCancel = document.getElementById('pk-cancel'), pkOut = document.getElementById('pk-out'), pkLive = document.getElementById('pk-live');
+const pkHint = document.getElementById('pk-hint'), pkT2 = document.getElementById('pk-t2'), pkT1 = document.getElementById('pk-t1');
+const pkReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PK_SCAN = 900, PK_BACK = 600, PK_LEAD = 380;
+let pkP = 0, pkRaf = 0, pkState = 'idle', pkHintT = 0, pkLead = 0;
+
+const pkOutCubic = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+function pkPaint(p) {                               // the ring and the strokes, from centre outward
+  pkP = p;
+  pkRing.style.strokeDashoffset = (1 - p).toFixed(4);
+  pkArcs.forEach((a, i) => { a.style.strokeDashoffset = (1 - pkOutCubic((p - i * 0.14) / 0.4)).toFixed(4); });
+}
+function pkRun(to, ms, done) {                      // from wherever p is now; to 1 is forward, to 0 is back
+  cancelAnimationFrame(pkRaf);
+  const from = pkP, t0 = performance.now();
+  if (!ms) { pkPaint(to); if (done) done(); return; }
+  const dur = ms * Math.abs(to - from);
+  const step = (now) => {
+    const k = dur ? Math.min(1, (now - t0) / dur) : 1;
+    pkPaint(from + (to - from) * k);
+    if (k < 1) pkRaf = requestAnimationFrame(step); else if (done) done();
+  };
+  pkRaf = requestAnimationFrame(step);
+}
+function pkName() {                                 // the name before the @, capitalised
+  const n = (pkIn.value.split('@')[0] || '').trim().split(/[._-]/)[0];
+  return n ? n[0].toUpperCase() + n.slice(1) : '';
+}
+function pkSet(s) {
+  pkState = s;
+  pk.dataset.s = s;
+  pkCancel.inert = s !== 'scan';
+  pkOut.inert = s !== 'ok';
+  pkBtn.setAttribute('aria-disabled', String(s === 'ok'));
+  pkBtn.setAttribute('aria-label', s === 'scan' ? 'Scanning passkey. Press to cancel' : s === 'ok' ? 'Signed in' : 'Sign in with passkey');
+  pkIn.readOnly = s !== 'idle';
+}
+function pkStart() {
+  if (!/.+@.+/.test(pkIn.value.trim())) {            // no email: ask for one instead of scanning
+    pkIn.setAttribute('aria-invalid', 'true'); pkIn.focus({ preventScroll: true });
+    pkHint.textContent = 'Add your email first.'; pkLive.textContent = 'Add your email first.';
+    clearTimeout(pkHintT); pkHintT = setTimeout(() => { pkHint.textContent = 'Your passkey stays on this device.'; pkIn.removeAttribute('aria-invalid'); }, 2200);
+    return;
+  }
+  pkIn.removeAttribute('aria-invalid');
+  const name = pkName();
+  pkT2.textContent = name ? 'Welcome back, ' + name : 'Welcome back';
+  pkSet('scan'); pk.classList.add('m');
+  pkLive.textContent = 'Scanning your passkey. Touch your sensor.';
+  clearTimeout(pkLead);                             // the scan starts once the pill has become the circle
+  pkLead = setTimeout(() => pkRun(1, pkReduced ? 0 : PK_SCAN, () => {
+    pkSet('ok'); pkLive.textContent = pkT2.textContent + '. Signed in.';
+  }), pkReduced ? 0 : PK_LEAD);
+}
+function pkAbort() {                                // cancel: run p back, then widen into the pill
+  if (pkState !== 'scan') return;
+  const had = pk.contains(document.activeElement);
+  clearTimeout(pkLead);
+  pkSet('idle'); pkLive.textContent = 'Passkey sign-in cancelled.';
+  pkRun(0, pkReduced ? 0 : PK_BACK, () => pk.classList.remove('m'));
+  if (had) pkBtn.focus({ preventScroll: true });          // the Cancel link goes inert, so keyboard focus moves to the button
+}
+function pkSignOut(instant) {                       // the disc closes, the circle widens to the pill
+  if (instant) pk.classList.add('still');
+  cancelAnimationFrame(pkRaf); clearTimeout(pkLead);
+  pkSet('idle'); pkLive.textContent = instant ? '' : 'Signed out.';
+  pkRun(0, 0);
+  pk.classList.remove('m');
+  if (instant) { pk.getBoundingClientRect(); pk.classList.remove('still'); }
+}
+function pkRestOk() {                               // reduced motion: rests signed in
+  pk.classList.add('still', 'm');
+  pkT2.textContent = 'Welcome back, ' + (pkName() || 'Dana');
+  pkPaint(1); pkSet('ok');
+  pk.getBoundingClientRect(); pk.classList.remove('still');
+}
+pkBtn.addEventListener('click', () => { if (pkState === 'idle') pkStart(); else if (pkState === 'scan') pkAbort(); });
+pkCancel.addEventListener('click', pkAbort);
+pkOut.addEventListener('click', () => { const had = document.activeElement === pkOut; pkSignOut(); if (had) pkBtn.focus({ preventScroll: true }); });
+pk.addEventListener('keydown', (e) => { if (e.key === 'Escape') pkAbort(); });
+pkPaint(0);
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function go(my, el, fx = 0.5, fy = 0.58, ms = 760) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * fx, r.top + r.height * fy, ms))) throw 0;
+    if (my !== epoch) throw 0;
+  }
+  async function tap(my, el, fx = 0.5) {
+    await go(my, el, fx);
+    el.classList.add('is-hot');
+    await gap(my, 160);
+    el.style.transform = 'translateY(1px)';
+    await gap(my, 110);
+    el.style.transform = '';
+    el.classList.remove('is-hot');
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  }
+  async function aside(my, el, dx, dy) {              // step off the control so the ghost never sits on the glyph
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width / 2 + dx, r.top + r.height / 2 + dy, 520))) throw 0;
+    if (my !== epoch) throw 0;
+  }
+  function rest() {                                   // the form at rest; reduced motion rests signed in
+    pkIn.value = 'dana@kova.app';
+    if (reduced) pkRestOk(); else pkSignOut(true);
+    if (document.activeElement && pk.contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 900);
+        await tap(my, pkBtn, 0.5);                    // sign in, then step aside while it scans
+        await aside(my, pkBtn, 112, -2);
+        await gap(my, 2100);                          // scan, welcome, a moment to read it
+        await tap(my, pkOut, 0.5);                    // sign out, the card glides back
+        await aside(my, pkOut, 90, 40);
+        await gap(my, 1500);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); [pkBtn, pkOut].forEach((b) => b.classList.remove('is-hot')); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!pk.matches(':hover') && !pk.contains(document.activeElement)) { rest(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true, capture: true });
+    addEventListener('pointerdown', touch, { passive: true, capture: true });
+    addEventListener('keydown', () => touch({}), true);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(); if (!reduced) script(); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (reduced) rest(); else script(); }, 300));
+})();
+</script>
+</body>
+</html>

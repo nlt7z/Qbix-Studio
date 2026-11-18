@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semantic zoom · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "semantic-zoom", "title": "Semantic zoom", "group": "studio", "added": "2026-11-17", "cat": "cards", "order": 90,
+  "kind": "loop", "tone": "paper", "shot": 2400,
+  "line": "camera 560 ms ease-move · detail uncovered per level · type laid out per level, never scaled",
+  "summary": "A Strata board of six project tiles on a white canvas with a faint dot grid. The zoom does not just make things bigger, it changes what a tile says. At 50% a tile is a title. At 100% it uncovers a status line and a small drawn thumbnail. At 200% the camera settles on one tile and its checklist and owner are uncovered. The camera eases on the move curve, around the selected tile for the buttons and around the pointer for ctrl-scroll and pinch. Every tile is laid out again per level in real pixels, so the type stays at its own size and crisp at every zoom.",
+  "spec": [
+    ["Levels", "title only below 80%, status line and thumbnail from 80% to 170%, checklist and owner from 170%; the level follows the target zoom, so the detail starts opening as the camera starts moving"],
+    ["Camera", "one tween of zoom (in log space) and centre, 560 ms ease-move in, 400 ms out; every new target starts from where the camera is, so it can be redirected at any moment"],
+    ["Detail in", "each part is uncovered from its bottom edge up under a clip and rises 6 px, 420 ms expo out, 100 ms after the level changes; checklist rows 40 ms apart, the ticks draw in one stroke after them"],
+    ["Detail out", "the same clip closes from the top, 220 ms ease-in, no delay, about 0.6x of the way in"],
+    ["Type", "four sizes in px, never scaled by the camera: 11, 13, 17 and 24; tiles are resized in whole pixels and re-laid out, so text is rendered at its own size at every zoom"],
+    ["Focus", "the selected tile has the one ink ring and the one lime point (its status dot); the others have a soft ring and a hollow dot"],
+    ["Input", "- and + step 50, 100, 200% around the selected tile; ctrl-scroll or pinch zooms around the pointer; plain scroll or a drag pans; double-click a tile zooms to 200% or back to 100%"],
+    ["Loop", "a ghost zooms out to 50%, double-clicks Forma to land on 200%, then steps back to 100%; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-17"],
+  "where": "A Strata project board that has to work as an overview and as a place to read one project, with the same tiles at both.",
+  "rules": [
+    "Zoom changes the content, not only the size: each level has its own layout, and a tile never shows a scaled bitmap of a smaller level.",
+    "Text keeps its px size at every zoom; only the tile box grows, so every size stays on the pixel grid and crisp.",
+    "The camera is one value pair (zoom and centre) that always retargets from where it is; a second click, a wheel tick or a drag mid-move never queues.",
+    "Detail is uncovered under a clip and rises a few px, it never fades; it leaves faster than it comes, and no level shoves its neighbours.",
+    "One ink ring marks the selected tile and one lime dot marks its status; every other tile and dot stays white with a soft ring.",
+    "Real controls: tiles, - and + are buttons, + and - keys work, a polite live region names the tile and what the level shows, focus recentres the camera on the tile.",
+    "Under reduced motion the board rests at 100% on Forma and every zoom is instant."
+  ],
+  "tags": ["cards", "zoom", "canvas", "board", "level of detail", "camera", "pinch", "Strata", "semantic"]
+}
+</script>
+<style data-code>
+/* Semantic zoom. One heavy thing: the selected tile's ink ring. One lime point: its status dot. White surfaces with a soft ring.
+   Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0), ui (.4,0,.2,1). Four type sizes: 11, 13, 17, 24. */
+.sz { width: 640px; max-width: 100%; display: grid; gap: 14px; color: #0B0C0D; font: 400 13px/18px Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+.sz :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.sz-card { position: relative; height: 356px; background: #fff; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+/* the canvas: white with a faint dot grid that pans and scales with the camera */
+.sz-board { position: absolute; inset: 0; overflow: clip; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  background-image: radial-gradient(circle, rgba(11, 12, 13, .09) 1.2px, transparent 1.6px); background-size: 28px 28px; }
+.sz-board.drag { cursor: grabbing; }
+
+/* a tile: a white box whose size is set per frame in whole pixels; its content is laid out for the level in px */
+.sz-tile { position: absolute; left: 0; top: 0; z-index: 1; display: block; text-align: left; background: #fff; border-radius: 16px; overflow: clip; will-change: transform;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .1); transition: box-shadow 200ms cubic-bezier(.4, 0, .2, 1); }
+.sz-tile:hover { box-shadow: 0 0 0 1px rgba(11, 12, 13, .22); }
+.sz-tile.sel { z-index: 2; box-shadow: 0 0 0 1.5px #0B0C0D; }
+.sz-tile:focus-visible { outline: 2px solid #0B0C0D; outline-offset: -4px; }
+
+/* the title: centred at 50%, top left at 100%, larger at 200% */
+.sz-t { position: absolute; left: 14px; right: 14px; top: 50%; transform: translateY(-50%); display: block;
+  font: 300 17px/21px Outfit, Geist, sans-serif; letter-spacing: -.025em; text-wrap: balance;
+  transition: top 420ms cubic-bezier(.65, 0, .35, 1), transform 420ms cubic-bezier(.65, 0, .35, 1), left 420ms cubic-bezier(.65, 0, .35, 1), right 420ms cubic-bezier(.65, 0, .35, 1), font-size 420ms cubic-bezier(.65, 0, .35, 1), line-height 420ms cubic-bezier(.65, 0, .35, 1); }
+.sz[data-lv="1"] .sz-t { top: 12px; transform: none; }
+.sz[data-lv="2"] .sz-t { top: 22px; left: 24px; right: 24px; transform: none; font-size: 24px; line-height: 28px; }
+
+/* parts that are uncovered: closed (clipped from the top, 220 ms in), open (from the bottom edge up, 420 ms expo out, 100 ms behind) */
+.sz-st, .sz-th1, .sz-th2, .sz-r, .sz-ow { clip-path: inset(100% 0 0 0); transform: translateY(6px);
+  transition: clip-path 220ms cubic-bezier(.5, 0, .75, 0), transform 220ms cubic-bezier(.5, 0, .75, 0); }
+.sz-st { position: absolute; left: 14px; top: 38px; display: flex; align-items: center; gap: 8px; height: 18px; font-weight: 500; color: rgba(11, 12, 13, .66); white-space: nowrap;
+  transition: clip-path 220ms cubic-bezier(.5, 0, .75, 0), transform 220ms cubic-bezier(.5, 0, .75, 0), left 420ms cubic-bezier(.65, 0, .35, 1), top 420ms cubic-bezier(.65, 0, .35, 1); }
+.sz[data-lv="2"] .sz-st { left: 24px; top: 56px; }
+.sz[data-lv="1"] .sz-st, .sz[data-lv="2"] .sz-st { clip-path: inset(-4px); transform: none;
+  transition: clip-path 420ms cubic-bezier(.16, 1, .3, 1) 100ms, transform 420ms cubic-bezier(.16, 1, .3, 1) 100ms, left 420ms cubic-bezier(.65, 0, .35, 1), top 420ms cubic-bezier(.65, 0, .35, 1); }
+.sz[data-lv="1"] .sz-th1, .sz[data-lv="2"] .sz-th2, .sz[data-lv="2"] .sz-r, .sz[data-lv="2"] .sz-ow { clip-path: inset(-4px); transform: none;
+  transition: clip-path 420ms cubic-bezier(.16, 1, .3, 1) calc(100ms + var(--k, 0) * 40ms), transform 420ms cubic-bezier(.16, 1, .3, 1) calc(100ms + var(--k, 0) * 40ms); }
+.sz[data-lv="2"] .sz-th1 { transition-duration: 220ms; }
+
+/* the status dot: hollow, lime on the selected tile */
+.sz-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1.25px rgba(11, 12, 13, .3);
+  transition: background 200ms cubic-bezier(.4, 0, .2, 1), box-shadow 200ms cubic-bezier(.4, 0, .2, 1); }
+.sz-tile.sel .sz-dot { background: #B8FF00; box-shadow: none; }
+
+/* the drawn thumbnail: line art in a vector box, so it stays crisp at any size */
+.th { display: block; background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); overflow: hidden; }
+.th svg { display: block; width: 100%; height: 100%; }
+.th svg * { fill: none; stroke: rgba(11, 12, 13, .42); stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.th svg .a { stroke: rgba(11, 12, 13, .9); stroke-width: 1.6; }
+.sz-th1 { position: absolute; right: 14px; bottom: 14px; width: min(46%, 168px); aspect-ratio: 16 / 9; }
+.sz-th2 { position: absolute; left: 24px; top: 88px; width: max(140px, 36%); aspect-ratio: 16 / 9; border-radius: 12px; }
+
+/* the 200% layer: checklist and owner */
+.sz-ck { position: absolute; left: calc(24px + max(140px, 36%) + 20px); right: 24px; top: 88px; display: block; }
+.sz-r { display: flex; align-items: center; gap: 8px; height: 24px; white-space: nowrap; }
+.sz-r svg { width: 16px; height: 16px; flex: none; }
+.sz-r circle { fill: none; stroke: rgba(11, 12, 13, .22); stroke-width: 1.25; }
+.sz-r.done circle { stroke: rgba(11, 12, 13, .85); }
+.sz-r path { fill: none; stroke: #0B0C0D; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 12; stroke-dashoffset: 12; transition: stroke-dashoffset 0s 220ms; }
+.sz[data-lv="2"] .sz-r path { stroke-dashoffset: 0; transition: stroke-dashoffset 360ms cubic-bezier(.16, 1, .3, 1) calc(300ms + var(--k, 0) * 40ms); }
+.sz-ow { position: absolute; left: 24px; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 10px; height: 28px; font-weight: 500; white-space: nowrap; }
+.sz-av { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .14); font: 500 11px/1 Geist, sans-serif; font-style: normal; letter-spacing: 0; }
+.sz-n { margin-left: auto; font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+
+/* the bar under the board: what this level shows, and the zoom control */
+.sz-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 40px; }
+.sz-cap { margin: 0; display: inline-grid; height: 18px; overflow: hidden; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.sz-cap i { grid-area: 1 / 1; font-style: normal; white-space: nowrap; transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.sz-zoom { display: inline-flex; align-items: center; height: 40px; padding: 0 4px; border-radius: 999px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.sz-zoom button { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.sz-zoom button:hover:not(:disabled), .sz-zoom button.is-hot { background: #EEF1E8; }
+.sz-zoom button:active:not(:disabled) { transform: translateY(1px); }
+.sz-zoom button:disabled { color: rgba(11, 12, 13, .28); cursor: default; }
+.sz-zoom svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
+.sz-pct { min-width: 52px; text-align: center; font: 500 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+
+.sz.snap *, .sz.snap *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .sz *, .sz *::before { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="sz" id="sz" data-lv="1">
+  <div class="sz-card">
+    <div class="sz-board" id="sz-board" role="group" aria-label="Project board"></div>
+  </div>
+  <div class="sz-bar">
+    <p class="sz-cap" id="sz-cap" aria-hidden="true"><i>Forma · Status and thumbnail</i></p>
+    <div class="sz-zoom" role="group" aria-label="Zoom">
+      <button type="button" id="sz-out" aria-label="Zoom out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9"/></svg></button>
+      <span class="sz-pct" id="sz-pct">100%</span>
+      <button type="button" id="sz-in" aria-label="Zoom in"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9M8 3.5v9"/></svg></button>
+    </div>
+  </div>
+  <p class="sr-only" id="sz-live" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Zoom with - and + (or the + and - keys) · ctrl-scroll or pinch zooms at the pointer · scroll or drag pans · double-click a tile</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Semantic zoom. The camera is {z, x, y} (zoom and the world point at the centre). Tiles live in world units (272 x 144) and are
+   resized to z times that in whole px every frame; their content is laid out per level (data-lv 0, 1, 2) in real px, never scaled. */
+const szEl = document.getElementById('sz'), szBoard = document.getElementById('sz-board'), szCap = document.getElementById('sz-cap');
+const szInB = document.getElementById('sz-in'), szOutB = document.getElementById('sz-out'), szPct = document.getElementById('sz-pct'), szLive = document.getElementById('sz-live');
+const SZ = { TW: 272, TH: 144, PX: 300, PY: 172, BW: 872, BH: 316, M: 20, MIN: .5, MAX: 2, STEPS: [.5, 1, 2] };
+const SZ_REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SZ_LV = ['Title only', 'Status and thumbnail', 'Checklist and owner'];
+const SZ_ART = {
+  forma: '<path d="M12 14h34M112 14h36"/><rect x="12" y="26" width="62" height="52" rx="5"/><circle class="a" cx="43" cy="48" r="11"/><path d="M34 68q9-6 18 0"/><path d="M86 34h62M86 44h44M86 54h54"/><rect class="a" x="86" y="64" width="38" height="14" rx="7"/>',
+  kova: '<path d="M14 14h40"/><path d="M12 78h136"/><rect x="22" y="58" width="16" height="20" rx="2"/><rect x="46" y="48" width="16" height="30" rx="2"/><rect x="70" y="53" width="16" height="25" rx="2"/><rect x="94" y="36" width="16" height="42" rx="2"/><rect class="a" x="118" y="24" width="16" height="54" rx="2"/>',
+  willow: '<rect x="14" y="12" width="132" height="66" rx="7"/><path d="M14 30h132M47 30v48M80 30v48M113 30v48"/><path d="M22 21h28"/><rect class="a" x="84" y="42" width="24" height="18" rx="5"/>',
+  button: '<rect class="a" x="38" y="29" width="84" height="30" rx="15"/><path d="M62 44h36"/><path d="M110 62v14l4-4 3 7 3-1-3-7h5z"/>',
+  tabs: '<path d="M12 31h136"/><path d="M16 21h28M62 21h28M108 21h28"/><path class="a" d="M16 31h28"/><path d="M16 48h128M16 60h100M16 72h112"/>',
+  toast: '<rect x="22" y="28" width="116" height="34" rx="17"/><circle class="a" cx="42" cy="45" r="6"/><path d="M56 41h58M56 50h38"/>',
+};
+const SZ_ITEMS = [
+  { t: 'Forma', st: 'In review', art: 'forma', ow: 'Dana Whitfield', ini: 'DW', ck: [['Hero copy approved', 1], ['Product photos', 1], ['Checkout flow', 1], ['Launch review', 0]] },
+  { t: 'Kova', st: 'Shipped', art: 'kova', ow: 'Ravi Shah', ini: 'RS', ck: [['Pricing table', 1], ['Invoice emails', 1], ['Audit log', 1], ['Export to CSV', 1]] },
+  { t: 'Willow Counseling', st: 'Drafting', art: 'willow', ow: 'Mara Reyes', ini: 'MR', ck: [['Intake form', 1], ['Booking page', 1], ['Service pages', 0], ['Reminders', 0]] },
+  { t: 'Button', st: 'Stable', art: 'button', ow: 'Jun Park', ini: 'JP', ck: [['Variants', 1], ['Focus ring', 1], ['Press state', 1], ['Docs page', 1]] },
+  { t: 'Tabs', st: 'In review', art: 'tabs', ow: 'Ines Duarte', ini: 'ID', ck: [['Arrow keys', 1], ['Roving focus', 1], ['Overflow menu', 1], ['Motion pass', 0]] },
+  { t: 'Toast', st: 'Stable', art: 'toast', ow: 'Sam Oduya', ini: 'SO', ck: [['Stacking', 1], ['Swipe to close', 1], ['Live region', 1], ['Docs page', 1]] },
+];
+const szThumb = (k) => `<svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${SZ_ART[k]}</svg>`;
+const szTiles = SZ_ITEMS.map((it, i) => {
+  const el = document.createElement('button');
+  el.type = 'button'; el.className = 'sz-tile'; el.setAttribute('aria-pressed', 'false'); el.setAttribute('aria-label', it.t);
+  const done = it.ck.filter((c) => c[1]).length;
+  el.innerHTML = `<span class="sz-t">${it.t}</span><span class="sz-st"><i class="sz-dot"></i>${it.st}</span>
+    <span class="sz-th1 th">${szThumb(it.art)}</span>
+    <span class="sz-th2 th" style="--k:0">${szThumb(it.art)}</span>
+    <span class="sz-ck">${it.ck.map((c, k) => `<span class="sz-r${c[1] ? ' done' : ''}" style="--k:${k + 1}"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7"/>${c[1] ? '<path d="M4.8 8.3l2.2 2.2 4.2-4.6"/>' : ''}</svg>${c[0]}</span>`).join('')}</span>
+    <span class="sz-ow" style="--k:5"><i class="sz-av">${it.ini}</i>${it.ow}<span class="sz-n">${done} / 4</span></span>`;
+  szBoard.appendChild(el);
+  return { el, i, wx: (i % 3) * SZ.PX, wy: Math.floor(i / 3) * SZ.PY, it, done };
+});
+
+/* the camera */
+let szW = 640, szH = 356, szSel = 0, szLv = 1, szRaf = 0, szFrom = null, szT0 = 0, szDur = 0;
+const szCam = { z: 1, x: 436, y: 158 };
+let szTgt = { z: 1, x: 436, y: 158 };
+const szEase = (() => { const x1 = .65, y1 = 0, x2 = .35, y2 = 1, cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const e = ((ax * t + bx) * t + cx) * t - x, d = (3 * ax * t + 2 * bx) * t + cx; if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; } return ((ay * t + by) * t + cy) * t; }; })();
+const szClamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const szLvOf = (z) => (z < .8 ? 0 : z < 1.7 ? 1 : 2);
+/* keep the board in view: centred when it is smaller than the view, otherwise held inside it with a margin */
+function szFit(z, x, y) {
+  z = szClamp(z, SZ.MIN, SZ.MAX);
+  const hw = szW / 2 / z, hh = szH / 2 / z, ex0 = -SZ.M, ex1 = SZ.BW + SZ.M, ey0 = -SZ.M, ey1 = SZ.BH + SZ.M;
+  x = ex1 - ex0 <= 2 * hw ? (ex0 + ex1) / 2 : szClamp(x, ex0 + hw, ex1 - hw);
+  y = ey1 - ey0 <= 2 * hh ? (ey0 + ey1) / 2 : szClamp(y, ey0 + hh, ey1 - hh);
+  return { z, x, y };
+}
+function szDraw() {
+  const z = szCam.z, w = Math.round(SZ.TW * z), h = Math.round(SZ.TH * z);
+  szTiles.forEach((t) => {
+    t.el.style.transform = `translate(${Math.round(szW / 2 + (t.wx - szCam.x) * z)}px, ${Math.round(szH / 2 + (t.wy - szCam.y) * z)}px)`;
+    t.el.style.width = w + 'px'; t.el.style.height = h + 'px';
+  });
+  const g = 28 * z;
+  szBoard.style.backgroundSize = g.toFixed(2) + 'px ' + g.toFixed(2) + 'px';
+  szBoard.style.backgroundPosition = (szW / 2 - szCam.x * z).toFixed(1) + 'px ' + (szH / 2 - szCam.y * z).toFixed(1) + 'px';
+  szPct.textContent = Math.round(z * 100) + '%';
+}
+function szStep(now) {
+  szRaf = 0;
+  const p = Math.min(1, (now - szT0) / szDur), k = szEase(p);
+  szCam.z = Math.exp(Math.log(szFrom.z) + (Math.log(szTgt.z) - Math.log(szFrom.z)) * k);
+  szCam.x = szFrom.x + (szTgt.x - szFrom.x) * k; szCam.y = szFrom.y + (szTgt.y - szFrom.y) * k;
+  szDraw();
+  if (p < 1) szRaf = requestAnimationFrame(szStep);
+}
+function szStop() { if (szRaf) { cancelAnimationFrame(szRaf); szRaf = 0; } }
+/* go to a target; a new target always starts from where the camera is now */
+function szGo(z, x, y, ms) {
+  szTgt = szFit(z, x, y);
+  szLvSet(szLvOf(szTgt.z));
+  szInB.disabled = szTgt.z >= SZ.MAX - .001; szOutB.disabled = szTgt.z <= SZ.MIN + .001;
+  if (!ms || SZ_REDUCED) { szStop(); Object.assign(szCam, szTgt); szDraw(); return; }
+  szFrom = { z: szCam.z, x: szCam.x, y: szCam.y }; szT0 = performance.now(); szDur = ms;
+  if (!szRaf) szRaf = requestAnimationFrame(szStep);
+}
+const szCentre = (i) => ({ x: szTiles[i].wx + SZ.TW / 2, y: szTiles[i].wy + SZ.TH / 2 });
+function szFocus(i, z, ms) { const c = szCentre(i); szGo(z, c.x, c.y, ms); }
+
+/* a line of text that rolls: dir +1 brings the new one from below, -1 from above */
+function szRoll(el, txt, dir, snap) {
+  const last = el.lastElementChild;
+  if (last && last.textContent === txt) return;
+  if (snap || !last) { el.innerHTML = '<i></i>'; el.firstChild.textContent = txt; return; }
+  const n = document.createElement('i'); n.textContent = txt; n.style.transform = `translateY(${dir * 100}%)`;
+  el.appendChild(n); el.getBoundingClientRect();
+  [...el.children].forEach((c) => { if (c !== n) c.style.transform = `translateY(${-dir * 100}%)`; });
+  n.style.transform = 'none';
+  setTimeout(() => { [...el.children].forEach((c) => { if (c !== el.lastElementChild) c.remove(); }); }, 460);
+}
+function szSay() {
+  const t = szTiles[szSel], pct = Math.round(szTgt.z * 100);
+  szLive.textContent = `${t.it.t}, ${pct} percent. ` + (szLv === 2 ? `${t.done} of 4 done, owner ${t.it.ow}.` : szLv === 1 ? `${t.it.st}.` : '');
+}
+function szCapSet(dir, snap) { szRoll(szCap, `${szTiles[szSel].it.t} · ${SZ_LV[szLv]}`, dir, snap); }
+function szLvSet(lv, snap) {
+  if (lv === szLv) return;
+  const dir = lv > szLv ? 1 : -1;
+  szLv = lv; szEl.dataset.lv = String(lv); szCapSet(dir, snap); szSay();
+}
+function szSelect(i) {
+  if (i === szSel && szTiles[i].el.classList.contains('sel')) return;
+  szSel = i;
+  szTiles.forEach((t) => { const on = t.i === i; t.el.classList.toggle('sel', on); t.el.setAttribute('aria-pressed', String(on)); });
+  szCapSet(1); szSay();
+}
+/* - and + step through 50, 100 and 200% around the selected tile */
+function szZoomStep(dir) {
+  const z = szTgt.z;
+  const next = dir > 0 ? SZ.STEPS.find((s) => s > z + .02) : [...SZ.STEPS].reverse().find((s) => s < z - .02);
+  if (next) szFocus(szSel, next, dir > 0 ? 560 : 400);
+}
+function szZoomAt(nz, px, py) {                      // keep the world point under the pointer where it is
+  nz = szClamp(nz, SZ.MIN, SZ.MAX);
+  const wx = szTgt.x + (px - szW / 2) / szTgt.z, wy = szTgt.y + (py - szH / 2) / szTgt.z;
+  szGo(nz, wx - (px - szW / 2) / nz, wy - (py - szH / 2) / nz, 320);
+}
+
+/* input */
+let szDrag = null, szSuppress = false;
+szTiles.forEach((t) => {
+  t.el.addEventListener('click', () => { if (!szSuppress) szSelect(t.i); });
+  t.el.addEventListener('dblclick', () => { if (szSuppress) return; szSelect(t.i); const up = szTgt.z < 1.5; szFocus(t.i, up ? 2 : 1, up ? 560 : 400); });
+  t.el.addEventListener('focus', () => { if (t.el.matches(':focus-visible')) { szSelect(t.i); szFocus(t.i, szTgt.z, 420); } });
+});
+szBoard.addEventListener('pointerdown', (e) => { if (e.button === 0) szDrag = { x: e.clientX, y: e.clientY, cx: szTgt.x, cy: szTgt.y, moved: false }; });
+addEventListener('pointermove', (e) => {
+  if (!szDrag) return;
+  const dx = e.clientX - szDrag.x, dy = e.clientY - szDrag.y;
+  if (!szDrag.moved && Math.hypot(dx, dy) < 5) return;
+  if (!szDrag.moved) { szDrag.moved = true; szBoard.classList.add('drag'); szStop(); }
+  const f = szFit(szCam.z, szDrag.cx - dx / szCam.z, szDrag.cy - dy / szCam.z);
+  szCam.x = szTgt.x = f.x; szCam.y = szTgt.y = f.y; szDraw();
+}, { passive: true });
+addEventListener('pointerup', () => {
+  if (szDrag && szDrag.moved) { szSuppress = true; setTimeout(() => { szSuppress = false; }, 0); }
+  szDrag = null; szBoard.classList.remove('drag');
+});
+szBoard.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const r = szBoard.getBoundingClientRect();
+  if (e.ctrlKey || e.metaKey) szZoomAt(szTgt.z * Math.exp(-e.deltaY * .006), e.clientX - r.left, e.clientY - r.top);
+  else szGo(szTgt.z, szTgt.x + e.deltaX / szTgt.z, szTgt.y + e.deltaY / szTgt.z, 180);
+}, { passive: false });
+szInB.addEventListener('click', () => szZoomStep(1));
+szOutB.addEventListener('click', () => szZoomStep(-1));
+szEl.addEventListener('keydown', (e) => {
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); szZoomStep(1); }
+  else if (e.key === '-' || e.key === '_') { e.preventDefault(); szZoomStep(-1); }
+  else if (e.key === '0') { e.preventDefault(); szFocus(szSel, 1, 480); }
+});
+new ResizeObserver(() => { szW = szBoard.clientWidth; szH = szBoard.clientHeight; szGo(szTgt.z, szTgt.x, szTgt.y, 0); }).observe(szBoard);
+
+/* the board at rest: 100% on Forma */
+szEl.classList.add('snap');
+szW = szBoard.clientWidth || 640; szH = szBoard.clientHeight || 356;
+szSelect(0); szFocus(0, 1, 0); szCapSet(1, true); szSay();
+szEl.getBoundingClientRect(); szEl.classList.remove('snap');
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0, first = true;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function to(my, x, y, ms) { if (!(await QM.ghostTo(x, y, ms)) || my !== epoch) throw 0; }
+  async function toEl(my, el, ms, fx = 0.5, fy = 0.5) { const r = el.getBoundingClientRect(); await to(my, r.left + r.width * fx, r.top + r.height * fy, ms); }
+  const press = async (my, el, fn) => { el.classList.add('is-hot'); await gap(my, 140); fn(); await gap(my, 160); el.classList.remove('is-hot'); };
+  function rest() {                                   // the key state: 100% on Forma
+    szSelect(0); szFocus(0, 1, 0);
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      if (QM.tile && first) { first = false; await gap(my, 5200); }
+      QM.ghostShow();
+      rest();
+      for (;;) {
+        await gap(my, 900);
+        await toEl(my, szOutB, 820); await press(my, szOutB, () => szZoomStep(-1));   // 50%: titles only
+        await gap(my, 1700);
+        await toEl(my, szTiles[0].el, 800, 0.5, 0.6); await gap(my, 220);
+        szTiles[0].el.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));    // 200% on Forma
+        await gap(my, 300);
+        { const r = szBoard.getBoundingClientRect(); await to(my, r.right - 22, r.top + r.height * 0.5, 700); }   // park in the margin, off the tile
+        await gap(my, 3000);
+        await toEl(my, szOutB, 760); await press(my, szOutB, () => szZoomStep(-1));   // back to 100%
+        await to(my, innerWidth * 0.84, innerHeight * 0.86, 800);
+        await gap(my, 2000);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); document.querySelectorAll('.sz-zoom .is-hot').forEach((b) => b.classList.remove('is-hot')); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!szEl.matches(':hover') && !szEl.contains(document.activeElement)) script(); else touch({}); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(); if (!reduced) script(); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (!reduced) script(); }, 300));
+})();
+</script>
+</body>
+</html>

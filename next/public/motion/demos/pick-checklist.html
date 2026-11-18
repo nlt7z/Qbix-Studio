@@ -41,7 +41,7 @@
 </script>
 <style data-code>
 /* Launch checklist. Idea: bencho.dev checklist (MIT). */
-.ck { width: 520px; background: var(--surface); border-radius: 14px; padding: 24px; display: grid; gap: 16px; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
+.ck { --row: 48px; width: 520px; background: var(--surface); border-radius: 14px; padding: 24px; display: grid; gap: 16px; font-size: 14px; line-height: 1.5; letter-spacing: 0; color: var(--fg); }
 .ck-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .ck-top h1 { margin: 0; font-family: var(--font-headline); font-size: 20px; font-weight: 300; letter-spacing: -0.035em; line-height: 1.2; }
 .ck-top p { margin: 4px 0 0; color: var(--fg2); }
@@ -50,10 +50,11 @@
 .ck-track { height: 6px; border-radius: 999px; background: var(--sunk); overflow: hidden; }
 .ck-track > i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--signal); transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1); }
 .ck ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.ck-item { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; margin: 0 -12px; width: calc(100% + 24px); border: 0; border-radius: 8px; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-item { display: flex; align-items: center; gap: 12px; min-height: var(--row); padding: 0 12px; margin: 0 -12px; width: calc(100% + 24px); border: 0; border-radius: 8px; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
 .ck-item:hover, .ck-item.is-hot { background: var(--fill); }
 .ck-item:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
-.ck-box { position: relative; width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; border: 1px solid rgba(11, 12, 13, 0.52); background: var(--surface); transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), border-color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-box { position: relative; width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; border: 1px solid rgba(11, 12, 13, 0.52); background: var(--surface); transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), border-color 120ms cubic-bezier(0.16, 1, 0.3, 1), transform 100ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-item:active .ck-box { transform: scale(0.92); }
 .ck-item[aria-checked="true"] .ck-box { background: var(--signal); border-color: var(--signal); }
 .ck-box svg { display: block; width: 14px; height: 14px; fill: none; stroke: var(--on-lime); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 .ck-box path { stroke-dasharray: 18; stroke-dashoffset: 18; transition: stroke-dashoffset 200ms cubic-bezier(0.16, 1, 0.3, 1); }
@@ -66,14 +67,19 @@
 .ck-who img { display: block; width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: 40% 35%; }
 .ck-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 8px; }
 .ck-foot span { color: var(--fg2); }
-.ck-go { height: 36px; padding: 0 16px; border: 1px solid transparent; border-radius: 8px; background: var(--signal); color: var(--on-lime); font-weight: 500; white-space: nowrap; cursor: pointer; transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), color 120ms cubic-bezier(0.16, 1, 0.3, 1); }
-.ck-go:hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.ck-go { height: 36px; padding: 0 16px; border: 1px solid transparent; border-radius: 8px; background: var(--signal); color: var(--on-lime); font-weight: 500; white-space: nowrap; cursor: pointer;
+  transition: background-color 120ms cubic-bezier(0.16, 1, 0.3, 1), color 120ms cubic-bezier(0.16, 1, 0.3, 1), transform 100ms cubic-bezier(0.16, 1, 0.3, 1); }
+.ck-go:hover:not(:disabled) { background: color-mix(in oklab, var(--signal) 88%, #000); }
+.ck-go:active:not(:disabled) { transform: translateY(1px); }
 .ck-go:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 .ck-go:disabled { background: color-mix(in srgb, var(--signal) 32%, var(--surface)); color: rgba(12, 19, 0, 0.4); cursor: default; }
 @media (prefers-reduced-motion: reduce) { .ck *, .ck *::before, .ck *::after { transition-duration: 1ms !important; } }
 </style>
 <style>
   .ck-fit { position: fixed; z-index: 1; }
+  /* in a tile the card is a little tighter, so it can be drawn at its own size (the type reads at 14px) instead of shrunk to fit 500px */
+  html.qm-tile .ck { --row: 38px; padding: 20px 24px; gap: 12px; }
+  html.qm-tile .ck-foot { padding-top: 4px; }
   .qm-hint { position: fixed; right: clamp(24px, 6vmin, 56px); top: clamp(10px, 2vmin, 20px); text-align: right; z-index: 2; }
 </style>
 </head>
@@ -85,7 +91,7 @@
 <section class="ck" id="panel">
   <div class="ck-top">
     <div><h1>Launch checklist</h1><p>Willow Counseling · Live in 7 days</p></div>
-    <div class="ck-count" id="count"></div>
+    <div class="ck-count" id="count" aria-live="polite"></div>
   </div>
   <div class="ck-track" aria-hidden="true"><i id="bar"></i></div>
   <ul id="list" role="group" aria-label="Launch tasks">
@@ -97,7 +103,7 @@
     <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">Name, city and specialties set for Google</span></span><span class="ck-who" title="Sera"><img src="../assets/offers/sera.jpg" alt=""></span></button></li>
     <li><button class="ck-item" type="button" role="checkbox" aria-checked="false"><span class="ck-box"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.4 5.6 10.4 11.5 3.8"/></svg></span><span class="ck-label"><span class="ck-t">Domain connected, email still working</span></span><span class="ck-who" title="Dana"><img src="../assets/art/you.webp" alt=""></span></button></li>
   </ul>
-  <div class="ck-foot"><span id="hint"></span><button class="ck-go" id="release" type="button" disabled>Go live</button></div>
+  <div class="ck-foot"><span id="hint" aria-live="polite"></span><button class="ck-go" id="release" type="button" disabled>Go live</button></div>
 </section>
 <!-- /code -->
 </div>
@@ -125,7 +131,7 @@ reset(still ? 5 : 2);
 <script src="../assets/picks/p3-ghost.js"></script>
 <script>
   /* loop kind: the ghost ticks three, takes one back and ticks it again, then the last two: the button wakes */
-  PickGhost.fit($('#fit'), 520, 590, { max: 1.5, gutter: 48 });
+  PickGhost.fit($('#fit'), 520, $('#panel').offsetHeight, { max: 1.5, gutter: QM.tile ? 28 : 48 });
   PickGhost.start({
     hot: '.ck-item',
     reset: () => reset(2),

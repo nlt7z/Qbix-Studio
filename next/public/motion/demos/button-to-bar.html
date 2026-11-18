@@ -7,46 +7,60 @@
 <script type="application/json" id="qm-meta">
 {
   "id": "button-to-bar", "title": "Button to bar", "group": "studio", "cat": "loading", "order": 30,
-  "kind": "loop", "tone": "paper", "added": "2026-11-05", "shot": 3900,
-  "line": "520 ms ease-move · 3 files · 600 ms a stretch",
+  "kind": "loop", "tone": "paper", "added": "2026-11-05", "shot": 4900,
+  "line": "520 ms ease-move · 3 files · 600 ms a stretch · 100 ms press",
   "summary": "An Upload moodboard button is pressed: its label slides out through the top, the black body narrows into a sage bar of its own height and fills with ink, the count 0, 1, 2, 3 rolling in its sleeve. The last stretch fills lime, then the bar opens back out into a button that reads 3 files uploaded, with a tick drawn.",
   "spec": [
-    ["Narrow", "width 16em → 11em and ink → pale, 520 ms ease-move, label out through the top 480 ms expo"],
+    ["Narrow", "width 16em → 11em, 520 ms ease-move, while the ink body (white label inside) is drawn back to the left by a clip, uncovering the sage track; the label leaves through the top 480 ms expo"],
     ["Fill", "three stretches of 600 ms ease-soft, 700 ms apart; the count rolls one digit a stretch"],
     ["Two texts", "the count is set twice, ink on the sage track and white on the fill, so it flips as the fill passes"],
     ["Last stretch", "the fill turns lime and its text ink, the one lime of the piece"],
-    ["Open", "width back to 16em, ink body, 3 files uploaded rises in, tick stroke drawn 480 ms expo"],
-    ["Script", "press at 1.2 s, done at about 5 s, held 2.2 s; a real click runs it too"]
+    ["Open", "width back to 16em, the ink body drawn out again from the left, 3 files uploaded rises in 90 ms behind it, tick stroke drawn 480 ms expo"],
+    ["States", "hover 120 ms to a lighter ink, press 2px in 100 ms, a focus ring inside the cut corner; the bar ignores clicks while it fills, and a click on the finished button rolls it back"],
+    ["Script", "press at 1.2 s, done at about 5 s, held 2.2 s; the ghost stops at the first real pointer or key and resumes 7 s after the last"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-05"],
   "where": "The moodboard step of the Design service intake: the client drops three references and the button reports on itself.",
   "rules": [
     "The control keeps its height from start to finish; only its width and what it says change.",
     "Everything is uncovered through the button's own clip: labels slide, the fill grows, nothing fades.",
-    "Lime only for the final stretch of the fill."
+    "Lime only for the final stretch of the fill.",
+    "Labels slide straight up and down; the button never moves them sideways while it changes width."
   ],
   "tags": ["loading", "button", "progress", "upload", "click"]
 }
 </script>
 <style data-code>
 /* Button to bar: one control, three states, one height */
-.bb { --cut: 1.1em; position: relative; display: block; height: 4.5em; width: 16em; padding: 0; border: 0; cursor: pointer; overflow: hidden;
-  background: #0B0C0D; color: #f4f5f2; font: 500 1.05em/1 Geist, system-ui, sans-serif; letter-spacing: -.011em;
+.bb { --cut: 1em; position: relative; display: block; height: 4.5em; width: 16em; padding: 0; border: 0; cursor: pointer; overflow: hidden;
+  background: #E3E8DA; color: #0B0C0D; font: 500 1em/1 Geist, system-ui, sans-serif; letter-spacing: -.011em;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
-  transition: width 520ms cubic-bezier(.65, 0, .35, 1), background-color 360ms cubic-bezier(.65, 0, .35, 1), transform 300ms cubic-bezier(.22, 1, .36, 1); }
-.bb:active { transform: translateY(2px); transition-duration: 520ms, 360ms, 140ms; }
-.bb.press { transform: translateY(2px); }
-.bb[data-s='bar'] { width: 11em; background: #E3E8DA; color: #0B0C0D; }
-.bb-l { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .6em; white-space: nowrap;
+  transition: width 520ms cubic-bezier(.65, 0, .35, 1), transform 300ms cubic-bezier(.22, 1, .36, 1); }
+/* the ink body (with its white labels) is a layer over the sage track: it is drawn back to the left and out again, never faded through grey */
+.bb-ink { position: absolute; inset: 0; background: #0B0C0D; clip-path: inset(0);
+  transition: clip-path 520ms cubic-bezier(.65, 0, .35, 1), background-color 120ms cubic-bezier(.4, 0, .2, 1); }
+.bb[data-s='bar'] .bb-ink { clip-path: inset(0 100% 0 0); }
+.bb[data-s='idle']:hover .bb-ink, .bb[data-s='idle'].is-hot .bb-ink, .bb[data-s='done']:hover .bb-ink { background-color: #222427; }
+.bb:not([data-s='bar']):active, .bb.press { transform: translateY(2px); transition-duration: 520ms, 100ms; }
+.bb[data-s='bar'] { width: 11em; cursor: progress; }
+/* the clip-path would cut an outside ring and the layers sit above an outline, so the ring is a layer of its own, inside the button */
+.bb:focus-visible { outline: 0; }
+.bb:focus-visible::after { content: ''; position: absolute; inset: 6px; z-index: 3; pointer-events: none; background: #f4f5f2; --rc: calc(var(--cut) - 3.5px);
+  clip-path: polygon(evenodd, 0 0, calc(100% - var(--rc)) 0, 100% var(--rc), 100% 100%, 0 100%, 0 0,
+    2px 2px, 2px calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) calc(var(--rc) + .83px), calc(100% - var(--rc) - .83px) 2px, 2px 2px); }
+.bb[data-s='bar']:focus-visible::after { background: #0B0C0D; }
+.bb-l { position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: .6em; white-space: nowrap;
   transition: transform 480ms cubic-bezier(.16, 1, .3, 1); }
-.bb-idle { transform: none; }
-.bb[data-s='bar'] .bb-idle, .bb[data-s='done'] .bb-idle, .bb[data-s='idle2'] .bb-idle { transform: translateY(-110%); }
+.bb-idle, .bb-done { right: auto; width: 16em; color: #f4f5f2; }              /* a fixed width: the label travels only up or down while the button changes width */
+.bb-idle { transform: none; transition-delay: 90ms; }
+.bb[data-s='bar'] .bb-idle, .bb[data-s='done'] .bb-idle { transform: translateY(-110%); transition-delay: 0ms; }
+.bb[data-s='idle2'] .bb-idle { transform: none; transition-delay: 120ms; }       /* coming back: from below, as the finished label leaves up */
 .bb-bar { transform: translateY(110%); }
 .bb[data-s='bar'] .bb-bar { transform: none; }
 .bb[data-s='done'] .bb-bar, .bb[data-s='idle2'] .bb-bar { transform: translateY(-110%); }
-.bb-done { transform: translateY(110%); }
+.bb-done { transform: translateY(110%); transition-delay: 90ms; }
 .bb[data-s='done'] .bb-done { transform: none; }
-.bb[data-s='idle2'] .bb-done { transform: translateY(-110%); }
+.bb[data-s='idle2'] .bb-done { transform: translateY(-110%); transition-delay: 0ms; }
 .bb-done svg { width: 1.2em; height: 1.2em; fill: none; stroke: #f4f5f2; stroke-width: 2.4; stroke-linecap: square; stroke-linejoin: miter; }
 .bb-done path { stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset 480ms cubic-bezier(.16, 1, .3, 1) .2s; }
 .bb[data-s='done'] .bb-done path { stroke-dashoffset: 0; }
@@ -54,20 +68,20 @@
   transition: width 600ms cubic-bezier(.45, 0, .25, 1), background-color 300ms cubic-bezier(.45, 0, .25, 1), color 300ms cubic-bezier(.45, 0, .25, 1); }
 .bb-fill.is-lime { background: #B8FF00; color: #0c1300; }
 .bb-cnt { position: absolute; left: 0; top: 0; bottom: 0; width: 11em; display: flex; align-items: center; justify-content: center; gap: .3em;
-  font: 500 .8em/1 'Geist Mono', Geist, sans-serif; letter-spacing: 0; font-variant-numeric: tabular-nums; }
-.bb-dg { display: block; height: 1.2em; overflow: hidden; }
+  font: 500 .875em/1 'Geist Mono', Geist, sans-serif; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.bb-dg { display: block; height: 1.5em; overflow: hidden; }
 .bb-dg > span { display: block; transition: transform 480ms cubic-bezier(.16, 1, .3, 1); }
-.bb-dg b { display: block; height: 1.2em; line-height: 1.2em; font-weight: 500; }
+.bb-dg b { display: block; height: 1.5em; line-height: 1.5em; font-weight: 500; }
 .bb.nt, .bb.nt * { transition: none !important; }
 @media (prefers-reduced-motion: reduce) { .bb, .bb * { transition: none !important; } }
 </style>
 <style>
-  .sd { font-size: clamp(11px, min(2vw, 3.2vh), 26px); display: grid; gap: 1.1em; justify-items: start; }
-  .sd .kicker { font-size: .75em; }
-  .bb-card { --cut: 1em; width: 31em; padding: 1.6em 1.6em 1.8em; background: #EEF1E8; color: #0B0C0D;
+  .sd { font-size: clamp(12px, min(2vw, 3.2vh), 26px); font-size: round(down, clamp(12px, min(2vw, 3.2vh), 26px), 4px); display: grid; gap: 1em; justify-items: start; }
+  .sd .kicker { font-size: .75em; line-height: 1.5; }
+  .bb-card { --cut: 1em; width: 31em; padding: 1.5em 1.5em 1.75em; background: #EEF1E8; color: #0B0C0D;
     clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
-  .bb-card h2 { font: 400 2em/1.05 Outfit, Geist, sans-serif; letter-spacing: -.03em; }
-  .bb-card .m { margin: .7em 0 1.7em; font: 400 .78em/1.4 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
+  .bb-card h2 { font: 400 2em/1.0625 Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+  .bb-card .m { margin: 1em 0 2em; font: 400 .75em/1.5 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
 </style>
 </head>
 <body>
@@ -78,14 +92,17 @@
     <h2>Send us your references</h2>
     <p class="m">Forma · 3 images · logo, shelf, packaging</p>
 <!-- code -->
-<button type="button" class="bb" id="bb" data-s="idle" aria-live="polite">
+<button type="button" class="bb" id="bb" data-s="idle" aria-label="Upload moodboard">
+  <span class="bb-ink" aria-hidden="true">
   <span class="bb-l bb-idle">Upload moodboard</span>
+  <span class="bb-l bb-done"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>3 files uploaded</span>
+  </span>
   <span class="bb-l bb-bar" aria-hidden="true">
     <span class="bb-cnt"><span class="bb-dg"><span><b>0</b><b>1</b><b>2</b><b>3</b></span></span><span>/ 3 files</span></span>
     <span class="bb-fill" id="bb-fill"><span class="bb-cnt"><span class="bb-dg"><span><b>0</b><b>1</b><b>2</b><b>3</b></span></span><span>/ 3 files</span></span></span>
   </span>
-  <span class="bb-l bb-done"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>3 files uploaded</span>
 </button>
+<span class="sr-only" id="bb-say" role="status" aria-live="polite"></span>
 <!-- /code -->
   </div>
 </div>
@@ -93,69 +110,92 @@
 </main>
 <script src="../kit/stage.js"></script>
 <script data-code>
-/* States idle → bar → done, set on data-s. The count is two copies (track and fill), rolled together. */
+/* States idle → bar → done, set on data-s. The count is two copies (track and fill), rolled together.
+   Clicks are ignored while the bar fills (aria-disabled, so focus stays); a click on "done" rolls back. */
 const BB = (() => {
-  const btn = document.getElementById('bb'), fill = document.getElementById('bb-fill');
+  const btn = document.getElementById('bb'), fill = document.getElementById('bb-fill'), say = document.getElementById('bb-say');
   const w = (ms) => new Promise((r) => setTimeout(r, ms));
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let busy = false;
-  const count = (n) => btn.querySelectorAll('.bb-dg > span').forEach((s) => { s.style.transform = `translateY(${-n * 1.2}em)`; });
-  const reach = (pct, n, lime) => { fill.style.width = pct + '%'; fill.classList.toggle('is-lime', !!lime); setTimeout(() => count(n), 380); };   // the digit lands as the fill arrives
+  const count = (n) => btn.querySelectorAll('.bb-dg > span').forEach((s) => { s.style.transform = `translateY(${-n * 1.5}em)`; });
+  const reach = (pct, n, lime) => { fill.style.width = pct + '%'; fill.classList.toggle('is-lime', !!lime); setTimeout(() => count(n), 380); say.textContent = `Uploading, ${n} of 3 files`; };   // the digit lands as the fill arrives
+  const label = (t) => btn.setAttribute('aria-label', t);
   function reset() {
     btn.classList.add('nt');
     btn.dataset.s = 'idle';
     fill.style.width = '0%'; fill.classList.remove('is-lime'); count(0);
+    label('Upload moodboard'); btn.removeAttribute('aria-disabled'); say.textContent = '';
     void btn.offsetWidth;
     btn.classList.remove('nt');
   }
   async function upload() {
-    if (busy) return;
+    if (busy || btn.dataset.s !== 'idle') return;
     busy = true;
-    if (still) { btn.classList.add('nt'); btn.dataset.s = 'done'; busy = false; return; }
+    btn.setAttribute('aria-disabled', 'true'); label('Uploading');
+    if (still) { btn.classList.add('nt'); btn.dataset.s = 'done'; label('3 files uploaded'); say.textContent = '3 files uploaded'; btn.removeAttribute('aria-disabled'); busy = false; return; }
     btn.dataset.s = 'bar';
     await w(620);
     reach(33.3, 1); await w(700);
     reach(66.6, 2); await w(700);
     reach(100, 3, true); await w(900);
     btn.dataset.s = 'done';
+    label('3 files uploaded'); say.textContent = '3 files uploaded'; btn.removeAttribute('aria-disabled');
     await w(700);
     busy = false;
   }
   async function back() {                  // done rolls up out, then the idle label comes back from below
+    if (busy || btn.dataset.s !== 'done') return;
+    busy = true;
+    if (still) { reset(); busy = false; return; }
+    const idle = btn.querySelector('.bb-idle');             // park the idle label below its sleeve, then let it rise
+    idle.style.transition = 'none'; idle.style.transform = 'translateY(110%)'; void idle.offsetWidth;
+    idle.style.transition = ''; idle.style.transform = '';
     btn.dataset.s = 'idle2';
-    await w(560);
+    await w(640);
     reset();
+    busy = false;
   }
-  btn.addEventListener('click', upload);
-  return { btn, reset, upload, back, get busy() { return busy; } };
+  btn.addEventListener('click', () => (btn.dataset.s === 'done' ? back() : upload()));
+  return { btn, reset, upload, back, get busy() { return busy; }, get state() { return btn.dataset.s; } };
 })();
 </script>
 <script>
-  let run = 0, resumeT = 0;
+  let run = 0, resumeT = 0, ghosting = false;
   const w = (ms) => new Promise((r) => setTimeout(r, ms));
   async function start() {
     const my = ++run;
     while (BB.busy) await w(100);
-    BB.reset();
-    if (QM.reduced) return;
-    QM.ghostShow();
+    if (my !== run) return;
+    if (BB.state === 'done') await BB.back(); else BB.reset();   // never snap a finished button: roll it back
+    if (my !== run) return;
+    ghosting = true;
+    if (QM.reduced) { ghosting = false; return; }
     await w(1000); if (my !== run) return;
+    QM.ghostShow();                         // after the harness has hidden it for its own start
     const r = BB.btn.getBoundingClientRect();
     if (!(await QM.ghostTo(r.left + r.width * .6, r.top + r.height * .6, 800))) return;
     if (my !== run) return;
+    BB.btn.classList.add('is-hot');
+    await w(220); if (my !== run) return;
     BB.btn.classList.add('press');
-    await w(160); BB.btn.classList.remove('press');
+    await w(110); BB.btn.classList.remove('press', 'is-hot');
     if (my !== run) return;
     BB.upload();
-    await w(900);
+    await w(900); if (my !== run) return;
     QM.ghostTo(r.left + r.width + 140, r.top + r.height + 70, 900);
     await w(4000); if (my !== run) return;
     await w(2200); if (my !== run) return;
     await BB.back(); if (my !== run) return;
     start();
   }
-  const takeOver = () => { if (QM.tile) return; run++; QM.ghostHide(); clearTimeout(resumeT); resumeT = setTimeout(start, 7000); };
-  addEventListener('pointerdown', takeOver, true);
+  /* a real pointer or key ends the ghost until it has been quiet for 7 s */
+  function real(e) {
+    if (QM.tile || !e.isTrusted || (e.type === 'pointermove' && e.pointerType !== 'mouse')) return;
+    if (ghosting) { ghosting = false; run++; QM.ghostHide(); BB.btn.classList.remove('is-hot', 'press'); }
+    clearTimeout(resumeT);
+    resumeT = setTimeout(start, 7000);
+  }
+  ['pointermove', 'pointerdown', 'keydown'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
   QM.demo({ kind: 'loop', restart: start });
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(start));
 </script>

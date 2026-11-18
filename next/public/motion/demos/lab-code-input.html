@@ -13,14 +13,16 @@
   "order": 80,
   "kind": "loop",
   "tone": "paper",
-  "line": "380 ms digits · caret spring k 260 · 460 ms damped shake",
+  "line": "380 ms digits · caret spring k 260 · 460 ms damped shake · lime 60 ms apart",
   "summary": "Six cells and one hidden input. Each digit slides up through a mask in its cell and the ink caret springs from cell to cell. A wrong code shakes the row with a damped sine and flips the sage cells to ink; the right one turns them lime, one after another. Left alone it receives a text, mistypes, corrects, and gets in.",
   "spec": [
-    ["Digit", "translateY 100% → 0 inside the cell, 380 ms, cubic-bezier(0.2, 0.8, 0.2, 1); out 260 ms ease-in"],
+    ["Digit", "translateY 100% → 0 inside the cell, 380 ms expo out (0.16, 1, 0.3, 1); out 260 ms ease-in (0.5, 0, 0.75, 0)"],
+    ["Cell", "the cell under the caret takes a 2px ink frame (160 ms), so keyboard focus is seen on the cells; hovering the row tints them 120 ms"],
     ["Caret", "x on a spring k 260 · c 26, breathing between entries"],
     ["Shake", "460 ms, sin(4πp) × 6 px × (1 − p)²"],
-    ["Success", "cells turn lime 60 ms apart and pop to 1.06"],
-    ["Banner", "the text slides down from above the frame, 650 ms, cubic-bezier(0.2, 0.8, 0.2, 1)"]
+    ["Success", "cells turn lime 60 ms apart (300 ms) and pop to 1.06, settling back on expo out with no overshoot"],
+    ["Banner", "the text slides down from above the frame, 650 ms expo out; once signed in it leaves up in 400 ms ease-in"],
+    ["Keys", "type or paste six digits; Backspace erases; Escape clears the cells, and leaves the field when it is already empty; the message line is a status region"]
   ],
   "source": ["Qbix studio library · code-input"],
   "where": "Signing in to a launch site preview or a client portal with a texted code.",
@@ -36,13 +38,16 @@
 <style data-code>
 /* Verification code: sage cells, an ink caret, masked digits, lime when you are in */
 .vc-clip { position: absolute; left: 0; right: 0; top: 0; height: 96px; overflow: hidden; }
-.vc-sms { position: absolute; left: 0; right: 0; top: 12px; padding: 12px 16px 13px; background: #0B0C0D; color: #f4f5f2; transform: translateY(-130%); transition: transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1); --cut: 12px; }
+.vc-sms { position: absolute; left: 0; right: 0; top: 12px; padding: 12px 16px 13px; background: #0B0C0D; color: #f4f5f2; transform: translateY(-130%); transition: transform 650ms var(--ease-out-expo); --cut: 12px; }
+.vc-sms.is-out { transition: transform 400ms var(--ease-in); }
 @media (prefers-reduced-motion: reduce) { .vc-sms { transition: none; } }
 .vc-sms .a { display: flex; justify-content: space-between; font: 500 14px/1 'Geist', sans-serif; letter-spacing: 0; color: rgba(244, 245, 242, 0.64); }
 .vc-sms .a b { font-weight: 500; color: #f4f5f2; }
 .vc-sms .m { margin-top: 8px; font-size: 14px; line-height: 1.35; }
 .vc-row { position: absolute; left: 0; top: 130px; width: 400px; height: 72px; }
-.vc-box { position: absolute; top: 0; width: 56px; height: 72px; background: #EEF1E8; overflow: hidden; }
+.vc-box { position: absolute; top: 0; width: 56px; height: 72px; background: #EEF1E8; overflow: hidden; transition: box-shadow 160ms var(--ease), background-color 120ms var(--ease); }
+.vc-row:hover .vc-box { background-color: #E3E8DA; }
+.vc-box.is-cur { box-shadow: inset 0 0 0 2px #0B0C0D; }
 .vc-box b { position: absolute; inset: 0; display: grid; place-items: center; font: 500 32px/1 'Geist Mono', sans-serif; font-variant-numeric: tabular-nums; }
 .vc-caret { position: absolute; top: 20px; left: 0; width: 3px; height: 32px; background: #0B0C0D; }
 .vc-real { position: absolute; inset: 0; opacity: 0; font-size: 16px; border: 0; padding: 0; background: transparent; color: transparent; caret-color: transparent; cursor: text; }
@@ -52,8 +57,9 @@
 </style>
 <style>
   .qm-stage { padding: 0; }
-  #vc-stage { position: absolute; left: 50%; top: 47%; width: 800px; height: 280px; transform-origin: 50% 50%; }
-  .vc-copy { position: absolute; left: 0; top: 40px; width: 340px; display: grid; gap: 14px; }
+  #vc-stage { position: absolute; left: 50%; top: 50%; width: 760px; height: 280px; transform-origin: 50% 50%; }
+  html:not(.qm-tile) #vc-stage { top: calc(50% - 23px); }          /* centred above the detail view's 46px bar */
+  .vc-copy { position: absolute; left: 0; top: 40px; width: 320px; display: grid; gap: 14px; }
   .vc-copy .title { font-size: 56px; }
   .vc-copy .lede { font-size: 14px; max-width: 22em; }
   #vc-right { position: absolute; right: 0; top: 0; width: 400px; height: 280px; }
@@ -71,7 +77,7 @@
 <!-- code -->
 <div class="vc-clip"><div class="vc-sms cut" id="vc-sms"><div class="a"><b>Qbix</b><span>now</span></div><div class="m" id="vc-msg">418 207 is your sign in code.</div></div></div>
 <div class="vc-row" id="vc-row"><div class="vc-caret" id="vc-caret"></div><input class="vc-real" id="vc-real" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Six digit code"></div>
-<div class="vc-help" id="vc-help"><span>Didn't get it? Resend in 30 s</span></div>
+<div class="vc-help" id="vc-help" role="status" aria-live="polite"><span>Didn't get it? Resend in 30 s</span></div>
 <!-- /code -->
   </div>
 </div>
@@ -98,7 +104,7 @@ function tween(d, f, done) {
   const g = () => { const p = Math.min(1, (T - t0) / d); f(p); if (p >= 1) { ticks.delete(g); if (done) done(); } };
   ticks.add(g); g();
 }
-const EZ = 'cubic-bezier(.2,.8,.2,1)';
+const EZ = 'cubic-bezier(.16,1,.3,1)', EZ_IN = 'cubic-bezier(.5,0,.75,0)';   // the kit's expo out and exit curves
 
 /* six cells, a wider gap in the middle */
 const X = [0, 1, 2, 3, 4, 5].map((i) => i * 64 + (i > 2 ? 8 : 0)), off = (400 - (X[5] + 56)) / 2;
@@ -110,7 +116,7 @@ function setDigits(str, erasing) {
     if (cur) {
       cur.classList.add('out');
       if (RM) cur.remove();
-      else cur.animate([{ transform: 'none' }, { transform: `translateY(${erasing ? 100 : -100}%)` }], { duration: 260, easing: 'ease-in', fill: 'forwards' }).onfinish = () => cur.remove();
+      else cur.animate([{ transform: 'none' }, { transform: `translateY(${erasing ? 100 : -100}%)` }], { duration: 260, easing: EZ_IN, fill: 'forwards' }).onfinish = () => cur.remove();
     }
     if (want) {
       const n = document.createElement('b'); n.textContent = want; b.appendChild(n);
@@ -123,17 +129,19 @@ function setDigits(str, erasing) {
 /* the caret glides between cells and breathes softly while waiting */
 const cx = spring(X[0] + off + 26, 260, 26), caretAlpha = spring(1, 200, 26);
 let caretOn = true, lastMove = 0;
-function caretTo(i) { if (i > 5) { caretAlpha.t = 0; return; } caretAlpha.t = caretOn ? 1 : 0; cx.t = X[i] + off + 26; lastMove = T; }
+function frameCell(i) { boxes.forEach((b, k) => b.classList.toggle('is-cur', k === i)); }
+function caretTo(i) { if (i > 5) { caretAlpha.t = 0; frameCell(-1); return; } caretAlpha.t = caretOn ? 1 : 0; frameCell(caretOn ? i : -1); cx.t = X[i] + off + 26; lastMove = T; }
 ticks.add((dt) => {
   cx.step(dt); caretAlpha.step(dt);
   const idle = T - lastMove, breathe = idle > 500 && !RM ? 0.55 + 0.45 * Math.cos(((idle - 500) / 1000) * Math.PI * 1.6) : 1;
   caret.style.transform = `translateX(${cx.x.toFixed(2)}px)`; caret.style.opacity = (Math.max(0, Math.min(1, caretAlpha.x)) * breathe).toFixed(3);
 });
 
+function smsTo(show) { sms.classList.toggle('is-out', !show); sms.style.transform = show ? 'none' : 'translateY(-130%)'; }
 function say(html) {
   const old = help.querySelector('span:not(.out)');
   const n = document.createElement('span'); n.innerHTML = html; help.appendChild(n);
-  if (!old) return; old.classList.add('out');
+  if (!old) return; old.classList.add('out'); old.setAttribute('aria-hidden', 'true');
   if (RM) { old.remove(); return; }
   n.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 420, easing: EZ });
   old.animate([{ transform: 'none' }, { transform: 'translateY(-100%)' }], { duration: 420, easing: EZ, fill: 'forwards' }).onfinish = () => old.remove();
@@ -146,7 +154,7 @@ function shake() {
 function paint(state) {
   boxes.forEach((b, i) => {
     const go = () => {
-      b.style.transition = RM ? 'none' : 'background-color .3s ease, color .3s ease, transform .45s cubic-bezier(.3,1.6,.5,1)';
+      b.style.transition = RM ? 'none' : 'background-color .3s var(--ease), color .3s var(--ease), transform .45s var(--ease-out-expo), box-shadow 160ms var(--ease)';
       b.style.background = state === 'ok' ? '#b8ff00' : state === 'err' ? '#0B0C0D' : '';
       b.style.color = state === 'ok' ? '#0c1300' : state === 'err' ? '#f4f5f2' : '';
       if (state === 'ok') { b.style.transform = 'scale(1.06)'; at(160, () => (b.style.transform = '')); }
@@ -157,18 +165,23 @@ function paint(state) {
 
 let code = '418207', phase = 'typing';
 function check(str) {
-  if (str.length < 6) return; caretAlpha.t = 0;
+  if (str.length < 6) return; caretAlpha.t = 0; frameCell(-1);
   if (str === code) {
     phase = 'ok'; paint('ok');
     say('<svg viewBox="0 0 16 16" fill="none" stroke="#0B0C0D" stroke-width="2" stroke-linecap="square"><path d="M3 8.5l3 3 7-7"/></svg>You\'re in. Opening your preview.');
-    sms.style.transform = 'translateY(-130%)';
+    smsTo(false);
   } else { phase = 'err'; paint('err'); shake(); say("That code didn't match. Try again."); }
 }
 
 /* real typing */
 let lastIn = -1e9;
 real.addEventListener('focus', () => { stopGhost(); caretOn = true; caretTo(Math.min(real.value.length, 5)); });
-real.addEventListener('blur', () => { caretOn = false; caretAlpha.t = 0; });
+real.addEventListener('blur', () => { caretOn = false; caretAlpha.t = 0; frameCell(-1); });
+real.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (real.value) { real.value = ''; if (phase !== 'typing') { paint(''); resend(); phase = 'typing'; } setDigits('', true); }
+  else real.blur();
+});
 real.addEventListener('input', () => {
   lastIn = T; let v = real.value.replace(/\D/g, '').slice(0, 6);
   if (phase !== 'typing') { paint(''); resend(); phase = 'typing'; v = v.slice(-1); }
@@ -186,7 +199,7 @@ setDigits('');
   function run() {
     ghost = true; jobs.length = 0; let t = 200; const step = (d, fn) => { t += d; at(t, fn); };
     real.value = ''; phase = 'typing'; paint(''); setDigits('', true); caretOn = true; caretTo(0);
-    step(0, () => { sms.style.transform = 'none'; });
+    step(0, () => { smsTo(true); });
     const typo = code.slice(0, 5) + ((+code[5] + 3) % 10);
     t += 700;
     for (let i = 1; i <= 6; i++) step(150 + Math.random() * 90 + (i === 4 ? 140 : 0), () => { setDigits(typo.slice(0, i)); if (i === 6) at(220, () => check(typo)); });
@@ -198,10 +211,10 @@ setDigits('');
     step(900, () => { newCode(); run(); });
   }
   ticks.add(() => { if (!ghost && !RM && T - lastIn > 2500 && document.activeElement !== real) run(); });
-  if (RM) { sms.style.transform = 'none'; setDigits(code); phase = 'ok'; paint('ok'); caretAlpha.x = caretAlpha.t = 0; help.innerHTML = '<span>You\'re in. Opening your preview.</span>'; }
+  if (RM) { smsTo(true); setDigits(code); phase = 'ok'; paint('ok'); caretAlpha.x = caretAlpha.t = 0; help.innerHTML = '<span>You\'re in. Opening your preview.</span>'; }
   function fit() {
     const st = document.getElementById('vc-stage');
-    const s = Math.min(innerWidth / 840, (innerHeight - 70) / 300) * 0.96;
+    const s = Math.min(innerWidth / 800, (innerHeight - 70) / 300) * 0.9;
     st.style.transform = `translate(-50%,-50%) scale(${Math.min(s, 1.7)})`;
   }
   addEventListener('resize', fit); fit();

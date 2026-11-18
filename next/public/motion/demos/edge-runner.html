@@ -30,17 +30,24 @@
 </script>
 <style data-code>
 /* Edge runner: the button is its own progress */
-.er { --cut: 1.1em; position: relative; display: block; width: 17em; height: 4.5em; padding: 0; border: 0; cursor: pointer;
+.er { --cut: 1.1em; position: relative; display: block; width: 100%; height: 4em; height: round(4em, 1px); padding: 0; border: 0; cursor: pointer;
   background: #0B0C0D; color: #f4f5f2; font: 500 1.05em/1 Geist, system-ui, sans-serif; letter-spacing: -.011em; overflow: hidden;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
   transition: transform 300ms cubic-bezier(.22, 1, .36, 1); }
-.er:active { transform: translateY(2px); transition-duration: 140ms; }
+.er:active { transform: translateY(2px); transition-duration: 100ms; }
+.er:focus-visible { outline: none; }
+.er:focus-visible .er-core { outline: 2px solid #f4f5f2; outline-offset: -8px; }   /* the layers cover the button's own outline */
+.er.is-done:focus-visible .er-core { outline: none; }
+.er.is-done:focus-visible .er-fill { outline: 2px solid #0c1300; outline-offset: -8px; }
 .er-core, .er-fill { position: absolute; inset: 0; display: grid; place-items: center; }
 .er-fill { background: #B8FF00; color: #0c1300; }
 .er-fill span { display: block; overflow: hidden; padding-block: .2em; }
 .er-fill i { display: block; transform: translateY(120%); transition: transform 520ms cubic-bezier(.16, 1, .3, 1); }
 .er.is-done .er-fill i { transform: none; transition-delay: 160ms; }
-.er-core { background: #0B0C0D; clip-path: inset(0); transition: clip-path 600ms cubic-bezier(.65, 0, .35, 1); }
+.er-core { background: #0B0C0D; clip-path: inset(0); transition: clip-path 600ms cubic-bezier(.65, 0, .35, 1), background 150ms cubic-bezier(.4, 0, .2, 1); }
+.er:hover .er-core { background: #16181a; }
+.er-fill { transition: background 150ms cubic-bezier(.4, 0, .2, 1); }
+.er:hover .er-fill { background: #C9F24A; }
 .er.is-done .er-core { clip-path: inset(50% 0 50% 0); }
 .er-t { position: relative; }
 .er-dots { position: absolute; left: 100%; bottom: 0; overflow: hidden; width: 0; animation: er-dots 1.1s steps(4, jump-start) infinite; }
@@ -52,12 +59,16 @@
 @media (prefers-reduced-motion: reduce) { .er-dots { animation: none; width: 1.1em; } .er, .er * { transition: none !important; } }
 </style>
 <style>
-  .sd { font-size: clamp(11px, min(2vw, 3.2vh), 26px); display: grid; gap: 1.1em; justify-items: start; }
+  .sd { font-size: clamp(11px, min(2.4vw, 3.9vh), 30px); font-size: round(clamp(11px, min(2.4vw, 3.9vh), 30px), 5px); display: grid; gap: 1.1em; justify-items: start; }   /* whole 5px steps: the frame's edges land on pixels */
   .sd .kicker { font-size: .75em; }
   .er-card { --cut: 1em; width: 31em; padding: 1.6em 1.6em 1.8em; background: #EEF1E8; color: #0B0C0D;
     clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
   .er-card h2 { font: 400 2em/1.05 Outfit, Geist, sans-serif; letter-spacing: -.03em; }
-  .er-card .m { margin: .7em 0 1.7em; font: 400 .78em/1.4 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
+  .er-card .m { margin: .7em 0 1.2em; font: 400 .75em/1.4 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); }
+.er-refs { display: grid; grid-template-columns: repeat(6, 1fr); gap: .5em; margin: 0 0 1.5em; padding: 0; list-style: none; }
+  .er-refs li { aspect-ratio: 1.35; overflow: hidden; }
+  .er-refs svg { width: 100%; height: 100%; display: block; }
+  .er-card { padding: 1.6em; }
 </style>
 </head>
 <body>
@@ -67,8 +78,16 @@
   <div class="er-card">
     <h2>Forma design system</h2>
     <p class="m">1 moodboard · 6 references · tokens, components, code</p>
+    <ul class="er-refs" aria-hidden="true">
+      <li style="background:#E3E8DA"><svg viewBox="0 0 100 74"><text x="50" y="52" text-anchor="middle" font-family="Outfit, Geist, sans-serif" font-weight="300" font-size="42" letter-spacing="-1.5" fill="#0B0C0D">Aa</text></svg></li>
+      <li style="background:#0B0C0D"><svg viewBox="0 0 100 74"><circle cx="50" cy="37" r="17" fill="#EEF1E8"/></svg></li>
+      <li style="background:#fff"><svg viewBox="0 0 100 74"><path d="M30 60V14A46 46 0 0 1 76 60Z" fill="#0B0C0D"/></svg></li>
+      <li style="background:#E3E8DA"><svg viewBox="0 0 100 74"><path d="M26 16h12v42H26zM44 16h12v42H44zM62 16h12v42H62z" fill="#0B0C0D"/></svg></li>
+      <li style="background:#0B0C0D"><svg viewBox="0 0 100 74"><circle cx="50" cy="37" r="17" fill="none" stroke="#EEF1E8" stroke-width="7"/></svg></li>
+      <li style="background:#fff"><svg viewBox="0 0 100 74"><path d="M30 18h18v18H30zM52 36h18v18H52z" fill="#0B0C0D"/><path d="M52 18h18v18H52zM30 36h18v18H30z" fill="#E3E8DA"/></svg></li>
+    </ul>
 <!-- code -->
-<button type="button" class="er" id="er" aria-live="polite">
+<button type="button" class="er" id="er" aria-live="polite" aria-label="Generating">
   <span class="er-fill"><span><i>Open preview ↗︎</i></span></span>
   <span class="er-core"><span class="er-t">Generating<span class="er-dots" aria-hidden="true">...</span></span></span>
   <svg class="er-svg" id="er-svg" aria-hidden="true"><path class="er-seg" id="er-seg" pathLength="100"/></svg>
@@ -87,8 +106,9 @@ const ER = (() => {
   let p = 0, len = 33, raf = 0, last = 0, closeAt = 0, timers = [];
   const ease = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
   function outline() {                       // the button's own outline, cut corner included, inset by half the stroke
-    const W = btn.clientWidth, H = btn.clientHeight, c = parseFloat(getComputedStyle(btn).getPropertyValue('--cut')) * parseFloat(getComputedStyle(btn).fontSize), i = 1.5;
-    const d = `M${i} ${i}H${W - c}L${W - i} ${c}V${H - i}H${i}Z`;
+    const W = btn.clientWidth, H = btn.clientHeight, c = parseFloat(getComputedStyle(btn).getPropertyValue('--cut')) * parseFloat(getComputedStyle(btn).fontSize), i = 1.5, q = i * 0.4142;
+    // the stroke sits wholly inside the frame, its diagonal parallel to the cut and 1.5 px in from it
+    const d = `M${i} ${i}H${(W - c - q).toFixed(2)}L${W - i} ${(c + q).toFixed(2)}V${H - i}H${i}Z`;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     seg.setAttribute('d', d);
   }
@@ -112,13 +132,14 @@ const ER = (() => {
     outline(); draw();
     void btn.offsetWidth;
     btn.classList.remove('nt');
+    btn.setAttribute('aria-label', 'Generating');
   }
   function run() {                           // 3.2 s of work, then close the frame, then fill
     reset();
-    if (still) { len = 100; draw(); btn.classList.add('nt', 'is-done'); return; }
+    if (still) { len = 100; draw(); btn.classList.add('nt', 'is-done'); btn.setAttribute('aria-label', 'Open preview'); return; }
     cancelAnimationFrame(raf); last = performance.now(); raf = requestAnimationFrame(frame);
     timers.push(setTimeout(() => { closeAt = performance.now(); }, 3200));
-    timers.push(setTimeout(() => btn.classList.add('is-done'), 3200 + 560));
+    timers.push(setTimeout(() => { btn.classList.add('is-done'); btn.setAttribute('aria-label', 'Open preview'); }, 3200 + 560));
   }
   if (window.ResizeObserver) new ResizeObserver(outline).observe(btn);
   btn.addEventListener('click', run);

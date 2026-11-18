@@ -25,11 +25,12 @@
   "source": ["Qbix studio library · scroll-shrink"],
   "where": "A field-notes article on the Qbix journal, reading as one long page.",
   "rules": [
-    "Lines shrink and step toward the ground colour; they are never blurred and never go transparent.",
+    "Lines shrink and step toward the ground colour; they are never blurred and never go transparent. The figure shrinks with the lines (scale only).",
     "Lines are measured after wrapping and re-measured on resize and when fonts arrive.",
     "The lime is only the small marker bar between copies."
   ],
-  "tags": ["scroll", "text", "lines", "article"]
+  "tags": ["scroll", "text", "lines", "article"],
+  "shot": 3400
 }
 </script>
 <style data-code>
@@ -37,12 +38,15 @@
 .ss-view { position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; outline: none; }
 .ss-view.drag { cursor: grabbing; }
 .ss-track { will-change: transform; }
-.ss-col { width: min(560px, 84%); margin: 0 auto; padding: 64px 0 0; }
+.ss-col { width: min(560px, 84%); margin: 0 auto; padding: 72px 0 0; }
 .ss-col > * { margin: 0 0 20px; }
 .ss-col .ln { display: block; transform-origin: left center; will-change: transform; }
 .ss-col .kick { font: 500 13px/16px 'Geist', sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, 0.66); }
 .ss-col h1 { font-family: 'Outfit', 'Geist', sans-serif; font-weight: 300; font-size: clamp(36px, 6.4vw, 64px); line-height: 1.04; letter-spacing: -0.035em; }
 .ss-col h2 { font-family: 'Outfit', 'Geist', sans-serif; font-weight: 300; font-size: clamp(24px, 3.2vw, 32px); line-height: 1.1; letter-spacing: -0.03em; margin-top: 36px; }
+.ss-col .fig { width: 100%; aspect-ratio: 16 / 7; margin: 28px 0 32px; overflow: hidden; background: #E3E8DA; clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); }
+.ss-col .fig img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ss-view:focus-visible { outline: 2px solid #0B0C0D; outline-offset: -6px; }
 .ss-col .dek { font-size: 15px; font-weight: 500; line-height: 1.5; }
 .ss-col .by { font: 500 13px/16px 'Geist', sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, 0.66); }
 .ss-col p.split:not(.kick):not(.dek):not(.by):not(.pull):not(.end) { font-size: 15px; line-height: 1.6; }
@@ -68,6 +72,7 @@
     <h1 class="split">A site gets one first look</h1>
     <p class="dek split">What we learned designing and building forty small sites this year.</p>
     <p class="by split">By Sera, Qbix studio</p>
+    <div class="ln fig"><img src="../assets/art/lime-bloom.webp" alt="" width="1200" height="675"></div>
     <p class="split">Most visitors meet a site on a phone, in a feed, with a thumb already moving. The first second decides if they stay. That second belongs to one screen, so design it with care.</p>
     <p class="split">The best first screen is rarely the busiest. It is one clear headline, one picture with room around it, and one button that says what happens next.</p>
     <h2 class="split">Lead with the one idea</h2>
@@ -102,7 +107,7 @@
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v)), ease = (x) => x * x * (3 - 2 * x);
   function paint() {
     pos = ((pos % period) + period) % period;
-    track.style.transform = `translate3d(0,${(-pos).toFixed(2)}px,0)`;
+    track.style.transform = `translate3d(0,${reduce ? Math.round(-pos) : (-pos).toFixed(2)}px,0)`;   // a still frame lands on whole pixels
     const zone = vh * 0.34;
     for (const l of lines) {
       const y = l.top - pos; if (y > vh + 40 || y + l.h < -160) continue;
@@ -133,7 +138,7 @@
   function rebuild() { const ratio = pos / (period || 1); build(); pos = ratio * period; lines.forEach((l) => { l.s = -1; l.o = -1; }); paint(); }
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(rebuild, 120); });
   window.ssApi = { pos: (p) => { pos = p; } };
-  build(); pos = reduce ? 0 : period * 0.16; paint(); start();
+  build(); pos = 0; lastInput = performance.now(); paint(); start();   // opens on the headline; the drift starts after 2.5 s
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(rebuild);
 })();
 </script>

@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card to page · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "card-to-page", "title": "Card to page", "group": "studio", "added": "2026-11-16", "cat": "cards", "order": 80,
+  "kind": "loop", "tone": "paper", "shot": 6000,
+  "line": "shared-element flight · 520 ms ease-move · back 440 ms, same path · page uncovered 140 ms behind",
+  "summary": "Four Forma product cards. Pick one and its picture, name and price fly into the product page: the picture grows from the card to the hero, the name scales from 18 to 36 px into the page title, the price travels beside it, while the other cards slide out of the frame and the description, stock line and Add to cart button are uncovered 140 ms behind. The back arrow plays the same flight in reverse and lands each element exactly on its card.",
+  "spec": [
+    ["Flight", "one progress q from 0 to 1 draws everything; position, size and scale of the picture, name and price are measured from the card and from the page, then interpolated on the move curve (.65, 0, .35, 1) over 520 ms"],
+    ["Back", "q runs down the same curve in 440 ms, so every element retraces its path and lands on its card to the pixel; at rest q is exactly 0 or 1 and the transforms are cleared"],
+    ["Name", "Outfit Light 18 px on the card, 36 px on the page, line height 22 and 44: a clean 2× scale of one element, never a cross-fade between two"],
+    ["Other cards", "slide out toward their own side of the frame, 420 ms move curve, 30 ms apart by distance from the picked card; the frame clips them"],
+    ["Page", "stock line, description and Add to cart are uncovered from the bottom edge with an 8 px rise, 380 ms expo out, starting at 140, 190 and 240 ms; the header swaps up (150 ms ease-in out, 360 ms expo in, 120 ms later)"],
+    ["Keyboard", "cards are buttons; opening moves focus to the back button, Escape or the back button returns, and focus goes back to the card"],
+    ["Loop", "the ghost opens a card, adds it to the cart, goes back, and picks another; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "The shop of a Forma-like site Qbix builds: a product grid whose cards open into the product page without a cut, and close back to exactly where the visitor was.",
+  "rules": [
+    "One element per thing: the page's picture, title and price are the cards' own, moved. Never fade one into another.",
+    "Measure both ends, then interpolate: card rect to page rect, with transform-origin at the top left, so the first frame sits exactly on the card and the last exactly on the page.",
+    "Drive the flight from one number. Opening, closing, and an interruption halfway are the same function running forwards or backwards.",
+    "Scale text by a clean ratio (18 to 36 px here) so it stays sharp and no glyph is ever stretched.",
+    "The picked card's own picture, name and price hide on the flight's first frame and return on its last, so there is never a frame with two or none.",
+    "While the page is open the grid is inert; while it closes the page is. Tab only reaches what is on screen.",
+    "This is a FLIP written by hand rather than document.startViewTransition: the same code runs in the gallery's iframe, in a headless check and in any browser, and the slide-out and the uncovers are part of one scrubbable timeline.",
+    "Under reduced motion the page opens and closes with no flight."
+  ],
+  "tags": ["shared element", "FLIP", "card", "page transition", "product", "shop", "Forma", "hero"]
+}
+</script>
+<style data-code>
+/* Card to page. A white 20 px surface with a soft ring, the product pictures at 16 px, Add to cart the one ink pill, one lime point (the stock dot). The flight is drawn from script (cpDraw(q)); CSS holds the two layouts. */
+.cp { position: relative; width: 648px; height: 276px; background: #fff; color: #0B0C0D; overflow: hidden; border-radius: 20px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+:where(.cp button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; text-align: left; }
+.cp p, .cp h3 { margin: 0; }
+.cp-k { font-weight: 500; color: rgba(11, 12, 13, .66); }
+.cp-n { font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+.cp-h { position: absolute; left: 24px; right: 24px; top: 20px; height: 20px; display: flex; align-items: center; justify-content: space-between; }
+
+/* the grid: four cards, picture / name / price; the arrow is uncovered on hover */
+.cp-g { position: absolute; left: 24px; top: 60px; display: flex; gap: 16px; }
+.cp-c { position: relative; display: block; width: 138px; height: 192px; flex: none; }
+.cp-c:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 4px; }
+.cp-pic, .cp-hero { display: block; overflow: hidden; transform-origin: 0 0; border-radius: 16px; }  /* 16 px on the card and on the page; in flight script sets radius / scale so the corner stays 16 px on screen */
+.cp-pic { width: 138px; height: 138px; }
+.cp-pic img, .cp-hero img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cp-name { display: block; width: max-content; margin-top: 10px; font: 300 18px/22px Outfit, Geist, sans-serif; letter-spacing: -.035em; transform-origin: 0 0; }
+.cp-price { display: block; width: max-content; font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); transform-origin: 0 0; }
+.cp-go { position: absolute; right: 0; top: 172px; width: 16px; height: 20px; overflow: hidden; }
+.cp-go svg { display: block; width: 16px; height: 16px; margin-top: 2px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; transform: translateY(120%); transition: transform 220ms cubic-bezier(.5, 0, .75, 0); }
+.cp-c:hover .cp-go svg, .cp-c:focus-visible .cp-go svg, .cp-c.is-hot .cp-go svg { transform: none; transition: transform 320ms cubic-bezier(.16, 1, .3, 1); }
+.cp-c.is-press .cp-go svg, .cp-c:active .cp-go svg { transform: translateY(1px); transition-duration: 90ms; }
+.cp-c.is-picked .cp-go svg { transform: translateY(120%); transition: transform 220ms cubic-bezier(.5, 0, .75, 0); }
+
+/* the page: hero, title, price and the rest, laid out at their final places */
+.cp-pg { position: absolute; inset: 0; visibility: hidden; }
+.cp-hero { position: absolute; left: 24px; top: 60px; width: 192px; height: 192px; }
+.cp-hero img { position: absolute; inset: 0; display: none; }
+.cp-hero img.is-cur { display: block; }
+.cp-t { position: absolute; left: 248px; top: 60px; width: max-content; font: 300 36px/44px Outfit, Geist, sans-serif; letter-spacing: -.035em; transform-origin: 0 0; white-space: nowrap; }
+.cp-pr { position: absolute; left: 248px; top: 108px; width: max-content; font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); transform-origin: 0 0; }
+.cp-st { position: absolute; left: 296px; top: 108px; display: flex; align-items: center; gap: 8px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.cp-st i { width: 8px; height: 8px; background: #B8FF00; border-radius: 50%; }
+.cp-d { position: absolute; left: 248px; top: 140px; width: 352px; color: rgba(11, 12, 13, .66); text-wrap: balance; }
+.cp-addw { position: absolute; left: 248px; top: 208px; width: 148px; height: 44px; }
+.cp-add { width: 148px; height: 44px; display: grid; overflow: hidden; background: #0B0C0D; color: #fff; border-radius: 999px; font-size: 15px; font-weight: 600; letter-spacing: -.011em; transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.cp-add > span { grid-area: 1 / 1; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.cp-add > span + span { transform: translateY(110%); }
+.cp-add.is-done > span:first-child { transform: translateY(-110%); }
+.cp-add.is-done > span + span { transform: none; }
+.cp-add:hover, .cp-add.is-hot { box-shadow: 0 8px 16px -8px rgba(11, 12, 13, .55); }
+.cp-add:active > span, .cp-add.is-press > span { translate: 0 1px; }
+.cp-add:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.cp-back { display: flex; align-items: center; gap: 8px; height: 20px; font-weight: 500; color: rgba(11, 12, 13, .66); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.cp-back svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; transition: transform 300ms cubic-bezier(.16, 1, .3, 1); }
+.cp-back:hover, .cp-back.is-hot { color: #0B0C0D; }
+.cp-back:hover svg, .cp-back.is-hot svg { transform: translateX(-3px); }
+.cp-back:active svg, .cp-back.is-press svg { transform: translateX(-2px); transition-duration: 90ms; }
+.cp-tick { width: 16px; height: 16px; display: block; fill: none; stroke: #fff; stroke-width: 1.5; }
+</style>
+<style>
+  .cpw { display: grid; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="cpw">
+<!-- code -->
+<section class="cp" id="cp" aria-label="Forma shop">
+  <div class="cp-h" id="cp-h1"><p class="cp-k">Forma · Shop</p><p class="cp-n">4 pieces</p></div>
+  <div class="cp-g" id="cp-g">
+    <button type="button" class="cp-c" aria-label="Arc cup, $38">
+      <span class="cp-pic"><img src="../assets/art/lime-arc.webp" alt="" draggable="false"></span>
+      <span class="cp-name">Arc cup</span><span class="cp-price">$38</span>
+      <span class="cp-go"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg></span>
+    </button>
+    <button type="button" class="cp-c" aria-label="Wave plate, $46">
+      <span class="cp-pic"><img src="../assets/art/lime-waves.webp" alt="" draggable="false"></span>
+      <span class="cp-name">Wave plate</span><span class="cp-price">$46</span>
+      <span class="cp-go"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg></span>
+    </button>
+    <button type="button" class="cp-c" aria-label="Bloom vase, $82">
+      <span class="cp-pic"><img src="../assets/art/lime-bloom.webp" alt="" draggable="false"></span>
+      <span class="cp-name">Bloom vase</span><span class="cp-price">$82</span>
+      <span class="cp-go"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg></span>
+    </button>
+    <button type="button" class="cp-c" aria-label="Fold dish, $54">
+      <span class="cp-pic"><img src="../assets/art/lime-fold.webp" alt="" draggable="false"></span>
+      <span class="cp-name">Fold dish</span><span class="cp-price">$54</span>
+      <span class="cp-go"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg></span>
+    </button>
+  </div>
+
+  <div class="cp-pg" id="cp-pg" inert>
+    <div class="cp-h" id="cp-h2">
+      <button type="button" class="cp-back" id="cp-back" aria-label="Back to the shop"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Shop</button>
+      <p class="cp-n" id="cp-no">01 / 04</p>
+    </div>
+    <span class="cp-hero" id="cp-hero">
+      <img src="../assets/art/lime-arc.webp" alt="" draggable="false"><img src="../assets/art/lime-waves.webp" alt="" draggable="false">
+      <img src="../assets/art/lime-bloom.webp" alt="" draggable="false"><img src="../assets/art/lime-fold.webp" alt="" draggable="false">
+    </span>
+    <h3 class="cp-t" id="cp-t">Arc cup</h3>
+    <p class="cp-pr" id="cp-pr">$38</p>
+    <p class="cp-st" id="cp-st"><i></i>In stock</p>
+    <p class="cp-d" id="cp-d"></p>
+    <div class="cp-addw" id="cp-addw"><button type="button" class="cp-add" id="cp-add"><span>Add to cart</span><span><svg class="cp-tick" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.3l3.2 3.2L12.5 4.8"/></svg>Added</span></button></div>
+  </div>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Card to page</span><span class="qm-sep">/</span><span>Open a card · Esc or the back arrow returns it to its place</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Card to page. One progress q (0 = grid, 1 = page) draws every part; opening runs it up, going back runs it down the same curve. */
+const CP = { OPEN: 520, BACK: 440 };
+const CP_RADIUS = [16, 16];      // picture corner on the card and on the page, px on screen
+const CP_ITEMS = [
+  { name: 'Arc cup', price: '$38', d: 'A hand-thrown cup with a curved lip. Satin lime glaze, 9 cm tall.' },
+  { name: 'Wave plate', price: '$46', d: 'A flat plate with a rolling edge. Dishwasher safe, 24 cm wide.' },
+  { name: 'Bloom vase', price: '$82', d: 'Folded petals in one piece. Holds three stems, 21 cm tall.' },
+  { name: 'Fold dish', price: '$54', d: 'A shallow dish for keys and rings. Soft matte glaze, 14 cm wide.' },
+];
+const cpBox = document.getElementById('cp'), cpGrid = document.getElementById('cp-g'), cpPage = document.getElementById('cp-pg');
+const cpCards = [...cpGrid.querySelectorAll('.cp-c')].map((el) => ({ el, pic: el.querySelector('.cp-pic'), name: el.querySelector('.cp-name'), price: el.querySelector('.cp-price') }));
+const cpH1 = document.getElementById('cp-h1'), cpH2 = document.getElementById('cp-h2'), cpBack = document.getElementById('cp-back'), cpNo = document.getElementById('cp-no');
+const cpHero = document.getElementById('cp-hero'), cpHeroImgs = [...cpHero.children], cpT = document.getElementById('cp-t'), cpPr = document.getElementById('cp-pr');
+const cpLines = [document.getElementById('cp-st'), document.getElementById('cp-d'), document.getElementById('cp-addw')];
+const cpAdd = document.getElementById('cp-add'), cpDesc = document.getElementById('cp-d');
+const cpReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cpQ = 0, cpTarget = 0, cpCur = 0, cpLive = false, cpRaf = 0, cpLast = 0, cpFl = null, cpFocusBack = false, cpAddT = 0;
+
+// the curves, as the kit's: move (.65, 0, .35, 1), expo out (.16, 1, .3, 1), in (.5, 0, .75, 0)
+function cpBezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, sy = (t) => ((ay * t + by) * t + cy) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let t = x;
+    for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; }
+    return sy(Math.min(1, Math.max(0, t)));
+  };
+}
+const cpMove = cpBezier(0.65, 0, 0.35, 1), cpExpo = cpBezier(0.16, 1, 0.3, 1), cpIn = cpBezier(0.5, 0, 0.75, 0);
+const cp01 = (x) => Math.min(1, Math.max(0, x));
+const cpPx = (n) => (Math.abs(n) < 0.005 ? 0 : n).toFixed(2);
+
+// a shared element: from its rect on the card (a) to its rect on the page (b), the page element standing in for the card's
+function cpFly(el, a, b, f, uniform, radius) {
+  if (f >= 1) { el.style.transform = ''; if (radius) el.style.borderRadius = ''; return; }
+  const k = (p) => a[p] + (b[p] - a[p]) * f;
+  const sy = k('height') / b.height, sx = uniform ? sy : k('width') / b.width;
+  el.style.transform = `translate(${cpPx(k('left') - b.left)}px, ${cpPx(k('top') - b.top)}px) scale(${sx.toFixed(5)}, ${sy.toFixed(5)})`;
+  // the corner is drawn in the element's own units, so a 16 px corner on screen is 16 / scale (card radius to page radius, linearly)
+  if (radius) el.style.borderRadius = `${((radius[0] + (radius[1] - radius[0]) * f) / sx).toFixed(2)}px / ${((radius[0] + (radius[1] - radius[0]) * f) / sy).toFixed(2)}px`;
+}
+const cpRect = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height }; };
+
+function cpDraw(q) {
+  const t = q * CP.OPEN, f = cpMove(q), card = cpCards[cpCur];
+  if (q > 0 && !cpLive) {                                   // first frame of a flight: the card's own parts give way to the page's
+    cpLive = true;
+    card.pic.style.visibility = card.name.style.visibility = card.price.style.visibility = 'hidden';
+    card.el.classList.add('is-picked');
+    cpPage.style.visibility = 'visible';
+    if (cpTarget && cpFocusBack) cpBack.focus({ preventScroll: true });   // focus goes with the page
+  } else if (q === 0 && cpLive) {                           // last frame of the way back: the card's parts return, the page leaves
+    cpLive = false;
+    card.pic.style.visibility = card.name.style.visibility = card.price.style.visibility = '';
+    card.el.classList.remove('is-picked');
+    cpPage.style.visibility = 'hidden';
+    cpHero.style.transform = cpT.style.transform = cpPr.style.transform = cpHero.style.borderRadius = '';
+    cpCards.forEach((c) => { c.el.style.transform = ''; });
+    cpH1.style.clipPath = cpH1.style.transform = cpH2.style.clipPath = cpH2.style.transform = '';
+    cpLines.forEach((el) => { el.style.clipPath = el.style.transform = ''; });
+  }
+  if (!cpLive) return;
+  // picture, name, price: the page's own elements, flown
+  cpFly(cpHero, cpFl.a.pic, cpFl.b.pic, f, false, CP_RADIUS);
+  cpFly(cpT, cpFl.a.name, cpFl.b.name, f, true);
+  cpFly(cpPr, cpFl.a.price, cpFl.b.price, f, true);
+  // the other cards slide out toward their own side; the frame clips them
+  cpCards.forEach((c, j) => {
+    if (j === cpCur) return;
+    const left = 24 + j * 154, off = j < cpCur ? -(left + 146) : 648 - left + 8;
+    const s = cpMove(cp01((t - 30 * Math.abs(j - cpCur)) / 420));
+    c.el.style.transform = s ? `translateX(${(off * s).toFixed(2)}px)` : '';
+  });
+  // headers: the shop row leaves up under a closing clip, the back row is uncovered from below 120 ms later
+  const lv = cpIn(cp01(t / 150)), ar = cpExpo(cp01((t - 120) / 360));
+  cpH1.style.clipPath = lv ? `inset(0 0 ${(lv * 100).toFixed(2)}% 0)` : ''; cpH1.style.transform = lv ? `translateY(${(-6 * lv).toFixed(2)}px)` : '';
+  cpH2.style.clipPath = ar < 1 ? `inset(${((1 - ar) * 100).toFixed(2)}% 0 0 0)` : ''; cpH2.style.transform = ar < 1 ? `translateY(${((1 - ar) * 6).toFixed(2)}px)` : '';
+  // the rest of the page: stock, description, Add to cart, uncovered from the bottom edge behind the flight
+  cpLines.forEach((el, k) => {
+    const u = cpExpo(cp01((t - 140 - k * 50) / 380));
+    el.style.clipPath = u < 1 ? `inset(${((1 - u) * 100).toFixed(2)}% 0 0 0)` : ''; el.style.transform = u < 1 ? `translateY(${((1 - u) * 8).toFixed(2)}px)` : '';
+  });
+}
+function cpStep() {
+  cpRaf = 0;
+  const now = performance.now(), dt = Math.min(50, Math.max(0.5, now - cpLast)); cpLast = now;
+  cpQ = cpTarget ? Math.min(1, cpQ + dt / CP.OPEN) : Math.max(0, cpQ - dt / CP.BACK);
+  cpDraw(cpQ);
+  if (cpQ !== cpTarget) cpRaf = requestAnimationFrame(cpStep); else cpArrive();
+}
+function cpRun() {
+  if (cpReduced) { cpQ = cpTarget; cpDraw(cpQ); cpArrive(); return; }
+  if (!cpRaf) { cpLast = performance.now(); cpRaf = requestAnimationFrame(cpStep); }
+}
+function cpArrive() {
+  if (cpTarget) { if (cpFocusBack && document.activeElement !== cpBack) cpBack.focus({ preventScroll: true }); }
+  else {
+    cpGrid.inert = false;
+    if (cpFocusBack) cpCards[cpCur].el.focus({ preventScroll: true });
+  }
+}
+
+function cpOpen(i, focus = true) {
+  if (cpQ > 0 || cpTarget) return;
+  cpCur = i; cpFocusBack = focus;
+  const it = CP_ITEMS[i], card = cpCards[i];
+  cpHeroImgs.forEach((img, k) => img.classList.toggle('is-cur', k === i));
+  cpT.textContent = it.name; cpPr.textContent = it.price; cpDesc.textContent = it.d;
+  cpNo.textContent = `0${i + 1} / 04`;
+  cpPage.style.visibility = 'visible';                       // measure the page where it will rest
+  cpFl = {
+    a: { pic: cpRect(card.pic), name: cpRect(card.name), price: cpRect(card.price) },
+    b: { pic: cpRect(cpHero), name: cpRect(cpT), price: cpRect(cpPr) },
+  };
+  cpPage.style.visibility = '';                              // it stays hidden until the flight's first frame
+  cpTarget = 1; cpGrid.inert = true; cpPage.inert = false;
+  cpRun();
+}
+function cpClose(focus = true) {
+  if (!cpTarget) return;
+  cpTarget = 0; cpFocusBack = focus; cpPage.inert = true;
+  cpRun();
+}
+
+cpCards.forEach((c, i) => c.el.addEventListener('click', () => cpOpen(i, !window.cpQuiet)));
+cpBack.addEventListener('click', () => cpClose(!window.cpQuiet));
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && cpTarget) { e.preventDefault(); cpClose(true); } });
+cpAdd.addEventListener('click', () => {
+  clearTimeout(cpAddT);
+  cpAdd.classList.add('is-done');
+  cpAddT = setTimeout(() => cpAdd.classList.remove('is-done'), 1700);
+});
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function tap(my, el, hold = 240) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.55, r.top + r.height * 0.55, 760))) throw 0;
+    if (my !== epoch) throw 0;
+    el.classList.add('is-hot');
+    await gap(my, 190);
+    el.classList.add('is-press');
+    await gap(my, 110);
+    el.classList.remove('is-press', 'is-hot');
+    el.click();
+    await gap(my, hold);
+  }
+  // back to the grid, instantly and invisibly (a real visitor left the page open)
+  function reset() {
+    if (cpQ > 0 || cpTarget) { cancelAnimationFrame(cpRaf); cpRaf = 0; cpTarget = 0; cpQ = 0; cpDraw(0); cpPage.inert = true; cpGrid.inert = false; }
+    cpAdd.classList.remove('is-done');
+    if (document.activeElement && cpBox.contains(document.activeElement)) document.activeElement.blur();
+  }
+  let n = 0;
+  async function script() {
+    const my = ++epoch;
+    window.cpQuiet = true;
+    try {
+      QM.ghostShow();
+      if (cpTarget) await tap(my, cpBack, 600);
+      for (;;) {
+        await gap(my, 1000);
+        const i = [2, 0, 3, 1][n++ % 4];
+        await tap(my, cpCards[i].el, 2200);                      // the flight, and the page at rest
+        await tap(my, cpAdd, 1500);                              // Added
+        await tap(my, cpBack, 600);                              // and the same flight back
+        await QM.ghostTo(innerWidth * 0.78, innerHeight * 0.84, 600);
+        await gap(my, 700);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; window.cpQuiet = false; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!cpBox.matches(':hover') && !cpBox.contains(document.activeElement)) script(); else touch({}); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

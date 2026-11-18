@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generated card · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "generated-card", "title": "Generated card", "group": "studio", "added": "2026-11-17", "cat": "loading", "order": 50,
+  "kind": "loop", "tone": "paper", "shot": 4000,
+  "line": "outline opens 560 ms expo out · slots uncovered 30 ms apart · bars rise 520 ms ease-move, 40 ms apart · total rolls to $1,284",
+  "summary": "A Qbix agent is asked to show Kova's spend this week and answers with a component, not a paragraph. The answer card is built in front of you: its outline opens to size, sage skeleton parts are uncovered (a title bar, seven bar slots, a total), and each resolves in stream order. The title types in, the bars rise one by one from zero, the total counts up to $1,284 in Geist Mono, and a small Open in Kova link is uncovered last. Today's bar is the one ink bar; the rest are pale. Hovering or focusing a bar reads its value, and Regenerate builds the card again.",
+  "spec": [
+    ["Outline", "a white card with a soft ring opens from a 56 px outline to its 348 px height in 560 ms expo out; closing is 300 ms ease-in"],
+    ["Skeleton", "the title bar, total bar and seven slots are uncovered top down, 380 ms expo out, 30 ms apart; sage with a slow white shimmer; each one is wiped away as its part resolves"],
+    ["Title", "types in at 26 ms a character, then the title bar is swept off to the right"],
+    ["Bars", "each bar is uncovered from the baseline up on 520 ms ease-move, 40 ms apart; its slot recedes downward behind it; seven bars land together in 760 ms"],
+    ["Total", "$0 to $1,284 on one 760 ms ease-move tween, Geist with tabular figures so the comma stays narrow, a reserved width"],
+    ["Footer", "Regenerate is uncovered with the skeleton; Open in Kova and today's value are uncovered last, 380 ms expo out; the status rolls from Generating to Generated with its lime dot"],
+    ["Regenerate", "every part leaves in 200 ms ease-in while the card closes in 300 ms, then the build starts again; clicking it mid-build restarts from where things are"],
+    ["Loop", "a ghost reads two bars, then regenerates; a real pointer or key takes over, it resumes after 4.5 s. The whole build is about 2.3 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-17"],
+  "where": "A Qbix agent thread on a Kova task, where the answer to a data question is a small live component the person can read, inspect and ask for again.",
+  "rules": [
+    "Today's bar is the one ink element in the frame. The other bars are the pale sage-deep, so the finished card is a white card with one dark bar, not a green block.",
+    "Sage appears only while loading (skeleton parts with a shimmer) and as the pale bars; the skeleton is wiped away part by part, never faded out together.",
+    "Parts resolve in stream order so the card reads as being written: title, then bars, then the total, then the actions.",
+    "Nothing bounces. Arrivals use expo out, moves use the move curve, exits use ease-in at about 0.6× the length of the entry.",
+    "Bars are real buttons: hovering or focusing one uncovers its value above it, a click pins it. They are inert until the card is built.",
+    "The status line is a polite live region and the total reserves its width in tabular figures, so nothing shoves while it counts.",
+    "Under reduced motion the card rests fully built and every change is instant."
+  ],
+  "tags": ["generative UI", "agent", "answer", "chart", "skeleton", "loading", "Kova", "component"]
+}
+</script>
+<style data-code>
+/* Generated card. The one ink element is today's bar; the lime point is the Generated dot. White surface, soft ring, 20px radius.
+   Easings: expo out (.16,1,.3,1) arrivals, move (.65,0,.35,1) bars and the card, in (.5,0,.75,0) exits, ui (.4,0,.2,1). Every state is a class, so any click can interrupt. */
+.gc { position: relative; width: 440px; max-width: 100%; height: 408px; color: #0B0C0D; font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+:where(.gc button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the prompt, a white pill */
+.gc-prompt { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 20px 0 16px; margin: 0; border-radius: 999px; background: #fff; font-weight: 500;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 8px 24px -14px rgba(11, 12, 13, .18); }
+.gc-prompt svg { width: 16px; height: 16px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the card: its outline opens, its parts are uncovered inside it */
+.gc-card { position: absolute; left: 0; right: 0; top: 60px; height: 56px; overflow: hidden; background: #fff; border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  transition: height 300ms cubic-bezier(.5, 0, .75, 0); }
+.gc.o .gc-card { height: 348px; transition: height 560ms cubic-bezier(.16, 1, .3, 1); }
+.gc-in { height: 348px; padding: 20px; }
+
+.gc-hd { display: flex; align-items: center; justify-content: space-between; height: 28px; }
+.gc-title { position: relative; display: grid; margin: 0; font: 300 22px/28px Outfit, Geist, sans-serif; letter-spacing: -.035em; white-space: nowrap; }
+.gc-tx { grid-area: 1 / 1; min-width: 190px; clip-path: inset(0 0 100% 0); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.gc.t .gc-tx { clip-path: inset(-2px); transition: none; }
+
+/* skeleton parts: sage, uncovered top down, a slow shimmer, wiped away when the real part is there */
+.gc-sk { position: absolute; overflow: hidden; background: #EEF1E8; border-radius: 6px; clip-path: inset(0 0 100% 0);
+  transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.gc.k .gc-sk { clip-path: inset(0); transition: clip-path 380ms cubic-bezier(.16, 1, .3, 1) calc(var(--i, 0) * 30ms); }
+.gc-sk::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .75), rgba(255, 255, 255, 0));
+  animation: gc-sh 1100ms cubic-bezier(.4, 0, .2, 1) infinite paused; }
+.gc.k:not(.d) .gc-sk::after { animation-play-state: running; }
+@keyframes gc-sh { to { transform: translateX(100%); } }
+.gc-sk-t { left: 0; top: 4px; width: 150px; height: 20px; }
+.gc.t .gc-sk-t { clip-path: inset(0 0 0 100%); transition: clip-path 260ms cubic-bezier(.65, 0, .35, 1); }
+.gc-sk-n { left: 0; top: 4px; width: 112px; height: 28px; }
+.gc.n .gc-sk-n { clip-path: inset(0 0 0 100%); transition: clip-path 260ms cubic-bezier(.65, 0, .35, 1); }
+
+/* status: rolls from Generating to Generated with the lime dot */
+.gc-st { position: relative; width: 96px; height: 20px; margin: 0; overflow: hidden; font-size: 12px; line-height: 20px; font-weight: 500; letter-spacing: -.006em; color: rgba(11, 12, 13, .66);
+  clip-path: inset(0 0 100% 0); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.gc.o .gc-st { clip-path: inset(0); transition: clip-path 380ms cubic-bezier(.16, 1, .3, 1) 140ms; }
+.gc-st > span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; gap: 8px; white-space: nowrap; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.gc-st > .s2 { transform: translateY(110%); }
+.gc.d .gc-st > .s1 { transform: translateY(-110%); }
+.gc.d .gc-st > .s2 { transform: none; }
+.gc-dot { width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16); }
+
+/* total */
+.gc-tot { margin-top: 12px; }
+.gc-lbl { margin: 0; height: 16px; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+.gc-numw { position: relative; height: 36px; }
+.gc-num { display: block; min-width: 112px; font: 500 28px/36px Geist, system-ui, sans-serif; letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+  clip-path: inset(0 100% 0 0); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.gc.n .gc-num { clip-path: inset(-2px); transition: clip-path 300ms cubic-bezier(.16, 1, .3, 1); }
+
+/* chart: seven columns, each a button holding its slot, its bar and its value */
+.gc-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; height: 124px; margin-top: 16px; }
+.gc-col { position: relative; height: 100%; border-radius: 10px; }
+.gc-slot { left: 50%; margin-left: -18px; bottom: 0; width: 36px; height: 100px; border-radius: 8px 8px 4px 4px; }
+.gc.b .gc-slot { clip-path: inset(100% 0 0 0); transition: clip-path 320ms cubic-bezier(.65, 0, .35, 1) calc(240ms + var(--i) * 40ms); }
+.gc-bar { position: absolute; left: 50%; bottom: 0; width: 36px; height: var(--h); margin-left: -18px; background: #E3E8DA; border-radius: 8px 8px 4px 4px;
+  clip-path: inset(100% 0 0 0 round 8px 8px 4px 4px);
+  transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0), background 160ms cubic-bezier(.4, 0, .2, 1); }
+.gc.b .gc-bar { clip-path: inset(0 0 0 0 round 8px 8px 4px 4px);
+  transition: clip-path 520ms cubic-bezier(.65, 0, .35, 1) calc(var(--i) * 40ms), background 160ms cubic-bezier(.4, 0, .2, 1); }
+.gc-col.today .gc-bar { background: #0B0C0D; }
+.gc.d .gc-col:not(.today):hover .gc-bar, .gc.d .gc-col:not(.today).is-hot .gc-bar, .gc.d .gc-col:not(.today):focus-visible .gc-bar, .gc-col:not(.today).is-pin .gc-bar { background: #CCD5BA; }
+.gc-col:active .gc-bar { transform: translateY(1px); }
+.gc-col:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 0; }
+.gc-v { position: absolute; left: 50%; bottom: calc(var(--h) + 6px); transform: translate(-50%, 4px); white-space: nowrap; pointer-events: none;
+  font: 500 12px/16px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  clip-path: inset(0 0 100% 0); transition: clip-path 160ms cubic-bezier(.5, 0, .75, 0), transform 160ms cubic-bezier(.5, 0, .75, 0); }
+.gc.d .gc-col.today .gc-v, .gc.d .gc-col:hover .gc-v, .gc.d .gc-col.is-hot .gc-v, .gc.d .gc-col:focus-visible .gc-v, .gc-col.is-pin .gc-v {
+  clip-path: inset(-2px -6px); transform: translate(-50%, 0); transition: clip-path 260ms cubic-bezier(.16, 1, .3, 1), transform 260ms cubic-bezier(.16, 1, .3, 1); }
+.gc-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; margin-top: 8px; }
+.gc-days span { text-align: center; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: -.006em; color: rgba(11, 12, 13, .66);
+  clip-path: inset(0 0 100% 0); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.gc.k .gc-days span { clip-path: inset(-2px); transition: clip-path 380ms cubic-bezier(.16, 1, .3, 1) calc(var(--i) * 30ms); }
+.gc-days .today { color: #0B0C0D; }
+
+/* footer: a text link and a white ringed pill */
+.gc-ft { display: flex; align-items: center; justify-content: space-between; height: 36px; margin-top: 16px; }
+.gc-link { position: relative; width: 116px; height: 36px; overflow: hidden; text-align: left; font-weight: 500; clip-path: inset(0 0 100% 0); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.gc.d .gc-link { clip-path: inset(0); transition: clip-path 380ms cubic-bezier(.16, 1, .3, 1); }
+.gc-link > span { position: absolute; inset: 0; display: flex; align-items: center; white-space: nowrap; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.gc-link > .l2 { transform: translateY(110%); }
+.gc-link.is-open > .l1 { transform: translateY(-110%); }
+.gc-link.is-open > .l2 { transform: none; }
+.gc-link::after { content: ''; position: absolute; left: 0; bottom: 6px; width: 104px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left center; transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.gc-link:hover::after, .gc-link:focus-visible::after, .gc-link.is-hot::after { transform: scaleX(1); }
+.gc-link:active { transform: translateY(1px); }
+.gc-rg { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px 0 12px; border-radius: 999px; background: #fff; font-weight: 500;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .14); clip-path: inset(-2px -2px 100% -2px);
+  transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0), background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.gc.k .gc-rg { clip-path: inset(-2px); transition: clip-path 380ms cubic-bezier(.16, 1, .3, 1) 300ms, background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.gc-rg:hover, .gc-rg.is-hot { background: #EEF1E8; }
+.gc-rg:active { transform: translateY(1px); }
+.gc-rg svg { width: 14px; height: 14px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.gc-rg:focus-visible, .gc-link:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+
+.gc.still *, .gc.still *::before, .gc.still *::after { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .gc *, .gc *::before, .gc *::after { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<section class="gc" id="gc" aria-label="Agent answer">
+  <p class="gc-prompt"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v4M8 9.5v4M2.5 8h4M9.5 8h4"/></svg>Show Kova's spend this week</p>
+
+  <article class="gc-card" id="gc-card" aria-label="Spend this week">
+    <div class="gc-in">
+      <header class="gc-hd">
+        <h3 class="gc-title" aria-label="Spend this week"><i class="gc-sk gc-sk-t" aria-hidden="true"></i><span class="gc-tx" id="gc-tx" aria-hidden="true"></span></h3>
+        <p class="gc-st" aria-hidden="true"><span class="s1">Generating</span><span class="s2"><i class="gc-dot"></i>Generated</span></p>
+      </header>
+
+      <div class="gc-tot">
+        <p class="gc-lbl">Total spent</p>
+        <div class="gc-numw"><i class="gc-sk gc-sk-n" aria-hidden="true"></i><span class="gc-num" id="gc-num" aria-hidden="true">$0</span></div>
+      </div>
+
+      <div class="gc-bars" id="gc-bars" role="group" aria-label="Spend by day" inert>
+        <button type="button" class="gc-col" style="--i:0;--h:62px" aria-label="Monday, $148" aria-pressed="false"><i class="gc-sk gc-slot" style="--i:0" aria-hidden="true"></i><i class="gc-bar"></i><span class="gc-v" aria-hidden="true">$148</span></button>
+        <button type="button" class="gc-col" style="--i:1;--h:73px" aria-label="Tuesday, $176" aria-pressed="false"><i class="gc-sk gc-slot" style="--i:1" aria-hidden="true"></i><i class="gc-bar"></i><span class="gc-v" aria-hidden="true">$176</span></button>
+        <button type="button" class="gc-col" style="--i:2;--h:47px" aria-label="Wednesday, $112" aria-pressed="false"><i class="gc-sk gc-slot" style="--i:2" aria-hidden="true"></i><i class="gc-bar"></i><span class="gc-v" aria-hidden="true">$112</span></button>
+        <button type="button" class="gc-col" style="--i:3;--h:85px" aria-label="Thursday, $204" aria-pressed="false"><i class="gc-sk gc-slot" style="--i:3" aria-hidden="true"></i><i class="gc-bar"></i><span class="gc-v" aria-hidden="true">$204</span></button>
+        <button type="button" class="gc-col" style="--i:4;--h:70px" aria-label="Friday, $168" aria-pressed="false"><i class="gc-sk gc-slot" style="--i:4" aria-hidden="true"></i><i class="gc-bar"></i><span class="gc-v" aria-hidden="true">$168</span></button>
+        <button type="button" class="gc-col" style="--i:5;--h:98px" aria-label="Saturday, $236" aria-pressed="false"><i class="gc-sk gc-slot" style="--i:5" aria-hidden="true"></i><i class="gc-bar"></i><span class="gc-v" aria-hidden="true">$236</span></button>
+        <button type="button" class="gc-col today" style="--i:6;--h:100px" aria-label="Sunday, today, $240" aria-pressed="false"><i class="gc-sk gc-slot" style="--i:6" aria-hidden="true"></i><i class="gc-bar"></i><span class="gc-v" aria-hidden="true">$240</span></button>
+      </div>
+      <div class="gc-days" aria-hidden="true"><span style="--i:0">M</span><span style="--i:1">T</span><span style="--i:2">W</span><span style="--i:3">T</span><span style="--i:4">F</span><span style="--i:5">S</span><span class="today" style="--i:6">S</span></div>
+
+      <footer class="gc-ft">
+        <button type="button" class="gc-link" id="gc-link" aria-label="Open in Kova" inert><span class="l1" aria-hidden="true">Open in Kova ↗︎</span><span class="l2" aria-hidden="true">Opening…</span></button>
+        <button type="button" class="gc-rg" id="gc-rg"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M12 7a5 5 0 1 1-1.6-3.7M12 2v2.8H9.2"/></svg>Regenerate</button>
+      </footer>
+    </div>
+  </article>
+  <p class="sr-only" id="gc-live" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  <div class="qm-ui"><span>The card builds itself · hover or focus a bar to read it · Regenerate builds it again</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Generated card. One timeline of classes (o open, k skeleton, t title, n total, b bars, d done); CSS carries every transition,
+   so Regenerate can interrupt at any point: it takes the classes off (parts leave fast, the card closes) and then builds again. */
+const gc = document.getElementById('gc'), gcTx = document.getElementById('gc-tx'), gcNum = document.getElementById('gc-num');
+const gcBars = document.getElementById('gc-bars'), gcLink = document.getElementById('gc-link'), gcRg = document.getElementById('gc-rg'), gcLive = document.getElementById('gc-live');
+const GC_TITLE = 'Spend this week', GC_TOTAL = 1284;
+const gcReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let gcTimers = [], gcRaf = 0, gcShown = 0;
+
+function gcBez(x1, y1, x2, y2) {                    // a CSS cubic-bezier as a function of progress
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const sx = (t) => ((ax * t + bx) * t + cx) * t, dx = (t) => (3 * ax * t + 2 * bx) * t + cx;
+  return (x) => { let t = x; for (let i = 0; i < 8; i++) { const e = sx(t) - x, d = dx(t); if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; } return ((ay * t + by) * t + cy) * t; };
+}
+const gcMove = gcBez(.65, 0, .35, 1);
+const gcMoney = (v) => '$' + Math.round(v).toLocaleString('en-US');
+function gcCount(to, ms) {                          // the total: one tween, retargets from where it is
+  cancelAnimationFrame(gcRaf);
+  const from = gcShown, t0 = performance.now();
+  const paint = (v) => { gcShown = v; gcNum.textContent = gcMoney(v); };
+  if (!ms) return paint(to);
+  const step = (now) => { const p = Math.min(1, (now - t0) / ms); paint(from + (to - from) * gcMove(p)); if (p < 1) gcRaf = requestAnimationFrame(step); };
+  gcRaf = requestAnimationFrame(step);
+}
+function gcAt(ms, fn) { gcTimers.push(setTimeout(fn, gcReduced ? 0 : ms)); }
+function gcClear() { gcTimers.forEach(clearTimeout); gcTimers = []; cancelAnimationFrame(gcRaf); }
+function gcType() {                                 // the title writes itself, 26 ms a character
+  let i = 0;
+  const tick = () => { gcTx.textContent = GC_TITLE.slice(0, ++i); if (i < GC_TITLE.length) gcTimers.push(setTimeout(tick, 26)); };
+  tick();
+}
+function gcBuild() {                                // about 2.3 s from the first outline
+  gcClear();
+  gcLive.textContent = 'Generating the spend card.';
+  gcAt(0,    () => gc.classList.add('o'));
+  gcAt(220,  () => gc.classList.add('k'));
+  gcAt(760,  () => { gc.classList.add('t'); gcType(); });
+  gcAt(960,  () => gc.classList.add('b'));
+  gcAt(1000, () => { gc.classList.add('n'); gcCount(GC_TOTAL, 760); });
+  gcAt(1780, () => {
+    gc.classList.add('d'); gcBars.inert = false; gcLink.inert = false;
+    gcLive.textContent = 'Spend card ready. Total ' + gcMoney(GC_TOTAL) + ' this week, highest today at $240.';
+  });
+}
+function gcOut() {                                  // every part leaves fast, the card closes
+  gcClear();
+  gcBars.inert = true; gcLink.inert = true;
+  gcLink.classList.remove('is-open');
+  gc.classList.remove('d', 'b', 'n', 't', 'k', 'o');
+  gcCount(0, 0);
+  gcTx.textContent = '';
+  gcBars.querySelectorAll('.is-pin').forEach((b) => { b.classList.remove('is-pin'); b.setAttribute('aria-pressed', 'false'); });
+}
+function gcRegen() { gcOut(); gcAt(360, gcBuild); }
+function gcRest(built) {                            // an instant state, no transitions
+  gc.classList.add('still');
+  gcOut();
+  if (built) {
+    gc.classList.add('o', 'k', 't', 'n', 'b', 'd');
+    gcTx.textContent = GC_TITLE; gcCount(GC_TOTAL, 0);
+    gcBars.inert = false; gcLink.inert = false;
+    gcLive.textContent = 'Spend card ready. Total ' + gcMoney(GC_TOTAL) + ' this week, highest today at $240.';
+  }
+  gc.getBoundingClientRect();
+  gc.classList.remove('still');
+}
+gcRg.addEventListener('click', () => (gcReduced ? gcRest(true) : gcRegen()));
+gcBars.addEventListener('click', (e) => {            // a click pins a bar's value open
+  const col = e.target.closest('.gc-col'); if (!col) return;
+  const on = col.classList.toggle('is-pin'); col.setAttribute('aria-pressed', String(on));
+});
+let gcOpenT = 0;
+gcLink.addEventListener('click', () => {            // the link says what it is doing, then settles back
+  gcLink.classList.add('is-open'); gcLive.textContent = 'Opening in Kova.';
+  clearTimeout(gcOpenT);
+  gcOpenT = setTimeout(() => gcLink.classList.remove('is-open'), gcReduced ? 0 : 1400);
+});
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function go(my, el, fx = 0.5, fy = 0.58) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * fx, r.top + r.height * fy, 720))) throw 0;
+    if (my !== epoch) throw 0;
+  }
+  async function tap(my, el, hold) {
+    await go(my, el);
+    el.classList.add('is-hot');
+    await gap(my, 160);
+    el.style.transform = 'translateY(1px)';
+    await gap(my, 110);
+    el.style.transform = '';
+    el.classList.remove('is-hot');
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await gap(my, hold);
+  }
+  async function read(my, col, hold) {                // hover a bar: the ghost sits beside the bar's top, never on its value
+    const r = col.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.78, r.bottom - 34, 720))) throw 0;
+    if (my !== epoch) throw 0;
+    col.classList.add('is-hot');
+    await gap(my, hold);
+    col.classList.remove('is-hot');
+  }
+  const cols = Array.from(document.querySelectorAll('.gc-col'));
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      gcBuild();
+      for (;;) {
+        await gap(my, 2900);                          // the build, then a moment to read it
+        await read(my, cols[2], 1100);
+        await read(my, cols[3], 1100);
+        await tap(my, gcRg, 400);                     // regenerate
+        await QM.ghostTo(gcRg.getBoundingClientRect().left + 40, gcRg.getBoundingClientRect().top + 52, 480);
+        if (my !== epoch) throw 0;
+        await gap(my, 360);                           // the card closes and builds again
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); cols.forEach((c) => c.classList.remove('is-hot')); gcRg.classList.remove('is-hot'); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!gc.matches(':hover') && !gc.contains(document.activeElement)) { script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true, capture: true });
+    addEventListener('pointerdown', touch, { passive: true, capture: true });
+    addEventListener('keydown', () => touch({}), true);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); gcClear(); if (reduced) gcRest(true); else { gcRest(false); script(); } } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (reduced) gcRest(true); else script(); }, 300));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morph bar · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "morph-bar", "title": "Morph bar", "group": "studio", "added": "2026-11-16", "cat": "buttons", "order": 10,
+  "kind": "loop", "tone": "paper", "shot": 16500,
+  "line": "320 × 56 → 400 × 108 · 420 ms ease-move · content swaps 120 ms apart",
+  "summary": "A small ink toolbar docked under a Forma page preview, drawn as a white surface with a soft ring with three actions. Share, Comment and Ship each grow the same ink container into their own panel: width, height and position travel together on the move curve while the old row leaves up 6 px under a quick clip and the new panel is uncovered from below. Escape, the close glyph or a click outside folds it back to the bar, and Send and Ship it leave a label that rolls to Sent or Shipped.",
+  "spec": [
+    ["Container", "one ink block: width, height and left change together, 420 ms ease-move open, 320 ms close; the corner radius travels too, 28 px as the bar, 20 px as a panel"],
+    ["Leaving", "old row translateY -6 px with its clip closing from the bottom, 150 ms ease-in"],
+    ["Arriving", "new panel from translateY +6 px, uncovered from the bottom edge up, 360 ms expo out, 120 ms after the morph starts"],
+    ["Heights", "bar 56 px, Share and Comment 108 px, Ship 136 px; panels are 400 px wide, the bar 320 px"],
+    ["Done", "Send and Ship it close the panel and the bar's label rolls to Sent or Shipped (a small lime dot) for 2 s; Copy rolls to Copied with a tick"],
+    ["Loop", "a ghost opens each panel in turn; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "The review bar on a Forma preview link Qbix sends a client: share the preview, leave a comment on the hero, then ship it to the live domain.",
+  "rules": [
+    "One container morphs; panels are layers inside it and never move on their own, so only the ink's edge travels.",
+    "Nothing fades and nothing bounces: rows are clipped and uncovered, the container follows the move curve.",
+    "Hidden layers are inert and not visible, so Tab only reaches what is on screen; Escape returns focus to the button that opened the panel.",
+    "Reserved widths: every label sits in a fixed-width button, so Sent and Shipped never move their neighbours.",
+    "Interrupting is safe: transitions reverse from where they are, and a layer that has not finished leaving comes straight back.",
+    "Under reduced motion every state still changes, with no transition."
+  ],
+  "tags": ["button", "toolbar", "morph", "container", "panel", "share", "comment", "ship", "Forma"]
+}
+</script>
+<style data-code>
+/* Morph bar. Ink #0B0C0D on a white surface, one lime point; the ink container is the only heavy thing. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0). */
+.mb { position: relative; width: 448px; height: 296px; background: #fff; color: #0B0C0D; overflow: hidden; font: 400 13px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.006em;
+  border-radius: 20px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+:where(.mb button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the page behind: a Forma preview */
+.mb-nav { position: absolute; left: 24px; right: 24px; top: 20px; display: flex; align-items: baseline; justify-content: space-between; }
+.mb-nav b { font-size: 14px; font-weight: 600; letter-spacing: -.011em; }
+.mb-nav span { display: flex; gap: 20px; color: rgba(11, 12, 13, .66); font-weight: 500; }
+.mb-h { position: absolute; left: 24px; top: 56px; margin: 0; width: 240px; font: 300 28px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; text-wrap: balance; }
+.mb-p { position: absolute; left: 24px; top: 120px; margin: 0; width: 220px; white-space: nowrap; color: rgba(11, 12, 13, .66); }
+.mb-pic { position: absolute; right: 24px; top: 56px; width: 88px; height: 72px; border-radius: 12px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); display: grid; place-items: center; color: rgba(11, 12, 13, .38); }
+.mb-pic svg { display: block; width: 56px; height: 56px; stroke-width: 1.5; }
+
+/* the container: one ink block that changes size; layers inside are anchored to its bottom edge */
+.mb-box { position: absolute; bottom: 20px; left: 64px; width: 320px; height: 56px; background: #0B0C0D; color: #fff; overflow: hidden;
+  border-radius: 28px;
+  transition: width 320ms cubic-bezier(.65, 0, .35, 1), height 320ms cubic-bezier(.65, 0, .35, 1), left 320ms cubic-bezier(.65, 0, .35, 1), border-radius 320ms cubic-bezier(.65, 0, .35, 1); }
+.mb-box[data-s="share"], .mb-box[data-s="comment"] { left: 24px; width: 400px; height: 108px; border-radius: 20px; transition-duration: 420ms; }
+.mb-box[data-s="ship"] { left: 24px; width: 400px; height: 136px; border-radius: 20px; transition-duration: 420ms; }
+.mb-box button:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+
+/* layers: below (not yet shown) / in / above (left). In: uncovered from the bottom edge, 120 ms behind the morph. Above: up 6 px under a closing clip. */
+.mb-l { position: absolute; bottom: 0; left: 50%; visibility: hidden; clip-path: inset(100% 0 0 0); transform: translateY(6px);
+  transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1) 120ms, transform 360ms cubic-bezier(.16, 1, .3, 1) 120ms; }
+.mb-l[data-p="in"] { visibility: visible; clip-path: inset(0); transform: none; }
+.mb-l[data-p="above"] { clip-path: inset(0 0 100% 0); transform: translateY(-6px);
+  transition: clip-path 150ms cubic-bezier(.5, 0, .75, 0), transform 150ms cubic-bezier(.5, 0, .75, 0), visibility 0s 150ms; }
+.mb-l.snap { transition: none !important; }
+.mb-bar { width: 320px; height: 56px; margin-left: -160px; padding: 8px; display: flex; gap: 4px; }
+.mb-pn { width: 400px; margin-left: -200px; padding: 16px; }
+.mb-pn[data-k="share"], .mb-pn[data-k="comment"] { height: 108px; }
+.mb-pn[data-k="ship"] { height: 136px; }
+
+/* bar buttons: fixed widths, so a label that rolls never shoves its neighbour */
+.mb-b { height: 40px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 500; letter-spacing: -.011em; color: #fff;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.mb-b:hover, .mb-b.is-hot { background: rgba(255, 255, 255, .1); }
+.mb-b:active > *, .mb-b.is-press > * { transform: translateY(1px); }
+.mb-ic { display: grid; width: 16px; height: 16px; overflow: hidden; }
+.mb-ic > * { grid-area: 1 / 1; width: 16px; height: 16px; display: block; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.mb-ic > :last-child:not(:first-child) { transform: translateY(110%); }
+.mb-lab { display: grid; height: 20px; overflow: hidden; }
+.mb-lab b { grid-area: 1 / 1; text-align: center; font-weight: 500; line-height: 20px; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.mb-lab b + b { transform: translateY(110%); }
+.mb-b.is-done .mb-ic > :first-child, .mb-b.is-done .mb-lab b:first-child { transform: translateY(-110%); }
+.mb-b.is-done .mb-ic > :last-child, .mb-b.is-done .mb-lab b + b { transform: none; }
+.mb-sq { display: block; background: #B8FF00; width: 8px; height: 8px; margin: 4px; border-radius: 50%; }
+.mb svg { stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+
+/* panels */
+.mb-hd { display: flex; align-items: center; justify-content: space-between; height: 24px; }
+.mb-t { font-weight: 500; color: rgba(255, 255, 255, .66); }
+.mb-x { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: -4px; color: rgba(255, 255, 255, .66); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.mb-x:hover { color: #fff; }
+.mb-x:active svg { transform: translateY(1px); }
+.mb-field { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 44px; margin-top: 8px; padding: 0 4px 0 16px; background: rgba(255, 255, 255, .08); border-radius: 22px; }
+.mb-url { font: 400 13px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; white-space: nowrap; }
+.mb-in { flex: 1; min-width: 0; height: 44px; border: 0; padding: 0; margin: 0; background: none; color: #fff; font: inherit; font-size: 13px; letter-spacing: -.006em; outline: 0; }
+.mb-in::placeholder { color: rgba(255, 255, 255, .5); opacity: 1; }
+.mb-field:has(.mb-in:focus-visible) { box-shadow: inset 0 -2px 0 #fff; }
+.mb-act { position: relative; flex: none; width: 84px; height: 36px; display: grid; overflow: hidden; background: #fff; color: #0B0C0D; font-size: 14px; font-weight: 600; letter-spacing: -.011em;
+  border-radius: 999px; transition: background 160ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1); }
+.mb-act > span { grid-area: 1 / 1; display: flex; align-items: center; justify-content: center; gap: 6px; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.mb-act > span + span { transform: translateY(110%); }
+.mb-act.is-done > span:first-child { transform: translateY(-110%); }
+.mb-act.is-done > span + span { transform: none; }
+.mb-act:active > span, .mb-act.is-press > span { translate: 0 1px; }
+.mb-act:disabled { background: rgba(255, 255, 255, .14); color: rgba(255, 255, 255, .5); cursor: default; }
+.mb-act:not(:disabled):hover { background: #EEF1E8; }
+.mb-dot { display: block; width: 16px; height: 16px; border-radius: 50%; background: #B8FF00; }
+.mb-dot svg { display: block; stroke: #0B0C0D; }
+.mb-ship-t { margin: 0; font: 300 28px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.mb-ship-s { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; height: 18px; color: rgba(255, 255, 255, .66); font-weight: 500; }
+.mb-ship-s i { flex: none; width: 8px; height: 8px; background: #B8FF00; border-radius: 50%; }
+.mb-ship-r { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.mb-cancel { height: 40px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 500; color: rgba(255, 255, 255, .66); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.mb-cancel:hover { color: #fff; }
+.mb-ship-r .mb-act { width: 96px; height: 40px; }
+
+.mb.still *, .mb.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .mb *, .mb *::before { transition: none !important; } }
+</style>
+<style>
+  .mbw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="mbw">
+    <p class="kicker">Forma · Preview review bar</p>
+<!-- code -->
+<div class="mb" id="mb">
+  <div class="mb-nav"><b>Forma</b><span><a>Shop</a><a>Studio</a><a>Journal</a></span></div>
+  <h3 class="mb-h">Small batch, made by hand.</h3>
+  <p class="mb-p">Slip-cast bowls and vessels.</p>
+  <div class="mb-pic" aria-hidden="true"><svg viewBox="0 0 72 72"><path d="M12 28h48c0 17-9 28-24 28S12 45 12 28z"/><path d="M8 28h56"/><path d="M26 62h20"/></svg></div>
+
+  <div class="mb-box" id="mb-box" data-s="bar">
+    <div class="mb-l mb-bar" data-k="bar" data-p="in" role="toolbar" aria-label="Preview actions">
+      <button type="button" class="mb-b" id="mb-b-share" style="width: 92px" aria-controls="mb-share" aria-expanded="false">
+        <span class="mb-ic"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 10V2M5 5l3-3 3 3M3 9v5h10V9"/></svg></span>
+        <span class="mb-lab"><b>Share</b></span>
+      </button>
+      <button type="button" class="mb-b" id="mb-b-comment" style="width: 112px" aria-controls="mb-comment" aria-expanded="false">
+        <span class="mb-ic"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h12v9H7l-3 3v-3H2z"/></svg><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.5"/></svg></span>
+        <span class="mb-lab"><b>Comment</b><b>Sent</b></span>
+      </button>
+      <button type="button" class="mb-b" id="mb-b-ship" style="width: 92px" aria-controls="mb-ship" aria-expanded="false">
+        <span class="mb-ic"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12L12 4M5.5 4H12v6.5"/></svg><span><i class="mb-sq"></i></span></span>
+        <span class="mb-lab"><b>Ship</b><b>Shipped</b></span>
+      </button>
+    </div>
+
+    <div class="mb-l mb-pn" id="mb-share" data-k="share" data-p="below" role="group" aria-label="Share preview" inert>
+      <div class="mb-hd"><span class="mb-t">Anyone with the link can view</span>
+        <button type="button" class="mb-x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11"/></svg></button></div>
+      <div class="mb-field"><span class="mb-url">forma.studio/preview/r2</span>
+        <button type="button" class="mb-act" id="mb-copy"><span>Copy</span><span><i class="mb-dot"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 8.3l2.3 2.3 4.7-5"/></svg></i>Copied</span></button></div>
+    </div>
+
+    <div class="mb-l mb-pn" id="mb-comment" data-k="comment" data-p="below" role="group" aria-label="Comment on preview" inert>
+      <div class="mb-hd"><span class="mb-t">Comment on r2</span>
+        <button type="button" class="mb-x" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11"/></svg></button></div>
+      <div class="mb-field"><input class="mb-in" id="mb-in" type="text" placeholder="Add a comment" aria-label="Comment" autocomplete="off">
+        <button type="button" class="mb-act" id="mb-send" disabled><span>Send</span></button></div>
+    </div>
+
+    <div class="mb-l mb-pn" id="mb-ship" data-k="ship" data-p="below" role="group" aria-label="Ship to forma.studio" inert>
+      <h4 class="mb-ship-t">Ship to forma.studio?</h4>
+      <p class="mb-ship-s"><i></i>forma.studio is live now. r2 replaces it.</p>
+      <div class="mb-ship-r"><button type="button" class="mb-cancel" id="mb-cancel">Cancel</button><button type="button" class="mb-act" id="mb-go"><span>Ship it</span></button></div>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Open Share, Comment or Ship · Esc or a click outside folds it back</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Morph bar. State is one word (bar, share, comment, ship); go() moves the container and swaps layers. A layer is below, in, or above. */
+const mb = document.getElementById('mb'), mbBox = document.getElementById('mb-box');
+const mbL = { bar: mbBox.querySelector('[data-k=bar]'), share: document.getElementById('mb-share'), comment: document.getElementById('mb-comment'), ship: document.getElementById('mb-ship') };
+const mbBtn = { share: document.getElementById('mb-b-share'), comment: document.getElementById('mb-b-comment'), ship: document.getElementById('mb-b-ship') };
+let mbCur = 'bar', mbFrom = 'bar';
+const mbTimer = {};
+
+function mbSnap(el, p) {                          // set a layer's place instantly (no transition)
+  el.classList.add('snap'); el.dataset.p = p; el.getBoundingClientRect(); el.classList.remove('snap');
+}
+function mbGo(s, focus = true) {
+  if (s === mbCur) return;
+  const prev = mbL[mbCur], next = mbL[s];
+  // a layer that has fully left starts again from below; one still leaving just comes back from where it is
+  if (next.dataset.p === 'above' && performance.now() - (next._left || 0) > 240) mbSnap(next, 'below');
+  next.inert = false; next.dataset.p = 'in';
+  prev.inert = true; prev.dataset.p = 'above'; prev._left = performance.now();
+  mbBox.dataset.s = s;
+  for (const k in mbBtn) mbBtn[k].setAttribute('aria-expanded', String(k === s));
+  mbCur = s;
+  if (!focus || window.mbQuiet) return;                   // the ghost never moves focus
+  if (s === 'bar') (mbBtn[mbFrom] || mbBtn.share).focus({ preventScroll: true });
+  else (s === 'comment' ? document.getElementById('mb-in') : s === 'share' ? document.getElementById('mb-copy') : document.getElementById('mb-go')).focus({ preventScroll: true });
+}
+function mbOpen(k) { if (mbCur !== 'bar') return; mbFrom = k; mbDone(mbBtn[k], false); mbGo(k); }
+function mbClose(focus = true) { mbGo('bar', focus); }
+function mbDone(el, on, ms = 2000) {              // a button rolls to its done label and back
+  clearTimeout(mbTimer[el.id]);
+  el.classList.toggle('is-done', on);
+  if (on) mbTimer[el.id] = setTimeout(() => el.classList.remove('is-done'), ms);
+}
+
+for (const k in mbBtn) mbBtn[k].addEventListener('click', () => mbOpen(k));
+mbBox.querySelectorAll('.mb-x').forEach((b) => b.addEventListener('click', () => mbClose()));
+document.getElementById('mb-cancel').addEventListener('click', () => mbClose());
+document.getElementById('mb-copy').addEventListener('click', () => {
+  try { navigator.clipboard && navigator.clipboard.writeText('forma.studio/preview/r2').catch(() => {}); } catch (e) { /* no clipboard here */ }
+  mbDone(document.getElementById('mb-copy'), true, 1800);
+});
+const mbIn = document.getElementById('mb-in'), mbSend = document.getElementById('mb-send');
+mbIn.addEventListener('input', () => { mbSend.disabled = !mbIn.value.trim(); });
+function mbSendIt() {
+  if (mbSend.disabled) return;
+  mbIn.value = ''; mbSend.disabled = true;
+  mbClose(); mbFrom = 'comment'; mbDone(mbBtn.comment, true);
+}
+mbSend.addEventListener('click', mbSendIt);
+mbIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); mbSendIt(); } });
+document.getElementById('mb-go').addEventListener('click', () => { mbClose(); mbFrom = 'ship'; mbDone(mbBtn.ship, true, 2400); });
+mbBox.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mbCur !== 'bar') { e.stopPropagation(); mbClose(); } });
+mb.addEventListener('pointerdown', (e) => { if (mbCur !== 'bar' && !mbBox.contains(e.target)) mbClose(false); });
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const $ = (s) => document.querySelector(s);
+  async function tap(my, el, hold = 240) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.55, r.top + r.height * 0.55, 720))) throw 0;
+    if (my !== epoch) throw 0;
+    el.classList.add('is-hot');
+    await gap(my, 190);
+    el.classList.add('is-press');
+    await gap(my, 120);
+    el.classList.remove('is-press', 'is-hot');
+    el.click();
+    await gap(my, hold);
+  }
+  function still(fn) { mb.classList.add('still'); fn(); mb.getBoundingClientRect(); mb.classList.remove('still'); }
+  function reset() {
+    still(() => {
+      mbL[mbCur].dataset.p = 'below'; mbL.bar.dataset.p = 'in'; mbL.bar.inert = false;
+      for (const k of ['share', 'comment', 'ship']) { mbL[k].dataset.p = 'below'; mbL[k].inert = true; }
+      mbBox.dataset.s = 'bar'; mbCur = 'bar';
+      for (const k in mbBtn) { mbBtn[k].classList.remove('is-done', 'is-hot', 'is-press'); clearTimeout(mbTimer[mbBtn[k].id]); mbBtn[k].setAttribute('aria-expanded', 'false'); }
+      document.getElementById('mb-copy').classList.remove('is-done');
+      mbIn.value = ''; mbSend.disabled = true;
+    });
+    if (document.activeElement && mb.contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    window.mbQuiet = true;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 1000);
+        await tap(my, mbBtn.share, 1000);                       // Share opens
+        await tap(my, $('#mb-copy'), 1500);                     // Copied, with its tick
+        await tap(my, $('#mb-share .mb-x'), 700);               // folds back
+        await tap(my, mbBtn.comment, 900);                      // Comment opens
+        await QM.ghostTo(innerWidth * 0.5, innerHeight * 0.66, 500);
+        for (const ch of 'Calmer hero, please') { mbIn.value += ch; mbIn.dispatchEvent(new Event('input', { bubbles: true })); await gap(my, 55); }
+        await gap(my, 360);
+        await tap(my, mbSend, 1400);                            // Sent
+        await tap(my, mbBtn.ship, 1000);                        // Ship opens
+        await tap(my, $('#mb-go'), 2400);                       // Shipped
+        await tap(my, mbBtn.ship, 900);                         // opens again ...
+        await tap(my, $('#mb-cancel'), 800);                    // ... and Cancel folds it back
+        await QM.ghostTo(innerWidth * 0.8, innerHeight * 0.88, 600);
+        await gap(my, 900);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; window.mbQuiet = false; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!mb.matches(':hover') && !mb.contains(document.activeElement)) { reset(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); reset(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

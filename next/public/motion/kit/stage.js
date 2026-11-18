@@ -88,7 +88,7 @@
     return ghost;
   }
   function place() { if (ghost) ghost.style.transform = `translate(${gx.toFixed(1)}px, ${gy.toFixed(1)}px)`; }
-  QM.ghostShow = () => ghostEl().classList.remove('is-off');
+  QM.ghostShow = () => { if (!reduced) ghostEl().classList.remove('is-off'); }; // reduced motion: no ghost (2026-11-16)
   QM.ghostHide = () => ghost && ghost.classList.add('is-off');
   QM.ghostAt = (x, y) => { ghostEl(); gx = x; gy = y; place(); };
   /** Move the ghost to (x, y) over ms, eased like a hand (in-out). */

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dither load · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "dither-load", "title": "Dither load", "group": "studio", "added": "2026-11-16", "cat": "images", "order": 20,
+  "kind": "play", "tone": "paper", "shot": 1960,
+  "line": "8 → 4 → 2 → 1 px cells · 1.8 s · Bayer 8 × 8",
+  "summary": "Forma's Fold vessel tile loads its picture through an ordered dither. A coarse 1-bit pass in ink on white sweeps down the frame at 8 px cells, then 4, 2 and 1 px passes overtake it, each front edged by the dither itself. The last step dissolves the dots cell by cell into the full-colour render. A Geist Mono line counts the steps and the scrubber can hold any frame.",
+  "spec": [
+    ["Matrix", "ordered Bayer 8 × 8; a cell is ink where the picture is darker than its threshold"],
+    ["Steps", "cells 8, 4, 2, 1 px; fronts start 0, 380, 760, 1100 ms and last 520, 420, 380, 340 ms"],
+    ["Front", "ease-soft top to bottom, its edge jittered by the same matrix, so no straight line is ever drawn"],
+    ["Resolve", "from 1300 ms, 500 ms ease-soft: dots clear in Bayer order on 4 px cells, with a slight top-down bias"],
+    ["Status", "step counter rolls 260 ms expo out; the lime dot is cut away and a tick is drawn when loaded"],
+    ["Source", "luminance read through getImageData from a small same-page copy, so it also works from file://"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "A Forma product grid or a case study's gallery on a slow connection: the picture arrives as a dither, so the tile never sits empty and the wait looks designed.",
+  "rules": [
+    "Nothing fades: dots are drawn by the front, then cleared cell by cell. The colour picture is only uncovered.",
+    "Read pixels from an image on the same origin (or a data: URI); a cross-origin or file:// image taints the canvas.",
+    "Cells stay on whole pixels and the canvas is drawn pixelated, so a 1 px cell is still one crisp dot.",
+    "Under reduced motion the picture is shown at once, with the loaded line."
+  ],
+  "tags": ["image", "loading", "dither", "bayer", "canvas", "product tile", "Forma", "progressive"]
+}
+</script>
+<style data-code>
+/* Dither load. Ink #0B0C0D, white (the picture's field), one lime point. Easings: expo out (.16,1,.3,1), soft (.45,0,.25,1). */
+.dl { width: 340px; background: #fff; color: #0B0C0D; font: 400 13px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+:where(.dl button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.dl button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+
+/* the picture: the real image underneath, the dither canvas on top (opaque until a cell is cleared) */
+.dl-pic { position: relative; width: 340px; height: 280px; background: #fff; cursor: pointer; overflow: hidden; border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.dl-pic img, .dl-pic canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.dl-pic img { object-fit: cover; }
+.dl-pic canvas { image-rendering: pixelated; }
+.dl-pic canvas[hidden] { display: none; }
+
+.dl-row { display: flex; align-items: baseline; justify-content: space-between; margin-top: 16px; }
+.dl-name { margin: 0; font: 300 28px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.dl-price { font: 400 15px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; }
+.dl-glaze { margin: 6px 0 0; color: rgba(11, 12, 13, .66); font-weight: 500; }
+
+/* the status line: the word has a reserved width, the step counter rolls inside a clip */
+.dl-st { display: flex; align-items: center; justify-content: space-between; height: 24px; margin-top: 14px; }
+.dl-ln { display: flex; align-items: center; gap: 8px; font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); }
+.dl-mark { position: relative; flex: none; width: 12px; height: 12px; }
+.dl-dot { position: absolute; left: 2px; top: 2px; width: 8px; height: 8px; background: #B8FF00; border-radius: 50%;
+  transition: clip-path 300ms cubic-bezier(.5, 0, .75, 0); clip-path: inset(0); }
+.dl-tick { position: absolute; inset: 0; width: 12px; height: 12px; }
+.dl-tick path { stroke-dasharray: 12; stroke-dashoffset: 12; transition: stroke-dashoffset 420ms cubic-bezier(.16, 1, .3, 1); }
+.dl.is-done .dl-dot { clip-path: inset(0 0 100% 0); }
+.dl.is-done .dl-tick path { stroke-dashoffset: 0; transition-delay: 120ms; }
+.dl-w { display: inline-block; width: 7ch; white-space: nowrap; transition: width 300ms cubic-bezier(.65, 0, .35, 1); }
+.dl.is-done .dl-w { width: 6ch; }
+.dl-roll { display: inline-block; height: 18px; overflow: hidden; vertical-align: top; }
+.dl-roll span { display: block; height: 18px; }
+.dl-roll b { display: block; font-weight: 400; transition: transform 260ms cubic-bezier(.16, 1, .3, 1); transform: translateY(calc(var(--n, 0) * -18px)); }
+.dl-again { height: 24px; padding: 0 2px; font-weight: 500; color: rgba(11, 12, 13, .66); text-decoration: underline; text-underline-offset: 3px;
+  transition: color 160ms cubic-bezier(.4, 0, .2, 1), transform 120ms cubic-bezier(.22, 1, .36, 1); }
+.dl-again:hover { color: #0B0C0D; }
+.dl-again:active { transform: translateY(1px); }
+@media (prefers-reduced-motion: reduce) { .dl * { transition: none !important; } }
+</style>
+<style>
+  .dlw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="dlw">
+    <p class="kicker">Forma · Product tile</p>
+<!-- code -->
+<article class="dl" id="dl" aria-label="Fold vessel, $54">
+  <div class="dl-pic" id="dl-pic">
+    <img id="dl-img" src="../assets/art/lime-bloom.webp" width="340" height="280" alt="Fold vessel in moss glaze" draggable="false">
+    <canvas id="dl-cv" width="340" height="280" aria-hidden="true"></canvas>
+  </div>
+  <div class="dl-row"><h3 class="dl-name">Fold vessel</h3><span class="dl-price">$54</span></div>
+  <p class="dl-glaze">Moss glaze</p>
+  <div class="dl-st">
+    <div class="dl-ln">
+      <span class="dl-mark" aria-hidden="true"><i class="dl-dot"></i><svg class="dl-tick" viewBox="0 0 12 12"><path d="M1.5 6.5l3 3 6-7" fill="none" stroke="#0B0C0D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="dl-w" id="dl-w">Loading</span><span>39 KB ·</span>
+      <span class="dl-roll" aria-hidden="true"><b><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></b></span><span>/ 4</span>
+    </div>
+    <button type="button" class="dl-again" id="dl-again">Reload</button>
+  </div>
+  <p class="sr-only" id="dl-live" role="status" aria-live="polite"></p>
+</article>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Click the picture or Reload to load it again · drag the scrubber to hold any step</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Dither load. ditherLoad(canvas, image) reads the picture's luminance once, builds a 1-bit ordered-dither mask for each cell size,
+   and returns draw(ms): the whole load as a pure function of time, so it plays, scrubs and rests on any frame. */
+function ditherLoad(canvas, image, o = {}) {
+  const W = canvas.width, H = canvas.height, N = W * H;
+  const INK = o.ink || 0xFF0D0C0B, FIELD = o.field || 0xFFFFFFFF;            // ABGR: #0B0C0D and white
+  const STEPS = o.steps || [[0, 520, 8], [380, 420, 4], [760, 380, 2], [1100, 340, 1]]; // [start ms, sweep ms, cell px]
+  const DISSOLVE = o.dissolve || [1300, 500];
+  const TOTAL = DISSOLVE[0] + DISSOLVE[1], BAND = 16;
+  const ease = bez(0.45, 0, 0.25, 1);                                         // the kit's ease-soft
+
+  // Bayer 8 x 8, thresholds 0..1
+  let m = [[0]];
+  for (let n = 1; n < 8; n *= 2) {
+    const k = m.length, next = [];
+    for (let y = 0; y < 2 * k; y++) { next.push([]); for (let x = 0; x < 2 * k; x++) next[y][x] = 4 * m[y % k][x % k] + [[0, 2], [3, 1]][(y / k) | 0][(x / k) | 0]; }
+    m = next;
+  }
+  const B = (x, y) => (m[y & 7][x & 7] + 0.5) / 64;
+
+  // luminance, through a tone curve: pale ground goes to the field, the dark folds to solid ink
+  const c2 = document.createElement('canvas'); c2.width = W; c2.height = H;
+  const g = c2.getContext('2d', { willReadFrequently: true });
+  g.drawImage(image, 0, 0, W, H);
+  const px = g.getImageData(0, 0, W, H).data, dark = new Float32Array(N);
+  for (let i = 0; i < N; i++) dark[i] = Math.pow(Math.min(1, Math.max(0, (1 - px[i * 4] / 255 - (o.lo ?? 0.2)) / (o.span ?? 0.72))), o.gamma ?? 1.45);
+
+  // one ink mask per cell size: the cell's mean darkness against the matrix at the cell's own index
+  const masks = STEPS.map(([, , k]) => {
+    const out = new Uint8Array(N);
+    for (let cy = 0; cy * k < H; cy++) for (let cx = 0; cx * k < W; cx++) {
+      let sum = 0, cnt = 0;
+      for (let y = cy * k; y < Math.min(H, cy * k + k); y++) for (let x = cx * k; x < Math.min(W, cx * k + k); x++) { sum += dark[y * W + x]; cnt++; }
+      const ink = sum / cnt > B(cx, cy) ? 1 : 0;
+      for (let y = cy * k; y < Math.min(H, cy * k + k); y++) for (let x = cx * k; x < Math.min(W, cx * k + k); x++) out[y * W + x] = ink;
+    }
+    return out;
+  });
+  // per pixel: the jitter that roughens a front, and the order in which the resolve clears it
+  const jit = new Float32Array(N), key = new Float32Array(N);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    jit[y * W + x] = B(x, y) * BAND;
+    key[y * W + x] = 0.78 * B(x >> 2, y >> 2) + 0.22 * (y / H);
+  }
+
+  const ctx = canvas.getContext('2d'), frame = ctx.createImageData(W, H), buf = new Uint32Array(frame.data.buffer);
+  function draw(ms) {
+    const fronts = STEPS.map(([at, dur]) => ease((ms - at) / dur) * (H + BAND));
+    const q = ms > DISSOLVE[0] ? ease((ms - DISSOLVE[0]) / DISSOLVE[1]) : -1;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (q > key[i]) { buf[i] = 0; continue; }                               // cleared: the picture shows through
+      let s = STEPS.length - 1;
+      while (s >= 0 && y + jit[i] > fronts[s]) s--;
+      buf[i] = s >= 0 && masks[s][i] ? INK : FIELD;
+    }
+    ctx.putImageData(frame, 0, 0);
+    // how many steps have started, for the readout
+    let n = 0;
+    for (const [at] of STEPS) if (ms >= at && ms > 0) n++;
+    return { step: n, done: ms >= TOTAL };
+  }
+  return { draw, total: TOTAL };
+
+  function bez(x1, y1, x2, y2) {                                              // cubic-bezier(x1, y1, x2, y2) as a function
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    return (x) => {
+      if (x <= 0) return 0;
+      if (x >= 1) return 1;
+      let t = x;
+      for (let i = 0; i < 8; i++) { const e = ((ax * t + bx) * t + cx) * t - x, d = (3 * ax * t + 2 * bx) * t + cx; if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; }
+      return ((ay * t + by) * t + cy) * t;
+    };
+  }
+}
+
+/* The tile: plays on load and again on a click. Anything that sets the time (a clock, a scrubber) just calls show(ms). */
+const dl = document.getElementById('dl'), dlCv = document.getElementById('dl-cv');
+let dlEng = null, dlRaf = 0, dlT0 = 0;
+function dlShow(ms) {
+  if (!dlEng) return;
+  const r = dlEng.draw(ms);
+  dlCv.hidden = r.done;
+  dl.classList.toggle('is-done', r.done);
+  dl.querySelector('.dl-roll b').style.setProperty('--n', r.step);
+  document.getElementById('dl-w').textContent = r.done ? 'Loaded' : 'Loading';
+}
+function dlStop() { cancelAnimationFrame(dlRaf); dlRaf = 0; }
+function dlPlay() {
+  dlStop();
+  if (!dlEng) return;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) { dlShow(dlEng.total); return; }
+  dlT0 = performance.now();
+  const tick = (now) => {
+    const ms = Math.min(dlEng.total, now - dlT0);
+    dlShow(ms);
+    dlRaf = ms < dlEng.total ? requestAnimationFrame(tick) : 0;
+  };
+  dlRaf = requestAnimationFrame(tick);
+}
+function dlRest() { dlStop(); dlShow(matchMedia('(prefers-reduced-motion: reduce)').matches && dlEng ? dlEng.total : 0); }
+</script>
+<script>
+(() => {
+  const SRC = 'data:image/jpeg;base64,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';
+  // file:// images taint a canvas in Chromium, so the luminance comes from this small data: copy of the same crop
+  const src = new Image();
+  const ready = new Promise((res) => { src.onload = res; });
+  src.src = SRC;
+  const el = document.getElementById('dl');
+  let live = false;
+  const again = () => { dlStop(); dlRest(); requestAnimationFrame(() => dlPlay()); };
+  document.getElementById('dl-pic').addEventListener('click', again);
+  document.getElementById('dl-again').addEventListener('click', again);
+  document.getElementById('dl-live').textContent = '';
+  const announce = () => { document.getElementById('dl-live').textContent = 'Picture loaded, 39 KB'; };
+  QM.demo({
+    kind: 'play', lead: 500, dur: 1800, hold: 2600,
+    reset() { dlRest(); document.getElementById('dl-live').textContent = ''; },
+    play() { dlPlay(); setTimeout(announce, 1800); },
+    seekPlay(v) { dlStop(); dlShow(Math.max(0, Math.min(1, v)) * (dlEng ? dlEng.total : 1800)); },
+  });
+  ready.then(() => {
+    dlEng = ditherLoad(dlCv, src);
+    dlRest();
+  });
+})();
+</script>
+</body>
+</html>

@@ -15,7 +15,7 @@
   "order": 40,
   "kind": "loop",
   "tone": "paper",
-  "line": "a quarter turn a second · digits roll 380 ms · lime tick on done",
+  "line": "a quarter turn a second · digits roll 380 ms · 2 s, 5 s, 3 s · lime tick on done",
   "summary": "Three small status blocks, one for each step of a build: queued, working, done. A working block turns its square a quarter every second with a tiny press, and its seconds roll up digit by digit out of a sleeve. Done, the label rolls to “Done in 4s”, the square becomes a lime tick and the block narrows to fit. The run passes from one block to the next.",
   "spec": [
     ["Square", "16px; queued is a 2px frame, working is solid ink, done is lime with a drawn ink tick"],
@@ -23,7 +23,7 @@
     ["Seconds", "a digit sleeve: the old digit leaves up, the new arrives from below, 380 ms, expo out"],
     ["Label", "Queued → Working → Done in 4s, rolled through one sleeve whose width glides, so the block follows"],
     ["Done", "the clock closes in 320 ms, the tick is drawn in 220 ms (stroke-dashoffset 20 → 0)"],
-    ["Order", "each step starts 500 ms after the one before is done; 3 s, 4 s, 3 s here"],
+    ["Order", "each step starts after the one before is done, with a different pause each time (480 ms, 880 ms); 2 s, 5 s, 3 s here, then the run is held and the blocks roll back to Queued one after another, 70 ms apart"],
     ["Reduced motion", "one block of each state, nothing turns"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-05"],
@@ -31,8 +31,8 @@
   "rules": [
     "The square is the only thing that moves while working; the seconds only change by rolling.",
     "Lime appears once per block and only for done.",
-    "A block is as wide as its words; nothing is padded to a fixed size.",
-    "Click a block to move it on: Queued, Working, Done, Queued."
+    "A block is as wide as its words; when the words change, its width glides on the move curve and the blocks beside it follow, nothing jumps.","Seconds are in tabular figures, so a changing digit never moves its neighbour.",
+    "Click a block, or press Enter or Space on it, to move it on: Queued, Working, Done, Queued. A short status line says each change to a screen reader."
   ],
   "tags": ["agent", "timer", "status", "digits", "sleeve"],
   "deps": [],
@@ -42,25 +42,28 @@
 <style data-code>
 /* Working timer: queued, working, done. One square, one label sleeve, one clock sleeve. */
 .st { width: 540px; background: var(--surface); padding: 24px; display: grid; gap: 20px; color: var(--fg); --cut: 16px; }
-.st-top { display: flex; justify-content: space-between; align-items: center; height: 16px; font-family: var(--font-sans); font-size: 13px; letter-spacing: 0; color: var(--fg2); }
+.st-top { font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; align-items: center; height: 16px; font-family: var(--font-sans); font-size: 13px; letter-spacing: 0; color: var(--fg2); }
 .st-row { display: flex; gap: 8px; align-items: flex-start; }
 .st-col { display: grid; gap: 8px; min-width: 0; }
 .st-k { margin: 0; height: 16px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--fg2); }
-.st-b { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; height: 64px; padding: 0 20px; background: var(--sunk); font-size: 16px; letter-spacing: -0.011em; cursor: pointer; white-space: nowrap; transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.st-b:active { transform: translateY(2px); }
-.st-b:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
-.st-sq { position: relative; flex: none; width: 16px; height: 16px; margin-right: 14px; background: var(--fg); transition: background 160ms ease, box-shadow 160ms ease; }
-.st-sq svg { position: absolute; inset: 0; width: 16px; height: 16px; fill: none; stroke: var(--on-lime); stroke-width: 2.2; stroke-linecap: square; }
+.st-b { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; height: 64px; padding: 0 20px; background: var(--sunk); font-size: 16px; letter-spacing: -0.011em; cursor: pointer; white-space: nowrap; transition: transform 300ms var(--ease-portfolio), background 160ms var(--ease); }
+.st-b:hover { background: #DAE1CE; }
+.st-b:active { transform: translateY(2px); transition-duration: 100ms; }
+.st-b:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.st-sq { position: relative; flex: none; width: 16px; height: 16px; margin-right: 14px; background: var(--fg); transition: background 160ms var(--ease), box-shadow 160ms var(--ease); }
+.st-sq svg { position: absolute; inset: 0; width: 16px; height: 16px; fill: none; stroke: var(--on-lime); stroke-width: 2; stroke-linecap: square; }
 .st-sq path { stroke-dasharray: 18; stroke-dashoffset: 20; }
 .st-b[data-s="q"] .st-sq { background: transparent; box-shadow: inset 0 0 0 2px var(--fg3); }
 .st-b[data-s="d"] .st-sq { background: var(--signal); }
 .st-b[data-s="q"] .st-lab { color: var(--fg2); }
-.st-clk { display: inline-flex; width: 0; overflow: hidden; font-family: var(--font-mono); font-variant-numeric: tabular-nums; transition: width 320ms cubic-bezier(0.65, 0, 0.35, 1), margin 320ms cubic-bezier(0.65, 0, 0.35, 1); }
-.st-b[data-s="w"] .st-clk { width: 28px; margin-left: 10px; }
+.st-clk { display: inline-flex; width: 0; overflow: hidden; font-family: var(--font-mono); font-variant-numeric: tabular-nums; transition: width 320ms var(--ease-move), margin 320ms var(--ease-move); }
+.st-b[data-s="w"] .st-clk { width: var(--cw, 20px); margin-left: 10px; }
 .st-clk .sl { height: 24px; line-height: 24px; }
 .st-clk > i { font-style: normal; line-height: 24px; color: var(--fg2); }
-.sl { position: relative; display: inline-block; overflow: hidden; vertical-align: top; height: 24px; line-height: 24px; }
+.sl { position: relative; display: inline-block; overflow: hidden; vertical-align: top; height: 24px; line-height: 24px; font-variant-numeric: tabular-nums; }
 .sl-t { position: absolute; left: 0; top: 0; display: block; white-space: nowrap; }
+/* a reset is a still frame: no transition may run while the blocks go back to rest */
+.st.is-reset *, .st.is-reset { transition: none !important; }
 @media (prefers-reduced-motion: reduce) { .st *, .st { transition: none !important; } }
 </style>
 <style>
@@ -75,8 +78,9 @@
 <div class="fit" id="fit">
   <p class="kicker">Agent · Working timer</p>
 <!-- code -->
-<section class="st cut" aria-label="Build run">
+<section class="st cut" id="st" aria-label="Build run">
   <div class="st-top"><span>Forma · Build run</span><span class="sl" id="tot" style="height:16px;line-height:16px"></span></div>
+  <p class="sr-only" id="say" role="status" aria-live="polite"></p>
   <div class="st-row" id="row">
     <div class="st-col"><p class="st-k">Moodboard</p><button class="st-b" type="button" data-s="q"><i class="st-sq"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.4 6.6 11.3 12.5 4.6"/></svg></i><span class="sl st-lab"></span><span class="st-clk"><span class="sl st-dg"></span><i>s</i></span></button></div>
     <div class="st-col"><p class="st-k">Tokens</p><button class="st-b" type="button" data-s="q"><i class="st-sq"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.4 6.6 11.3 12.5 4.6"/></svg></i><span class="sl st-lab"></span><span class="st-clk"><span class="sl st-dg"></span><i>s</i></span></button></div>
@@ -94,18 +98,20 @@ const $ = (s) => document.querySelector(s);
 const OUT = 'cubic-bezier(0.16, 1, 0.3, 1)', MOVE = 'cubic-bezier(0.65, 0, 0.35, 1)';
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const B = [...document.querySelectorAll('.st-b')].map((el) => ({
-  el, sq: el.querySelector('.st-sq'), path: el.querySelector('path'), lab: el.querySelector('.st-lab'), dg: el.querySelector('.st-dg'), secs: 0, ang: 0, timer: 0,
+  el, name: el.closest('.st-col').querySelector('.st-k').textContent, sq: el.querySelector('.st-sq'), path: el.querySelector('path'),
+  lab: el.querySelector('.st-lab'), clk: el.querySelector('.st-clk'), dg: el.querySelector('.st-dg'), secs: 0, ang: 0, timer: 0,
 }));
-const tot = $('#tot');
+const tot = $('#tot'), say = $('#say');
 
-function put(sl, text) { sl.innerHTML = ''; const t = document.createElement('span'); t.className = 'sl-t'; t.textContent = text; sl.append(t); sl.style.width = t.offsetWidth + 'px'; }
+function put(sl, text) { sl.getAnimations().forEach((a) => a.cancel()); sl.innerHTML = ''; const t = document.createElement('span'); t.className = 'sl-t'; t.textContent = text; sl.append(t); sl.style.width = t.offsetWidth + 'px'; }
 function roll(sl, text, ms = 380) {
   if (still) return put(sl, text);
   const old = sl.lastElementChild, next = document.createElement('span');
   next.className = 'sl-t'; next.textContent = text; sl.append(next);
   const w0 = sl.offsetWidth, w1 = next.offsetWidth, o = { duration: ms, easing: OUT, fill: 'both' };
-  if (old) old.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-110%)' }], o).finished.then(() => old.remove());
-  next.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], o);
+  // the old words leave quicker (ease in, 0.5x) and the new ones start 0.2x later, so the two never overlap
+  if (old) old.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-110%)' }], { duration: Math.round(ms * 0.5), easing: 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'both' }).finished.then(() => old.remove(), () => {});
+  next.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], { ...o, delay: Math.round(ms * 0.22) });
   sl.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], { duration: ms, easing: OUT });
   sl.style.width = w1 + 'px';
 }
@@ -120,49 +126,76 @@ function beat(b) {                                  // a quarter turn with a sma
   ], { duration: 360, easing: MOVE, fill: 'forwards' });
 }
 function total() { const n = B.filter((b) => b.el.dataset.s === 'd').length; roll(tot, n + ' / 3 done', 320); }
-function queue(b) {
-  clearInterval(b.timer); b.sq.getAnimations().forEach((a) => a.cancel()); b.path.getAnimations().forEach((a) => a.cancel());
-  b.el.dataset.s = 'q'; b.secs = 0; b.ang = 0; b.sq.style.transform = ''; b.path.style.strokeDashoffset = 20;
-  put(b.lab, 'Queued'); put(b.dg, '0');
+function announce(b, text) { b.el.setAttribute('aria-label', b.name + ', ' + text); say.textContent = b.name + ', ' + text; }
+function draw(b, on) {                              // the tick is drawn in, or undrawn
+  b.path.getAnimations().forEach((a) => a.cancel());
+  if (still) { b.path.style.strokeDashoffset = on ? 0 : 20; return; }
+  b.path.animate([{ strokeDashoffset: on ? 20 : 0 }, { strokeDashoffset: on ? 0 : 20 }], { duration: on ? 220 : 140, easing: on ? OUT : 'cubic-bezier(0.5, 0, 0.75, 0)', fill: 'forwards', delay: on ? 80 : 0 });
+}
+function queue(b, animated) {                       // back to rest; animated: the blocks roll back, not snap
+  clearInterval(b.timer); b.sq.getAnimations().forEach((a) => a.cancel());
+  b.el.dataset.s = 'q'; b.secs = 0; b.ang = 0; b.sq.style.transform = '';
+  b.clk.style.removeProperty('--cw');
+  if (animated && !still) { draw(b, false); roll(b.lab, 'Queued'); put(b.dg, '0'); }
+  else { b.path.getAnimations().forEach((a) => a.cancel()); b.path.style.strokeDashoffset = 20; put(b.lab, 'Queued'); put(b.dg, '0'); }
+  announce(b, 'queued');
 }
 function work(b) {
   b.el.dataset.s = 'w'; b.secs = 0; b.path.getAnimations().forEach((a) => a.cancel()); b.path.style.strokeDashoffset = 20;
+  b.clk.style.removeProperty('--cw');
   roll(b.lab, 'Working'); put(b.dg, '0');
+  announce(b, 'working');
   clearInterval(b.timer);
-  b.timer = setInterval(() => { b.secs++; roll(b.dg, String(b.secs)); beat(b); }, 1000);
+  b.timer = setInterval(() => {
+    b.secs++; roll(b.dg, String(b.secs)); beat(b);
+    b.clk.style.setProperty('--cw', Math.ceil((String(b.secs).length + 1) * 9.6) + 'px');   // a second digit widens the clock, it never clips
+  }, 1000);
 }
 function done(b) {
   clearInterval(b.timer); b.sq.getAnimations().forEach((a) => a.cancel()); b.sq.style.transform = ''; b.ang = 0;
   b.el.dataset.s = 'd';
-  roll(b.lab, 'Done in ' + Math.max(1, b.secs) + 's');
-  if (still) b.path.style.strokeDashoffset = 0;
-  else b.path.animate([{ strokeDashoffset: 20 }, { strokeDashoffset: 0 }], { duration: 220, easing: OUT, fill: 'forwards', delay: 80 });
+  const text = 'Done in ' + Math.max(1, b.secs) + 's';
+  roll(b.lab, text);
+  draw(b, true);
+  announce(b, 'done in ' + Math.max(1, b.secs) + ' seconds');
   total();
 }
-B.forEach((b) => b.el.addEventListener('click', () => {
+function step(b) {
   const s = b.el.dataset.s;
-  if (s === 'q') work(b); else if (s === 'w') done(b); else queue(b);
+  if (s === 'q') work(b); else if (s === 'w') done(b); else queue(b, true);
   total();
-}));
+}
+B.forEach((b) => b.el.addEventListener('click', () => step(b)));
 </script>
 <script src="../assets/picks/p3-ghost.js"></script>
 <script>
   PickGhost.fit($('#fit'), 540, 200, { max: 1.5, gutter: 100 });
-  function rest() { B.forEach(queue); put(tot, '0 / 3 done'); }
+  const card = $('#st');
+  function rest() {
+    card.classList.add('is-reset');
+    B.forEach((b) => queue(b)); put(tot, '0 / 3 done'); say.textContent = '';
+    void card.offsetWidth; card.classList.remove('is-reset');
+  }
+  rest();                                           // the blocks are drawn from the first frame
+  document.fonts.ready.then(() => { if (!B.some((b) => b.el.dataset.s !== 'q')) rest(); });
   PickGhost.start({
     hot: '.st-b',
     reset: rest,
-    still() { rest(); B[0].el.dataset.s = 'd'; put(B[0].lab, 'Done in 3s'); B[0].path.style.strokeDashoffset = 0; B[1].el.dataset.s = 'w'; put(B[1].lab, 'Working'); put(B[1].dg, '2'); put(tot, '1 / 3 done'); },
+    still() { rest(); B[0].el.dataset.s = 'd'; put(B[0].lab, 'Done in 3s'); draw(B[0], true); B[1].el.dataset.s = 'w'; put(B[1].lab, 'Working'); put(B[1].dg, '2'); put(tot, '1 / 3 done'); },
     async script(g) {
       QM.ghostHide();                               // a run, not a pointer: the pipeline moves by itself
-      await g.wait(700);
-      for (const [i, s] of [[0, 3], [1, 4], [2, 3]]) {
+      await g.wait(900);
+      // paced like work: a quick step, a long one, a pause before the last, then the result held
+      for (const [i, s, gap] of [[0, 2, 480], [1, 5, 880], [2, 3, 0]]) {
         work(B[i]);
         await g.wait(s * 1000 + 80);
         done(B[i]);
-        await g.wait(560);
+        await g.wait(gap);
       }
-      await g.wait(2200);
+      await g.wait(2600);
+      for (const b of B) { queue(b, true); await g.wait(70); }   // the blocks roll back, so the loop has no seam
+      roll(tot, '0 / 3 done', 320);
+      await g.wait(1100);
     },
   });
   QM.demo({ kind: 'loop', restart: PickGhost.restart });

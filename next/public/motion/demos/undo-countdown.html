@@ -14,14 +14,17 @@
   "order": 40,
   "kind": "loop",
   "tone": "paper",
-  "line": "5 s linear drain · row out 320 ms · list closes 420 ms",
+  "line": "5 s linear drain · row out 320 ms · list closes 420 ms · 100 ms press",
   "summary": "Archive a file and its row slides out to the left while the rows below close up. A black toast is uncovered from under the card, a lime bar along its foot draining over 5 seconds. Undo drops the toast away and opens the gap again, the row sliding back into its place. Left alone, the toast leaves and the file stays archived.",
   "spec": [
-    ["Row out", "320 ms · cubic-bezier(0.5, 0, 0.75, 0) · translateX to -110%, clipped by its slot"],
+    ["Row out", "320 ms · cubic-bezier(0.5, 0, 0.75, 0) · translateX to -110%, clipped by its slot; the slot is inert from then on"],
     ["Close up", "slot height 56px to 0, 420 ms ease-move, starting 220 ms into the exit"],
     ["Toast", "uncovered from the card's foot: translateY 100% to 0, 480 ms expo out; leaves in 300 ms ease-in"],
     ["Countdown", "3px lime bar, scaleX 1 to 0 from the left, 5000 ms linear, the same clock that commits the archive"],
     ["Undo", "the slot opens 420 ms ease-move, then the row slides in 520 ms expo out, 120 ms behind"],
+    ["Pause", "hover or focus on the toast stops the bar and the timer together; leaving gives back what was left"],
+    ["Keys", "Archive, then Tab: the toast takes focus after a keyboard archive, so Enter is Undo; the hidden toast is inert"],
+    ["Press", "2px in 100 ms on Archive and Undo, hover 160 ms, the underline of Archive draws 360 ms expo"],
     ["Loop", "the script presses Undo once, then lets the next one run out"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-05"],
@@ -30,7 +33,8 @@
     "The bar and the timer are one clock: when the bar is empty the archive is final.",
     "The row leaves sideways and the list closes after it, never both at once.",
     "Lime is the bar. The toast is the one black object.",
-    "A second archive commits the first."
+    "A second archive commits the first.",
+    "Nothing the viewer cannot see can take focus: the archived row and the hidden toast are inert."
   ],
   "tags": ["undo", "toast", "list", "countdown", "feedback"],
   "shot": 3300
@@ -41,29 +45,35 @@
 .card { position: relative; background: var(--surface); padding: 24px 24px 0; --cut: 16px; overflow: hidden; }
 .uf-list { list-style: none; margin: 0; padding: 0; height: 224px; }
 .uf-slot { height: 56px; overflow: hidden; transition: height 420ms var(--ease-move); }
-.uf-slot.is-gone { height: 0; }
+.uf-slot.is-gone { height: 0; transition-delay: 220ms; }                /* the row leaves first, then the list closes after it */
 .uf-row { display: grid; grid-template-columns: 32px 1fr auto auto; align-items: center; gap: 16px; height: 48px; padding: 0 16px 0 8px; background: var(--sunk); transition: transform 520ms var(--ease-out-expo) 120ms, background 160ms var(--ease); }
 .uf-slot.is-gone .uf-row { transform: translateX(-110%); transition: transform 320ms var(--ease-in); }
 .uf-row:hover, .uf-row.is-hover { background: #D9E0CC; }
 .uf-ext { display: grid; place-items: center; width: 32px; height: 32px; background: var(--surface); font: 500 11px/1 var(--font-mono); letter-spacing: 0; }
 .uf-nm { font: 500 15px/20px var(--font-sans); letter-spacing: -0.011em; white-space: nowrap; }
 .uf-sz { font-size: 12px; color: var(--fg2); }
-.uf-arc { all: unset; cursor: pointer; font: 500 11px/16px var(--font-sans); letter-spacing: 0; color: var(--fg2); transition: color 160ms var(--ease), transform 300ms var(--ease-portfolio); }
-.uf-row:hover .uf-arc, .uf-row.is-hover .uf-arc { color: var(--fg); }
-.uf-arc:active { transform: translateY(2px); }
+.uf-arc { all: unset; position: relative; cursor: pointer; padding: 16px 8px; margin: -16px -8px; font: 500 12px/16px var(--font-sans); letter-spacing: 0; color: var(--fg2); transition: color 160ms var(--ease), transform 300ms var(--ease-portfolio); }
+.uf-arc::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 14px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left center; transition: transform 360ms var(--ease-out-expo); }
+.uf-row:hover .uf-arc, .uf-row.is-hover .uf-arc, .uf-arc:focus-visible { color: var(--fg); }
+.uf-arc:hover::after, .uf-arc:focus-visible::after, .uf-row.is-hover .uf-arc::after { transform: scaleX(1); }
+.uf-arc:active, .uf-arc.is-down { transform: translateY(2px); transition-duration: 160ms, 100ms; }
+.uf-arc:focus-visible { outline: 2px solid var(--fg); outline-offset: -4px; }                  /* all: unset removes the kit's ring, so each control brings its own */
 .uf-dock { position: relative; height: 80px; overflow: hidden; margin: 0 -24px; padding: 8px 24px 0; }
-.uf-toast { position: absolute; left: 24px; right: 24px; top: 8px; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 20px; background: var(--fg); color: var(--ground); font-size: 15px; letter-spacing: -0.011em; --cut: 12px; transform: translateY(110%); transition: transform 300ms var(--ease-in); overflow: hidden; }
+.uf-toast { position: absolute; left: 24px; right: 24px; top: 8px; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 20px; background: var(--fg); color: var(--ground); font-size: 15px; letter-spacing: -0.011em; --cut: 12px; transform: translateY(calc(100% + 24px)); transition: transform 300ms var(--ease-in); overflow: hidden; }       /* fully under the dock's edge, not 10px of black showing */
 .uf-toast.is-in { transform: none; transition: transform 480ms var(--ease-out-expo); }
 .uf-toast b { font-weight: 500; }
 .uf-undo { all: unset; cursor: pointer; display: grid; place-items: center; height: 40px; padding: 0 16px; background: rgba(243, 244, 245, 0.14); font: 500 12px/1 var(--font-sans); letter-spacing: 0; transition: background 160ms var(--ease), transform 300ms var(--ease-portfolio); }
 .uf-undo:hover, .uf-undo.is-hover { background: rgba(243, 244, 245, 0.24); }
-.uf-undo:active, .uf-undo.is-down { transform: translateY(2px); }
+.uf-undo:active, .uf-undo.is-down { transform: translateY(2px); transition-duration: 160ms, 100ms; }
+.uf-undo:focus-visible { outline: 2px solid var(--ground); outline-offset: -5px; }
 .uf-drain { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--signal); transform-origin: left center; }
-.uf-toast.is-in .uf-drain { animation: uf-drain 5000ms linear forwards; }
+.uf-toast.is-in .uf-drain { animation: uf-drain 5000ms linear forwards; }          /* the one linear motion: it tracks the clock */
+.uf-toast.is-held .uf-drain { animation-play-state: paused; }
 @keyframes uf-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .uf-slot, .uf-row, .uf-toast { transition: none !important; } .uf-toast.is-in .uf-drain { animation: none; transform: scaleX(0.6); } }
 </style>
 <style>
+  .rig > .kicker { line-height: 20px; }
   .rig { width: 520px; display: grid; gap: 16px; transform-origin: 50% 50%; }
   .rig.is-reset *, .rig.is-reset *::before { transition: none !important; animation: none !important; }
 </style>
@@ -81,12 +91,12 @@
     <li class="uf-slot"><div class="uf-row"><span class="uf-ext">JSON</span><span class="uf-nm">tokens.json</span><span class="uf-sz mono">12 KB</span><button class="uf-arc" type="button">Archive</button></div></li>
   </ul>
   <div class="uf-dock">
-    <div class="uf-toast cut" id="uf-toast" role="status"><span>Archived <b id="uf-name">old-hero.png</b></span><button class="uf-undo" id="uf-undo" type="button">Undo</button><i class="uf-drain"></i></div>
+    <div class="uf-toast cut" id="uf-toast" role="status" aria-live="polite" inert><span>Archived <b id="uf-name">old-hero.png</b></span><button class="uf-undo" id="uf-undo" type="button">Undo</button><i class="uf-drain"></i></div>
   </div>
 </div>
 <!-- /code -->
-  <div class="qm-ui"><span>Archive a file · Undo within 5 s</span></div>
 </div>
+<div class="qm-ui"><span>Archive a file · Undo within 5 s</span></div>
 </main>
 <script src="../kit/stage.js"></script>
 <script data-code>
@@ -96,29 +106,47 @@ const ufName = document.getElementById('uf-name'), ufUndo = document.getElementB
 const HOLD = 5000;
 let pending = null;
 
+function setIn(on) { ufToast.classList.toggle('is-in', on); ufToast.inert = !on; if (!on) ufToast.classList.remove('is-held'); }
+function arm(ms) { pending.t0 = performance.now(); pending.left = ms; pending.timer = setTimeout(commit, ms); }
 function commit() {                       // the toast leaves; the file stays archived
   if (!pending) return;
   clearTimeout(pending.timer); pending = null;
-  ufToast.classList.remove('is-in');
+  const had = ufToast.contains(document.activeElement);
+  setIn(false);
+  if (had) { const next = ufList.querySelector('.uf-slot:not(.is-gone) .uf-arc'); if (next) next.focus(); }
 }
-function archive(slot) {
+function archive(slot, byKey) {
   if (pending) commit();                  // a second archive commits the first
-  slot.classList.add('is-gone');
+  slot.classList.add('is-gone'); slot.inert = true;
   ufName.textContent = slot.querySelector('.uf-nm').textContent;
-  ufToast.classList.remove('is-in'); void ufToast.offsetWidth;   // restart the bar
-  ufToast.classList.add('is-in');
-  pending = { slot, timer: setTimeout(commit, HOLD) };
+  ufToast.classList.remove('is-in', 'is-held'); void ufToast.offsetWidth;   // restart the bar
+  setIn(true);
+  pending = { slot };
+  arm(HOLD);
+  if (byKey) ufUndo.focus({ preventScroll: true });    // the button that was pressed is gone, so Enter again is Undo
 }
 function undo() {
   if (!pending) return;
   clearTimeout(pending.timer);
-  pending.slot.classList.remove('is-gone');
+  const slot = pending.slot, had = ufToast.contains(document.activeElement);
   pending = null;
-  ufToast.classList.remove('is-in');
+  slot.inert = false; slot.classList.remove('is-gone');
+  setIn(false);
+  if (had) slot.querySelector('.uf-arc').focus({ preventScroll: true });
 }
+/* hover or focus on the toast holds the bar and the timer together, and gives back what was left */
+function hold(on) {
+  if (!pending) return;
+  if (on && !pending.held) { pending.held = true; clearTimeout(pending.timer); pending.left -= performance.now() - pending.t0; ufToast.classList.add('is-held'); }
+  else if (!on && pending.held) { pending.held = false; ufToast.classList.remove('is-held'); arm(Math.max(0, pending.left)); }
+}
+ufToast.addEventListener('pointerenter', (e) => { if (e.isTrusted) hold(true); });
+ufToast.addEventListener('pointerleave', (e) => { if (e.isTrusted && !ufToast.contains(document.activeElement)) hold(false); });
+ufToast.addEventListener('focusin', () => hold(true));
+ufToast.addEventListener('focusout', () => { if (!ufToast.matches(':hover')) hold(false); });
 ufList.addEventListener('click', (e) => {
   const b = e.target.closest('.uf-arc');
-  if (b) archive(b.closest('.uf-slot'));
+  if (b) archive(b.closest('.uf-slot'), e.detail === 0);
 });
 ufUndo.addEventListener('click', undo);
 </script>
@@ -128,7 +156,8 @@ ufUndo.addEventListener('click', undo);
   function fit() {
     const bar = QM.tile ? 0 : 46;
     const k = Math.min(innerWidth * 0.68 / 520, (innerHeight - bar - 48) / rig.offsetHeight, 2.2);
-    rig.style.transform = `scale(${k.toFixed(4)})`;
+    const q = Math.max(0.5, Math.floor(k * 4) / 4);          // quarter steps: 1px things and the 8px grid land on whole pixels
+    rig.style.transform = `scale(${q})`;
   }
   addEventListener('resize', fit); fit();
 
@@ -138,8 +167,8 @@ ufUndo.addEventListener('click', undo);
   function reset() {
     rig.classList.add('is-reset');
     if (pending) { clearTimeout(pending.timer); pending = null; }
-    ufToast.classList.remove('is-in');
-    ufList.querySelectorAll('.uf-slot').forEach((s) => s.classList.remove('is-gone'));
+    setIn(false);
+    ufList.querySelectorAll('.uf-slot').forEach((s) => { s.classList.remove('is-gone'); s.inert = false; });
     ufList.querySelectorAll('.is-hover').forEach((r) => r.classList.remove('is-hover'));
     void rig.offsetWidth;
     rig.classList.remove('is-reset');
@@ -151,30 +180,43 @@ ufUndo.addEventListener('click', undo);
     if (g !== gen) throw ABORT;
   }
   async function press(el) {
-    await sleep(110); el.classList.add('is-down'); await sleep(130); el.classList.remove('is-down'); el.click();
+    await sleep(110); el.classList.add('is-down'); await sleep(110); el.classList.remove('is-down');
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));        // a pointer click, so nothing takes keyboard focus
+  }
+  /* a story never starts on a mess: whatever a viewer left behind is put back with the real motion, not snapped */
+  async function settle() {
+    if (pending && ufToast.contains(document.activeElement)) document.activeElement.blur();   // focus held the clock: let it run
+    hold(false);
+    while (pending) await sleep(200);
+    const gone = ufList.querySelectorAll('.uf-slot.is-gone');
+    if (gone.length) { gone.forEach((s) => { s.inert = false; s.classList.remove('is-gone'); }); await sleep(1000); }
   }
   async function story() {
-    reset(); await sleep(800);
+    await settle(); reset(); await sleep(800);
     const row = ufList.children[1].firstElementChild, arc = row.querySelector('.uf-arc');
     await pointAt(arc); row.classList.add('is-hover');
-    await press(arc); await sleep(250); row.classList.remove('is-hover');
-    await sleep(1600);
+    await press(arc); row.classList.remove('is-hover');
+    QM.ghostTo(innerWidth * 0.84, innerHeight * 0.74, 700);          // off the list, so the rows closing up are not "hovered"
+    await sleep(1700);
     if (round++ % 2 === 0) {                       // this round: Undo
       await pointAt(ufUndo); ufUndo.classList.add('is-hover');
       await press(ufUndo); ufUndo.classList.remove('is-hover');
       QM.ghostHide(); await sleep(2400);
     } else {                                       // next round: let it run out
-      await QM.ghostTo(innerWidth * 0.9, innerHeight * 0.9, 900);
-      QM.ghostHide(); await sleep(HOLD - 1850 + 1200);
+      QM.ghostHide(); await sleep(HOLD - 2400 + 1200);
     }
   }
-  function cancel() { gen++; running = false; QM.ghostHide(); ufUndo.classList.remove('is-down', 'is-hover'); }
+  function cancel() { gen++; running = false; QM.ghostHide(); ufUndo.classList.remove('is-down', 'is-hover'); ufList.querySelectorAll('.is-hover, .is-down').forEach((r) => r.classList.remove('is-hover', 'is-down')); }
+  /* a real pointer or key stops the ghost; it comes back after 4 s without input */
   if (!QM.tile) {
-    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) cancel(); } };
-    ['pointerdown', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+    const real = (e) => {
+      if (!e.isTrusted || (e.type === 'pointermove' && e.pointerType !== 'mouse')) return;
+      lastReal = performance.now(); if (running) cancel();
+    };
+    ['pointermove', 'pointerdown', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
   }
   addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancel(); } });
-  if (QM.reduced) archive(ufList.children[1]);
+  if (QM.reduced) { archive(ufList.children[1]); clearTimeout(pending.timer); }
   else (async function idle() {
     for (;;) {
       await new Promise((r) => setTimeout(r, 250));

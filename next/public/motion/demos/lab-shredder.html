@@ -30,7 +30,7 @@
     "No blur, no shadow under the pile: the strips are told apart by the white ground."
   ],
   "tags": ["canvas", "sheet", "loading", "hold", "drafts"],
-  "shot": 3300
+  "shot": 4600
 }
 </script>
 <style data-code>
@@ -61,7 +61,7 @@
 (function () {
   const cv = document.getElementById('shred'), ctx = cv.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const INK = '#0B0C0D', SHEET = '#ffffff', LIME = '#B8FF00', HEAD = '#0B0C0D', SLOT = '#ffffff', BAR = '#0B0C0D', OFF = '#3a3d42', BACK = '#E3E8DA', LINE = '#E3E8DA';   // a white sheet on the white ground, one ink head
+  const INK = '#0B0C0D', SHEET = '#EEF1E8', LIME = '#B8FF00', HEAD = '#0B0C0D', SLOT = '#ffffff', BAR = '#0B0C0D', OFF = '#2a2d31', VENT = '#1d2023', BACK = '#CDD5BD', LINE = '#D3DAC5';   // a sage sheet on the white ground (white on white left the strips invisible), a deeper sage back, one ink head
   let W, H, dpr, s, docW, docH, headY, headH, cx, N = 10;
   const doc = document.createElement('canvas');
   let seedN = 1; const rnd = () => ((seedN = (seedN * 16807) % 2147483647) - 1) / 2147483646;
@@ -96,15 +96,17 @@
     const r = cv.getBoundingClientRect();
     dpr = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-    s = Math.max(0.72, Math.min(1.45, Math.min(W / 640, H / 400)));
-    docW = 150 * s; docH = docW * 1.3; headH = 50 * s;
-    cx = W > 640 ? W * 0.7 : W / 2;
-    headY = Math.min(H - 60 * s, Math.max(H * 0.5, 40 * s + docH + 10 * s));
+    s = Math.max(0.72, Math.min(1.7, Math.min(W / 560, H / 340)));
+    docW = Math.round(150 * s); docH = Math.round(docW * 1.3); headH = Math.round(50 * s);
+    // the free area is right of the copy (left pad + 38% / 360px); centre the head in it, and let the strips of a sheet hang to the bottom margin
+    const copy = cv.parentElement.querySelector('.sh-copy'), right = copy && W > 640 ? copy.getBoundingClientRect().right : 0;
+    cx = W > 640 ? Math.round((right + W) / 2 + (W - right) * 0.02) : Math.round(W / 2);
+    headY = Math.round(Math.max(headH * 0.2, Math.min(H * 0.3, H - 12 * s - headH - docH * 0.88)));
     drawDoc();
   }
   function makeStrips() {
     const a = []; seedN = 99 + di * 13;
-    for (let i = 0; i < N; i++) a.push({ i, c: (rnd() < 0.5 ? -1 : 1) * (0.22 + rnd() * 0.6), tw: (rnd() - 0.5) * 0.8, tws: (rnd() < 0.5 ? -1 : 1) * (0.3 + rnd() * 1.1), sw: rnd() * 6, fan: (i - (N - 1) / 2) * 0.018 + (rnd() - 0.5) * 0.02, rx: 0, ry: 0, vx: 0, vy: 0, rot: 0, vr: 0, extra: 0 });
+    for (let i = 0; i < N; i++) a.push({ i, c: (rnd() < 0.5 ? -1 : 1) * (0.16 + rnd() * 0.36), tw: (rnd() - 0.5) * 0.5, tws: (rnd() < 0.5 ? -1 : 1) * (0.3 + rnd() * 0.7), sw: rnd() * 6, fan: (i - (N - 1) / 2) * 0.018 + (rnd() - 0.5) * 0.02, rx: 0, ry: 0, vx: 0, vy: 0, rot: 0, vr: 0, extra: 0 });
     return a;
   }
   let phase = 'enter', pt = 0, F = 0, feedV = 0, strips = [], falling = [], fast = false, clock = 0;
@@ -139,6 +141,8 @@
     ctx.fillStyle = HEAD; cutRect(cx - hw / 2, headY - 2 * s, hw, headH + 2 * s, 12 * s); ctx.fill();
     ctx.fillStyle = SLOT; ctx.fillRect(cx - docW / 2 - 5 * s, headY - 1 * s, docW + 10 * s, 3.2 * s);
     ctx.fillStyle = BAR; ctx.fillRect(cx - hw / 2 + 14 * s, headY + headH * 0.42, hw - 28 * s - 30 * s, headH * 0.3);
+    ctx.fillStyle = VENT;                                                              // a row of vent slits on the head, on a 6 s pitch
+    for (let vx = cx - hw / 2 + 14 * s; vx < cx + hw / 2 - 50 * s; vx += 6 * s) ctx.fillRect(Math.round(vx), Math.round(headY + headH * 0.42), Math.max(2, Math.round(2 * s)), Math.round(headH * 0.3));
     ctx.fillStyle = F > 0 && phase === 'feed' ? LIME : OFF; ctx.fillRect(cx + hw / 2 - 34 * s, headY + headH * 0.42, 14 * s, headH * 0.3);
     ctx.fillStyle = SLOT; ctx.fillRect(cx - docW / 2 - 3 * s, headY + headH - 2.5 * s, docW + 6 * s, 2.5 * s);
   }

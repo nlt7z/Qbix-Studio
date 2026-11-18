@@ -16,10 +16,10 @@
   "line": "digit strips on springs · avatars scale in and out",
   "summary": "Each digit is a 0 to 9 strip that rolls on a spring in the direction of change. Initial blocks scale in when someone joins, scale out when they leave, and the rest spring into the gap while a +N tile counts the overflow. A line under the row slides up with a small fact each time.",
   "spec": [
-    ["Digits", "strip of 30 numerals, spring 170 / 19, rolls up or down by the shortest way, wraps after a roll"],
-    ["Avatars", "position spring 260 / 24, scale spring 320 / 22, 5 shown, the rest in a +N tile"],
+    ["Digits", "strip of 30 numerals, spring 200 / 28 (critically damped, no overshoot), rolls up or down by the shortest way, wraps after a roll"],
+    ["Avatars", "position spring 260 / 32, scale spring 320 / 36 (both critically damped), 5 shown, the rest in a +N tile, at rest on whole pixels"],
     ["Traffic", "a join or a leave every 1.5–3.1 s, 58% joins, between 8 and 21 reviewers"],
-    ["Line", "mask slide up out of a sleeve, 600 ms, the old line leaves upward"],
+    ["Line", "mask slide up out of a sleeve: the old line leaves upward in 360 ms ease in, the new one waits 140 ms and rises in 600 ms expo out"],
     ["Trigger", "always on; click the button to join as You (lime) or leave"]
   ],
   "source": ["Qbix studio library · fomo-counter"],
@@ -34,10 +34,10 @@
 </script>
 <style data-code>
 /* Reviewer counter: a spring-driven numeral, a row of initial blocks */
-.fm { width: min(100%, 720px); display: grid; gap: 22px; --a: clamp(44px, 7.4vw, 60px); }
+.fm { width: fit-content; min-width: min(100%, 460px); max-width: 100%; display: grid; gap: 22px; --a: clamp(44px, 7.4vw, 60px); }
 .fm-top { display: flex; align-items: flex-end; gap: clamp(16px, 3vw, 32px); }
-.fm-num { display: flex; font-family: 'Outfit', 'Geist', sans-serif; font-size: clamp(110px, 21vw, 220px); font-weight: 200; line-height: 1; height: 1em; letter-spacing: -0.04em; color: #0B0C0D; overflow: hidden; font-variant-numeric: tabular-nums; }
-.fm-col { height: 1em; overflow: hidden; width: 0.64em; text-align: center; transition: width 400ms cubic-bezier(0.65, 0, 0.35, 1); }
+.fm-num { display: flex; font-family: 'Outfit', 'Geist', sans-serif; font-size: var(--fs, clamp(110px, 21vw, 220px)); font-weight: 200; line-height: 1; height: 1em; letter-spacing: -0.04em; color: #0B0C0D; overflow: hidden; font-variant-numeric: tabular-nums; }
+.fm-col { height: 1em; overflow: hidden; width: var(--cw, 0.64em); text-align: center; transition: width 400ms cubic-bezier(0.65, 0, 0.35, 1); }
 .fm-strip { will-change: transform; }
 .fm-strip span { display: block; height: 1em; line-height: 1em; }
 .fm-label { padding-bottom: 0.9em; display: grid; gap: 6px; }
@@ -47,12 +47,16 @@
   clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
 .fm-av.more { background: #E3E8DA; color: rgba(11, 12, 13, 0.66); }
 .fm-av.more i { display: block; font-style: normal; transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1); }
-.fm-foot { position: relative; height: 1.6em; overflow: hidden; font: 400 13px/1.6 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.66); }
+.fm-foot { position: relative; width: 210px; height: 1.6em; overflow: hidden; font: 400 13px/1.6 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.66); }
 .fm-foot span { position: absolute; left: 0; top: 0; white-space: nowrap; transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1); }
-.fm-foot span.in { transform: translateY(110%); } .fm-foot span.out { transform: translateY(-110%); }
+.fm-foot span.in { transform: translateY(110%); }
+/* the old line leaves quicker than the new one arrives, and the new one waits for it */
+.fm-foot span.out { transform: translateY(-110%); transition: transform 360ms cubic-bezier(0.5, 0, 0.75, 0); }
 </style>
 <style>
-  .fm-join { justify-self: start; }
+  .fm-join { justify-self: start; transition: transform 100ms var(--ease), background 140ms var(--ease); }
+  .fm-join:hover { background: #26282C; }
+  .fm-join:active, .fm-join.is-press { transform: translateY(2px); }
   .fm-bar { display: flex; align-items: center; gap: 20px; }
 </style>
 </head>
@@ -66,7 +70,7 @@
     <div class="fm-label"><p class="kicker">Reviewing now</p><p class="mono" style="font-size:13px;color:rgba(11, 12, 13,.66)">Review call Friday, 2 pm</p></div>
   </div>
   <div class="fm-row" id="row"></div>
-  <div class="fm-bar"><button class="btn btn-solid cut fm-join" id="join">Join the review</button><div class="fm-foot" id="foot"></div></div>
+  <div class="fm-bar"><button class="btn btn-solid cut fm-join" id="join">Join the review</button><div class="fm-foot" id="foot" aria-live="polite"></div></div>
 </div>
 <!-- /code -->
   <div class="qm-ui"><span>Click to join the review or leave</span></div>
@@ -85,7 +89,14 @@
     for (let i = -10; i < 20; i++) { const s = document.createElement('span'); s.textContent = ((i % 10) + 10) % 10; strip.appendChild(s); }
     col.appendChild(strip); numEl.appendChild(col); cols.push({ col, strip, p: 0, v: 0, t: 0 });
   }
-  const setColWidths = (n) => { cols[0].col.style.width = n >= 10 ? '0.64em' : '0em'; };
+  const setColWidths = (n) => { cols[0].col.style.width = n >= 10 ? 'var(--cw, 0.64em)' : '0px'; };
+  // sizes land on whole pixels, so a digit at rest is never cut on a half pixel
+  const fm = document.querySelector('.fm');
+  function fit() {
+    const w = innerWidth, fs = Math.round(Math.min(220, Math.max(110, w * 0.21))), a = Math.round(Math.min(60, Math.max(44, w * 0.074)));
+    fm.style.setProperty('--fs', fs + 'px'); fm.style.setProperty('--a', a + 'px'); fm.style.setProperty('--cw', Math.round(fs * 0.64) + 'px');
+  }
+  fit();
   let count = 12;
   function setDigits(from, to) {
     const up = to > from, f = [Math.floor(from / 10) % 10, from % 10], t = [Math.floor(to / 10) % 10, to % 10];
@@ -94,14 +105,14 @@
       c.t += up ? ((t[i] - f[i]) + 10) % 10 : -(((f[i] - t[i]) + 10) % 10);
       if (reduce) c.p = c.t;
     }
-    setColWidths(to);
+    setColWidths(to); numEl.setAttribute('aria-label', to + ' people reviewing now');
   }
-  const POOL = [['AL', '#EEF1E8', '#0B0C0D'], ['MR', '#E3E8DA', '#0B0C0D'], ['JK', '#0B0C0D', '#f4f5f2'], ['SO', '#EEF1E8', '#0B0C0D'], ['TB', '#E3E8DA', '#0B0C0D'], ['EP', '#EEF1E8', '#0B0C0D'], ['DW', '#E3E8DA', '#0B0C0D'], ['CN', '#0B0C0D', '#f4f5f2'], ['RV', '#EEF1E8', '#0B0C0D'], ['HG', '#E3E8DA', '#0B0C0D'], ['LM', '#EEF1E8', '#0B0C0D'], ['QF', '#E3E8DA', '#0B0C0D']];
+  const POOL = [['AL', '#EEF1E8', '#0B0C0D'], ['MR', '#E3E8DA', '#0B0C0D'], ['JK', '#0B0C0D', '#f4f5f2'], ['SO', '#EEF1E8', '#0B0C0D'], ['TB', '#E3E8DA', '#0B0C0D'], ['EP', '#EEF1E8', '#0B0C0D'], ['DW', '#E3E8DA', '#0B0C0D'], ['CN', '#0B0C0D', '#f4f5f2'], ['RV', '#EEF1E8', '#0B0C0D'], ['HG', '#E3E8DA', '#0B0C0D'], ['LM', '#EEF1E8', '#0B0C0D'], ['QF', '#E3E8DA', '#0B0C0D'], ['NB', '#EEF1E8', '#0B0C0D'], ['IY', '#0B0C0D', '#f4f5f2'], ['OT', '#E3E8DA', '#0B0C0D'], ['VK', '#EEF1E8', '#0B0C0D'], ['GA', '#E3E8DA', '#0B0C0D'], ['PZ', '#EEF1E8', '#0B0C0D'], ['UD', '#0B0C0D', '#f4f5f2'], ['BX', '#E3E8DA', '#0B0C0D']];
   let pi = 0; const SHOW = 5; let viewers = [], moreEl = null, moreN = 0;
   function avatar(v) { const el = document.createElement('div'); el.className = 'fm-av'; el.textContent = v[0]; el.style.background = v[1]; el.style.color = v[2]; row.appendChild(el); return el; }
   function newViewer(you) { const v = you ? ['You', '#B8FF00', '#0c1300'] : POOL[pi++ % POOL.length]; return { el: avatar(v), x: -1, vx: 0, s: reduce ? 1 : 0, vs: 0, ts: 1, you: !!you }; }
   function layout() {
-    const a = row.getBoundingClientRect().height, g = 8, live = viewers.filter((v) => !v.leaving);
+    const a = Math.round(row.getBoundingClientRect().height), g = 8, live = viewers.filter((v) => !v.leaving);
     live.forEach((v, i) => { if (i < SHOW) { v.tx = i * (a + g); v.ts = 1; } else { v.tx = SHOW * (a + g); v.ts = 0; } });
     const extra = Math.max(0, count - Math.min(SHOW, live.length));
     if (!moreEl) { moreEl = document.createElement('div'); moreEl.className = 'fm-av more'; moreEl.innerHTML = '<i></i>'; row.appendChild(moreEl); moreEl._o = { el: moreEl, x: SHOW * (a + g), vx: 0, s: 0, vs: 0, ts: 0, tx: SHOW * (a + g) }; }
@@ -122,8 +133,9 @@
   function sayFoot(t) {
     const old = [...foot.querySelectorAll('span')], sp = document.createElement('span'); sp.textContent = t;
     if (reduce) { old.forEach((o) => o.remove()); foot.appendChild(sp); return; }
-    sp.className = 'in'; foot.appendChild(sp); old.forEach((o) => { o.className = 'out'; setTimeout(() => o.remove(), 650); });
-    requestAnimationFrame(() => requestAnimationFrame(() => { if (sp.className === 'in') sp.className = ''; }));
+    sp.className = 'in'; foot.appendChild(sp); old.forEach((o) => { o.className = 'out'; setTimeout(() => o.remove(), 420); });
+    // the new line waits for the old one to clear the window (140 ms), then rises on expo out
+    setTimeout(() => { if (sp.className === 'in') sp.className = ''; }, old.length ? 140 : 32);
   }
   let last = performance.now(), running = false;
   const sp = (o, k, vk, target, K, C, dt) => { o[vk] += (K * (target - o[k]) - C * o[vk]) * dt; o[k] += o[vk] * dt; };
@@ -131,13 +143,16 @@
     if (document.hidden) { running = false; return; }
     const dt = Math.min(0.04, (now - last) / 1000); last = now;
     for (const c of cols) {
-      if (reduce) c.p = c.t; else for (let i = 0; i < 3; i++) sp(c, 'p', 'v', c.t, 170, 19, dt / 3);
+      if (reduce) c.p = c.t; else for (let i = 0; i < 3; i++) sp(c, 'p', 'v', c.t, 200, 28, dt / 3);
       if (Math.abs(c.p - c.t) < 0.001 && Math.abs(c.v) < 0.01) { const k = Math.floor(c.t / 10) * 10; c.p -= k; c.t -= k; }
       c.strip.style.transform = `translateY(${-(c.p + 10)}em)`;
     }
     for (const v of viewers.concat(moreEl ? [moreEl._o] : [])) {
-      if (reduce) { v.x = v.tx; v.s = v.ts; } else for (let i = 0; i < 3; i++) { sp(v, 'x', 'vx', v.tx, 260, 24, dt / 3); sp(v, 's', 'vs', v.ts, 320, 22, dt / 3); }
-      v.el.style.transform = `translateX(${v.x}px) scale(${Math.max(0, v.s)})`;
+      if (reduce) { v.x = v.tx; v.s = v.ts; } else for (let i = 0; i < 3; i++) { sp(v, 'x', 'vx', v.tx, 260, 32, dt / 3); sp(v, 's', 'vs', v.ts, 320, 36, dt / 3); }
+      // critically damped: it arrives without overshoot, and at rest it sits on whole pixels
+      if (Math.abs(v.x - v.tx) < 0.05 && Math.abs(v.vx) < 0.5) { v.x = v.tx; v.vx = 0; }
+      if (Math.abs(v.s - v.ts) < 0.002 && Math.abs(v.vs) < 0.02) { v.s = v.ts; v.vs = 0; }
+      v.el.style.transform = `translateX(${v.x === v.tx ? Math.round(v.x) : v.x.toFixed(2)}px) scale(${Math.max(0, v.s)})`;
     }
     requestAnimationFrame(frame);
   }
@@ -157,7 +172,7 @@
   }
   function setLabel(t) { joinB.textContent = t; }
   joinB.addEventListener('click', toggle);
-  addEventListener('resize', layout);
+  addEventListener('resize', () => { fit(); layout(); });
   const start12 = 12; count = 0;
   for (let i = 0; i < start12; i++) viewers.push(newViewer(false));
   count = start12; cols[0].t = cols[0].p = 1; cols[1].t = cols[1].p = 2; setColWidths(count);
@@ -173,19 +188,31 @@
   (async function () {
     QM.demo({ kind: 'loop' });
     if (QM.reduced) return;
+    // real input stops the ghost; it comes back after 6 s of quiet
+    let real = -1e9; const touch = () => { real = performance.now(); };
+    for (const t of ['pointerdown', 'keydown']) addEventListener(t, touch, true);
+    addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') touch(); }, { passive: true });
+    const idle = () => performance.now() - real > 6000;
     const b = document.getElementById('join'), at = (e) => { const r = e.getBoundingClientRect(); return [r.left + r.width * 0.55, r.top + r.height * 0.6]; };
+    const give = () => { QM.ghostHide(); b.classList.remove('is-press'); };
+    // each step ends the story as soon as a real hand shows up
+    const step = async (ms) => { await QM.wait(ms); if (!idle()) { give(); return false; } return true; };
+    const goto = async (x, y, ms) => { await QM.ghostTo(x, y, ms); return idle() || (give(), false); };
     for (;;) {
       await QM.wait(2600);
+      if (!idle()) continue;
       QM.ghostAt(innerWidth * 0.8, innerHeight * 0.45); QM.ghostShow();
-      await QM.ghostTo(...at(b), 900); await QM.wait(220);
-      b.classList.add('is-press'); await QM.wait(130); b.classList.remove('is-press'); window.fmApi.toggle();
-      await QM.ghostTo(innerWidth * 0.8, innerHeight * 0.5, 700); await QM.wait(3200);
-      await QM.ghostTo(...at(b), 800); await QM.wait(200);
-      window.fmApi.toggle(); await QM.ghostTo(innerWidth * 0.82, innerHeight * 0.6, 700); QM.ghostHide();
+      if (!(await goto(...at(b), 900)) || !(await step(220))) continue;
+      b.classList.add('is-press'); await QM.wait(110); b.classList.remove('is-press'); window.fmApi.toggle();
+      if (!(await goto(innerWidth * 0.8, innerHeight * 0.5, 700)) || !(await step(3200))) continue;
+      if (!(await goto(...at(b), 800)) || !(await step(200))) continue;
+      b.classList.add('is-press'); await QM.wait(110); b.classList.remove('is-press'); window.fmApi.toggle();
+      if (!(await goto(innerWidth * 0.82, innerHeight * 0.6, 700))) continue;
+      QM.ghostHide();
       await QM.wait(4000);
     }
   })();
 </script>
-<style>.btn.is-press { transform: translateY(2px); }</style>
+
 </body>
 </html>

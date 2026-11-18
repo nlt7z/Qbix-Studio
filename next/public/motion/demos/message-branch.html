@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Message branches · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "message-branch", "title": "Message branches", "group": "studio", "added": "2026-11-17", "cat": "agent", "order": 70,
+  "kind": "loop", "tone": "paper", "shot": 2400,
+  "line": "edit opens under a clip · only the changed words open or close · answers slide 520 ms ease-move · pager rolls its numbers",
+  "summary": "A Qbix chat with one message, Draft a tagline for Forma, and the agent's answer. Hovering the message uncovers Edit. Editing turns the bubble into a field with Send; sending keeps the old answer as branch 1 and makes branch 2: the old answer slides out to the left, the new one slides in from the right and writes itself word by word, and a pager, ‹ 2 / 2 ›, is uncovered under the message. Paging back and forth slides the answers sideways and morphs the message in place: only the words that differ close and open, the rest of the sentence stays where it is.",
+  "spec": [
+    ["Edit", "the Edit button is uncovered from its bottom edge when the message is hovered, focused or touched; the bubble leaves up under a clip (220 ms ease-in) and the field is uncovered from below (360 ms expo out, 60 ms behind)"],
+    ["Send", "an ink pill, the only heavy thing on the card; it rests on sage with muted text until the text really differs from the branch; Enter sends, Escape cancels"],
+    ["Branch", "the new answer comes from the right and the old one leaves left on 520 ms ease-move; the new words are uncovered one by one, 38 ms apart, after 260 ms"],
+    ["Pager", "a clipped box opens from 0 to its width (420 ms expo out, 260 ms ease-in closing); the current number and the total roll up or down 360 ms expo out, in the direction they change"],
+    ["Morph", "a word diff of the old and the new message: words in both stay put, a word that goes closes its width to 0 in 260 ms ease-in with its letters leaving up, a word that comes opens its width in 420 ms expo out with its letters coming up from below; the bubble follows the width"],
+    ["Loop", "a ghost edits Forma's tagline request, sends it, pages to branch 1 and back, then drops the extra branch; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-17"],
+  "where": "A thread with the Qbix agent in a Forma brand brief, where the client asks for a calmer tagline and still wants the first one a click away.",
+  "rules": [
+    "The sentence is one object: a word diff decides what moves, so unchanged words never jump and the bubble only grows or shrinks by the words that changed.",
+    "Branches are a row, not a stack: older answers wait to the left and newer to the right, and every change of branch moves in the direction of the number.",
+    "The one heavy thing is the Send pill while a message is edited. At rest the bubble is white with a ring and the pager is plain text.",
+    "Everything is uncovered under a clip or moved on a curve, never faded; exits are about 0.6x the entry and nothing bounces.",
+    "Every state can be left mid-way: paging during a slide, or during a morph, retargets from where the words and panels are.",
+    "Real controls: Edit, the arrows and Send are buttons, the field is a real input (Enter, Escape), a polite live region reads the branch aloud.",
+    "Under reduced motion the card rests on branch 2 with the pager shown and every change is instant."
+  ],
+  "tags": ["agent", "chat", "branch", "edit", "pager", "version", "message", "Forma"]
+}
+</script>
+<style data-code>
+/* Message branches. One heavy thing: the Send pill while editing. White surfaces with a soft ring; one lime point (the agent's dot).
+   Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0), ui (.4,0,.2,1). */
+.mb { position: relative; width: 480px; max-width: 100%; padding: 20px 20px 18px; background: #fff; color: #0B0C0D; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 15px/22px Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+.mb :where(button, input) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; }
+.mb button { cursor: pointer; }
+
+/* the message zone: two layers, the bubble and the editor, uncovered under a clip */
+.mb-zone { position: relative; height: 88px; }
+.mb-lay { position: absolute; inset: 0; margin: 0;
+  transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1) 60ms, transform 360ms cubic-bezier(.16, 1, .3, 1) 60ms; }
+.mb-view { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; clip-path: inset(-8px); }
+.mb-ed { display: flex; flex-direction: column; gap: 8px; clip-path: inset(calc(100% + 8px) -8px -8px -8px); transform: translateY(6px); }
+.mb-zone[data-m="edit"] .mb-view { clip-path: inset(-8px -8px calc(100% + 8px) -8px); transform: translateY(-6px);
+  transition: clip-path 220ms cubic-bezier(.5, 0, .75, 0), transform 220ms cubic-bezier(.5, 0, .75, 0); }
+.mb-zone[data-m="edit"] .mb-ed { clip-path: inset(-8px); transform: none; }
+
+/* the bubble: white with a ring, its words are spans whose width the diff opens and closes */
+.mb-bub { max-width: 100%; padding: 11px 16px; background: #fff; border-radius: 16px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .1); white-space: nowrap; }
+.mb-w { display: inline-block; vertical-align: top; height: 22px; overflow: hidden; margin-right: 4px;
+  transition: width 420ms cubic-bezier(.16, 1, .3, 1), margin-right 420ms cubic-bezier(.16, 1, .3, 1); }
+.mb-w:last-child { margin-right: 0; }
+.mb-w i { display: inline-block; vertical-align: top; font-style: normal; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.mb-w.off { width: 0 !important; margin-right: 0; transition-duration: 260ms; transition-timing-function: cubic-bezier(.5, 0, .75, 0); }
+.mb-w.off i { transform: translateY(-105%); transition-duration: 260ms; transition-timing-function: cubic-bezier(.5, 0, .75, 0); }
+.mb-w.off.pre i { transform: translateY(105%); transition: none; }
+
+.mb-tools { display: flex; align-items: center; justify-content: flex-end; height: 32px; }
+.mb-edit { display: inline-flex; align-items: center; gap: 6px; height: 28px; margin-right: 6px; padding: 0 8px; border-radius: 999px;
+  font-size: 13px; font-weight: 500; line-height: 1; color: rgba(11, 12, 13, .66);
+  clip-path: inset(100% 0 0 0); transform: translateY(4px); pointer-events: none;
+  transition: clip-path 160ms cubic-bezier(.5, 0, .75, 0), transform 160ms cubic-bezier(.5, 0, .75, 0), color 160ms cubic-bezier(.4, 0, .2, 1); }
+.mb-zone:hover .mb-edit, .mb-zone:focus-within .mb-edit, .mb-zone.hot .mb-edit { clip-path: inset(-6px); transform: none; pointer-events: auto;
+  transition: clip-path 260ms cubic-bezier(.16, 1, .3, 1), transform 260ms cubic-bezier(.16, 1, .3, 1), color 160ms cubic-bezier(.4, 0, .2, 1); }
+@media (hover: none) { .mb-edit { clip-path: inset(-6px); transform: none; pointer-events: auto; } }
+.mb-edit:hover { color: #0B0C0D; }
+.mb-edit:active { transform: translateY(1px); }
+.mb-edit svg { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the pager: a clipped box that opens to its own width */
+.mb-pgw { width: 0; overflow: hidden; transition: width 260ms cubic-bezier(.5, 0, .75, 0); }
+.mb-pgw[data-open] { transition-duration: 420ms; transition-timing-function: cubic-bezier(.16, 1, .3, 1); }
+.mb-pg { display: inline-flex; width: max-content; align-items: center; height: 32px; white-space: nowrap; font: 500 15px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.mb-ar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: #0B0C0D;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.mb-ar:hover:not(:disabled) { background: #EEF1E8; }
+.mb-ar:active:not(:disabled) { transform: translateY(1px); }
+.mb-ar:disabled { color: rgba(11, 12, 13, .28); cursor: default; }
+.mb-ar svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.mb-pn { display: inline-flex; align-items: center; gap: 5px; padding: 0 4px; }
+.mb-roll { display: inline-grid; height: 20px; overflow: hidden; line-height: 20px; }
+.mb-roll i { grid-area: 1 / 1; font-style: normal; text-align: center; transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.mb-sl { color: rgba(11, 12, 13, .38); }
+
+/* the editor: a field with the one ink pill */
+.mb-in { height: 44px; width: 100%; padding: 0 16px; background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); outline: none;
+  transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.mb-in:focus { box-shadow: 0 0 0 1.5px rgba(11, 12, 13, .55); }
+.mb-bt { display: flex; align-items: center; justify-content: flex-end; gap: 4px; height: 36px; }
+.mb-cancel { height: 36px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 500; line-height: 1; color: rgba(11, 12, 13, .66);
+  transition: color 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.mb-cancel:hover { color: #0B0C0D; }
+.mb-send { height: 36px; padding: 0 18px; border-radius: 999px; font-size: 13px; font-weight: 600; line-height: 1; background: #0B0C0D; color: #fff;
+  transition: background 220ms cubic-bezier(.4, 0, .2, 1), color 220ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.mb-send:disabled { background: #EEF1E8; color: rgba(11, 12, 13, .38); cursor: default; }
+.mb-send:active:not(:disabled), .mb-cancel:active { transform: translateY(1px); }
+
+/* the answers: a row of panels in a window as wide as the card, the current one in view */
+.mb-who { display: flex; align-items: center; gap: 8px; height: 22px; margin-top: 8px; font-size: 13px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.mb-dot { width: 6px; height: 6px; border-radius: 50%; background: #B8FF00; }
+.mb-win { position: relative; height: 70px; margin: 2px -20px 0; overflow: hidden; }
+.mb-pa { position: absolute; inset: 0 20px; padding-top: 4px;
+  transition: transform 520ms cubic-bezier(.65, 0, .35, 1), visibility 0s 520ms; visibility: hidden; }
+.mb-pa[data-pos="in"] { visibility: visible; transform: none; transition: transform 520ms cubic-bezier(.65, 0, .35, 1); }
+.mb-pa[data-pos="left"] { transform: translateX(calc(-100% - 40px)); }
+.mb-pa[data-pos="right"] { transform: translateX(calc(100% + 40px)); }
+.mb-t { margin: 0; font: 300 26px/32px Outfit, Geist, sans-serif; letter-spacing: -.035em; white-space: nowrap; }
+.mb-p { margin: 2px 0 0; font-size: 15px; line-height: 22px; color: rgba(11, 12, 13, .66); white-space: nowrap; }
+.sw { display: inline-block; vertical-align: top; overflow: hidden; }
+.sw i { display: inline-block; vertical-align: top; font-style: normal; transform: translateY(105%); transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.sw.in i { transform: none; }
+.sw.sp { width: .27em; }
+.mb-t .sw { height: 32px; }
+.mb-p .sw { height: 22px; }
+
+.mb.snap *, .mb.snap *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .mb *, .mb *::before { transition: none !important; } }
+</style>
+<style>
+  .mbw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="mbw">
+    <p class="kicker">Forma · brand thread</p>
+<!-- code -->
+<div class="mb" id="mb">
+  <div class="mb-zone" id="mb-zone" data-m="view">
+    <div class="mb-lay mb-view" id="mb-view">
+      <div class="mb-bub" id="mb-bub" aria-hidden="true"></div>
+      <div class="mb-tools">
+        <button type="button" class="mb-edit" id="mb-edit" aria-label="Edit message">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 13.5l.8-3.2 7.6-7.6a1.4 1.4 0 012 2l-7.6 7.6-2.8 1.2z"/><path d="M9.6 4l2.4 2.4"/></svg>Edit</button>
+        <div class="mb-pgw" id="mb-pgw" inert>
+          <div class="mb-pg" id="mb-pg" role="group" aria-label="Branches">
+            <button type="button" class="mb-ar" id="mb-prev" aria-label="Previous branch"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.8 3.5L5.3 8l4.5 4.5"/></svg></button>
+            <span class="mb-pn"><span class="mb-roll" id="mb-cur"><i>1</i></span><span class="mb-sl">/</span><span class="mb-roll" id="mb-tot"><i>1</i></span></span>
+            <button type="button" class="mb-ar" id="mb-next" aria-label="Next branch"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.2 3.5L10.7 8l-4.5 4.5"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <form class="mb-lay mb-ed" id="mb-ed" inert>
+      <input class="mb-in" id="mb-in" type="text" maxlength="48" aria-label="Edit your message" autocomplete="off" spellcheck="false">
+      <div class="mb-bt">
+        <button type="button" class="mb-cancel" id="mb-cancel">Cancel</button>
+        <button type="submit" class="mb-send" id="mb-send">Send</button>
+      </div>
+    </form>
+  </div>
+  <div class="mb-who"><i class="mb-dot"></i>Qbix agent</div>
+  <div class="mb-win" id="mb-win"></div>
+  <p class="sr-only" id="mb-live" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Hover your message and press Edit · Send makes a branch · page with the arrows</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Message branches. Branches are {q, a, el}: the message, the answer and its panel. Only the current panel is in view, older ones wait
+   left, newer ones right. The message is a row of word spans: a word diff decides which close, which open and which stay. */
+const mb = document.getElementById('mb'), mbZone = document.getElementById('mb-zone'), mbBub = document.getElementById('mb-bub');
+const mbEditB = document.getElementById('mb-edit'), mbView = document.getElementById('mb-view'), mbEd = document.getElementById('mb-ed');
+const mbIn = document.getElementById('mb-in'), mbSendB = document.getElementById('mb-send'), mbWin = document.getElementById('mb-win');
+const mbPgw = document.getElementById('mb-pgw'), mbPg = document.getElementById('mb-pg'), mbPrev = document.getElementById('mb-prev'), mbNext = document.getElementById('mb-next');
+const mbCurN = document.getElementById('mb-cur'), mbTotN = document.getElementById('mb-tot'), mbLive = document.getElementById('mb-live');
+
+const MB_POOLS = {
+  calm: [['Slow clay, quiet mornings.', 'Softer, with fewer claims and more room to breathe.'], ['Made slowly, kept close.', 'Quieter still, one idea and no adjectives.']],
+  bold: [['Clay, turned up.', 'Louder: short words and a firm full stop.'], ['Loud colour, steady hands.', 'A bolder line that still sounds handmade.']],
+  base: [['Made by hand. Kept for years.', 'Direct and warm, built around the hand-thrown pieces.'], ['Every piece, one pair of hands.', 'A plainer line that puts the maker first.'], ['Made small. Made well.', 'Short enough to sit under the logo.']],
+};
+function mbAnswer(q, n) {
+  const k = /calm|quiet|soft|gentle/i.test(q) ? 'calm' : /bold|loud|punch|strong/i.test(q) ? 'bold' : 'base';
+  const a = MB_POOLS[k][n % MB_POOLS[k].length];
+  return { t: a[0], p: a[1] };
+}
+const mbB = [{ q: 'Draft a tagline for Forma', a: mbAnswer('Draft a tagline', 0), el: null }];
+let mbCur = 0, mbMode = 'view', mbSp = [], mbSettle = 0, mbPgOpen = false;
+const mbWords = (s) => s.trim().split(/\s+/).filter(Boolean);
+const mbSnap = (fn) => { mb.classList.add('snap'); fn(); mb.getBoundingClientRect(); mb.classList.remove('snap'); };
+
+/* a number that rolls: dir +1 brings the new one from below, -1 from above */
+function mbRoll(el, txt, dir, snap) {
+  const last = el.lastElementChild;
+  if (last && last.textContent === txt) return;
+  if (snap || !last) { el.innerHTML = '<i>' + txt + '</i>'; return; }
+  const n = document.createElement('i');
+  n.textContent = txt; n.style.transform = `translateY(${dir * 100}%)`;
+  el.appendChild(n); el.getBoundingClientRect();
+  [...el.children].forEach((c) => { if (c !== n) c.style.transform = `translateY(${-dir * 100}%)`; });
+  n.style.transform = 'none';
+  setTimeout(() => { [...el.children].forEach((c) => { if (c !== el.lastElementChild) c.remove(); }); }, 460);
+}
+
+/* the message: a word diff */
+function mbDiff(a, b) {
+  const n = a.length, m = b.length, L = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = a[i] === b[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  const ops = []; let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { ops.push({ t: 'k', i, j }); i++; j++; }
+    else if (L[i + 1][j] >= L[i][j + 1]) { ops.push({ t: 'd', i }); i++; }
+    else { ops.push({ t: 'a', j }); j++; }
+  }
+  while (i < n) ops.push({ t: 'd', i: i++ });
+  while (j < m) ops.push({ t: 'a', j: j++ });
+  return ops;
+}
+function mbMorph(text, snap) {
+  const B = mbWords(text);
+  if (snap) {
+    mbBub.textContent = '';
+    mbSp = B.map((w) => { const el = document.createElement('span'); el.className = 'mb-w'; el.innerHTML = '<i></i>'; el.firstChild.textContent = w; mbBub.appendChild(el); const s = { el, w, on: true }; el._s = s; return s; });
+    return;
+  }
+  const vis = mbSp.filter((s) => s.on), ops = mbDiff(vis.map((s) => s.w), B);
+  let ref = null;
+  for (let k = ops.length - 1; k >= 0; k--) {
+    const o = ops[k];
+    if (o.t === 'k') ref = vis[o.i].el;
+    else if (o.t === 'd') {
+      const s = vis[o.i]; s.on = false; s.el.style.width = s.el.getBoundingClientRect().width + 'px'; s.el.getBoundingClientRect(); s.el.classList.add('off'); ref = s.el;
+    } else {
+      const el = document.createElement('span'); el.className = 'mb-w off pre'; el.innerHTML = '<i></i>'; el.firstChild.textContent = B[o.j];
+      mbBub.insertBefore(el, ref); const s = { el, w: B[o.j], on: true }; el._s = s;
+      const w = el.firstChild.offsetWidth; el.getBoundingClientRect();
+      el.classList.remove('off', 'pre'); el.style.width = w + 'px'; ref = el;
+    }
+  }
+  mbSp = [...mbBub.children].map((el) => el._s);
+  clearTimeout(mbSettle);
+  mbSettle = setTimeout(() => { mbSp = mbSp.filter((s) => { if (!s.on) { s.el.remove(); return false; } s.el.style.width = ''; return true; }); }, 520);
+}
+
+/* an answer panel: its words are uncovered one by one when it streams */
+function mbPanel(a) {
+  const el = document.createElement('div');
+  el.className = 'mb-pa'; el.dataset.pos = 'right'; el.setAttribute('aria-hidden', 'true');
+  const fill = (cls, text) => {
+    const p = document.createElement('p'); p.className = cls;
+    mbWords(text).forEach((w, k) => {
+      if (k) { const sp = document.createElement('span'); sp.className = 'sw sp'; p.appendChild(sp); }
+      const s = document.createElement('span'); s.className = 'sw'; s.innerHTML = '<i></i>'; s.firstChild.textContent = w; p.appendChild(s);
+    });
+    el.appendChild(p);
+  };
+  fill('mb-t', a.t); fill('mb-p', a.p);
+  mbWin.appendChild(el);
+  return el;
+}
+function mbStream(el, snap) {
+  const ws = [...el.querySelectorAll('.sw:not(.sp)')];
+  if (snap) { ws.forEach((w) => w.classList.add('in')); return; }
+  ws.forEach((w, k) => setTimeout(() => w.classList.add('in'), 260 + k * 38));
+}
+function mbPlace() {
+  mbB.forEach((b, k) => { b.el.dataset.pos = k < mbCur ? 'left' : k > mbCur ? 'right' : 'in'; b.el.setAttribute('aria-hidden', String(k !== mbCur)); });
+}
+function mbFit(snap) {
+  mbPgw.style.width = mbPgOpen ? mbPg.offsetWidth + 'px' : '0px';
+  if (snap) { mbPgw.getBoundingClientRect(); }
+}
+function mbPager(snap, dir) {
+  mbRoll(mbCurN, String(mbCur + 1), dir, snap); mbRoll(mbTotN, String(mbB.length), 1, snap);
+  mbPrev.disabled = mbCur === 0; mbNext.disabled = mbCur === mbB.length - 1;
+  mbFit(snap);
+}
+function mbSay() { mbLive.textContent = mbB.length > 1 ? `Branch ${mbCur + 1} of ${mbB.length}. ${mbB[mbCur].q}. ${mbB[mbCur].a.t}` : ''; }
+
+/* page to branch i: panels slide, the message morphs, the number rolls */
+function mbGo(i, snap) {
+  i = Math.max(0, Math.min(mbB.length - 1, i));
+  if (i === mbCur) return;
+  const dir = i > mbCur ? 1 : -1;
+  mbCur = i;
+  mbPlace(); mbMorph(mbB[i].q, snap); mbPager(snap, dir); mbSay();
+}
+function mbOpenPager(snap) { mbPgOpen = true; mbPgw.dataset.open = ''; mbPgw.inert = false; mbPager(snap, 1); }
+function mbClosePager(snap) { mbPgOpen = false; delete mbPgw.dataset.open; mbPgw.inert = true; mbFit(snap); }
+
+function mbEdit() {
+  if (mbMode === 'edit') return;
+  mbMode = 'edit'; mbIn.value = mbB[mbCur].q; mbSyncSend();
+  mbZone.dataset.m = 'edit'; mbView.inert = true; mbEd.inert = false;
+  mbIn.focus({ preventScroll: true }); mbIn.setSelectionRange(mbIn.value.length, mbIn.value.length);
+}
+function mbLeaveEdit(refocus) {
+  mbMode = 'view'; mbZone.dataset.m = 'view'; mbView.inert = false; mbEd.inert = true;
+  if (refocus) mbEditB.focus({ preventScroll: true }); else if (mbEd.contains(document.activeElement)) document.activeElement.blur();
+}
+function mbSyncSend() { const v = mbIn.value.trim(); mbSendB.disabled = !v || v === mbB[mbCur].q; }
+function mbSend(refocus) {
+  const v = mbIn.value.trim().replace(/\s+/g, ' ');
+  if (!v || v === mbB[mbCur].q) { mbLeaveEdit(refocus); return; }
+  const first = mbB.length === 1, a = mbAnswer(v, mbB.length);
+  const el = mbPanel(a);
+  mbSnap(() => { el.dataset.pos = 'right'; });
+  mbB.push({ q: v, a, el }); mbCur = mbB.length - 1;
+  mbLeaveEdit(refocus);
+  mbPlace(); mbStream(el);
+  setTimeout(() => mbMorph(v), 200);                 // the bubble is back in view by then
+  if (first) { mbPager(true, 1); setTimeout(() => { if (mbB.length > 1) mbOpenPager(); }, 220); } else mbPager(false, 1);
+  mbSay();
+}
+/* drop every branch but the first: used by the loop to start over */
+function mbDrop() {
+  if (mbMode === 'edit') mbLeaveEdit(false);
+  mbGo(0);
+  const extra = mbB.splice(1);
+  mbClosePager();
+  setTimeout(() => { if (mbB.length === 1) { extra.forEach((b) => b.el.remove()); mbPager(true, 1); } else extra.forEach((b) => { if (!mbB.includes(b)) b.el.remove(); }); }, 560);
+  mbSay();
+}
+
+mbEditB.addEventListener('click', mbEdit);
+mbEd.addEventListener('submit', (e) => { e.preventDefault(); mbSend(true); });
+document.getElementById('mb-cancel').addEventListener('click', () => mbLeaveEdit(true));
+mbIn.addEventListener('input', mbSyncSend);
+mbEd.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); mbLeaveEdit(true); } });
+mbPrev.addEventListener('click', () => mbGo(mbCur - 1));
+mbNext.addEventListener('click', () => mbGo(mbCur + 1));
+
+/* the first branch, at rest */
+mbSnap(() => { mbB[0].el = mbPanel(mbB[0].a); mbB[0].el.dataset.pos = 'in'; mbStream(mbB[0].el, true); mbMorph(mbB[0].q, true); mbPager(true, 1); mbEd.inert = true; mbPgw.inert = true; });
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0, first = true;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const mid = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  async function to(my, x, y, ms) { if (!(await QM.ghostTo(x, y, ms)) || my !== epoch) throw 0; }
+  async function toEl(my, el, ms, fx = 0.5) { const r = el.getBoundingClientRect(); await to(my, r.left + r.width * fx, r.top + r.height * 0.55, ms); }
+  function textX(n) {                                  // where the caret sits after n characters of the field
+    const s = document.createElement('span'), cs = getComputedStyle(mbIn);
+    s.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:' + cs.font + ';letter-spacing:' + cs.letterSpacing;
+    s.textContent = mbIn.value.slice(0, n); document.body.appendChild(s);
+    const x = s.getBoundingClientRect().width; s.remove();
+    return mbIn.getBoundingClientRect().left + 16 + x;
+  }
+  function tidy() {                                    // back to one branch, as the loop starts
+    if (mbMode === 'edit') mbLeaveEdit(false);
+    if (mbB.length > 1) mbDrop();
+    mbZone.classList.remove('hot');
+  }
+  function rest() {                                    // a still: branch 2 shown, the pager open (reduced motion)
+    mbSnap(() => {
+      if (mbMode === 'edit') mbLeaveEdit(false);
+      mbB.splice(1).forEach((b) => b.el.remove()); mbCur = 0; mbPlace(); mbMorph(mbB[0].q, true); mbClosePager(true); mbPager(true, 1);
+      if (reduced || QM.tile) {                          // a tile starts on the finished state, so its still shows the pager
+        const v = 'Draft a calmer tagline for Forma', a = mbAnswer(v, 1), el = mbPanel(a);
+        mbB.push({ q: v, a, el }); mbCur = 1; mbPlace(); mbStream(el, true); mbMorph(v, true); mbOpenPager(true); mbSay();
+      }
+    });
+    if (document.activeElement && mb.contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      if (QM.tile && first) { first = false; await gap(my, 3600); }
+      QM.ghostShow();
+      tidy();
+      for (;;) {
+        await gap(my, mbB.length > 1 ? 1300 : 900);
+        await toEl(my, mbBub, 820, 0.6);                      // hover the message, Edit appears
+        mbZone.classList.add('hot'); await gap(my, 520);
+        await toEl(my, mbEditB, 520); await gap(my, 220);
+        mbZone.classList.remove('hot'); mbEdit(); await gap(my, 520);
+        mbIn.setSelectionRange(8, 8);
+        await to(my, textX(8), mid(mbIn)[1], 520); await gap(my, 160);
+        mbIn.setSelectionRange(8, 8);
+        const base = mbIn.value;
+        for (let k = 1; k <= 7; k++) {                        // "calmer " goes in after "Draft a "
+          mbIn.value = base.slice(0, 8) + 'calmer '.slice(0, k) + base.slice(8); mbIn.setSelectionRange(8 + k, 8 + k);
+          mbIn.dispatchEvent(new Event('input')); await gap(my, 70);
+        }
+        await gap(my, 360);
+        await toEl(my, mbSendB, 620); await gap(my, 200);
+        mbSend(false);
+        { const r = mbWin.getBoundingClientRect(); await to(my, r.right - 64, r.top + 44, 800); }   // park beside the answer, off the pager
+        await gap(my, 3400);                                  // the answer streams in; pager is up
+        await toEl(my, mbPrev, 620); await gap(my, 160); mbGo(0); await gap(my, 2000);
+        await toEl(my, mbNext, 520); await gap(my, 160); mbGo(1); await gap(my, 2000);
+        await toEl(my, mbPrev, 520); await gap(my, 160); mbGo(0); await gap(my, 1100);
+        mbDrop(); await to(my, innerWidth * 0.84, innerHeight * 0.86, 700);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); mbZone.classList.remove('hot'); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!mb.matches(':hover') && !mb.contains(document.activeElement)) script(); else touch({}); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(); if (!reduced) script(); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (reduced || QM.tile) rest(); if (!reduced) script(); }, 300));
+})();
+</script>
+</body>
+</html>

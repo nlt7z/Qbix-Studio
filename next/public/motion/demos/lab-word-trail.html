@@ -17,11 +17,12 @@
   "line": "2.1 s life · ink to lime by speed · source-atop",
   "summary": "The pointer's path is drawn into an offscreen canvas where it fades with time, its colour going from ink to lime as the pointer speeds up. The word is drawn first, as a pale sage tint, and the trail is composited with source-atop, so it shows only inside the letterforms.",
   "spec": [
-    ["Life", "2.1 s a point, width and colour easing back to the letter colour with age"],
+    ["Life", "2.1 s a point: the width thins first (to 16%), the colour holds and eases back to the letter colour only in the last 40%, so an old stroke tapers away and never washes to grey"],
     ["Colour", "ink when slow, lime when fast, a short blend between (smoothstep from 30% to 70% of the top speed); speed is smoothed 25% a point against 2 × the short side a second"],
-    ["Width", "0.3 of the type size, thinner when fast"],
+    ["Width", "0.3 of the type size, thinner when fast; drawn as round stamps a few pixels apart with colour and width interpolated between points, so overlaps never band"],
     ["Composite", "globalCompositeOperation source-atop: the trail exists only on the word"],
-    ["Trigger", "the pointer anywhere; the word is fitted on one line or two, whichever gives bigger letters"]
+    ["Trigger", "the pointer anywhere; the word is fitted on one line or two, whichever gives bigger letters, and centred on its x-height"],
+    ["Idle", "a ghost makes two passes along the word, out and back, 2.5 s each, easing in and out (ink, lime, ink); reduced motion keeps one finished stroke on the word"]
   ],
   "source": ["Qbix studio library · word-trail"],
   "where": "The giant wordmark sign-off: the name is the surface you draw on.",
@@ -31,7 +32,7 @@
     "The key under the word is flat steps, not a ramp."
   ],
   "tags": ["canvas", "trail", "wordmark", "pointer"],
-  "shot": 4200
+  "shot": 1900
 }
 </script>
 <style data-code>
@@ -65,7 +66,7 @@ const wordTrail = (() => {
   const FONT = 'Outfit, Geist, system-ui, sans-serif', WORD = 'qbix';
   const LIFE = reduce ? 3 : 2.1;
   const BASE = [227, 232, 218], C0 = [11, 12, 13], C1 = [184, 255, 0];   // a pale word, ink when slow, lime when fast
-  let W, H, dpr, lines = [WORD], fs = 100, VMAX = 1500;
+  let W, H, dpr, lines = [WORD], fs = 100, VMAX = 1500, on = true;
   const FOOT = () => Math.min(80, H * 0.12);
   function fitWord() {
     const pad = Math.min(W, H) * 0.08, aw = W - pad * 2, ah = H - pad * 2 - FOOT();
@@ -75,19 +76,25 @@ const wordTrail = (() => {
     const s1 = Math.min(aw / m1, ah / (asc + desc)) * 100, s2 = Math.min(aw / m2, ah / (lh * 2)) * 100;
     if (s2 > s1 * 1.15) { lines = ['qb', 'ix']; fs = s2; } else { lines = [WORD]; fs = s1; }
   }
+  // where the word sits: one baseline a line. The block is centred on the x-height bands (not on the ascender and the descender), so the weight of the word sits on the middle of the frame
+  function geom() {
+    const asc = fs * 0.78, desc = fs * 0.24, lh = (asc + desc) * 1.02, xh = fs * 0.52;
+    const span = lh * (lines.length - 1) + xh;
+    const top = (H - FOOT()) / 2 - span / 2 + xh;          // the first baseline
+    return { lh, xh, base: lines.map((_, i) => Math.round(top + lh * i)) };
+  }
   function layout() {
     dpr = Math.min(2, devicePixelRatio || 1);
     W = innerWidth; H = innerHeight;
     cv.width = trail.width = Math.round(W * dpr); cv.height = trail.height = Math.round(H * dpr);
     VMAX = Math.max(700, Math.min(W, H) * 2);
     fitWord();
+    if (reduce) seedStill();
   }
   function drawWord(c) {
     c.font = `400 ${fs}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    const asc = fs * 0.78, desc = fs * 0.24, lh = (asc + desc) * 1.02;
-    const total = lh * lines.length - (lh - asc - desc);
-    let y = (H - FOOT()) / 2 - total / 2 + asc;
-    lines.forEach((l) => { c.fillText(l, W / 2, y); y += lh; });
+    const g = geom();
+    lines.forEach((l, i) => c.fillText(l, W / 2, g.base[i]));
   }
   // stroke points: x, y, time, smoothed speed
   const pts = [];
@@ -106,24 +113,45 @@ const wordTrail = (() => {
   }
   // ink or lime, with only a short blend between: the middle of an ink-to-lime ramp is mud
   const speedColor = (v) => { const t = Math.max(0, Math.min(1, (v / VMAX - 0.3) / 0.4)), u = t * t * (3 - 2 * t); return C0.map((x, i) => Math.round(x + (C1[i] - x) * u)); };
+  // a point's colour and width at age factor k (1 new, 0 gone). The colour holds and eases back to the pale word only in the last 40% of
+  // its life (halfway between ink and sage is a grey), and the width thins first, so an old stroke tapers away instead of washing out.
+  const sm = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const tone = (p, k) => { const col = speedColor(p.sv), ka = sm(0, 0.4, k); return BASE.map((x, j) => x + (col[j] - x) * ka); };
+  const half = (p, k) => fs * 0.3 * (1.1 - 0.4 * Math.min(1, p.sv / VMAX)) * (0.16 + 0.84 * sm(0, 0.7, k)) / 2;
+  // one stretch of stroke: round stamps close together along the way, colour and width interpolated between its two points.
+  // Both change smoothly along the path, so the overlaps never show as arcs or bands (a stamp every 6% of its radius).
+  function seg(a, ka, b, kb, last) {
+    const ca = tone(a, ka), cb = tone(b, kb), ha = half(a, ka), hb = half(b, kb);
+    const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.ceil(d / Math.max(1.2, Math.min(ha, hb) * 0.06)));
+    for (let i = last ? 0 : 1; i <= n; i++) {
+      const f = i / n, r = ha + (hb - ha) * f;
+      tctx.fillStyle = `rgb(${Math.round(ca[0] + (cb[0] - ca[0]) * f)},${Math.round(ca[1] + (cb[1] - ca[1]) * f)},${Math.round(ca[2] + (cb[2] - ca[2]) * f)})`;
+      tctx.beginPath(); tctx.arc(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f, r, 0, 6.2832); tctx.fill();
+    }
+  }
+  // reduced motion: one finished stroke stays on the word, not fading
+  let still = [];
+  function seedStill() {
+    still = [];
+    const N = 70, g = geom();
+    for (let i = 0; i <= N; i++) {
+      const [x, y] = route(i / N, 0);
+      const p = still[i - 1], v = p ? Math.hypot(x - p.x, y - p.y) * N / 1.6 : 0;
+      still.push({ x, y, sv: p ? p.sv + (v - p.sv) * 0.25 : 0, brk: i === 0 });
+    }
+  }
   function frame() {
     requestAnimationFrame(frame);
+    if (!on || document.hidden) return;
     const now = performance.now() / 1000;
     while (pts.length && now - pts[0].t > LIFE) pts.shift();
-    // 1. the trail canvas: every live segment, fading with age
+    // 1. the trail canvas: every live segment, oldest first, fading with age
     tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     tctx.clearRect(0, 0, W, H);
-    tctx.lineCap = 'round'; tctx.lineJoin = 'round';
-    const base = fs * 0.3;
+    for (let i = 1; i < still.length; i++) seg(still[i - 1], 0.9, still[i], 0.9, i === 1);
     for (let i = 1; i < pts.length; i++) {
       const a = pts[i - 1], b = pts[i]; if (b.brk) continue;
-      const k = 1 - (now - b.t) / LIFE, ka = k * k * (3 - 2 * k);
-      const col = speedColor(b.sv), tv = Math.min(1, b.sv / VMAX);
-      const w = base * (1.1 - 0.4 * tv) * (0.5 + 0.5 * k);
-      // colours are mixed into the letter colour and drawn opaque so overlaps never band
-      tctx.strokeStyle = `rgb(${BASE.map((x, j) => Math.round(x + (col[j] - x) * ka)).join(',')})`;
-      tctx.lineWidth = w;
-      tctx.beginPath(); tctx.moveTo(a.x, a.y); tctx.lineTo(b.x, b.y); tctx.stroke();
+      seg(a, 1 - (now - a.t) / LIFE, b, 1 - (now - b.t) / LIFE, i === 1 || pts[i - 1].brk);
     }
     // 2. the word, then the trail only where the word is
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -136,9 +164,22 @@ const wordTrail = (() => {
     ctx.drawImage(trail, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
   }
+  // the ghost's hand: two passes along the word, out and back, each slow at its ends and fast in the middle (so ink to lime to ink), then a beat of rest
+  const ez = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const PASS = 2.5, REST = 0.6, PERIOD = 2 * (PASS + REST);
+  function route(p, pass) {
+    const g = geom(), j = pass % lines.length;
+    ctx.font = `400 ${fs}px ${FONT}`;
+    const mw = ctx.measureText(lines[j]).width, x0 = W / 2 - mw / 2 + mw * 0.07, x1 = W / 2 + mw / 2 - mw * 0.07;
+    const u = ez(p), dir = pass % 2 ? -1 : 1;
+    const x = dir > 0 ? x0 + (x1 - x0) * u : x1 + (x0 - x1) * u;
+    const y = g.base[j] - g.xh / 2 + dir * Math.sin(p * 6.2832) * g.xh * 0.2 * (lines.length > 1 ? 0.8 : 1);
+    return [x, y];
+  }
   layout();
   addEventListener('resize', layout);
   if (document.fonts) document.fonts.load('400 100px Outfit').then(layout, () => {});
+  if (window.IntersectionObserver) new IntersectionObserver((e) => { on = e[0].isIntersecting; }).observe(cv);   // paused off screen
   requestAnimationFrame(frame);
   // the key: flat steps
   const key = document.getElementById('key');
@@ -146,10 +187,8 @@ const wordTrail = (() => {
   return {
     push,
     path(t) {
-      const gt = t * 1.5, u = gt + 0.85 * Math.sin(gt * 0.9);
-      const cx = W / 2, cy = (H - FOOT()) / 2;
-      const ax = W * 0.36, ay = Math.min(H * 0.3, fs * (lines.length === 2 ? 0.95 : 0.42));
-      return [cx + ax * Math.sin(u * 1.1) * Math.cos(u * 0.23), cy + ay * Math.sin(u * 2.3 + 0.4)];
+      const u = t % PERIOD, pass = u < PERIOD / 2 ? 0 : 1, v = pass ? u - PERIOD / 2 : u;
+      return route(Math.min(1, v / PASS), pass);
     }
   };
 })();
@@ -159,7 +198,7 @@ document.addEventListener('pointermove', (e) => {
 });
 </script>
 <script>
-  QM.demo({ kind: 'pointer', move: (x, y) => wordTrail.push(x, y), path: (t) => wordTrail.path(t) });
+  QM.demo({ kind: 'pointer', move: (x, y, ghost) => { if (!(ghost && QM.reduced)) wordTrail.push(x, y); }, path: (t) => wordTrail.path(t) });
 </script>
 </body>
 </html>

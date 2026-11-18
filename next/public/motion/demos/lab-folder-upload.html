@@ -41,10 +41,14 @@
 .fu-copy { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; }
 .fu-t { font: 300 clamp(26px, 4.6vw, 44px)/1.15 'Outfit', 'Geist', sans-serif; letter-spacing: -0.03em; height: 1.15em; position: relative; overflow: hidden; }
 .fu-sub { font-size: clamp(14px, 2vw, 16px); color: rgba(11, 12, 13, 0.64); margin-top: 6px; height: 1.4em; line-height: 1.4em; position: relative; overflow: hidden; font-variant-numeric: tabular-nums; }
-.fu-t span, .fu-sub span { position: absolute; left: 0; right: 0; transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1); }
-.fu .in { transform: translateY(110%); } .fu .out { transform: translateY(-110%); }
-.fu-bar { width: min(220px, 50vw); height: 6px; margin: 14px auto 0; background: #E3E8DA; overflow: hidden; transform: scaleX(0); transform-origin: left; transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1); }
-.fu-bar.is-on { transform: scaleX(1); }
+.fu-t span, .fu-sub span { position: absolute; left: 0; right: 0; transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1); }
+/* a line leaves quicker (ease in) than the next one rises (expo out) */
+.fu .in { transform: translateY(110%); } .fu .out { transform: translateY(-110%); transition: transform 360ms cubic-bezier(0.5, 0, 0.75, 0); }
+#file { cursor: grab; } #file:active { cursor: grabbing; }
+#file:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 6px; }
+.fu-bar { width: min(220px, 50vw); height: 6px; margin: 14px auto 0; background: #E3E8DA; overflow: hidden; transform: scaleX(0); transform-origin: right; transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1); }
+/* it draws in from the left and is wiped off to the right, the way the fill travelled */
+.fu-bar.is-on { transform: scaleX(1); transform-origin: left; }
 .fu-bar i { display: block; height: 100%; width: 100%; background: #0B0C0D; transform-origin: left; transform: scaleX(0); }
 @media (prefers-reduced-motion: reduce) { .fu-t span, .fu-sub span, .fu-bar { transition: none; } }
 </style>
@@ -70,7 +74,7 @@
       </g>
     </g>
     <g id="top">
-      <g id="file">
+      <g id="file" tabindex="0" role="button" aria-label="Moodboard picture. Press Enter to upload it">
         <rect x="-33" y="-42" width="66" height="84" fill="#E3E8DA" transform="rotate(-9)"/>
         <rect x="-33" y="-42" width="66" height="84" fill="#EEF1E8" transform="rotate(6)"/>
         <rect x="-33" y="-42" width="66" height="84" fill="#ffffff"/>
@@ -80,6 +84,7 @@
       </g>
     </g>
   </svg>
+  <p class="sr-only" id="fu-sr" role="status" aria-live="polite"></p>
   <div class="fu-copy" id="fu-copy"><div class="fu-t" id="fu-t"></div><div class="fu-sub" id="fu-sb"></div><div class="fu-bar" id="fu-bar"><i id="fu-fill"></i></div></div>
 </div>
 <!-- /code -->
@@ -99,10 +104,11 @@ function folderUpload(root) {
   let W, H, S, CX, BY, home = { x: 0, y: 0 };
   function resize() {
     const o = root.getBoundingClientRect(); W = o.width; H = o.height; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    S = Math.max(0.62, Math.min(1.45, Math.min(W / 430, H / 560)));
-    CX = W / 2; BY = H * 0.46 + 40 * S;
+    // S in eighths, the folder's left edge and its base on whole pixels: the flap's four edges are crisp at rest
+    S = Math.max(0.625, Math.min(1.5, Math.floor(Math.min(W / 430, H / 560) * 8) / 8));
+    CX = Math.round(W / 2 - 100 * S) + 100 * S; BY = Math.round(H * 0.46 + 40 * S);
     copy.style.top = BY + 26 * S + 'px';
-    home = { x: Math.min(W - 16 - 62 * S, CX + 150 * S), y: Math.min(H - 16 - 70 * S, BY + 170 * S) };
+    home = { x: Math.min(W - 16 - 62 * S, CX + 200 * S), y: Math.min(H - 16 - 70 * S, BY + 190 * S) };   // right of the copy and the bar, clear of both
     if (W < 520) home = { x: W - 16 - 58 * S, y: Math.min(H - 26 - 56 * S, BY + 190 * S) };
     if (st === 'idle' && !dragging) { F.x.x = home.x; F.y.x = home.y; }
   }
@@ -117,10 +123,12 @@ function folderUpload(root) {
     if (quick && old.length) { old[old.length - 1].textContent = txt; return; }
     const sp = document.createElement('span'); sp.textContent = txt;
     if (reduce || !old.length) { old.forEach((o) => o.remove()); el.appendChild(sp); return; }
-    sp.className = 'in'; el.appendChild(sp); old.forEach((o) => { o.className = 'out'; setTimeout(() => o.remove(), 650); });
-    requestAnimationFrame(() => requestAnimationFrame(() => { if (sp.className === 'in') sp.className = ''; }));
+    sp.className = 'in'; el.appendChild(sp); old.forEach((o) => { o.className = 'out'; setTimeout(() => o.remove(), 420); });
+    // the old line clears first (140 ms), then the new one rises
+    setTimeout(() => { if (sp.className === 'in') sp.className = ''; }, 140);
   }
-  const say = (a, b, q) => { setText($('fu-t'), a); setText($('fu-sb'), b, q); };
+  const sr = $('fu-sr');
+  const say = (a, b, q) => { setText($('fu-t'), a); setText($('fu-sb'), b, q); if (sr.textContent !== a) sr.textContent = a; };
   const local = (wx, wy) => ({ x: (wx - CX) / S, y: (wy - BY) / S });
   const overFolder = (x, y) => { const l = local(x, y); return l.x > -130 && l.x < 130 && l.y > -230 && l.y < 30; };
   const setParent = (p) => { const t = p === 'mid' ? mid : topL; if (file.parentNode !== t) t.appendChild(file); };
@@ -179,12 +187,12 @@ function folderUpload(root) {
       for (;;) {
         const u = Math.min(1, (performance.now() - t0) / dur);
         prog = u < 1 ? Math.min(0.99, (u * 0.92 + 0.08 * Math.sin(u * Math.PI * 0.5)) * (1 - 0.12 * Math.sin(u * Math.PI * 3) * (1 - u))) : 1;
-        fillb.style.transform = `scaleX(${prog})`;
+        const bw = bar.offsetWidth || 220; fillb.style.transform = `scaleX(${Math.round(prog * bw) / bw})`;   // whole pixels
         say('Uploading ' + n + (n === 1 ? ' picture' : ' pictures'), Math.round(prog * 100) + '%', prog > 0.011);
         if (u >= 1) break; await wait(50);
       }
       setState('done'); open.t = 0; sq.t = 0; hop.v = -520; hop.t = 0; sq.v = 3;
-      happyOn = 1; bar.classList.remove('is-on'); say(n + (n === 1 ? ' picture' : ' pictures') + ' added', 'Forma moodboard · clay, glaze and light');
+      happyOn = 1; setTimeout(() => { if (my === seq) bar.classList.remove('is-on'); }, reduce ? 0 : 520); say(n + (n === 1 ? ' picture' : ' pictures') + ' added', 'Forma moodboard · clay, glaze and light');
       await wait(2600);
       happyOn = 0;
       setParent('top'); F.x.x = home.x; F.y.x = home.y; F.x.t = home.x; F.y.t = home.y; F.s.x = 0.2; F.s.t = 1; F.r.t = 0;   // the picture grows back at its home
@@ -212,6 +220,10 @@ function folderUpload(root) {
   // real files dropped from the desktop
   addEventListener('dragover', (e) => { e.preventDefault(); if (st === 'idle') setState('drag'); hoverOn(true); });
   addEventListener('drop', (e) => { e.preventDefault(); const n = (e.dataTransfer && e.dataTransfer.files.length) || 1; if (st === 'hover' || st === 'drag') { F.x.x = CX; F.y.x = BY - 200 * S; F.s.x = 0.9; swallow(n); } });
+  // keyboard: Enter or Space sends the picture in, the same story as a drop
+  file.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && st === 'idle' && !dragging) { e.preventDefault(); setState('drag'); swallow(3); }
+  });
   addEventListener('resize', resize);
   resize(); idleText(); F.x.x = F.x.t = home.x; F.y.x = F.y.t = home.y;
   if (reduce) render();
@@ -227,7 +239,7 @@ const fu = folderUpload(document.getElementById('fu'));
 <script>
   /* the ghost carries the file to the folder, lets go, and drifts off while it chews */
   let lastReal = -1e9, gen = 0;
-  ['pointerdown', 'keydown'].forEach((n) => addEventListener(n, (e) => { if (e.isTrusted) { lastReal = performance.now(); gen++; QM.ghostHide(); if (fu.dragging) fu.release(); } }, true));
+  ['pointerdown', 'keydown', 'pointermove'].forEach((n) => addEventListener(n, (e) => { if (e.isTrusted && (e.pointerType !== 'touch') && (n !== 'pointermove' || e.pointerType === 'mouse')) { lastReal = performance.now(); gen++; QM.ghostHide(); if (fu.dragging && n !== 'pointermove') fu.release(); } }, true));
   const guard = (g) => { if (g !== gen) throw 0; };
   async function toss(g) {
     const h = fu.home(), S = fu.S();
@@ -244,7 +256,7 @@ const fu = folderUpload(document.getElementById('fu'));
   async function loop() {
     for (;;) {
       await QM.wait(250);
-      if (QM.reduced || document.hidden || performance.now() - lastReal < 2500 || fu.state() !== 'idle' || fu.dragging) continue;
+      if (QM.reduced || document.hidden || performance.now() - lastReal < 5000 || fu.state() !== 'idle' || fu.dragging) continue;
       const g = gen;
       try { await toss(g); } catch (e) { if (fu.dragging) fu.release(); }
     }

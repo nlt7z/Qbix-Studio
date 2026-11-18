@@ -18,7 +18,7 @@
   "summary": "A solid bar sweeps across a line left to right, then collapses toward the right edge and hands off to the words it was covering. The line is clipped shut from the right and opens; the bar rides inside the same clip, so what reads is a bar of colour crossing and uncovering the type.",
   "spec": [
     ["Duration", "600 ms the clip, 600 ms the bar"],
-    ["Easing", "clip cubic-bezier(0.16, 1, 0.3, 1) · bar ease-in-out cubic-bezier(0.42, 0, 0.58, 1)"],
+    ["Easing", "clip cubic-bezier(0.16, 1, 0.3, 1) (expo out) · bar cubic-bezier(0.65, 0, 0.35, 1) (the kit's move curve, as the bar is a move)"],
     ["Stagger", "0.15 s × the line's index (plus an optional delay)"],
     ["Move", "line clip-path inset(0 100% 0 0) → inset(0 0 0 0) · bar scaleX 1 → 0, origin right"],
     ["Bar timing", "starts halfway through the clip (delay + duration / 2)"],
@@ -29,12 +29,12 @@
   "where": "/products/strata: the hero's two title lines, and the “Everything a system needs.” heading on the white panel.",
   "rules": [
     "No fade, no blur: the line is covered, then uncovered. The bar is the only thing that is ever seen moving.",
-    "The bar is a solid of the page's own ink (or white): never lime. The screen's lime belongs to the button.",
-    "The clip is the line box, so keep line-height at 1 or more and let a title be display: block; a wipe on an inline run breaks across lines.",
+    "The bar is a solid of the page's own ink (or white): never lime. The screen's lime belongs to the button. Each line is as wide as its words (width: fit-content), so the bar ends where the type ends.",
+    "The clip is the line box plus a little room above and below (padding with a matching negative margin) so descenders are never cut; let a title be display: block, a wipe on an inline run breaks across lines.",
     "Lines go together when they are one thought: the stagger is 0.15 s, not more."
   ],
   "tags": ["text", "entrance", "clip", "bar", "in view"],
-  "shot": 1300
+  "shot": 2800
 }
 </script>
 <style data-code>
@@ -46,6 +46,10 @@
   --wipe-at: 0ms;                      /* set per line: delay + index × 150 ms */
   position: relative;
   display: block;
+  width: fit-content;                  /* the bar is as long as its words, not as wide as the title */
+  /* the clip is the line box plus room for the ascender and the descender (g, y), pulled back with a negative margin so the lines keep their rhythm */
+  padding-block: 0.05em 0.1em;
+  margin-block: -0.05em -0.1em;
   clip-path: inset(0 100% 0 0);
   transition: clip-path var(--wipe-dur) cubic-bezier(0.16, 1, 0.3, 1) var(--wipe-at);
 }
@@ -55,7 +59,7 @@
   pointer-events: none;
   background: var(--wipe-color, #0B0C0D);
   transform-origin: right center;
-  transition: transform var(--wipe-dur) cubic-bezier(0.42, 0, 0.58, 1) calc(var(--wipe-at) + var(--wipe-dur) / 2);
+  transition: transform var(--wipe-dur) cubic-bezier(0.65, 0, 0.35, 1) calc(var(--wipe-at) + var(--wipe-dur) / 2);
 }
 .wipe.is-in { clip-path: inset(0 0 0 0); }
 .wipe.is-in::after { transform: scaleX(0); }
@@ -75,10 +79,11 @@
 .pd-signal { color: inherit; }   /* was the one lime word; lime now marks only the button, so it reads in the title's own ink */
 </style>
 <style>
-  .tw { width: min(100%, 980px); display: grid; gap: clamp(14px, 3vmin, 26px); justify-items: start; }
+  .tw { width: max-content; max-width: 100%; display: grid; gap: clamp(14px, 3vmin, 26px); justify-items: start; }
   /* the library draws the title larger so it fills a tile */
   .tw .pd-title { font-size: clamp(36px, min(8vw, 13vh), 110px); }
   .wipe.is-reset, .wipe.is-reset::after { transition: none; }
+  .tw .pd-title { text-wrap: balance; }
 </style>
 </head>
 <body>

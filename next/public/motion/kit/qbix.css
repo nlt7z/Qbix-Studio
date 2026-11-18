@@ -235,3 +235,11 @@ html.qm-tile::-webkit-scrollbar { display: none; }
   transition: opacity 240ms var(--ease);
 }
 .qm-ghost.is-off { opacity: 0; }
+
+/* Keyboard focus for every control in every piece (2026-11-16 polish pass).
+   :where() keeps it at zero specificity, so a piece's own :focus-visible rule wins. */
+:where(button, a[href], input, select, textarea, [role='button'], [role='slider'], [role='switch'], [role='tab'], [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--fg, #0B0C0D);
+  outline-offset: 3px;
+}
+:where(button, a[href], [role='button'], [role='tab']):focus:not(:focus-visible) { outline: none; }

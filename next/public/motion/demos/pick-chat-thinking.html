@@ -14,15 +14,15 @@
   "order": 37,
   "kind": "loop",
   "tone": "paper",
-  "line": "steps tick in every 1 s · 120–260 ms · fold into one row",
+  "line": "steps arrive 0.7 to 1.7 s apart · push 260 ms · fold into one row",
   "summary": "The companion sits beside the reply, its cube bobbing and three dots blinking, while the activity rows tick in one by one under a live header whose label swaps and shimmers. When the answer arrives the companion goes, the steps fold into a single “AI reasoning” row, and the answer rises in. The cube's lime top is the one lime: it is there only while the model is working.",
   "spec": [
-    ["Rows", "one every 1 s (the first after 0.6 s); each rises 6px over 200 ms, expo out; the newest is the running one (a pulsing ring)"],
-    ["Header", "three dots, the live label (it swaps: the old one leaves in 120 ms ease-in, the new one rises in 200 ms) shimmering over 3 s, a seconds counter every 250 ms, a chevron"],
+    ["Rows", "paced like work: after 0.7, 0.9, 1.7 and 1.0 s; each rises 6px over 200 ms, expo out, while its height opens 260 ms on the move curve so the thread above glides up instead of jumping; the newest is the running one (a pulsing ring)"],
+    ["Header", "three dots, the live label (it swaps: the old one leaves in 120 ms ease-in, the new one rises in 200 ms, starting 120 ms later, once the old one has gone, so they never overlap) shimmering over 3 s, a seconds counter in tabular figures, a chevron"],
     ["Companion", "a 56px cube with a lime top, bobbing, and a three-dot emote that pops in over 260 ms and blinks on a 1.4 s loop"],
-    ["Done", "after 0.8 s: the companion leaves (120 ms), a tile takes its place (200 ms), the list folds (grid rows 1fr → 0fr, 200 ms) into one row with a count, the answer rises in 260 ms later"],
+    ["Done", "after a 1.1 s pause: the companion leaves (120 ms), a tile takes its place (200 ms), the list folds (grid rows 1fr → 0fr, 200 ms) into one row with a count, the answer rises in 260 ms later and opens its height on the move curve"],
     ["Rows are folded, never removed", "the steps stay in the document inside the folded row, and the header opens them again"],
-    ["Loop", "3.6 s after the answer the thread starts over; paused while the page is hidden"]
+    ["Loop", "3.6 s after the answer the old thread folds away from the bottom (260 ms, ease in) and the next question rises in; paused while the page is hidden"]
   ],
   "source": ["motion.ui.o2tech.ai · Thinking (bom-chat-thinking)", "Idea: Qbix studio library · thinking"],
   "where": "Strata's chat: ask for a design system from Forma's moodboard and watch the model read the board, pull the palette, measure the type and draft the components before it answers.",
@@ -30,10 +30,11 @@
     "Quiet motion, 120 to 260 ms. Steps fold, never vanish.",
     "No morphing orbs: the companion is a plain cube and only lives in the conversation.",
     "One lime, and only while it is thinking.",
-    "The header is a real button: it opens and closes the folded steps."
+    "The header is a real button: it opens and closes the folded steps.",
+    "The thread is drawn in an 880 × 550 frame at about 0.9 in a tile, so the 14px type reads as 13px; status changes are said once in a hidden status line."
   ],
   "tags": ["chat", "thinking", "timeline", "ai", "steps"],
-  "shot": 3700
+  "shot": 5200
 }
 </script>
 <style data-code>
@@ -68,7 +69,7 @@
 .companion .emote { transform-box: fill-box; transform-origin: 50% 100%; animation: emote-pop var(--duration-slow, 260ms) var(--ease-out) both; }
 .companion .emote rect { animation: emote-dot 1.4s var(--ease-in-out) infinite both; }
 .companion .emote rect:nth-child(2) { animation-delay: .18s; } .companion .emote rect:nth-child(3) { animation-delay: .36s; }
-@keyframes emote-pop { 0% { opacity: 0; transform: translateY(2px) scale(.4); } 70% { opacity: 1; transform: translateY(0) scale(1.15); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes emote-pop { 0% { opacity: 0; transform: translateY(2px) scale(.4); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes emote-dot { 0%, to { opacity: .25; } 40% { opacity: 1; } }
 .col { min-width: 0; display: grid; gap: var(--space-3); padding-top: var(--space-1); }
 .answer { display: grid; gap: var(--space-2); animation: rise var(--duration-base) var(--ease-out) both; }
@@ -76,8 +77,10 @@
 .answer .rest { color: var(--muted); }
 /* the activity timeline */
 .tl { display: grid; }
-.sum { display: flex; align-items: center; gap: var(--space-2); min-height: 28px; padding: var(--space-1) var(--space-2) var(--space-1) 0; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); text-align: left; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.sum { display: flex; align-items: center; gap: var(--space-2); min-height: 28px; padding: var(--space-1) var(--space-2) var(--space-1) 0; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); text-align: left; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-base) var(--ease-out); }
 .sum:hover, .sum.is-hover { background: var(--surface-muted); color: var(--text); }
+.sum:active { transform: translateY(1px); transition-duration: 80ms; }
+.sum:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
 .sum .mk { display: grid; place-items: center; width: 16px; color: var(--faint); }
 .tl.is-live .sum .mk { color: var(--muted); }
 .dots { display: inline-flex; gap: 2px; align-items: center; height: 12px; }
@@ -86,12 +89,12 @@
 @keyframes dot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2.5px); } }
 .lbl { display: grid; min-width: 0; overflow: hidden; }
 .lbl span { grid-area: 1 / 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lbl .in { animation: lin var(--duration-base) var(--ease-out) both; }
+.lbl .in { animation: lin var(--duration-base) var(--ease-out) 120ms both; }
 .lbl .out { animation: lout var(--duration-fast) var(--ease-in) both; }
 @keyframes lin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes lout { from { opacity: 1; } to { opacity: 0; transform: translateY(-4px); } }
 .tl.is-live .lbl span:not(.out) { color: transparent; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 38%, var(--text) 50%, var(--muted) 62%, var(--muted) 100%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: shim 3s linear infinite; }
-.tl.is-live .lbl .in { animation: lin var(--duration-base) var(--ease-out) both, shim 3s linear infinite; }
+.tl.is-live .lbl .in { animation: lin var(--duration-base) var(--ease-out) 120ms both, shim 3s linear infinite; }
 @keyframes shim { from { background-position: 100% 0; } to { background-position: 0 0; } }
 .sum .cnt { margin-left: auto; color: var(--faint); font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
 .sum .chev { color: var(--faint); transition: transform var(--duration-base) var(--ease-out); }
@@ -116,8 +119,10 @@
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .composer { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) var(--space-6) var(--space-5); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3); border: 1px solid var(--field-border); border-radius: var(--radius-lg); }
 .composer .clip { color: var(--muted); display: grid; place-items: center; width: 36px; height: 36px; }
+.composer:focus-within { box-shadow: inset 0 0 0 1px var(--text); border-color: var(--text); }
 .composer input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; height: 36px; font: inherit; color: inherit; }
 .composer input::placeholder { color: var(--faint); }
+.send[disabled] { cursor: default; }
 .send { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: var(--radius-pill); background: rgba(11, 12, 13, .22); color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .you, .bot, .answer, .st, .lbl .in, .companion .bob, .companion .emote, .companion .emote rect, .dots i, .st.is-running .m::after { animation: none; }
@@ -126,7 +131,7 @@
 </style>
 <style>
   html, body { height: 100%; overflow: hidden; }
-  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+  .vp { position: absolute; left: 0; top: 0; width: 880px; height: 550px; transform-origin: 0 0; }
 </style>
 </head>
 <body>
@@ -136,6 +141,7 @@
   <div class="thread">
     <div class="head"><h1>Forma · Moodboard</h1><span class="meta">Strata · 9 images</span></div>
     <div class="msgs" id="msgs"></div>
+    <p class="sr-only" id="say" role="status" aria-live="polite"></p>
     <div class="composer">
       <span class="clip" id="clip"></span>
       <input type="text" placeholder="Ask about this moodboard" autocomplete="off" aria-label="Message">
@@ -189,33 +195,61 @@ function stepHTML(s, running) {
 const ABORT = { abort: true };
 let gen = 0;
 const sleep = (ms, my = gen) => new Promise((res, rej) => setTimeout(() => (my === gen ? res() : rej(ABORT)), ms));
+const say = (t) => { $('#say').textContent = t; };
+const EXPO = 'cubic-bezier(.16, 1, .3, 1)', MOVE = 'cubic-bezier(.65, 0, .35, 1)', IN = 'cubic-bezier(.5, 0, .75, 0)';
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* a thing that joins the thread opens its height on the move curve, so what is above it glides up */
+function open(el, clip, ms = 260) {
+  if (calm) return;
+  const h = el.offsetHeight;
+  if (clip) el.style.overflow = 'hidden';      // only a filled bubble is clipped; the rest has no ground to show it
+  el.animate([{ height: '0px' }, { height: h + 'px' }], { duration: ms, easing: MOVE }).finished.then(() => { el.style.overflow = ''; }, () => {});
+}
+/* the old thread folds away from the bottom, quicker than it arrived (a loop never snaps) */
+async function clearOut(my) {
+  if (!msgs.children.length) return;
+  if (!calm) {
+    const a = msgs.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 100% 0)' }], { duration: 260, easing: IN, fill: 'forwards' });
+    await sleep(270, my);
+    a.cancel();
+  }
+  msgs.innerHTML = '';
+}
 
 async function play(my) {
-  msgs.innerHTML = '';
+  await clearOut(my);
   const q = document.createElement('div'); q.className = 'you'; q.textContent = 'Make a design system from this.'; msgs.append(q);
-  await sleep(420, my);
+  open(q, true);
+  await sleep(520, my);
   const bot = document.createElement('div'); bot.className = 'bot';
   bot.innerHTML = `<div class="who"><span class="companion">${COMPANION}</span><span class="tile">${icon('Box', 16)}</span></div>
-    <div class="col"><div class="tl is-live is-open"><button class="sum" type="button" aria-expanded="true"><span class="mk"><span class="dots"><i></i><i></i><i></i></span></span><span class="lbl"></span><span class="cnt">0s</span><span class="chev">${icon('ChevronDown', 14)}</span></button><div class="wrap"><ol></ol></div></div></div>`;
+    <div class="col"><div class="tl is-live is-open"><button class="sum" type="button" aria-expanded="true"><span class="mk"><span class="dots"><i></i><i></i><i></i></span></span><span class="lbl" aria-hidden="true"></span><span class="cnt" aria-hidden="true">0s</span><span class="chev">${icon('ChevronDown', 14)}</span></button><div class="wrap"><ol></ol></div></div></div>`;
   msgs.append(bot);
+  open(bot);
   const tl = $('.tl', bot), lbl = $('.lbl', tl), ol = $('ol', tl), cnt = $('.cnt', tl), sum = $('.sum', tl);
-  sum.addEventListener('click', () => { const open = tl.classList.toggle('is-open'); sum.setAttribute('aria-expanded', String(open)); });
+  sum.setAttribute('aria-label', 'Thinking steps');
+  sum.addEventListener('click', () => { const o = tl.classList.toggle('is-open'); sum.setAttribute('aria-expanded', String(o)); });
   const t0 = performance.now();
-  const tick = setInterval(() => { cnt.textContent = Math.floor((performance.now() - t0) / 1000) + 's'; }, 250);
+  let shown = 0;
+  const tick = setInterval(() => { const n = Math.floor((performance.now() - t0) / 1000); if (n !== shown) { shown = n; cnt.textContent = n + 's'; } }, 200);
   const setLabel = (t) => {
     const old = lbl.querySelector('span');
     if (old) { old.className = 'out'; setTimeout(() => old.remove(), 120); }
     const n = document.createElement('span'); n.textContent = t; n.className = old ? 'in' : ''; lbl.append(n);
   };
   try {
-    setLabel('Working');
+    setLabel('Working'); say('Thinking');
+    // paced like work: a quick look, a quick pull, a long measure, a short draft, then a pause before the answer
+    const GAPS = [700, 900, 1700, 1000];
     for (let i = 0; i < STEPS.length; i++) {
-      await sleep(i ? 1000 : 600, my);
+      await sleep(GAPS[i], my);
       ol.querySelectorAll('.is-running').forEach((e) => e.classList.remove('is-running'));
       ol.insertAdjacentHTML('beforeend', stepHTML(STEPS[i], true));
-      setLabel(STEPS[i].label);
+      open(ol.lastElementChild);
+      setLabel(STEPS[i].label); say(STEPS[i].label);
     }
-    await sleep(800, my);
+    await sleep(1100, my);
   } finally { clearInterval(tick); }
   ol.querySelectorAll('.is-running').forEach((e) => e.classList.remove('is-running'));
   // the run ends: the companion goes, the steps fold into one row, the answer arrives
@@ -225,10 +259,13 @@ async function play(my) {
   lbl.innerHTML = '<span>AI reasoning</span>';
   $('.mk', tl).innerHTML = icon('Sparkles', 14);
   cnt.textContent = STEPS.length + ' steps';
+  sum.setAttribute('aria-label', 'AI reasoning, ' + STEPS.length + ' steps');
   await sleep(260, my);
   const a = document.createElement('div'); a.className = 'answer';
   a.innerHTML = `<p class="lead">${ANSWER[0]}</p><p class="rest">${ANSWER[1]}</p>`;
   $('.col', bot).append(a);
+  open(a);
+  say(ANSWER[0] + ' ' + ANSWER[1]);
 }
 /* with reduced motion the run is drawn finished, at once */
 function still() {
@@ -251,13 +288,13 @@ async function main() {
 }
 </script>
 <script>
-  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window ---- */
+  /* ---- harness glue: the 880 × 550 frame the thread is drawn in, scaled to the window ---- */
   function vpfit() {
     const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
     const go = () => {
       const bar = QM.tile || !ui ? 0 : 46;
-      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
-      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+      const k = Math.min(innerWidth / 880, (innerHeight - bar) / 550);   // 880 × 550: the thread at about 0.9 in a tile, so its type reads
+      vp.style.transform = `translate(${Math.round((innerWidth - 880 * k) / 2)}px, ${Math.round((innerHeight - bar - 550 * k) / 2)}px) scale(${k.toFixed(4)})`;
     };
     addEventListener('resize', go); go();
   }

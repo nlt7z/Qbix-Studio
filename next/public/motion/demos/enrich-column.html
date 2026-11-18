@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enrich column · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "enrich-column", "title": "Enrich column", "group": "studio", "added": "2026-11-17", "cat": "data", "order": 80,
+  "kind": "loop", "tone": "paper", "shot": 2400,
+  "line": "cells fill top to bottom, 520 ms apart · a shimmer line, then the value types in · three dots settle · the counter rolls",
+  "summary": "A Qbix leads table with four companies and a new, empty column, Stack. One small ink pill in its header, Fill with agent, starts the agent. The cells fill from the top with overlap: each shows a short sage shimmer line that is uncovered, then its value is typed in over it (Next.js · Vercel, Shopify, Webflow, Framer) and three small dots settle beside it to say how sure the agent is. The row heights never change. A counter in the header rolls from 0 / 4 to 4 / 4 and when the last cell lands a lime dot appears on the header. The pill has stepped down to a text button, Filling…, and then Clear, which takes the values away from the bottom up.",
+  "spec": [
+    ["Start", "the ink pill steps down to a text button in 300 ms: its fill and colour change on the ui curve while its width follows the new label on 420 ms ease-move; the label rolls up under a clip (360 ms expo out, the old one leaves in 150 ms ease-in)"],
+    ["Cell", "a cell starts 520 ms after the one above it: a shimmer line 8 px tall is uncovered left to right (280 ms expo out) and a slow sage sweep runs across it for about 650 ms; it is uncovered away to the right while the value types in at about 24 ms a character"],
+    ["Confidence", "three dots, ink at 80% (filled) or 18% (open), scale in 60 ms apart on 280 ms expo out once the value is typed; high is three filled, medium two"],
+    ["Counter", "Geist Mono, tabular; the count rolls up 360 ms expo out as each value lands, and rolls down when the column is cleared"],
+    ["Done", "when the last value lands a lime dot pops in beside Stack (300 ms expo out) and the button reads Clear"],
+    ["Clear", "the values are uncovered away upward from the last row to the first, 60 ms apart (200 ms ease-in), the dot closes, the pill comes back"],
+    ["Stop", "pressing Filling… stops the run: cells that are still working retract, finished ones stay and the pill returns to fill the rest"],
+    ["Loop", "a ghost fills, waits, clears and fills again; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-17"],
+  "where": "A Qbix leads table where a salesperson adds a column and asks the agent to look each company up, and wants to see which cells it is sure about.",
+  "rules": [
+    "One heavy thing: the Fill pill. As soon as it has done its job it steps down to text, so the filled table has no heavy element at all.",
+    "The grid never moves: rows have fixed height and the new values only appear inside their cells, so a reader can keep their eyes on one row.",
+    "Work is shown where it happens: a shimmer line in the empty cell, then the typed value; sage is only that line.",
+    "Confidence is part of the answer, three small dots in ink at alpha beside the value, not a colour or a badge.",
+    "Nothing fades and nothing bounces: things are uncovered under a clip, exits are about 0.6x of the entry.",
+    "Every state can be left mid-way: Filling… stops the run, Clear works at any moment, and the pill comes back.",
+    "A real button with a label that follows its state, a polite live region for the count, a real table for screen readers.",
+    "Under reduced motion the table rests filled, with the counter at 4 / 4 and every change is instant."
+  ],
+  "tags": ["data", "table", "column", "agent", "fill", "enrich", "confidence", "leads", "typing"]
+}
+</script>
+<style data-code>
+/* Enrich column. One heavy thing: the Fill pill (it steps down to text). Sage only as the shimmer line and a hover wash. One lime point (done).
+   Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0), ui (.4,0,.2,1). */
+.ec { position: relative; width: 600px; max-width: 100%; padding: 24px 24px 12px; background: #fff; color: #0B0C0D; border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.008em; }
+.ec :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.ec-hd { margin: 0 0 8px; font: 300 22px/26px Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+
+.ec-t { width: calc(100% + 16px); margin: 0 -8px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+.ec-t th, .ec-t td { position: relative; padding: 0 8px; text-align: left; vertical-align: middle; }
+.ec-t th { height: 40px; font-size: 13px; font-weight: 500; line-height: 20px; color: rgba(11, 12, 13, .66); }
+.ec-t td { height: 52px; }
+.ec-t th::after, .ec-t tbody tr:not(:last-child) td::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(11, 12, 13, .07); }
+.ec-t th:first-child::after, .ec-t td:first-child::after { left: 8px; }
+.ec-t th:last-child::after, .ec-t td:last-child::after { right: 8px; }
+.ec-t tbody tr td { transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.ec-t tbody tr:hover td { background: #EEF1E8; transition-duration: 120ms; }
+.ec-t tbody tr:hover td::after { opacity: 0; }
+.ec-t td:first-child { border-radius: 10px 0 0 10px; }
+.ec-t td:last-child { border-radius: 0 10px 10px 0; }
+.ec-co { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.ec-fav { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(11, 12, 13, .1);
+  font: 500 12px/1 Geist, system-ui, sans-serif; letter-spacing: 0; font-style: normal; }
+.ec-site { font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; color: rgba(11, 12, 13, .66); }
+
+/* the header of the new column: the label and its lime dot, the counter, the one action */
+.ec-th { display: flex; align-items: center; justify-content: space-between; height: 40px; }
+.ec-lb { display: inline-flex; align-items: center; gap: 8px; }
+.ec-dot { width: 6px; height: 6px; border-radius: 50%; background: #B8FF00; transform: scale(0);
+  transition: transform 200ms cubic-bezier(.5, 0, .75, 0); }
+.ec[data-s="done"] .ec-dot { transform: scale(1); transition: transform 300ms cubic-bezier(.16, 1, .3, 1); }
+.ec-rt { display: inline-flex; align-items: center; gap: 6px; }
+.ec-cnt { display: inline-flex; align-items: center; gap: 4px; font: 500 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; font-variant-numeric: tabular-nums; color: #0B0C0D;
+  clip-path: inset(100% 0 0 0); transform: translateY(4px); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0), transform 200ms cubic-bezier(.5, 0, .75, 0); }
+.ec-cnt.on { clip-path: inset(-4px); transform: none; transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1), transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.ec-cnt span.sl { color: rgba(11, 12, 13, .38); }
+.ec-roll { display: inline-grid; height: 20px; overflow: hidden; }
+.ec-roll i { grid-area: 1 / 1; font-style: normal; text-align: center; transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+
+.ec-act { position: relative; flex: none; height: 28px; width: 142px; border-radius: 999px; overflow: hidden; text-align: left; font-size: 13px; font-weight: 500; line-height: 1;
+  background: #0B0C0D; color: #fff;
+  transition: background 300ms cubic-bezier(.16, 1, .3, 1), color 300ms cubic-bezier(.16, 1, .3, 1), width 420ms cubic-bezier(.65, 0, .35, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ec-act.snap { transition: none; }
+.ec-act:active { transform: translateY(1px); }
+.ec-act[data-s="busy"], .ec-act[data-s="done"] { background: transparent; color: rgba(11, 12, 13, .66); }
+.ec-act[data-s="busy"]:hover, .ec-act[data-s="done"]:hover { background: #EEF1E8; color: #0B0C0D; }
+.ec-act[data-s="done"] { color: #0B0C0D; }
+.ec-al { position: absolute; left: 12px; top: 0; height: 28px; display: flex; align-items: center; gap: 6px; white-space: nowrap; visibility: hidden;
+  clip-path: inset(100% 0 0 0); transform: translateY(6px);
+  transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1) 80ms, transform 360ms cubic-bezier(.16, 1, .3, 1) 80ms; }
+.ec-al[data-p="in"] { visibility: visible; clip-path: inset(0); transform: none; }
+.ec-al[data-p="above"] { clip-path: inset(0 0 100% 0); transform: translateY(-6px);
+  transition: clip-path 150ms cubic-bezier(.5, 0, .75, 0), transform 150ms cubic-bezier(.5, 0, .75, 0), visibility 0s 150ms; }
+.ec-al svg { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* a cell of the new column: a shimmer line, then the typed value and its confidence dots */
+.ec-c { position: relative; height: 52px; margin: 0 -8px 0 0; }
+.ec-sh { position: absolute; left: 0; top: 22px; height: 8px; width: var(--w, 80px); border-radius: 4px;
+  background: linear-gradient(90deg, #EEF1E8 0%, #E3E8DA 50%, #EEF1E8 100%) 0 0 / 200% 100%;
+  clip-path: inset(0 100% 0 0); transition: clip-path 150ms cubic-bezier(.5, 0, .75, 0); animation: ec-sw 1.8s linear infinite; }
+.ec-c[data-s="shim"] .ec-sh { clip-path: inset(0); transition: clip-path 280ms cubic-bezier(.16, 1, .3, 1); }
+.ec-c[data-s="typing"] .ec-sh, .ec-c[data-s="done"] .ec-sh { clip-path: inset(0 0 0 100%); transition: clip-path 220ms cubic-bezier(.5, 0, .75, 0); }
+@keyframes ec-sw { to { background-position: -200% 0; } }
+.ec-v { position: absolute; left: 0; top: 0; height: 52px; display: flex; align-items: center; gap: 10px; white-space: nowrap;
+  clip-path: inset(0 0 100% 0); transform: translateY(-4px); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0), transform 200ms cubic-bezier(.5, 0, .75, 0); }
+.ec-c[data-s="typing"] .ec-v, .ec-c[data-s="done"] .ec-v { clip-path: inset(-4px); transform: none; transition: none; }
+.ec-cf { display: inline-flex; gap: 3px; }
+.ec-cf i { width: 5px; height: 5px; border-radius: 50%; background: rgba(11, 12, 13, .8); transform: scale(0); transition: transform 150ms cubic-bezier(.5, 0, .75, 0); }
+.ec-cf i.o { background: rgba(11, 12, 13, .18); }
+.ec-c[data-s="done"] .ec-cf i { transform: scale(1); transition: transform 280ms cubic-bezier(.16, 1, .3, 1); }
+.ec-c[data-s="done"] .ec-cf i:nth-child(2) { transition-delay: 60ms; }
+.ec-c[data-s="done"] .ec-cf i:nth-child(3) { transition-delay: 120ms; }
+
+.ec.snap *, .ec.snap *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .ec *, .ec *::before { transition: none !important; animation: none !important; } }
+</style>
+<style>
+  .ecw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="ecw">
+    <p class="kicker">Qbix leads · Seattle</p>
+<!-- code -->
+<div class="ec" id="ec" data-s="idle">
+  <h3 class="ec-hd">Leads</h3>
+  <table class="ec-t">
+    <colgroup><col style="width:168px"><col style="width:166px"><col></colgroup>
+    <thead>
+      <tr>
+        <th scope="col">Company</th>
+        <th scope="col">Site</th>
+        <th scope="col">
+          <div class="ec-th">
+            <span class="ec-lb">Stack<i class="ec-dot"></i></span>
+            <span class="ec-rt">
+              <span class="ec-cnt" id="ec-cnt" aria-hidden="true"><span class="ec-roll" id="ec-n"><i>0</i></span><span class="sl">/</span><span>4</span></span>
+              <button type="button" class="ec-act" id="ec-act" data-s="idle" aria-label="Fill Stack with agent">
+                <span class="ec-al" data-p="in" data-k="idle"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2c.4 3.2 1.8 4.6 5 5-3.2.4-4.6 1.8-5 5-.4-3.2-1.8-4.6-5-5 3.2-.4 4.6-1.8 5-5z"/></svg>Fill with agent</span>
+                <span class="ec-al" data-p="below" data-k="busy">Filling…</span>
+                <span class="ec-al" data-p="below" data-k="done">Clear</span>
+              </button>
+            </span>
+          </div>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><div class="ec-co"><i class="ec-fav">F</i>Fieldnote</div></td><td><span class="ec-site">fieldnote.app</span></td><td><div class="ec-c" data-s="empty" style="--w:96px"><i class="ec-sh"></i><div class="ec-v"><span class="ec-vt"></span><span class="ec-cf" role="img"></span></div></div></td></tr>
+      <tr><td><div class="ec-co"><i class="ec-fav">M</i>Marlow Pottery</div></td><td><span class="ec-site">marlowpottery.com</span></td><td><div class="ec-c" data-s="empty" style="--w:64px"><i class="ec-sh"></i><div class="ec-v"><span class="ec-vt"></span><span class="ec-cf" role="img"></span></div></div></td></tr>
+      <tr><td><div class="ec-co"><i class="ec-fav">H</i>Hollis Dental</div></td><td><span class="ec-site">hollisdental.com</span></td><td><div class="ec-c" data-s="empty" style="--w:80px"><i class="ec-sh"></i><div class="ec-v"><span class="ec-vt"></span><span class="ec-cf" role="img"></span></div></div></td></tr>
+      <tr><td><div class="ec-co"><i class="ec-fav">T</i>Tern Studio</div></td><td><span class="ec-site">tern.studio</span></td><td><div class="ec-c" data-s="empty" style="--w:72px"><i class="ec-sh"></i><div class="ec-v"><span class="ec-vt"></span><span class="ec-cf" role="img"></span></div></div></td></tr>
+    </tbody>
+  </table>
+  <p class="sr-only" id="ec-live" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Press Fill with agent · Filling… stops it · Clear takes the values away</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Enrich column. ecRun is the run token: starting, stopping or clearing bumps it, so every pending step of an older run just ends.
+   A cell is data-s: empty, shim (working), typing, done. */
+const ec = document.getElementById('ec'), ecAct = document.getElementById('ec-act'), ecCnt = document.getElementById('ec-cnt');
+const ecNum = document.getElementById('ec-n'), ecLive = document.getElementById('ec-live');
+const ecCells = [...ec.querySelectorAll('.ec-c')], ecLabels = [...ecAct.querySelectorAll('.ec-al')];
+const EC_ROWS = [['Next.js · Vercel', 3], ['Shopify', 3], ['Webflow', 2], ['Framer', 3]];
+const EC_LV = ['', 'Low confidence', 'Medium confidence', 'High confidence'];
+const EC_STATES = ['idle', 'busy', 'done'];
+let ecRun = 0, ecCount = 0, ecState = 'idle', ecWait = [];
+const ecSnap = (fn) => { ec.classList.add('snap'); ecAct.classList.add('snap'); fn(); ec.getBoundingClientRect(); ec.classList.remove('snap'); ecAct.classList.remove('snap'); };
+const ecW = (my, ms) => new Promise((r) => { const t = setTimeout(() => r(my === ecRun), ms); ecWait.push(t); });
+
+function ecRoll(txt, dir, snap) {                    // dir +1 brings the new number from below
+  const last = ecNum.lastElementChild;
+  if (last && last.textContent === txt) return;
+  if (snap || !last) { ecNum.innerHTML = '<i>' + txt + '</i>'; return; }
+  const n = document.createElement('i');
+  n.textContent = txt; n.style.transform = `translateY(${dir * 100}%)`;
+  ecNum.appendChild(n); ecNum.getBoundingClientRect();
+  [...ecNum.children].forEach((c) => { if (c !== n) c.style.transform = `translateY(${-dir * 100}%)`; });
+  n.style.transform = 'none';
+  setTimeout(() => { [...ecNum.children].forEach((c) => { if (c !== ecNum.lastElementChild) c.remove(); }); }, 460);
+}
+function ecCount_(n, dir, snap) {
+  ecCount = n; ecRoll(String(n), dir, snap);
+  ecCnt.classList.toggle('on', n > 0 || ecState === 'busy');
+  ecLive.textContent = ecState === 'idle' && n === 0 ? '' : `Stack: ${n} of 4 filled`;
+}
+/* the one action: its label layers go up when the state advances and down when it goes back; its width follows the label */
+function ecSetState(s, snap) {
+  const i = EC_STATES.indexOf(s);
+  ecState = s; ec.dataset.s = s;
+  const lab = ecLabels[i], w = Math.ceil(lab.offsetWidth) + 24;
+  ecAct.style.width = w + 'px';
+  ecLabels.forEach((l, k) => { l.dataset.p = k === i ? 'in' : k < i ? 'above' : 'below'; });
+  ecAct.dataset.s = s;
+  ecAct.setAttribute('aria-label', s === 'idle' ? 'Fill Stack with agent' : s === 'busy' ? 'Stop filling' : 'Clear Stack');
+  ecCnt.classList.toggle('on', ecCount > 0 || s === 'busy');
+}
+function ecSet(k, s) { ecCells[k].dataset.s = s; }
+function ecFillDots(k) {
+  const cf = ecCells[k].querySelector('.ec-cf'), n = EC_ROWS[k][1];
+  cf.innerHTML = [0, 1, 2].map((d) => (d < n ? '<i></i>' : '<i class="o"></i>')).join('');
+  cf.setAttribute('aria-label', EC_LV[n]);
+}
+function ecShow(k, snap) {                           // a finished cell, instantly
+  const c = ecCells[k];
+  c.querySelector('.ec-vt').textContent = EC_ROWS[k][0]; ecFillDots(k); ecSet(k, 'done');
+}
+function ecWipe(k) {                                 // the value leaves under its clip, then its text goes
+  ecSet(k, 'empty');
+  setTimeout(() => { if (ecCells[k].dataset.s === 'empty') { ecCells[k].querySelector('.ec-vt').textContent = ''; ecCells[k].querySelector('.ec-cf').innerHTML = ''; } }, 260);
+}
+
+async function ecCell(my, k, delay) {
+  if (!(await ecW(my, delay))) return;
+  ecSet(k, 'shim');
+  if (!(await ecW(my, 640))) return;
+  const c = ecCells[k], vt = c.querySelector('.ec-vt'), text = EC_ROWS[k][0];
+  c.querySelector('.ec-cf').innerHTML = ''; vt.textContent = '';
+  ecSet(k, 'typing');                                // the shimmer line leaves first, then the characters
+  if (!(await ecW(my, 200))) return;
+  for (let i = 1; i <= text.length; i++) {
+    vt.textContent = text.slice(0, i);
+    if (!(await ecW(my, 22 + (i % 3) * 4))) return;
+  }
+  if (!(await ecW(my, 90))) return;
+  ecFillDots(k); c.getBoundingClientRect(); ecSet(k, 'done');
+  ecCount_(ecCount + 1, 1);
+}
+async function ecStart() {
+  if (ecState === 'busy') return;
+  ecWait.forEach(clearTimeout); ecWait = [];
+  const my = ++ecRun;
+  ecSetState('busy'); ecCount_(ecCount, 1);
+  const todo = ecCells.map((c, k) => k).filter((k) => ecCells[k].dataset.s !== 'done');
+  await Promise.all(todo.map((k, j) => ecCell(my, k, 180 + j * 520)));
+  if (my !== ecRun) return;
+  ecSetState('done');
+  ecLive.textContent = 'Stack filled: 4 of 4';
+}
+function ecStop() {                                  // busy -> idle: working cells retract, finished ones stay
+  ecRun++; ecWait.forEach(clearTimeout); ecWait = [];
+  ecCells.forEach((c, k) => { if (c.dataset.s === 'shim' || c.dataset.s === 'typing') ecWipe(k); });
+  ecSetState('idle');
+}
+function ecClear() {                                 // values leave upward, last row first
+  ecRun++; ecWait.forEach(clearTimeout); ecWait = [];
+  const my = ecRun;
+  for (let k = ecCells.length - 1; k >= 0; k--) setTimeout(() => { if (my === ecRun) ecWipe(k); }, (ecCells.length - 1 - k) * 60);
+  ecSetState('idle'); ecCount_(0, -1);
+}
+ecAct.addEventListener('click', () => { if (ecState === 'idle') ecStart(); else if (ecState === 'busy') ecStop(); else ecClear(); });
+
+ecSetState('idle', true); ecAct.style.width = Math.ceil(ecLabels[0].offsetWidth) + 24 + 'px'; ecCount_(0, 1, true);
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0, first = true;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function toEl(my, el, ms, fx = 0.5) { const r = el.getBoundingClientRect(); if (!(await QM.ghostTo(r.left + r.width * fx, r.top + r.height * 0.6, ms)) || my !== epoch) throw 0; }
+  function rest() {                                    // reduced motion and a tile: filled (the tile's still); otherwise: empty
+    const filled = reduced || QM.tile;
+    ecRun++; ecWait.forEach(clearTimeout); ecWait = [];
+    ecSnap(() => {
+      ecCells.forEach((c, k) => { if (filled) ecShow(k); else { ecSet(k, 'empty'); c.querySelector('.ec-vt').textContent = ''; c.querySelector('.ec-cf').innerHTML = ''; } });
+      ecCount = filled ? 4 : 0; ecSetState(filled ? 'done' : 'idle'); ecCount_(ecCount, 1, true);
+      if (filled) ecLive.textContent = 'Stack filled: 4 of 4';
+    });
+    if (document.activeElement && ec.contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      if (QM.tile && first) { first = false; await gap(my, 3600); }
+      QM.ghostShow();
+      if (ecState === 'done') ecClear(); else if (ecState === 'busy') ecStop();
+      for (;;) {
+        await gap(my, 1100);
+        if (ecCount > 0 && ecState === 'idle') { ecCells.forEach((c, k) => { if (c.dataset.s === 'done') ecWipe(k); }); ecCount_(0, -1); }
+        await toEl(my, ecAct, 820, 0.45); await gap(my, 260);
+        ecStart();
+        while (ecState !== 'done') await gap(my, 120);
+        { const r = ec.getBoundingClientRect(); if (!(await QM.ghostTo(r.right - 40, r.bottom + 36, 760)) || my !== epoch) throw 0; }
+        await gap(my, 5200);
+        await toEl(my, ecAct, 760, 0.5); await gap(my, 260);
+        ecClear(); await gap(my, 1200);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!ec.matches(':hover') && !ec.contains(document.activeElement)) script(); else touch({}); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(); if (!reduced) script(); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (reduced || QM.tile) rest(); if (!reduced) script(); }, 300));
+})();
+</script>
+</body>
+</html>

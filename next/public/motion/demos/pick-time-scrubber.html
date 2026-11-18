@@ -18,10 +18,10 @@
   "summary": "A ruler of days for a go-live date. Drag it, fling it, and one spring carries it to the nearest day: the ticks stand tall at the centre and fall away toward the masked ends, the date and a chip read out above, and a rubber band holds it inside the next 90 days. The lime is the button that sets the date.",
   "spec": [
     ["Ruler", "18px a day, 61 ticks in the window; a tick's height is 10 + 40 × a Gaussian of its distance from the centre (+12 on the first of a month), its ink 0.18 + 0.82 × the same; weekends a tone down"],
-    ["Labels", "the date on every Monday, the month on the 1st; the face is masked to nothing at both ends"],
+    ["Labels", "the date on every Monday, the month on the 1st (a Monday within two days of a 1st steps aside, so 30 and Dec never overlap); the face is masked to nothing at both ends"],
     ["Drag", "the ruler follows the hand 1:1; past either end it follows at 35% (a rubber band)"],
     ["Release", "the hand's velocity over its last 100 ms (days per second, capped at 60) decides the landing: round(position + 0.3 × v); then one spring from that velocity carries it there: k 120 · c 19"],
-    ["Keys and wheel", "← → step a day, a sideways wheel steps a day, each by the same spring"],
+    ["Keys and wheel", "← → step a day, Page Up and Down a week, Home and End the ends, a sideways wheel steps a day, each by the same spring"],
     ["Reading", "the date counts in tabular numerals; the chip says whether it is the promised date, or how many days later or earlier; the button says Date set for 1.4 s"]
   ],
   "source": ["motion.ui.o2tech.ai · Delivery ruler (ix-time-scrubber)", "Idea: bencho.dev time-scrubber (MIT)"],
@@ -51,7 +51,7 @@
 .hd h1 { font: 300 20px/1.35 var(--font-headline); letter-spacing: -0.03em; }
 .hd p { color: var(--muted); }
 .read { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
-.read .d { font-family: var(--font-headline); font-weight: 200; font-size: 42px; letter-spacing: -0.04em; line-height: 1.15; font-variant-numeric: tabular-nums; min-width: 4.4ch; }
+.read .d { font-family: var(--font-headline); font-weight: 200; font-size: 42px; letter-spacing: -0.04em; line-height: 1.15; font-variant-numeric: tabular-nums; min-width: 3em; }
 .read .w { color: var(--muted); font-size: 14px; }
 .read .chip { margin-left: auto; }
 .chip { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 3px var(--space-2); border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; color: var(--muted); background: #E3E8DA; }
@@ -67,13 +67,14 @@
 .dial:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 .foot { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
 .foot .meta { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.btn { min-width: 152px; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-4); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), transform 100ms var(--ease-out); }
 .btn:hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
-.btn:active { background: color-mix(in oklab, var(--signal) 78%, #000); }
+.btn:active { background: color-mix(in oklab, var(--signal) 78%, #000); transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 </style>
 <style>
   html, body { height: 100%; overflow: hidden; }
-  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+  .vp { position: absolute; left: 0; top: 0; width: 880px; height: 550px; transform-origin: 0 0; }
   .page { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
 </style>
 </head>
@@ -84,7 +85,7 @@
   <div class="hd"><h1>Go-live date</h1><p>Willow Counseling · Practice Website Refresh · Dana Reyes, LMFT</p></div>
   <div class="read"><span class="d" id="d"></span><span class="w" id="w"></span><span id="chip"></span></div>
   <div class="dial" id="dial" tabindex="0" role="slider" aria-label="Go-live date" aria-valuemin="0" aria-valuemax="90"><div class="face" id="face"></div><div class="mid"></div></div>
-  <div class="foot"><button type="button" class="btn" id="set">Set go-live date</button><span class="meta" id="gap"></span></div>
+  <div class="foot"><button type="button" class="btn" id="set" aria-live="polite">Set go-live date</button><span class="meta" id="gap"></span></div>
 </div>
 <!-- /code -->
 </div></div>
@@ -106,6 +107,8 @@ for (let i = 0; i < POOL; i++) {
 let pos = PROMISED, vel = 0, target = PROMISED, drag = null, spring = false, samples = [], lastDay = -1;
 const K = 120, C = 19;
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* a Monday's date steps aside when the 1st is within two days: 30 and Dec would sit on top of each other */
+const nearFirst = (d) => d.getDate() <= 3 || new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate() - d.getDate() <= 1;
 const rubber = (p) => (p < 0 ? p * 0.35 : p > MAXD ? MAXD + (p - MAXD) * 0.35 : p);
 
 function draw() {
@@ -116,7 +119,7 @@ function draw() {
     const d = dateAt(day), dow = d.getDay(), ok = day >= 0 && day <= MAXD;
     el.t.style.left = x.toFixed(1) + 'px'; el.t.style.height = (ok ? 10 + 40 * f + (d.getDate() === 1 ? 12 : 0) : 0) + 'px';
     el.t.style.opacity = (0.18 + 0.82 * f).toFixed(3); el.t.classList.toggle('we', dow === 0 || dow === 6);
-    const lab = ok && (d.getDate() === 1 ? d.toLocaleDateString('en-US', { month: 'short' }) : dow === 1 ? String(d.getDate()) : '');
+    const lab = ok && (d.getDate() === 1 ? d.toLocaleDateString('en-US', { month: 'short' }) : dow === 1 && !nearFirst(d) ? String(d.getDate()) : '');
     el.l.style.left = x.toFixed(1) + 'px'; el.l.textContent = lab || ''; el.l.style.opacity = (0.25 + 0.75 * f).toFixed(3);
   }
   const day = Math.max(0, Math.min(MAXD, Math.round(pos)));
@@ -130,6 +133,7 @@ function read(day) {
   $('#chip').innerHTML = diff === 0 ? '<span class="chip on">On the promised date</span>' : diff > 0 ? `<span class="chip">${diff} ${diff === 1 ? 'day' : 'days'} later</span>` : `<span class="chip">${-diff} ${diff === -1 ? 'day' : 'days'} earlier</span>`;
   $('#gap').textContent = day === 0 ? 'Today' : `In ${day} ${day === 1 ? 'day' : 'days'}`;
   dial.setAttribute('aria-valuenow', day);
+  dial.setAttribute('aria-valuetext', d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
 }
 /* put it on a day with no spring */
 function jump(d) { pos = target = d; vel = 0; spring = false; lastDay = -1; draw(); }
@@ -169,9 +173,10 @@ function release() {
 }
 dial.addEventListener('pointerup', release); dial.addEventListener('pointercancel', release);
 dial.addEventListener('keydown', (e) => {
-  const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-  if (!d) return;
-  e.preventDefault(); target = Math.max(0, Math.min(MAXD, Math.round(target) + d)); spring = true;
+  const step = { ArrowRight: 1, ArrowLeft: -1, PageUp: 7, PageDown: -7 }[e.key];
+  if (step === undefined && e.key !== 'Home' && e.key !== 'End') return;
+  e.preventDefault();
+  target = e.key === 'Home' ? 0 : e.key === 'End' ? MAXD : Math.max(0, Math.min(MAXD, Math.round(target) + step)); spring = true;
 });
 dial.addEventListener('wheel', (e) => { e.preventDefault(); target = Math.max(0, Math.min(MAXD, Math.round(pos) + Math.sign(e.deltaX || e.deltaY))); spring = true; }, { passive: false });
 $('#set').addEventListener('click', () => { $('#set').textContent = 'Date set'; setTimeout(() => ($('#set').textContent = 'Set go-live date'), 1400); });
@@ -179,14 +184,14 @@ read(PROMISED);
 requestAnimationFrame(loop);
 </script>
 <script>
-  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window; a ghost hand plays it; real input takes over ---- */
+  /* ---- harness glue: a 880 × 550 frame (the card is 600 wide in it, two thirds of a tile), scaled to the window; a ghost hand plays it; real input takes over ---- */
   const ABORT = { abort: true };
   function vpfit() {
     const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
     const go = () => {
       const bar = QM.tile || !ui ? 0 : 46;
-      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
-      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+      const k = Math.min(innerWidth / 880, (innerHeight - bar) / 550);
+      vp.style.transform = `translate(${(innerWidth - 880 * k) / 2}px, ${(innerHeight - bar - 550 * k) / 2}px) scale(${k})`;
     };
     addEventListener('resize', go); go();
   }

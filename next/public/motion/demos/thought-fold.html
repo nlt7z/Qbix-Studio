@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thought fold · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "thought-fold", "title": "Thought fold", "group": "studio", "added": "2026-11-16", "cat": "agent", "order": 30,
+  "kind": "loop", "tone": "paper", "shot": 1500,
+  "line": "6 s of reasoning · fold 420 ms ease-move · answer uncovered 160 ms behind",
+  "summary": "A Qbix agent reply to \"Make the Forma hero calmer.\" Its reasoning streams word by word as three dim lines while a live timer counts; at 6 s the lines slide up under a clip, the row closes on the move curve and the label rolls from Thinking 6.0 s to Thought for 6 s, with the answer uncovered below: a before and an after of the hero, drawn small. Clicking the row unfolds the same lines again.",
+  "spec": [
+    ["Stream", "words uncovered left to right, 200 ms expo out each, 35 to 100 ms apart; three lines start at 0.5, 2.35 and 4.15 s; the live line is ink, finished lines drop to 56%"],
+    ["Fold", "row height 74 px to 0 in 420 ms ease-move; the lines travel up 14 px under the clip, 260 ms ease-in"],
+    ["Unfold", "height opens 420 ms ease-move; lines come down 420 ms expo out, 60 ms behind, 40 ms apart"],
+    ["Label", "Thinking and the timer roll up, Thought for 6 s rolls in from below, 420 ms expo out; the lime square turns 90 degrees each second"],
+    ["Answer", "heading, two frames and the actions uncovered top down, 420 ms expo out, 160 ms after the fold starts, 50 ms apart; leaving takes 200 ms ease-in"],
+    ["Loop", "the ghost folds the lines, runs it again, waits for the answer and unfolds; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "The reply card of the Qbix agent in a Forma review thread: it thinks, folds that to one quiet row, and leaves the answer to read.",
+  "rules": [
+    "The reasoning folds to one row; the answer never moves until the fold starts, and it never waits for the viewer to open anything.",
+    "Nothing fades and nothing bounces: words are clipped and uncovered, the fold is a height on the move curve.",
+    "The timer is a real clock in tabular figures; the row reserves the width of its longest label so nothing is shoved.",
+    "Only a finished thought can be opened: the row is a disabled button while it streams, an expandable one after.",
+    "Folded lines are inert, so Tab and screen readers meet only what is on screen; a polite live region says Thinking and then the result.",
+    "Under reduced motion every state still changes, with no transition, and the card rests open with its answer, nothing moving."
+  ],
+  "tags": ["agent", "reasoning", "thinking", "fold", "collapse", "stream", "chat", "Forma"]
+}
+</script>
+<style data-code>
+/* Thought fold. Ink #0B0C0D on white, sage #EEF1E8 only as a hover wash, one lime point; Apply is the one ink element. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0). */
+.tf { width: 460px; color: #0B0C0D; font: 400 14px/22px Geist, system-ui, sans-serif; letter-spacing: -.011em; --tf-fh: 74px; }
+:where(.tf button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.tf p, .tf h4, .tf figure { margin: 0; }
+
+/* the person's message */
+.tf-me { display: flex; justify-content: flex-end; }
+.tf-me p { padding: 9px 16px; background: #fff; border-radius: 16px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+
+/* the agent: a mark in the gutter, everything else in one column */
+.tf-ag { display: grid; grid-template-columns: 24px 1fr; column-gap: 12px; margin-top: 20px; }
+.tf-av { width: 24px; height: 24px; margin-top: 2px; background: #fff; color: #0B0C0D; border-radius: 50%; box-shadow: 0 0 0 1px rgba(11, 12, 13, .14); text-align: center; font: 300 15px/24px Outfit, Geist, sans-serif; }
+
+/* the row: a live square or a chevron, a label that rolls */
+.tf-head { display: flex; align-items: center; gap: 8px; height: 28px; margin-left: -8px; padding: 0 8px; border-radius: 8px; transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.tf-head:not(:disabled):hover, .tf-head.is-hot { background: #EEF1E8; }
+.tf-head:disabled { cursor: default; }
+.tf-head:not(:disabled):active .tf-lab, .tf-head.is-press .tf-lab { translate: 0 1px; }
+.tf-sw { display: grid; width: 16px; height: 16px; overflow: hidden; }
+.tf-sw > * { grid-area: 1 / 1; display: block; width: 16px; height: 16px; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.tf-live { background: #B8FF00; width: 8px; height: 8px; margin: 4px; border-radius: 2px; transition: transform 420ms cubic-bezier(.16, 1, .3, 1), rotate 420ms cubic-bezier(.16, 1, .3, 1); }
+.tf-chev { transform: translateY(110%); }
+.tf-chev svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 420ms cubic-bezier(.65, 0, .35, 1); }
+.tf[data-open="1"] .tf-chev svg { transform: rotate(180deg); }
+.tf-head.is-done .tf-live { transform: translateY(-300%); }
+.tf-head.is-done .tf-chev { transform: none; }
+.tf-lab { display: grid; height: 22px; overflow: hidden; font-weight: 500; }
+.tf-lab > b { grid-area: 1 / 1; font-weight: 500; white-space: nowrap; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.tf-lab > b + b { transform: translateY(110%); }
+.tf-head.is-done .tf-lab > b:first-child { transform: translateY(-110%); }
+.tf-head.is-done .tf-lab > b + b { transform: none; }
+.tf-t { margin-left: 8px; font: 400 12px/22px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+
+/* the reasoning: a clip whose height is the fold, lines that slide under it */
+.tf-fold { height: var(--tf-fh); overflow: hidden; transition: height 420ms cubic-bezier(.65, 0, .35, 1); }
+.tf[data-open="0"] .tf-fold { height: 0; }
+.tf-lines { padding: 2px 0 6px 24px; transition: transform 420ms cubic-bezier(.16, 1, .3, 1) 60ms; }
+.tf[data-open="0"] .tf-lines { transform: translateY(-14px); transition: transform 260ms cubic-bezier(.5, 0, .75, 0); }
+.tf-ln { color: rgba(11, 12, 13, .56); transition: color 400ms cubic-bezier(.4, 0, .2, 1); }
+.tf-ln.cur { color: #0B0C0D; }
+.tf-w { display: inline-block; clip-path: inset(-4px 100% -4px -2px); transition: clip-path 200ms cubic-bezier(.16, 1, .3, 1); }
+.tf-w.on { clip-path: inset(-4px -4px -4px -2px); }
+
+/* the answer: every part is uncovered top down, a few ms apart */
+.tf-ans { margin-top: 12px; }
+.tf-ans [data-r] { visibility: hidden; clip-path: inset(0 0 100% 0); transform: translateY(8px);
+  transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0), transform 200ms cubic-bezier(.5, 0, .75, 0), visibility 0s 200ms; }
+.tf-ans[data-p="in"] [data-r] { visibility: visible; clip-path: inset(0); transform: none;
+  transition: clip-path 420ms cubic-bezier(.16, 1, .3, 1) calc(160ms + var(--rd, 0ms)), transform 420ms cubic-bezier(.16, 1, .3, 1) calc(160ms + var(--rd, 0ms)), visibility 0s calc(160ms + var(--rd, 0ms)); }
+.tf-h { font: 300 20px/24px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.tf-row { display: grid; grid-template-columns: 140px 140px 1fr; gap: 8px; margin-top: 12px; }
+.tf-fig figcaption { margin-top: 6px; font-size: 12px; line-height: 16px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.tf-frame { position: relative; width: 140px; height: 84px; background: #fff; overflow: hidden; border-radius: 12px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); }
+.tf-frame > * { position: absolute; display: block; border-radius: 2px; }
+.tf-frame .ph { border: 1px solid rgba(11, 12, 13, .28); border-radius: 8px; }
+.tf-frame .bt { border: 1px solid rgba(11, 12, 13, .5); border-radius: 999px; }
+.tf-frame .bt.q { border-color: rgba(11, 12, 13, .16); }
+.tf-frame .pt { width: 6px; height: 6px; border-radius: 50%; background: #B8FF00; }
+.tf-act { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; height: 84px; }
+
+/* actions: Apply rolls to Applied; Run again is a quiet text action */
+.tf-apply { position: relative; width: 100%; height: 40px; display: grid; overflow: hidden; background: #0B0C0D; color: #fff; font-size: 14px; font-weight: 600;
+  border-radius: 999px; transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.tf-apply > span { grid-area: 1 / 1; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.tf-apply > span + span { transform: translateY(110%); }
+.tf-apply.is-done > span:first-child { transform: translateY(-110%); }
+.tf-apply.is-done > span + span { transform: none; }
+.tf-apply:hover, .tf-apply.is-hot { background: #26282C; }
+.tf-apply:active > span, .tf-apply.is-press > span { translate: 0 1px; }
+.tf-apply svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.tf-again { display: inline-flex; align-items: center; gap: 6px; height: 28px; font-weight: 500; color: rgba(11, 12, 13, .66); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.tf-again:hover, .tf-again.is-hot { color: #0B0C0D; }
+.tf-again:active, .tf-again.is-press { translate: 0 1px; }
+.tf-again svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+.tf :is(button:focus-visible) { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+.tf.still *, .tf.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .tf *, .tf *::before { transition: none !important; } }
+</style>
+<style>
+  /* the stage keeps the height of the open card, top anchored, so folding never moves the page */
+  .tfw { display: grid; gap: 14px; justify-items: start; align-content: start; height: 350px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="tfw">
+    <p class="kicker">Qbix agent · Forma hero</p>
+<!-- code -->
+<div class="tf" id="tf" data-open="1">
+  <div class="tf-me"><p>Make the Forma hero calmer.</p></div>
+  <div class="tf-ag">
+    <span class="tf-av" aria-hidden="true">Q</span>
+    <div class="tf-col">
+      <button type="button" class="tf-head is-done" id="tf-head" aria-expanded="true" aria-controls="tf-fold">
+        <span class="tf-sw" aria-hidden="true"><i class="tf-live" id="tf-live"></i><span class="tf-chev"><svg viewBox="0 0 16 16"><path d="M3.5 6.5L8 11l4.5-4.5"/></svg></span></span>
+        <span class="tf-lab"><b>Thinking<span class="tf-t" id="tf-t">0.0 s</span></b><b id="tf-done">Thought for 6 s</b></span>
+      </button>
+      <div class="tf-fold" id="tf-fold">
+        <div class="tf-lines">
+          <p class="tf-ln">Reading the hero: 3 type sizes, 2 buttons</p>
+          <p class="tf-ln">The lime button competes with the photo</p>
+          <p class="tf-ln">Try one button, a larger photo, a lighter headline</p>
+        </div>
+      </div>
+      <div class="tf-ans" id="tf-ans" data-p="in">
+        <h4 class="tf-h" data-r>Calmer hero: one button, bigger photo.</h4>
+        <div class="tf-row">
+          <figure class="tf-fig" data-r style="--rd: 50ms">
+            <div class="tf-frame" aria-hidden="true">
+              <i style="left: 10px; top: 9px; width: 14px; height: 3px; background: rgba(11,12,13,.5)"></i>
+              <i style="left: 84px; top: 9px; width: 10px; height: 2px; background: rgba(11,12,13,.16)"></i>
+              <i style="left: 98px; top: 9px; width: 10px; height: 2px; background: rgba(11,12,13,.16)"></i>
+              <i style="left: 112px; top: 9px; width: 10px; height: 2px; background: rgba(11,12,13,.16)"></i>
+              <i style="left: 10px; top: 23px; width: 64px; height: 6px; background: rgba(11,12,13,.5)"></i>
+              <i style="left: 10px; top: 32px; width: 54px; height: 6px; background: rgba(11,12,13,.5)"></i>
+              <i style="left: 10px; top: 41px; width: 40px; height: 6px; background: rgba(11,12,13,.5)"></i>
+              <i style="left: 10px; top: 53px; width: 50px; height: 3px; background: rgba(11,12,13,.16)"></i>
+              <i class="bt" style="left: 10px; top: 63px; width: 28px; height: 10px"></i>
+              <i class="bt q" style="left: 42px; top: 63px; width: 28px; height: 10px"></i>
+              <i class="ph" style="left: 86px; top: 23px; width: 44px; height: 50px"></i>
+            </div>
+            <figcaption>Before</figcaption>
+          </figure>
+          <figure class="tf-fig" data-r style="--rd: 100ms">
+            <div class="tf-frame" aria-hidden="true">
+              <i style="left: 10px; top: 9px; width: 14px; height: 3px; background: rgba(11,12,13,.5)"></i>
+              <i style="left: 10px; top: 33px; width: 44px; height: 3px; background: rgba(11,12,13,.5)"></i>
+              <i style="left: 10px; top: 40px; width: 30px; height: 3px; background: rgba(11,12,13,.5)"></i>
+              <i class="bt" style="left: 10px; top: 56px; width: 28px; height: 10px"></i>
+              <i class="pt" style="left: 15px; top: 58px; width: 6px; height: 6px"></i>
+              <i class="ph" style="left: 72px; top: 9px; width: 58px; height: 66px"></i>
+            </div>
+            <figcaption>After</figcaption>
+          </figure>
+          <div class="tf-act" data-r style="--rd: 150ms">
+            <button type="button" class="tf-apply" id="tf-apply"><span>Apply</span><span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.5"/></svg>Applied</span></button>
+            <button type="button" class="tf-again" id="tf-again"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.5M13 2.5v3h-3"/></svg>Run again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="sr-only" id="tf-live-msg" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Click Thought for 6 s to unfold it · Run again replays the reasoning</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Thought fold. One run: the lines stream, the row finishes, the fold closes and the answer is uncovered.
+   State lives in attributes: data-open on the card (fold open or closed), is-done on the row, data-p on the answer. */
+const tf = document.getElementById('tf'), tfHead = document.getElementById('tf-head'), tfFold = document.getElementById('tf-fold');
+const tfAns = document.getElementById('tf-ans'), tfLive = document.getElementById('tf-live'), tfT = document.getElementById('tf-t');
+const tfMsg = document.getElementById('tf-live-msg'), tfDoneLab = document.getElementById('tf-done');
+const tfLines = [...tf.querySelectorAll('.tf-ln')], tfApply = document.getElementById('tf-apply'), tfAgain = document.getElementById('tf-again');
+const TF_AT = [500, 2350, 4150], TF_END = 6000, TF_ANSWER = 'Calmer hero: one button, bigger photo.';
+let tfRunId = 0, tfApplyT = 0;
+
+// every word is its own clip, so a line can be uncovered word by word
+tfLines.forEach((p) => {
+  p.innerHTML = p.textContent.split(' ').map((w) => `<span class="tf-w on">${w}</span>`).join(' ');
+});
+const tfSleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function tfSnap(fn) { tf.classList.add('still'); fn(); tf.getBoundingClientRect(); tf.classList.remove('still'); }
+function tfOpen(on) {
+  tf.dataset.open = on ? '1' : '0';
+  tfHead.setAttribute('aria-expanded', String(on));
+  tfFold.inert = !on;
+}
+tfHead.addEventListener('click', () => { if (!tfHead.disabled) tfOpen(tf.dataset.open !== '1'); });
+
+async function tfRun() {
+  const my = ++tfRunId;
+  const alive = () => { if (my !== tfRunId) throw 0; };
+  try {
+    tfHead.disabled = true; tfHead.classList.remove('is-done');
+    tfMsg.textContent = 'Thinking';
+    tfAns.dataset.p = 'out'; tfAns.inert = true;
+    tfSnap(() => { tfLines.forEach((p) => { p.classList.remove('cur'); p.querySelectorAll('.tf-w').forEach((w) => w.classList.remove('on')); }); tfLive.style.rotate = '0deg'; });
+    tfOpen(true);
+    const t0 = performance.now();
+    let turns = 0;
+    const tick = (now) => {
+      if (my !== tfRunId || tfHead.disabled === false) return;
+      const s = Math.min(TF_END, now - t0) / 1000;
+      tfT.textContent = s.toFixed(1) + ' s';
+      if (Math.floor(s) !== turns) { turns = Math.floor(s); tfLive.style.rotate = `${90 * turns}deg`; }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    for (let i = 0; i < tfLines.length; i++) {
+      await tfSleep(Math.max(0, t0 + TF_AT[i] - performance.now())); alive();
+      tfLines.forEach((p, j) => p.classList.toggle('cur', j === i));
+      const words = [...tfLines[i].querySelectorAll('.tf-w')];
+      for (let k = 0; k < words.length; k++) {
+        words[k].classList.add('on');
+        await tfSleep(35 + words[k].textContent.length * 8 + (k % 5 === 3 ? 90 : 0)); alive();   // a stream: uneven, a little breath every few words
+      }
+    }
+    await tfSleep(Math.max(0, t0 + TF_END - performance.now())); alive();
+    const secs = Math.round((performance.now() - t0) / 1000);
+    tfT.textContent = (TF_END / 1000).toFixed(1) + ' s';
+    tfDoneLab.textContent = `Thought for ${secs} s`;
+    tfLines.forEach((p) => p.classList.remove('cur'));
+    tfHead.disabled = false; tfHead.classList.add('is-done');
+    tfOpen(false);                                           // the lines fold up ...
+    tfAns.dataset.p = 'in'; tfAns.inert = false;             // ... and the answer is uncovered 160 ms behind (CSS delay)
+    tfMsg.textContent = `Thought for ${secs} seconds. ${TF_ANSWER}`;
+  } catch (e) { if (e !== 0) throw e; }
+}
+tfAgain.addEventListener('click', tfRun);
+tfApply.addEventListener('click', () => {
+  clearTimeout(tfApplyT); tfApply.classList.add('is-done');
+  tfApplyT = setTimeout(() => tfApply.classList.remove('is-done'), 2200);
+});
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function tap(my, el, hold = 240) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.55, 720))) throw 0;
+    if (my !== epoch) throw 0;
+    el.classList.add('is-hot');
+    await gap(my, 190);
+    el.classList.add('is-press');
+    await gap(my, 120);
+    el.classList.remove('is-press', 'is-hot');
+    el.click();
+    await gap(my, hold);
+  }
+  // rest: the thought finished, lines open, answer in (the card the gallery measures)
+  function rest(folded) {
+    tfRunId++; clearTimeout(tfApplyT);
+    tfSnap(() => {
+      tfLines.forEach((p) => { p.classList.remove('cur'); p.querySelectorAll('.tf-w').forEach((x) => x.classList.add('on')); });
+      tfLive.style.rotate = '0deg'; tfApply.classList.remove('is-done');
+      tfHead.disabled = false; tfHead.classList.add('is-done'); tfDoneLab.textContent = 'Thought for 6 s'; tfT.textContent = '6.0 s';
+      tfAns.dataset.p = 'in'; tfAns.inert = false; tfOpen(!folded);
+    });
+    if (document.activeElement && tf.contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 1300);
+        await tap(my, tfHead, 1300);                            // fold the lines
+        await tap(my, tfAgain, 300);                            // run it again
+        await QM.ghostTo(innerWidth * 0.8, innerHeight * 0.84, 700);
+        await gap(my, TF_END + 1500);                           // 6 s of reasoning, the fold, the answer
+        await tap(my, tfHead, 2600);                            // unfold it again
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!tf.matches(':hover') && !tf.contains(document.activeElement)) { rest(false); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  if (reduced) rest(false);
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(false); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

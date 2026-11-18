@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent cursor · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "agent-cursor", "title": "Agent cursor", "group": "studio", "added": "2026-11-16", "cat": "agent", "order": 90,
+  "kind": "loop", "tone": "paper", "shot": 5450,
+  "line": "own cursor, eased arcs · press ring · slider drag · Take over / Resume",
+  "summary": "A Strata settings panel run by an agent that has its own visible cursor, lime with an ink edge and a lime Qbix agent label. It glides along curved, eased paths, presses with a ring, drags the Radius slider from 12 to 4 while the preview follows live, then clicks Publish. A caption under the panel names each step. Take over, or the real pointer entering the panel, pauses the agent (its cursor turns to an outline marked Paused) and Resume hands the work back from whatever state the panel is in.",
+  "spec": [
+    ["Cursor", "its own lime arrow with an ink edge and a lime Qbix agent label, never the harness ghost; paused it is an outline with a white Paused label. The label sits below and right of the tip, and left of it while the slider is worked so it never covers a value"],
+    ["Path", "a quadratic arc bowed 16% of the distance (6 to 28 px), time 380 ms + 1.25 ms per px, eased (0.45, 0, 0.25, 1), so it starts quick and lands slowly"],
+    ["Press", "cursor 0.86 scale in 100 ms; a ring of lime inside ink grows 0.3 to 1.15 over 520 ms expo out"],
+    ["Drag", "the thumb follows the cursor along its arc, the value rolls with it, the preview radius is set every frame; on release the thumb settles to the whole pixel value in 160 ms"],
+    ["Publish", "label rolls to Publishing, a thin white line fills the button's foot over 900 ms (a progress that tracks time), then Published with a drawn tick and the preview tag turns Live"],
+    ["Hand-over", "Take over pauses until Resume; the real pointer or a key inside the panel pauses it and it resumes by itself 4.5 s after the pointer leaves; Resume plans from the panel as it is now, so a changed radius or an early publish are respected"],
+    ["Loop", "after Published the cursor leaves, then a new draft opens: radius glides back to 12 on expo out, Publish and the tag roll back, no jump"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "Strata's product page and the Labs chapter on the agent: showing that an agent can operate a real interface in the open, with the person one click away from taking the controls.",
+  "rules": [
+    "The agent has its own cursor and a name on it; it is clearly not the viewer's pointer and not the harness ghost.",
+    "The plan is stated before anything moves, and every step has a caption under the panel (an aria-live line for screen readers).",
+    "Take over is always one click or one pointer move away; pausing is clean (no half press, no stuck drag) and Resume plans from the panel's real state.",
+    "Every control the agent uses works for real with a pointer and the keyboard: swatches, the radius slider, type scale, Publish.",
+    "The preview is the one place a radius appears, because the radius is the token being set; the panel itself is a quiet white surface.",
+    "Under reduced motion the cursor rests on Publish with the radius already at 4, and the controls still work."
+  ],
+  "tags": ["agent", "cursor", "pointer", "automation", "slider", "hand-over", "take over", "Strata", "settings"]
+}
+</script>
+<style data-code>
+/* Agent cursor. White surfaces with soft rings; Publish is the one ink fill, the agent's own cursor and label the one lime point, sage #EEF1E8 only as a slider track and hover wash. Easings: expo out (.16,1,.3,1), move (.65,0,0.35,1). */
+.ac { position: relative; width: 528px; font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; color: #0B0C0D; user-select: none; -webkit-user-select: none; }
+:where(.ac button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.ac p, .ac h2 { margin: 0; }
+.ac-mono { font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ac-roll { display: inline-grid; overflow: hidden; vertical-align: top; }
+.ac-roll > b { grid-area: 1 / 1; font-weight: inherit; white-space: nowrap; }
+
+/* the plan, and the one way out */
+.ac-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.ac-k { color: rgba(11, 12, 13, .66); font-weight: 500; }
+.ac-plan { font: 300 28px/32px Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.ac-take { flex: none; height: 36px; padding: 0 16px; background: #fff; border-radius: 999px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .14); font-weight: 500; display: inline-flex; align-items: center;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ac-take:hover, .ac-take.is-hot { background: #EEF1E8; }
+.ac-take:active { transform: translateY(1px); }
+.ac-take[aria-pressed="true"] { box-shadow: 0 0 0 1.5px #0B0C0D; }
+.ac-take .ac-roll { min-width: 6.4ch; justify-items: center; }
+
+/* the panel */
+.ac-panel { display: grid; grid-template-columns: 1fr 200px; gap: 24px; padding: 18px; background: #fff; border-radius: 20px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.ac-ctl { display: flex; flex-direction: column; gap: 16px; }
+.ac-hd { display: flex; align-items: baseline; justify-content: space-between; height: 20px; margin-bottom: 8px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.ac-hd .ac-mono { color: #0B0C0D; min-width: 6ch; text-align: right; }
+
+/* brand colour: small circles, the choice is an ink ring */
+.ac-sw { display: flex; gap: 14px; height: 28px; align-items: center; padding-left: 4px; }
+.ac-sw button { width: 20px; height: 20px; border-radius: 50%; background: var(--c); transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ac-sw button:hover, .ac-sw button.is-hot { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px rgba(11, 12, 13, .22); }
+.ac-sw button[aria-checked="true"] { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #0B0C0D; }
+.ac-sw button:active { transform: translateY(1px); }
+
+/* radius slider: a thin ink fill on a sage track, a white thumb with a ring */
+.ac-sl { position: relative; height: 28px; cursor: pointer; touch-action: none; }
+.ac-sl::before { content: ''; position: absolute; left: 0; right: 0; top: 12px; height: 4px; border-radius: 2px; background: #EEF1E8; }
+.ac-fill { position: absolute; left: 0; top: 12px; width: 100%; height: 4px; border-radius: 2px; background: #0B0C0D; transform-origin: 0 50%; transform: scaleX(0); }
+.ac-thumb { position: absolute; left: 0; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .14), 0 3px 8px -2px rgba(11, 12, 13, .3); transition: box-shadow 120ms cubic-bezier(.4, 0, .2, 1); }
+.ac-sl:hover .ac-thumb, .ac-sl.is-hot .ac-thumb, .ac-sl.is-grab .ac-thumb { box-shadow: 0 0 0 1px rgba(11, 12, 13, .3), 0 4px 10px -2px rgba(11, 12, 13, .34); }
+.ac-sl.is-settle .ac-thumb { transition: transform 160ms cubic-bezier(.16, 1, .3, 1), box-shadow 120ms cubic-bezier(.4, 0, .2, 1); }
+.ac-sl.is-settle .ac-fill { transition: transform 160ms cubic-bezier(.16, 1, .3, 1); }
+.ac-sl.is-grab, .ac-sl.is-grab * { cursor: grabbing; }
+
+/* type scale: plain text, the choice is a white chip with a ring */
+.ac-sc { display: flex; gap: 4px; }
+.ac-sc button { flex: 1; height: 28px; border-radius: 999px; font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66);
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ac-sc button:hover, .ac-sc button.is-hot { background: #EEF1E8; color: #0B0C0D; }
+.ac-sc button[aria-checked="true"] { background: #fff; color: #0B0C0D; font-weight: 500; box-shadow: 0 0 0 1px rgba(11, 12, 13, .22); }
+.ac-sc button:active { transform: translateY(1px); }
+
+/* publish: the one ink fill */
+.ac-pub { position: relative; margin-top: auto; height: 48px; display: flex; align-items: center; justify-content: center; background: #0B0C0D; color: #fff; border-radius: 999px; font-size: 15px; font-weight: 600; letter-spacing: -.011em; overflow: hidden;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ac-pub:hover, .ac-pub.is-hot { background: #26282C; }
+.ac-pub:active { transform: translateY(2px); }
+.ac-pub[aria-disabled="true"] { cursor: default; background: #0B0C0D; transform: none; }
+.ac-pub::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255, 255, 255, .8); transform-origin: 100% 50%; transform: scaleX(0); transition: transform 300ms cubic-bezier(.16, 1, .3, 1); }
+.ac-pub.is-pending::after { transform-origin: 0 50%; transform: scaleX(1); transition: transform 900ms linear; }
+.ac-tick { position: absolute; left: 22px; top: 17px; width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 1.5; clip-path: inset(0 100% 0 0); transition: clip-path 120ms cubic-bezier(.5, 0, .75, 0); }
+.ac-pub.is-done .ac-tick { clip-path: inset(0); transition: clip-path 420ms cubic-bezier(.16, 1, .3, 1) 120ms; }
+
+/* the preview: the one place a radius shows (the picture frame and the button take it) */
+.ac-prev { --r: 12px; --brand: #0B0C0D; --h: 22px; display: flex; flex-direction: column; padding: 14px; background: #fff; border-radius: 14px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); }
+.ac-pv-hd { display: flex; align-items: center; justify-content: space-between; height: 22px; margin-bottom: 10px; color: rgba(11, 12, 13, .66); }
+.ac-tag { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 999px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .12); color: rgba(11, 12, 13, .66); font-size: 13px; font-weight: 500; transition: color 200ms cubic-bezier(.4, 0, .2, 1); }
+.ac-tag i { width: 6px; height: 6px; border-radius: 50%; background: transparent; margin-left: -2px; transition: width 240ms cubic-bezier(.16, 1, .3, 1), margin 240ms cubic-bezier(.16, 1, .3, 1); }
+.ac-tag.is-live { color: #0B0C0D; }
+.ac-tag.is-live i { background: #0B0C0D; }
+.ac-tag:not(.is-live) i { width: 0; margin-left: -6px; }
+.ac-tag .ac-roll { min-width: 4.4ch; }
+.ac-img { width: 100%; flex: 1; min-height: 84px; display: grid; place-items: center; border-radius: var(--r); box-shadow: 0 0 0 1px rgba(11, 12, 13, .1); }
+.ac-img svg { display: block; width: 44px; height: 44px; fill: none; stroke: rgba(11, 12, 13, .3); stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.ac-pv-row { display: flex; align-items: baseline; justify-content: space-between; margin-top: 10px; }
+.ac-name { font: 300 var(--h)/26px Outfit, Geist, sans-serif; letter-spacing: -.03em; white-space: nowrap; transition: font-size 360ms cubic-bezier(.65, 0, .35, 1); }
+.ac-buy { margin-top: 12px; height: 34px; display: flex; align-items: center; justify-content: center; background: #fff; color: #0B0C0D; border-radius: 999px; box-shadow: 0 0 0 1px var(--brand); font-size: 14px; font-weight: 600; letter-spacing: -.011em; transition: box-shadow 200ms cubic-bezier(.4, 0, .2, 1); }
+
+/* the caption */
+.ac-cap { display: flex; align-items: center; gap: 10px; height: 20px; margin-top: 14px; color: rgba(11, 12, 13, .66); }
+.ac-pt { flex: none; width: 8px; height: 8px; border-radius: 50%; background: rgba(11, 12, 13, .38); transition: background 200ms cubic-bezier(.4, 0, .2, 1); }
+.ac.is-paused .ac-pt { background: rgba(11, 12, 13, .14); }
+.ac-cap .ac-roll { flex: 1; min-width: 0; }
+.ac-cap .ac-mono { min-width: 6ch; text-align: right; }
+
+/* the agent's cursor: lime body, ink edge, its name on a lime pill. The label sits below and to the right of the tip, and to the left of it while the agent works the slider, so it never covers a value. */
+.ac-cur { position: absolute; left: 0; top: 0; z-index: 20; width: 22px; height: 28px; pointer-events: none; will-change: transform; transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ac-cur:not(.is-in) { visibility: hidden; }
+.ac-cur.is-move { transition: none; }
+.ac-arrow { position: absolute; left: 0; top: 0; width: 22px; height: 28px; transform-origin: 1.5px 1.5px; transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ac-arrow path { fill: #B8FF00; stroke: #0B0C0D; stroke-width: 1.75; stroke-linejoin: round; transition: fill 200ms cubic-bezier(.4, 0, .2, 1); }
+.ac-cur.is-down .ac-arrow { transform: scale(.86); }
+.ac-cur.is-paused .ac-arrow path { fill: transparent; }
+.ac-lbl { position: absolute; left: 16px; top: 22px; height: 22px; display: grid; overflow: hidden; border-radius: 999px; background: #B8FF00; color: #0B0C0D; font-size: 12px; font-weight: 500; line-height: 22px; white-space: nowrap;
+  translate: 0 0; transition: translate 300ms cubic-bezier(.16, 1, .3, 1), background 200ms cubic-bezier(.4, 0, .2, 1), color 200ms cubic-bezier(.4, 0, .2, 1), box-shadow 200ms cubic-bezier(.4, 0, .2, 1); }
+.ac-lbl > span { grid-area: 1 / 1; padding: 0 10px; transition: transform 300ms cubic-bezier(.16, 1, .3, 1); }
+.ac-lbl > span + span { transform: translateY(110%); }
+.ac-cur.is-left .ac-lbl { translate: calc(-100% - 24px) -20px; }
+.ac-cur.is-paused .ac-lbl { background: #fff; color: #0B0C0D; box-shadow: 0 0 0 1px rgba(11, 12, 13, .3); }
+.ac-cur.is-paused .ac-lbl > span:first-child { transform: translateY(-110%); }
+.ac-cur.is-paused .ac-lbl > span + span { transform: translateY(0); }
+.ac-ring { position: absolute; left: 0; top: 0; width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%; pointer-events: none; z-index: 19; box-shadow: 0 0 0 2px #B8FF00, 0 0 0 3px rgba(11, 12, 13, .3); }
+
+.ac button:focus-visible, .ac [role="slider"]:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.ac-pub:focus-visible { outline-color: #fff; outline-offset: -5px; }
+.ac [hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .ac *, .ac *::before, .ac *::after { transition: none !important; } }
+</style>
+<style>
+  .acw { display: grid; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="acw">
+<!-- code -->
+<div class="ac" id="ac">
+  <div class="ac-top">
+    <div>
+      <p class="ac-k">Strata · Agent run</p>
+      <h2 class="ac-plan">Set radius to 4 and publish</h2>
+    </div>
+    <button type="button" class="ac-take" id="ac-take" aria-pressed="false"><span class="ac-roll" id="ac-take-t"><b>Take over</b></span></button>
+  </div>
+
+  <section class="ac-panel" id="ac-panel" aria-label="Strata settings">
+    <div class="ac-ctl">
+      <div>
+        <div class="ac-hd"><span id="ac-brand-l">Brand colour</span><span class="ac-mono" id="ac-brand-v">Ink</span></div>
+        <div class="ac-sw" id="ac-sw" role="radiogroup" aria-labelledby="ac-brand-l"></div>
+      </div>
+      <div>
+        <div class="ac-hd"><span>Radius</span><span class="ac-mono" id="ac-rad-v">12 px</span></div>
+        <div class="ac-sl is-settle" id="ac-sl" role="slider" tabindex="0" aria-label="Radius" aria-valuemin="0" aria-valuemax="16" aria-valuenow="12" aria-valuetext="12 px"><i class="ac-fill" id="ac-fill"></i><i class="ac-thumb" id="ac-thumb"></i></div>
+      </div>
+      <div>
+        <div class="ac-hd"><span id="ac-sc-l">Type scale</span><span class="ac-mono" id="ac-sc-v">1.25</span></div>
+        <div class="ac-sc" id="ac-sc" role="radiogroup" aria-labelledby="ac-sc-l"></div>
+      </div>
+      <button type="button" class="ac-pub" id="ac-pub"><svg class="ac-tick" viewBox="0 0 14 14" aria-hidden="true"><path d="M1.5 7.5l3.5 3.5 7.5-8"/></svg><span class="ac-roll" id="ac-pub-t"><b>Publish</b></span></button>
+    </div>
+
+    <div class="ac-prev" id="ac-prev" aria-label="Preview">
+      <div class="ac-pv-hd"><span class="ac-mono" id="ac-token">--radius: 12px</span><span class="ac-tag" id="ac-tag"><i></i><span class="ac-roll" id="ac-tag-t"><b>Draft</b></span></span></div>
+      <div class="ac-img" aria-hidden="true"><svg viewBox="0 0 44 44"><path d="M6 17h32c0 11-7 19-16 19S6 28 6 17z"/><path d="M13 37h18"/></svg></div>
+      <div class="ac-pv-row"><span class="ac-name" id="ac-name">Fold vessel</span><span class="ac-mono">$54</span></div>
+      <div class="ac-buy">Add to cart</div>
+    </div>
+  </section>
+
+  <div class="ac-cap">
+    <i class="ac-pt"></i>
+    <span class="ac-roll" id="ac-cap"><b>Reading the settings</b></span>
+    <span class="ac-roll ac-mono" id="ac-n"><b>1 / 4</b></span>
+  </div>
+  <p class="sr-only" id="ac-msg" role="status" aria-live="polite"></p>
+
+  <!-- the agent's own cursor (never the harness ghost) -->
+  <div class="ac-cur" id="ac-cur" aria-hidden="true">
+    <svg class="ac-arrow" viewBox="0 0 22 28"><path d="M1.5 1.5 L1.5 21.2 L6.3 16.6 L9.6 24.4 L13.2 22.9 L9.9 15.2 L16.4 15.2 Z"/></svg>
+    <span class="ac-lbl"><span>Qbix agent</span><span>Paused</span></span>
+  </div>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Move the pointer into the panel, or press Take over, to stop the agent. Resume hands the work back.</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Agent cursor. Positions the agent uses are relative to .ac (thumbX, at()). The agent drives the same controls a person does: setRadius(), setBrand(), setScale(), publish().
+   Its cursor is a separate element moved along eased arcs; take over() aborts the script cleanly and resume() plans again from the panel's real state. */
+const $ = (id) => document.getElementById(id);
+const acEl = $('ac'), acPanel = $('ac-panel'), acCur = $('ac-cur'), acSl = $('ac-sl'), acThumb = $('ac-thumb'), acFill = $('ac-fill'), acPub = $('ac-pub');
+const acReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const BRANDS = [['Ink', '#0B0C0D', '#fff'], ['Sage', '#C5D1AA', '#0c1300'], ['Fern', '#6FAE00', '#0c1300'], ['Forest', '#263A0A', '#fff']];
+const SCALES = [1.2, 1.25, 1.333];
+const RAD = { MAX: 16, THUMB: 20, START: 12, GOAL: 4 };
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+let acVal = RAD.START, acBrand = 0, acScale = 1, acState = 'draft';   // draft | pending | done
+
+$('ac-sw').innerHTML = BRANDS.map((b, i) => `<button type="button" role="radio" aria-checked="${i === 0}" aria-label="${b[0]}" style="--c:${b[1]}"></button>`).join('');
+$('ac-sc').innerHTML = SCALES.map((s, i) => `<button type="button" role="radio" aria-checked="${i === 1}">${s}</button>`).join('');
+const acSw = [...$('ac-sw').children], acSc = [...$('ac-sc').children];
+
+/* text that changes rolls inside its clip: the old line leaves up (or down), the new one arrives from the other side */
+function roll(el, text, dir = 1, delay = 0) {
+  const cur = el.lastElementChild;
+  if (cur.textContent === text) return;
+  if (acReduced || !cur.animate) { cur.textContent = text; return; }
+  while (el.children.length > 2) el.firstElementChild.remove();
+  const nb = document.createElement('b'); nb.textContent = text; el.appendChild(nb);
+  const o = { duration: 420, delay, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'both' };
+  cur.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-110 * dir}%)` }], o).finished.then(() => cur.remove(), () => {});
+  nb.animate([{ transform: `translateY(${110 * dir}%)` }, { transform: 'translateY(0)' }], o);
+}
+
+/* the radius: one number, drawn everywhere. Float while dragging, the whole pixel on release. */
+function drawRadius(v, snap) {
+  acVal = v;
+  const span = acSl.clientWidth - RAD.THUMB, x = (v / RAD.MAX) * span, r = Math.round(v);
+  acSl.classList.toggle('is-settle', !!snap);
+  acThumb.style.transform = `translate3d(${snap ? Math.round(x) : x.toFixed(2)}px, 0, 0)`;
+  acFill.style.transform = `scaleX(${((snap ? Math.round(x) : x) + RAD.THUMB / 2) / acSl.clientWidth})`;
+  $('ac-prev').style.setProperty('--r', r + 'px');
+  $('ac-rad-v').textContent = r + ' px';
+  $('ac-token').textContent = `--radius: ${r}px`;
+  acSl.setAttribute('aria-valuenow', String(r));
+  acSl.setAttribute('aria-valuetext', r + ' px');
+}
+const thumbX = (v) => acSl.getBoundingClientRect().left - acEl.getBoundingClientRect().left + (v / RAD.MAX) * (acSl.clientWidth - RAD.THUMB) + RAD.THUMB / 2;
+function setBrand(i) {
+  acBrand = i;
+  acSw.forEach((b, k) => b.setAttribute('aria-checked', String(k === i)));
+  const p = $('ac-prev').style; p.setProperty('--brand', BRANDS[i][1]); p.setProperty('--on', BRANDS[i][2]);
+  $('ac-brand-v').textContent = BRANDS[i][0];
+}
+function setScale(i) {
+  acScale = i;
+  acSc.forEach((b, k) => b.setAttribute('aria-checked', String(k === i)));
+  $('ac-prev').style.setProperty('--h', (14 * SCALES[i] * SCALES[i]).toFixed(1) + 'px');
+  $('ac-sc-v').textContent = String(SCALES[i]);
+}
+acSw.forEach((b, i) => b.addEventListener('click', () => setBrand(i)));
+acSc.forEach((b, i) => b.addEventListener('click', () => setScale(i)));
+
+/* publish: Publishing with a bar that tracks time, then Published; a person and the agent press the same button */
+let pubT = 0;
+function publish() {
+  if (acState !== 'draft') return;
+  acState = 'pending';
+  acPub.classList.add('is-pending'); acPub.setAttribute('aria-disabled', 'true');
+  roll($('ac-pub-t'), 'Publishing');
+  pubT = setTimeout(() => {
+    acState = 'done';
+    acPub.classList.remove('is-pending'); acPub.classList.add('is-done');
+    roll($('ac-pub-t'), 'Published');
+    $('ac-tag').classList.add('is-live'); roll($('ac-tag-t'), 'Live');
+    $('ac-msg').textContent = 'Published to forma.studio';
+  }, 900);
+}
+function unpublish(instant) {
+  clearTimeout(pubT);
+  acState = 'draft';
+  acPub.classList.remove('is-pending', 'is-done'); acPub.removeAttribute('aria-disabled');
+  $('ac-tag').classList.remove('is-live');
+  if (instant) { $('ac-pub-t').innerHTML = '<b>Publish</b>'; $('ac-tag-t').innerHTML = '<b>Draft</b>'; }
+  else { roll($('ac-pub-t'), 'Publish', -1); roll($('ac-tag-t'), 'Draft', -1); }
+}
+acPub.addEventListener('click', publish);
+
+/* the slider, for a pointer and the keyboard */
+let slDrag = null;
+const valueAt = (cx) => clamp(((cx - acSl.getBoundingClientRect().left - RAD.THUMB / 2) / (acSl.clientWidth - RAD.THUMB)) * RAD.MAX, 0, RAD.MAX);
+acSl.addEventListener('pointerdown', (e) => {
+  if (e.button > 0) return;
+  acSl.setPointerCapture(e.pointerId);
+  slDrag = e.pointerId; acSl.classList.add('is-grab');
+  drawRadius(valueAt(e.clientX), false);
+});
+acSl.addEventListener('pointermove', (e) => { if (slDrag === e.pointerId) drawRadius(valueAt(e.clientX), false); });
+const slEnd = (e) => { if (slDrag !== e.pointerId) return; slDrag = null; acSl.classList.remove('is-grab'); drawRadius(Math.round(acVal), true); };
+acSl.addEventListener('pointerup', slEnd); acSl.addEventListener('pointercancel', slEnd);
+acSl.addEventListener('keydown', (e) => {
+  const k = e.key, d = k === 'ArrowRight' || k === 'ArrowUp' ? 1 : k === 'ArrowLeft' || k === 'ArrowDown' ? -1 : k === 'PageUp' ? 4 : k === 'PageDown' ? -4 : 0;
+  if (d) { e.preventDefault(); drawRadius(clamp(Math.round(acVal) + d, 0, RAD.MAX), true); }
+  else if (k === 'Home') { e.preventDefault(); drawRadius(0, true); }
+  else if (k === 'End') { e.preventDefault(); drawRadius(RAD.MAX, true); }
+});
+drawRadius(RAD.START, true); setBrand(0); setScale(1);
+</script>
+<script>
+(() => {
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const soft = QM.bezier(0.45, 0, 0.25, 1);
+  let epoch = 0, mode = 'run', resumeT = 0;     // mode: run | user (Take over) | hover (the real pointer is in the panel)
+  const cur = { x: 0, y: 0 };
+
+  const at = (el, fx = 0.5, fy = 0.5) => {
+    const r = el.getBoundingClientRect(), a = acEl.getBoundingClientRect();
+    return { x: r.left - a.left + r.width * fx, y: r.top - a.top + r.height * fy };
+  };
+  const park = () => { const p = acPanel.getBoundingClientRect(), a = acEl.getBoundingClientRect(); return { x: p.right - a.left + 40, y: p.top - a.top + 56 }; };
+  const place = (x, y) => { cur.x = x; cur.y = y; acCur.style.transform = `translate3d(${(x - 1.5).toFixed(1)}px, ${(y - 1.5).toFixed(1)}px, 0)`; };
+  function jump(p) { acCur.classList.add('is-move', 'is-in'); place(p.x, p.y); acCur.getBoundingClientRect(); acCur.classList.remove('is-move'); }
+
+  const say = (text, n, dir = 1) => { roll($('ac-cap'), text, dir); roll($('ac-n'), n, dir); $('ac-msg').textContent = text; };
+
+  /* an arc: a quadratic curve bowed to the side, travelled on an ease that starts quick and lands slowly */
+  function glide(my, to, ms, bow) {
+    const p0 = { x: cur.x, y: cur.y }, dx = to.x - p0.x, dy = to.y - p0.y, d = Math.hypot(dx, dy) || 1;
+    const time = ms || clamp(380 + d * 1.25, 420, 1100);
+    const b = (bow ?? clamp(d * 0.16, 6, 28)) * (dx >= 0 ? -1 : 1);
+    const c = { x: (p0.x + to.x) / 2 - (dy / d) * b, y: (p0.y + to.y) / 2 + (dx / d) * b };
+    acCur.classList.add('is-move');
+    return new Promise((res) => {
+      const t0 = performance.now();
+      const f = (now) => {
+        if (my !== epoch) return res(false);
+        const p = Math.min(1, (now - t0) / time), t = soft(p), u = 1 - t;
+        place(u * u * p0.x + 2 * u * t * c.x + t * t * to.x, u * u * p0.y + 2 * u * t * c.y + t * t * to.y);
+        if (p < 1) requestAnimationFrame(f); else res(true);
+      };
+      requestAnimationFrame(f);
+    });
+  }
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const go = async (my, to, ms, bow) => { if (!(await glide(my, to, ms, bow))) throw 0; };
+  function ring() {
+    const r = document.createElement('i'); r.className = 'ac-ring';
+    r.style.transform = `translate3d(${cur.x}px, ${cur.y}px, 0)`;
+    acEl.appendChild(r);
+    const a = r.animate([{ transform: `translate3d(${cur.x}px, ${cur.y}px, 0) scale(.3)`, opacity: 1 }, { transform: `translate3d(${cur.x}px, ${cur.y}px, 0) scale(1.15)`, opacity: 0 }], { duration: 520, easing: 'cubic-bezier(.16, 1, .3, 1)' });
+    a.finished.then(() => r.remove(), () => r.remove());
+  }
+  const down = () => { acCur.classList.remove('is-move'); acCur.classList.add('is-down'); if (!acReduced) ring(); };
+  const up = () => acCur.classList.remove('is-down');
+  const hot = (el, on) => el.classList.toggle('is-hot', on);
+
+  // the radius slider as the agent drags it: the thumb is held at its centre and follows the cursor along the arc
+  async function dragRadius(my, to, ms) {
+    const from = acVal, p0 = { x: cur.x, y: cur.y }, p1 = { x: thumbX(to), y: p0.y };
+    const d = Math.hypot(p1.x - p0.x, 0), b = 7 * (p1.x >= p0.x ? -1 : 1);
+    const c = { x: (p0.x + p1.x) / 2, y: p0.y + b };
+    acSl.classList.add('is-grab'); acCur.classList.add('is-move');
+    await new Promise((res) => {
+      const t0 = performance.now();
+      const f = (now) => {
+        if (my !== epoch) return res();
+        const p = Math.min(1, (now - t0) / ms), t = soft(p), u = 1 - t;
+        place(u * u * p0.x + 2 * u * t * c.x + t * t * p1.x, u * u * p0.y + 2 * u * t * c.y + t * t * p1.y);
+        drawRadius(from + (to - from) * t, false);
+        if (p < 1) requestAnimationFrame(f); else res();
+      };
+      requestAnimationFrame(f);
+    });
+    if (my !== epoch) throw 0;
+  }
+  const letGo = () => { up(); acSl.classList.remove('is-grab'); hot(acSl, false); if (!slDrag) drawRadius(Math.round(acVal), true); };
+  const labelBack = () => acCur.classList.remove('is-left');
+
+  // a value glides: radius back to its start for the next draft
+  function tweenRadius(my, to, ms) {
+    const from = acVal;
+    return new Promise((res) => {
+      const t0 = performance.now(), e = QM.bezier(0.16, 1, 0.3, 1);
+      const f = (now) => {
+        if (my !== epoch) return res();
+        const p = Math.min(1, (now - t0) / ms);
+        drawRadius(from + (to - from) * e(p), false);
+        if (p < 1) requestAnimationFrame(f); else { drawRadius(to, true); res(); }
+      };
+      requestAnimationFrame(f);
+    });
+  }
+
+  /* the plan, read from the panel as it is now: so Resume after a person changed something does the right thing */
+  async function script(fresh) {
+    const my = ++epoch;
+    try {
+      for (;;) {
+        if (fresh) { jump(park()); say('Reading the settings', '1 / 4'); await gap(my, 700); }
+        else say('Back at it. Checking the panel', '1 / 4');
+        // 1 · read the panel: the brand colour, then how the radius shows in the preview
+        await go(my, at(acSw[acBrand], 0.5, 0.6));
+        hot(acSw[acBrand], true); await gap(my, 400); hot(acSw[acBrand], false);
+        await go(my, at(document.querySelector('.ac-buy'), 0.86, 0.5)); await gap(my, 320);   // how the corner reads in the preview
+        // 2 · the radius
+        if (Math.round(acVal) !== RAD.GOAL) {
+          say(`Radius is ${Math.round(acVal)}. Dragging to ${RAD.GOAL}`, '2 / 4');
+          acCur.classList.add('is-left');                          // the label steps to the left of the tip while the slider is worked, clear of every value
+          await go(my, { x: thumbX(acVal), y: at(acSl).y });
+          hot(acSl, true); await gap(my, 240);
+          down(); await gap(my, 130);
+          await dragRadius(my, RAD.GOAL, Math.round(clamp(Math.abs(thumbX(acVal) - thumbX(RAD.GOAL)) * 7, 760, 1600)));
+          await gap(my, 110);
+          letGo(); await gap(my, 300);
+          labelBack();
+        }
+        say(`Radius is ${RAD.GOAL}. The preview follows`, '3 / 4');
+        await gap(my, 1100);
+        // 3 · publish
+        if (acState === 'draft') {
+          say('Publishing r2 to forma.studio', '4 / 4');
+          await go(my, at(acPub, 0.5, 0.55));
+          hot(acPub, true); await gap(my, 260);
+          down(); await gap(my, 130);
+          up(); hot(acPub, false); publish();
+          await gap(my, 1100);
+        }
+        if (acState === 'done') say('Published. forma.studio is on r2', '4 / 4');
+        await gap(my, 1500);
+        await go(my, park(), 760);
+        await gap(my, 1300);
+        // 4 · the next draft opens: values glide back, nothing jumps
+        say('A new draft is open', '1 / 4', -1);
+        unpublish(false);
+        setBrand(0); setScale(1);
+        await tweenRadius(my, RAD.START, 760);
+        await gap(my, 1500);
+        fresh = true;
+      }
+    } catch (e) { /* aborted: a hand-over, or a restart */ }
+  }
+
+  /* hand-over: pausing is clean (no half press, no stuck drag); the plan is read again on Resume */
+  function takeOver(why) {
+    if (mode !== 'run') { if (why === 'user') { mode = 'user'; clearTimeout(resumeT); } return; }
+    mode = why; epoch++;
+    clearTimeout(resumeT);
+    up(); labelBack(); hot(acSw[acBrand], false); hot(acSl, false); hot(acPub, false);
+    if (!slDrag) { acSl.classList.remove('is-grab'); drawRadius(Math.round(acVal), true); }
+    acCur.classList.add('is-paused'); acEl.classList.add('is-paused');
+    $('ac-take').setAttribute('aria-pressed', 'true'); roll($('ac-take-t'), 'Resume');
+    say('Paused. You have the controls', 'Paused');
+  }
+  function resume() {
+    if (mode === 'run') return;
+    mode = 'run'; clearTimeout(resumeT);
+    acCur.classList.remove('is-paused'); acEl.classList.remove('is-paused');
+    $('ac-take').setAttribute('aria-pressed', 'false'); roll($('ac-take-t'), 'Take over', -1);
+    script(false);
+  }
+  $('ac-take').addEventListener('click', () => (mode === 'run' ? takeOver('user') : resume()));
+
+  if (!QM.tile && !acReduced) {
+    let usedKeys = false;   // a focused control only holds the agent back when the keyboard put the focus there
+    const armResume = () => {
+      clearTimeout(resumeT);
+      if (mode !== 'hover') return;
+      resumeT = setTimeout(() => {
+        if (mode !== 'hover') return;
+        if (acPanel.matches(':hover') || (usedKeys && acPanel.contains(document.activeElement)) || slDrag) armResume(); else resume();
+      }, 4500);
+    };
+    acPanel.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') { clearTimeout(resumeT); takeOver('hover'); } });
+    acPanel.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') armResume(); });
+    acPanel.addEventListener('pointerdown', () => { usedKeys = false; clearTimeout(resumeT); takeOver('hover'); });
+    acPanel.addEventListener('pointerup', () => armResume());
+    acPanel.addEventListener('keydown', () => { usedKeys = true; takeOver('hover'); armResume(); });
+  }
+
+  /* reduced motion: a complete still. The radius is already 4, the cursor rests on Publish; the controls still work. */
+  function still() {
+    drawRadius(RAD.GOAL, true);
+    jump(at(acPub, 0.5, 0.55));
+    say(`Radius is ${RAD.GOAL}. Next: publish`, '3 / 4');
+    $('ac-take').hidden = true;
+  }
+  function hardReset() {
+    epoch++; clearTimeout(resumeT); mode = 'run';
+    up(); labelBack(); acCur.classList.remove('is-paused'); acEl.classList.remove('is-paused');
+    $('ac-take').setAttribute('aria-pressed', 'false'); $('ac-take-t').innerHTML = '<b>Take over</b>';
+    unpublish(true); setBrand(0); setScale(1); drawRadius(RAD.START, true);
+    acSl.classList.remove('is-grab');
+  }
+  const begin = () => { hardReset(); if (acReduced) still(); else { jump(park()); script(true); } };
+  QM.demo({ kind: 'loop', restart() { begin(); } });
+  if (acReduced) still();
+  else (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(begin, 300));
+})();
+</script>
+</body>
+</html>

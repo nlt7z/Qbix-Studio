@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detent dial · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "detent-dial", "title": "Detent dial", "group": "studio", "added": "2026-11-16", "cat": "inputs", "order": 100,
+  "kind": "loop", "tone": "paper", "shot": 4600,
+  "line": "6 detents · 54° apart · pull 0.45 between · tick on crossing · optional click",
+  "summary": "A round knob for Strata's type scale ratio, with six detents: 1.125, 1.2, 1.25, 1.333, 1.414, 1.5. Drag around its centre, use the wheel or the arrow keys. Between detents it resists, so the notch trails the hand; past the halfway point it lets go and pops into the next detent with a 1 px tick of the notch, the ring tick for that detent turns ink, and a soft click plays if the speaker is on. Beside it a specimen of Aa at five steps rescales with the ratio on the move curve, and the ratio rolls in Geist Mono.",
+  "spec": [
+    ["Detents", "270° of travel from −135° to +135°, a detent every 54° (−135, −81, −27, 27, 81, 135); three minor ticks between each pair"],
+    ["Drag", "angle from atan2 around the knob's centre, counted as differences so the pointer can leave the ring; pointer capture; the knob's own angle is not the hand's"],
+    ["Resistance", "while held, target = detent + (hand − detent) × 0.45, so the notch trails the hand by up to 30°; once the hand passes the midpoint (+3° of hysteresis) the nearest detent changes and the target moves 30° at once"],
+    ["Ease", "the shown angle chases its target critically damped, ω 26 s⁻¹ held and 15 s⁻¹ on release, solved in closed form per frame, so it never overshoots a detent"],
+    ["Tick", "on crossing: the notch steps 1 px toward the centre and back in 180 ms, the ring tick turns ink (120 ms), navigator.vibrate(8) where supported, and a 25 ms filtered click if the speaker is on"],
+    ["Sound", "off by default; the AudioContext is created on the click that turns it on, never before; noise burst through a band-pass at 2.4 kHz plus a 150 Hz thump, gain 0.2"],
+    ["Specimen", "Aa at 14 px × ratio^0…4 (14, 21, 32, 47, 71 at 1.5), baselines on one line; size 420 ms on the move curve, the px labels count on the same curve"],
+    ["Readout", "Geist Mono 44 px, tabular; each character is its own clipped slot and rolls only if it changed, up when the ratio rises, down when it falls"],
+    ["Keys and wheel", "arrows step a detent, Home and End the ends, wheel steps one per 40 px, at most one per 110 ms; aria-valuetext reads the ratio and its name"],
+    ["Loop", "the ghost turns it up to 1.5 and back to 1.25; a real pointer, wheel or key takes over, it resumes 4.5 s later"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "Strata's type step: the dial a client turns to choose how fast headings grow, with the specimen answering under their hand before the system is built.",
+  "rules": [
+    "Detents are the only values: the angle is free between them but the value is not, and the specimen only ever shows a real ratio.",
+    "Resistance comes from a target pulled toward the nearest detent, not from slowing the hand; the knob never overshoots (critically damped).",
+    "Sound is opt-in and the AudioContext is created on a user gesture; the haptic is only sent for a real hand, never for the ghost.",
+    "A tick is a single, small event: the notch, one ring tick, the click. Nothing else flashes.",
+    "The specimen's baselines stay on one line while the sizes change; the labels count on the same curve as the glyphs.",
+    "Under reduced motion the knob snaps from detent to detent, the specimen and the ratio change without a transition, and it rests on 1.333."
+  ],
+  "tags": ["dial", "knob", "detents", "tactile", "haptic", "sound", "type scale", "specimen", "Strata", "slider"]
+}
+</script>
+<style data-code>
+/* Detent dial. A light knob (white, a soft ring and shadow) with an ink indicator, fine ink ticks at low alpha, a white specimen surface; no lime, no fills. Easings: move (.65,0,.35,1), expo out (.16,1,.3,1). The knob's angle is set from script. */
+.dd { position: relative; width: 596px; font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; color: #0B0C0D; user-select: none; -webkit-user-select: none; }
+:where(.dd button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.dd p { margin: 0; }
+.dd-k { margin-bottom: 20px; color: rgba(11, 12, 13, .66); font-weight: 500; }
+.dd-row { display: grid; grid-template-columns: 256px 296px; gap: 44px; align-items: stretch; }
+.dd-mono { font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.dd-roll { display: inline-grid; overflow: hidden; vertical-align: top; }
+.dd-roll > b { grid-area: 1 / 1; font-weight: inherit; white-space: nowrap; }
+
+/* the knob: a circle you turn; the ring of ticks is drawn by script */
+.dd-knob { position: relative; width: 256px; height: 256px; border-radius: 50%; cursor: grab; touch-action: none; outline-offset: 4px; }
+.dd-knob.is-grab, .dd-knob.is-grab * { cursor: grabbing; }
+.dd-knob:focus-visible { outline: 2px solid #0B0C0D; }
+.dd-ring { position: absolute; inset: 0; width: 256px; height: 256px; overflow: visible; pointer-events: none; }
+.dd-ring line { stroke: rgba(11, 12, 13, .3); stroke-width: 1.5; stroke-linecap: round; transition: stroke 120ms cubic-bezier(.4, 0, .2, 1); }
+.dd-ring line.is-minor { stroke: rgba(11, 12, 13, .14); }
+.dd-ring line.is-on { stroke: #0B0C0D; }
+.dd-body { position: absolute; left: 44px; top: 44px; width: 168px; height: 168px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .08), 0 2px 4px rgba(11, 12, 13, .05), 0 14px 32px -12px rgba(11, 12, 13, .3); transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.dd-knob.is-grab .dd-body { transform: scale(.985); }
+.dd-rot { position: absolute; inset: 0; will-change: transform; }
+.dd-cap { position: absolute; left: 26px; top: 26px; width: 116px; height: 116px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .07), inset 0 -8px 14px -10px rgba(11, 12, 13, .12), inset 0 8px 10px -8px rgba(11, 12, 13, .05); }
+.dd-notch { position: absolute; left: 82px; top: 8px; width: 4px; height: 18px; border-radius: 2px; background: #0B0C0D; }
+
+/* the speaker: off by default */
+.dd-snd { position: absolute; left: 106px; top: 222px; width: 44px; height: 28px; display: grid; place-items: center; background: #fff; border-radius: 999px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .14);
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.dd-snd:hover { background: #EEF1E8; }
+.dd-snd:active { transform: translateY(1px); }
+.dd-snd[aria-pressed="true"] { box-shadow: 0 0 0 1.5px #0B0C0D; }
+.dd-snd svg { width: 16px; height: 16px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; transition: stroke 160ms cubic-bezier(.4, 0, .2, 1); }
+.dd-snd .dd-waves { clip-path: inset(0 100% 0 0); transition: clip-path 160ms cubic-bezier(.5, 0, .75, 0); }
+.dd-snd[aria-pressed="true"] .dd-waves { clip-path: inset(0); transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1); }
+.dd-snd .dd-mute { clip-path: inset(0); transition: clip-path 160ms cubic-bezier(.5, 0, .75, 0); }
+.dd-snd[aria-pressed="true"] .dd-mute { clip-path: inset(0 0 100% 0); }
+
+@property --n { syntax: '<integer>'; inherits: false; initial-value: 14; }
+/* the answer: the ratio and the specimen */
+.dd-out { display: flex; flex-direction: column; justify-content: space-between; }
+.dd-lab { color: rgba(11, 12, 13, .66); font-weight: 500; }
+.dd-val { display: flex; margin-top: 2px; height: 48px; font: 400 44px/48px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.dd-ch { display: inline-grid; overflow: hidden; width: 1ch; height: 48px; }
+.dd-ch.is-dot { width: .46ch; }
+.dd-ch.is-dot > b { margin-left: -.27ch; }
+.dd-ch > b { grid-area: 1 / 1; justify-self: center; width: 1ch; font-weight: inherit; text-align: center; }
+.dd-name { margin-top: 2px; height: 20px; color: rgba(11, 12, 13, .66); }
+.dd-spec { padding: 18px; background: #fff; border-radius: 20px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.dd-glyphs { display: flex; align-items: flex-end; gap: 10px; height: 104px; }
+.dd-cell { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; }
+.dd-aa { --bl: .13; display: block; margin-bottom: calc(var(--bl) * -1em); font: 300 var(--s, 16px)/1 Outfit, Geist, sans-serif; letter-spacing: -.03em; white-space: nowrap; transition: font-size 420ms cubic-bezier(.65, 0, .35, 1); }
+.dd-px { --n: 14; margin-top: 12px; font-size: 12px; line-height: 16px; color: rgba(11, 12, 13, .66); counter-reset: n var(--n); transition: --n 420ms cubic-bezier(.65, 0, .35, 1); }
+.dd-px::before { content: counter(n); }
+@media (prefers-reduced-motion: reduce) { .dd *, .dd *::before { transition: none !important; } }
+</style>
+<style>
+  .ddw { display: grid; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="ddw">
+<!-- code -->
+<div class="dd" id="dd">
+  <p class="dd-k">Strata · Type scale</p>
+  <div class="dd-row">
+    <div class="dd-knob" id="dd-knob" role="slider" tabindex="0" aria-label="Type scale ratio" aria-valuemin="0" aria-valuemax="5" aria-valuenow="2" aria-valuetext="1.25, Major third">
+      <svg class="dd-ring" id="dd-ring" viewBox="0 0 256 256" aria-hidden="true"></svg>
+      <div class="dd-body"><div class="dd-cap"></div><div class="dd-rot" id="dd-rot"><div class="dd-notch" id="dd-notch"></div></div></div>
+      <button type="button" class="dd-snd" id="dd-snd" aria-pressed="false" aria-label="Click sound" title="Click sound">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M2 7h3l4-3.5v11L5 11H2z"/><g class="dd-waves"><path d="M12 6.2a4 4 0 0 1 0 5.6"/><path d="M14.2 4a7 7 0 0 1 0 10"/></g><path class="dd-mute" d="M12.5 6.5l4 5M16.5 6.5l-4 5"/></svg>
+      </button>
+    </div>
+
+    <div class="dd-out">
+      <div>
+        <p class="dd-lab">Ratio · base 14 px</p>
+        <div class="dd-val" id="dd-val" aria-hidden="true"></div>
+        <p class="dd-name"><span class="dd-roll" id="dd-name"><b>Major third</b></span></p>
+      </div>
+      <div class="dd-spec">
+        <div class="dd-glyphs" id="dd-glyphs" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Drag around the knob, use the wheel, or focus it and use the arrow keys. The speaker turns the click on.</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Detent dial. One idea: the hand's angle (user) is not the knob's angle (shown).
+   While held, the knob is pulled toward the nearest detent; the shown angle chases that target critically damped. */
+const RATIOS = [1.125, 1.2, 1.25, 1.333, 1.414, 1.5];
+const NAMES = ['Major second', 'Minor third', 'Major third', 'Perfect fourth', 'Augmented fourth', 'Perfect fifth'];
+const DET = [-135, -81, -27, 27, 81, 135];      // degrees from straight up, clockwise
+const PULL = 0.45, HYST = 3, W_HELD = 26, W_FREE = 15, BASE = 14;
+const ddKnob = document.getElementById('dd-knob'), ddRot = document.getElementById('dd-rot'), ddNotch = document.getElementById('dd-notch');
+const ddReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+let idx = 2, user = DET[2], shown = DET[2], vel = 0, held = false, raf = 0, last = 0;
+
+/* the ring: a minor tick every 13.5°, a long one on each detent */
+const ddRing = document.getElementById('dd-ring'), ticks = [];
+(() => {
+  let html = '';
+  for (let a = -135; a <= 135.01; a += 13.5) {
+    const major = DET.some((d) => Math.abs(d - a) < 0.01), r1 = 124, r0 = major ? 111 : 118, t = (a * Math.PI) / 180;
+    html += `<line class="${major ? '' : 'is-minor'}" x1="${(128 + Math.sin(t) * r0).toFixed(2)}" y1="${(128 - Math.cos(t) * r0).toFixed(2)}" x2="${(128 + Math.sin(t) * r1).toFixed(2)}" y2="${(128 - Math.cos(t) * r1).toFixed(2)}"/>`;
+  }
+  ddRing.innerHTML = html;
+  [...ddRing.children].forEach((l) => { if (!l.classList.contains('is-minor')) ticks.push(l); });
+})();
+
+/* the readout: each character is a clipped slot that rolls only if it changed */
+const ddVal = document.getElementById('dd-val');
+for (let i = 0; i < 5; i++) { const s = document.createElement('span'); s.className = 'dd-ch' + (i === 1 ? ' is-dot' : ''); s.innerHTML = '<b></b>'; ddVal.appendChild(s); }
+function roll(el, text, dir, instant) {
+  const cur = el.lastElementChild;
+  if (cur.textContent === text) return;
+  if (instant || ddReduced || !cur.animate) { cur.textContent = text; return; }
+  while (el.children.length > 2) el.firstElementChild.remove();
+  const nb = document.createElement('b'); nb.textContent = text; el.appendChild(nb);
+  const o = { duration: 420, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'both' };
+  cur.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-110 * dir}%)` }], o).finished.then(() => cur.remove(), () => {});
+  nb.animate([{ transform: `translateY(${110 * dir}%)` }, { transform: 'translateY(0)' }], o);
+}
+function showRatio(i, dir, instant) {
+  const s = String(RATIOS[i]).padEnd(5, ' ');
+  [...ddVal.children].forEach((slot, k) => roll(slot, s[k] === ' ' ? '' : s[k], dir, instant));
+  roll(document.getElementById('dd-name'), NAMES[i], dir, instant);
+}
+
+/* the specimen: Aa at five steps, baselines on one line; sizes ease on the move curve and the labels count on the same curve */
+const ddGlyphs = document.getElementById('dd-glyphs'), cells = [];
+for (let k = 0; k < 5; k++) {
+  const c = document.createElement('div'); c.className = 'dd-cell';
+  c.innerHTML = '<span class="dd-aa">Aa</span><span class="dd-px dd-mono"></span>';
+  ddGlyphs.appendChild(c); cells.push(c.firstChild);
+}
+const sizeAt = (i, k) => BASE * Math.pow(RATIOS[i], k);
+// the size is one custom property: --s on the glyph (font-size transitions) and --n on the label (an integer that counts on the same curve)
+function showSpecimen(i) {
+  cells.forEach((c, k) => { const px = Math.round(sizeAt(i, k)); c.style.setProperty('--s', px + 'px'); c.nextSibling.style.setProperty('--n', px); });
+}
+// the glyphs sit on one baseline: measure the space under it for this face once the font is in
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+  const p = document.createElement('span');
+  p.style.cssText = 'position:absolute;visibility:hidden;font:300 100px/1 Outfit,sans-serif;white-space:nowrap';
+  p.innerHTML = 'A<i style="display:inline-block;width:0;height:0"></i>'; document.body.appendChild(p);
+  const bl = p.lastChild.offsetTop; p.remove();
+  if (bl > 40 && bl < 100) cells.forEach((c) => c.style.setProperty('--bl', ((100 - bl) / 100).toFixed(3)));
+});
+
+/* the feedback of a tick: the notch, one ring tick, a click, a buzz */
+let audio = null, soundOn = false, noise = null;
+function click() {
+  if (!soundOn || !audio) return;
+  const t = audio.currentTime;
+  const src = audio.createBufferSource(); src.buffer = noise;
+  const bp = audio.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 1.2;
+  const g = audio.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+  src.connect(bp); bp.connect(g); g.connect(audio.destination); src.start(t); src.stop(t + 0.04);
+  const o = audio.createOscillator(), og = audio.createGain(); o.frequency.value = 150;
+  og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.12, t + 0.003); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+  o.connect(og); og.connect(audio.destination); o.start(t); o.stop(t + 0.06);
+}
+document.getElementById('dd-snd').addEventListener('click', (e) => {
+  soundOn = !soundOn;
+  e.currentTarget.setAttribute('aria-pressed', String(soundOn));
+  if (soundOn && !audio) {            // created on this click: a user gesture, never before
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) { soundOn = false; e.currentTarget.setAttribute('aria-pressed', 'false'); return; }
+    audio = new AC();
+    noise = audio.createBuffer(1, Math.round(audio.sampleRate * 0.04), audio.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  if (soundOn && audio) { audio.resume(); click(); }
+});
+
+/* the value changes only here */
+function commit(i, real) {
+  if (i === idx) return;
+  const dir = i > idx ? 1 : -1;
+  idx = i;
+  ticks.forEach((l, k) => l.classList.toggle('is-on', k === i));
+  showRatio(i, dir);
+  showSpecimen(i);
+  ddKnob.setAttribute('aria-valuenow', String(i));
+  ddKnob.setAttribute('aria-valuetext', `${RATIOS[i]}, ${NAMES[i]}`);
+  if (!ddReduced && ddNotch.animate) ddNotch.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(1px)', offset: 0.22 }, { transform: 'translateY(0)' }], { duration: 180, easing: 'cubic-bezier(.4, 0, .2, 1)' });
+  if (real) { click(); if (navigator.vibrate) navigator.vibrate(8); }
+}
+// the hand's angle picks the detent, with hysteresis so a hand resting on a boundary does not chatter
+function pick(u) {
+  let i = idx;
+  while (i < 5 && u > (DET[i] + DET[i + 1]) / 2 + HYST) i++;
+  while (i > 0 && u < (DET[i] + DET[i - 1]) / 2 - HYST) i--;
+  return i;
+}
+const targetAngle = () => (held ? DET[idx] + (user - DET[idx]) * PULL : DET[idx]);
+function draw() { ddRot.style.transform = `rotate(${shown.toFixed(2)}deg)`; }
+function frame(now) {
+  const dt = Math.min(0.034, Math.max(0.001, (now - last) / 1000)); last = now;
+  const w = held ? W_HELD : W_FREE, T = targetAngle();
+  // critically damped, exact for a fixed target over dt: x = T + (A + B dt) e^(-w dt)
+  const A = shown - T, B = vel + w * A, e = Math.exp(-w * dt);
+  shown = T + (A + B * dt) * e; vel = (vel - w * B * dt) * e;
+  if (!held && Math.abs(shown - T) < 0.02 && Math.abs(vel) < 0.05) { shown = T; vel = 0; draw(); raf = 0; return; }
+  draw();
+  raf = requestAnimationFrame(frame);
+}
+function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+function setIdx(i, real) {
+  i = clamp(i, 0, 5);
+  user = DET[i];
+  commit(i, real);
+  if (ddReduced) { shown = DET[i]; vel = 0; draw(); } else wake();
+}
+
+/* one grip, whoever holds it: a pointer or the ghost. x, y are client px. */
+let phiPrev = 0;
+const ddCenter = () => { const r = ddKnob.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const phiOf = (x, y) => { const [cx, cy] = ddCenter(); return (Math.atan2(x - cx, -(y - cy)) * 180) / Math.PI; };
+const radiusOf = (x, y) => { const [cx, cy] = ddCenter(); return Math.hypot(x - cx, y - cy); };
+function gripStart(x, y) { held = true; user = DET[idx]; phiPrev = phiOf(x, y); ddKnob.classList.add('is-grab'); wake(); }
+function gripMove(x, y, real) {
+  if (!held || radiusOf(x, y) < 14) return;
+  const phi = phiOf(x, y);
+  let d = phi - phiPrev; if (d > 180) d -= 360; if (d < -180) d += 360;
+  phiPrev = phi;
+  user = clamp(user + d, DET[0] - 18, DET[5] + 18);
+  const i = pick(user);
+  if (i !== idx) commit(i, real);
+  if (ddReduced) { shown = DET[idx]; draw(); }
+}
+function gripEnd() { if (!held) return; held = false; ddKnob.classList.remove('is-grab'); if (ddReduced) { shown = DET[idx]; draw(); } else wake(); }
+
+let ddPtr = null;
+ddKnob.addEventListener('pointerdown', (e) => {
+  if (e.button > 0 || ddPtr !== null || e.target.closest('.dd-snd')) return;
+  ddPtr = e.pointerId;
+  try { ddKnob.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+  ddKnob.focus({ preventScroll: true });
+  gripStart(e.clientX, e.clientY);
+});
+ddKnob.addEventListener('pointermove', (e) => { if (e.pointerId === ddPtr) gripMove(e.clientX, e.clientY, true); });
+const ddUp = (e) => { if (e.pointerId !== ddPtr) return; ddPtr = null; gripEnd(); };
+ddKnob.addEventListener('pointerup', ddUp); ddKnob.addEventListener('pointercancel', ddUp);
+let wheelAcc = 0, wheelAt = 0;
+ddKnob.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  wheelAcc += e.deltaY;
+  if (Math.abs(wheelAcc) < 40 || e.timeStamp - wheelAt < 110) return;
+  setIdx(idx + (wheelAcc < 0 ? 1 : -1), true); wheelAcc = 0; wheelAt = e.timeStamp;
+}, { passive: false });
+ddKnob.addEventListener('keydown', (e) => {
+  const k = e.key, to = k === 'ArrowUp' || k === 'ArrowRight' ? idx + 1 : k === 'ArrowDown' || k === 'ArrowLeft' ? idx - 1 : k === 'Home' ? 0 : k === 'End' ? 5 : -1;
+  if (to < 0) return;
+  e.preventDefault(); setIdx(to, true);
+});
+
+// first draw: the knob at rest on 1.25
+ticks.forEach((l, k) => l.classList.toggle('is-on', k === idx));
+showRatio(idx, 1, true); showSpecimen(idx); draw();
+</script>
+<script>
+(() => {
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const move = QM.bezier(0.65, 0, 0.35, 1);
+  let epoch = 0, resumeT = 0, ghostGrip = false;   // ghostGrip: the ghost holds the knob, so a real hand is never let go by the script
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const R = 70;
+  const pos = (phi) => { const [cx, cy] = ddCenter(); const t = (phi * Math.PI) / 180; return [cx + Math.sin(t) * R, cy - Math.cos(t) * R]; };
+  // the ghost's hand turns by phi degrees over ms, on the move curve
+  async function turn(my, from, to, ms) {
+    await new Promise((res) => {
+      const t0 = performance.now();
+      const f = (now) => {
+        if (my !== epoch) return res();
+        const p = Math.min(1, (now - t0) / ms), phi = from + (to - from) * move(p), [x, y] = pos(phi);
+        QM.ghostAt(x, y); gripMove(x, y, false);
+        if (p < 1) requestAnimationFrame(f); else res();
+      };
+      requestAnimationFrame(f);
+    });
+    if (my !== epoch) throw 0;
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 1100);
+        const [x0, y0] = pos(DET[idx]);
+        if (!(await QM.ghostTo(x0, y0, 800))) throw 0;
+        await gap(my, 260);
+        gripStart(x0, y0); ghostGrip = true;
+        await gap(my, 160);
+        await turn(my, DET[idx], DET[5], 3300);       // up, one detent at a time
+        await gap(my, 900);
+        await turn(my, DET[5], DET[2], 3200);         // and back to 1.25
+        ghostGrip = false; gripEnd();
+        await gap(my, 700);
+        await QM.ghostTo(innerWidth * 0.84, innerHeight * 0.86, 600);
+        await gap(my, 1500);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; if (ghostGrip) { ghostGrip = false; gripEnd(); } QM.ghostHide(); }
+  function rest(i) { stopScript(); setIdx(i, false); }
+  if (!QM.tile && !ddReduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => {
+        const k = document.getElementById('dd');
+        if (!k.matches(':hover') && !ddKnob.contains(document.activeElement) && !held) { rest(2); script(); } else { touch({}); }
+      }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('wheel', () => touch({}), { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  if (ddReduced) setIdx(3, false);
+  QM.demo({ kind: 'loop', restart() { rest(ddReduced ? 3 : 2); if (!ddReduced) script(); } });
+  if (!ddReduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

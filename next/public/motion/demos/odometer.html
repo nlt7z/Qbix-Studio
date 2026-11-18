@@ -22,7 +22,7 @@
     ["Stagger", "80 ms delay, then 70 ms a digit (symbols such as $ do not count)"],
     ["Move", "strip translateY 0 → −n × 10% of its own height (ten lines of 1.05em, so a digit is 1.05em)"],
     ["Mask", "each cell is 1.05em tall, overflow hidden, as wide as its final digit"],
-    ["Trigger", "in view, once (margin −15% 0)"],
+    ["Trigger", "in view, once (margin −15% 0). The library loop rolls the digits back down together (380 ms, ease in) before each run instead of snapping to 0"],
     ["Prices", "from $500, 1 to 3 weeks (Design service) · $600 / $800, flat (Practice Website Refresh) · from $5,000, 5 to 10 weeks (Brand upgrade), from lib/data.ts"]
   ],
   "source": ["components/offers/Odometer.tsx", "components/offers/OfferPrice.tsx", "app/globals.css · .odo-* and EXCLUSIVE-OFFER PRICING (.odo-strip::before)", "lib/data.ts · services, PRICES"],
@@ -38,19 +38,22 @@
 </script>
 <style data-code>
 /* Odometer — components/offers/Odometer.tsx, app/globals.css .odo-* */
+/* --lh is the digit height on whole pixels (set from JS), em until it is */
 .odo { display: inline-flex; line-height: 1; }
 .odo-row { display: inline-flex; }
-.odo-cell { position: relative; display: inline-block; height: 1.05em; overflow: hidden; }
-.odo-ghost { display: block; height: 1.05em; line-height: 1.05; visibility: hidden; }   /* sizes the cell to its digit */
+.odo-cell { position: relative; display: inline-block; height: var(--lh, 1.05em); overflow: hidden; }
+.odo-ghost { display: block; height: var(--lh, 1.05em); line-height: var(--lh, 1.05); visibility: hidden; }   /* sizes the cell to its digit */
 .odo-strip {
   position: absolute; left: 0; top: 0;
   display: flex; flex-direction: column;
   transform: translateY(0);
   transition: transform 1250ms cubic-bezier(0.16, 1, 0.3, 1) var(--at, 0ms);
 }
+/* the loop rolls the digits back down together, quicker than they came (exit about 0.3x) */
+.odo.is-back .odo-strip { transition: transform 380ms cubic-bezier(0.5, 0, 0.75, 0) 0ms; }
 /* the digits are generated, so the page's text is only the price */
-.odo-strip::before { content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9'; display: block; white-space: pre; line-height: 1.05; }
-.odo-ch { line-height: 1.05; }
+.odo-strip::before { content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9'; display: block; white-space: pre; line-height: var(--lh, 1.05); }
+.odo-ch { line-height: var(--lh, 1.05); }
 .odo.is-in .odo-strip { transform: translateY(var(--to)); }   /* −n × 10% of the strip */
 @media (prefers-reduced-motion: reduce) {
   .odo-strip { transform: translateY(var(--to)); transition: none; }
@@ -85,7 +88,7 @@
 .offer-price-note .offer-badge { margin-left: 4px; }
 </style>
 <style>
-  .od { --big: clamp(88px, min(21vw, 34vh), 250px); width: min(100%, 1180px); display: grid; gap: clamp(12px, 3vmin, 28px); }
+  .od { --big: clamp(88px, min(21vw, 34vh), 250px); width: fit-content; min-width: min(100%, 640px); max-width: 100%; display: grid; gap: clamp(12px, 3vmin, 28px); }
   /* the library draws the price larger so it fills a tile; the site's own sizes are the clamps in the code */
   .od .offer-price { gap: 0.06em clamp(12px, 2vw, 24px); }
   .od .offer-price-big { font-size: var(--big); }
@@ -115,9 +118,9 @@
   </div>
   <div class="qm-ui" id="ui">
     <span>Price</span>
-    <button data-p="design" class="is-on">Design $500</button>
-    <button data-p="practice">Practice $600</button>
-    <button data-p="brand">Brand $5,000</button>
+    <button data-p="design" class="is-on" aria-pressed="true">Design $500</button>
+    <button data-p="practice" aria-pressed="false">Practice $600</button>
+    <button data-p="brand" aria-pressed="false">Brand $5,000</button>
   </div>
 </main>
 <script src="../kit/stage.js"></script>
@@ -142,6 +145,8 @@ function odometer(el, value) {
     row.append(cell);
   }
   el.replaceChildren(sr, row);
+  // the digit height on whole pixels: a digit at rest never sits on a half pixel
+  el.style.setProperty('--lh', `${Math.round(parseFloat(getComputedStyle(el).fontSize) * 1.05)}px`);
 }
 
 const io = new IntersectionObserver((entries) => {
@@ -178,25 +183,23 @@ document.querySelectorAll('[data-odo]').forEach((el) => {
       `<span class="offer-badge">${p.badge}</span>`;
     odo = row.querySelector('[data-odo]');
     odometer(odo, p.now);
-    note.style.display = p.note ? '' : 'none';
+    note.style.visibility = p.note ? '' : 'hidden';   // keeps its line, so the block does not re-centre
   };
-  const reset = () => {
-    odo.classList.add('is-reset');
-    odo.classList.remove('is-in');
-    void odo.offsetWidth;
-    odo.classList.remove('is-reset');
-  };
+  // the loop rolls back down (is-back) instead of snapping to $000
+  const reset = () => odo.classList.remove('is-in', 'is-reset') || odo.classList.add('is-back');
+  const refit = () => document.querySelectorAll('.odo').forEach((o) => o.style.setProperty('--lh', `${Math.round(parseFloat(getComputedStyle(o).fontSize) * 1.05)}px`));
+  addEventListener('resize', refit);
   QM.demo({
     kind: 'play',
     dur: 1250 + 80 + 70 * 2,
     hold: 2000,
+    lead: 900,   // the roll back (380 ms) and a breath
     reset,
-    play: () => odo.classList.add('is-in'),
+    play: () => { odo.classList.remove('is-back'); odo.classList.add('is-in'); },
   });
   document.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => {
-    document.querySelectorAll('[data-p]').forEach((x) => x.classList.toggle('is-on', x === b));
-    show(b.dataset.p);
-    reset();
+    document.querySelectorAll('[data-p]').forEach((x) => { x.classList.toggle('is-on', x === b); x.setAttribute('aria-pressed', x === b); });
+    show(b.dataset.p);   // a new row starts at 0
     requestAnimationFrame(() => requestAnimationFrame(() => odo.classList.add('is-in')));
   }));
 </script>

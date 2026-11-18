@@ -14,15 +14,16 @@
   "order": 50,
   "kind": "loop",
   "tone": "paper",
-  "line": "one spring · k 380 · c 30 · point to fan it out",
+  "line": "one spring · k 380 · c 36 · point to fan it out",
   "summary": "Three notices stacked with a sliver of the two behind; point at them and they fan out into a list on one spring. Dismiss one and it slides away while a new one rises in from below; Retry turns the failed deploy into a live one, in place. The Retry key is the one lime on the screen.",
   "spec": [
-    ["Spring", "every toast, every property: k 380 · c 30 (a damping ratio of 0.77, a hint of give), stepped each frame"],
+    ["Spring", "every toast, every property: k 380 · c 36 (a damping ratio of 0.92, the original's 30 gave 3px of overshoot on a full-height move), stepped each frame, at rest on whole pixels"],
     ["Stack", "front toast at the middle of the frame; each one behind sits 12px higher and 5% smaller, hung from its top edge, one tone sunk further"],
     ["List", "front at the bottom, the rest above it at 10px; y = H − toast − k × (toast + 10)"],
     ["Hover", "the frame is the list's own size, so pointing at it is pointing at the list; it opens and closes with a pointer over / out containment test"],
     ["Dismiss", "slides to x = 420 on the same spring while it fades; the next one rises from 30px below, in front; always three"],
-    ["Retry", "the toast's content is swapped in place: the failed deploy becomes Deploy complete"],
+    ["Retry", "the toast's content is swapped in place and uncovered from the left in 360 ms (expo out): the failed deploy becomes Deploy complete"],
+    ["Loop", "the story ends by dropping the three toasts back below the frame (the same spring, 70 ms apart) before they rise in again, so the loop has no cut"],
     ["Reduced motion", "springs jump to their targets"]
   ],
   "source": ["motion.ui.o2tech.ai · Toast stack (ix-toast-stack)", "Idea: bencho.dev toast-stack (MIT)"],
@@ -64,14 +65,15 @@
 .toast .tx b { font-weight: 500; }
 .toast .tx span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
 .toast .acts { display: flex; align-items: center; gap: var(--space-1); }
-.btn { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 var(--space-3); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 var(--space-3); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--signal); color: var(--on-lime); font: 500 14px/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), transform 100ms var(--ease-out); }
+.btn:active { transform: scale(.97); }
 .btn:hover, .btn.is-hover { background: color-mix(in oklab, var(--signal) 88%, #000); }
 .btn.quiet { width: 32px; padding: 0; background: transparent; color: var(--fg); }
 .btn.quiet:hover, .btn.quiet.is-hover { background: var(--surface-muted); }
 </style>
 <style>
   html, body { height: 100%; overflow: hidden; }
-  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+  .vp { position: absolute; left: 0; top: 0; width: 920px; height: 575px; transform-origin: 0 0; }
   .page { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
 </style>
 </head>
@@ -118,7 +120,7 @@ const POOL = [
 const FIXED = { t: 'Deploy complete', b: 'forma.studio is live', i: 'check' };
 
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const K = 380, C = 30;                                      // the one spring
+const K = 380, C = 36;                                      // the one spring (damping ratio 0.92: it arrives with no visible overshoot)
 const sp = (x) => ({ x, v: 0, t: x });
 const step = (s, dt) => { if (still) { s.x = s.t; s.v = 0; return; } s.v += (K * (s.t - s.x) - C * s.v) * dt; s.x += s.v * dt; };
 let open = false, nextPool = 3, uid = 0, items = [], age = 0;
@@ -128,17 +130,19 @@ function make(def, startBelow) {
   el.className = 'toast';
   el.setAttribute('role', 'status');
   const o = { def: { ...def }, el, y: sp(startBelow ? H + 30 : 0), x: sp(0), s: sp(1), tone: sp(0), id: uid++, gone: false, born: age };
-  o.draw = () => {
+  o.draw = (wipe) => {
     const d = o.def;
     el.innerHTML = `<span class="ic">${icon(d.i)}</span><div class="tx"><b>${d.t}</b><span>${d.b}</span></div>
       <div class="acts">${d.retry ? '<button type="button" class="btn" data-act="retry">Retry</button>' : ''}<button type="button" class="btn quiet" data-act="x" aria-label="Dismiss">${icon('x', 16)}</button></div>`;
+    // an in-place swap is uncovered from the left, never cut
+    if (wipe && !still) [el.children[0], el.children[1]].forEach((n) => n.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 360, easing: 'cubic-bezier(.16, 1, .3, 1)' }));
   };
   o.draw();
   el.addEventListener('click', (e) => {
     const a = e.target.closest('[data-act]');
     if (!a) return;
     if (a.dataset.act === 'x') dismiss(o);
-    else { o.def = { ...FIXED }; o.draw(); }                // the failed deploy becomes the deploy complete, in place
+    else { o.def = { ...FIXED }; o.draw(true); }                // the failed deploy becomes the deploy complete, in place
   });
   frame.appendChild(el);
   return o;
@@ -163,12 +167,15 @@ function dismiss(o) {
   items.unshift(n);
 }
 const live = () => items.filter((o) => !o.gone);
+/* the loop's seam: the three drop back below the frame on the same spring, 70 ms apart, so nothing is cut */
+function leaveAll() { live().forEach((o, k) => setTimeout(() => { o.hold = true; o.y.t = H + 30; }, k * 70)); }
 const setOpen = (v) => { open = v; };
 /* the frame is the list's own size: over / out with a containment test, so the list never slides out from under the pointer */
 frame.addEventListener('pointerover', () => setOpen(true));
 frame.addEventListener('pointerout', (e) => { if (!e.relatedTarget || !frame.contains(e.relatedTarget)) setOpen(false); });
 frame.addEventListener('pointerdown', () => setOpen(true));
 frame.addEventListener('focusin', () => setOpen(true));
+frame.addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) { setOpen(false); if (frame.contains(document.activeElement)) document.activeElement.blur(); } });
 frame.addEventListener('focusout', (e) => { if (!frame.contains(e.relatedTarget)) setOpen(false); });
 
 let prev = performance.now();
@@ -180,6 +187,7 @@ function loop(now) {
       if (age - o.born < 200 + o.kickAt) { o.el.style.transform = `translate3d(0, ${H + 30}px, 0)`; return; }
       delete o.kickAt;
     }
+    if (o.hold) return;
     const p = place(Math.min(k, SHOWN - 1 + (k >= SHOWN ? 1 : 0)));
     o.y.t = k >= SHOWN ? place(SHOWN - 1).y - 12 : p.y;
     o.s.t = k >= SHOWN ? 0.8 : p.s;
@@ -188,7 +196,11 @@ function loop(now) {
   items.forEach((o) => {
     if (o.kickAt != null) return;
     step(o.y, dt); step(o.x, dt); step(o.s, dt); step(o.tone, dt);
-    o.el.style.transform = `translate3d(${o.x.x.toFixed(1)}px, ${o.y.x.toFixed(1)}px, 0) scale(${o.s.x.toFixed(4)})`;
+    // at rest the toast sits on whole pixels
+    const calm = Math.abs(o.y.t - o.y.x) < 0.05 && Math.abs(o.y.v) < 0.5 && Math.abs(o.x.t - o.x.x) < 0.05;
+    if (calm) { o.y.x = o.y.t; o.y.v = 0; o.x.x = o.x.t; o.x.v = 0; }
+    const r1 = calm ? Math.round : (v) => +v.toFixed(2);
+    o.el.style.transform = `translate3d(${r1(o.x.x)}px, ${r1(o.y.x)}px, 0) scale(${o.s.x.toFixed(4)})`;
     o.el.style.transformOrigin = '50% 0';
     const t = Math.max(0, Math.min(1, o.tone.x));
     o.el.style.background = `color-mix(in srgb, var(--sunk) ${(t * 100).toFixed(0)}%, var(--surface))`;
@@ -202,14 +214,14 @@ build();
 requestAnimationFrame(loop);
 </script>
 <script>
-  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window; a ghost hand plays it; real input takes over ---- */
+  /* ---- harness glue: a 920 × 575 frame (the original's 1200 × 750 made the 14px type read as 9px in a tile), scaled to the window; a ghost hand plays it; real input takes over ---- */
   const ABORT = { abort: true };
   function vpfit() {
     const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
     const go = () => {
       const bar = QM.tile || !ui ? 0 : 46;
-      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
-      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+      const k = Math.min(innerWidth / 920, (innerHeight - bar) / 575);
+      vp.style.transform = `translate(${(innerWidth - 920 * k) / 2}px, ${(innerHeight - bar - 575 * k) / 2}px) scale(${k})`;
     };
     addEventListener('resize', go); go();
   }
@@ -270,6 +282,7 @@ requestAnimationFrame(loop);
     await hand.wait(1400);
     await hand.to(r.left - 130 * (r.width / 360), r.top + r.height * 0.5, 700);         // leave: it gathers back up
     await hand.wait(1500);
+    leaveAll(); await hand.wait(900);                                                   // they drop away, then rise in again
   }
   let paused = false, running = false, lastReal = -1e9;
   function cancelStory() { hand.cancel(); QM.ghostHide(); hand.release(); running = false; }
@@ -281,7 +294,7 @@ requestAnimationFrame(loop);
   (async function idle() {
     for (;;) {
       await QM.wait(250);
-      if (QM.reduced || paused || document.hidden || (!QM.tile && performance.now() - lastReal < 2500)) continue;
+      if (QM.reduced || paused || document.hidden || (!QM.tile && performance.now() - lastReal < 5000)) continue;
       running = true;
       try { build(); await story(); } catch (e) { if (e !== ABORT) throw e; }
       if (running) { QM.ghostHide(); hand.release(); }

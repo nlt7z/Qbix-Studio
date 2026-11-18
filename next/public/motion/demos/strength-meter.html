@@ -14,7 +14,7 @@
   "order": 20,
   "kind": "loop",
   "tone": "paper",
-  "line": "4 segments · 360 ms expo · lime only at Strong",
+  "line": "4 segments · 360 ms expo · 100 ms press · lime only at Strong",
   "summary": "Four segments under a password field fill one by one, each uncovered from the left, and the word beside them rolls Weak, Fair, Good, Strong. The segments stay ink until the last state, when a lime layer sweeps across all four. The eye toggle draws its strike line, and the dots roll over into letters one cell after another.",
   "spec": [
     ["Segment", "8px tall, clip from the left, 360 ms cubic-bezier(0.16, 1, 0.3, 1); a jump of two states staggers 80 ms"],
@@ -22,7 +22,9 @@
     ["Strong", "a lime layer clips across the four segments, 70 ms apart; it leaves the same way"],
     ["Reveal", "each cell is a sleeve with a dot over its letter; 360 ms ease-move, 22 ms per cell"],
     ["Typing", "a new cell rolls up out of its sleeve in 320 ms"],
-    ["Eye", "the strike line draws with a stroke offset in 240 ms; the lid dips once"]
+    ["Eye", "the strike line draws with a stroke offset in 240 ms; the lid dips once; hover tints the key 120 ms, press 2px in 100 ms"],
+    ["Field", "focus draws a 2px ink frame in 160 ms; the caret shows only while the input itself has focus"],
+    ["Say", "the word rolls on screen; a hidden live region says it once per change"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-05"],
   "where": "The Qbix sign-up, under the password field, where the strength of what you typed is told in one word and one bar.",
@@ -30,17 +32,19 @@
     "Ink until Strong. Lime says one thing: this is done.",
     "The word rolls, it is never swapped or faded.",
     "Dots and letters share one cell width so nothing shifts when they roll.",
-    "The caret follows the real selection."
+    "The caret follows the real selection.",
+    "Once the lime has swept over, the ink under it is hidden, so no dark edge shows at the segment ends."
   ],
   "tags": ["input", "password", "meter", "roll", "form"],
-  "shot": 4600
+  "shot": 5000
 }
 </script>
 <style data-code>
 /* Strength meter: four segments, one word, one lime. */
 .card { background: var(--surface); padding: 28px; display: grid; gap: 14px; --cut: 16px; }
 .pw-label { font: 500 15px/20px var(--font-sans); letter-spacing: -0.011em; }
-.pw-field { position: relative; height: 60px; background: var(--sunk); }
+.pw-field { position: relative; height: 60px; background: var(--sunk); transition: box-shadow 160ms var(--ease); }
+.pw-field.is-focus, .pw-field:has(.pw-in:focus) { box-shadow: inset 0 0 0 2px var(--fg); }
 .pw-in { position: absolute; inset: 0; width: 100%; padding: 0 64px 0 16px; border: 0; outline: 0; background: transparent; color: transparent; caret-color: transparent; font: 500 17px/1 var(--font-sans); letter-spacing: 0; }
 .pw-show { position: absolute; left: 16px; top: 0; bottom: 0; display: flex; align-items: center; pointer-events: none; }
 .pw-c { width: 14px; height: 24px; overflow: hidden; flex: 0 0 auto; }
@@ -51,10 +55,12 @@
 .pw-field.is-shown .pw-r { transform: translateY(-24px); }
 @keyframes pw-in { from { transform: translateY(24px); } to { transform: none; } }
 .pw-caret { position: absolute; top: 18px; width: 2px; height: 24px; background: var(--fg); opacity: 0; pointer-events: none; }
-.pw-field.is-focus .pw-caret, .pw-field:focus-within .pw-caret { opacity: 1; animation: pw-blink 1s steps(1) infinite; }
+.pw-field.is-focus .pw-caret, .pw-field:has(.pw-in:focus) .pw-caret { opacity: 1; animation: pw-blink 1s steps(1) infinite; }
 @keyframes pw-blink { 50% { opacity: 0; } }
-.pw-eye { position: absolute; right: 0; top: 0; width: 60px; height: 60px; display: grid; place-items: center; border: 0; background: transparent; color: var(--fg); cursor: pointer; transition: transform 160ms var(--ease-portfolio); }
-.pw-eye:active { transform: translateY(2px); }
+.pw-eye { position: absolute; right: 0; top: 0; width: 60px; height: 60px; display: grid; place-items: center; border: 0; background: transparent; color: var(--fg); cursor: pointer; transition: transform 300ms var(--ease-portfolio), background-color 120ms var(--ease); }
+.pw-eye:hover, .pw-eye.is-hot { background: rgba(11, 12, 13, 0.06); }
+.pw-eye:active, .pw-eye.press { transform: translateY(2px); transition-duration: 100ms; }
+.pw-eye:focus-visible { outline-offset: -6px; }
 .pw-eye svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: square; }
 .pw-eye .lid { transform-origin: 12px 12px; }
 .pw-eye .slash { stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 240ms var(--ease-move); }
@@ -66,15 +72,18 @@
 .pw-meter b { position: absolute; inset: 0; clip-path: inset(0 100% 0 0); transition: clip-path 360ms var(--ease-out-expo); }
 .pw-meter .ink { background: var(--fg); }
 .pw-meter .lime { background: var(--signal); transition-duration: 300ms; transition-delay: calc(var(--k) * 70ms); }
+/* the sweep is done: the ink under the lime goes (hidden, not drawn), so no dark rim at the segment edge */
+.pw-meter.is-strong .ink { visibility: hidden; transition: clip-path 360ms var(--ease-out-expo), visibility 0s 700ms; }
 .pw-meter .ink.on { clip-path: inset(0); }
 .pw-meter.is-strong .lime { clip-path: inset(0); }
 .pw-foot { display: flex; justify-content: space-between; align-items: center; font: 500 13px/20px var(--font-sans); letter-spacing: -0.006em; color: var(--fg2); }
-.pw-word { display: block; height: 20px; overflow: hidden; color: var(--fg); text-align: right; }
+.pw-word { display: block; height: 20px; overflow: hidden; color: var(--fg); text-align: right; min-width: 4em; }
 .pw-col { display: block; transition: transform 420ms var(--ease-move); }
 .pw-col em { display: block; height: 20px; }
 @media (prefers-reduced-motion: reduce) { .pw-e { animation: none; } .pw-r, .pw-col, .pw-meter b, .pw-eye .slash { transition: none; } }
 </style>
 <style>
+  .rig > .kicker { line-height: 20px; }
   .rig { width: 520px; display: grid; gap: 16px; transform-origin: 50% 50%; }
   .rig.is-reset *, .rig.is-reset *::before { transition: none !important; animation: none !important; }
 </style>
@@ -89,7 +98,7 @@
   <div class="pw-field" id="pw-field">
     <div class="pw-show" id="pw-show" aria-hidden="true"></div>
     <i class="pw-caret" id="pw-caret"></i>
-    <input id="pw-in" class="pw-in" type="text" maxlength="26" autocomplete="off" spellcheck="false">
+    <input id="pw-in" class="pw-in" type="text" maxlength="26" autocomplete="off" spellcheck="false" aria-describedby="pw-say">
     <button class="pw-eye" id="pw-eye" type="button" aria-label="Show password" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><g class="lid"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></g><path class="slash" d="M4 20L20 4"/></svg>
     </button>
@@ -97,11 +106,11 @@
   <div class="pw-meter" id="pw-meter" aria-hidden="true">
     <i><b class="ink"></b><b class="lime" style="--k:0"></b></i><i><b class="ink"></b><b class="lime" style="--k:1"></b></i><i><b class="ink"></b><b class="lime" style="--k:2"></b></i><i><b class="ink"></b><b class="lime" style="--k:3"></b></i>
   </div>
-  <div class="pw-foot mono"><span>Strength</span><span class="pw-word" aria-live="polite"><span class="pw-col" id="pw-col"><em>Empty</em><em>Weak</em><em>Fair</em><em>Good</em><em>Strong</em></span></span></div>
+  <div class="pw-foot mono"><span>Strength</span><span class="sr-only" id="pw-say" aria-live="polite"></span><span class="pw-word" aria-hidden="true"><span class="pw-col" id="pw-col"><em>Empty</em><em>Weak</em><em>Fair</em><em>Good</em><em>Strong</em></span></span></div>
 </div>
 <!-- /code -->
-  <div class="qm-ui"><span>Type a password · the eye shows it</span></div>
 </div>
+<div class="qm-ui"><span>Type a password · the eye shows it</span></div>
 </main>
 <script src="../kit/stage.js"></script>
 <script data-code>
@@ -109,7 +118,8 @@
    (14px each, dot over letter) so the reveal can roll them. The caret is drawn from the real selection. */
 const pwIn = document.getElementById('pw-in'), pwField = document.getElementById('pw-field');
 const pwShow = document.getElementById('pw-show'), pwCaret = document.getElementById('pw-caret');
-const pwEye = document.getElementById('pw-eye'), pwCol = document.getElementById('pw-col');
+const pwEye = document.getElementById('pw-eye'), pwCol = document.getElementById('pw-col'), pwSay = document.getElementById('pw-say');
+const WORDS = ['Empty', 'Weak', 'Fair', 'Good', 'Strong'];
 const segs = Array.from(document.querySelectorAll('#pw-meter i'));
 const CELL = 14;
 let cells = [], shown = false, score = 0;
@@ -139,6 +149,7 @@ function paint(next) {
   });
   document.getElementById('pw-meter').classList.toggle('is-strong', next === 4);
   pwCol.style.transform = `translateY(${-20 * next}px)`;
+  pwSay.textContent = next ? `Strength: ${WORDS[next]}` : '';
   score = next;
 }
 function caret() {
@@ -172,7 +183,8 @@ pwEye.addEventListener('click', () => setShown(!shown));
   function fit() {
     const bar = QM.tile ? 0 : 46;
     const k = Math.min(innerWidth * 0.68 / 520, (innerHeight - bar - 48) / rig.offsetHeight, 2.2);
-    rig.style.transform = `scale(${k.toFixed(4)})`;
+    const q = Math.max(0.5, Math.floor(k * 4) / 4);          // quarter steps: the card's 1px edges and 8px segments land on whole pixels
+    rig.style.transform = `scale(${q})`;
   }
   addEventListener('resize', fit); fit();
 
@@ -183,7 +195,7 @@ pwEye.addEventListener('click', () => setShown(!shown));
   function setValue(v) { pwIn.value = v; pwIn.setSelectionRange(v.length, v.length); sync(); }
   function reset() {
     rig.classList.add('is-reset');
-    setValue(''); setShown(false); focusOn(false); pwEye.classList.remove('is-dip');
+    setValue(''); setShown(false); focusOn(false); pwEye.classList.remove('is-dip', 'is-hot', 'press');
     void rig.offsetWidth;
     rig.classList.remove('is-reset');
   }
@@ -193,9 +205,18 @@ pwEye.addEventListener('click', () => setShown(!shown));
     QM.ghostShow();
     await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.55, 800);
     if (g !== gen) throw ABORT;
-    await sleep(120); el.click(); await sleep(200);
+    el.classList.add('is-hot'); await sleep(200);
+    el.classList.add('press'); await sleep(100);
+    el.classList.remove('press'); el.click(); await sleep(120);
+    el.classList.remove('is-hot'); await sleep(100);
+  }
+  async function erase() {                       // what is on the field leaves the way the story ends: hide, then backspace
+    if (shown) { setShown(false); await sleep(500); }
+    while (pwIn.value) { setValue(pwIn.value.slice(0, -1)); await sleep(26); }
+    focusOn(false);
   }
   async function story() {
+    await erase();                               // nothing is snapped away if the viewer left a password behind
     reset(); await sleep(600);
     focusOn(true); await sleep(300);
     await type('FormaStudio'); await sleep(650);
@@ -204,20 +225,24 @@ pwEye.addEventListener('click', () => setShown(!shown));
     await press(pwEye); await sleep(1700);
     await press(pwEye); await sleep(900);
     QM.ghostHide();
-    while (pwIn.value) { setValue(pwIn.value.slice(0, -1)); await sleep(26); }
-    focusOn(false); await sleep(900);
+    await erase(); await sleep(900);
   }
-  function cancel() { gen++; running = false; QM.ghostHide(); }
+  function cancel() { gen++; running = false; QM.ghostHide(); pwEye.classList.remove('is-hot', 'press'); }
+  /* a real pointer or key stops the ghost; it resumes after 4 s without input (and never while the field has focus) */
   if (!QM.tile) {
-    const real = (e) => { if (e.isTrusted) { lastReal = performance.now(); if (running) { cancel(); focusOn(false); } } };
-    ['pointerdown', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
+    const real = (e) => {
+      if (!e.isTrusted || (e.type === 'pointermove' && e.pointerType !== 'mouse')) return;
+      lastReal = performance.now();
+      if (running) { cancel(); focusOn(false); }
+    };
+    ['pointermove', 'pointerdown', 'keydown', 'touchstart'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
   }
   addEventListener('message', (e) => { const m = e.data; if (m && m.qm === 'cmd' && m.cmd === 'pause') { paused = true; cancel(); } });
   if (QM.reduced) { setValue('FormaStudio9!'); focusOn(true); }
   else (async function idle() {
     for (;;) {
       await new Promise((r) => setTimeout(r, 250));
-      if (paused || document.hidden || running || (!QM.tile && performance.now() - lastReal < 4000)) continue;
+      if (paused || document.hidden || running || document.activeElement === pwIn || (!QM.tile && performance.now() - lastReal < 4000)) continue;
       running = true;
       try { await story(); } catch (e) { if (e !== ABORT) throw e; }
       running = false;

@@ -13,14 +13,16 @@
   "order": 10,
   "kind": "loop",
   "tone": "paper",
-  "line": "tilt ±15° · flip 180° · 360 ms digits",
+  "line": "tilt ±15° · flip 180° · 360 ms digits · 100 ms press",
   "summary": "A payment card that tilts toward the pointer in CSS 3D. Every typed character slides up through its own mask to replace a dot, a lit block follows the active field across the card, and focusing the security code turns the card over on a spring. Left alone it fills itself in and pays the $300 to start the Practice Website Refresh.",
   "spec": [
     ["Tilt", "rotateX ±11°, rotateY ±15°, spring k 120 · c 18"],
     ["Flip", "rotateY 0 → 180° on a spring k 110 · c 17, when the code is focused"],
-    ["Digit", "translateY 100% → 0 in a 1.3em mask, 360 ms, cubic-bezier(0.2, 0.8, 0.2, 1)"],
+    ["Digit", "translateY 100% → 0 in a 1.3em mask, 360 ms expo out (0.16, 1, 0.3, 1), the digit it replaces leaving with it on the same curve; name letters that go leave in 180 ms ease-in"],
     ["Follow block", "x, y, width, height on springs k 200 · c 26"],
-    ["Idle", "sways, then types a whole card, pays, and clears itself"]
+    ["Pay", "hover 120 ms to a lighter ink, 2px press in 100 ms, a focus ring inside the cut corner; the label rolls up 500 ms expo out; an unfinished form shakes its first empty field 380 ms and focuses it"],
+    ["Keys", "Tab walks the four fields (the card follows and turns for the code); Enter pays; Escape leaves the field"],
+    ["Idle", "sways, then types a whole card, pays, and clears itself; the first real touch stops it and it comes back after 6 s"]
   ],
   "source": ["Qbix studio library · credit-card"],
   "where": "The checkout of the Practice Website Refresh: $600 flat, $300 to start and $300 when the site goes live.",
@@ -60,7 +62,7 @@
 .cc-who { position: absolute; left: 16px; bottom: 12px; padding: 4px 6px; width: 178px; }
 .cc-name { position: relative; height: 1.3em; overflow: hidden; white-space: nowrap; font: 500 15px/1.3 var(--font-sans, 'Geist'); }
 .cc-name i { display: inline-block; white-space: pre; }
-.cc-ph { position: absolute; left: 0; top: 0; opacity: 0.34; transition: transform 350ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.cc-ph { position: absolute; left: 0; top: 0; opacity: 0.34; transition: transform 350ms var(--ease-out-expo); }
 .cc-ph.hide { transform: translateY(-110%); }
 .cc-exp { position: absolute; left: 206px; bottom: 12px; padding: 4px 6px; font: 500 15px/1.3 'Geist Mono', sans-serif; }
 .cc-exp .cc-s.sl { width: 0.4em; }
@@ -74,24 +76,31 @@
 .cc-form { display: grid; gap: 8px; width: 360px; }
 .cc-sum { display: flex; justify-content: space-between; align-items: baseline; padding: 0 2px 4px; font: 500 13px/1 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.64); }
 .cc-sum b { font-weight: 500; color: #0B0C0D; }
-.cc-f { display: block; background: #EEF1E8; padding: 8px 14px 9px; cursor: text; transition: box-shadow 160ms var(--ease, ease); }
+.cc-f { display: block; background: #EEF1E8; padding: 8px 14px 9px; cursor: text; transition: box-shadow 160ms var(--ease), background-color 120ms var(--ease); }
+.cc-f:hover { background: #E3E8DA; }
 .cc-f.on { box-shadow: inset 0 0 0 2px #0B0C0D; }
 .cc-f span { display: block; font: 500 13px/1.3 'Geist', sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.5); }
 .cc-f input { all: unset; display: block; width: 100%; box-sizing: border-box; font: 500 15px/1.4 var(--font-sans, 'Geist'); color: #0B0C0D; caret-color: #0B0C0D; font-variant-numeric: tabular-nums; }
 .cc-f input::placeholder { color: rgba(11, 12, 13, 0.3); }
 .cc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cc-pay { all: unset; box-sizing: border-box; position: relative; display: block; height: 48px; background: #0B0C0D; color: #f4f5f2; font: 500 15px/48px var(--font-sans, 'Geist'); text-align: center; cursor: pointer; overflow: hidden; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.cc-pay:active { transform: translateY(2px); }
-.cc-pay span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.cc-pay { all: unset; box-sizing: border-box; position: relative; display: block; height: 48px; background: #0B0C0D; color: #f4f5f2; font: 500 15px/48px var(--font-sans, 'Geist'); text-align: center; cursor: pointer; overflow: hidden; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), background-color 120ms var(--ease); }
+.cc-pay:hover, .cc-pay.is-hot { background: #222427; }
+.cc-pay:active, .cc-pay.press { transform: translateY(2px); transition-duration: 100ms, 120ms; }
+/* the clip-path would cut an outside ring and the labels sit above an outline, so the ring is a layer of its own, inside the cut corner */
+.cc-pay:focus-visible::after { content: ''; position: absolute; inset: 6px; z-index: 3; pointer-events: none; background: #f4f5f2;
+  clip-path: polygon(evenodd, 0 0, calc(100% - 8.5px) 0, 100% 8.5px, 100% 100%, 0 100%, 0 0,
+    2px 2px, 2px calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 9.33px, calc(100% - 9.33px) 2px, 2px 2px); }
+.cc-pay span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 500ms var(--ease-out-expo); }
 .cc-pay .p2 { transform: translateY(100%); }
 .cc-pay.done .p1 { transform: translateY(-100%); }
 .cc-pay.done .p2 { transform: none; }
 .cc-pay svg { width: 18px; height: 18px; }
-@media (prefers-reduced-motion: reduce) { .cc-pay span, .cc-ph { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cc-pay span, .cc-ph { transition: none; } .cc-pay:active, .cc-pay.press { transform: none; } }
 </style>
 <style>
   .qm-stage { padding: 0; }
-  #cc-stage { position: absolute; left: 50%; top: 46%; width: 764px; height: 300px; transform-origin: 50% 50%; display: grid; grid-template-columns: 340px 360px; column-gap: 64px; align-items: center; }
+  #cc-stage { position: absolute; left: 50%; top: 50%; width: 740px; height: 300px; transform-origin: 50% 50%; display: grid; grid-template-columns: 340px 360px; column-gap: 40px; align-items: center; }
+  html:not(.qm-tile) #cc-stage { top: calc(50% - 23px); }          /* centred above the detail view's 46px bar */
   @media (max-aspect-ratio: 5/4) { #cc-stage { grid-template-columns: 340px; grid-template-rows: 214px auto; width: 360px; height: 492px; row-gap: 20px; justify-content: center; } }
   .cc-hint { position: absolute; left: 0; right: 0; bottom: 56px; text-align: center; }
 </style>
@@ -128,6 +137,7 @@
     <label class="cc-f" data-k="exp"><span>Expiry</span><input id="cc-iExp" inputmode="numeric" placeholder="MM/YY" maxlength="5"></label>
     <label class="cc-f" data-k="cvc"><span>Security code</span><input id="cc-iCvc" inputmode="numeric" placeholder="123" maxlength="3"></label>
   </div>
+  <span class="sr-only" id="cc-say" role="status" aria-live="polite"></span>
   <button class="cc-pay" id="cc-pay" type="button"><span class="p1">Start my website, $300 deposit</span><span class="p2"><svg viewBox="0 0 18 18" fill="none" stroke="#B8FF00" stroke-width="2" stroke-linecap="square"><path d="M3.5 9.5l3.5 3.5 7.5-8"/></svg>Live in 7 days</span></button>
 </form>
 <!-- /code -->
@@ -139,7 +149,7 @@
 <script data-code>
 const $ = (s) => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const card = $('#cc-card'), scene = $('#cc-scene'), pay = $('#cc-pay');
+const card = $('#cc-card'), scene = $('#cc-scene'), pay = $('#cc-pay'), cardForm = $('#cc-form');
 const inp = { num: $('#cc-iNum'), name: $('#cc-iName'), exp: $('#cc-iExp'), cvc: $('#cc-iCvc') };
 const fields = {};
 document.querySelectorAll('.cc-f').forEach((f) => (fields[f.dataset.k] = f));
@@ -167,7 +177,7 @@ function spring(x, k = 170, c = 24) {
 })();
 
 /* slots: each character sits in its own mask and slides up to replace the old one */
-const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)', EASE_IN = 'cubic-bezier(0.5, 0, 0.75, 0)';   // the kit's expo out and exit curves
 function mkSlots(el, groups) {
   const out = [];
   groups.forEach((g) => {
@@ -201,7 +211,7 @@ function setName(str) {
   for (let i = cur.length - 1; i >= k; i--) {
     const n = cur[i]; n.classList.add('out');
     if (RM) { n.remove(); continue; }
-    n.animate([{ transform: 'none' }, { transform: 'translateY(110%)' }], { duration: 180, easing: 'ease-in', fill: 'forwards' }).onfinish = () => n.remove();
+    n.animate([{ transform: 'none' }, { transform: 'translateY(110%)' }], { duration: 180, easing: EASE_IN, fill: 'forwards' }).onfinish = () => n.remove();
   }
   const firstOut = cName.querySelector('i.out');
   for (let i = k; i < str.length; i++) {
@@ -265,7 +275,7 @@ Object.entries(inp).forEach(([k, el]) => {
   el.addEventListener('focus', () => { stopStory(); setActive(k); });
   el.addEventListener('blur', () => setTimeout(() => { if (!Object.values(inp).includes(document.activeElement)) setActive(null); }, 0));
   el.addEventListener('input', () => {
-    pay.classList.remove('done');
+    pay.classList.remove('done'); $('#cc-say').textContent = '';
     if (k === 'num') el.value = fmtNum(digits(el.value));
     if (k === 'exp') el.value = fmtExp(digits(el.value));
     if (k === 'cvc') el.value = digits(el.value).slice(0, 3);
@@ -278,10 +288,15 @@ pay.addEventListener('click', () => {
   stopStory();
   const need = [['num', 16], ['name', 2], ['exp', 4], ['cvc', 3]].find(([k, n]) => (k === 'name' ? inp.name.value.trim() : digits(inp[k].value)).length < n);
   if (need) {
-    fields[need[0]].animate([{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'none' }], { duration: 380, easing: 'ease-out' });
+    fields[need[0]].animate([{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-2px)' }, { transform: 'none' }], { duration: 380, easing: EASE });
     inp[need[0]].focus(); return;
   }
-  inp.cvc.blur(); setActive(null); pay.classList.add('done');
+  inp.cvc.blur(); setActive(null); pay.classList.add('done'); $('#cc-say').textContent = 'Paid. Live in 7 days.';
+});
+/* Enter pays (an unfinished form shakes and focuses the first empty field); Escape leaves the field and the card turns back */
+cardForm.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && !e.isComposing) { e.preventDefault(); pay.click(); }
+  else if (e.key === 'Escape' && e.target.tagName === 'INPUT') e.target.blur();
 });
 render();
 requestAnimationFrame(frame);
@@ -290,7 +305,7 @@ requestAnimationFrame(frame);
   /* harness glue: the idle story types a whole card, pays, clears, and starts again */
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   let storyTok = 0, lastUser = -1e9;
-  function stopStory() { storyTok++; lastUser = performance.now(); }
+  function stopStory() { storyTok++; lastUser = performance.now(); pay.classList.remove('is-hot', 'press'); }
   const people = ['Maya Ellison', 'Jonah Price', 'Rosa Delgado', 'Theo Marsh'];
   let pi = 0;
   async function story() {
@@ -309,16 +324,18 @@ requestAnimationFrame(frame);
       for (let i = 0; i < 3 && ok(); i++) { inp.cvc.value = cc.slice(0, i + 1); render(); await sleep(150); }
       await sleep(900); setActive(null); await sleep(700);
       if (!ok()) return;
-      pay.classList.add('done'); await sleep(2400);
+      pay.classList.add('is-hot'); await sleep(320); pay.classList.add('press'); await sleep(110);
+      pay.classList.remove('press', 'is-hot'); pay.classList.add('done'); $('#cc-say').textContent = 'Paid. Live in 7 days.'; await sleep(2400);
       for (let i = 0; i < 22 && ok(); i++) {
         inp.num.value = fmtNum(digits(inp.num.value).slice(0, -1)); inp.name.value = inp.name.value.slice(0, -1);
         inp.exp.value = fmtExp(digits(inp.exp.value).slice(0, -1)); inp.cvc.value = inp.cvc.value.slice(0, -1); render(); await sleep(32);
       }
-      pay.classList.remove('done');
+      pay.classList.remove('done'); $('#cc-say').textContent = '';
     }
   }
   /* after the viewer lets go for a while, the story resumes from an empty card */
   setInterval(() => {
+    if (RM) return;                                   // reduced motion keeps the finished card
     if (performance.now() - lastUser < 6000 || Object.values(inp).includes(document.activeElement)) return;
     if (QM_running) return;
     Object.values(inp).forEach((i) => (i.value = '')); pay.classList.remove('done'); render(); QM_running = true; story().then(() => {});
@@ -331,7 +348,7 @@ requestAnimationFrame(frame);
   function fit() {
     const st = document.getElementById('cc-stage');
     const w = st.offsetWidth, h = st.offsetHeight;
-    const s = Math.min(innerWidth / w, (innerHeight - 70) / h) * 0.92;
+    const s = Math.min(innerWidth / w, (innerHeight - 70) / h) * 0.86;      // leaves a clear margin at both ends in a tile
     st.style.transform = `translate(-50%,-50%) scale(${Math.min(s, 1.6)})`;
   }
   addEventListener('resize', fit); fit();

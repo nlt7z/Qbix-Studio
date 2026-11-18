@@ -13,14 +13,14 @@
   "order": 820,
   "kind": "play",
   "tone": "paper",
-  "line": "steps spin then tick · two calls for you · an orb on springs",
+  "line": "steps 1.1 s, 2.1 s, 1.4 s · a pause · two calls for you · an orb on springs",
   "summary": "A run you can see, check and correct: a build agent makes Forma's launch site from 9 moodboard pictures. Each step is a sentence with its result under it: running steps turn a spinner, finished ones draw a tick. The agent will not guess, so two design checks (a picture too dark for the hero, a button low on contrast) are put to you with two clear choices, and the summary says what happened. Beside it a flat orb changes speed, size and wobble on springs between idle, thinking and speaking.",
   "spec": [
-    ["Steps", "three, 1.3 s / 1.6 s / 1.3 s; each is uncovered with a clip, spinner turns 900 ms, the tick draws in 320 ms"],
-    ["Review", "uncovered with a grid-rows transition 0fr → 1fr, 600 ms expo out"],
-    ["Orb", "three wobbling outlines from sine waves; speed 0.35 / 1.6 / 0.9, wobble and size on springs 60 / 14 and 140 / 16"],
+    ["Steps", "three, 1.1 s / 2.1 s / 1.4 s with 260 ms between them; each is uncovered with a clip (600 ms expo out, 360 ms ease in when it closes), the spinner turns 900 ms, the tick draws in 320 ms. All three rows and the review are laid out from the first frame, so nothing moves while they arrive"],
+    ["Review", "after a 700 ms pause, uncovered with a clip from the top, 600 ms expo out; inert until it is open"],
+    ["Orb", "three wobbling outlines from sine waves; speed 0.35 / 1.6 / 0.9, wobble and size on critically damped springs 60 / 15.5 and 140 / 23.7 (no overshoot)"],
     ["Story", "run → review → Brighten → Leave → summary, then the orb rests"],
-    ["Trigger", "click a choice under each check; Run again restarts"]
+    ["Trigger", "click a choice under each check; Run again restarts. A real click or key stops the scripted run for 5 s"]
   ],
   "source": ["Qbix studio library · 12-agent-ui"],
   "where": "The run view of a Qbix build agent: making a launch site from a moodboard and asking before it changes anything.",
@@ -38,10 +38,10 @@
 .ag { --c: 14px; background: #EEF1E8; padding: 14px 16px 12px; display: grid; gap: 8px; min-width: 0;
   clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
 .ag-req { font-family: 'Outfit', Geist, sans-serif; font-size: clamp(20px, 2.4vw, 26px); font-weight: 300; line-height: 1.1; letter-spacing: -0.03em; }
-.ag-meta { display: flex; gap: 16px; font: 400 12px/1 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.5); }
+.ag-meta { font-variant-numeric: tabular-nums; display: flex; gap: 16px; font: 400 12px/1 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.5); }
 .ag-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.ag-st { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; background: #ffffff; padding: 6px 12px; clip-path: inset(0 0 100% 0); transition: clip-path 600ms cubic-bezier(0.16, 1, 0.3, 1); }
-.ag-st.in { clip-path: inset(0 0 0 0); }
+.ag-st { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; background: #ffffff; padding: 6px 12px; clip-path: inset(0 0 100% 0); transition: clip-path 360ms var(--ease-in); }
+.ag-st.in { clip-path: inset(0 0 0 0); transition: clip-path 600ms var(--ease-out-expo); }
 .ag-st .t { font-size: 13px; font-weight: 500; line-height: 1.3; }
 .ag-st small { display: block; font-size: 12px; font-weight: 400; color: rgba(11, 12, 13, 0.55); line-height: 1.35; }
 .ag-ic { position: relative; width: 20px; height: 20px; margin-top: 1px; }
@@ -51,22 +51,28 @@
 .ag-st[data-s='done'] .ag-spin { visibility: hidden; }
 .ag-st[data-s='done'] .ag-tick path { stroke-dashoffset: 0; }
 @keyframes ag-spin { to { transform: rotate(360deg); } }
-.ag-review { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 600ms cubic-bezier(0.16, 1, 0.3, 1); }
-.ag-review.on { grid-template-rows: 1fr; }
-.ag-review > div { overflow: hidden; display: grid; gap: 6px; }
+/* the review is always laid out (so the panel never changes size); it is uncovered by a clip */
+.ag-review { clip-path: inset(0 0 100% 0); transition: clip-path 360ms var(--ease-in); }
+.ag-review.on { clip-path: inset(0 0 0 0); transition: clip-path 600ms var(--ease-out-expo); }
+.ag-review > div { display: grid; gap: 6px; }
 .ag-review h3 { font-size: 16px; font-weight: 300; letter-spacing: -0.03em; margin-top: 2px; }
 .ag-chg { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; background: #ffffff; padding: 8px 8px 8px 12px; font-size: 13px; line-height: 1.3; }
 .ag-chg small { display: block; color: rgba(11, 12, 13, 0.55); font-size: 12px; }
 .ag-chg .acts { display: flex; gap: 6px; }
-.ag-chg button { all: unset; cursor: pointer; height: 32px; padding: 0 12px; display: grid; place-items: center; font: 500 13px/1 Geist, sans-serif; background: #EEF1E8; color: #0B0C0D; }
+.ag-chg button { all: unset; cursor: pointer; height: 32px; padding: 0 12px; display: grid; place-items: center; font: 500 13px/1 Geist, sans-serif; background: #EEF1E8; color: #0B0C0D; transition: background 120ms var(--ease), color 120ms var(--ease), transform 100ms var(--ease); }
 .ag-chg button.press, .ag-chg button:hover { background: #0B0C0D; color: #ffffff; }
+.ag-chg button:active, .ag-chg button.press { transform: translateY(1px); }
+.ag-chg button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
 .ag-chg.kept button[data-a='keep'], .ag-chg.changed button[data-a='change'] { background: #0B0C0D; color: #ffffff; }
 .ag-end { min-height: 1.2em; font-size: 13px; color: rgba(11, 12, 13, 0.7); }
 .ag-end b { color: #0B0C0D; font-weight: 500; }
 .ag-orbbox { display: grid; justify-items: center; gap: 14px; align-content: center; }
 .ag-orb { width: clamp(120px, 20vw, 200px); aspect-ratio: 1; display: block; }
 .ag-seg { display: flex; gap: 14px; font: 400 12px/1 'Geist', Geist, sans-serif; letter-spacing: 0; }
-.ag-seg button { all: unset; cursor: pointer; padding: 4px 0; color: rgba(11, 12, 13, 0.38); }
+.ag-seg button { all: unset; cursor: pointer; padding: 4px 0; color: rgba(11, 12, 13, 0.38); box-shadow: 0 2px 0 transparent; transition: color 160ms var(--ease), box-shadow 160ms var(--ease), transform 100ms var(--ease); }
+.ag-seg button:hover { color: rgba(11, 12, 13, 0.64); }
+.ag-seg button:active { transform: translateY(1px); }
+.ag-seg button:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
 .ag-seg button.on { color: #0B0C0D; box-shadow: 0 2px 0 #0B0C0D; }
 .ag-line { font: 400 12px/1.4 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.64); text-align: center; min-height: 2.8em; }
 .ag.is-reset * { transition: none !important; }
@@ -74,8 +80,10 @@
 .agw { width: min(100%, 980px); display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 8px; align-items: stretch; }
 .agw .ag-orbbox { background: #EEF1E8; }
 .ag-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
-.ag-replay { all: unset; cursor: pointer; font: 400 12px/1 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.5); }
+.ag-replay { all: unset; cursor: pointer; padding: 4px 0; margin: -4px 0; font: 400 12px/1 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, 0.5); transition: color 160ms var(--ease), transform 100ms var(--ease); }
 .ag-replay:hover { color: #0B0C0D; }
+.ag-replay:active { transform: translateY(1px); }
+.ag-replay:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
 @media (max-width: 720px) { .agw { grid-template-columns: 1fr; } .ag-orbbox { display: none; } }
 @media (prefers-reduced-motion: reduce) { .ag-spin { animation: none; } }
 </style>
@@ -84,21 +92,22 @@
 <main class="qm-stage">
 <!-- code -->
 <div class="agw">
-  <div class="ag" id="run" aria-live="polite">
-    <div class="ag-top"><p class="kicker">Qbix · Forma launch</p><button class="ag-replay" id="replay">Run again</button></div>
+  <div class="ag" id="run">
+    <p class="sr-only" id="say" role="status" aria-live="polite"></p>
+    <div class="ag-top"><p class="kicker">Qbix · Forma launch</p><button class="ag-replay" id="replay" type="button">Run again</button></div>
     <p class="ag-req">Build the launch site for Forma</p>
-    <div class="ag-meta"><span id="elapsed">0:00</span><span>9 pictures</span></div>
+    <div class="ag-meta"><span id="elapsed" style="min-width:3ch">0:00</span><span>9 pictures</span></div>
     <ul class="ag-steps" id="steps"></ul>
-    <div class="ag-review" id="review"><div>
+    <div class="ag-review" id="review" inert><div>
       <h3>2 checks need your call</h3>
-      <div class="ag-chg" data-id="a"><p>Picture 4 is too dark for the hero<small>Shot in low light</small></p><div class="acts"><button data-a="keep">Brighten</button><button data-a="change">Flag</button></div></div>
-      <div class="ag-chg" data-id="b"><p>The waitlist button is low on contrast<small>White text on lime, 1.3 to 1</small></p><div class="acts"><button data-a="keep">Use ink text</button><button data-a="change">Leave</button></div></div>
+      <div class="ag-chg" data-id="a"><p>Picture 4 is too dark for the hero<small>Shot in low light</small></p><div class="acts"><button type="button" data-a="keep">Brighten</button><button type="button" data-a="change">Flag</button></div></div>
+      <div class="ag-chg" data-id="b"><p>The waitlist button is low on contrast<small>White text on lime, 1.3 to 1</small></p><div class="acts"><button type="button" data-a="keep">Use ink text</button><button type="button" data-a="change">Leave</button></div></div>
       <p class="ag-end" id="endline"></p>
     </div></div>
   </div>
   <div class="ag-orbbox">
     <canvas class="ag-orb" id="orb" aria-hidden="true"></canvas>
-    <div class="ag-seg" role="group" aria-label="Agent state"><button class="on" data-m="idle">Idle</button><button data-m="think">Thinking</button><button data-m="speak">Speaking</button></div>
+    <div class="ag-seg" role="group" aria-label="Agent state"><button type="button" class="on" data-m="idle" aria-pressed="true">Idle</button><button type="button" data-m="think" aria-pressed="false">Thinking</button><button type="button" data-m="speak" aria-pressed="false">Speaking</button></div>
     <p class="ag-line" id="orbline">Waiting for a task</p>
   </div>
 </div>
@@ -113,28 +122,41 @@
   const $ = (id) => document.getElementById(id);
   const ICON = '<span class="ag-ic"><svg class="ag-spin" viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 0 1 9 9" stroke="#0B0C0D" stroke-width="2.4"/><path d="M12 3a9 9 0 1 0 9 9" stroke="#0B0C0D" stroke-width="2.4" opacity="0"/></svg><svg class="ag-tick" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#0B0C0D" stroke-width="2.4"/></svg></span>';
   const STEPS = [
-    { t: 'Reading 9 moodboard pictures', done: '9 read, 5 colours pulled', ms: 1300 },
-    { t: 'Placing each picture in the layout', done: '8 placed, 1 too dark for the hero', ms: 1600 },
-    { t: 'Checking contrast and sizes', done: '14 pairs pass, 1 button fails', ms: 1300 },
+    { t: 'Reading 9 moodboard pictures', done: '9 read, 5 colours pulled', ms: 1100 },
+    { t: 'Placing each picture in the layout', done: '8 placed, 1 too dark for the hero', ms: 2100 },
+    { t: 'Checking contrast and sizes', done: '14 pairs pass, 1 button fails', ms: 1400 },
   ];
-  const stepsEl = $('steps'), review = $('review'), elapsed = $('elapsed'), endline = $('endline');
-  let runId = 0, t0 = 0, timer = 0;
+  const stepsEl = $('steps'), review = $('review'), elapsed = $('elapsed'), endline = $('endline'), say = $('say');
+  /* the three rows exist from the first frame, covered by a clip: the panel never changes size while the run arrives */
+  const rows = STEPS.map((s) => {
+    const li = document.createElement('li'); li.className = 'ag-st'; li.dataset.s = 'run';
+    li.innerHTML = `${ICON}<div class="t">${s.t}<small>Working</small></div>`; stepsEl.append(li);
+    return li;
+  });
+  let runId = 0, t0 = 0, timer = 0, shown = '';
+  function clock() { const s = Math.floor((performance.now() - t0) / 1000), v = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; if (v !== shown) { shown = v; elapsed.textContent = v; } }
   async function run() {
-    const id = ++runId; stepsEl.innerHTML = ''; review.classList.remove('on'); endline.textContent = '';
+    const id = ++runId, open = rows.some((r) => r.classList.contains('in')) || review.classList.contains('on');
+    review.classList.remove('on'); review.inert = true; endline.textContent = '';
+    rows.forEach((r) => r.classList.remove('in'));
     document.querySelectorAll('.ag-chg').forEach((c) => c.classList.remove('kept', 'changed'));
-    t0 = performance.now(); clearInterval(timer); elapsed.textContent = '0:00';
-    timer = setInterval(() => { const s = Math.floor((performance.now() - t0) / 1000); elapsed.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }, 250);
+    clearInterval(timer); shown = ''; elapsed.textContent = '0:00'; say.textContent = 'Run started';
     setOrb('think');
-    for (const s of STEPS) {
-      if (id !== runId) return;
-      const li = document.createElement('li'); li.className = 'ag-st'; li.dataset.s = 'run';
-      li.innerHTML = `${ICON}<div class="t">${s.t}<small>Working</small></div>`; stepsEl.append(li);
-      requestAnimationFrame(() => requestAnimationFrame(() => li.classList.add('in')));
-      await wait(s.ms); if (id !== runId) return;
-      li.dataset.s = 'done'; li.querySelector('small').textContent = s.done;
+    if (open) await wait(380);                                    // the last run closes (ease in) before this one is uncovered
+    if (id !== runId) return false;
+    t0 = performance.now(); timer = setInterval(clock, 250);
+    for (let i = 0; i < STEPS.length; i++) {
+      const s = STEPS[i], li = rows[i];
+      li.dataset.s = 'run'; li.querySelector('small').textContent = 'Working';
+      await wait(i ? 260 : 0); if (id !== runId) return false;    // a breath between steps
+      li.classList.add('in');
+      await wait(s.ms); if (id !== runId) return false;
+      li.dataset.s = 'done'; li.querySelector('small').textContent = s.done; say.textContent = s.t + ': ' + s.done;
     }
-    if (id !== runId) return;
-    clearInterval(timer); review.classList.add('on'); setOrb('idle', 'Waiting for your call on 2 checks');
+    clearInterval(timer); clock();
+    await wait(700); if (id !== runId) return false;               // a pause before it asks
+    review.inert = false; review.classList.add('on'); setOrb('idle', 'Waiting for your call on 2 checks'); say.textContent = '2 checks need your call';
+    return true;
   }
   $('replay').addEventListener('click', run);
   document.querySelectorAll('.ag-chg').forEach((c) => c.addEventListener('click', (e) => {
@@ -142,25 +164,29 @@
     c.classList.toggle('kept', b.dataset.a === 'keep'); c.classList.toggle('changed', b.dataset.a === 'change');
     const left = [...document.querySelectorAll('.ag-chg')].filter((x) => !x.classList.contains('kept') && !x.classList.contains('changed')).length;
     endline.innerHTML = left ? `${left} left to decide.` : '<b>All decided.</b> 8 pictures placed, 1 flagged for Mia.';
-    if (!left) { setOrb('speak', 'Writing the summary'); setTimeout(() => setOrb('idle', 'Done. Waiting for a task'), 2200); }
+    say.textContent = left ? `${left} left to decide` : 'All decided. 8 pictures placed, 1 flagged for Mia.';
+    if (!left) { setOrb('speak', 'Writing the summary'); clearTimeout(settle); settle = setTimeout(() => setOrb('idle', 'Done. Waiting for a task'), 2200); }
   }));
   /* the orb: three wobbling outlines from sine waves; the state moves speed, size and wobble on springs */
   const cv = $('orb'), g = cv.getContext('2d'), orbline = $('orbline');
   const MODES = { idle: { speed: 0.35, wob: 0.035, size: 0.8 }, think: { speed: 1.6, wob: 0.09, size: 0.72 }, speak: { speed: 0.9, wob: 0.06, size: 0.86 } };
+  let settle = 0;
   const spring = (v, k, c) => ({ value: v, target: v, vel: 0, step(dt) { this.vel += (k * (this.target - this.value) - c * this.vel) * dt; this.value += this.vel * dt; } });
-  const sp = { speed: spring(0.35, 60, 14), wob: spring(0.035, 60, 14), size: spring(0.8, 140, 16) };
+  const sp = { speed: spring(0.35, 60, 15.5), wob: spring(0.035, 60, 15.5), size: spring(0.8, 140, 23.7) };   // c = 2 √k: critically damped, no overshoot
   let mode = 'idle', phase = 0;
   function setOrb(m, line) {
     mode = m; Object.keys(sp).forEach((k) => { sp[k].target = MODES[m][k]; });
-    document.querySelectorAll('.ag-seg button').forEach((b) => b.classList.toggle('on', b.dataset.m === m));
+    document.querySelectorAll('.ag-seg button').forEach((b) => { const on = b.dataset.m === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     orbline.textContent = line || { idle: 'Waiting for a task', think: 'Working through the pictures', speak: 'Explaining what it found' }[m];
   }
   document.querySelector('.ag-seg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setOrb(b.dataset.m); });
-  function sizeOrb() { const px = Math.min(2, devicePixelRatio || 1), r = cv.getBoundingClientRect(); cv.width = r.width * px; cv.height = r.height * px; }
+  function sizeOrb() { const px = Math.min(2, devicePixelRatio || 1), r = cv.getBoundingClientRect(); cv.width = Math.round(r.width * px); cv.height = Math.round(r.height * px); }
   function blob(R, w, layer, N = 96) { const W = cv.width, H = cv.height; g.beginPath(); for (let i = 0; i <= N; i++) { const a = i / N * Math.PI * 2, wv = Math.sin(a * 3 + phase * (1 + layer * 0.4)) * 0.5 + Math.sin(a * 5 - phase * 1.3 + layer) * 0.3 + Math.sin(a * 2 + phase * 0.7) * 0.2, r = R * (1 + wv * w), x = W / 2 + Math.cos(a) * r, y = H / 2 + Math.sin(a) * r; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); }
-  let last = performance.now(), running = false;
+  let last = performance.now(), running = false, onscreen = true;
+  new IntersectionObserver((e) => { onscreen = e[e.length - 1].isIntersecting; }).observe(cv);
   function drawOrb(now) {
     if (document.hidden) { running = false; return; }
+    if (!onscreen) { last = now; requestAnimationFrame(drawOrb); return; }   // off screen it only waits
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     Object.values(sp).forEach((s) => s.step(dt)); phase += dt * sp.speed.value * (reduced ? 0.2 : 1);
     const W = cv.width, H = cv.height, R = Math.min(W, H) / 2, lw = Math.max(2, W / 90);
@@ -172,28 +198,33 @@
     requestAnimationFrame(drawOrb);
   }
   sizeOrb(); addEventListener('resize', sizeOrb); requestAnimationFrame(drawOrb);
-  window.agApi = { run, setOrb, reset() { runId++; clearInterval(timer); const r = $('run'); r.classList.add('is-reset'); stepsEl.innerHTML = ''; review.classList.remove('on'); endline.textContent = ''; document.querySelectorAll('.ag-chg').forEach((c) => c.classList.remove('kept', 'changed')); elapsed.textContent = '0:00'; setOrb('idle'); void r.offsetWidth; r.classList.remove('is-reset'); } };
+  window.agApi = { run, setOrb, reset() { runId++; clearInterval(timer); clearTimeout(settle); const r = $('run'); r.classList.add('is-reset'); rows.forEach((x) => x.classList.remove('in')); review.classList.remove('on'); review.inert = true; endline.textContent = ''; say.textContent = ''; document.querySelectorAll('.ag-chg').forEach((c) => c.classList.remove('kept', 'changed')); elapsed.textContent = '0:00'; setOrb('idle'); void r.offsetWidth; r.classList.remove('is-reset'); } };
 })();
 </script>
 <script>
   (function () {
-    const api = window.agApi; let run = 0;
+    const api = window.agApi; let run = 0, touched = -1e9;
+    // a real press or key takes the piece: the script stops, and starts again after 5 s of nothing
+    const take = (e) => { if (!e.isTrusted) return; touched = performance.now(); run++; QM.ghostHide(); };
+    addEventListener('pointerdown', take); addEventListener('keydown', take);
+    const idle = () => performance.now() - touched > 5000;
     const at = (e) => { const r = e.getBoundingClientRect(); return [r.left + r.width * 0.5, r.top + r.height * 0.55]; };
-    const tap = async (b) => { b.classList.add('press'); await QM.wait(130); b.classList.remove('press'); b.click(); };
+    const tap = async (b) => { b.classList.add('press'); await QM.wait(110); b.classList.remove('press'); b.click(); };
     async function play() {
+      if (!idle()) return;
       const my = ++run, ok = () => my === run;
       QM.ghostAt(innerWidth * 0.8, innerHeight * 0.3); QM.ghostShow();
-      api.run();
-      await QM.wait(4600); if (!ok()) return;                       // three steps, then the review opens
+      if (!(await api.run()) || !ok()) return;                       // three steps, a pause, then the review opens
+      await QM.wait(500); if (!ok()) return;
       const a = document.querySelector('.ag-chg[data-id=a] button[data-a=keep]'), b = document.querySelector('.ag-chg[data-id=b] button[data-a=change]');
       await QM.ghostTo(...at(a), 900); if (!ok()) return;
-      await QM.wait(200); await tap(a); await QM.wait(500); if (!ok()) return;
+      await QM.wait(200); await tap(a); await QM.wait(600); if (!ok()) return;
       await QM.ghostTo(...at(b), 800); if (!ok()) return;
       await QM.wait(200); await tap(b); if (!ok()) return;
       await QM.ghostTo(innerWidth * 0.8, innerHeight * 0.75, 800);
     }
     if (QM.reduced) { api.run(); }
-    QM.demo({ kind: 'play', lead: 500, dur: 11500, hold: 600, reset() { run++; api.reset(); }, play });
+    QM.demo({ kind: 'play', lead: 500, dur: 14000, hold: 700, reset() { if (!idle()) return; run++; api.reset(); }, play });
   })();
 </script>
 </body>

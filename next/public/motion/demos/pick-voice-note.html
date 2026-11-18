@@ -48,7 +48,7 @@
   --field-border: rgba(11, 12, 13, .5); --control-track: var(--fg4);
   font: 400 14px/1.5 var(--font-sans); letter-spacing: 0; color: var(--fg);
 }
-.card { width: min(560px, 100%); height: min(640px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-6); display: grid; grid-template-rows: auto 1fr auto; gap: var(--space-4); overflow: hidden; }
+.card { width: min(560px, 100%); height: min(456px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-6); display: grid; grid-template-rows: auto 1fr auto; gap: var(--space-4); overflow: hidden; }
 .hd { display: flex; align-items: center; gap: var(--space-3); }
 .hd h1 { font: 300 18px/1.35 var(--font-headline); letter-spacing: -0.035em; }
 .hd .meta { margin-left: auto; font-size: 12px; color: var(--faint); }
@@ -65,17 +65,20 @@
 .comp.rec { background: var(--surface-muted); }
 .comp .ph { color: var(--faint); flex: 1; }
 .L { flex: 1; min-width: 0; align-items: center; gap: var(--space-3); display: none; }
-.mic { flex: 0 0 auto; margin-left: auto; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface-muted); display: grid; place-items: center; color: var(--fg); touch-action: none; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.mic { flex: 0 0 auto; margin-left: auto; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface-muted); display: grid; place-items: center; color: var(--fg); touch-action: none; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), transform 160ms var(--ease-out); }
 .mic:hover, .mic.is-hover { background: rgba(11, 12, 13, .1); }
+.mic:active { transform: scale(.94); transition: background-color var(--duration-fast) var(--ease-out), transform 100ms var(--ease-out); }
 .comp.rec .mic { background: var(--signal); color: var(--on-lime); }
 .comp.cancel .mic { background: var(--fg); color: var(--ground); }
+.wv { flex: 1; min-width: 0; overflow: hidden; }   /* the wave slides inside this, so it never runs over the timer */
+.wv .wave { flex: none; width: 100%; }
 .wave { flex: 1; min-width: 0; height: 36px; display: flex; align-items: center; justify-content: flex-end; gap: 2px; overflow: hidden; }
 .wave i { flex: 0 0 3px; width: 3px; border-radius: 2px; background: var(--fg); min-height: 3px; }
 .wave.play i { background: var(--control-track); cursor: pointer; flex: 1 1 0; max-width: 4px; }
 .wave.play i.on { background: var(--fg); }
 .wave.play { justify-content: space-between; touch-action: none; cursor: pointer; }
 .tm { font-variant-numeric: tabular-nums; min-width: 38px; color: var(--muted); }
-.hint { flex: 0 0 auto; color: var(--muted); white-space: nowrap; transition: color var(--duration-fast) var(--ease-out); }
+.hint { flex: 0 0 auto; min-width: 7.5em; text-align: right; color: var(--muted); white-space: nowrap; transition: color var(--duration-fast) var(--ease-out); }
 .comp.cancel .hint { color: var(--fg); }
 .rdot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--fg); animation: pulse 1.6s var(--ease-in-out) infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
@@ -90,7 +93,7 @@
 </style>
 <style>
   html, body { height: 100%; overflow: hidden; }
-  .vp { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; transform-origin: 0 0; }
+  .vp { position: absolute; left: 0; top: 0; width: 800px; height: 500px; transform-origin: 0 0; }
   .page { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; }
 </style>
 </head>
@@ -147,7 +150,7 @@ function addMsg(m, fresh) {
 let st = 'idle', t0 = 0, levels = [], startX = 0, dx = 0, prog = 0, playing = false, dur = 0, clip = [], acc = 0, bars = [], wave = null;
 const SAMPLE = 70, CANCEL = 90, N = 56;     // a bar every 70 ms; 90px of slide throws it away; 56 bars in a clip
 comp.innerHTML = `<div class="L" data-s="idle"><span class="ph">Ask about this interview</span></div>
-  <div class="L" data-s="rec"><span class="rdot"></span><span class="tm" id="tm">0:00</span><div class="wave" id="wave"></div><span class="hint" id="hint">Slide left to cancel</span></div>
+  <div class="L" data-s="rec"><span class="rdot"></span><span class="tm" id="tm">0:00</span><div class="wv"><div class="wave" id="wave"></div></div><span class="hint" id="hint">Slide left to cancel</span></div>
   <div class="L" data-s="clip" id="clipL"></div>
   <button type="button" class="mic" aria-label="Hold to record">${icon('mic', 20)}</button>`;
 const mic = comp.querySelector('.mic');
@@ -248,14 +251,17 @@ resetThread(); view();
 requestAnimationFrame(frame);
 </script>
 <script>
-  /* ---- harness glue: the 1200 × 750 frame the original was drawn in, scaled to the window; a ghost hand plays it; real input takes over ---- */
+  /* ---- harness glue: the frame, scaled to the window; a ghost hand plays it; real input takes over ---- */
   const ABORT = { abort: true };
   function vpfit() {
     const vp = document.querySelector('.vp'), ui = document.querySelector('.qm-ui');
     const go = () => {
       const bar = QM.tile || !ui ? 0 : 46;
-      const k = Math.min(innerWidth / 1200, (innerHeight - bar) / 750);
-      vp.style.transform = `translate(${(innerWidth - 1200 * k) / 2}px, ${(innerHeight - bar - 750 * k) / 2}px) scale(${k})`;
+      // the frame is the window at 1 : 1 in a tile (800 × 500), and the same frame scaled up in the detail view:
+      // the card is 560 × 456 inside it, so its 14px type reads in a tile and there is no empty column in the thread
+      const k = Math.max(0.5, Math.min(1.6, innerWidth / 800, (innerHeight - bar) / 500));
+      vp.style.width = innerWidth / k + 'px'; vp.style.height = (innerHeight - bar) / k + 'px';
+      vp.style.transform = `scale(${k})`;
     };
     addEventListener('resize', go); go();
   }

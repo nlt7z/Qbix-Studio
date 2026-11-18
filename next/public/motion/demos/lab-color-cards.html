@@ -21,23 +21,32 @@
 .cc-deck { position: absolute; inset: 0; perspective: 1400px; }
 .cc-card { position: absolute; left: 0; top: 0; transform-style: preserve-3d; cursor: pointer; will-change: transform;
   transition: transform .95s cubic-bezier(.65, 0, .35, 1); }
+.cc-card:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 4px; }
 .cc-flip { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .9s cubic-bezier(.65, 0, .35, 1); }
 .cc-card.back .cc-flip { transform: rotateY(180deg); }
 .cc-face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
   clip-path: polygon(0 0, calc(100% - var(--cutc)) 0, 100% var(--cutc), 100% 100%, 0 100%); }
 .cc-front { display: flex; flex-direction: column; }
 .cc-band { position: relative; flex: 1; }
+.cc-band:first-child { flex: 1.25; }
 .cc-band:last-child { flex: 2.2; }
-.cc-band span { position: absolute; left: var(--pad); bottom: calc(var(--pad) * .55); font: 500 13px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; }
+.cc-band span { position: absolute; left: var(--pad); bottom: calc(var(--pad) * .55); font: 500 13px/1 Geist, system-ui, sans-serif; letter-spacing: -.006em; }
 .cc-band:last-child span { bottom: var(--pad); }
-.cc-name { position: absolute; left: var(--pad); right: var(--pad); bottom: calc(var(--pad) + 26px); font: 300 var(--big)/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+/* each band is labelled with its colour's name (the hex values are on the back), the first with the palette's
+   own, the way a card game prints its index, so a fanned card still reads; the big name is for the open card (top of the stack, lifted, enlarged) and wipes in over the first band in its place */
+.cc-band.top span { bottom: auto; top: calc(var(--pad) * .7);
+  clip-path: inset(-2px -2px -2px -2px); transition: clip-path 240ms cubic-bezier(.5, 0, .75, 0); }
+.cc-card.named .cc-band.top span { clip-path: inset(-2px -2px 110% -2px); }
+.cc-name { position: absolute; left: var(--pad); right: var(--pad); top: calc(var(--pad) * .55); font: 300 var(--big)/1 Outfit, Geist, sans-serif; letter-spacing: -.035em;
+  clip-path: inset(-6px 100% -6px -6px); transition: clip-path 240ms cubic-bezier(.5, 0, .75, 0); }
+.cc-card.named .cc-name { clip-path: inset(-6px -6px -6px -6px); transition: clip-path 560ms cubic-bezier(.16, 1, .3, 1) 120ms; }
 .cc-backf { transform: rotateY(180deg); padding: var(--pad); display: flex; flex-direction: column; background: #EEF1E8; color: #0B0C0D; }
 .cc-backf h2 { margin: 0 0 auto; font: 300 var(--big)/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
 .cc-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 13px; }
-.cc-chip { width: 22px; height: 22px; flex: none; }
+.cc-chip { width: 22px; height: 22px; flex: none; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .14); }
 .cc-row b { font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
 .cc-row i { font: 400 13px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; color: rgba(11, 12, 13,.64); }
-@media (prefers-reduced-motion: reduce) { .cc-card, .cc-flip { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cc-card, .cc-flip, .cc-name, .cc-band.top span { transition: none !important; } }
 </style>
 <style>
   .qm-stage { display: block; padding: 0; }
@@ -49,7 +58,8 @@
 <main class="qm-stage">
   <div class="cc-cap"><p class="kicker">Strata · 06 palettes</p><h1 class="title">From one moodboard.</h1></div>
 <!-- code -->
-<div class="cc-deck" id="cc-deck"></div>
+<div class="cc-deck" id="cc-deck" role="group" aria-label="Six palettes"></div>
+<p class="sr-only" id="cc-status" role="status" aria-live="polite"></p>
 <!-- /code -->
 </main>
 <script src="../kit/stage.js"></script>
@@ -57,13 +67,14 @@
 const ColorCards = (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const deck = document.getElementById('cc-deck');
+  // six palettes from one moodboard, in qbix's own range: lime, sage, ink, clay, a muted blue, bone
   const PALETTES = [
-    { name: 'Bright', c: [['#6fae00', 'Moss'], ['#b8ff00', 'Lime'], ['#d2f26a', 'Zest'], ['#eaf9b0', 'Pith']] },
-    { name: 'Calm', c: [['#4e8068', 'Pine'], ['#8db59b', 'Sage'], ['#b7d3bf', 'Fern'], ['#dcebe0', 'Frost']] },
-    { name: 'Warm', c: [['#c2603a', 'Clay'], ['#e08c66', 'Peach'], ['#f2bea3', 'Blush'], ['#f9e1d3', 'Cream']] },
-    { name: 'Cool', c: [['#3c6fa8', 'Denim'], ['#7fa6d0', 'Sky'], ['#b5cfe8', 'Haze'], ['#dce8f4', 'Ice']] },
-    { name: 'Soft', c: [['#7b5cb3', 'Iris'], ['#a88bd6', 'Lilac'], ['#cdbaea', 'Lavender'], ['#e8def6', 'Petal']] },
-    { name: 'Sunny', c: [['#d9a21b', 'Honey'], ['#ebc65a', 'Butter'], ['#f5de96', 'Straw'], ['#faefc8', 'Oat']] },
+    { name: 'Lime', c: [['#5C8A00', 'Moss'], ['#B8FF00', 'Lime'], ['#DCEF9C', 'Fresh'], ['#EEF4D6', 'Chalk']] },
+    { name: 'Willow', c: [['#4F6B4C', 'Pine'], ['#8DA586', 'Sage'], ['#C3D1BC', 'Fern'], ['#E3EAD9', 'Mist']] },
+    { name: 'Ink', c: [['#0B0C0D', 'Night'], ['#31402E', 'Spruce'], ['#C9D6BD', 'Sage'], ['#EDF0E4', 'Bone']] },
+    { name: 'Clay', c: [['#A4603F', 'Rust'], ['#C88F72', 'Terra'], ['#E3C3AF', 'Shell'], ['#F1E3D8', 'Plaster']] },
+    { name: 'Harbor', c: [['#3E5C7A', 'Slate'], ['#7E99B3', 'Tide'], ['#B8C9D8', 'Haze'], ['#E0E9F0', 'Ice']] },
+    { name: 'Bone', c: [['#8E8670', 'Stone'], ['#BFB7A0', 'Sand'], ['#DDD6C3', 'Linen'], ['#EFEBDF', 'Bone']] },
   ];
   const lum = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
   const ink = (h) => (lum(h) > 0.5 ? '#0B0C0D' : '#f4f5f2');
@@ -71,8 +82,9 @@ const ColorCards = (() => {
   const cards = PALETTES.map((p, i) => {
     const el = document.createElement('div');
     el.className = 'cc-card';
-    const bands = p.c.slice().reverse().map(([hex]) => `<div class="cc-band" style="background:${hex};color:${ink(hex)}"><span>${hex}</span></div>`).join('');
-    el.innerHTML = `<div class="cc-flip"><div class="cc-face cc-front">${bands}<div class="cc-name" style="color:${ink(p.c[0][0])}">${p.name}</div></div>` +
+    el.tabIndex = 0; el.setAttribute('role', 'button'); el.setAttribute('aria-label', `${p.name} palette, ${p.c.map((c) => c[1]).join(', ')}`);
+    const bands = p.c.slice().reverse().map(([hex, nm], k) => `<div class="cc-band${k === 0 ? ' top' : ''}" style="background:${hex};color:${ink(hex)}"><span>${k === 0 ? p.name : nm}</span></div>`).join('');
+    el.innerHTML = `<div class="cc-flip"><div class="cc-face cc-front">${bands}<div class="cc-name" style="color:${ink(p.c[3][0])}">${p.name}</div></div>` +
       `<div class="cc-face cc-backf"><h2>${p.name}</h2>` +
       p.c.map(([hex, n]) => `<div class="cc-row"><div class="cc-chip" style="background:${hex}"></div><b>${n}</b><i>${hex}</i></div>`).join('') + '</div></div>';
     deck.appendChild(el);
@@ -86,8 +98,8 @@ const ColorCards = (() => {
   function size() {
     W = innerWidth; H = innerHeight;
     const capH = Math.min(110, H * 0.17);
-    ch = Math.max(160, Math.min(400, Math.min((H - capH) * 0.6, W * 0.66)));
-    cw = ch * 0.68;
+    ch = Math.round(Math.max(160, Math.min(400, Math.min((H - capH) * 0.6, W * 0.66))));
+    cw = Math.round(ch * 0.68);
     cx = W / 2; cy = capH + (H - capH) * 0.47;
     const s = deck.style;
     s.setProperty('--cutc', Math.round(ch * 0.07) + 'px');
@@ -111,13 +123,14 @@ const ColorCards = (() => {
         if (ci === slide) { x += cw * 0.95; y -= ch * 0.06; rot = 9; z = 40; }
       } else {
         const a = n > 1 ? -maxA + (2 * maxA * pos) / (n - 1) : 0, rad = (a * Math.PI) / 180;
-        x += Math.sin(rad) * R; y += R - Math.cos(rad) * R + ch * 0.06; rot = a; z = pos;
+        x += Math.sin(rad) * R; y += R - Math.cos(rad) * R - ch * 0.1; rot = a; z = pos;
         if (ci === lift) { y -= ch * 0.1; x += Math.sin(rad) * ch * 0.1; }
         if (ci === focus) { x = cx - cw / 2; y = cy - ch / 2; rot = 0; sc = Math.min(1.12, (H * 0.8) / ch); z = 200; }
       }
       el.style.zIndex = ci === focus ? 100 : ci === slide ? 50 : pos;
-      el.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotate(${rot}deg) scale(${sc})`;
+      el.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, ${Math.round(z)}px) rotate(${rot}deg) scale(${sc})`;
       el.classList.toggle('back', ci === flipped);
+      el.classList.toggle('named', mode === 'stack' ? pos === n - 1 : ci === lift || ci === focus);
     });
   }
 
@@ -141,27 +154,47 @@ const ColorCards = (() => {
   const LOOP = 14.4;
   let t = 0, si = 0, lastInput = -1e9, resumed = true, prev = 0, raf = 0;
 
-  deck.addEventListener('click', (e) => {
+  const status = document.getElementById('cc-status');
+  const say = (t) => { if (status.textContent !== t) status.textContent = t; };
+  function activate(ci) {
     lastInput = performance.now();
-    const hit = e.target.closest('.cc-card');
-    const ci = hit ? cards.findIndex((c) => c.el === hit) : -1;
     if (ci >= 0 && mode === 'fan') {
       if (focus === ci) flipped = flipped === ci ? -1 : ci;
       else { focus = ci; flipped = ci; lift = -1; }
+      say(flipped === ci ? PALETTES[ci].name + ' palette, flipped' : PALETTES[ci].name + ' palette');
     } else if (ci >= 0 && mode === 'stack') {
       slide = order[order.length - 1]; place();
       setTimeout(() => { order.unshift(order.pop()); place(); setTimeout(() => { slide = -1; place(); }, 300); }, 560);
+      say('Next palette: ' + PALETTES[order[order.length - 2]].name);
       return;
-    } else if (focus >= 0) { focus = -1; flipped = -1; }
-    else mode = mode === 'fan' ? 'stack' : 'fan';
+    } else if (focus >= 0) { focus = -1; flipped = -1; say('Fan'); }
+    else { mode = mode === 'fan' ? 'stack' : 'fan'; say(mode === 'fan' ? 'Fan' : 'Stack'); }
     place();
+  }
+  const cardOf = (t) => { const hit = t.closest && t.closest('.cc-card'); return hit ? cards.findIndex((c) => c.el === hit) : -1; };
+  deck.addEventListener('click', (e) => activate(cardOf(e.target)));
+  // keyboard: Enter or Space opens and flips (a click), arrows move the lift along the fan, Escape closes
+  deck.addEventListener('keydown', (e) => {
+    const ci = cardOf(e.target);
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(ci); }
+    else if (e.key === 'Escape' && focus >= 0) { focus = -1; flipped = -1; lastInput = performance.now(); say('Fan'); place(); }
+    else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && mode === 'fan' && focus < 0) {
+      e.preventDefault();
+      const pos = order.indexOf(ci), nx = order[Math.max(0, Math.min(order.length - 1, pos + (e.key === 'ArrowRight' ? 1 : -1)))];
+      cards[nx].el.focus();
+    }
+  });
+  deck.addEventListener('focusin', (e) => {
+    const ci = cardOf(e.target);
+    if (ci < 0 || !e.target.matches(':focus-visible')) return;
+    lastInput = performance.now();
+    if (mode === 'fan' && focus < 0 && ci !== lift) { lift = ci; place(); }
   });
   deck.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse') return;
     lastInput = performance.now();
     if (mode !== 'fan' || focus >= 0) return;
-    const hit = e.target.closest('.cc-card');
-    const ci = hit ? cards.findIndex((c) => c.el === hit) : -1;
+    const ci = cardOf(e.target);
     if (ci !== lift) { lift = ci; place(); }
   });
 

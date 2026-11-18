@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Follow presence · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "follow-presence", "title": "Follow presence", "group": "studio", "added": "2026-11-17", "cat": "cursor", "order": 100,
+  "kind": "loop", "tone": "paper", "shot": 2400,
+  "line": "avatar joins, others nudge 40 ms apart · follow glide 820 ms ease-move · then it tracks her · your scroll or Esc ends it",
+  "summary": "A Willow Counseling home page open in a Strata editor, with a facepile top right. A teammate joins: her avatar, MR, is uncovered at the end of the pile and the others nudge along, 40 ms apart. Her cursor slides in with a lime name pill and selects a heading further down the page. Pressing her avatar, or the Follow Mara pill beside it, turns on Follow: the view glides on the move curve to her cursor, a thin ink frame closes around the document and the pill turns ink and reads Following Mara, Esc. From then on the view keeps her cursor in sight as she moves on and types. Scrolling yourself, pressing Esc or pressing the pill ends it, and the view stays where it is.",
+  "spec": [
+    ["Join", "her avatar is uncovered by a circle opening (320 ms expo out, 80 ms in); the others slide 26 px along on 420 ms ease-move, 40 ms apart starting next to her; Follow Mara opens beside the pile on 420 ms expo out"],
+    ["Cursor", "an arrow and a lime name pill, the one lime point; it slides in from the page edge on 900 ms ease-move; her selection is a soft ink outline drawn left to right (320 ms expo out), closing in 180 ms ease-in"],
+    ["Follow in", "the scroll glides from where you are to a spot that puts her cursor at 65% of the view, 820 ms ease-move, aimed at where she is now rather than where she was; the pill's ink layer is uncovered from the left (360 ms expo out) while its label rolls up and the frame closes in 1.5 px (420 ms expo out)"],
+    ["Tracking", "after the glide the view chases her cursor with a short ease (a time constant of about 140 ms, so it follows smoothly and slightly behind); it stops at the page ends"],
+    ["Follow out", "your own wheel, touch or scroll keys, Esc, the pill, or her leaving ends it; the view stays where it is, the frame opens in 220 ms ease-in and the pill steps back to a white ringed pill"],
+    ["Own scroll", "the follow scroll is the piece's own: ending follow is decided by what you do (wheel, touch, keys), never by a scroll event, so the glide cannot cancel itself"],
+    ["Out of view", "while she is off screen and you are not following, a small white pill at that edge reads Mara and an arrow; pressing it follows her"],
+    ["Loop", "a ghost presses her avatar, lets the view follow her while she moves to Pricing and types, then presses the pill to stop while she moves on; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-17"],
+  "where": "A shared Strata editor where a designer joins a counselor's page edit and wants to see exactly what she is working on without asking where.",
+  "rules": [
+    "Follow is a mode with a visible edge: the ink frame and the ink pill are the only heavy things, and the pill is the control that ends it.",
+    "Her cursor carries the single lime point, a name pill beside the arrow so it never covers the text she is selecting or typing.",
+    "The follow scroll is never mistaken for yours: you leave follow by acting (wheel, touch, scroll keys, Esc, the pill), not by observing the scroll position.",
+    "The view aims at her cursor as it is now every frame, so a move that starts mid-glide is followed without a jump, and the glide and the tracking are one motion.",
+    "Joining and leaving move the pile, they do not pop: each avatar travels on the move curve and her avatar is uncovered by a circle, not faded.",
+    "Real controls: her avatar and the pill are buttons (aria-pressed, labelled), Esc ends follow, the page is a focusable scroll region, a polite live region says who joined, followed and left.",
+    "Under reduced motion the editor rests in follow with her cursor in view and every change is instant."
+  ],
+  "tags": ["cursor", "presence", "multiplayer", "follow", "facepile", "avatar", "scroll", "editor", "Willow Counseling", "Strata"]
+}
+</script>
+<style data-code>
+/* Follow presence. One heavy thing: the ink pill while following (the thin frame is its line). One lime point: her name pill.
+   White surfaces with a soft ring. Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0). Four type sizes: 11, 13, 15, 24. */
+.fp { position: relative; width: 600px; max-width: 100%; background: #fff; color: #0B0C0D; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 13px/18px Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+.fp :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the toolbar: the document, then Follow and the facepile */
+.fp-bar { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 16px 0 20px; }
+.fp-doc { font-weight: 500; white-space: nowrap; }
+.fp-doc span { color: rgba(11, 12, 13, .5); }
+.fp-r { display: flex; align-items: center; }
+
+/* the Follow pill: white and ringed, an ink layer is uncovered from the left when following; two labels roll */
+.fp-fw { position: relative; display: inline-grid; height: 28px; width: 0; margin-right: -12px; overflow: hidden; border-radius: 999px; background: #fff; color: rgba(11, 12, 13, .78);
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .12);
+  transition: width 260ms cubic-bezier(.5, 0, .75, 0), margin-right 260ms cubic-bezier(.5, 0, .75, 0), color 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1), visibility 0s 260ms; }
+.fp-fw[data-m="hide"] { visibility: hidden; }
+.fp-fw[data-m="off"], .fp-fw[data-m="on"] { margin-right: 12px; transition: width 420ms cubic-bezier(.16, 1, .3, 1), margin-right 420ms cubic-bezier(.16, 1, .3, 1), color 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1), visibility 0s; }
+.fp-fw::before { content: ''; position: absolute; inset: 0; background: #0B0C0D; transform: scaleX(0); transform-origin: left center; transition: transform 220ms cubic-bezier(.5, 0, .75, 0); }
+.fp-fw[data-m="on"]::before { transform: scaleX(1); transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.fp-fw[data-m="on"] { color: #fff; }
+.fp-fw:hover:not([data-m="on"]) { color: #0B0C0D; }
+.fp-fw:active { transform: translateY(1px); }
+.fp-lab { position: relative; grid-area: 1 / 1; justify-self: start; width: max-content; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; font-weight: 500; line-height: 28px; white-space: nowrap;
+  transition: transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.fp-lab.on { transform: translateY(100%); }
+.fp-fw[data-m="on"] .fp-lab.off { transform: translateY(-100%); }
+.fp-fw[data-m="on"] .fp-lab.on { transform: none; }
+.fp-lab kbd { padding: 0 5px; border-radius: 5px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .4); font: 500 11px/16px 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; }
+
+/* the facepile: each face sits at its own offset, so joining and leaving travel on the move curve */
+.fp-pile { position: relative; width: 80px; height: 28px; }
+.fp-av { position: absolute; right: 0; top: 0; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(11, 12, 13, .12); font: 500 11px/1 Geist, system-ui, sans-serif; font-style: normal; letter-spacing: 0; color: #0B0C0D;
+  transform: translateX(var(--x, 0px)); transition: transform 420ms cubic-bezier(.65, 0, .35, 1) calc(var(--d, 0) * 40ms); }
+.fp-mara { clip-path: circle(0% at 50% 50%); pointer-events: none; transition: transform 420ms cubic-bezier(.65, 0, .35, 1) calc(var(--d, 0) * 40ms), clip-path 180ms cubic-bezier(.5, 0, .75, 0), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.fp-mara.in { clip-path: circle(130% at 50% 50%); pointer-events: auto; transition: transform 420ms cubic-bezier(.65, 0, .35, 1) calc(var(--d, 0) * 40ms), clip-path 320ms cubic-bezier(.16, 1, .3, 1) 80ms, box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.fp-mara:hover, .fp-mara.is-hot { box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(11, 12, 13, .4); }
+.fp-mara:active { transform: translateX(var(--x, 0px)) translateY(1px); }
+
+/* the document: a real scroll region inside a ringed viewport; the follow frame closes in over it */
+.fp-view { position: relative; height: 280px; margin: 0 12px 12px; border-radius: 12px; background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); overflow: hidden; }
+.fp-view::after { content: ''; position: absolute; inset: 0; z-index: 6; border-radius: 12px; pointer-events: none; box-shadow: inset 0 0 0 0 #0B0C0D;
+  transition: box-shadow 220ms cubic-bezier(.5, 0, .75, 0); }
+.fp[data-follow] .fp-view::after { box-shadow: inset 0 0 0 1.5px #0B0C0D; transition: box-shadow 420ms cubic-bezier(.16, 1, .3, 1); }
+.fp-scroll { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; outline-offset: -3px; }
+.fp-scroll::-webkit-scrollbar { display: none; }
+.fp-page { position: relative; padding: 28px 36px 56px; }
+.fp-page h2 { margin: 36px 0 0; font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.fp-page h2:first-child { margin-top: 0; }
+.fp-page p { margin: 8px 0 0; font: 400 15px/22px Geist, system-ui, sans-serif; letter-spacing: -.011em; color: rgba(11, 12, 13, .72); }
+.fp-page p.fp-two { min-height: 44px; }                 /* two lines reserved, so typing never moves what is below */
+.fp-caret { display: none; width: 1.5px; height: 18px; margin-left: 1px; vertical-align: -3px; background: #0B0C0D; animation: fp-blink 1s steps(1) infinite; }
+.fp-typing .fp-caret { display: inline-block; }
+@keyframes fp-blink { 50% { visibility: hidden; } }
+
+/* her selection: a soft ink outline drawn left to right */
+.fp-sel { position: absolute; z-index: 2; border-radius: 7px; pointer-events: none; box-shadow: 0 0 0 1.5px rgba(11, 12, 13, .55);
+  clip-path: inset(-4px 100% -4px -4px); visibility: hidden; transition: clip-path 180ms cubic-bezier(.5, 0, .75, 0), visibility 0s 180ms; }
+.fp-sel[data-on] { clip-path: inset(-4px); visibility: visible; transition: clip-path 320ms cubic-bezier(.16, 1, .3, 1), visibility 0s; }
+
+/* her cursor: the arrow, and the one lime point beside it so it never sits over what she touches */
+.fp-cur { position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; visibility: hidden; will-change: transform; }
+.fp-cur.on { visibility: visible; }
+.fp-cur svg { display: block; width: 16px; height: 22px; fill: #fff; stroke: #0B0C0D; stroke-width: 1.4; stroke-linejoin: round; }
+.fp-name { position: absolute; left: 18px; top: -3px; height: 22px; padding: 0 9px; border-radius: 999px; background: #B8FF00; color: #0c1300; font-weight: 600; line-height: 22px; white-space: nowrap; }
+
+/* off screen: a small white pill at that edge points at her */
+.fp-edge { position: absolute; z-index: 7; right: 14px; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px 0 14px; border-radius: 999px; background: #fff; font-weight: 500; white-space: nowrap;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .1), 0 8px 20px -10px rgba(11, 12, 13, .3);
+  clip-path: inset(100% -10px 0 -10px); transform: translateY(6px); pointer-events: none;
+  transition: clip-path 220ms cubic-bezier(.5, 0, .75, 0), transform 220ms cubic-bezier(.5, 0, .75, 0), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.fp-edge[data-d="down"] { bottom: 10px; }
+.fp-edge[data-d="up"] { top: 10px; clip-path: inset(0 -10px 100% -10px); transform: translateY(-6px); }
+.fp-edge[data-on] { clip-path: inset(-10px); transform: none; pointer-events: auto;
+  transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1), transform 360ms cubic-bezier(.16, 1, .3, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.fp-edge:hover { box-shadow: 0 0 0 1px rgba(11, 12, 13, .3), 0 8px 20px -10px rgba(11, 12, 13, .3); }
+.fp-edge:active { transform: translateY(1px); }
+.fp-edge svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.fp-edge[data-d="up"] svg { transform: scaleY(-1); }
+
+.fp.snap *, .fp.snap *::before, .fp.snap *::after { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .fp *, .fp *::before, .fp *::after { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="fp" id="fp">
+  <div class="fp-bar">
+    <div class="fp-doc">Willow Counseling <span>· Home</span></div>
+    <div class="fp-r">
+      <button type="button" class="fp-fw" id="fp-fw" data-m="hide" inert aria-pressed="false">
+        <span class="fp-lab off">Follow Mara</span>
+        <span class="fp-lab on">Following Mara <kbd>Esc</kbd></span>
+      </button>
+      <div class="fp-pile" id="fp-pile" role="group" aria-label="People here">
+        <i class="fp-av" title="Jun Park">JP</i>
+        <i class="fp-av" title="Ines Duarte">ID</i>
+        <button type="button" class="fp-av fp-mara" id="fp-mara" aria-label="Follow Mara" aria-pressed="false" inert>MR</button>
+      </div>
+    </div>
+  </div>
+  <div class="fp-view">
+    <div class="fp-scroll" id="fp-scroll" tabindex="0" role="region" aria-label="Willow Counseling home page">
+      <div class="fp-page" id="fp-page">
+        <h2>Counseling that fits your week</h2>
+        <p>Weekly sessions in Seattle and online, with evening slots and no waiting list.</p>
+        <h2>Who we help</h2>
+        <p>Adults and couples working through stress, grief and big changes. Most people start with a short intro call, then pick a counselor. Evenings and weekends are open.</p>
+        <h2 id="fp-h3">How sessions work</h2>
+        <p>You meet your counselor for 50 minutes, in person or by video. The first session is a conversation, not an intake form.</p>
+        <h2>Pricing</h2>
+        <p class="fp-two" id="fp-price"><span id="fp-base">Sessions are $120 for 50 minutes.</span><span id="fp-ins"></span><i class="fp-caret" id="fp-caret"></i></p>
+        <h2 id="fp-h5">Find us</h2>
+        <p>Willow Counseling, 214 Pine Street, Seattle. Open Monday to Saturday.</p>
+        <i class="fp-sel" id="fp-sel"></i>
+        <div class="fp-cur" id="fp-cur" aria-hidden="true">
+          <svg viewBox="0 0 16 22"><path d="M1.2 1.2v17l4.6-4.4 3.2 7.2 2.8-1.2-3.2-7H15z"/></svg>
+          <span class="fp-name">Mara</span>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="fp-edge" id="fp-edge" data-d="down" tabindex="-1" aria-label="Follow Mara">Mara <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2.5v9M3.5 8L7 11.5 10.5 8"/></svg></button>
+  </div>
+  <p class="sr-only" id="fp-live" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Press Mara's avatar or Follow Mara · scroll, press Esc or press the pill to stop following</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Follow presence. Her cursor lives in page coordinates {x, y} (the tip of the arrow). Follow is a mode: every frame the view
+   aims at a scroll that puts her cursor at 65% of the view; the first 820 ms are a glide on the move curve from where you are,
+   after that an ease chases her. Ending follow is decided by what you do (wheel, touch, scroll keys, Esc, the pill), never by
+   reading the scroll position, so the follow scroll cannot end itself. */
+const fp = document.getElementById('fp'), fpScroll = document.getElementById('fp-scroll'), fpPage = document.getElementById('fp-page');
+const fpFw = document.getElementById('fp-fw'), fpMaraB = document.getElementById('fp-mara'), fpPile = document.getElementById('fp-pile');
+const fpCurEl = document.getElementById('fp-cur'), fpSel = document.getElementById('fp-sel'), fpEdge = document.getElementById('fp-edge');
+const fpLive = document.getElementById('fp-live'), fpIns = document.getElementById('fp-ins'), fpBase = document.getElementById('fp-base'), fpPrice = document.getElementById('fp-price');
+const FP_REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fpPos = { x: 0, y: 0 };
+let fpHere = false, fpFollowing = false, fpCurOn = false, fpMT = 0;
+let fpR = 0, fpS = 0, fpFrom = 0, fpFT = 0, fpLast = 0, fpGlide = true;
+const fpEase = (() => { const x1 = .65, y1 = 0, x2 = .35, y2 = 1, cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  return (x) => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 8; i++) { const e = ((ax * t + bx) * t + cx) * t - x, d = (3 * ax * t + 2 * bx) * t + cx; if (Math.abs(e) < 1e-6 || Math.abs(d) < 1e-6) break; t -= e / d; } return ((ay * t + by) * t + cy) * t; }; })();
+const fpClamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const fpSay = (t) => { fpLive.textContent = t; };
+const fpMax = () => Math.max(0, fpScroll.scrollHeight - fpScroll.clientHeight);
+
+/* where things are, in page coordinates (the page scrolls, these do not change) */
+function fpBox(el) {
+  const rg = document.createRange(); rg.selectNodeContents(el);
+  const r = rg.getBoundingClientRect(), p = fpPage.getBoundingClientRect();
+  return { l: r.left - p.left, t: r.top - p.top, w: r.width, h: r.height };
+}
+function fpEnd() {                                   // the end of the typed text (or of the base text), where her caret is
+  const node = fpIns.firstChild || fpBase.firstChild, rg = document.createRange();
+  rg.setStart(node, node.length); rg.collapse(true);
+  const r = fpBase.getBoundingClientRect(), p = fpPage.getBoundingClientRect();
+  const c = rg.getClientRects()[0] || r;
+  return { x: c.right - p.left, top: c.top - p.top, bottom: c.bottom - p.top };
+}
+
+/* her cursor */
+function fpPlace() {
+  fpCurEl.style.transform = `translate(${fpPos.x.toFixed(1)}px, ${fpPos.y.toFixed(1)}px)`;
+  fpEdgeUpdate();
+}
+function fpShowCur(on) { fpCurOn = on; fpCurEl.classList.toggle('on', on); fpEdgeUpdate(); }
+function fpMove(x, y, ms) {                          // travel on the move curve; a newer move cancels this one
+  const my = ++fpMT, x0 = fpPos.x, y0 = fpPos.y;
+  return new Promise((res) => {
+    if (!ms || FP_REDUCED) { fpPos.x = x; fpPos.y = y; fpPlace(); return res(true); }
+    const t0 = performance.now();
+    const f = (now) => {
+      if (my !== fpMT) return res(false);
+      const p = Math.min(1, (now - t0) / ms), k = fpEase(p);
+      fpPos.x = x0 + (x - x0) * k; fpPos.y = y0 + (y - y0) * k; fpPlace();
+      if (p < 1) requestAnimationFrame(f); else res(true);
+    };
+    requestAnimationFrame(f);
+  });
+}
+function fpSelect(el) {                              // a soft outline around the words, drawn left to right
+  const b = fpBox(el);
+  Object.assign(fpSel.style, { left: b.l - 8 + 'px', top: b.t - 4 + 'px', width: b.w + 16 + 'px', height: b.h + 8 + 'px' });
+  fpSel.dataset.on = '';
+  return fpBeside(el);
+}
+function fpBeside(el) { const b = fpBox(el); return { x: b.l + b.w + 18, y: b.t + b.h / 2 }; }   // where her arrow rests: beside the outline
+function fpUnselect() { delete fpSel.dataset.on; }
+function fpTypeAt() { const e = fpEnd(); return { x: e.x + 1, y: e.bottom + 3 }; }   // her arrow sits on the empty second line, under the caret
+
+/* the edge pill: she is off screen and you are not following */
+function fpEdgeUpdate() {
+  const vh = fpScroll.clientHeight, vy = fpPos.y - fpScroll.scrollTop;
+  const out = fpHere && fpCurOn && !fpFollowing && (vy > vh - 8 || vy < 8);
+  if (out) fpEdge.dataset.d = vy < 8 ? 'up' : 'down';
+  if (out !== fpEdge.hasAttribute('data-on')) { fpEdge.toggleAttribute('data-on', out); fpEdge.tabIndex = out ? 0 : -1; }
+}
+
+/* the facepile and the Follow pill */
+function fpFaces(snap) {
+  const faces = [...fpPile.children].filter((a, k) => k < 2 || fpHere), n = faces.length;
+  [...fpPile.children].forEach((a, k) => {
+    const idx = faces.indexOf(a);
+    if (idx < 0) { a.style.setProperty('--x', '0px'); return; }
+    a.style.setProperty('--x', -(n - 1 - idx) * 26 + 'px');
+    a.style.setProperty('--d', String(a === fpMaraB ? 0 : (n - 1 - idx - (fpHere ? 1 : 0)) * 1));
+  });
+  fpMaraB.classList.toggle('in', fpHere); fpMaraB.inert = !fpHere;
+}
+function fpPill(m) {
+  fpFw.dataset.m = m; fpFw.inert = m === 'hide';
+  const lab = fpFw.querySelector(m === 'on' ? '.fp-lab.on' : '.fp-lab.off');
+  fpFw.style.width = m === 'hide' ? '0px' : lab.offsetWidth + 'px';
+}
+function fpJoin() {
+  if (fpHere) return;
+  fpHere = true; fpFaces(); setTimeout(() => { if (fpHere && !fpFollowing) fpPill('off'); }, 300);
+  fpSay('Mara joined.');
+}
+function fpLeave() {
+  if (!fpHere) return;
+  if (fpFollowing) fpFollow(false, 'left');
+  fpHere = false; fpUnselect(); fpPill('hide'); fpFaces();      // her cursor slides out on its own; the caller hides it after
+  fpSay('Mara left.');
+}
+
+/* follow */
+function fpAim() { return fpClamp(fpPos.y - fpScroll.clientHeight * 0.65, 0, fpMax()); }
+function fpFrame(now) {
+  fpR = 0;
+  if (!fpFollowing) return;
+  const tg = fpAim(), dt = Math.min(.05, Math.max(.001, (now - fpLast) / 1000));
+  fpLast = now;
+  if (fpGlide) {                                      // the glide: from where you were, aimed at where she is now
+    const p = Math.min(1, (now - fpFT) / 820);
+    fpS = fpFrom + (tg - fpFrom) * fpEase(p);
+    if (p >= 1) fpGlide = false;
+  } else fpS += (tg - fpS) * (1 - Math.exp(-dt * 7));
+  fpScroll.scrollTop = fpS;
+  fpEdgeUpdate();
+  fpR = requestAnimationFrame(fpFrame);
+}
+function fpFollow(on, why) {
+  if (on === fpFollowing || (on && !fpHere)) return;
+  fpFollowing = on;
+  fp.toggleAttribute('data-follow', on); fpMaraB.setAttribute('aria-pressed', String(on)); fpMaraB.setAttribute('aria-label', on ? 'Stop following Mara' : 'Follow Mara');
+  fpFw.setAttribute('aria-pressed', String(on));
+  fpPill(on ? 'on' : fpHere ? 'off' : 'hide');
+  if (on) {
+    fpFrom = fpS = fpScroll.scrollTop; fpGlide = true; fpFT = fpLast = performance.now();
+    if (FP_REDUCED) { fpScroll.scrollTop = fpAim(); fpGlide = false; }
+    else if (!fpR) fpR = requestAnimationFrame(fpFrame);
+    fpSay('Following Mara.');
+  } else {
+    if (fpR) { cancelAnimationFrame(fpR); fpR = 0; }
+    fpSay(why === 'left' ? 'Mara left. Stopped following.' : 'Stopped following Mara.');
+  }
+  fpEdgeUpdate();
+}
+const fpToggle = () => fpFollow(!fpFollowing);
+fpMaraB.addEventListener('click', fpToggle);
+fpFw.addEventListener('click', fpToggle);
+fpEdge.addEventListener('click', () => fpFollow(true));
+/* your own scroll ends follow: judged by your wheel, touch and keys, not by scroll events (the follow scroll fires those too) */
+const fpOwn = () => { if (fpFollowing) fpFollow(false); };
+fpScroll.addEventListener('wheel', fpOwn, { passive: true });
+fpScroll.addEventListener('touchstart', fpOwn, { passive: true });
+fpScroll.addEventListener('keydown', (e) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) fpOwn(); });
+fpScroll.addEventListener('scroll', fpEdgeUpdate, { passive: true });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && fpFollowing) fpFollow(false); });
+
+/* her typing: one character at a time, her arrow stays under the caret */
+async function fpType(text, ms, alive) {
+  fpPrice.classList.add('fp-typing');
+  for (const ch of text) {
+    if (!alive()) return;
+    fpIns.textContent += ch;
+    const t = fpTypeAt(); fpPos.x = t.x; fpPos.y = t.y; fpPlace();
+    await new Promise((r) => setTimeout(r, FP_REDUCED ? 0 : ms));
+  }
+  if (alive()) fpPrice.classList.remove('fp-typing');
+}
+fpFaces(); fpPill('hide');
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const snap = (fn) => { fp.classList.add('snap'); fn(); fp.getBoundingClientRect(); fp.classList.remove('snap'); };
+  const TEXT = ' Sliding scale on request.';
+  const h3 = () => document.getElementById('fp-h3'), h5 = () => document.getElementById('fp-h5');
+  let mEpoch = 0, gEpoch = 0, cStart = 0, cycle = 0, resumeT = 0, firstCycle = true, lastTouch = 0, skipBefore = 0;
+  const cyc = () => performance.now() - cStart;
+  const mAt = async (my, t) => { const d = t - cyc(); if (d > 0) await w(d); if (my !== mEpoch) throw 0; };
+  const gAt = async (my, t) => { const d = t - cyc(); if (d > 0) await w(d); if (my !== gEpoch) throw 0; };
+  const late = (t) => t < skipBefore || cyc() > t + 300;   // a step that has already gone by (a tile starts on the finished follow, 3.5 s before Mara moves on)
+
+  function clear() {                                    // an empty editor: nobody here, scrolled to the top
+    fpFollow(false); fpHere = false; fpShowCur(false); fpUnselect(); fpPill('hide'); fpFaces();
+    fpIns.textContent = ''; fpPrice.classList.remove('fp-typing'); fpScroll.scrollTop = 0; fpEdgeUpdate();
+  }
+  function keyState() {                                 // Mara is here, selecting the heading, and you are following her
+    snap(() => {
+      clear(); fpHere = true; fpFaces();
+      const t = fpSelect(h3()); fpPos.x = t.x; fpPos.y = t.y; fpPlace(); fpShowCur(true);
+      fpFollow(true); fpScroll.scrollTop = fpS = fpAim(); fpGlide = false;
+      fpFw.dataset.m = 'on'; fpPill('on');
+    });
+  }
+  async function mara() {                               // one cycle of Mara's work: her timeline, in ms
+    const my = ++mEpoch; cycle++;
+    try {
+      if (QM.tile && firstCycle) { firstCycle = false; keyState(); skipBefore = 5000; cStart = performance.now() - 1500; }
+      else { clear(); skipBefore = 0; cStart = performance.now(); firstCycle = false; }
+      if (!late(600)) { await mAt(my, 600); fpJoin(); }
+      if (!late(1300)) {
+        await mAt(my, 1300);
+        const b = fpBox(h3()); fpPos.x = fpPage.clientWidth + 40; fpPos.y = b.t - 6; fpPlace(); fpShowCur(true);
+        const t = fpBeside(h3());
+        await fpMove(t.x, t.y, 900);
+      }
+      if (!late(2300)) { await mAt(my, 2300); fpSelect(h3()); }
+      if (!late(8600)) {                                 // she moves down to Pricing, then types
+        await mAt(my, 8600); fpUnselect();
+        const t = fpTypeAt(); await fpMove(t.x, t.y, 1100);
+        await mAt(my, 9900);
+        await fpType(TEXT, 52, () => my === mEpoch);
+      }
+      await mAt(my, 13800);                              // and on to Find us
+      fpUnselect(); await w(180); if (my !== mEpoch) throw 0;
+      { const t = fpBeside(h5()); await fpMove(t.x, t.y, 1000); if (my !== mEpoch) throw 0; fpSelect(h5()); }
+      await mAt(my, 16000);                              // she leaves
+      fpUnselect(); fpMove(fpPage.clientWidth + 40, fpPos.y, 700); fpLeave();
+      await mAt(my, 17000);
+      if (performance.now() - lastTouch > 4000) fpScroll.scrollTo({ top: 0, behavior: 'smooth' });
+      await mAt(my, 17900); fpIns.textContent = ''; fpShowCur(false);
+      await mAt(my, 18300);
+      if (!reduced) mara();
+    } catch (e) { /* cancelled */ }
+  }
+
+  /* the ghost: presses her avatar, lets the view follow, then presses the pill */
+  const mid = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  async function ghost() {
+    const my = ++gEpoch;
+    try {
+      for (;;) {
+        const id = cycle;
+        const to = async (x, y, ms) => { if (!(await QM.ghostTo(x, y, ms)) || my !== gEpoch) throw 0; };
+        const park = async () => { const r = document.querySelector('.fp-bar').getBoundingClientRect(); await to(r.left + r.width * 0.5, r.top + r.height / 2, 800); };
+        if (!late(2800)) {
+          await gAt(my, 2800); QM.ghostShow(); await to(...mid(fpMaraB), 900);
+          await gAt(my, 3900); fpMaraB.classList.add('is-hot'); await w(140); fpFollow(true); await w(160); fpMaraB.classList.remove('is-hot');
+          await gAt(my, 4500); await park();
+        }
+        if (!late(11700)) {
+          await gAt(my, 11700); QM.ghostShow(); await to(...mid(fpFw), 800);
+          await gAt(my, 12600); fpFw.classList.add('is-hot'); await w(140); fpFollow(false); await w(160); fpFw.classList.remove('is-hot');
+          await gAt(my, 13200); await park();
+        }
+        while (cycle === id) { await w(250); if (my !== gEpoch) throw 0; }
+      }
+    } catch (e) { fpFw.classList.remove('is-hot'); fpMaraB.classList.remove('is-hot'); }
+  }
+  function stopGhost() { gEpoch++; QM.ghostHide(); fpFw.classList.remove('is-hot'); fpMaraB.classList.remove('is-hot'); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      lastTouch = performance.now(); stopGhost();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!fp.matches(':hover') && !fp.contains(document.activeElement)) ghost(); else touch({}); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  const begin = () => { if (reduced) keyState(); else { mara(); ghost(); } };
+  QM.demo({ kind: 'loop', restart() { mEpoch++; stopGhost(); firstCycle = false; clear(); if (reduced) keyState(); else { mara(); ghost(); } } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(begin, 300));
+})();
+</script>
+</body>
+</html>

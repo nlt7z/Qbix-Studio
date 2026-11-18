@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lens switch · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lens-switch", "title": "Lens switch", "group": "studio", "added": "2026-11-16", "cat": "buttons", "order": 60,
+  "kind": "loop", "tone": "paper", "shot": 6000,
+  "line": "3 views · lens 1.25× · stretch ≤ 14% · move curve 490–600 ms · drag and snap",
+  "summary": "Strata's view switch: Tokens, Components, Code on a white pill track. The thumb is a clear lens, not a frosted pane. Whatever is under it is drawn again at 1.25× and bent where it meets the rim, so a label glides in compressed and opens up as it reaches the centre. Between segments the lens travels on the move curve and stretches along its path by up to 14%, then settles with no overshoot; it can also be dragged and snaps on release. The panel below is uncovered by a short wipe that follows the lens.",
+  "spec": [
+    ["Lens", "156 × 60 px over a 52 px track, 4 px proud above and below; a lit 1 px top edge, a soft ring and a deeper shadow, a pill like the track, no frost"],
+    ["Magnify", "a second copy of the label row at 1.25× (set in real 18.75 px type, so it stays sharp), moved opposite the lens so the labels slide through it"],
+    ["Refraction", "an SVG feDisplacementMap on the copy, fed by a generated edge map: 0 in the middle, up to 14 px sideways and 5 px up and down across the outer 58% of the lens, its strength scaled by the lens's speed (0 at rest, full at 250 px/s), so a resting label is never bent and a moving lens bends what crosses its rim"],
+    ["Travel", "490 ms for one segment, 600 ms for two, the move curve (0.65, 0, 0.35, 1); a new target mid-way restarts from the lens's own position"],
+    ["Stretch", "scaleX = 1 + 0.14 × min(1, speed / 800 px/s), the speed low-passed over 50 ms and the scale eased over 60 ms, so it swells with the move and settles to 1 without overshoot"],
+    ["Drag", "grab the lens, it follows the pointer; on release it projects the velocity 0.14 s ahead, picks the nearest segment and settles on a critically damped spring (ω 14)"],
+    ["Panel", "the new view is uncovered by clip-path, 520 ms expo out, wiping the way the lens went; nothing fades"],
+    ["Keys", "a real tablist: arrows, Home and End select and move focus; the focus ring is drawn on the lens"],
+    ["Loop", "the ghost taps Components, taps Code, drags the lens back to Tokens; a real input takes over and the ghost returns after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "The view switch of a Strata page, and any Qbix product where three or four views share one panel: the lens makes the change of view something you can watch happen.",
+  "rules": [
+    "The lens is clear: it holds a magnified copy of what is under it, never a blur. Keep the copy aria-hidden; the real tabs stay underneath and carry the roles.",
+    "The copy is set in real type at 1.25×, not scaled, so it stays sharp. The refraction filter is set only once its edge map exists; without it the lens still magnifies, it just does not bend.",
+    "The bend is scaled by speed: at rest the displacement scale is 0, so a resting label is never distorted.",
+    "Stretch comes from speed, not from time: any move, a drag too, swells the lens in proportion and returns it to 1. It never goes past the target.",
+    "The panel is uncovered, not faded; if a second tap comes mid-wipe the new view goes on top and the old one finishes underneath.",
+    "Under reduced motion the lens and the panel jump to the chosen view and rest on Components."
+  ],
+  "tags": ["lens", "glass", "refraction", "tabs", "segmented control", "stretch", "drag", "Strata"]
+}
+</script>
+<style data-code>
+/* Lens switch. White surfaces with soft rings; the lens is the one focus, one lime point, sage #EEF1E8 only as a control part. Easings: move (.65,0,.35,1), expo out (.16,1,.3,1).
+   The lens's position, stretch and the copy's offset are set from script (draw). */
+.ls { width: 464px; display: grid; gap: 12px; color: #0B0C0D; user-select: none; -webkit-user-select: none; }
+.ls p, .ls h3 { margin: 0; }
+.ls-k { font: 500 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+:where(.ls button) { font: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the track and its real tabs */
+.ls-track { position: relative; width: 464px; height: 52px; background: #fff; border-radius: 26px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.ls-tabs { position: absolute; inset: 0; display: flex; padding: 0 22px; }
+.ls-tab { flex: 0 0 140px; height: 52px; font: 500 15px/52px Geist, system-ui, sans-serif; letter-spacing: -.011em; text-align: center;
+  color: rgba(11, 12, 13, var(--a, .66)); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.ls-tab:hover, .ls-tab.is-hot { color: #0B0C0D; }
+.ls-tab:active, .ls-tab.is-press { translate: 0 1px; }
+
+/* the lens: a clear pane with a soft rim, the label row drawn again at 1.25x through a displacement filter, a lit top edge.
+   The body is clipped to its pill; the outline for keyboard focus sits outside it. */
+.ls-lens { position: absolute; left: 0; top: -4px; width: 156px; height: 60px; border-radius: 30px; cursor: grab; touch-action: none; transform: translate3d(14px, 0, 0); }
+.ls-lens.is-drag, .ls-lens.is-drag * { cursor: grabbing; }
+.ls-body { position: absolute; inset: 0; background: #fff; border-radius: 30px; overflow: hidden; box-shadow: 0 0 0 1px rgba(11, 12, 13, .14), 0 10px 22px -8px rgba(11, 12, 13, .34), 0 2px 4px rgba(11, 12, 13, .06); }
+.ls-opt { position: absolute; inset: 0; }
+.ls-copy { position: absolute; left: 0; top: 0; width: 580px; height: 66px; display: flex; padding: 0 27.5px; pointer-events: none; }
+.ls-copy span { flex: 0 0 175px; font: 500 18.75px/66px Geist, system-ui, sans-serif; letter-spacing: -.011em; text-align: center; white-space: nowrap; color: rgba(11, 12, 13, var(--a, .66)); }
+.ls-lit { position: absolute; inset: 0; border-radius: 30px; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .95), inset 0 -7px 12px -6px rgba(11, 12, 13, .1), inset 0 7px 10px -6px rgba(11, 12, 13, .05); pointer-events: none; }
+.ls-track:has(.ls-tab:focus-visible) .ls-lens { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.ls-tab.is-sel:focus-visible { outline: none; }
+
+/* the panel: one stack, the new view wiped in over the old */
+.ls-panels { position: relative; width: 464px; height: 160px; margin-top: 12px; background: #fff; overflow: hidden; border-radius: 20px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.ls-p { position: absolute; inset: 0; padding: 16px; background: #fff; }
+.ls-p[hidden] { display: none; }
+.ls-hd { height: 32px; display: flex; align-items: baseline; justify-content: space-between; }
+.ls-h { font: 300 22px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.ls-n { display: flex; align-items: center; gap: 8px; font: 400 13px/28px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+.ls-n i { width: 8px; height: 8px; background: #B8FF00; border-radius: 50%; }
+.ls-g { margin-top: 8px; height: 88px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ls-c { position: relative; background: #fff; padding: 12px; display: flex; flex-direction: column; justify-content: flex-end; border-radius: 12px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); font: 500 13px/16px Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+.ls-c > span { font: 400 13px/16px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); }
+.ls-sw { position: absolute; left: 12px; top: 12px; width: 28px; height: 28px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(11, 12, 13, .12); }
+.ls-inksw { font-style: normal; display: grid; place-items: center; background: #fff; font: 300 17px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; color: #0B0C0D; box-shadow: 0 0 0 1px #0B0C0D; }
+.ls-ringsw { background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 0 0 5px rgba(11, 12, 13, .07); width: 18px; height: 18px; left: 17px; top: 17px; }
+.ls-radsw { border-radius: 8px; background: #fff; box-shadow: 0 0 0 1.5px rgba(11, 12, 13, .38); }
+.ls-demo { position: absolute; left: 12px; top: 12px; height: 28px; display: flex; align-items: center; }
+.ls-d-btn { padding: 0 14px; height: 28px; background: #fff; color: #0B0C0D; border-radius: 999px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .22); font: 600 13px/28px Geist, system-ui, sans-serif; }
+.ls-d-field { width: 64px; height: 28px; padding: 0 10px; background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .12); color: rgba(11, 12, 13, .66); font: 400 13px/28px Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+.ls-d-tag { display: flex; align-items: center; gap: 6px; padding: 0 10px; height: 24px; border-radius: 999px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .12); color: #0B0C0D; font: 500 13px/24px Geist, system-ui, sans-serif; }
+.ls-d-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: rgba(11, 12, 13, .38); }
+.ls-d-sw { position: relative; width: 44px; height: 24px; background: #EEF1E8; border-radius: 999px; }
+.ls-d-sw::after { content: ''; position: absolute; right: 2px; top: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 2px 5px rgba(11, 12, 13, .2); }
+.ls-code { margin-top: 8px; height: 88px; padding: 8px 14px; background: #fff; color: #0B0C0D; border-radius: 12px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: pre; }
+.ls-code b { font-weight: 400; color: rgba(11, 12, 13, .5); }
+@media (prefers-reduced-motion: reduce) { .ls-tab { transition: none; } }
+</style>
+<style>
+  .lsw { display: grid; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="lsw">
+<!-- code -->
+<section class="ls" id="ls" aria-label="Strata view">
+  <p class="ls-k">Strata · Design system</p>
+  <div>
+    <div class="ls-track" id="ls-track">
+      <div class="ls-tabs" role="tablist" aria-label="View" id="ls-tabs">
+        <button type="button" role="tab" class="ls-tab is-sel" id="ls-t0" aria-controls="ls-p0" aria-selected="true" tabindex="0">Tokens</button>
+        <button type="button" role="tab" class="ls-tab" id="ls-t1" aria-controls="ls-p1" aria-selected="false" tabindex="-1">Components</button>
+        <button type="button" role="tab" class="ls-tab" id="ls-t2" aria-controls="ls-p2" aria-selected="false" tabindex="-1">Code</button>
+      </div>
+      <div class="ls-lens" id="ls-lens" aria-hidden="true">
+        <div class="ls-body">
+          <div class="ls-opt" id="ls-opt"><div class="ls-copy" id="ls-copy"><span>Tokens</span><span>Components</span><span>Code</span></div></div>
+          <i class="ls-lit"></i>
+        </div>
+      </div>
+    </div>
+    <div class="ls-panels" id="ls-panels">
+      <section class="ls-p" id="ls-p0" role="tabpanel" aria-labelledby="ls-t0">
+        <div class="ls-hd"><h3 class="ls-h">Tokens</h3><p class="ls-n"><i></i>24 tokens</p></div>
+        <div class="ls-g">
+          <div class="ls-c"><i class="ls-sw ls-inksw">Aa</i>Ink<span>#0B0C0D</span></div>
+          <div class="ls-c"><i class="ls-sw" style="background:#EEF1E8"></i>Sage<span>#EEF1E8</span></div>
+          <div class="ls-c"><i class="ls-sw ls-ringsw"></i>Ring<span>7% ink</span></div>
+          <div class="ls-c"><i class="ls-sw ls-radsw"></i>Radius<span>16 px</span></div>
+        </div>
+      </section>
+      <section class="ls-p" id="ls-p1" role="tabpanel" aria-labelledby="ls-t1" hidden>
+        <div class="ls-hd"><h3 class="ls-h">Components</h3><p class="ls-n"><i></i>12 components</p></div>
+        <div class="ls-g">
+          <div class="ls-c"><div class="ls-demo"><span class="ls-d-btn">Ship it</span></div>Button<span>3 states</span></div>
+          <div class="ls-c"><div class="ls-demo"><span class="ls-d-field">Search</span></div>Field<span>4 states</span></div>
+          <div class="ls-c"><div class="ls-demo"><span class="ls-d-tag">Live</span></div>Tag<span>2 states</span></div>
+          <div class="ls-c"><div class="ls-demo"><span class="ls-d-sw"></span></div>Switch<span>2 states</span></div>
+        </div>
+      </section>
+      <section class="ls-p" id="ls-p2" role="tabpanel" aria-labelledby="ls-t2" hidden>
+        <div class="ls-hd"><h3 class="ls-h">Code</h3><p class="ls-n"><i></i>tokens.css</p></div>
+        <div class="ls-code"><b>--ink:</b>    #0B0C0D;
+<b>--sage:</b>   #EEF1E8;
+<b>--ring:</b>   #0B0C0D12;
+<b>--radius:</b> 16px;</div>
+      </section>
+    </div>
+  </div>
+  <p class="sr-only" id="ls-msg" role="status" aria-live="polite"></p>
+</section>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="ls-refract" filterUnits="userSpaceOnUse" x="-20" y="-20" width="196" height="100" color-interpolation-filters="sRGB">
+    <feImage id="ls-map" x="0" y="0" width="156" height="60" preserveAspectRatio="none" result="map"/>
+    <feDisplacementMap in="SourceGraphic" in2="map" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Lens switch</span><span class="qm-sep">/</span><span>Click a view, drag the lens, or use the arrow keys</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Lens switch. One number, the lens's left edge x (track px), draws everything: draw(x, s) places the lens, offsets the magnified copy
+   against it and tints the labels by their distance to it. A tween (the move curve), a spring (after a drag) or the pointer sets x. */
+const LS = { PAD: 22, SEG: 140, LW: 156, ZOOM: 1.25, STRETCH: 0.14, V0: 800, SPRING: 14, LOOK: 0.14 };
+const lsLens = document.getElementById('ls-lens'), lsCopy = document.getElementById('ls-copy'), lsOpt = document.getElementById('ls-opt');
+const lsTabs = [...document.querySelectorAll('.ls-tab')], lsPanels = [...document.querySelectorAll('.ls-p')];
+const lsCopyEls = [...lsCopy.children], lsMsg = document.getElementById('ls-msg');
+const lsReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const lsMove = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);   // the move curve, close to cubic-bezier(.65, 0, .35, 1)
+const lsXOf = (i) => LS.PAD + LS.SEG * i + (LS.SEG - LS.LW) / 2;      // the lens's left edge when centred on segment i
+const lsMinX = lsXOf(0), lsMaxX = lsXOf(2);
+const lsClamp = (v, a, b) => Math.min(b, Math.max(a, v));
+let lsX = lsXOf(0), lsS = 1, lsV = 0, lsSel = 0, lsMode = 'idle', lsRaf = 0, lsLast = 0;
+let lsTween = null, lsSpring = null, lsDragX = lsX, lsTint = [], lsScale = '';
+const lsDisp = document.querySelector('#ls-refract feDisplacementMap');
+
+// the refraction map: neutral (0.5) inside, pushing the sampled point outward in the rim, so what meets an edge is drawn compressed
+function lsBuildMap() {
+  const w = LS.LW, h = 60, c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d'), img = g.createImageData(w, h);
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const u = (x + 0.5) / w * 2 - 1, v = (y + 0.5) / h * 2 - 1;
+    const dx = Math.sign(u) * 14 * ss(0.42, 1, Math.abs(u));
+    const dy = Math.sign(v) * 5 * ss(0.5, 1, Math.abs(v));
+    const i = (y * w + x) * 4;
+    img.data[i] = Math.round(127.5 + dx / 30 * 255); img.data[i + 1] = Math.round(127.5 + dy / 30 * 255); img.data[i + 2] = 128; img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  document.getElementById('ls-map').setAttribute('href', c.toDataURL('image/png'));
+  lsOpt.style.filter = 'url(#ls-refract)';
+}
+
+function lsDraw(x, s) {
+  const rest = s === 1;
+  const px = rest ? Math.round(x) : x;
+  lsLens.style.transform = `translate3d(${px.toFixed(2)}px, 0, 0)${rest ? '' : ` scaleX(${s.toFixed(4)})`}`;
+  // the copy is the same row at 1.25×: opposite the lens, so the label at the lens's centre sits at its centre
+  lsCopy.style.transform = `translate(${(LS.LW / 2 - LS.ZOOM * (px + LS.LW / 2)).toFixed(2)}px, -3px)`;
+  // the bend scales with speed: a resting lens is a clean magnifier, a moving one bends what crosses its rim
+  const k = Math.min(1, Math.abs(lsV) / 250), scale = (30 * k * k * (3 - 2 * k)).toFixed(1);
+  if (scale !== lsScale) { lsScale = scale; lsDisp.setAttribute('scale', scale); }
+  const cx = px + LS.LW / 2;
+  lsTabs.forEach((t, i) => {
+    const a = (0.66 + 0.34 * Math.max(0, 1 - Math.abs(LS.PAD + LS.SEG * (i + 0.5) - cx) / LS.SEG));
+    const q = Math.round(a * 100);
+    if (lsTint[i] !== q) { lsTint[i] = q; t.style.setProperty('--a', (q / 100).toFixed(2)); lsCopyEls[i].style.setProperty('--a', (q / 100).toFixed(2)); }
+  });
+}
+
+function lsTick(now) {
+  const dt = Math.min(48, Math.max(1, now - lsLast)); lsLast = now;
+  let nx = lsX;
+  if (lsMode === 'tween') {
+    const p = Math.min(1, (now - lsTween.t0) / lsTween.dur);
+    nx = lsTween.x0 + (lsTween.x1 - lsTween.x0) * lsMove(p);
+    if (p >= 1) lsMode = 'idle';
+  } else if (lsMode === 'spring') {
+    const t = (now - lsSpring.t0) / 1000, e = lsSpring.target + (lsSpring.A + lsSpring.B * t) * Math.exp(-LS.SPRING * t);
+    nx = e;
+    if (t > 1.2 || Math.abs(e - lsSpring.target) < 0.15) { nx = lsSpring.target; lsMode = 'idle'; }
+  } else if (lsMode === 'drag') nx = lsDragX;
+  // speed: the move divided by the frame, low-passed over 50 ms
+  const v = (nx - lsX) / dt * 1000;
+  lsV += (v - lsV) * (1 - Math.exp(-dt / 50));
+  lsX = nx;
+  // stretch follows speed and eases back: it can never pass 1 + STRETCH, and it settles to exactly 1
+  const st = 1 + LS.STRETCH * Math.min(1, Math.abs(lsV) / LS.V0);
+  lsS += (st - lsS) * (1 - Math.exp(-dt / 60));
+  if (lsMode === 'idle' && Math.abs(lsS - 1) < 0.0008 && Math.abs(lsV) < 4) { lsS = 1; lsV = 0; }
+  lsDraw(lsX, lsS);
+  if (lsMode !== 'idle' || lsS !== 1) lsRaf = requestAnimationFrame(lsTick); else lsRaf = 0;
+}
+function lsKick() { if (!lsRaf) { lsLast = performance.now(); lsRaf = requestAnimationFrame(lsTick); } }
+
+function lsTravel(i) {
+  const x1 = lsXOf(i);
+  if (lsReduced) { lsMode = 'idle'; lsX = x1; lsS = 1; lsV = 0; lsDraw(lsX, 1); return; }
+  lsTween = { x0: lsX, x1, t0: performance.now(), dur: 380 + 0.8 * Math.abs(x1 - lsX) };
+  lsMode = 'tween'; lsKick();
+}
+function lsSpringTo(i, v0) {
+  const target = lsXOf(i);
+  if (lsReduced) { lsMode = 'idle'; lsX = target; lsS = 1; lsDraw(lsX, 1); return; }
+  const A = lsX - target, w = LS.SPRING, lim = w * Math.abs(A);
+  let v = v0;
+  if (A > 0) v = Math.max(v, -lim); else if (A < 0) v = Math.min(v, lim); else v = 0;     // never start faster than reaching the target: it cannot cross it
+  lsSpring = { target, A, B: v + w * A, t0: performance.now() };
+  lsMode = 'spring'; lsKick();
+}
+
+/* the panel: the new view is wiped in over the old, the way the lens went; a second tap goes on top and the old one finishes underneath */
+let lsZ = 1;
+function lsShow(i, from) {
+  const nw = lsPanels[i];
+  lsPanels.forEach((p, k) => { if (k !== i) { p.inert = true; p.setAttribute('aria-hidden', 'true'); } });
+  nw.inert = false; nw.removeAttribute('aria-hidden');
+  if (lsReduced || !nw.animate || from === i) { lsPanels.forEach((p, k) => { p.hidden = k !== i; }); return; }
+  nw.hidden = false; nw.style.zIndex = String(++lsZ);
+  const fwd = i > from;
+  const a = nw.animate([{ clipPath: fwd ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 520, delay: 150, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'both' });
+  a.finished.then(() => {
+    a.cancel();
+    lsPanels.forEach((p, k) => { if (k !== i && Number(p.style.zIndex || 0) < Number(nw.style.zIndex)) p.hidden = true; });
+  }, () => {});
+}
+function lsSelect(i, focus) {
+  if (i === lsSel) { if (focus) lsTabs[i].focus({ preventScroll: true }); return; }
+  const from = lsSel; lsSel = i;
+  lsTabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === i)); t.tabIndex = k === i ? 0 : -1; t.classList.toggle('is-sel', k === i); });
+  lsShow(i, from);
+  lsMsg.textContent = lsTabs[i].textContent;
+  if (focus) lsTabs[i].focus({ preventScroll: true });
+}
+lsTabs.forEach((t, i) => t.addEventListener('click', () => { if (i === lsSel) return; lsSelect(i); lsTravel(i); }));
+document.getElementById('ls-tabs').addEventListener('keydown', (e) => {
+  const k = e.key, n = lsTabs.length;
+  const to = k === 'ArrowRight' ? (lsSel + 1) % n : k === 'ArrowLeft' ? (lsSel + n - 1) % n : k === 'Home' ? 0 : k === 'End' ? n - 1 : -1;
+  if (to < 0) return;
+  e.preventDefault(); lsSelect(to, true); lsTravel(to);
+});
+
+/* drag: one drag, whoever holds it, a pointer or the ghost. cx is client x, t is ms. */
+let lsDrag = null;
+function lsDragStart(cx, t) {
+  lsDrag = { cx0: cx, x0: lsX, s: [[t, cx]] };
+  lsDragX = lsX; lsMode = 'drag'; lsLens.classList.add('is-drag'); lsKick();
+}
+function lsDragMove(cx, t) {
+  if (!lsDrag) return;
+  lsDrag.s.push([t, cx]);
+  while (lsDrag.s.length > 2 && t - lsDrag.s[0][0] > 100) lsDrag.s.shift();
+  lsDragX = lsClamp(lsDrag.x0 + (cx - lsDrag.cx0), lsMinX, lsMaxX);
+}
+function lsDragEnd(t) {
+  if (!lsDrag) return;
+  const a = lsDrag.s[0], b = lsDrag.s[lsDrag.s.length - 1];
+  const v = b[0] - a[0] > 8 && t - b[0] < 80 ? (b[1] - a[1]) / (b[0] - a[0]) * 1000 : 0;
+  lsDrag = null; lsLens.classList.remove('is-drag');
+  const cx = lsX + LS.LW / 2 + v * LS.LOOK;
+  let best = 0;
+  for (let i = 1; i < 3; i++) if (Math.abs(LS.PAD + LS.SEG * (i + 0.5) - cx) < Math.abs(LS.PAD + LS.SEG * (best + 0.5) - cx)) best = i;
+  lsSelect(best); lsSpringTo(best, v);
+}
+let lsPtr = null;
+lsLens.addEventListener('pointerdown', (e) => {
+  if (e.button > 0 || lsPtr) return;
+  lsPtr = { id: e.pointerId, cx: e.clientX, moved: false };
+  addEventListener('pointermove', lsPMove); addEventListener('pointerup', lsPEnd); addEventListener('pointercancel', lsPEnd);
+});
+function lsPMove(e) {
+  if (!lsPtr || e.pointerId !== lsPtr.id) return;
+  if (!lsPtr.moved) {
+    if (Math.abs(e.clientX - lsPtr.cx) < 3) return;
+    lsPtr.moved = true;
+    try { lsLens.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    lsDragStart(lsPtr.cx, e.timeStamp);
+  }
+  lsDragMove(e.clientX, e.timeStamp);
+}
+function lsPEnd(e) {
+  if (!lsPtr || e.pointerId !== lsPtr.id) return;
+  const p = lsPtr; lsPtr = null;
+  removeEventListener('pointermove', lsPMove); removeEventListener('pointerup', lsPEnd); removeEventListener('pointercancel', lsPEnd);
+  if (p.moved) lsDragEnd(e.timeStamp);
+}
+
+lsBuildMap();
+lsDraw(lsX, 1);
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function tap(my, el, hold = 240) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.55, 720))) throw 0;
+    if (my !== epoch) throw 0;
+    el.classList.add('is-hot');
+    await gap(my, 190);
+    el.classList.add('is-press');
+    await gap(my, 110);
+    el.classList.remove('is-press', 'is-hot');
+    el.click();
+    await gap(my, hold);
+  }
+  // the ghost takes the lens and carries it to segment i over ms (the move curve), then lets go
+  async function carry(my, i, ms) {
+    const r = lsLens.getBoundingClientRect(), y = r.top + r.height / 2;
+    let x = r.left + r.width / 2;
+    if (!(await QM.ghostTo(x, y, 700))) throw 0;
+    await gap(my, 160);
+    const x0 = x, dx = (lsXOf(i) - lsX) * (r.width / lsLens.offsetWidth), mv = QM.bezier(0.65, 0, 0.35, 1);
+    lsDragStart(x0, performance.now());
+    await new Promise((res) => {
+      const t0 = performance.now();
+      const f = (now) => {
+        if (my !== epoch) { lsDrag = null; lsLens.classList.remove('is-drag'); return res(); }
+        const p = Math.min(1, (now - t0) / ms);
+        x = x0 + dx * mv(p); QM.ghostAt(x, y); lsDragMove(x, now);
+        if (p < 1) requestAnimationFrame(f); else res();
+      };
+      requestAnimationFrame(f);
+    });
+    if (my !== epoch) throw 0;
+    lsDragEnd(performance.now() + 200);          // released at rest: it only settles
+  }
+  function rest(i) {
+    lsDrag = null; lsLens.classList.remove('is-drag'); lsMode = 'idle';
+    lsSelect(i); lsPanels.forEach((p, k) => { p.hidden = k !== i; p.style.zIndex = ''; p.getAnimations().forEach((a) => a.cancel()); });
+    lsPanels.forEach((p, k) => { p.inert = k !== i; if (k !== i) p.setAttribute('aria-hidden', 'true'); else p.removeAttribute('aria-hidden'); });
+    lsX = lsXOf(i); lsS = 1; lsV = 0; lsDraw(lsX, 1);
+    if (document.activeElement && document.getElementById('ls').contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 1300);
+        await tap(my, lsTabs[1], 1500);                  // Components
+        await tap(my, lsTabs[2], 1700);                  // Code
+        await carry(my, 0, 760);                         // the lens back to Tokens, two segments
+        await gap(my, 600);
+        await QM.ghostTo(innerWidth * 0.82, innerHeight * 0.88, 600);
+        await gap(my, 1500);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  let usedKeys = false;   // focus only holds the ghost back when the keyboard put it there
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      if (e.type) usedKeys = false;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => {
+        const ui = document.getElementById('ls');
+        if (!ui.matches(':hover') && !(usedKeys && ui.contains(document.activeElement)) && !lsDrag) { rest(0); script(); } else { touch({}); }
+      }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => { touch({}); usedKeys = true; });
+  }
+  if (reduced) rest(1);
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(reduced ? 1 : 0); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

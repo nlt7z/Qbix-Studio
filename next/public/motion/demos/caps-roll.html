@@ -49,7 +49,7 @@
 
 /* how far along: a bar per state, filling as each is reached */
 .ch-caps-bar { display: flex; gap: 4px; order: -1; }
-.ch-caps-bar i { position: relative; flex: 1; height: 2px; background: color-mix(in srgb, var(--fg, #0B0C0D) 16%, transparent); }
+.ch-caps-bar i { position: relative; flex: 1; height: 2px; background: var(--sunk, #E3E8DA); }
 .ch-caps-bar i::after {
   content: ''; position: absolute; inset: 0;
   background: var(--fg, #0B0C0D);
@@ -88,14 +88,18 @@
   /* a phone-width column on the stage: the scene's placeholder, then its caption */
   .pc { --w: clamp(280px, min(88vw, 74vh), 420px); width: var(--w); padding: 0 16px; display: flex; flex-direction: column; }
   .ph { height: calc((var(--w) - 32px) * 0.84); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; }
-  .ph-tile { position: relative; display: flex; align-items: flex-end; padding: 12px; background: var(--surface); color: var(--fg3); overflow: hidden; }
-  .ph-tile b { position: relative; z-index: 1; font-weight: 500; font-size: 12px; letter-spacing: 0; font-family: var(--font-sans); transition: color 420ms var(--ease-out-expo); }
-  .ph-tile::before { content: ''; position: absolute; inset: 0; background: var(--fg); clip-path: inset(0 100% 0 0); transition: clip-path 420ms var(--ease-out-expo); }
-  .ph-tile.is-on::before { clip-path: inset(0 0 0 0); }
-  .ph-tile.is-on b { color: var(--ground); }
-  .ph-tile i { position: absolute; right: 12px; top: 12px; z-index: 1; font-size: 12px; font-family: var(--font-mono); letter-spacing: 0; color: inherit; }
+  /* the scene's stand-in: four product tiles, one lit at a time. The lit state is a second layer (ink, white type, a lime point) uncovered by a clip,
+     so the type changes colour exactly where the ink arrives and the tile is never half one thing. */
+  .ph-tile { position: relative; background: var(--surface); color: var(--fg2); overflow: hidden; }
+  .ph-tile .lay { position: absolute; inset: 0; padding: 12px; display: flex; align-items: flex-end; }
+  .ph-tile .lay b { font-weight: 500; font-size: 13px; line-height: 1.2; letter-spacing: -0.006em; font-family: var(--font-sans); }
+  .ph-tile .lay i { position: absolute; right: 12px; top: 12px; font-size: 12px; line-height: 16px; font-family: var(--font-mono); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+  .ph-tile .lay svg { position: absolute; left: 50%; top: 42%; width: 48px; height: 48px; margin: -24px 0 0 -24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: miter; stroke-linecap: square; }
+  .ph-tile .ink { background: var(--fg); color: var(--ground); clip-path: inset(0 100% 0 0); transition: clip-path 260ms var(--ease-in); }
+  .ph-tile .ink::after { content: ''; position: absolute; left: 12px; top: 12px; width: 8px; height: 8px; background: var(--signal); }
+  .ph-tile.is-on .ink { clip-path: inset(0 0 0 0); transition: clip-path 420ms var(--ease-out-expo); }
+  @media (prefers-reduced-motion: reduce) { .ph-tile .ink, .ph-tile.is-on .ink { transition: none; } }
   .pc .kicker { margin: 0 0 12px; }
-  @media (prefers-reduced-motion: reduce) { .ph-tile::before, .ph-tile b { transition: none; } }
 </style>
 </head>
 <body>
@@ -103,10 +107,10 @@
   <div class="pc" id="pc">
     <p class="kicker">Qbix Labs</p>
     <div class="ph" id="ph" aria-hidden="true">
-      <span class="ph-tile"><i>01</i><b>Strata</b></span>
-      <span class="ph-tile"><i>02</i><b>AI Bidding</b></span>
-      <span class="ph-tile"><i>03</i><b>TTS Editor</b></span>
-      <span class="ph-tile"><i>04</i><b>Interview Assistant</b></span>
+      <span class="ph-tile"><span class="lay"><i>01</i><svg viewBox="0 0 48 48"><path d="M5 18 24 8l19 10-19 10zM5 26l19 10 19-10M5 33l19 10 19-10"/></svg><b>Strata</b></span></span>
+      <span class="ph-tile"><span class="lay"><i>02</i><svg viewBox="0 0 48 48"><path d="M13 20a11 11 0 1 0 22 0 11 11 0 1 0-22 0M24 31v13M16 44h16"/></svg><b>AI Bidding</b></span></span>
+      <span class="ph-tile"><span class="lay"><i>03</i><svg viewBox="0 0 48 48"><path d="M8 20v8M14 14v20M20 8v32M26 16v16M32 12v24M38 20v8"/></svg><b>TTS Editor</b></span></span>
+      <span class="ph-tile"><span class="lay"><i>04</i><svg viewBox="0 0 48 48"><path d="M6 8h26v17H18l-8 7v-7H6zM26 30h16v10h-4v6l-6-6H26z"/></svg><b>Interview Assistant</b></span></span>
     </div>
 <!-- code -->
 <div class="ch-caps ch-caps--sub" aria-hidden="true">
@@ -151,6 +155,7 @@ function setCaption(caps, step) {
 <script>
   const caps = document.querySelector('.ch-caps');
   const tiles = Array.from(document.querySelectorAll('.ph-tile'));
+  tiles.forEach((t) => { const c = t.firstElementChild.cloneNode(true); c.classList.add('ink'); t.appendChild(c); });   // the lit layer is a copy of the resting one
   const n = tiles.length;
   let step = -1, lit = -2;
   // the driver's state: round(shown) − 1, so a state is shown from half way into its move

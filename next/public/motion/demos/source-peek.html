@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Source peek · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "source-peek", "title": "Source peek", "group": "studio", "added": "2026-11-17", "cat": "agent", "order": 10,
+  "kind": "loop", "tone": "paper", "shot": 4600,
+  "line": "underline 220 ms · card travels 420 ms ease-move · contents swap under a clip",
+  "summary": "A Qbix agent answer about Kova's onboarding, three short sentences with a small numbered marker after each. Hovering or focusing a marker draws a soft underline under its sentence, left to right, and raises one source card above the sentence: the site, the interview or survey, and one quoted line. Moving to the next marker does not close and reopen anything. The same card travels to it on the move curve, its contents swap under a short vertical clip, and the underline moves to the next sentence. Leaving takes the card down 4 px and uncovers it away.",
+  "spec": [
+    ["Underline", "1 px ink at 55%, drawn left to right under the sentence, 220 ms expo out; it retracts in 150 ms ease-in; the other sentences dim to 56% while one is active"],
+    ["Card in", "uncovered from its bottom edge up under a clip, rising 4 px, 360 ms expo out; the caret points at the marker"],
+    ["Card out", "down 4 px and uncovered away from the top, 220 ms ease-in, about 0.6× of the way in"],
+    ["Travel", "marker to marker the card moves on 420 ms ease-move, the caret slides inside it; the old source leaves up 6 px under a closing clip (150 ms), the new one comes up from below 80 ms behind (360 ms expo out)"],
+    ["Marker", "16 px circle, Geist Mono 11 px, a soft ring; the active one fills lime, the only lime point"],
+    ["Loop", "a ghost visits 1, 3 and 2 in turn; a real pointer or key takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-17"],
+  "where": "An answer from the Qbix agent in a Kova research thread, where every claim has to be one hover away from the interview or survey it came from.",
+  "rules": [
+    "One card for all sources: it travels between markers, it is never closed and opened again, so the eye follows one object.",
+    "The sentence is the thing being checked, so the underline and the dimming say which words the card is about; nothing is filled in ink.",
+    "Nothing fades and nothing bounces: the card is uncovered under a clip, moves on the move curve, and leaves quicker than it came.",
+    "Markers are real buttons: hover or keyboard focus opens, a click or Enter pins the card, Escape or a click outside closes it. A polite live region reads the source out.",
+    "A card that is still leaving comes straight back when a marker is hovered again; hovering out and in again never flickers.",
+    "Under reduced motion the card rests open on source 1 and every change is instant."
+  ],
+  "tags": ["agent", "citation", "source", "popover", "tooltip", "answer", "Kova", "research"]
+}
+</script>
+<style data-code>
+/* Source peek. Ink #0B0C0D on white surfaces with a soft ring; one lime point (the active marker). Easings: expo out (.16,1,.3,1), move (.65,0,.35,1), in (.5,0,.75,0). */
+.sp { position: relative; width: 480px; padding: 24px; background: #fff; color: #0B0C0D; border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 15px/24px Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+:where(.sp button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.sp-hd { margin: 0 0 12px; font: 300 22px/26px Outfit, Geist, sans-serif; letter-spacing: -.035em; text-wrap: balance; }
+.sp-p { margin: 0; text-wrap: auto; }
+
+/* a sentence: its underline is a background drawn left to right */
+.sp-s { padding-bottom: 2px; background: linear-gradient(rgba(11, 12, 13, .55), rgba(11, 12, 13, .55)) no-repeat 0 100% / 0 1px;
+  transition: background-size 150ms cubic-bezier(.5, 0, .75, 0), color 220ms cubic-bezier(.4, 0, .2, 1); }
+.sp-s.on { background-size: 100% 1px; transition: background-size 220ms cubic-bezier(.16, 1, .3, 1), color 220ms cubic-bezier(.4, 0, .2, 1); }
+.sp.has-on .sp-s:not(.on) { color: rgba(11, 12, 13, .56); }
+.sp-nb { white-space: nowrap; }
+
+/* the marker: a small numbered circle that stays out of the line box */
+.sp-m { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin: -6px 0 -6px 3px; vertical-align: 4px;
+  border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .2);
+  font: 500 11px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; color: #0B0C0D; font-variant-numeric: tabular-nums;
+  transition: background 220ms cubic-bezier(.4, 0, .2, 1), box-shadow 220ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.sp-m:hover, .sp-m[aria-expanded="true"] { background: #B8FF00; box-shadow: 0 0 0 1px #0B0C0D; transition-duration: 160ms; }
+.sp-m:active { transform: translateY(1px); }
+.sp-m:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 2px; }
+
+/* the one card: it travels (pos), it is uncovered (card), its contents are layers */
+.sp-pos { position: absolute; left: 0; top: 0; width: 300px; height: 96px; z-index: 5; pointer-events: none;
+  transition: transform 420ms cubic-bezier(.65, 0, .35, 1); }
+.sp-pos.snap { transition: none; }
+.sp-card { position: absolute; inset: 0; background: #fff; border-radius: 14px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .22);
+  clip-path: inset(calc(100% + 40px) -40px -40px -40px); transform: translateY(4px);
+  transition: clip-path 220ms cubic-bezier(.5, 0, .75, 0), transform 220ms cubic-bezier(.5, 0, .75, 0); }
+.sp-pos[data-s="on"] .sp-card { clip-path: inset(-40px); transform: none;
+  transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1), transform 360ms cubic-bezier(.16, 1, .3, 1); }
+.sp-caret { position: absolute; left: 0; bottom: -5px; width: 10px; height: 10px; background: #fff; border-radius: 0 0 2px 0;
+  box-shadow: 1px 1px 0 0 rgba(11, 12, 13, .07); transition: transform 420ms cubic-bezier(.65, 0, .35, 1); }
+.sp-pos.snap .sp-caret { transition: none; }
+
+/* layers: below (not yet shown) / in / above (left). In: uncovered from the bottom edge, 80 ms behind the travel. Above: up 6 px under a closing clip. */
+.sp-l { position: absolute; inset: 0; padding: 14px 16px; overflow: hidden; border-radius: 14px; visibility: hidden; clip-path: inset(100% 0 0 0); transform: translateY(6px);
+  transition: clip-path 360ms cubic-bezier(.16, 1, .3, 1) 80ms, transform 360ms cubic-bezier(.16, 1, .3, 1) 80ms; }
+.sp-l[data-p="in"] { visibility: visible; clip-path: inset(0); transform: none; }
+.sp-l[data-p="above"] { clip-path: inset(0 0 100% 0); transform: translateY(-6px);
+  transition: clip-path 150ms cubic-bezier(.5, 0, .75, 0), transform 150ms cubic-bezier(.5, 0, .75, 0), visibility 0s 150ms; }
+.sp-l.snap { transition: none !important; }
+.sp-src { display: flex; align-items: center; gap: 8px; height: 20px; font-size: 13px; line-height: 20px; font-weight: 500; letter-spacing: -.006em; white-space: nowrap; }
+.sp-src span { color: rgba(11, 12, 13, .66); }
+.sp-fav { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07);
+  font: 500 11px/1 Geist, system-ui, sans-serif; letter-spacing: 0; font-style: normal; }
+.sp-q { margin: 6px 0 0; font-size: 13px; line-height: 20px; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); text-wrap: pretty; }
+
+.sp.still *, .sp.still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .sp *, .sp *::before { transition: none !important; } }
+</style>
+<style>
+  .spw { display: grid; gap: 14px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="spw">
+    <p class="kicker">Qbix agent · Kova</p>
+<!-- code -->
+<div class="sp" id="sp">
+  <h3 class="sp-hd">Where Kova's onboarding loses people</h3>
+  <p class="sp-p">
+    <span class="sp-s">Most people stop at the bank-link <span class="sp-nb">step.<button type="button" class="sp-m" aria-label="Source 1" aria-expanded="false">1</button></span></span>
+    <span class="sp-s">They say they want to look around before connecting an <span class="sp-nb">account.<button type="button" class="sp-m" aria-label="Source 2" aria-expanded="false">2</button></span></span>
+    <span class="sp-s">Teams that moved linking to day two kept 18% more new <span class="sp-nb">users.<button type="button" class="sp-m" aria-label="Source 3" aria-expanded="false">3</button></span></span>
+  </p>
+
+  <div class="sp-pos" id="sp-pos" data-s="off" aria-hidden="true">
+    <div class="sp-card">
+      <div class="sp-l" data-p="below"><div class="sp-src"><i class="sp-fav">k</i><b>kova.app/research</b><span>· Interview 4</span></div>
+        <p class="sp-q">“I closed it at the bank screen. I just wanted to see the app first.”</p></div>
+      <div class="sp-l" data-p="below"><div class="sp-src"><i class="sp-fav">k</i><b>kova.app/research</b><span>· Survey 2</span></div>
+        <p class="sp-q">“61% of 212 people would rather look around before linking a bank.”</p></div>
+      <div class="sp-l" data-p="below"><div class="sp-src"><i class="sp-fav">k</i><b>kova.app/research</b><span>· Test B</span></div>
+        <p class="sp-q">“Linking on day two kept 18% more new users after a week.”</p></div>
+      <i class="sp-caret"></i>
+    </div>
+  </div>
+  <p class="sr-only" id="sp-live" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Hover or Tab to a marker · click pins the card · Esc closes it</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Source peek. One card, three sources: show(i) raises it over marker i or, if it is already up, travels it there and swaps the layers. */
+const sp = document.getElementById('sp'), spPos = document.getElementById('sp-pos'), spLive = document.getElementById('sp-live');
+const spM = [...sp.querySelectorAll('.sp-m')], spS = [...sp.querySelectorAll('.sp-s')], spL = [...sp.querySelectorAll('.sp-l')];
+const spCaret = spPos.querySelector('.sp-caret');
+const spSay = ['Source 1: kova.app/research, Interview 4. “I closed it at the bank screen. I just wanted to see the app first.”',
+  'Source 2: kova.app/research, Survey 2. “61% of 212 people would rather look around before linking a bank.”',
+  'Source 3: kova.app/research, Test B. “Linking on day two kept 18% more new users after a week.”'];
+let spCur = 0, spShown = false, spBy = '', spPinned = false, spGone = -1e9, spHideT = 0;
+const spClamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+function spSnap(el, fn) { el.classList.add('snap'); fn(); el.getBoundingClientRect(); el.classList.remove('snap'); }
+function spPlace(i) {                               // the card sits 8 px above the first line of the sentence, its caret near the marker but over that line
+  const m = spM[i].getBoundingClientRect(), b = sp.getBoundingClientRect(), r = spS[i].getClientRects()[0];
+  const mx = m.left + m.width / 2 - b.left, top = r.top - b.top;
+  const cx = spClamp(mx, r.left - b.left + 12, r.right - b.left - 12);
+  const x = spClamp(Math.round(cx - 150), 0, 180), y = Math.round(top - 96 - 8);
+  spPos.style.transform = `translate(${x}px, ${y}px)`;
+  spCaret.style.transform = `translateX(${spClamp(Math.round(cx - x), 22, 278) - 5}px) rotate(45deg)`;
+}
+function spShow(i, who) {
+  clearTimeout(spHideT);
+  const now = performance.now(), fresh = !spShown && now - spGone > 320;
+  if (fresh) {                                      // came to rest long ago: appear on the marker, no travel
+    spL.forEach((l) => spSnap(l, () => { l.dataset.p = 'below'; }));
+    spL[i].dataset.p = 'in';
+    spSnap(spPos, () => { spPlace(i); spCaret.getBoundingClientRect(); });
+    spCur = i;
+  } else if (spCur !== i) {                         // travel, and swap the contents under a clip
+    const prev = spL[spCur], next = spL[i];
+    if (next.dataset.p === 'above' && now - (next._left || 0) > 240) spSnap(next, () => { next.dataset.p = 'below'; });
+    next.dataset.p = 'in'; prev.dataset.p = 'above'; prev._left = now;
+    spPlace(i); spCur = i;
+  }
+  spShown = true; spBy = who; spPinned = who === 'pin';
+  spPos.dataset.s = 'on';
+  spS.forEach((s, k) => s.classList.toggle('on', k === i));
+  sp.classList.add('has-on');
+  spM.forEach((m, k) => m.setAttribute('aria-expanded', String(k === i)));
+  spLive.textContent = spSay[i];
+}
+function spHide() {
+  clearTimeout(spHideT);
+  if (!spShown) return;
+  spShown = false; spGone = performance.now(); spBy = ''; spPinned = false;
+  spPos.dataset.s = 'off';
+  spS.forEach((s) => s.classList.remove('on'));
+  sp.classList.remove('has-on');
+  spM.forEach((m) => m.setAttribute('aria-expanded', 'false'));
+  spLive.textContent = '';
+}
+const spLater = (ms, ok) => { clearTimeout(spHideT); spHideT = setTimeout(() => { if (ok()) spHide(); }, ms); };
+
+spM.forEach((m, i) => {
+  m.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'touch') spShow(i, 'hover'); });
+  m.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch') spLater(110, () => spBy === 'hover' && !spPinned); });
+  m.addEventListener('focus', () => { if (m.matches(':focus-visible')) spShow(i, 'focus'); });
+  m.addEventListener('blur', () => spLater(70, () => spBy !== 'hover' && spBy !== 'ghost'));
+  m.addEventListener('click', () => { if (spPinned && spShown && spCur === i) spHide(); else spShow(i, 'pin'); });
+});
+sp.addEventListener('keydown', (e) => { if (e.key === 'Escape' && spShown) { e.stopPropagation(); spHide(); } });
+document.addEventListener('pointerdown', (e) => { if (spShown && !e.target.closest('.sp-m')) spHide(); });
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  let epoch = 0, resumeT = 0;
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function visit(my, i, hold) {
+    const r = spM[i].getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.55, r.top + r.height * 0.6, 760))) throw 0;
+    if (my !== epoch) throw 0;
+    spShow(i, 'ghost');
+    await gap(my, hold);
+  }
+  function rest() {                                   // the card on source 1 in the reduced-motion still
+    sp.classList.add('still');
+    spHide(); spGone = -1e9;
+    if (reduced) spShow(0, 'rest');
+    sp.getBoundingClientRect(); sp.classList.remove('still');
+    if (document.activeElement && sp.contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 900);
+        for (const i of QM.tile ? [1, 0, 2] : [0, 2, 1]) await visit(my, i, 2000);   // the tile starts on 2, so its still shows the card mid-paragraph
+        await QM.ghostTo(innerWidth * 0.82, innerHeight * 0.88, 640);
+        if (my !== epoch) throw 0;
+        spHide();
+        await gap(my, 1300);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); if (spBy === 'ghost') spHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!sp.matches(':hover')) { spHide(); if (document.activeElement && sp.contains(document.activeElement)) document.activeElement.blur(); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(); if (!reduced) script(); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (reduced) rest(); else script(); }, 300));
+})();
+</script>
+</body>
+</html>

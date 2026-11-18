@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detent sheet · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "detent-sheet", "title": "Detent sheet", "group": "studio", "added": "2026-11-16", "cat": "cards", "order": 40,
+  "kind": "loop", "tone": "paper", "shot": 6200,
+  "line": "3 detents · release projects v × 0.2 s · critically damped, ω 13, no overshoot",
+  "summary": "A phone showing Willow Counseling's site with a booking sheet at the bottom. At the peek only Book a session and the next opening show; dragged to the medium detent it uncovers three times; at full it adds the week and the Book button. Release projects the pointer's velocity 0.2 s ahead and snaps to the nearest detent on a critically damped spring, so a flick travels further than a slow pull and nothing ever overshoots. The page behind recedes under a white veil as the sheet rises and steps back to 0.96 at full.",
+  "spec": [
+    ["Detents", "peek 90 px, medium 218 px, full 336 px of a 400 px screen; the sheet is one 336 px layer moved by translateY, so its content is uncovered, never faded"],
+    ["Release", "target = nearest detent to height + velocity × 0.2 s; velocity from the last 100 ms of the drag"],
+    ["Spring", "critically damped, ω = 13 rad/s, x(t) = target + (A + B·t)·e^(−ωt); the start velocity toward the target is capped at ω·distance, so the curve never crosses the target"],
+    ["Page", "veil opacity .62 × progress from peek to full; page scale 1 → 0.96 from medium to full, origin top centre"],
+    ["Past the ends", "a drag beyond peek or full follows a rubber band that tops out at 24 px, then returns on the same spring"],
+    ["Grabber", "role slider, 0 to 2, arrows step a detent, Home is peek, End is full; a tap on the grabber or header steps up and wraps"],
+    ["Loop", "the ghost pulls slowly to medium, picks a time, flicks to full, picks a day, books, flicks down; a real drag takes over, it resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-16"],
+  "where": "The mobile booking page Qbix builds for a practice like Willow Counseling: the sheet that holds the next openings, the week and the Book button without leaving the page.",
+  "rules": [
+    "Height is one number; the sheet, veil and page scale are all drawn from it, so a drag, a key and the spring cannot disagree.",
+    "The spring is critically damped and its start velocity is capped: the sheet arrives, it never bounces past.",
+    "Pointer capture starts after 4 px of travel, so taps on times and days still click; a drag never fires one.",
+    "Groups hidden below a detent are inert, so Tab only reaches what is on screen.",
+    "Text that changes rolls inside a clip (old up, new from below); nothing fades.",
+    "Under reduced motion the sheet follows the pointer and snaps on release, and rests at the medium detent."
+  ],
+  "tags": ["sheet", "bottom sheet", "detents", "drag", "velocity", "spring", "phone", "booking", "Willow"]
+}
+</script>
+<style data-code>
+/* Detent sheet. White surfaces with soft rings; the selected time is the one ink element, one lime point, sage #EEF1E8 only as a hover wash. Easings: expo out (.16,1,.3,1). The sheet's height is set from script (render(h)). */
+.ds-phone { position: relative; width: 240px; height: 412px; padding: 6px; background: #fff; border-radius: 36px; color: #0B0C0D; box-shadow: 0 0 0 1px rgba(11, 12, 13, .1), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 13px/18px Geist, system-ui, sans-serif; letter-spacing: -.006em; user-select: none; -webkit-user-select: none; }
+:where(.ds-phone button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.ds-phone p, .ds-phone h3 { margin: 0; }
+.ds-screen { position: relative; width: 228px; height: 400px; overflow: hidden; border-radius: 30px; background: #fff; isolation: isolate; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); }
+.ds-screen > * { position: absolute; }
+
+/* the page behind: Willow Counseling */
+.ds-page { inset: 0; transform-origin: 50% 0; }
+.ds-page > * { position: absolute; }
+.ds-nav { left: 18px; right: 18px; top: 36px; display: flex; align-items: center; justify-content: space-between; font: 300 20px/24px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.ds-nav svg { width: 18px; height: 12px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; }
+.ds-h { left: 18px; top: 80px; width: 192px; font: 300 28px/28px Outfit, Geist, sans-serif; letter-spacing: -.035em; text-wrap: balance; }
+.ds-p { left: 18px; top: 146px; width: 192px; color: rgba(11, 12, 13, .66); }
+.ds-pic { left: 18px; top: 196px; width: 192px; height: 140px; border-radius: 16px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); display: grid; place-items: center; }
+.ds-pic svg { display: block; width: 96px; height: 72px; fill: none; stroke: rgba(11, 12, 13, .28); stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.ds-veil { inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+
+/* phone chrome */
+.ds-status { left: 0; right: 0; top: 0; height: 32px; pointer-events: none; z-index: 3; }
+.ds-status span { position: absolute; left: 26px; top: 9px; font: 600 11px/14px Geist, system-ui, sans-serif; letter-spacing: 0; color: #0B0C0D; transition: color 120ms cubic-bezier(.4, 0, .2, 1); }
+.ds-status svg { position: absolute; right: 22px; top: 11px; width: 28px; height: 10px; fill: #0B0C0D; }
+.ds-island { left: 50%; top: 8px; width: 54px; height: 16px; margin-left: -27px; background: #fff; box-shadow: inset 0 0 0 1.5px #0B0C0D; border-radius: 8px; z-index: 3; }
+.ds-home { left: 50%; bottom: 6px; width: 72px; height: 4px; margin-left: -36px; background: rgba(11, 12, 13, .22); border-radius: 2px; z-index: 4; pointer-events: none; }
+
+/* the sheet: one full-height layer, moved by translateY; what is below the screen's edge is simply not uncovered yet */
+.ds-sheet { left: 0; right: 0; bottom: 0; height: 336px; background: #fff; z-index: 2; touch-action: none; will-change: transform;
+  transform: translate3d(0, 246px, 0);
+  border-radius: 20px 20px 0 0; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 -8px 28px -10px rgba(11, 12, 13, .22); }
+.ds-sheet.is-drag, .ds-sheet.is-drag * { cursor: grabbing !important; }
+.ds-grab { position: absolute; left: 50%; top: 0; width: 72px; height: 24px; margin-left: -36px; cursor: grab; }
+.ds-grab::before { content: ''; position: absolute; left: 20px; top: 8px; width: 32px; height: 4px; border-radius: 2px; background: rgba(11, 12, 13, .38); transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.ds-grab:hover::before, .ds-sheet.is-drag .ds-grab::before { background: rgba(11, 12, 13, .66); }
+.ds-grab:focus-visible { outline: 2px solid #0B0C0D; outline-offset: -2px; }
+.ds-hd { position: absolute; left: 18px; right: 18px; top: 18px; display: flex; align-items: baseline; justify-content: space-between; cursor: grab; }
+.ds-t { font: 300 20px/24px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.ds-mono { font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ds-hd .ds-mono { color: rgba(11, 12, 13, .66); }
+.ds-sub { position: absolute; left: 18px; right: 18px; top: 42px; height: 20px; display: flex; align-items: center; gap: 8px; color: rgba(11, 12, 13, .66); font-weight: 500; cursor: grab; }
+.ds-pt { flex: none; width: 8px; height: 8px; background: #B8FF00; border-radius: 50%; }
+
+/* rolling text: a clip, the old line leaves up, the new one arrives from below (script: roll()) */
+.ds-roll { display: grid; overflow: hidden; }
+.ds-roll > b { grid-area: 1 / 1; font-weight: inherit; white-space: nowrap; }
+
+/* three times */
+.ds-list { position: absolute; left: 18px; right: 18px; top: 72px; display: grid; gap: 8px; }
+.ds-row { height: 38px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: #fff; border-radius: 12px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); text-align: left;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1); }
+.ds-row > span:last-child { color: rgba(11, 12, 13, .66); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.ds-row:hover, .ds-row.is-hot { background: #EEF1E8; }
+.ds-row[aria-pressed="true"] { background: #0B0C0D; color: #fff; box-shadow: none; }
+.ds-row[aria-pressed="true"] > span:last-child { color: rgba(255, 255, 255, .66); }
+.ds-row:active, .ds-row.is-press { translate: 0 1px; }
+
+/* the week and the button */
+.ds-week { position: absolute; left: 18px; right: 18px; top: 218px; height: 48px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.ds-day { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; border-radius: 10px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1), background 160ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1); }
+.ds-day > span:first-child { font-weight: 500; color: rgba(11, 12, 13, .66); transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.ds-day:hover, .ds-day.is-hot { background: #EEF1E8; }
+.ds-day[aria-pressed="true"] { box-shadow: 0 0 0 1.5px #0B0C0D; font-weight: 600; }
+.ds-day[aria-pressed="true"] > span:first-child { color: #0B0C0D; }
+.ds-day:active, .ds-day.is-press { translate: 0 1px; }
+.ds-book { position: absolute; left: 18px; right: 18px; top: 278px; height: 42px; display: flex; align-items: center; justify-content: center; background: #fff; color: #0B0C0D; border-radius: 999px; box-shadow: 0 0 0 1px #0B0C0D; font-size: 14px; font-weight: 600; letter-spacing: -.011em;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.ds-book:hover, .ds-book.is-hot { background: #EEF1E8; }
+.ds-book:active > *, .ds-book.is-press > * { translate: 0 1px; }
+.ds-tick { position: absolute; left: 16px; top: 14px; width: 14px; height: 14px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; clip-path: inset(0 100% 0 0); transition: clip-path 120ms cubic-bezier(.5, 0, .75, 0); }
+.ds-book.is-booked .ds-tick { clip-path: inset(0); transition: clip-path 420ms cubic-bezier(.16, 1, .3, 1) 160ms; }
+
+.ds-phone :is(button:focus-visible) { outline: 2px solid #0B0C0D; outline-offset: -2px; }
+.ds-book:focus-visible { outline-offset: 3px; }
+.ds-sheet [inert] { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .ds-phone *, .ds-phone *::before { transition: none !important; } }
+</style>
+<style>
+  .dsw { display: grid; gap: 12px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="dsw">
+    <p class="kicker">Willow Counseling · Booking sheet</p>
+<!-- code -->
+<div class="ds-phone" id="ds">
+  <div class="ds-screen" id="ds-screen">
+    <div class="ds-page" id="ds-page">
+      <div class="ds-nav"><span>Willow</span><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M0 2.5h18M0 9.5h18"/></svg></div>
+      <h2 class="ds-h">Therapy that listens.</h2>
+      <p class="ds-p">Dana Reyes, LMFT. Video sessions, 50 minutes.</p>
+      <div class="ds-pic" aria-hidden="true"><svg viewBox="0 0 96 72"><path d="M4 60C20 14 76 14 92 60"/><path d="M20 60C30 34 66 34 76 60"/><path d="M2 66h92"/></svg></div>
+    </div>
+    <div class="ds-veil" id="ds-veil"></div>
+
+    <section class="ds-sheet" id="ds-sheet" aria-label="Book a session">
+      <div class="ds-grab" id="ds-grab" role="slider" tabindex="0" aria-label="Sheet height" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0" aria-valuetext="Peek"></div>
+      <div class="ds-hd"><h3 class="ds-t">Book a session</h3><span class="ds-mono">50 min</span></div>
+      <p class="ds-sub"><i class="ds-pt"></i><span class="ds-roll" id="ds-next"><b>Next: Wed 10:00</b></span></p>
+      <div class="ds-list" id="ds-list" role="group" aria-label="Times" inert>
+        <button type="button" class="ds-row" aria-pressed="true"><span class="ds-roll ds-mono"><b>10:00</b></span><span>Video</span></button>
+        <button type="button" class="ds-row" aria-pressed="false"><span class="ds-roll ds-mono"><b>14:00</b></span><span>Video</span></button>
+        <button type="button" class="ds-row" aria-pressed="false"><span class="ds-roll ds-mono"><b>16:30</b></span><span>Video</span></button>
+      </div>
+      <div class="ds-week" id="ds-week" role="group" aria-label="Day" inert></div>
+      <button type="button" class="ds-book" id="ds-book" inert><svg class="ds-tick" viewBox="0 0 14 14" aria-hidden="true"><path d="M1.5 7.5l3.5 3.5 7.5-8"/></svg><span class="ds-roll" id="ds-book-t"><b>Book Wed 10:00</b></span></button>
+    </section>
+
+    <div class="ds-status" aria-hidden="true"><span>9:41</span><svg viewBox="0 0 28 10"><rect x="0" y="6" width="3" height="4"/><rect x="5" y="4" width="3" height="6"/><rect x="10" y="2" width="3" height="8"/><rect x="17" y="1" width="9" height="8"/><rect x="26.5" y="3.5" width="1.5" height="3"/></svg></div>
+    <div class="ds-island" aria-hidden="true"></div>
+    <div class="ds-home" aria-hidden="true"></div>
+  </div>
+  <p class="sr-only" id="ds-msg" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Drag the sheet, or focus the grabber and use the arrow keys, Home and End</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Detent sheet. Height is the one number: render(h) draws the sheet, the veil and the page from it.
+   Release projects the velocity 0.2 s ahead, picks the nearest detent, and springTo() arrives there critically damped. */
+const DS = { PEEK: 90, MED: 218, FULL: 336, OMEGA: 13, LOOK: 0.2, RUBBER: 24 };
+const DETENTS = [DS.PEEK, DS.MED, DS.FULL], DNAMES = ['Peek', 'Medium', 'Full'];
+const dsSheet = document.getElementById('ds-sheet'), dsVeil = document.getElementById('ds-veil'), dsPage = document.getElementById('ds-page');
+const dsGrab = document.getElementById('ds-grab'), dsList = document.getElementById('ds-list'), dsWeek = document.getElementById('ds-week');
+const dsBook = document.getElementById('ds-book'), dsMsg = document.getElementById('ds-msg');
+const dsReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+let dsH = DS.PEEK, dsIdx = 0, dsRaf = 0;
+
+function render(h) {
+  dsH = h;
+  dsSheet.style.transform = `translate3d(0, ${(DS.FULL - h).toFixed(2)}px, 0)`;
+  const q = clamp((h - DS.PEEK) / (DS.FULL - DS.PEEK), 0, 1);
+  dsVeil.style.opacity = (0.62 * q).toFixed(3);
+  dsVeil.style.pointerEvents = q > 0.5 ? 'auto' : 'none';
+  const s = 1 - 0.04 * clamp((h - DS.MED) / (DS.FULL - DS.MED), 0, 1);
+  dsPage.style.transform = s < 1 ? `scale(${s.toFixed(4)})` : 'none';
+}
+// what is not on screen is not reachable: groups below the current detent are inert
+function setDetent(i) {
+  dsIdx = i;
+  dsList.inert = i < 1; dsWeek.inert = i < 2; dsBook.inert = i < 2;
+  dsGrab.setAttribute('aria-valuenow', String(i));
+  dsGrab.setAttribute('aria-valuetext', DNAMES[i]);
+}
+const nearest = (x) => DETENTS.reduce((b, d, i) => (Math.abs(d - x) < Math.abs(DETENTS[b] - x) ? i : b), 0);
+
+// critically damped: x(t) = target + (A + B t) e^(-wt). B = v0 + wA; capping v0 toward the target at w|A| keeps A and B the same sign, so x never crosses the target
+function springTo(i, v0 = 0) {
+  cancelAnimationFrame(dsRaf);
+  setDetent(i);
+  const target = DETENTS[i];
+  if (dsReduced) { render(target); return; }
+  const A = dsH - target, w = DS.OMEGA, lim = w * Math.abs(A);
+  let v = v0;
+  if (A > 0) v = Math.max(v, -lim); else if (A < 0) v = Math.min(v, lim); else v = 0;
+  const B = v + w * A, t0 = performance.now();
+  const step = (now) => {
+    const t = (now - t0) / 1000, x = target + (A + B * t) * Math.exp(-w * t);
+    if (t > 1.4 || Math.abs(x - target) < 0.2) { render(target); return; }
+    render(x);
+    dsRaf = requestAnimationFrame(step);
+  };
+  dsRaf = requestAnimationFrame(step);
+}
+const rubber = (h) => (h > DS.FULL ? DS.FULL + DS.RUBBER * (1 - Math.exp(-(h - DS.FULL) / DS.RUBBER))
+  : h < DS.PEEK ? DS.PEEK - DS.RUBBER * (1 - Math.exp(-(DS.PEEK - h) / DS.RUBBER)) : h);
+
+// one drag, whoever holds it: a pointer or the ghost. y is client px, t is ms.
+let dsDrag = null;
+function dragStart(y, t) { cancelAnimationFrame(dsRaf); dsDrag = { y0: y, h0: dsH, s: [[t, y]] }; dsSheet.classList.add('is-drag'); }
+function dragMove(y, t) {
+  if (!dsDrag) return;
+  dsDrag.s.push([t, y]);
+  while (dsDrag.s.length > 2 && t - dsDrag.s[0][0] > 100) dsDrag.s.shift();
+  render(rubber(dsDrag.h0 - (y - dsDrag.y0)));
+}
+function dragEnd(t) {
+  if (!dsDrag) return;
+  const a = dsDrag.s[0], b = dsDrag.s[dsDrag.s.length - 1];
+  const v = b[0] - a[0] > 8 && t - b[0] < 80 ? -((b[1] - a[1]) / (b[0] - a[0])) * 1000 : 0;   // px/s, positive = taller
+  dsDrag = null; dsSheet.classList.remove('is-drag');
+  springTo(nearest(clamp(dsH, DS.PEEK, DS.FULL) + v * DS.LOOK), v);
+}
+const stepUp = () => springTo(dsIdx < 2 ? dsIdx + 1 : 0);
+
+let dsPtr = null, dsSwallow = false;
+// move and up are heard on the window, so a fast flick that leaves the sheet before the 4 px threshold is still followed; capture starts with the drag
+dsSheet.addEventListener('pointerdown', (e) => {
+  if (e.button > 0 || dsPtr) return;
+  dsPtr = { id: e.pointerId, y: e.clientY, t: e.timeStamp, moved: false, tapStep: !!e.target.closest('.ds-grab, .ds-hd, .ds-sub') };
+  addEventListener('pointermove', ptrMove);
+  addEventListener('pointerup', ptrEnd);
+  addEventListener('pointercancel', ptrEnd);
+});
+function ptrMove(e) {
+  if (!dsPtr || e.pointerId !== dsPtr.id) return;
+  if (!dsPtr.moved) {
+    if (Math.abs(e.clientY - dsPtr.y) < 4) return;
+    dsPtr.moved = true; dsSwallow = true;
+    try { dsSheet.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    dragStart(dsPtr.y, dsPtr.t);                      // the drag counts from where the pointer went down
+  }
+  dragMove(e.clientY, e.timeStamp);
+}
+function ptrEnd(e) {
+  if (!dsPtr || e.pointerId !== dsPtr.id) return;
+  const p = dsPtr; dsPtr = null;
+  removeEventListener('pointermove', ptrMove); removeEventListener('pointerup', ptrEnd); removeEventListener('pointercancel', ptrEnd);
+  if (p.moved) dragEnd(e.timeStamp);
+  else if (p.tapStep && e.type === 'pointerup') stepUp();
+}
+dsSheet.addEventListener('click', (e) => { if (dsSwallow) { e.stopPropagation(); e.preventDefault(); } dsSwallow = false; }, true);
+dsVeil.addEventListener('click', () => { if (dsIdx > 0) springTo(dsIdx - 1); });
+dsGrab.addEventListener('keydown', (e) => {
+  const k = e.key;
+  const to = k === 'ArrowUp' || k === 'ArrowRight' ? Math.min(2, dsIdx + 1) : k === 'ArrowDown' || k === 'ArrowLeft' ? Math.max(0, dsIdx - 1) : k === 'Home' ? 0 : k === 'End' ? 2 : -1;
+  if (to < 0) return;
+  e.preventDefault(); springTo(to);
+});
+dsSheet.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dsIdx > 0) { e.stopPropagation(); springTo(0); dsGrab.focus({ preventScroll: true }); } });
+
+/* the booking inside: a day, a time, Book. Text that changes rolls inside its clip. */
+const DAYS = [['Wed', 18, ['10:00', '14:00', '16:30']], ['Thu', 19, ['09:30', '12:00', '15:30']], ['Fri', 20, ['09:00', '11:00', '14:30']], ['Mon', 23, ['10:30', '13:00', '17:00']], ['Tue', 24, ['09:00', '11:30', '15:00']]];
+const dsRows = [...dsList.querySelectorAll('.ds-row')];
+let dsDay = 0, dsTime = 0, dsBooked = false;
+dsWeek.innerHTML = DAYS.map((d, i) => `<button type="button" class="ds-day" aria-pressed="${i === 0}"><span>${d[0]}</span><span class="ds-mono">${d[1]}</span></button>`).join('');
+const dsDays = [...dsWeek.querySelectorAll('.ds-day')];
+
+function roll(el, text, delay = 0) {
+  const cur = el.lastElementChild;
+  if (cur.textContent === text) return;
+  if (dsReduced || !cur.animate) { cur.textContent = text; return; }
+  while (el.children.length > 2) el.firstElementChild.remove();
+  const nb = document.createElement('b'); nb.textContent = text; el.appendChild(nb);
+  const o = { duration: 420, delay, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'both' };
+  cur.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-110%)' }], o).finished.then(() => cur.remove(), () => {});
+  nb.animate([{ transform: 'translateY(110%)' }, { transform: 'translateY(0)' }], o);
+}
+const slot = () => `${DAYS[dsDay][0]} ${DAYS[dsDay][2][dsTime]}`;
+function dsSync(rollTimes) {
+  dsDays.forEach((b, i) => b.setAttribute('aria-pressed', String(i === dsDay)));
+  dsRows.forEach((b, i) => {
+    b.setAttribute('aria-pressed', String(i === dsTime));
+    if (rollTimes) roll(b.firstElementChild, DAYS[dsDay][2][i], i * 30);
+  });
+  roll(document.getElementById('ds-book-t'), (dsBooked ? 'Booked ' : 'Book ') + slot());
+  roll(document.getElementById('ds-next'), dsBooked ? `Booked: ${slot()}` : 'Next: Wed 10:00');
+  dsBook.classList.toggle('is-booked', dsBooked);
+}
+dsDays.forEach((b, i) => b.addEventListener('click', () => { dsDay = i; dsBooked = false; dsSync(true); }));
+dsRows.forEach((b, i) => b.addEventListener('click', () => { dsTime = i; dsBooked = false; dsSync(false); }));
+dsBook.addEventListener('click', () => {
+  if (dsBooked) return;
+  dsBooked = true; dsSync(false);
+  dsMsg.textContent = `Booked ${slot()}`;
+});
+setDetent(0); render(DS.PEEK);
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  async function tap(my, el, hold = 240) {
+    const r = el.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.5, r.top + r.height * 0.55, 720))) throw 0;
+    if (my !== epoch) throw 0;
+    el.classList.add('is-hot');
+    await gap(my, 190);
+    el.classList.add('is-press');
+    await gap(my, 120);
+    el.classList.remove('is-press', 'is-hot');
+    el.click();
+    await gap(my, hold);
+  }
+  // the ghost holds the grabber and moves it dy px (negative = up) over ms; ease 'move' ends at rest, 'line' ends at speed (a flick)
+  async function pull(my, dy, ms, flick) {
+    const r = dsGrab.getBoundingClientRect(), x = r.left + r.width / 2;
+    let y = r.top + r.height / 2;
+    if (!(await QM.ghostTo(x, y, 700))) throw 0;
+    await gap(my, 160);
+    const y0 = y, mv = QM.bezier(0.65, 0, 0.35, 1);
+    dragStart(y0, performance.now());
+    await new Promise((res) => {
+      const t0 = performance.now();
+      const f = (now) => {
+        if (my !== epoch) { dsDrag = null; dsSheet.classList.remove('is-drag'); return res(); }
+        const p = Math.min(1, (now - t0) / ms), k = flick ? p : mv(p);
+        y = y0 + dy * k; QM.ghostAt(x, y); dragMove(y, now);
+        if (p < 1) requestAnimationFrame(f); else res();
+      };
+      requestAnimationFrame(f);
+    });
+    if (my !== epoch) throw 0;
+    dragEnd(performance.now());
+  }
+  function rest(medium) {
+    cancelAnimationFrame(dsRaf); dsDrag = null; dsSheet.classList.remove('is-drag');
+    dsDay = 0; dsTime = 0; dsBooked = false; dsSync(true);
+    springTo(medium ? 1 : 0);
+    if (document.activeElement && document.getElementById('ds').contains(document.activeElement)) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      QM.ghostShow();
+      for (;;) {
+        await gap(my, 1300);
+        await pull(my, -128, 900, false);                      // a slow pull: medium
+        await gap(my, 900);
+        await tap(my, dsRows[1], 900);                         // Wed 14:00
+        await pull(my, -110, 170, true);                       // a flick: full, from only part of the way
+        await gap(my, 900);
+        await tap(my, dsDays[1], 1000);                        // Thu: the times roll
+        await tap(my, dsBook, 2000);                           // Booked
+        await pull(my, 200, 170, true);                        // a flick down: peek
+        await gap(my, 500);
+        dsDay = 0; dsTime = 0; dsBooked = false; dsSync(true); // rolls the line back to Next
+        await QM.ghostTo(innerWidth * 0.8, innerHeight * 0.88, 600);
+        await gap(my, 1100);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const touch = (e) => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(() => { if (!dsSheet.matches(':hover') && !dsSheet.contains(document.activeElement) && !dsDrag) { rest(false); script(); } else { touch({}); } }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch({}));
+  }
+  if (reduced) rest(true);
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(reduced); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

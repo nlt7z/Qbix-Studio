@@ -8,21 +8,23 @@
 {
   "id": "ask-approve", "title": "Ask to approve", "group": "studio", "cat": "agent", "order": 10,
   "kind": "loop", "tone": "paper", "added": "2026-11-05", "shot": 2300,
-  "line": "560 ms expo up · 140 ms press · 480 ms to a line",
+  "line": "560 ms expo up · 100 ms press · 480 ms to a line",
   "summary": "An agent stops at a gate. A request card is uncovered out of the composer; Approve gets a 2 px press and the card folds down into a single log line whose square turns a quarter at a time, then rolls to Live and draws its tick. Real clicks work, and Deny closes it the same way.",
   "spec": [
     ["Request", "grid rows 0fr → 1fr in 560 ms expo out; the card slides up 100% inside its clip"],
-    ["Press", "translateY 2px in 140 ms, then the card folds 480 ms ease-move"],
+    ["Press", "translateY 2px in 100 ms, hover 120 ms, then the card folds 480 ms ease-move"],
     ["Log line", "opens 520 ms expo; the text stack rolls 480 ms expo, 1.3em a step"],
     ["Square", "a quarter turn every 1.1 s, 90° is the same square, so the loop has no seam"],
     ["Tick", "stroke drawn in 480 ms expo, the square leaves through the top of its cell"],
-    ["Script", "request at 0.9 s, Approve pressed at 2.4 s, Live at 4.4 s; resumes 7 s after the viewer"]
+    ["Script", "request at 0.9 s, Approve pressed at 2.4 s, Live at 4.4 s; the ghost stops at the first real pointer or key and resumes 7 s after the last"],
+    ["Keys", "Tab reaches Approve and Deny once the request is open; Enter or Space presses, Escape denies; the hidden card is inert"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-05"],
   "where": "A Labs chapter on the agent: the one moment where the owner is asked before anything goes live.",
   "rules": [
     "The card is uncovered by a clip, never faded. It folds into the log, so the decision stays in the record.",
     "Approve is the one lime on screen; Deny is a 2 px frame, not a second colour.",
+    "The request card is inert while it is closed or folded, so Tab never lands in a hidden button.",
     "Reduced motion shows the request, still."
   ],
   "tags": ["agent", "approval", "click", "composer", "log"]
@@ -34,13 +36,14 @@
   background: #EEF1E8; color: #0B0C0D; font: 400 1em/1.4 Geist, system-ui, sans-serif; letter-spacing: -.011em;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
 .aa-log { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
-.aa-msg { align-self: flex-end; flex: none; display: flex; align-items: center; height: 2.4em; margin-bottom: .6em; padding: 0 1em; background: #0B0C0D; color: #f4f5f2; font-size: .88em; }
+.aa-msg { align-self: flex-end; flex: none; display: flex; align-items: center; height: 2.5em; margin-bottom: .5em; padding: 0 1em; background: #0B0C0D; color: #f4f5f2; font-size: .88em; }
 .aa-ln { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 520ms cubic-bezier(.16, 1, .3, 1); }
 .aa-ln > div { min-height: 0; overflow: hidden; }
 .aa-ln.is-shut { grid-template-rows: 0fr; }
-.aa-row { display: flex; align-items: center; gap: .75em; height: 2em; font-size: .92em; color: rgba(11, 12, 13, .64); }
+.aa-row { display: flex; align-items: center; gap: .75em; height: 2em; font-size: .9375em; color: rgba(11, 12, 13, .64); }
 .aa-row.now { color: #0B0C0D; }
-.aa-ic { position: relative; flex: none; width: 1.1em; height: 1.1em; overflow: hidden; }
+.aa-row:focus { outline: 0; }
+.aa-ic { position: relative; flex: none; width: 1.2em; height: 1.2em; overflow: hidden; }
 .aa-ic > * { position: absolute; inset: 0; display: block; transition: transform 480ms cubic-bezier(.16, 1, .3, 1); }
 .aa-ic svg { width: 100%; height: 100%; fill: none; stroke: #0B0C0D; stroke-width: 2.4; stroke-linecap: square; stroke-linejoin: miter; }
 .aa-ic .sq { display: grid; place-items: center; }
@@ -52,14 +55,14 @@
 .aa-row.done .aa-ic .ok { transform: none; }
 .aa-row.done .aa-ic .ok path { stroke-dashoffset: 0; }
 .aa-row.stop .aa-ic .sq i { animation: none; }
-.aa-tx { height: 1.3em; overflow: hidden; }
+.aa-tx { height: 1.4em; overflow: hidden; }
 .aa-tx > div { transition: transform 480ms cubic-bezier(.16, 1, .3, 1); }
-.aa-tx span { display: block; height: 1.3em; white-space: nowrap; }
+.aa-tx span { display: block; height: 1.4em; white-space: nowrap; }
 .aa-rq { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 560ms cubic-bezier(.16, 1, .3, 1); }
 .aa-rq > div { min-height: 0; overflow: hidden; }
 .aa-rq.is-open { grid-template-rows: 1fr; }
 .aa-rq.is-fold { transition-duration: 480ms; transition-timing-function: cubic-bezier(.65, 0, .35, 1); }
-.aa-card { --cut: .85em; margin-top: .6em; padding: 1.1em 1.2em 1.2em; background: #E3E8DA; transform: translateY(100%); transition: transform 560ms cubic-bezier(.16, 1, .3, 1);
+.aa-card { --cut: .85em; margin-top: .5em; padding: 1.125em 1.25em 1.25em; background: #E3E8DA; transform: translateY(100%); transition: transform 560ms cubic-bezier(.16, 1, .3, 1);
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
 .aa-rq.is-open .aa-card { transform: none; }
 .aa-rq.is-fold .aa-card { transition-duration: 480ms; transition-timing-function: cubic-bezier(.65, 0, .35, 1); }
@@ -67,12 +70,21 @@
 .aa-card h3 { margin: .55em 0 .2em; font: 500 1.1em/1.3 Geist, sans-serif; letter-spacing: -.015em; }
 .aa-diff { font: 400 .78em/1.4 'Geist Mono', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13, .64); font-variant-numeric: tabular-nums; }
 .aa-acts { display: flex; align-items: center; gap: .6em; margin-top: 1em; }
-.aa-b { height: 2.7em; padding: 0 1.3em; border: 0; cursor: pointer; font: 500 .9em/1 Geist, sans-serif; letter-spacing: -.011em; white-space: nowrap;
-  transition: transform 300ms cubic-bezier(.22, 1, .36, 1); }
-.aa-b:active, .aa-b.press { transform: translateY(2px); transition-duration: 140ms; }
+.aa-b { height: 2.6667em; padding: 0 1.3em; border: 0; cursor: pointer; font: 500 .9375em/1 Geist, sans-serif; letter-spacing: -.011em; white-space: nowrap;
+  transition: transform 300ms cubic-bezier(.22, 1, .36, 1), background-color 120ms cubic-bezier(.4, 0, .2, 1), color 120ms cubic-bezier(.4, 0, .2, 1), box-shadow 120ms cubic-bezier(.4, 0, .2, 1); }
+.aa-b:active, .aa-b.press { transform: translateY(2px); transition-duration: 100ms; }
 .aa-go { --cut: .75em; background: #B8FF00; color: #0c1300; clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.aa-go:hover, .aa-go.is-hot { background: #C9F24A; }
 .aa-no { background: transparent; color: #0B0C0D; box-shadow: inset 0 0 0 2px #0B0C0D; }
-.aa-comp { display: flex; align-items: center; gap: .5em; margin-top: .6em; height: 3em; padding-left: 1em; background: #E3E8DA; color: rgba(11, 12, 13, .64); font-size: .9em; }
+.aa-no:hover, .aa-no.is-hot { background: #0B0C0D; color: #f4f5f2; }
+/* the clip-path would cut an outside ring on Approve, so its ring sits inside the lime */
+.aa-go { position: relative; }
+.aa-go:focus-visible { outline: 0; }
+.aa-go:focus-visible::after { content: ''; position: absolute; inset: 5px; background: #0c1300; --rc: calc(var(--cut) - 2.9px);
+  clip-path: polygon(evenodd, 0 0, calc(100% - var(--rc)) 0, 100% var(--rc), 100% 100%, 0 100%, 0 0,
+    2px 2px, 2px calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) calc(var(--rc) + .83px), calc(100% - var(--rc) - .83px) 2px, 2px 2px); }
+.aa-no:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.aa-comp { display: flex; align-items: center; gap: .5em; margin-top: .6em; height: 3em; padding-left: 1em; background: #E3E8DA; color: rgba(11, 12, 13, .64); font-size: .9375em; }
 .aa-comp span { flex: 1; white-space: nowrap; overflow: hidden; }
 .aa-send { flex: none; width: 3em; height: 3em; display: grid; place-items: center; background: #0B0C0D; }
 .aa-send svg { width: 1.1em; height: 1.1em; fill: none; stroke: #f4f5f2; stroke-width: 2; stroke-linecap: square; }
@@ -80,8 +92,9 @@
 @media (prefers-reduced-motion: reduce) { .aa-panel *, .aa-panel { transition: none !important; } .aa-ic .sq i { animation: none; } }
 </style>
 <style>
-  .sd { font-size: clamp(11px, min(2vw, 3.2vh), 26px); display: grid; gap: 1.1em; justify-items: start; }
-  .sd .kicker { font-size: .75em; }
+  .sd { font-size: clamp(11px, min(2vw, 3.2vh), 26px); display: grid; gap: 1em; justify-items: start; }
+  html:not(.qm-tile) .sd { font-size: clamp(11px, min(2vw, calc((100vh - 46px) * .03)), 26px); }   /* the detail view keeps clear of its bottom bar */
+  .sd .kicker { font-size: .75em; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -90,15 +103,16 @@
   <p class="kicker">Agent · Approval</p>
 <!-- code -->
 <div class="aa-panel" id="aa">
+  <span class="sr-only" id="aa-say" role="status" aria-live="polite"></span>
   <div class="aa-log">
     <div class="aa-msg">Ship the Forma site.</div>
     <div class="aa-ln"><div><div class="aa-row done"><span class="aa-ic"><i class="sq"><i></i></i><i class="ok"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></i></span><span>Read brief.pdf</span></div></div></div>
     <div class="aa-ln"><div><div class="aa-row done"><span class="aa-ic"><i class="sq"><i></i></i><i class="ok"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></i></span><span>Built 3 pages</span></div></div></div>
     <div class="aa-ln"><div><div class="aa-row done"><span class="aa-ic"><i class="sq"><i></i></i><i class="ok"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></i></span><span>Wrote tokens.json</span></div></div></div>
-    <div class="aa-ln is-shut" id="aa-line"><div><div class="aa-row now" id="aa-row"><span class="aa-ic"><i class="sq"><i></i></i><i class="ok"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></i></span>
-      <span class="aa-tx"><div id="aa-stack"><span>Approved · deploying</span><span>Live</span><span>Denied · nothing deployed</span></div></span></div></div></div>
+    <div class="aa-ln is-shut" id="aa-line"><div><div class="aa-row now" id="aa-row" tabindex="-1"><span class="aa-ic"><i class="sq"><i></i></i><i class="ok"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></i></span>
+      <span class="aa-tx" aria-hidden="true"><div id="aa-stack"><span>Approved · deploying</span><span>Live</span><span>Denied · nothing deployed</span></div></span></div></div></div>
   </div>
-  <div class="aa-rq" id="aa-rq"><div><div class="aa-card">
+  <div class="aa-rq" id="aa-rq" inert><div><div class="aa-card">
     <div class="aa-k">Needs approval</div>
     <h3>Deploy forma.studio to production?</h3>
     <div class="aa-diff">3 pages · 12 files</div>
@@ -108,73 +122,96 @@
 </div>
 <!-- /code -->
 </div>
-<div class="qm-ui"><span>Approve or Deny · the run resumes by itself</span></div>
+<div class="qm-ui"><span>Approve or Deny · Esc denies · the run resumes by itself</span></div>
 </main>
 <script src="../kit/stage.js"></script>
 <script data-code>
 /* The gate: open the request, then fold it into the log line the decision becomes. */
 const AA = (() => {
   const $ = (id) => document.getElementById(id);
-  const panel = $('aa'), rq = $('aa-rq'), line = $('aa-line'), row = $('aa-row'), stack = $('aa-stack');
-  let decided = false;
-  const at = (i) => { stack.style.transform = `translateY(${-i * 1.3}em)`; };
+  const panel = $('aa'), rq = $('aa-rq'), line = $('aa-line'), row = $('aa-row'), stack = $('aa-stack'), say = $('aa-say');
+  let decided = false, doneT = 0;
+  const at = (i) => { stack.style.transform = `translateY(${-i * 1.4}em)`; };
   function reset() {
+    clearTimeout(doneT);
     panel.classList.add('nt');
     rq.classList.remove('is-open', 'is-fold');
+    rq.inert = true;
     line.classList.add('is-shut');
     row.classList.remove('done', 'stop');
+    say.textContent = '';
     at(0);
     decided = false;
     void panel.offsetWidth;
     panel.classList.remove('nt');
   }
-  const ask = () => rq.classList.add('is-open');
+  const ask = () => { rq.inert = false; rq.classList.add('is-open'); };
   function decide(ok) {
     if (decided || !rq.classList.contains('is-open')) return;
     decided = true;
+    const hadFocus = rq.contains(document.activeElement);
+    rq.inert = true;                         // folded away: no Tab stop left behind
+    if (hadFocus) row.focus({ preventScroll: true });
     rq.classList.add('is-fold');
     rq.classList.remove('is-open');
     line.classList.remove('is-shut');
     if (ok) {
       at(0);
-      setTimeout(() => { at(1); row.classList.add('done'); }, 1900);
+      say.textContent = 'Approved, deploying';
+      doneT = setTimeout(() => { at(1); row.classList.add('done'); say.textContent = 'Live'; }, 1900);
     } else {
       at(2);
       row.classList.add('stop');
+      say.textContent = 'Denied, nothing deployed';
     }
   }
   $('aa-ok').addEventListener('click', () => decide(true));
   $('aa-deny').addEventListener('click', () => decide(false));
-  return { reset, ask, decide };
+  panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') decide(false); });
+  return { reset, ask, decide, get decided() { return decided; } };
 })();
 </script>
 <script>
   const w = (ms) => new Promise((r) => setTimeout(r, ms));
   const okBtn = document.getElementById('aa-ok');
-  let run = 0, resumeT = 0;
+  let run = 0, resumeT = 0, ghosting = false;
   async function start() {
     const my = ++run;
+    ghosting = true;
     AA.reset();
-    if (QM.reduced) { AA.ask(); document.getElementById('aa-rq').style.transition = 'none'; return; }
-    QM.ghostShow();
+    if (QM.reduced) { document.getElementById('aa-rq').style.transition = 'none'; AA.ask(); ghosting = false; return; }
     await w(900); if (my !== run) return;
+    QM.ghostShow();                          // after the harness has hidden it for its own start
     AA.ask();
     await w(1500); if (my !== run) return;
     const r = okBtn.getBoundingClientRect();
     if (!(await QM.ghostTo(r.left + r.width * .55, r.top + r.height * .6, 800))) return;
     if (my !== run) return;
+    okBtn.classList.add('is-hot');
+    await w(240); if (my !== run) return;
     okBtn.classList.add('press');
-    await w(160); if (my !== run) return;
-    okBtn.classList.remove('press');
+    await w(110); if (my !== run) return;
+    okBtn.classList.remove('press', 'is-hot');
     AA.decide(true);
     await w(300); if (my !== run) return;
-    QM.ghostTo(r.left + r.width + 120, r.top + r.height + 60, 900);
+    const pr = document.getElementById('aa').getBoundingClientRect();
+    QM.ghostTo(pr.right + 36, pr.top + pr.height * .45, 900);
     await w(4300); if (my !== run) return;
     start();
   }
-  const takeOver = () => { if (QM.tile) return; run++; QM.ghostHide(); clearTimeout(resumeT); resumeT = setTimeout(start, 7000); };
-  addEventListener('pointerdown', takeOver, true);
-  addEventListener('keydown', takeOver, true);
+  /* a real pointer or key ends the ghost for good until things have been quiet for 7 s; if the
+     request was not open yet it opens now, so there is always something to use */
+  function real(e) {
+    if (QM.tile || !e.isTrusted || (e.type === 'pointermove' && e.pointerType !== 'mouse')) return;
+    if (ghosting) {
+      ghosting = false; run++; QM.ghostHide();
+      okBtn.classList.remove('is-hot', 'press');
+      if (!AA.decided) AA.ask();
+    }
+    clearTimeout(resumeT);
+    resumeT = setTimeout(start, 7000);
+  }
+  ['pointermove', 'pointerdown', 'keydown'].forEach((n) => addEventListener(n, real, { capture: true, passive: true }));
   QM.demo({ kind: 'loop', restart: start });
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(start));
 </script>

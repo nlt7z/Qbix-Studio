@@ -13,20 +13,21 @@
   "order": 90,
   "kind": "pointer",
   "tone": "paper",
-  "line": "ribs 13–26 px · sine shift ×0.42 · eased 4/s",
+  "line": "ribs 13–26 px · sine shift ×0.18 · eased 4/s",
   "summary": "A pane of reeded glass slides over a flat picture. The pane is split into vertical ribs and each rib is a small cylinder: it offsets the picture behind it by a sine across its width, so the word is cut into strips and seen again, shifted. The pane follows the pointer with an eased glide.",
   "spec": [
     ["Ribs", "width 2.2% of the stage, 13 to 26 px"],
     ["Pane", "44% of the stage, a whole number of ribs"],
-    ["Offset", "sin((u − 0.5)·π) · rib width · 0.42"],
-    ["Follow", "1 − e^(−4 dt), the pane's centre chases the pointer"],
+    ["Offset", "sin((u − 0.5)·π) · rib width · 0.18: small enough that the picture is never mirrored inside a rib, so strokes stretch instead of breaking into noise"],
+    ["Follow", "1 − e^(−4 dt), the pane's centre chases the pointer; at rest it lands exactly and stops drawing"],
+    ["Sampling", "the picture is drawn at 3× and each device column samples a slice of it, so the magnified strokes stay sharp"],
     ["Shade", "none: the glass shows only by what it does to the picture"],
     ["Idle", "a ghost slides the pane end to end and rests a beat"]
   ],
   "source": ["Qbix studio library · fluted-glass"],
   "where": "A Forma case study: a pane of reeded glass over a type and colour study.",
   "rules": [
-    "The glass is cut per column with drawImage: no blur, no gradient, no drawn edges.",
+    "The glass is cut per device column with drawImage from a 3× picture: no blur, no gradient, no drawn edges.",
     "The picture behind is white, ink and one lime disc.",
     "The pane keeps whole ribs so its edges always land on a rib edge."
   ],
@@ -51,12 +52,15 @@
 /* Fluted glass: a flat picture and a pane of ribs. createFluted(canvas) -> { to(x) } (css px) */
 function createFluted(cv, { reduce = false } = {}) {
   const g = cv.getContext('2d');
-  const src = document.createElement('canvas'), sx = src.getContext('2d');
-  let W = 0, H = 0, k = 1, x = 0, tx = 0, first = true;
+  const src = document.createElement('canvas'), sx = src.getContext('2d');     // the picture at 3× the screen: every rib magnifies it, so it needs the detail
+  const base = document.createElement('canvas'), bx = base.getContext('2d');   // the same picture at screen size, drawn once under the pane
+  const SS = 3, AMP = 0.18;
+  let W = 0, H = 0, k = 1, S = 3, x = 0, tx = 0, first = true, dirty = true, on = true;
 
   function art() {                         // the flat picture behind the glass
-    src.width = Math.round(W * k); src.height = Math.round(H * k);
-    sx.setTransform(k, 0, 0, k, 0, 0);
+    S = k * SS;
+    src.width = Math.round(W * S); src.height = Math.round(H * S);
+    sx.setTransform(S, 0, 0, S, 0, 0);
     sx.fillStyle = '#ffffff'; sx.fillRect(0, 0, W, H);
     const r = Math.min(W, H) * 0.24;
     sx.fillStyle = '#B8FF00'; sx.beginPath(); sx.arc(W * 0.68, H * 0.4, r, 0, 6.2832); sx.fill();
@@ -65,23 +69,32 @@ function createFluted(cv, { reduce = false } = {}) {
     sx.font = `200 ${size}px Outfit, Geist, sans-serif`; sx.textAlign = 'center';
     sx.fillText('Reeded', W / 2, H * 0.5 + size * 0.3);
     const m = Math.max(18, Math.min(W, H) * 0.06), small = Math.max(12, Math.min(15, W * 0.03));
-    sx.textAlign = 'left'; sx.fillStyle = '#0B0C0D';
+    sx.textAlign = 'left';
     sx.fillStyle = 'rgba(11, 12, 13, 0.66)'; sx.font = `500 ${small}px Geist, system-ui, sans-serif`;
     sx.fillText('Forma · Reeded glass study', m, H - m - small * 1.7);
     sx.fillText('White, ink and one lime disc', m, H - m);
+    base.width = cv.width; base.height = cv.height;
+    bx.imageSmoothingQuality = 'high';
+    bx.drawImage(src, 0, 0, src.width, src.height, 0, 0, base.width, base.height);
+    dirty = true;
   }
   function draw() {
     const pw0 = Math.max(150, Math.min(560, W * 0.44)), rw = Math.max(13, Math.min(26, W * 0.022));
     const pw = Math.round(pw0 / rw) * rw, left = Math.round(x - pw / 2), right = left + pw;
     g.setTransform(1, 0, 0, 1, 0, 0);
-    g.drawImage(src, 0, 0);
-    const c0 = Math.max(0, left), c1 = Math.min(W, right);
-    for (let cx = c0; cx < c1; cx++) {      // one device column at a time
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.drawImage(base, 0, 0);
+    const c0 = Math.max(0, Math.round(left * k)), c1 = Math.min(cv.width, Math.round(right * k));
+    for (let cd = c0; cd < c1; cd++) {      // one device column at a time
+      const cx = (cd + 0.5) / k;            // its centre in css px
       const u = (((cx - left) % rw) + rw) % rw / rw;
-      const d = Math.sin((u - 0.5) * Math.PI) * rw * 0.42;
-      const sxp = Math.max(0, Math.min(W - 1, cx - d));
-      g.drawImage(src, sxp * k, 0, k, H * k, cx * k, 0, k, H * k);
+      const a = (u - 0.5) * Math.PI;
+      const d = Math.sin(a) * rw * AMP, speed = 1 - Math.cos(a) * Math.PI * AMP;   // where the rib looks, and how fast the picture runs under it 
+      const wsrc = Math.max(1, (S / k) * Math.abs(speed));
+      const from = Math.max(0, Math.min(src.width - wsrc, (cx - d) * S - wsrc / 2));
+      g.drawImage(src, from, 0, wsrc, src.height, cd, 0, 1, cv.height);
     }
+    dirty = false;
   }
   function fit() {
     W = cv.clientWidth; H = cv.clientHeight; k = Math.min(2, devicePixelRatio || 1);
@@ -92,13 +105,17 @@ function createFluted(cv, { reduce = false } = {}) {
   let prev = 0;
   function frame(now) {
     requestAnimationFrame(frame);
+    if (!on || document.hidden) { prev = 0; return; }
     const dt = Math.min(0.05, (now - (prev || now)) / 1000); prev = now;
-    x += (tx - x) * (reduce ? 1 : 1 - Math.exp(-dt * 4));
-    draw();
+    const nx = reduce ? tx : x + (tx - x) * (1 - Math.exp(-dt * 4));
+    const moved = Math.abs(nx - x) > 0.004 || Math.abs(tx - nx) < 0.004 && nx !== x;
+    x = Math.abs(tx - nx) < 0.004 ? tx : nx;       // at rest the pane lands exactly, and stops redrawing
+    if (moved || dirty) draw();
   }
   fit();
   if (document.fonts) Promise.all([document.fonts.load('200 100px Outfit'), document.fonts.load('500 12px Geist')]).then(() => { art(); draw(); }, () => {});
   new ResizeObserver(() => { if (cv.clientWidth !== W || cv.clientHeight !== H) fit(); }).observe(cv);
+  if (window.IntersectionObserver) new IntersectionObserver((e) => { on = e[0].isIntersecting; }).observe(cv);   // paused off screen
   requestAnimationFrame(frame);
   return { to(px) { tx = px; } };
 }

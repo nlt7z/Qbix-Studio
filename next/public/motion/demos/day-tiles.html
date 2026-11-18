@@ -15,7 +15,7 @@
   "kind": "scroll",
   "tone": "paper",
   "line": "7 tiles · rotateX −180° · 1100 ms",
-  "shot": 4150,
+  "shot": 5000,
   "summary": "How it works as a week. Seven day tiles flip over one by one as the section scrolls past, each turning the moment its share of the scroll is reached. A step lights when its day turns, and the latest step day wears the lime: it moves on from day 1 to day 3 to day 7, the day the site goes live. Scrolling back turns them back.",
   "spec": [
     ["Carried by", "the scroll, linear: 0 when the block's top meets 85% of the screen, 1 when its bottom meets 45%"],
@@ -69,6 +69,9 @@
   padding: 10px; backface-visibility: hidden;
   font-size: 12px; letter-spacing: 0;
 }
+/* the lime hands over to the next step day without a snap */
+.dt-back { transition: background 400ms var(--ease), color 400ms var(--ease); }
+.dt-back b { transition: color 400ms var(--ease); }
 .dt-front { background: #EEF1E8; color: var(--pw-mute); }
 .dt-back { transform: rotateX(180deg); background: #E3E8DA; color: var(--pw-mute); }
 .dt-back b { font: 300 clamp(26px, 4vw, 44px)/1 var(--font-headline); letter-spacing: -0.04em; color: var(--pw-ink); }
@@ -82,14 +85,14 @@
 .dt-steps li.is-on .pw-step-n { color: var(--pw-ink); }
 /* now: the step day the week has most recently reached is lime; the lime moves on as the next one flips
    (day 1, then 3, then 7, the day it's live) */
-.dt-days li.is-now .dt-back { background: var(--signal); color: rgba(11, 12, 13, 0.7); transition: background 400ms var(--ease); }
+.dt-days li.is-now .dt-back { background: var(--signal); color: rgba(11, 12, 13, 0.7); transition-delay: 700ms; } /* the lime lands once the tile has turned */
 .dt-days li.is-now .dt-back b { color: #0B0C0D; }
 @media (max-width: 600px) {
   .dt-days { gap: 4px; }
-  .dt-front, .dt-back { padding: 5px; font-size: 9px; letter-spacing: 0; }
+  .dt-front, .dt-back { padding: 5px; font-size: 11px; letter-spacing: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dt-tile, .dt-steps li, .dt-steps .pw-step-n { transition: none; }
+  .dt-tile, .dt-back, .dt-back b, .dt-steps li, .dt-steps .pw-step-n { transition: none; }
 }
 </style>
 <style>
@@ -110,6 +113,8 @@
   /* the block must fit the screen it is read on: the fill ends when its bottom meets 45%, so a tall block has its
      tiles above the fold by then. In the 800px tile and short windows it is a little tighter. */
   html.qm-tile .pw-section { padding: 56px 0; }
+  /* a tile's frame holds the whole "How it works" block with white under it: the price waits below the fold until the scroll brings it */
+  html.qm-tile .pw-how { padding-bottom: 176px; }
   html.qm-tile .pw-h2 { margin-bottom: 18px; }
   html.qm-tile .dt { gap: 22px; }
   html.qm-tile .dt-days { gap: 6px; }
@@ -131,7 +136,7 @@
     </div>
   </section>
 
-  <section class="pw-section" data-nav-theme="light">
+  <section class="pw-section pw-how" data-nav-theme="light">
     <div class="container pw-narrow">
       <h2 class="pw-h2">How it works</h2>
 <!-- code -->
@@ -203,7 +208,8 @@ function dayTiles(root) {
 document.querySelectorAll('.dt').forEach(dayTiles);
 </script>
 <script>
-  QM.demo({ kind: 'scroll', lead: 700, dur: 5600, hold: 1600, back: 2400 });
+  // the first stop holds on the whole block (the week half turned, the steps under it), then the scroll goes on to the price
+  QM.demo({ kind: 'scroll', lead: 700, dur: 5600, stops: [0.52, 1], pause: 1500, hold: 1400, back: 2400 });
 </script>
 </body>
 </html>

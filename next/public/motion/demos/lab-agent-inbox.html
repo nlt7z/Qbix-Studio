@@ -8,12 +8,13 @@
 {
   "id": "lab-agent-inbox", "title": "Inbox arrival", "group": "lab", "cat": "feedback", "order": 390,
   "kind": "play", "tone": "paper", "shot": 7600,
-  "line": "520 ms expo · steps 520 ms apart · words 55 ms apart",
+  "line": "520 ms expo · steps at 260, 700, 1500 ms · words 55 ms apart",
   "summary": "A new email in the studio inbox arrives by growing its height while its content slides down into place. Opened, it ticks off the agent's steps one by one and sets a draft reply word by word, each word rising out of its own mask. Approve slides the row off to the right, the gap closes, and the archived counter rolls up by one.",
-  "spec": [["Arrive", "height 0 → h in 520 ms, content slides down 560 ms, expo out"], ["Open", "height to content in 520 ms; steps every 520 ms, a check draws in 450 ms"], ["Draft", "word by word, 55 ms apart, each word rises out of a mask 500 ms"], ["Approve", "row slides right 460 ms ease-move, then height collapses 420 ms"], ["Counter", "number slides up through a mask, 520 ms, 60 ms apart"], ["API", "Web Animations for the heights, transform transitions for the rest"]],
+  "spec": [["Arrive", "height 0 → h in 520 ms, content slides down 560 ms, expo out"], ["Open", "height to content in 520 ms; the steps land at 260, 700 and 1500 ms (a quick one, a longer one, then a pause), a check draws in 450 ms"], ["Draft", "word by word, 55 ms apart, each word rises out of a mask 500 ms"], ["Approve", "row slides right 460 ms ease-move, then height collapses 420 ms"], ["Counter", "number slides up through a mask, 520 ms, 60 ms apart, in tabular figures; at the end of the story it rolls back down by one"],
+    ["Loop end", "the rows close one after another (260 ms ease in, 60 ms apart) so the list is empty when the story starts again, with no cut"], ["API", "Web Animations for the heights, transform transitions for the rest"]],
   "source": ["Qbix studio library · agent-inbox"],
   "where": "A Practice or Labs chapter that shows an agent doing the busywork: the owner only approves.",
-  "rules": ["Nothing fades: words, steps and the button are uncovered through masks.", "Rows are flat sage blocks on white, 8px apart, the top right corner cut; an unread row has an ink avatar, a read one a deeper sage.", "Lime is the one Approve button on screen."],
+  "rules": ["Nothing fades: words, steps and the button are uncovered through masks.", "A row is a real button (Enter or Space opens it); a closed row's Approve is inert, so Tab never lands in a hidden control.", "Rows are flat sage blocks on white, 8px apart, the top right corner cut; an unread row has an ink avatar, a read one a deeper sage.", "Lime is the one Approve button on screen."],
   "tags": ["agent", "list", "click", "waapi", "studio inbox"]
 }
 </script>
@@ -22,12 +23,14 @@
 .ai-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding-bottom: clamp(10px, 2vh, 18px); }
 .ai-head h2 { font: 300 clamp(30px, 5vw, 50px)/1 Outfit, Geist, sans-serif; letter-spacing: -.03em; margin: 8px 0 0; }
 .ai-count { text-align: right; font: 14px/18px 'Geist', Geist, sans-serif; letter-spacing: 0; color: rgba(11, 12, 13,.64); }
-.ai-roll { font: 300 clamp(30px, 5vw, 50px)/1.1 Outfit, Geist, sans-serif; letter-spacing: -.03em; height: 1.1em; overflow: hidden; position: relative; color: #0B0C0D; text-transform: none; }
+.ai-roll { font-variant-numeric: tabular-nums; font: 300 clamp(30px, 5vw, 50px)/1.1 Outfit, Geist, sans-serif; letter-spacing: -.03em; height: 1.1em; overflow: hidden; position: relative; color: #0B0C0D; text-transform: none; }
 .ai-roll span { display: block; }
 .ai-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .ai-list::-webkit-scrollbar { display: none; }
 .ai-row { overflow: hidden; margin-bottom: 8px; }
-.ai-in { background: #EEF1E8; padding: clamp(12px, 2vw, 18px); cursor: pointer; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.ai-in { background: #EEF1E8; padding: clamp(12px, 2vw, 18px); cursor: pointer; transition: background 160ms var(--ease); clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.ai-in:hover { background: #E8ECDF; }
+.ai-top:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 4px; }
 .ai-top { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 12px; align-items: center; }
 .ai-av { grid-row: span 2; width: 40px; height: 40px; display: grid; place-items: center; background: #0B0C0D; color: #f4f5f2; font: 500 14px 'Geist Mono', Geist, sans-serif; letter-spacing: 0; transition: background 160ms, color 160ms; }
 .ai-row.read .ai-av { background: #E3E8DA; color: #0B0C0D; }
@@ -51,13 +54,19 @@
 .ai-acts > * { transform: translateY(64px); transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
 .ai-acts.on > * { transform: none; }
 .ai-ok { height: 48px; padding: 0 24px; border: 0; background: #B8FF00; color: #0c1300; font: 500 14px/1 Geist, sans-serif; cursor: pointer;
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
-.ai-ok:active, .ai-ok.press { transform: translateY(2px) !important; }
-.ai-ed { background: none; border: 0; color: rgba(11, 12, 13,.64); font: 500 14px Geist, sans-serif; cursor: pointer; }
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); transition: transform .5s var(--ease-out-expo), background 120ms var(--ease); }
+.ai-ok:hover { background: #C9F24A; }
+.ai-ok:focus-visible { outline: 2px solid #0c1300; outline-offset: -7px; }   /* inside, clear of the cut corner */
+.ai-ok:active, .ai-ok.press { transform: translateY(2px) !important; transition-duration: 100ms; }
+.ai-ed { background: none; border: 0; color: rgba(11, 12, 13,.64); font: 500 14px Geist, sans-serif; cursor: pointer; height: 48px; padding: 0 4px; box-shadow: inset 0 -1px 0 transparent; transition: color 160ms var(--ease), box-shadow 160ms var(--ease), transform .5s var(--ease-out-expo); }
+.ai-ed:hover { color: #0B0C0D; }
+.ai-ed:active { transform: translateY(2px) !important; transition-duration: 100ms; }
+.ai-ed:focus-visible { outline: 2px solid #0B0C0D; outline-offset: -4px; }
 @media (prefers-reduced-motion: reduce) { .ai-steps li span, .ai-steps path, .ai-acts > *, .ai-draft .w i { transition: none; } }
 </style>
 <style>
-  .qm-stage { align-items: stretch; justify-items: center; }
+  /* a definite height, so the list scrolls inside the frame instead of running past it */
+  .qm-stage { align-items: stretch; justify-items: center; height: 100vh; height: 100svh; min-height: 0; grid-template-rows: minmax(0, 1fr); }
   .ai { min-height: 0; }
 </style>
 </head>
@@ -67,7 +76,7 @@
 <div class="ai">
   <div class="ai-head">
     <div><p class="kicker">Studio · Qbix agent</p><h2>Inbox</h2></div>
-    <div class="ai-count"><div class="ai-roll" id="ai-cnt"><span>3</span></div>archived today</div>
+    <div class="ai-count"><div class="ai-roll" id="ai-cnt" aria-hidden="true"><span>3</span></div>archived today<span class="sr-only" id="ai-say" role="status" aria-live="polite"></span></div>
   </div>
   <div class="ai-list" id="ai-list"></div>
 </div>
@@ -77,7 +86,7 @@
 <script data-code>
 const Inbox = (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const EXPO = 'cubic-bezier(.16,1,.3,1)';
+  const EXPO = 'cubic-bezier(.16,1,.3,1)', IN = 'cubic-bezier(.5,0,.75,0)';
   const POOL = [
     { who: 'Dana Reyes', av: 'DR', subj: 'The homepage looks right. Approved.',
       steps: ['Read the review round', 'Checked the changes against the brief', 'Marked the homepage approved'],
@@ -95,18 +104,23 @@ const Inbox = (() => {
       steps: ['Matched the payment to invoice 0042', 'Marked the project paid', 'Attached the receipt'],
       draft: 'Hi Noor, thank you. Invoice 0042 is paid and the receipt is attached.' },
   ];
+  // paced like work: a quick check, a longer one, then a pause before the last (ms after the row opens)
+  const STEP_AT = [260, 700, 1500];
   const TIMES = ['now', '2m', '6m', '14m', '38m', '1h'];
   const list = document.getElementById('ai-list'), cnt = document.getElementById('ai-cnt');
   let pi = 0, archived = 3, rows = [], open = null;
 
   function make(item) {
     const r = document.createElement('div'); r.className = 'ai-row';
-    r.innerHTML = `<div class="ai-in"><div class="ai-top"><div class="ai-av">${item.av}</div>
+    r.innerHTML = `<div class="ai-in"><div class="ai-top" role="button" tabindex="0" aria-expanded="false"><div class="ai-av">${item.av}</div>
       <div class="ai-who">${item.who}</div><div class="ai-t">now</div><div class="ai-subj">${item.subj}</div></div>
       <div class="ai-more"><div class="ai-pad"><ul class="ai-steps">${item.steps.map((s) => `<li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg><span>${s}</span></li>`).join('')}</ul>
-      <p class="ai-draft"></p><div class="ai-acts"><button class="ai-ok">Approve and send</button><button class="ai-ed">Edit</button></div></div></div></div>`;
+      <p class="ai-draft"></p><div class="ai-acts"><button class="ai-ok" type="button">Approve and send</button><button class="ai-ed" type="button">Edit</button></div></div></div></div>`;
     const o = { el: r, item, state: 'closed', timers: [] };
-    r.querySelector('.ai-top').addEventListener('click', () => toggle(o));
+    r.querySelector('.ai-more').inert = true;                     // closed: nothing in it can take focus
+    const top = r.querySelector('.ai-top');
+    top.addEventListener('click', () => toggle(o));
+    top.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(o); } });
     r.querySelector('.ai-ok').addEventListener('click', (e) => { e.stopPropagation(); approve(o); });
     return o;
   }
@@ -132,12 +146,13 @@ const Inbox = (() => {
     if (o.state !== 'closed') { close(o); return; }
     o.state = 'opening'; open = o; o.el.classList.add('read');
     const more = o.el.querySelector('.ai-more'), pad = more.firstElementChild;
+    more.inert = false; o.el.querySelector('.ai-top').setAttribute('aria-expanded', 'true');
     const lis = [...o.el.querySelectorAll('.ai-steps li')], draft = o.el.querySelector('.ai-draft'), acts = o.el.querySelector('.ai-acts');
     draft.innerHTML = o.item.draft.split(' ').map((w) => `<span class="w"><i>${w}</i></span>`).join(' ');
     setHeight(more, pad.offsetHeight);
     const later = (ms, f) => o.timers.push(setTimeout(f, reduce ? 0 : ms));
-    lis.forEach((li, i) => later(260 + i * 520, () => li.classList.add('on')));
-    const t0 = 260 + lis.length * 520, words = [...draft.children];
+    lis.forEach((li, i) => later(STEP_AT[i], () => li.classList.add('on')));
+    const t0 = STEP_AT[STEP_AT.length - 1] + 520, words = [...draft.children];
     words.forEach((s, i) => later(t0 + i * 55, () => s.classList.add('on')));
     later(t0 + words.length * 55 + 150, () => { acts.classList.add('on'); o.state = 'ready'; more.style.height = pad.offsetHeight + 'px'; reveal(o); });
     later(560, () => reveal(o));
@@ -152,6 +167,8 @@ const Inbox = (() => {
     o.el.querySelectorAll('.ai-steps li').forEach((li) => li.classList.remove('on'));
     o.el.querySelector('.ai-acts').classList.remove('on');
     o.state = 'closed'; if (open === o) open = null;
+    o.el.querySelector('.ai-top').setAttribute('aria-expanded', 'false');
+    const more = o.el.querySelector('.ai-more'); more.inert = true;
   }
   // approve: the row slides right, then its height closes, and the counter rolls up
   function approve(o) {
@@ -160,6 +177,8 @@ const Inbox = (() => {
     if (open === o) open = null;
     const btn = o.el.querySelector('.ai-ok'); btn.classList.add('press'); setTimeout(() => btn.classList.remove('press'), 160);
     const done = () => { o.el.remove(); const i = rows.indexOf(o); if (i >= 0) rows.splice(i, 1); ages(); };
+    if (o.el.contains(document.activeElement)) { const nx = rows[rows.indexOf(o) + 1] || rows[rows.indexOf(o) - 1]; if (nx) nx.el.querySelector('.ai-top').focus({ preventScroll: true }); }
+    o.el.querySelector('.ai-more').inert = true;
     bump();
     if (reduce) { done(); return; }
     const h = o.el.offsetHeight;
@@ -167,31 +186,45 @@ const Inbox = (() => {
       o.el.animate([{ height: h + 'px', marginBottom: '8px' }, { height: '0px', marginBottom: '0px' }], { duration: 420, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' }).onfinish = done;
     };
   }
-  function bump() {
-    archived++;
+  function bump(dir = 1) {
+    archived += dir;
+    document.getElementById('ai-say').textContent = archived + ' archived today';
     const old = cnt.firstElementChild, n = document.createElement('span'); n.textContent = archived;
     if (reduce) { old.textContent = archived; return; }
     Object.assign(n.style, { position: 'absolute', right: '0', top: '0' }); cnt.appendChild(n);
     const o = { duration: 520, easing: EXPO, fill: 'both' };
-    old.animate([{ transform: 'none' }, { transform: 'translateY(-110%)' }], o).onfinish = () => old.remove();
-    n.animate([{ transform: 'translateY(110%)' }, { transform: 'none' }], { ...o, delay: 60 }).onfinish = () => { n.style.position = ''; };
+    old.animate([{ transform: 'none' }, { transform: `translateY(${-110 * dir}%)` }], o).onfinish = () => old.remove();
+    n.animate([{ transform: `translateY(${110 * dir}%)` }, { transform: 'none' }], { ...o, delay: 60 }).onfinish = () => { n.style.position = ''; };
+  }
+  // the end of the story: the rows close one after another and the counter rolls back, so the list is already empty at reset
+  function fold() {
+    const gone = rows.slice(); open = null;
+    gone.forEach((o, i) => {
+      o.timers.forEach(clearTimeout); o.state = 'gone'; o.el.querySelector('.ai-more').inert = true;
+      const h = o.el.offsetHeight;
+      if (reduce) { o.el.remove(); return; }
+      o.el.animate([{ height: h + 'px', marginBottom: '8px' }, { height: '0px', marginBottom: '0px' }], { duration: 260, delay: i * 60, easing: IN, fill: 'forwards' }).onfinish = () => o.el.remove();
+    });
+    rows = [];
+    if (archived > 3) bump(-(archived - 3));
   }
   function reset() {
     rows.forEach((o) => o.timers.forEach(clearTimeout));
     rows = []; open = null; list.innerHTML = ''; list.scrollTop = 0; pi = 0; archived = 3;
-    cnt.innerHTML = '<span>3</span>';
+    cnt.innerHTML = '<span>3</span>'; document.getElementById('ai-say').textContent = '';
   }
-  return { arrive, toggle, approve, reset, rows: () => rows, get open() { return open; }, still() { reset(); arrive(); arrive(); const o = arrive(); toggle(o); } };
+  return { arrive, toggle, approve, fold, reset, openMs: (o) => STEP_AT[STEP_AT.length - 1] + 520 + o.item.draft.split(' ').length * 55 + 150, rows: () => rows, get open() { return open; }, still() { reset(); arrive(); arrive(); const o = arrive(); toggle(o); } };
 })();
 </script>
 <script>
   // the story the viewer watches: three emails land, the top one is opened, read, approved
   let run = 0, touched = -1e9;
   addEventListener('pointerdown', (e) => { if (e.isTrusted) touched = performance.now(); });
+  addEventListener('keydown', (e) => { if (e.isTrusted) touched = performance.now(); });
   const idle = () => performance.now() - touched > 5000;
   const at = (el, dx = 40, dy = 0.55) => { const r = el.getBoundingClientRect(); return [r.left + Math.min(r.width * 0.4, dx + 60), r.top + r.height * dy]; };
   QM.demo({
-    kind: 'play', dur: 10500, hold: 1400, lead: 300,
+    kind: 'play', dur: 13000, hold: 900, lead: 300,
     reset() { if (idle()) { run++; Inbox.reset(); QM.ghostHide(); } },
     async play() {
       if (!idle()) return;
@@ -202,7 +235,7 @@ const Inbox = (() => {
       const top = Inbox.rows()[0]; QM.ghostShow();
       if (!ok() || !(await QM.ghostTo(...at(top.el.querySelector('.ai-top')), 900)) || !ok()) return;
       Inbox.toggle(top);
-      await QM.wait(260 + 3 * 520 + 16 * 55 + 700); if (!ok()) return;
+      await QM.wait(Inbox.openMs(top) + 700); if (!ok()) return;
       const btn = top.el.querySelector('.ai-ok');
       if (!(await QM.ghostTo(...at(btn, 40, 0.5), 800)) || !ok()) return;
       await QM.wait(350); if (!ok()) return;
@@ -210,6 +243,8 @@ const Inbox = (() => {
       await QM.wait(1300); if (!ok()) return;
       QM.ghostTo(innerWidth * 0.82, innerHeight * 0.86, 700);
       Inbox.arrive();
+      await QM.wait(2200); if (!ok()) return;
+      QM.ghostHide(); Inbox.fold();                       // a quiet end: the rows close, the counter rolls back
     },
   });
 </script>
