@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photo lift · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "photo-lift", "title": "Photo lift", "group": "studio", "added": "2026-11-19", "cat": "images", "order": 20,
+  "kind": "loop", "tone": "paper", "shot": 800,
+  "line": "X, Y, width and height as springs · response 0.46 s · release projects v × 0.5 s (d 0.998) · paging, rubber band",
+  "summary": "Forma's shop page: a 3 × 2 grid of rounded photo tiles. Tap one and the photo lifts out of its own cell and grows into a viewer, leaving by its exact rect, while the grid behind steps back to 0.96 under a white veil and the caption, the pager and the Add to bag pill are uncovered. In the viewer a photo is dragged 1:1 from where it was grabbed and shrinks towards 0.7 with the distance, so the grid shows through; on release the velocity is projected with Apple's deceleration and decides: home into the same cell on the same path it came out of, or back to full. Sideways drags page with momentum and the photo rubber-bands at the first and last. Everything is a spring that starts from the value on screen, so any photo can be caught mid-flight.",
+  "spec": [
+    ["Rect", "the lifted photo is four springs, centre X, centre Y, width and height, in viewer pixels; height is its own spring, so the box goes from the cell's square to the photo's own aspect and object-fit: cover redraws the crop on every frame: no stretching, no transform scale on the image"],
+    ["Spring", "critically damped, response 0.46 s (ω = 2π / 0.46); every retarget starts from the value and velocity on screen; the four springs of a retarget share one ω, so the box travels as a unit and in and out run on one path"],
+    ["Open", "from the cell's measured rect (taken with the grid un-scaled and the press undone) to the photo contained in the viewer; corner radius 14 → 22 px with the box's size; grid scale 1 → 0.96 and the veil 0 → 0.88 with the same measure; caption and pager are uncovered over the last half"],
+    ["Drag", "6–8 px of travel (8) before a drag is committed, then 1:1 from the commit point; down moves and scales the photo about the grab point (scale 1 → 0.7 over half the viewer height), up is a rubber band (x·D·0.55)/(D + 0.55·|x|), D = 240 px; the veil thins and the grid comes forward with the size"],
+    ["Release", "projected dy = dy + v × 0.499 s (d 0.998); home when it passes max(100 px, 22% of the viewer height), else back to full; the spring starts at the measured X, Y, size velocity; a throw home picks ω = max(ω₀, 1.5·v / distance), so it starts decelerating and never crosses its cell"],
+    ["Bounce", "only after a throw: back to full after an upward flick uses damping 0.8; every other spring is critically damped"],
+    ["Paging", "photos sit one viewer width apart; a drag moves the strip 1:1, past the ends it is shown through the rubber band; release projects v × 0.3 s and goes floor(|projection| + 0.78) pages (a flick or 22% of a page turns one), at most 3; response 0.4 s, same ω rule; Left and Right step"],
+    ["Catch", "a press on a photo in flight freezes it where it is and the drag takes it from there; a tap without a drag reverses it (opening goes home, closing opens again); a press on a paging strip stops it and a tap settles on the nearest photo"],
+    ["Loop", "starts on the viewer open; the ghost flicks one photo on, drags down slowly and lets go (it springs back), flicks down (it goes home), taps a cell and pages back; it calls the same down / move / up as a hand, yields to a real pointer and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-19"],
+  "where": "A product or portfolio grid on a Qbix client's site, such as Forma's shop or a case study's gallery, where a visitor looks at a photo larger and puts it back without losing their place.",
+  "rules": [
+    "The photo leaves the cell it sits in and lands on the same cell by the same path; the cell's rect is measured with the grid at scale 1, never from the live, scaled or pressed box.",
+    "Every spring starts from the position and velocity on screen. A photo, or a strip of photos, that is still moving is caught where it is; no state locks out the hand.",
+    "The crop animates because the box changes aspect under object-fit: cover; the image is never scaled or stretched.",
+    "The release is decided from the projected rest point, not from where the finger let go; the photo carries the finger's velocity into the spring.",
+    "Nothing bounces on its own: damping 0.8 appears only after an upward throw; opening, going home, paging and taps are critically damped.",
+    "One ink fill (Add to bag, only in the viewer) and one lime point (In stock); the veil, the cards and the pager are white or ink type.",
+    "The viewer is a dialog: Escape and Shop close it, Left and Right page, the cell that opened it gets the focus back.",
+    "Under reduced motion drags still follow the pointer, but release snaps, nothing springs or rubber-bands, and the viewer cross-fades in and out."
+  ],
+  "tags": ["photo", "viewer", "gallery", "shared element", "spring", "momentum", "rubber band", "dismiss", "swipe", "images"]
+}
+</script>
+<style data-code>
+/* Photo lift. White surfaces with soft rings; the one ink fill is Add to bag, one lime point (In stock). Easing for small feedback: ui (.4,0,.2,1).
+   Positions, sizes, radii, the veil and the grid's scale are set from script (render()): the photo is a box whose size and place are springs. */
+.pl-page, .pl-view { font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; color: #0B0C0D; -webkit-user-select: none; user-select: none; }
+.pl-page p, .pl-page h2, .pl-view p, .pl-view h3 { margin: 0; }
+:where(.pl-page button, .pl-view button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.pl-page { --cell: 144px; width: calc(var(--cell) * 3 + 64px); padding: 18px; background: #fff; border-radius: 20px; will-change: transform;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+
+/* the grid: a heading, then square cells with a name and a price under each */
+.pl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.pl-h { font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.pl-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, var(--cell)); gap: 16px 14px; }
+.pl-cell { display: block; width: 100%; text-align: left; outline: none; }
+.pl-pic { display: block; width: var(--cell); height: var(--cell); border-radius: 14px; overflow: hidden; background: #fff;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); transition: transform 100ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.pl-pic img, .pl-ph img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); pointer-events: none; }
+.pl-cell:hover .pl-pic { box-shadow: 0 0 0 1px rgba(11, 12, 13, .16); }
+.pl-cell:active .pl-pic, .pl-cell.is-press .pl-pic { transform: scale(.97); }
+.pl-cell:focus-visible .pl-pic { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.pl-cell.is-out .pl-pic img { visibility: hidden; }               /* its photo is in the viewer: the cell is an empty slot */
+.pl-grid.is-measure .pl-pic { transform: none !important; transition: none !important; }
+.pl-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 8px; }
+.pl-nm { font-size: 13px; line-height: 18px; font-weight: 500; }
+.pl-pr { font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+
+/* the viewer: a fixed layer over the page; the veil, the photos, the bar and the caption */
+.pl-view { position: fixed; left: 0; right: 0; top: 0; bottom: var(--pl-inset, 0px); z-index: 30; outline: none; touch-action: none; cursor: grab; visibility: hidden; pointer-events: none; }
+.pl-view.is-on { visibility: visible; pointer-events: auto; }
+.pl-view.is-drag, .pl-view.is-drag * { cursor: grabbing; }
+.pl-veil { position: absolute; inset: 0; background: #fff; opacity: 0; }
+.pl-ph { position: absolute; left: 0; top: 0; overflow: hidden; border-radius: 22px; background: #fff; visibility: hidden; will-change: transform;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 calc(22px * var(--o, 1)) calc(48px * var(--o, 1)) calc(-22px * var(--o, 1)) rgba(11, 12, 13, calc(.4 * var(--o, 1))); }
+
+/* chrome, uncovered by --u (0 → 1 with the photo's size): the bar rises out of the top edge, the caption comes up from the bottom */
+.pl-bar, .pl-cap { position: absolute; left: 50%; width: var(--pl-rw, min(560px, calc(100% - 48px))); transform: translateX(-50%); display: flex; justify-content: space-between; align-items: center; }
+.pl-bar { top: 0; height: 52px; clip-path: inset(0 -14px -14px -14px); }
+.pl-cap { bottom: 24px; height: 56px; clip-path: inset(-14px -14px 0 -14px); }
+.pl-bar > * { transform: translateY(calc((1 - var(--u, 1)) * -130%)); }
+.pl-cap > * { transform: translateY(calc((1 - var(--u, 1)) * 125%)); }
+.pl-back { display: inline-flex; align-items: center; gap: 6px; height: 36px; margin-left: -8px; padding: 0 12px 0 8px; border-radius: 999px; font-weight: 500; color: rgba(11, 12, 13, .66);
+  transition: color 160ms cubic-bezier(.4, 0, .2, 1), scale 100ms cubic-bezier(.4, 0, .2, 1); }
+.pl-back:hover { color: #0B0C0D; }
+.pl-back:active { scale: .97; }
+.pl-back svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.pl-count { font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); white-space: nowrap; }
+.pl-name { font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.pl-sub { display: flex; align-items: center; gap: 8px; margin-top: 2px; font-size: 13px; line-height: 20px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.pl-pt { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16); }
+.pl-roll { display: inline-grid; overflow: hidden; vertical-align: top; }
+.pl-roll > b { grid-area: 1 / 1; font-weight: inherit; white-space: nowrap; }
+.pl-price { font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+
+/* the one ink fill */
+.pl-add { display: flex; align-items: center; justify-content: center; height: 44px; padding: 0 22px; border-radius: 999px; background: #0B0C0D; color: #fff; font-size: 14px; font-weight: 600; letter-spacing: -.011em;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), scale 100ms cubic-bezier(.4, 0, .2, 1); }
+.pl-add:hover, .pl-add.is-hot { background: #24262a; }
+.pl-add:active, .pl-add.is-press { scale: .97; }
+.pl-add:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.pl-tick { flex: none; width: 0; height: 14px; margin-right: 0; overflow: hidden; transition: width 160ms cubic-bezier(.5, 0, .75, 0), margin 160ms cubic-bezier(.5, 0, .75, 0); }
+.pl-tick svg { display: block; width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.pl-add.is-added .pl-tick { width: 14px; margin-right: 8px; transition: width 420ms cubic-bezier(.16, 1, .3, 1), margin 420ms cubic-bezier(.16, 1, .3, 1); }
+
+/* reduced motion: the viewer cross-fades, photos swap by opacity, nothing springs */
+.pl-view.is-still { visibility: visible; opacity: 0; transition: opacity 160ms cubic-bezier(.4, 0, .2, 1); }
+.pl-view.is-still.is-on { opacity: 1; }
+.pl-view.is-still .pl-ph { transition: opacity 160ms cubic-bezier(.4, 0, .2, 1); }
+@media (prefers-reduced-motion: reduce) { .pl-page *, .pl-view * { transition-duration: 1ms !important; } .pl-view.is-still, .pl-view.is-still .pl-ph { transition-duration: 160ms !important; } }
+</style>
+<style>
+  html:not(.qm-tile) .pl-view { --pl-inset: 46px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<section class="pl-page" id="pl-page" aria-labelledby="pl-h">
+  <header class="pl-head"><h2 class="pl-h" id="pl-h">New in</h2><span class="pl-pr">Forma · 6 pieces</span></header>
+  <ul class="pl-grid" id="pl-grid">
+    <li><button type="button" class="pl-cell" data-name="Ash vase" data-price="$68" style="--pos:50% 58%"><span class="pl-pic"><img src="../assets/art/vase.webp" width="700" height="1050" alt="" draggable="false"></span><span class="pl-meta"><span class="pl-nm">Ash vase</span><span class="pl-pr">$68</span></span></button></li>
+    <li><button type="button" class="pl-cell" data-name="Fluted cup" data-price="$34" style="--pos:48% 50%"><span class="pl-pic"><img src="../assets/art/calla.webp" width="900" height="600" alt="" draggable="false"></span><span class="pl-meta"><span class="pl-nm">Fluted cup</span><span class="pl-pr">$34</span></span></button></li>
+    <li><button type="button" class="pl-cell" data-name="Moss carafe" data-price="$82" style="--pos:34% 40%"><span class="pl-pic"><img src="../assets/art/bottle.webp" width="800" height="1202" alt="" draggable="false"></span><span class="pl-meta"><span class="pl-nm">Moss carafe</span><span class="pl-pr">$82</span></span></button></li>
+    <li><button type="button" class="pl-cell" data-name="Pressed tumbler" data-price="$28" style="--pos:36% 50%"><span class="pl-pic"><img src="../assets/art/glass.webp" width="900" height="597" alt="" draggable="false"></span><span class="pl-meta"><span class="pl-nm">Pressed tumbler</span><span class="pl-pr">$28</span></span></button></li>
+    <li><button type="button" class="pl-cell" data-name="Loop tray" data-price="$46" style="--pos:50% 50%"><span class="pl-pic"><img src="../assets/art/ring.webp" width="1200" height="675" alt="" draggable="false"></span><span class="pl-meta"><span class="pl-nm">Loop tray</span><span class="pl-pr">$46</span></span></button></li>
+    <li><button type="button" class="pl-cell" data-name="Fold plate" data-price="$52" style="--pos:30% 40%"><span class="pl-pic"><img src="../assets/art/lime-fold.webp" width="1200" height="800" alt="" draggable="false"></span><span class="pl-meta"><span class="pl-nm">Fold plate</span><span class="pl-pr">$52</span></span></button></li>
+  </ul>
+</section>
+<div class="pl-view" id="pl-view" role="dialog" aria-modal="true" aria-label="Photo viewer" tabindex="-1">
+  <div class="pl-veil" id="pl-veil"></div>
+  <div class="pl-bar" id="pl-bar">
+    <button type="button" class="pl-back" id="pl-back"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7.5 3.5L3 8l4.5 4.5"/></svg><span>Shop</span></button>
+    <span class="pl-count" aria-hidden="true"><span class="pl-roll" id="pl-n"><b>1</b></span> / 6</span>
+  </div>
+  <div class="pl-cap" id="pl-cap">
+    <div class="pl-info">
+      <h3 class="pl-name"><span class="pl-roll" id="pl-name"><b>Ash vase</b></span></h3>
+      <p class="pl-sub"><span class="pl-roll pl-price" id="pl-price"><b>$68</b></span><i class="pl-pt"></i><span>In stock</span></p>
+    </div>
+    <button type="button" class="pl-add" id="pl-add"><span class="pl-tick"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M1.5 7.5l3.5 3.5 7.5-8"/></svg></span><span class="pl-roll" id="pl-add-t"><b>Add to bag</b></span></button>
+  </div>
+  <p class="sr-only" id="pl-msg" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Tap a photo, drag it down to put it back, swipe sideways to page, or catch it mid-flight. Esc closes; Left and Right page</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Photo lift. The lifted photo is one box with four springs (centre X, centre Y, width, height); the grid, the veil, the radius and the caption
+   are all derived from its size in render(). Release projects the velocity with d = 0.998 and chooses home or back; paging is one spring on a float. */
+const PL = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const OMEGA = (2 * Math.PI) / 0.46, OMEGA_PAGE = (2 * Math.PI) / 0.4;     // response 0.46 s for the photo, 0.4 s for paging
+  const DECEL = 0.998, LOOK = DECEL / (1 - DECEL) / 1000, LOOK_PAGE = 0.3;  // 0.499 s: where a release would coast to; paging looks 0.3 s ahead
+  const SLOP = 8, R0 = 14, R1 = 22, VEIL = 0.9, GRID = 0.04, KEY = 0;      // px before a drag, corner radii, veil and grid recede, the page the loop rests on
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const clamp01 = (x) => clamp(x, 0, 1);
+  const smooth01 = (x) => { const t = clamp01(x); return t * t * (3 - 2 * t); };
+  const $ = (id) => document.getElementById('pl-' + id);
+  const page = $('page'), grid = $('grid'), view = $('view'), veil = $('veil'), msg = $('msg'), addBtn = $('add');
+  const cells = [...grid.querySelectorAll('.pl-cell')];
+  const items = cells.map((cell) => {
+    const im = cell.querySelector('img');
+    return { cell, pic: cell.querySelector('.pl-pic'), src: im.getAttribute('src'), w: +im.getAttribute('width'), h: +im.getAttribute('height'),
+      name: cell.dataset.name, price: cell.dataset.price, pos: cell.style.getPropertyValue('--pos') };
+  });
+  const N = items.length;
+  items.forEach((it) => {                                                     // the viewer's own photos: same file, same crop, drawn at the photo's size
+    const ph = document.createElement('div');
+    ph.className = 'pl-ph';
+    ph.style.setProperty('--pos', it.pos);
+    ph.innerHTML = `<img src="${it.src}" alt="${it.name}" draggable="false">`;
+    view.insertBefore(ph, $('bar'));
+    it.ph = ph; it.st = { x: NaN, y: NaN, w: NaN, h: NaN, r: NaN, o: NaN, vis: null, op: null };
+  });
+  if (reduced) view.classList.add('is-still');
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) when critically damped, the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OMEGA, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+  const ls = { x: mk(), y: mk(), w: mk(), h: mk() }, LK = ['x', 'y', 'w', 'h'];   // the lifted photo
+  const pgS = mk(KEY);                                                           // the paging position, in photos
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                          // rubber band: Apple's, constant 0.55
+
+  /* geometry: where the cells are, where each photo fits in the viewer */
+  let VW = 800, VH = 500, OX = 0, OY = 0, PITCH = 800, cellR = [], fits = [];
+  function measure() {                                                           // cell rects with the grid un-scaled and the press undone
+    const tf = page.style.transform;
+    page.style.transform = 'none'; grid.classList.add('is-measure');
+    cellR = items.map((it) => { const r = it.pic.getBoundingClientRect(); return { x: r.left - OX, y: r.top - OY, w: r.width, h: r.height }; });
+    grid.classList.remove('is-measure'); page.style.transform = tf;
+  }
+  function layout() {
+    const r = view.getBoundingClientRect();
+    VW = r.width; VH = r.height; OX = r.left; OY = r.top; PITCH = VW;
+    const pad = clamp(0.06 * Math.min(VW, VH), 24, 72);
+    const cell = Math.floor(clamp(Math.min((VW * 0.6 - 64) / 3, (VH - 2 * pad - 146) / 2), 72, 188));
+    page.style.setProperty('--cell', cell + 'px');
+    measure();
+    const AW = Math.min(VW - 48, 600), top = 52, AH = Math.max(120, VH - top - 104);
+    view.style.setProperty('--pl-rw', Math.round(Math.min(AW, AH * 1.5)) + 'px');                // the bar and caption are as wide as a 3:2 photo
+    fits = items.map((it) => {
+      const w = Math.round(Math.min(AW, AH * (it.w / it.h))), h = Math.round(w * (it.h / it.w));
+      return { x: Math.round((VW - w) / 2), y: top + Math.round((AH - h) / 2), w, h, cx: Math.round((VW - w) / 2) + w / 2, cy: top + Math.round((AH - h) / 2) + h / 2 };
+    });
+  }
+
+  /* state */
+  let phase = 'grid', L = -1, liftOn = false, aimTo = 'fit', solo = false, cur = KEY, held = null, raf = 0, last = 0, wt = 0;
+  const pageRect = (i) => ({ x: fits[i].x + (i - pgS.x) * PITCH, y: fits[i].y, w: fits[i].w, h: fits[i].h });
+  const setLs = (cx, cy, w, h) => { LK.forEach((k, j) => { const s = ls[k]; s.x = [cx, cy, w, h][j]; s.v = 0; s.T = s.x; s.on = false; }); };
+
+  /* text that changes rolls inside its clip: the old line leaves up and the new one comes from below (reversed when the value fell) */
+  function roll(el, text, dir = 1) {
+    const cur = el.lastElementChild;
+    if (cur.textContent === text) return;
+    if (!cur.animate || reduced) { cur.textContent = text; return; }
+    while (el.children.length > 2) el.firstElementChild.remove();
+    const nb = document.createElement('b'); nb.textContent = text; el.appendChild(nb);
+    const o = { duration: 420, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'both' };
+    cur.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-110 * dir}%)` }], o).finished.then(() => cur.remove(), () => {});
+    nb.animate([{ transform: `translateY(${110 * dir}%)` }, { transform: 'translateY(0)' }], o);
+  }
+  const setText = (el, text) => { while (el.children.length > 1) el.firstElementChild.remove(); el.lastElementChild.textContent = text; };
+  let added = false;
+  function unadd() { if (added) { added = false; addBtn.classList.remove('is-added'); roll($('add-t'), 'Add to bag', -1); } }
+  addBtn.addEventListener('click', () => {
+    if (added) return;
+    added = true; addBtn.classList.add('is-added'); roll($('add-t'), 'Added');
+    msg.textContent = `${items[cur].name} added to bag`;
+  });
+  function show(i, animate, dir) {                                               // the caption, pager and aria for photo i
+    cur = i;
+    const it = items[i];
+    if (animate) { roll($('name'), it.name, dir); roll($('price'), it.price, dir); roll($('n'), String(i + 1), dir); }
+    else { setText($('name'), it.name); setText($('price'), it.price); setText($('n'), String(i + 1)); }
+    view.setAttribute('aria-label', `${it.name}, photo ${i + 1} of ${N}`);
+    unadd();
+  }
+
+  /* draw everything from the state: one pass, every value derived from the lifted photo's size (o: 0 in its cell, 1 in the viewer) */
+  let outCell = -2, lastU = NaN, lastO = NaN;
+  function render() {
+    const lift = liftOn && L >= 0, pgv = pgS.x;
+    let o = phase === 'open' ? 1 : 0;
+    if (lift) {
+      const c = cellR[L], f = fits[L], a = Math.sqrt(c.w * c.h), b = Math.sqrt(f.w * f.h);
+      o = clamp01((Math.sqrt(Math.max(0, ls.w.x * ls.h.x)) - a) / (b - a));
+    }
+    if (!lift && phase === 'open') {
+      const c = clamp(Math.round(pgv), 0, N - 1);
+      if (c !== cur) show(c, true, c > cur ? 1 : -1);
+    }
+    items.forEach((it, i) => {
+      const st = it.st;
+      let x, y, w, h, vis, r = R1, oo = 1;
+      if (lift && i === L) { w = ls.w.x; h = ls.h.x; x = ls.x.x - w / 2; y = ls.y.x - h / 2; vis = true; r = R0 + (R1 - R0) * o; oo = o; }
+      else { const f = fits[i]; w = f.w; h = f.h; x = f.x + (i - pgv) * PITCH; y = f.y; vis = phase === 'open' && !solo && Math.abs(i - pgv) < 1.02; }
+      if (reduced) { vis = true; const op = i === cur ? 1 : 0; if (op !== st.op) { it.ph.style.opacity = op; st.op = op; } }   // still: photos swap by opacity
+      if (vis !== st.vis) { it.ph.style.visibility = vis ? 'visible' : 'hidden'; st.vis = vis; }
+      if (!vis && !reduced) return;
+      it.ph.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
+      if (w !== st.w) { it.ph.style.width = w + 'px'; st.w = w; }
+      if (h !== st.h) { it.ph.style.height = h + 'px'; st.h = h; }
+      if (r !== st.r) { it.ph.style.borderRadius = r + 'px'; st.r = r; }
+      if (oo !== st.o) { it.ph.style.setProperty('--o', oo.toFixed(3)); st.o = oo; }
+    });
+    veil.style.opacity = (VEIL * o).toFixed(3);
+    page.style.transform = o > 0.001 ? `scale(${(1 - GRID * o).toFixed(4)})` : '';
+    const u = +smooth01((o - 0.45) / 0.55).toFixed(3);
+    if (u !== lastU) { view.style.setProperty('--u', u); lastU = u; }
+    const out = phase === 'open' ? (lift ? L : cur) : -1;
+    if (out !== outCell) { cells.forEach((c, i) => c.classList.toggle('is-out', i === out)); outCell = out; }
+  }
+
+  /* motion */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let live = false;
+    if (liftOn) for (const k of LK) live = step(ls[k], dt, 0.12, 6) || live;
+    live = step(pgS, dt, 0.0003, 0.01) || live;
+    if (liftOn && !live && !held) land();
+    render();
+    if (live) kick();
+  }
+  function land() {
+    liftOn = false; solo = false;
+    if (aimTo === 'home') { phase = 'grid'; L = -1; view.classList.remove('is-on'); }
+  }
+  // a photo goes to 'home' (its cell) or 'fit' (full size) from the value on screen; vel = the box's velocity in px/s
+  function liftGo(to, vel, bounce) {
+    const tgt = to === 'home' ? (() => { const c = cellR[L]; return [c.x + c.w / 2, c.y + c.h / 2, c.w, c.h]; })() : (() => { const f = fits[L]; return [f.cx, f.cy, f.w, f.h]; })();
+    aimTo = to;
+    if (reduced) { snapLift(to === 'home'); return; }
+    let w = OMEGA;
+    if (!bounce) LK.forEach((k, j) => { const D = tgt[j] - ls[k].x, V = vel[j]; if (V * D > 0) w = Math.max(w, (1.5 * Math.abs(V)) / Math.abs(D)); });   // a throw decelerates from the start and never crosses
+    LK.forEach((k, j) => aim(ls[k], tgt[j], vel[j], Math.min(w, 40), bounce ? 0.8 : 1));
+    kick();
+  }
+  function snapLift(home) {
+    liftOn = false; solo = false;
+    pgS.on = false; pgS.v = 0; if (L >= 0) pgS.x = pgS.T = L;
+    if (home) { phase = 'grid'; L = -1; view.classList.remove('is-on'); }
+    render();
+  }
+  function pageGo(T, v = 0) {
+    T = clamp(Math.round(T), 0, N - 1);
+    if (reduced) { pgS.x = pgS.T = T; pgS.on = false; pgS.v = 0; render(); return; }
+    const D = T - pgS.x;
+    let w = OMEGA_PAGE;
+    if (v * D > 0) w = clamp((1.5 * Math.abs(v)) / Math.abs(D), w, 40);
+    aim(pgS, T, v, w, 1);
+    kick();
+  }
+  function liftBegin(from) {                                                     // the photo in the viewer becomes the one in the hand
+    if (!liftOn) {
+      L = clamp(Math.round(pgS.x), 0, N - 1);
+      const r = pageRect(L);
+      setLs(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h);
+      liftOn = true; aimTo = 'fit'; solo = false;
+      if (pgS.x !== L) pageGo(L, pgS.on ? pgS.v : 0);                            // the strip finishes settling on it
+    }
+    return { cx: ls.x.x, cy: ls.y.x, w: ls.w.x, h: ls.h.x };
+  }
+
+  function open(i) {
+    if (phase !== 'grid') return;
+    measure();
+    L = i; phase = 'open'; solo = true;
+    pgS.x = pgS.T = i; pgS.on = false; pgS.v = 0;
+    show(i, false);
+    view.classList.add('is-on');
+    const c = cellR[i];
+    if (reduced) { liftOn = false; solo = false; render(); view.focus({ preventScroll: true }); return; }
+    setLs(c.x + c.w / 2, c.y + c.h / 2, c.w, c.h);
+    liftOn = true;
+    liftGo('fit', [0, 0, 0, 0], false);
+    render();
+    view.focus({ preventScroll: true });
+  }
+  function close() {
+    if (phase !== 'open') return;
+    measure();
+    if (!liftOn) {
+      L = clamp(Math.round(pgS.x), 0, N - 1);
+      const r = pageRect(L);
+      setLs(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h);
+      liftOn = true; solo = false;
+      if (pgS.x !== L) pageGo(L, 0);
+    }
+    liftGo('home', [0, 0, 0, 0], false);
+    render();
+    if (document.activeElement === view || view.contains(document.activeElement)) cells[L].focus({ preventScroll: true });
+  }
+  function snap(i) {                                                             // the viewer open on photo i, at rest, no motion
+    held = null; liftOn = false; solo = false; L = -1; phase = 'open';
+    LK.forEach((k) => { ls[k].on = false; });
+    pgS.x = pgS.T = i; pgS.v = 0; pgS.on = false;
+    show(i, false);
+    view.classList.add('is-on'); view.classList.remove('is-drag');
+    render();
+  }
+
+  /* one hand: a pointer or the ghost, both through down / move / up. x and y are client px, t is ms. */
+  function vel(rows, t, idx) {                                                   // px/s (or photos/s) over the last 80 ms of moves, 0 if the hand rested
+    const zero = idx.map(() => 0), b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return zero;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? zero : idx.map((j) => ((b[j] - a[j]) / dt) * 1000);
+  }
+  function down(x, y, t, ghost = false) {
+    if (held) up(t, true);
+    if (phase !== 'open') return;
+    held = { x0: x - OX, y0: y - OY, mode: 'wait', ghost, rows: [], caught: null };
+    held.rows.push([t, held.x0, held.y0, 0, 0, 0, 0, pgS.x]);
+    if (liftOn) { held.caught = 'lift'; LK.forEach((k) => { ls[k].on = false; ls[k].v = 0; }); }       // a photo in flight is caught where it is
+    else if (pgS.on) { held.caught = 'page'; pgS.on = false; pgS.v = 0; }
+  }
+  function move(x, y, t) {
+    const h = held;
+    if (!h) return;
+    x -= OX; y -= OY;
+    const row = [t, x, y, 0, 0, 0, 0, pgS.x];
+    h.rows.push(row);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    if (h.mode === 'wait') {
+      if (Math.hypot(x - h.x0, y - h.y0) < SLOP) return;
+      h.mode = liftOn || Math.abs(y - h.y0) > Math.abs(x - h.x0) ? 'lift' : 'page';
+      h.ax = x; h.ay = y;
+      if (h.mode === 'lift') h.base = liftBegin(); else { h.pg0 = pgS.x; h.start = clamp(Math.round(h.pg0), 0, N - 1); pgS.on = false; pgS.v = 0; }
+      view.classList.add('is-drag');
+    }
+    if (h.mode === 'lift') {
+      const dx = x - h.ax, dy = y - h.ay, b = h.base;
+      h.dyE = dy >= 0 ? dy : -rb(-dy, 240);                                      // up is a rubber band
+      const s = 1 - 0.3 * clamp01(Math.max(0, h.dyE) / (0.5 * VH));              // scale 1 → 0.7 with the distance down, about the grab point
+      const w = b.w * s, hh = b.h * s, cx = h.ax + dx + (b.cx - h.ax) * s, cy = h.ay + h.dyE + (b.cy - h.ay) * s;
+      ls.x.x = cx; ls.y.x = cy; ls.w.x = w; ls.h.x = hh;
+      row[3] = cx; row[4] = cy; row[5] = w; row[6] = hh;
+    } else {
+      const raw = h.pg0 - (x - h.ax) / PITCH, e = (u) => rb(u * PITCH, PITCH) / PITCH;
+      h.raw = raw;
+      pgS.x = reduced ? clamp(raw, 0, N - 1) : raw < 0 ? -e(-raw) : raw > N - 1 ? N - 1 + e(raw - (N - 1)) : raw;   // past the first or last it resists
+      row[7] = pgS.x;
+    }
+    render();
+  }
+  function up(t, cancel = false) {
+    const h = held;
+    if (!h) return;
+    held = null;
+    view.classList.remove('is-drag');
+    if (h.mode === 'wait') {                                                     // a tap
+      if (h.caught === 'lift') liftGo(cancel ? aimTo : aimTo === 'home' ? 'fit' : 'home', [0, 0, 0, 0], false);   // a tap on a photo in flight turns it round
+      else if (h.caught === 'page') pageGo(pgS.x);
+      else if (!cancel) close();
+      return;
+    }
+    if (h.mode === 'lift') {
+      const v = cancel ? [0, 0] : vel(h.rows, t, [1, 2]), vr = cancel ? [0, 0, 0, 0] : vel(h.rows, t, [3, 4, 5, 6]);
+      const home = !cancel && h.dyE + v[1] * LOOK > Math.max(100, 0.22 * VH);   // decided from where the throw is heading
+      liftGo(home ? 'home' : 'fit', vr, !home && v[1] < -300);
+    } else {
+      const v = cancel ? [0] : vel(h.rows, t, [7]);
+      const proj = h.raw - h.start + v[0] * LOOK_PAGE;
+      const n = Math.min(3, Math.floor(Math.abs(proj) + 0.78));
+      pageGo(h.start + Math.sign(proj) * n, v[0]);
+    }
+  }
+  const release = () => { if (held && held.ghost) up(performance.now()); };
+
+  let ptr = null;                                                                // a real pointer
+  view.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null || e.target.closest('button')) return;
+    ptr = e.pointerId;
+    try { view.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    down(e.clientX, e.clientY, e.timeStamp);
+  });
+  view.addEventListener('pointermove', (e) => { if (e.pointerId === ptr) move(e.clientX, e.clientY, e.timeStamp); });
+  const pend = (cancel) => (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.timeStamp, cancel); };
+  view.addEventListener('pointerup', pend(false));
+  view.addEventListener('pointercancel', pend(true));
+  view.addEventListener('wheel', (e) => {                                        // a trackpad's sideways stream moves the strip and settles 90 ms after the last event
+    if (phase !== 'open' || liftOn || held || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    pgS.on = false; pgS.v = 0;
+    pgS.x = clamp(pgS.x + e.deltaX / PITCH, -0.3, N - 0.7);
+    render();
+    clearTimeout(wt);
+    wt = setTimeout(() => pageGo(Math.round(pgS.x)), 90);
+  }, { passive: false });
+  cells.forEach((c, i) => c.addEventListener('click', () => open(i)));
+  $('back').addEventListener('click', close);
+  addEventListener('keydown', (e) => {
+    if (phase !== 'open' || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if (!liftOn && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !e.target.closest('button')) { e.preventDefault(); pageGo(Math.round(pgS.T) + (e.key === 'ArrowRight' ? 1 : -1), pgS.on ? pgS.v : 0); }
+  });
+  addEventListener('resize', () => { layout(); render(); });
+
+  layout();
+  snap(KEY);
+  if (document.fonts) document.fonts.ready.then(() => { layout(); render(); });
+  return {
+    items, cells, addBtn, down, move, up, release, open, close, snap, pageGo,
+    get phase() { return phase; }, get held() { return held; }, get cur() { return cur; },     size() { return { VW, VH, OX, OY }; },
+    toKey() {                                                                    // one step towards the key state (the viewer open on KEY), by springs; true when there
+      release();
+      if (held || liftOn || pgS.on) return false;
+      if (phase === 'grid') { open(KEY); return false; }
+      if (cur !== KEY || Math.round(pgS.x) !== KEY) { pageGo(KEY); return false; }
+      return true;
+    },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+  // the ghost holds the viewer at (fx, fy) (fractions of it) and moves dx, dy px over ms through PL.down / move / up, as a hand does.
+  // 'flick' accelerates and lets go at speed; 'ease' arrives, rests and lets go slowly
+  async function hand(my, fx, fy, dx, dy, ms, kind) {
+    const { VW, VH, OX, OY } = PL.size(), x0 = OX + VW * fx, y0 = OY + VH * fy;
+    if (!(await QM.ghostTo(x0, y0, 760))) throw 0;
+    await gap(my, 180);
+    PL.down(x0, y0, performance.now(), true);
+    const t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const now = performance.now(), p = Math.min(1, (now - t0) / ms), k = kind === 'flick' ? Math.pow(p, 1.6) : mv(p);
+      QM.ghostAt(x0 + dx * k, y0 + dy * k); PL.move(x0 + dx * k, y0 + dy * k, now);
+      if (p >= 1) break;
+    }
+    if (kind !== 'flick') await gap(my, 150);
+    PL.up(performance.now());
+  }
+  async function tapCell(my, i) {
+    const c = PL.cells[i], r = c.getBoundingClientRect();
+    if (!(await QM.ghostTo(r.left + r.width * 0.55, r.top + r.height * 0.5, 760))) throw 0;
+    c.classList.add('is-press'); await gap(my, 130);
+    c.classList.remove('is-press'); c.click();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 4200 : 1800);
+      for (let i = 0; i < 40 && !PL.toKey(); i++) await gap(my, 200);   // the viewer open on the key photo, wherever a hand left it
+      QM.ghostShow();
+      for (;;) {
+        await hand(my, 0.62, 0.46, -250, 0, 300, 'flick');          // flick sideways: the next photo, with momentum
+        await gap(my, 1500);
+        await hand(my, 0.5, 0.4, 0, 88, 780, 'ease');                // drag down slowly and let go: not far enough, it springs back
+        await gap(my, 1000);
+        await hand(my, 0.5, 0.35, 0, 230, 340, 'flick');             // flick down: it goes home into its cell
+        await gap(my, 1500);
+        await tapCell(my, 0);                                        // tap the vase: it grows out of its cell
+        await gap(my, 1700);
+        await hand(my, 0.4, 0.46, 120, 0, 650, 'ease');              // pull the first photo further right: nothing there, the strip resists and returns
+        await gap(my, 2000);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) PL.release(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); PL.release(); PL.cells.forEach((c) => c.classList.remove('is-press')); }
+  if (!QM.tile && !reduced) {
+    const idle = () => PL.held || PL.addBtn.matches(':hover');
+    const touch = (e) => {
+      if (e && e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('wheel', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); PL.snap(0); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

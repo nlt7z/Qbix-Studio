@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stretch slider · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "stretch-slider", "title": "Stretch slider", "group": "studio", "added": "2026-11-19", "cat": "inputs", "order": 50,
+  "kind": "loop", "tone": "paper", "shot": 700,
+  "line": "relative drag · rubber band D 140 px, area kept · release at v, damping 0.8 · coast d 0.998",
+  "summary": "The voice panel of Qbix's TTS Editor: two thick capsules, Volume and Speed. The value follows the hand 1:1 from where it was grabbed, never jumping to the pointer, and the one being touched turns solid ink while the other stays ink at low alpha. Pushed past an end, the whole capsule stretches along the drag through a rubber band, anchored on its far end and thinner so its area stays; letting go springs it back from the stretched length with the hand's velocity and damping 0.8. A flick coasts the value on by projection and, if the throw is heading past the end, runs into it and stretches. Speaker waves appear one by one with the volume, a gauge's ticks light with the speed, and the numbers roll digit by digit.",
+  "spec": [
+    ["Capsule", "392 × 68 px, radius 24 px in a 448 px card; a white track with a soft ring, the fill ink at 10% alpha, solid ink while touched (100 ms in, 300 ms out); a press scales it to 0.97 in 100 ms; label and value are drawn twice and clipped at the fill's edge, so the glyphs change colour mid-letter"],
+    ["Drag", "6 px of travel before it is a drag; from there the value moves 1:1 with the pointer (1 px = 1 / 392 of the range) relative to where it was grabbed; pointer capture; velocity from the last 80 ms"],
+    ["Stretch", "past an end the finger's travel x is shown through (x·D·0.55) / (D + 0.55·x), D = 140 px (100 px over shows 40 px, 200 px shows 62 px, never more than 140); the capsule widens by that on the dragged side, anchored on the far end, and its height is 68 · W / (W + stretch), so the area is kept (the 44 px of the held pose is 61 px tall)"],
+    ["Release", "a stretched capsule springs back from its stretched length at the release velocity, response 0.32 s; damping 0.8 when the hand was moving at over 300 px/s, else 1.0; a throw back in starts at the band's own speed plus 70% of the way to the hand's (≤ 2400 px/s), which is what makes the squash past rest visible: a 1000 px/s start from 40 px dips about 4 px"],
+    ["Coast", "a flick inside the range keeps its release velocity and decays with the scroll deceleration, x(t) = T − (T − x0)·e^(−2·t), T = the projected rest point (release + v × 0.499 s, d 0.998) snapped to a whole % or 0.1×; under 140 px/s it just settles on a spring (response 0.3 s)"],
+    ["Wall", "a coast whose projection lies past an end runs into it at the speed it has there and hands 1.8× that speed (≤ 1100 px/s) to the stretch, which springs out and back at damping 0.8"],
+    ["Catch", "a press freezes the value and the stretch where they are (the finger's travel is recovered from the shown stretch with the inverse of the band, so nothing jumps); a drag takes them from there"],
+    ["Icons", "speaker waves are stroke-dashed by the value, each over 14% of the range from 2%, 36% and 68%; at 0% a cross is drawn in; the speed gauge lights 5 ticks at 0, 25, 50, 75 and 100% and its needle turns 180° with the value"],
+    ["Numbers", "Geist Mono; every digit is a strip of 0–9 on its own critically damped spring (response 0.26 s) that takes the shortest way round (9 to 0 is one step); hundreds and tens appear by width"],
+    ["Keys", "role=slider; arrows ±1% (±0.1×), Shift or Page ±10% (±0.5×), Home, End; against an end an arrow nudges the stretch at 240 px/s; the capsule is ink for 0.9 s after a key"],
+    ["Loop", "the ghost arrives after about 5 s (the thumbnail's moment is Volume held 44 px past its end, a fixed pose at load), catches it, pulls it back to 72%, overdrags and tugs back, flicks Speed down into its end and eases it back; it uses the same down / move / up as a hand, yields to a real pointer and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-19"],
+  "where": "The voice panel of the TTS Editor in Qbix Labs, and any settings sheet on a Qbix product page where a thick control for volume, speed or intensity should feel like a piece of rubber in the hand.",
+  "rules": [
+    "Relative, never absolute: the value changes by the pointer's travel from where it was grabbed, and a tap changes nothing. Keys cover the exact value.",
+    "The finger's travel is one number (raw, in range units); the value is its clamp and the stretch is its overshoot through the rubber band. Every spring starts from the value and velocity on screen, and a catch recovers the raw travel from the stretch.",
+    "Overshoot exists only after a throw. A slow release, a key and a settle are critically damped; damping 0.8 is used only when the hand was moving at over 300 px/s, when a coast hits an end and for a key's nudge against an end.",
+    "The stretch is anchored on the end away from the drag and keeps the capsule's area: width and height are set together, the radius scales with the height.",
+    "One focus: only the capsule being touched (or still moving after a touch) is solid ink; the other is ink at low alpha. The one lime point is the Preview dot, and it only shows while a capsule is touched.",
+    "Numbers use tabular figures and roll per digit; aria-valuenow and the live status follow the settled value, not every frame.",
+    "Each capsule is role=slider with aria-valuemin, aria-valuemax, aria-valuenow and aria-valuetext.",
+    "Under reduced motion the capsule still follows the pointer inside its range, but there is no stretch, no spring, no coast and no ghost: release snaps to the nearest step and the numbers change in place."
+  ],
+  "tags": ["slider", "capsule", "stretch", "rubber band", "spring", "momentum", "velocity", "volume", "speed", "range", "inputs", "TTS"]
+}
+</script>
+<style data-code>
+/* Stretch slider. White surfaces with soft rings; solid ink only on the capsule being touched, one lime point (the Preview dot).
+   Easings: ui (.4,0,.2,1), expo out (.16,1,.3,1), move (.65,0,.35,1). The capsule's width, height, fill and the digits are set from script (draw()). */
+.ss-card { width: 448px; max-width: 100%; padding: 26px 28px 24px; background: #fff; color: #0B0C0D; border-radius: 22px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; user-select: none; -webkit-user-select: none; }
+.ss-card p, .ss-card h3 { margin: 0; }
+.ss-t { font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.ss-sub { margin-top: 2px; color: rgba(11, 12, 13, .66); font-size: 13px; line-height: 20px; font-weight: 500; }
+.ss-list { display: grid; gap: 12px; margin-top: 20px; }
+
+/* a slider: the row is the fixed slot (and the focus target); the capsule inside it is what stretches */
+.ss-row { position: relative; height: 68px; border-radius: 24px; cursor: grab; touch-action: pan-y; outline: none; }
+.ss-row.is-drag, .ss-row.is-drag * { cursor: grabbing; }
+.ss-row:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.ss-cap { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; border-radius: 24px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .1), 0 10px 22px -16px rgba(11, 12, 13, .3);
+  scale: 1; transition: scale 100ms cubic-bezier(.4, 0, .2, 1), box-shadow 200ms cubic-bezier(.4, 0, .2, 1); }
+.ss-row:hover .ss-cap { box-shadow: 0 0 0 1px rgba(11, 12, 13, .16), 0 10px 22px -16px rgba(11, 12, 13, .3); }
+.ss-cap.is-press { scale: .97; }
+.ss-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; overflow: hidden; background: #E6ECDB; transition: background-color 300ms cubic-bezier(.4, 0, .2, 1); }
+.ss-cap.is-on .ss-fill { background: #0B0C0D; transition-duration: 100ms; }
+
+/* the face: icon, name, value. Drawn twice: once over the track (clipped to the unfilled part) and once inside the fill (white when the fill is ink) */
+.ss-layer { position: absolute; left: 0; top: 0; height: 100%; width: 100%; box-sizing: border-box; padding: 0 22px 0 20px; display: flex; align-items: center; gap: 12px;
+  white-space: nowrap; pointer-events: none; color: #0B0C0D; }
+.ss-fill .ss-layer { transition: color 0s linear 130ms; }          /* the glyphs flip colour while the fill is mid-way, so they never meet it at the same grey */
+.ss-cap.is-on .ss-fill .ss-layer { color: #fff; transition-delay: 40ms; }
+.ss-ic { flex: none; width: 26px; height: 26px; display: grid; }
+.ss-ic svg { display: block; width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.ss-ic .ss-body { fill: currentColor; }
+.ss-w, .ss-x { stroke-dasharray: 1 2; }
+.ss-tk { transition: opacity 140ms cubic-bezier(.4, 0, .2, 1); }
+.ss-name { font: 500 16px/20px Geist, system-ui, sans-serif; letter-spacing: -.011em; }
+.ss-val { margin-left: auto; display: flex; align-items: center; font: 500 16px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ss-d { display: block; flex: none; height: 20px; width: 1ch; overflow: hidden; transition: width 260ms cubic-bezier(.16, 1, .3, 1); }
+.ss-d.is-off { width: 0; }
+.ss-st { display: block; white-space: pre; line-height: 20px; will-change: transform; }
+
+/* the preview line: the one lime point plays while a capsule is touched */
+.ss-prev { display: flex; align-items: center; gap: 8px; margin-top: 20px; height: 20px; }
+.ss-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: rgba(11, 12, 13, .2); transition: background-color 200ms cubic-bezier(.4, 0, .2, 1); }
+.ss-card.is-playing .ss-dot { background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16), 0 0 0 0 rgba(184, 255, 0, .8); animation: ss-pulse 1.3s cubic-bezier(.16, 1, .3, 1) infinite; }
+@keyframes ss-pulse { to { box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16), 0 0 0 8px rgba(184, 255, 0, 0); } }
+.ss-card.is-still *, .ss-card.is-still *::before { transition: none !important; animation: none !important; }
+.ss-prev b { font-weight: 500; letter-spacing: -.011em; }
+.ss-stat { margin-left: auto; height: 20px; overflow: hidden; font-size: 13px; line-height: 20px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.ss-stat > span { display: block; transition: transform 200ms cubic-bezier(.5, 0, .75, 0); }
+.ss-stat > span > i { display: block; height: 20px; font-style: normal; text-align: right; }
+.ss-card.is-playing .ss-stat > span { transform: translateY(-20px); transition: transform 320ms cubic-bezier(.16, 1, .3, 1); }
+@media (prefers-reduced-motion: reduce) { .ss-card *, .ss-card *::before { transition: none !important; animation: none !important; } }
+</style>
+<style>
+  .ssw { display: grid; gap: 12px; justify-items: start; width: 448px; max-width: 100%; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="ssw">
+    <p class="kicker">Qbix · TTS Editor</p>
+<!-- code -->
+<section class="ss-card" id="ss-card" aria-labelledby="ss-title">
+  <h3 class="ss-t" id="ss-title">Voice</h3>
+  <p class="ss-sub">Maple · warm, 24 kHz</p>
+  <div class="ss-list">
+    <div class="ss-row" id="ss-vol" data-kind="vol" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="72" aria-valuetext="72 percent">
+      <div class="ss-cap">
+        <div class="ss-fill"></div>
+        <div class="ss-layer" aria-hidden="true">
+          <span class="ss-ic"><svg viewBox="0 0 24 24"><path class="ss-body" d="M3.500 9.400h3.100l4.300-3.600v12.400l-4.300-3.600H3.500z"/><path class="ss-w" pathLength="1" d="M13.650 8.750A4.600 4.600 0 0 1 13.650 15.250"/><path class="ss-w" pathLength="1" d="M15.770 6.630A7.600 7.600 0 0 1 15.770 17.370"/><path class="ss-w" pathLength="1" d="M17.900 4.500A10.600 10.600 0 0 1 17.900 19.500"/><path class="ss-x" pathLength="1" d="M15 9.600l5 4.800M20 9.600l-5 4.800"/></svg></span>
+          <span class="ss-name">Volume</span>
+          <span class="ss-val"></span>
+        </div>
+      </div>
+    </div>
+    <div class="ss-row" id="ss-spd" data-kind="spd" role="slider" tabindex="0" aria-label="Speed" aria-valuemin="0.5" aria-valuemax="2" aria-valuenow="1.2" aria-valuetext="1.2 times">
+      <div class="ss-cap">
+        <div class="ss-fill"></div>
+        <div class="ss-layer" aria-hidden="true">
+          <span class="ss-ic"><svg viewBox="0 0 24 24"><path d="M2.500 17a9.500 9.500 0 0 1 19 0"/><path class="ss-tk" d="M6.400 17H5"/><path class="ss-tk" d="M8.040 13.040l-.990-.990"/><path class="ss-tk" d="M12 11.400V10"/><path class="ss-tk" d="M15.960 13.040l.990-.990"/><path class="ss-tk" d="M17.600 17H19"/><path class="ss-nd" d="M12 17H8.500"/><circle cx="12" cy="17" r="1.350" fill="currentColor" stroke="none"/></svg></span>
+          <span class="ss-name">Speed</span>
+          <span class="ss-val"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ss-prev"><i class="ss-dot"></i><b>Preview</b><span class="ss-stat" aria-hidden="true"><span><i>Ready</i><i>Playing</i></span></span></div>
+  <p class="sr-only" id="ss-msg" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Drag a capsule past its end, flick it, or focus one and use the arrow keys, Page, Home and End</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Stretch slider. Per slider: v (the value, 0..1), e (the stretch in px, springs) and the finger's travel while held (raw, in range units).
+   Past an end raw goes beyond 0..1: the value is its clamp and the stretch is the overshoot through the rubber band.
+   Release: inside the range the release velocity is kept and decays with the scroll deceleration (d = 0.998) to the projected point;
+   stretched, e springs back from its stretched length at the release velocity (damping 0.8 after a throw, else 1.0). */
+const SS = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const H = 68, R = 24, D = 140, SLOP = 6, THROW = 300, NUDGE = 240, KEY_POSE = 44;   // capsule height and radius, rubber-band dimension, px before a drag, px/s that makes a throw, px/s of a key's nudge, px of the held pose
+  const DECEL = 0.998, LOOK = DECEL / (1 - DECEL) / 1000, KD = -Math.log(DECEL) * 1000;   // 0.499 s of look-ahead; 2.0 per s, the decay of a coast
+  const OM = (2 * Math.PI) / 0.3, OME = (2 * Math.PI) / 0.32, OMD = (2 * Math.PI) / 0.26; // spring response: value 0.3 s, stretch 0.32 s, digits 0.26 s
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const smooth = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+  const digits = Array.from({ length: 30 }, (_, i) => i % 10).join('\n');
+
+  // what each slider shows: n (whole steps) from the value; places are the digits of the number, hide() says when a place is not drawn
+  const KIND = {
+    vol: { N: 100, init: 72, places: [100, 10, 1], num: (n) => n, show: (n, p) => p === 1 || n >= p, suffix: '%', text: (n) => [n, n + ' percent'] },
+    spd: { N: 15, init: 7, places: [10, 1], num: (n) => 5 + n, show: () => true, mid: '.', suffix: '×', text: (n) => [(0.5 + n / 10).toFixed(1), (0.5 + n / 10).toFixed(1) + ' times'] },
+  };
+
+  /* a spring: the critically damped closed form, or the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OM, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+
+  // the rubber band, Apple's constant 0.55, and its inverse (to recover the finger's travel from a stretch that is already shown)
+  const rb = (x) => (x * D * 0.55) / (D + 0.55 * x);
+  const rbInv = (r) => { r = Math.min(r, D * 0.98); return (r * D) / (0.55 * (D - r)); };
+
+  const card = document.getElementById('ss-card'), msg = document.getElementById('ss-msg');
+  const strip = () => `<span class="ss-d"><span class="ss-st">${digits}</span></span>`;
+
+  const sl = [...document.querySelectorAll('.ss-row')].map((row) => {
+    const K = KIND[row.dataset.kind], cap = row.firstElementChild, fill = cap.querySelector('.ss-fill'), base = cap.querySelector('.ss-layer');
+    // the value's digits, then a copy of the whole face that lives inside the fill
+    base.querySelector('.ss-val').innerHTML = K.places.map((p, i) => strip() + (K.mid && i === 0 ? '<span>' + K.mid + '</span>' : '')).join('') + `<span>${K.suffix}</span>`;
+    const face = base.cloneNode(true);
+    fill.appendChild(face);
+    const layers = [base, face];
+    const s = {
+      row, cap, fill, layers, K, N: K.N, W: row.offsetWidth || 392,
+      v: K.init / K.N, vv: 0, mode: 'rest', vs: mk(K.init / K.N), co: null, e: mk(0), anc: 1,
+      held: false, pin: false, live: false, keyT: 0, n: -1, last: '', at: 0, ics: layers.map((l) => l.querySelector('.ss-ic svg')),
+      slots: K.places.map((p, i) => ({ p, dg: 0, pos: 10, tgt: 10, vel: 0, vis: true, ds: layers.map((l) => l.querySelectorAll('.ss-d')[i]) })),
+    };
+    s.slots.forEach((o) => { o.sts = o.ds.map((d) => d.firstChild); });
+    s.ic = s.ics.map((svg) => ({ w: [...svg.querySelectorAll('.ss-w')], x: svg.querySelector('.ss-x'), tk: [...svg.querySelectorAll('.ss-tk')], nd: svg.querySelector('.ss-nd'), lit: [], wv: [], xv: -1, av: -1 }));
+    setN(s, Math.round(s.v * s.N), true);
+    return s;
+  });
+
+  /* the digits: each place is a strip of 0 to 9 (three times over) on its own spring; it takes the shortest way round */
+  function setN(s, n, instant) {
+    const num = s.K.num(n);
+    s.slots.forEach((o) => {
+      const dg = Math.floor(num / o.p) % 10;
+      if (instant || reduced) { o.dg = dg; o.pos = o.tgt = 10 + dg; o.vel = 0; drawSlot(o); }
+      else if (dg !== o.dg) { o.tgt += ((dg - o.dg + 15) % 10) - 5; o.dg = dg; }
+      const vis = s.K.show(num, o.p);
+      if (vis !== o.vis) { o.vis = vis; o.ds.forEach((d) => d.classList.toggle('is-off', !vis)); }
+    });
+    s.n = n;
+  }
+  function drawSlot(o) {
+    const y = (-o.pos * 20).toFixed(2);
+    o.sts.forEach((st) => { st.style.transform = `translateY(${y}px)`; });
+  }
+  function stepSlots(s, dt) {
+    let live = false;
+    for (const o of s.slots) {
+      if (o.tgt >= 20) { o.tgt -= 10; o.pos -= 10; } else if (o.tgt < 10) { o.tgt += 10; o.pos += 10; }
+      if (o.pos === o.tgt && !o.vel) continue;
+      const A = o.pos - o.tgt, B = o.vel + OMD * A, e = Math.exp(-OMD * dt);
+      let x = o.tgt + (A + B * dt) * e, v = (B - OMD * (A + B * dt)) * e;
+      if (Math.abs(x - o.tgt) < 0.003 && Math.abs(v) < 0.03) { x = o.tgt; v = 0; }
+      o.pos = x; o.vel = v; drawSlot(o); if (v) live = true;
+    }
+    return live;
+  }
+
+  /* the icons follow the value: waves are drawn in one by one, a cross at zero; the gauge lights its ticks and turns its needle */
+  function icons(s) {
+    const v = s.v, vol = s.K === KIND.vol;
+    s.ic.forEach((c) => {
+      if (vol) {
+        const key = [0.02, 0.36, 0.68].map((a) => +smooth((v - a) / 0.14).toFixed(3)), px = +(1 - smooth(v / 0.03)).toFixed(3), sig = key.join() + px;
+        if (sig === c.sig) return;
+        c.sig = sig;
+        c.w.forEach((p, i) => { p.style.strokeDashoffset = (1 - key[i]).toFixed(3); p.style.opacity = key[i] < 0.01 ? 0 : 1; });
+        c.x.style.strokeDashoffset = (1 - px).toFixed(3); c.x.style.opacity = px < 0.01 ? 0 : 1;
+      } else {
+        const a = Math.round(v * 180 * 2) / 2;
+        if (a !== c.av) { c.av = a; c.nd.setAttribute('transform', `rotate(${a} 12 17)`); }
+        c.tk.forEach((t, i) => { const on = v >= i / 4 - 0.001 ? 1 : 0.28; if (c.lit[i] !== on) { c.lit[i] = on; t.style.opacity = on; } });
+      }
+    });
+  }
+
+  /* draw: the capsule is one box (width and height), shifted when it is anchored on its right end; the fill and both faces follow it */
+  function draw(s) {
+    const E = Math.max(s.e.x, -s.W * 0.2), ww = s.W + E, h = H * s.W / ww, tx = s.anc < 0 ? -E : 0, ty = (H - h) / 2, F = s.v * ww;
+    const key = ww.toFixed(2) + '|' + h.toFixed(2) + '|' + tx.toFixed(2) + '|' + F.toFixed(2);
+    if (key !== s.last) {
+      s.last = key;
+      const c = s.cap.style;
+      c.width = ww.toFixed(2) + 'px'; c.height = h.toFixed(2) + 'px'; c.borderRadius = (R * h / H).toFixed(2) + 'px';
+      c.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)`;
+      s.fill.style.width = F.toFixed(2) + 'px';
+      s.layers[0].style.width = s.layers[1].style.width = ww.toFixed(2) + 'px';
+      s.layers[0].style.clipPath = `inset(0 0 0 ${F.toFixed(2)}px)`;
+    }
+    icons(s);
+    const n = Math.round(s.v * s.N);
+    if (n !== s.n) { setN(s, n); aria(s); }
+  }
+  function aria(s) {
+    clearTimeout(s.at);
+    s.at = setTimeout(() => {
+      const [num, txt] = s.K.text(s.n);
+      s.row.setAttribute('aria-valuenow', String(num)); s.row.setAttribute('aria-valuetext', txt);
+    }, 140);
+  }
+  function refresh(s) {
+    const hot = s.held || s.pin || s.live || s.keyT > performance.now();
+    s.cap.classList.toggle('is-on', hot);
+    card.classList.toggle('is-playing', sl.some((x) => x.held || x.pin || x.live || x.keyT > performance.now()));
+  }
+
+  /* motion */
+  let raf = 0, last = 0;
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let live = false;
+    for (const s of sl) {
+      if (s.mode === 'coast' && s.co) {
+        const c = s.co, t = Math.max(0, (now - c.t0) / 1000), ee = Math.exp(-KD * t);
+        const x = c.Tt - (c.Tt - c.x0) * ee, vel = (c.Tt - c.x0) * KD * ee;
+        if (c.wall >= 0 && (c.wall ? x >= 1 : x <= 0)) {                       // it runs into the end at the speed it has: the stretch takes it
+          s.v = c.wall; s.vv = 0; s.mode = 'rest'; s.co = null; s.anc = c.wall ? 1 : -1;
+          s.e.x = 0; aim(s.e, 0, Math.min(1100, Math.abs(vel) * s.W * 1.8), OME, 0.8);
+        } else if (Math.abs(c.Tt - x) < 0.0006) { s.v = c.Tt; s.vv = 0; s.mode = 'rest'; s.co = null; }
+        else { s.v = x; s.vv = vel; }
+      } else if (s.vs.on) {
+        step(s.vs, dt, 0.0004, 0.02); s.v = s.vs.x; s.vv = s.vs.v;
+        if (!s.vs.on) { s.mode = 'rest'; s.vv = 0; }
+      }
+      step(s.e, dt, 0.05, 3);
+      const sd = stepSlots(s, dt);
+      draw(s);
+      const moving = s.mode === 'coast' || s.vs.on || s.e.on || sd;
+      if (s.live && !s.held && !(s.mode === 'coast' || s.vs.on || s.e.on)) { s.live = false; done(s); }
+      refresh(s);
+      if (moving || s.live || s.keyT > now) live = true;
+    }
+    if (live) kick();
+  }
+  function done(s) {                                                   // the settled value, once, for the live status
+    const [, txt] = s.K.text(Math.round(s.v * s.N));
+    msg.textContent = `${s.row.getAttribute('aria-label')} ${txt}`;
+  }
+  const quant = (s, x) => Math.round(clamp(x, 0, 1) * s.N) / s.N;
+  // a critically damped spring for the value from the value and velocity on screen (keys, settles); a velocity into the target is capped so it never crosses
+  function vTo(s, T, vel = 0) {
+    const sp = s.vs, A = s.v - T;
+    if (reduced) { s.v = T; s.vs.on = false; s.mode = 'rest'; s.vv = 0; draw(s); return; }
+    if (A * vel < 0) vel = Math.sign(vel) * Math.min(Math.abs(vel), OM * Math.abs(A)); else if (A === 0) vel = 0;
+    sp.x = s.v; sp.v = vel; sp.T = T; sp.w = OM; sp.z = 1; sp.on = true; s.mode = 'spring'; s.co = null;
+    kick();
+  }
+  // the finger's travel at this moment, recovered from the value and the stretch on screen (so a catch never jumps)
+  function rawOf(s) {
+    const E = s.e.x;
+    if (E > 0.3) return s.anc > 0 ? 1 + rbInv(E) / s.W : -rbInv(E) / s.W;
+    return s.v;
+  }
+
+  /* one hand: a pointer or the ghost, both through down / move / up. x is client px, t is ms. */
+  let drag = null;
+  function down(s, x, t, ghost = false) {
+    if (drag) up(t);
+    const was = s.pin;
+    s.pin = false;
+    const raw = rawOf(s), flying = s.mode === 'coast' || s.vs.on || s.e.on || was;
+    if (s.mode === 'coast') s.co = null;
+    s.vs.on = false; s.e.on = false; s.e.v = 0; s.mode = 'hold'; s.vv = 0;
+    s.held = true; s.live = true; clearTimeout(s.keyT);
+    drag = { s, x0: x, raw0: raw, raw, on: false, q: [[t, raw, s.e.x]], ghost, flying };
+    s.cap.classList.add('is-press');                                    // feedback on the press: 0.97 in 100 ms
+    refresh(s);
+    kick();
+  }
+  function move(x, t) {
+    if (!drag) return;
+    const d = drag, s = d.s;
+    if (!d.on) {
+      if (Math.abs(x - d.x0) < SLOP) return;
+      d.on = true; d.x0 = x; s.row.classList.add('is-drag');             // 1:1 from the point where the drag began
+    }
+    let raw = d.raw0 + (x - d.x0) / s.W;
+    if (reduced) raw = clamp(raw, 0, 1);
+    d.raw = raw;
+    s.v = clamp(raw, 0, 1);
+    const over = raw > 1 ? (raw - 1) * s.W : raw < 0 ? -raw * s.W : 0;
+    if (over > 0) { s.anc = raw > 1 ? 1 : -1; s.e.x = rb(over); } else s.e.x = 0;
+    d.q.push([t, raw, s.e.x]);
+    while (d.q.length > 2 && t - d.q[0][0] > 100) d.q.shift();
+    draw(s);
+  }
+  function up(t, cancel = false) {
+    if (!drag) return;
+    const d = drag, s = d.s;
+    drag = null; s.held = false;
+    s.cap.classList.remove('is-press'); s.row.classList.remove('is-drag');
+    if (!d.on) {                                                         // a tap changes nothing; a caught capsule settles where it was heading
+      if (d.flying) { s.e.on = false; if (s.e.x > 0.05) aim(s.e, 0, 0, OME, 1); vTo(s, quant(s, s.v), 0); }
+      else s.live = false;
+      kick(); refresh(s); return;
+    }
+    const b = d.q[d.q.length - 1];
+    let a = d.q[0];
+    for (const q of d.q) if (b[0] - q[0] <= 80) { a = q; break; }
+    let vr = 0, ve = 0;                                                  // the hand's velocity in range units/s, and the stretch's in px/s
+    if (!cancel && b[0] - a[0] > 8 && t - b[0] < 80) { vr = clamp(((b[1] - a[1]) / (b[0] - a[0])) * 1000, -9, 9); ve = ((b[2] - a[2]) / (b[0] - a[0])) * 1000; }
+    const raw = d.raw;
+    if (reduced) { s.v = quant(s, raw); s.e.x = 0; s.mode = 'rest'; s.live = false; draw(s); done(s); refresh(s); return; }
+    if (raw > 1 || raw < 0) {                                            // stretched: the capsule springs back from its stretched length
+      const hv = Math.abs(vr) * s.W, thr = hv > THROW;
+      let v0 = ve;
+      if (thr && ve < 0) v0 = -Math.min(2400, -ve + 0.7 * Math.max(0, hv + ve));    // a throw back in: the band starts at its own speed plus 70% of the way to the hand's
+      aim(s.e, 0, v0, OME, thr ? 0.8 : 1);
+      s.v = raw > 1 ? 1 : 0; s.mode = 'rest';
+    } else {
+      const p = raw + vr * LOOK;
+      if (Math.abs(vr) * s.W < 140) vTo(s, quant(s, raw), vr);           // a gentle release settles on the nearest step
+      else if (p > 1 || p < 0) { s.mode = 'coast'; s.co = { x0: raw, Tt: p, t0: performance.now(), wall: p > 1 ? 1 : 0 }; }   // heading past the end: it will hit it
+      else {
+        const T = quant(s, p), dd = T - raw;
+        if (dd * vr <= 0) vTo(s, T, vr);
+        else { s.mode = 'coast'; s.co = { x0: raw, Tt: T, t0: performance.now(), wall: -1 }; }
+      }
+    }
+    kick();
+  }
+
+  // a real pointer: move and up are heard on the window; capture starts with the drag
+  let ptr = null;
+  const pmove = (e) => {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    const was = drag && drag.on;
+    move(e.clientX, e.timeStamp);
+    if (!was && drag && drag.on) { try { ptr.s.row.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ } }
+  };
+  const pend = (cancel) => (e) => {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    ptr = null;
+    removeEventListener('pointermove', pmove); removeEventListener('pointerup', pendUp); removeEventListener('pointercancel', pendCancel);
+    up(e.timeStamp, cancel);
+  };
+  const pendUp = pend(false), pendCancel = pend(true);
+  sl.forEach((s) => {
+    s.row.addEventListener('pointerdown', (e) => {
+      if (e.button > 0 || ptr) return;
+      ptr = { id: e.pointerId, s };
+      s.row.focus({ preventScroll: true });
+      down(s, e.clientX, e.timeStamp);
+      addEventListener('pointermove', pmove); addEventListener('pointerup', pendUp); addEventListener('pointercancel', pendCancel);
+    });
+
+    // keys: arrows step one (1% or 0.1x), Shift and Page ten steps (10% or 0.5x), Home and End; against an end an arrow nudges the stretch
+    s.row.addEventListener('keydown', (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key, big = s.row.dataset.kind === 'vol' ? 10 : 5;
+      const cur = Math.round((s.vs.on ? s.vs.T : s.v) * s.N);
+      let to = null, dir = 0;
+      if (k === 'ArrowRight' || k === 'ArrowUp') { to = cur + (e.shiftKey ? big : 1); dir = 1; }
+      else if (k === 'ArrowLeft' || k === 'ArrowDown') { to = cur - (e.shiftKey ? big : 1); dir = -1; }
+      else if (k === 'PageUp') { to = cur + big; dir = 1; } else if (k === 'PageDown') { to = cur - big; dir = -1; }
+      else if (k === 'Home') { to = 0; dir = -1; } else if (k === 'End') { to = s.N; dir = 1; }
+      else return;
+      e.preventDefault();
+      if (s.held) return;
+      const c = clamp(to, 0, s.N);
+      s.pin = false;
+      s.keyT = performance.now() + 900; s.live = false;
+      if (c === cur && !reduced && (k.startsWith('Arrow') || k.startsWith('Page'))) {     // against an end: a nudge, then back
+        s.anc = dir > 0 ? 1 : -1; s.e.x = Math.max(0, s.e.x); aim(s.e, 0, NUDGE, OME, 0.8);
+      }
+      if (s.mode === 'coast') { s.vs.x = s.v; s.vs.v = s.vv; s.vs.on = true; s.co = null; }
+      vTo(s, c / s.N, s.vs.on ? s.vs.v : 0);
+      if (!s.vs.on) s.mode = 'rest';
+      refresh(s); kick();
+      setTimeout(() => { done(s); refresh(s); kick(); }, 920);
+    });
+  });
+  new ResizeObserver(() => sl.forEach((s) => { s.W = s.row.offsetWidth || s.W; s.last = ''; draw(s); })).observe(sl[0].row);
+
+  sl.forEach((s) => { draw(s); });
+  return {
+    sl, down, move, up, rawOf,
+    get drag() { return drag; },
+    // the key pose: Volume held 44 px past its end, ink, the Preview dot playing (the tile's thumbnail)
+    pose() {
+      if (reduced) return;
+      const s = sl[0];
+      s.v = 1; s.vs.on = false; s.vs.x = 1; s.mode = 'rest'; s.co = null; s.anc = 1; s.e.x = KEY_POSE; s.e.v = 0; s.e.on = false; s.pin = true;
+      setN(s, s.N, true); draw(s); refresh(s);
+      card.classList.add('is-still');                                   // no transitions on the first frame: it is a pose, not a change
+      requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('is-still')));
+    },
+    posed() { return sl.some((s) => s.pin); },
+    unpose() { sl.forEach((s) => { if (s.pin) { s.pin = false; s.live = true; aim(s.e, 0, 0, OME, 1); kick(); } }); },
+    // back to the resting values (the ghost's reset), quietly: no ink
+    rest() {
+      sl.forEach((s) => {
+        s.pin = false; s.live = false;
+        if (s.e.x > 0.05) aim(s.e, 0, s.e.v, OME, 1);
+        vTo(s, s.K.init / s.N, s.mode === 'coast' ? s.vv : 0);
+        if (reduced) s.e.x = 0;
+      });
+      kick();
+    },
+    release() { if (drag && drag.ghost) up(performance.now()); },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [vol, spd] = SS.sl;
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const box = (s) => s.row.getBoundingClientRect();
+
+  // the ghost takes hold at gx (client px) on a capsule, moves through the segments { dx, ms, kind, hold } and lets go. It uses SS.down / move / up exactly as a hand does.
+  // 'flick' accelerates and lets go at speed, 'tug' moves at a constant speed, 'ease' arrives and rests
+  async function hand(my, s, gx, segs) {
+    const r = box(s), y = r.top + r.height / 2;
+    if (!(await QM.ghostTo(gx, y, 760))) throw 0;
+    await gap(my, 170);
+    SS.down(s, gx, performance.now(), true);
+    let x = gx;
+    for (const g of segs) {
+      await new Promise((res) => {
+        const t0 = performance.now();
+        const f = (now) => {
+          if (my !== epoch) return res();
+          const p = Math.min(1, Math.max(0, (now - t0) / g.ms)), k = g.kind === 'flick' ? Math.pow(p, 1.6) : g.kind === 'tug' ? p : mv(p);
+          QM.ghostAt(x + g.dx * k, y); SS.move(x + g.dx * k, now);
+          if (p < 1) requestAnimationFrame(f); else res();
+        };
+        requestAnimationFrame(f);
+      });
+      if (my !== epoch) throw 0;
+      x += g.dx;
+      if (g.hold) await gap(my, g.hold);
+    }
+    SS.up(performance.now());
+  }
+  // px to move so the finger's travel reaches a raw value (the first 6 px of a drag are not counted)
+  const toRaw = (s, target) => { const dx = (target - SS.rawOf(s)) * s.W; return dx + Math.sign(dx) * 6; };
+
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5000 : 3600);
+      QM.ghostShow();
+      for (;;) {
+        let r = box(vol);
+        const back = toRaw(vol, 0.72);
+        if (Math.abs(back) > 8) {                                          // Volume: caught where it is (past its end, or at 100%), slowly brought back to 72%
+          await hand(my, vol, r.left + r.width * 0.9, [{ dx: back, ms: 1300, kind: 'ease', hold: 220 }]);
+          await gap(my, 1100);
+        }
+        r = box(vol);
+        await hand(my, vol, r.left + r.width * 0.55, [          // up and over the end: it stretches, resists, then a tug back and let go
+          { dx: toRaw(vol, 1.42), ms: 1000, kind: 'ease', hold: 320 },
+          { dx: -150, ms: 90, kind: 'tug' },
+        ]);
+        await gap(my, 2300);
+        r = box(spd);
+        await hand(my, spd, r.left + r.width * 0.5, [{ dx: -150, ms: 190, kind: 'flick' }]);   // Speed: a flick down, it coasts into its end and stretches
+        await gap(my, 2300);
+        r = box(spd);
+        await hand(my, spd, r.left + r.width * 0.12, [{ dx: toRaw(spd, 7 / 15), ms: 1100, kind: 'ease', hold: 220 }]);   // and a slow drag back to 1.2×
+        await gap(my, 2400);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) SS.release(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); SS.release(); }
+
+  if (!QM.tile && !reduced) {
+    const idle = () => SS.drag || SS.sl.some((s) => s.row === document.activeElement || s.row.matches(':hover'));
+    const touch = (e) => {
+      if (e && e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      if (SS.posed()) SS.unpose();                                          // the held pose is a finger that was never there: let go of it
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) { SS.rest(); script(); } else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); SS.rest(); SS.pose(); if (!reduced) script(); } });
+  SS.pose();
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

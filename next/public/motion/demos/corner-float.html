@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corner float · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "corner-float", "title": "Corner float", "group": "studio", "added": "2026-11-19", "cat": "cards", "order": 30,
+  "kind": "loop", "tone": "paper", "shot": 700,
+  "line": "X and Y as two springs · throw projects v × 0.099 s (d 0.99) · response 0.4 s · tuck, resize, catch",
+  "summary": "A review call floats over a preview of Forma's shop page. Grab the window anywhere and it follows the hand 1:1; let go and the throw is projected with Apple's snappy deceleration, so a slow drag settles in the near corner and a flick carries it to the far one. X and Y are separate springs that start from the position and velocity on screen, so the window can be caught mid-flight. Past the card's edge it rubber-bands; thrown hard at a side it slides out and leaves a white tab with a chevron, and tapping or pulling the tab brings it back. A tap on the window grows it, anchored on the corner it sits in.",
+  "spec": [
+    ["Springs", "X, Y, width, height and the tab are separate springs, each started from the value and velocity on screen; response 0.4 s (ω = 2π / 0.4), damping 1.0; X and Y keep their own velocity, so a diagonal throw never desyncs"],
+    ["Drag", "the window waits for 6 px of travel (so a tap stays a tap), then follows 1:1 from the commit point with the pointer captured; the press is a 0.97 scale in 100 ms, the lift a deeper shadow in 220 ms"],
+    ["Velocity", "taken over the last 80 ms of moves, once from the pointer (the intent that is projected) and once from the window as drawn (the velocity the spring starts at, so a rubber-banded release has no seam)"],
+    ["Projection", "release point + v × 0.099 s (d 0.99: v / 1000 × d / (1 − d)); each axis picks the side its projected centre falls on, so the corner is where the throw was heading, not where the finger let go"],
+    ["Throw", "a release over 420 px/s is a throw: damping 0.8 and ω = max(2π / 0.4, 1.5·v / distance), which decelerates from the first frame and overshoots the corner by 1 to 6 px (measured); slower releases and every tap stay critically damped"],
+    ["Edges", "past the card's edge the window follows through (x·D·0.55) / (D + 0.55·|x|), D = 300 px across and 200 px down, and the spring returns it; an unbanded 'raw' position is kept so the projection still sees the whole throw"],
+    ["Tuck", "when the projected window lies more than 0.4 of its width past the left or right edge it slides out to the edge and the tab rises from behind its trailing edge (34 × 76 px, white, chevron); a tap on the tab docks it back where it was, a drag from the tab pulls it out 1:1 with no band, and it re-tucks if let go under 0.6 of its width out"],
+    ["Resize", "a tap toggles 184 × 150 and 288 × 218; width and height are springs with the same ω and damping as X and Y, so the corner it docks in stays fixed to the pixel while the opposite corner travels; the name is uncovered by the size, not faded"],
+    ["Catch", "a press on a window in flight stops it where it is and a drag takes it from there; a tap settles it on the corner it was heading for; a tap on a window at rest resizes"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-19"],
+  "where": "A client's web app or a Qbix review tool where a call, a player or a note has to stay on screen while the page underneath is read, such as Forma's design review, a launch call or a walkthrough video.",
+  "rules": [
+    "Everything that moves is a spring started from the value and velocity on screen. No state locks out the hand, and a retarget never zeroes the velocity unless the hand stopped it.",
+    "The release is decided from the projected rest point (d = 0.99), per axis, not from where the finger let go; the spring starts at the window's own velocity.",
+    "Damping 0.8 appears only after a throw. A slow drag, a tap, a resize and the way out of a tuck are critically damped.",
+    "Past the card's edge the window rubber-bands; it never stops hard. The raw, unbanded position is kept for the projection.",
+    "The window is anchored by the corner it docks in: resize changes width and height on the same spring as the position, so that corner does not move.",
+    "A tucked window always leaves a way back: the tab stays on the edge, is a real button, and can be tapped or dragged.",
+    "One ink fill (the end-call button) and one lime point (the live dot); the page behind is white with ink at low alpha so the window reads as the thing.",
+    "Under reduced motion drags still follow the pointer, but release, resize and tuck snap in place with a 160 ms cross-fade, with no springs or rubber band."
+  ],
+  "tags": ["floating window", "picture in picture", "call", "drag", "throw", "spring", "momentum", "rubber band", "tuck", "corner", "resize"]
+}
+</script>
+<style data-code>
+/* Corner float. A white call window floats over a quiet page preview. The one ink fill is the end-call button, the one lime point the live dot.
+   Position, size and the tab are set from script (render()): they are springs. Easing for small UI feedback: ui (.4, 0, .2, 1). */
+.cf-fit { position: relative; width: calc(600px * var(--s, 1)); height: calc(376px * var(--s, 1)); }
+.cf-card { position: absolute; left: 0; top: 0; width: 600px; height: 376px; transform: scale(var(--s, 1)); transform-origin: 0 0; background: #fff; border-radius: 20px; overflow: hidden;
+  font: 400 13px/18px Geist, system-ui, sans-serif; letter-spacing: -.006em; color: #0B0C0D; -webkit-user-select: none; user-select: none;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.cf-card p, .cf-card h2, .cf-card h3 { margin: 0; }
+:where(.cf-card button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the browser: a bar with the address, then the page the window floats over (the field) */
+.cf-bar { height: 40px; display: flex; align-items: center; justify-content: center; }
+.cf-url { display: flex; align-items: center; height: 24px; padding: 0 14px; border-radius: 999px; background: #EEF1E8; font: 400 12px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .66); }
+.cf-field { position: relative; height: 336px; overflow: hidden; touch-action: none; }
+
+/* the page behind: white and ink at low alpha, nothing heavy */
+.cf-page { position: absolute; inset: 0; pointer-events: none; }
+.cf-nav { position: absolute; left: 32px; right: 32px; top: 4px; height: 36px; display: flex; align-items: center; gap: 22px; color: rgba(11, 12, 13, .66); }
+.cf-logo { margin-right: 10px; font: 300 18px/22px Outfit, Geist, sans-serif; letter-spacing: -.03em; color: #0B0C0D; }
+.cf-nav .cf-sp { flex: 1; }
+.cf-hero { position: absolute; left: 32px; top: 66px; width: 250px; }
+.cf-kick { color: rgba(11, 12, 13, .66); }
+.cf-h { margin-top: 8px; font: 300 30px/34px Outfit, Geist, sans-serif; letter-spacing: -.03em; text-wrap: balance; }
+.cf-p { margin-top: 14px; color: rgba(11, 12, 13, .66); text-wrap: pretty; }
+.cf-more { display: block; margin-top: 12px; font-weight: 500; }
+.cf-tiles { position: absolute; left: 316px; top: 66px; display: grid; grid-template-columns: repeat(2, 126px); gap: 16px; }
+.cf-tile { width: 126px; }
+.cf-art { display: grid; place-items: start center; padding-top: 42px; box-sizing: border-box; height: 132px; border-radius: 14px; background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); }
+.cf-art svg { display: block; width: 52px; height: 64px; fill: none; stroke: rgba(11, 12, 13, .5); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.cf-tn { display: flex; justify-content: space-between; margin-top: 8px; font-weight: 500; }
+.cf-tn span { font: 400 12px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+.cf-foot-note { position: absolute; left: 32px; top: 252px; font: 400 12px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: rgba(11, 12, 13, .5); }
+
+/* the window: the box is placed and sized from script; the body is white with a soft ring and a deeper shadow because it floats */
+.cf-win { position: absolute; left: 0; top: 0; width: 184px; height: 150px; border-radius: 20px; touch-action: none; cursor: grab; outline: none; will-change: transform; --k: 0; --tl: 0; --tr: 0; --sa: 1; }
+.cf-win.is-drag, .cf-win.is-drag * { cursor: grabbing; }
+.cf-win:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.cf-body { position: relative; z-index: 1; width: 100%; height: 100%; display: flex; flex-direction: column; background: #fff; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 18px 36px -14px rgba(11, 12, 13, calc(.34 * var(--sa, 1)));
+  transition: transform 260ms cubic-bezier(.16, 1, .3, 1), box-shadow 260ms cubic-bezier(.16, 1, .3, 1); }
+.cf-win.is-press .cf-body { transform: scale(.97); transition-duration: 100ms; transition-timing-function: cubic-bezier(.4, 0, .2, 1); }
+.cf-win.is-drag .cf-body { box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 28px 48px -16px rgba(11, 12, 13, calc(.4 * var(--sa, 1))); transition-duration: 220ms; }
+.cf-vid { position: relative; flex: 1; min-height: 0; margin: 5px 5px 0; border-radius: 15px; overflow: hidden; background: #fff; }
+.cf-vid img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 26%; pointer-events: none; }
+.cf-over { position: absolute; inset: 0; display: grid; place-items: center; background: #fff; font-weight: 500; clip-path: inset(100% 0 0 0); transition: clip-path 220ms cubic-bezier(.5, 0, .75, 0); }
+.cf-win.is-ended .cf-over { clip-path: inset(0); transition-duration: 420ms; transition-timing-function: cubic-bezier(.16, 1, .3, 1); }
+
+/* the footer: who is on (uncovered by the size), the timer with the live dot, and the controls */
+.cf-foot { flex: none; height: 48px; padding: 0 8px 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cf-who { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.cf-name { height: calc(var(--k) * 18px); overflow: hidden; white-space: nowrap; font-weight: 500; }
+.cf-time { display: flex; align-items: center; gap: 7px; height: 18px; font: 400 12px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.cf-dot { position: relative; flex: none; width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16); transition: transform 220ms cubic-bezier(.5, 0, .75, 0); }
+.cf-dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #B8FF00; animation: cf-live 2.4s cubic-bezier(.16, 1, .3, 1) infinite; }
+@keyframes cf-live { 0% { transform: scale(1); opacity: .55; } 70%, 100% { transform: scale(2.6); opacity: 0; } }
+.cf-win.is-ended .cf-dot { transform: scale(0); }
+.cf-ctl { display: flex; gap: 6px; }
+.cf-btn { position: relative; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(11, 12, 13, .12);
+  transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1), scale 100ms cubic-bezier(.4, 0, .2, 1), background 160ms cubic-bezier(.4, 0, .2, 1); }
+.cf-btn::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
+.cf-btn svg { display: block; width: 16px; height: 16px; fill: none; stroke: #0B0C0D; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.cf-btn:hover { box-shadow: 0 0 0 1px rgba(11, 12, 13, .26); }
+.cf-btn:active, .cf-btn.is-press { scale: .94; }
+.cf-btn:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.cf-slash { stroke-dasharray: 14; stroke-dashoffset: 14; transition: stroke-dashoffset 200ms cubic-bezier(.16, 1, .3, 1); }
+.cf-btn.is-muted .cf-slash { stroke-dashoffset: 0; }
+.cf-endb { background: #0B0C0D; box-shadow: none; }                      /* the one ink fill */
+.cf-endb:hover { background: #24262a; box-shadow: none; }
+.cf-endb svg { fill: #fff; stroke: none; }
+
+/* the tab: it sits behind the window's trailing edge and comes out when the window is tucked (--tl: window gone left, --tr: gone right) */
+.cf-tab { position: absolute; top: 50%; z-index: 0; width: 34px; height: 76px; display: grid; place-items: center; background: #fff; pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 10px 22px -10px rgba(11, 12, 13, .3); transition: scale 100ms cubic-bezier(.4, 0, .2, 1); }
+.cf-tab::before { content: ''; position: absolute; inset: -6px -10px; }
+.cf-tab--l { left: 100%; border-radius: 0 17px 17px 0; transform: translate(calc((1 - var(--tl)) * -100%), -50%); }
+.cf-tab--r { right: 100%; border-radius: 17px 0 0 17px; transform: translate(calc((1 - var(--tr)) * 100%), -50%); }
+.cf-win.is-tuck .cf-tab { pointer-events: auto; }
+.cf-tab:active { scale: .94; }
+.cf-tab:focus-visible { outline: 2px solid #0B0C0D; outline-offset: -3px; }
+.cf-tab svg { display: block; width: 16px; height: 16px; fill: none; stroke: rgba(11, 12, 13, .75); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (prefers-reduced-motion: reduce) { .cf-dot::after { animation: none; opacity: 0; } .cf-card * { transition-duration: 1ms !important; } }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="cf-fit" id="cf-fit">
+ <section class="cf-card" id="cf-card" aria-label="Forma shop preview with a floating call window">
+  <div class="cf-bar" aria-hidden="true"><span class="cf-url">forma.studio/spring</span></div>
+  <div class="cf-field" id="cf-field">
+   <div class="cf-page" aria-hidden="true">
+    <div class="cf-nav"><span class="cf-logo">Forma</span><span>Shop</span><span>Studio</span><span>Journal</span><i class="cf-sp"></i><span>Bag 2</span></div>
+    <div class="cf-hero">
+     <p class="cf-kick">Spring line · 12 pieces</p>
+     <h2 class="cf-h">Quiet things for the table.</h2>
+     <p class="cf-p">Thrown and glazed by hand in small batches. Ships in 5 days.</p>
+     <span class="cf-more">Shop the line ↗︎</span>
+    </div>
+    <div class="cf-tiles">
+     <div class="cf-tile"><div class="cf-art"><svg viewBox="0 0 52 64"><path d="M19 6h14v8c0 5 10 9 10 24 0 12-7 20-17 20S9 50 9 38c0-15 10-19 10-24z"/></svg></div><p class="cf-tn">Ash vase<span>$68</span></p></div>
+     <div class="cf-tile"><div class="cf-art"><svg viewBox="0 0 52 64"><path d="M8 18h34l-3.6 32c-.4 3.4-3 6-6.4 6H18c-3.4 0-6-2.600-6.400-6z"/><path d="M42 24h2.500a6.500 6.500 0 0 1 0 13H40"/></svg></div><p class="cf-tn">Fluted cup<span>$34</span></p></div>
+    </div>
+    <p class="cf-foot-note">Made in Portland · 30-day returns</p>
+   </div>
+
+   <div class="cf-win" id="cf-win" role="group" tabindex="0" aria-label="Call window, Ava, Forma review. Drag or throw to a corner. Arrow keys move it, Enter resizes">
+    <button type="button" class="cf-tab cf-tab--l" id="cf-tab-l" tabindex="-1" aria-label="Bring the call window back"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg></button>
+    <button type="button" class="cf-tab cf-tab--r" id="cf-tab-r" tabindex="-1" aria-label="Bring the call window back"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg></button>
+    <div class="cf-body">
+     <div class="cf-vid"><img src="../assets/art/ava.webp" width="500" height="625" alt="" draggable="false"><div class="cf-over" aria-hidden="true">Call ended</div></div>
+     <div class="cf-foot">
+      <div class="cf-who"><span class="cf-name">Ava · Forma review</span><span class="cf-time"><i class="cf-dot"></i><b id="cf-t" style="font-weight:400">04:12</b></span></div>
+      <div class="cf-ctl">
+       <button type="button" class="cf-btn cf-mute" id="cf-mute" aria-pressed="false" aria-label="Mute microphone"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.750" y="1.750" width="4.500" height="7.500" rx="2.250"/><path d="M3.500 7.500a4.500 4.500 0 0 0 9 0M8 12v2.250"/><path class="cf-slash" d="M2.500 2.500l11 11" pathLength="14"/></svg></button>
+       <button type="button" class="cf-btn cf-endb" id="cf-end" aria-label="End call"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.600 9.800C4.700 6.800 11.300 6.800 14.400 9.800c.4.400.4 1 .1 1.400l-.9 1.100c-.3.400-.8.500-1.200.3l-1.900-.8c-.4-.2-.6-.5-.6-.9v-1.100c-1.200-.4-2.800-.4-4 0v1.100c0 .4-.2.700-.6.900l-1.900.8c-.4.200-.9.100-1.200-.3l-.9-1.100c-.3-.4-.3-1 .1-1.400z"/></svg></button>
+      </div>
+     </div>
+    </div>
+   </div>
+   <p class="sr-only" id="cf-msg" role="status" aria-live="polite"></p>
+  </div>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag or throw the call window to a corner, throw it hard at a side to tuck it, tap it to resize, or catch it mid-flight. Arrow keys move it; Enter resizes</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Corner float. The window is four springs (x, y, width, height) plus one for the tab; the page behind is just a picture.
+   Everything is in card pixels (the card may be drawn scaled: the pointer is divided by the scale). Release projects the throw with d = 0.99. */
+const CF = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const OM = (2 * Math.PI) / 0.4, OMT = (2 * Math.PI) / 0.34;               // response 0.4 s for the window, 0.34 s for the tab
+  const LOOK = 0.99 / (1 - 0.99) / 1000;                                    // 0.099 s: where a release coasts to (d = 0.99, the snappy one)
+  const FW = 600, FH = 336, M = 12, WS = 184, HS = 150, WL = 288, HL = 218;  // the field, the margin to a corner, the two sizes
+  const SLOP = 6, THROW = 420, TUCK = 0.4, DX = 300, DY = 200;              // px before a drag, px/s that makes a throw, how far out (of its width) tucks, rubber-band dimensions
+  const KEY = { cx: 1, cy: 1, big: true };                                 // the state the loop rests on
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const $ = (id) => document.getElementById('cf-' + id);
+  const fit = $('fit'), field = $('field'), win = $('win'), msg = $('msg'), clock = $('t');
+  const tabs = { '-1': $('tab-l'), 1: $('tab-r') };
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) when critically damped, the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OM, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+  const S = { x: mk(), y: mk(), w: mk(WS), h: mk(HS), tk: mk(0) };
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                      // rubber band, Apple's, constant 0.55
+  const rbInv = (r, D) => { r = Math.min(r, D * 0.9); return (r * D) / (0.55 * (D - r)); };
+  const band = (v, lo, hi, D) => (v < lo ? lo - rb(lo - v, D) : v > hi ? hi + rb(v - hi, D) : v);
+  const unband = (d, lo, hi, D) => (d < lo ? lo - rbInv(lo - d, D) : d > hi ? hi + rbInv(d - hi, D) : d);
+
+  /* state */
+  let big = KEY.big, dock = { cx: KEY.cx, cy: KEY.cy }, tuck = 0, tuckSide = -1, held = null, flight = false, raf = 0, last = 0;
+  let OX = 0, OY = 0, sc = 1, ended = false, secs = 4 * 60 + 12, endT = 0;
+  const say = (t) => { msg.textContent = t; };
+
+  /* where the window wants to be: docked in a corner (the corner is its anchor, so resize keeps it fixed), or out past a side */
+  function tgt() {
+    const w = big ? WL : WS, h = big ? HL : HS;
+    return { w, h, y: dock.cy ? FH - M - h : M, x: tuck < 0 ? -w : tuck > 0 ? FW : dock.cx ? FW - M - w : M };
+  }
+  function measure() {                                                       // the card's place and scale on screen
+    const r = field.getBoundingClientRect();
+    OX = r.left; OY = r.top; sc = r.width / FW || 1;
+  }
+  const local = (x, y) => ({ x: (x - OX) / sc, y: (y - OY) / sc });
+
+  /* draw everything from the springs */
+  let lw = NaN, lh = NaN, lk = NaN, lt = NaN, lsa = NaN, lstate = '';
+  function render() {
+    const w = S.w.x, h = S.h.x;
+    win.style.transform = `translate3d(${S.x.x.toFixed(2)}px, ${S.y.x.toFixed(2)}px, 0)`;
+    if (w !== lw) { win.style.width = w + 'px'; lw = w; }
+    if (h !== lh) { win.style.height = h + 'px'; lh = h; }
+    const k = +clamp((w - WS) / (WL - WS), 0, 1).toFixed(3);
+    if (k !== lk) { win.style.setProperty('--k', k); lk = k; }
+    const t = +clamp(S.tk.x, 0, 1).toFixed(3);
+    if (t !== lt) { win.style.setProperty('--tl', tuckSide < 0 ? t : 0); win.style.setProperty('--tr', tuckSide > 0 ? t : 0); lt = t; }
+    const sa = +(1 - clamp(Math.max(-S.x.x, S.x.x + w - FW) / w, 0, 1)).toFixed(2);          // the shadow leaves with the window, so no wash is left on the edge
+    if (sa !== lsa) { win.style.setProperty('--sa', sa); lsa = sa; }
+    const st = tuck ? 'tuck' : '';
+    if (st !== lstate) {
+      win.classList.toggle('is-tuck', !!tuck);
+      tabs[-1].tabIndex = tuck < 0 ? 0 : -1; tabs[1].tabIndex = tuck > 0 ? 0 : -1;
+      lstate = st;
+    }
+  }
+
+  /* motion */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let live = false;
+    for (const k of ['x', 'y']) live = step(S[k], dt, 0.05, 3) || live;
+    const pos = live;
+    for (const k of ['w', 'h']) live = step(S[k], dt, 0.05, 3) || live;
+    live = step(S.tk, dt, 0.002, 0.05) || live;
+    if (!pos) flight = false;
+    render();
+    if (live) kick();
+  }
+  // ω for a throw: a release that is heading for the target decelerates from the first frame (ω ≥ 1.5·v / distance), so the overshoot stays small
+  function pick(s, T, v, thr) {
+    let w = OM;
+    if (thr) { const D = T - s.x; if (v * D > 0) w = Math.min(40, Math.max(OM, (1.5 * v) / D)); }
+    return w;
+  }
+  // send the window to where tgt() says, from the position and velocity on screen. vx, vy: px/s; thr: the release was a throw (damping 0.8)
+  function go(vx = S.x.v, vy = S.y.v, thr = false, fl = false) {
+    const T = tgt();
+    if (tuck) tuckSide = tuck;
+    if (reduced) { snap(); return; }
+    const z = thr ? 0.8 : 1;
+    aim(S.x, T.x, vx, pick(S.x, T.x, vx, thr), z);
+    aim(S.y, T.y, vy, pick(S.y, T.y, vy, thr), z);
+    aim(S.w, T.w, S.w.v, OM, 1);
+    aim(S.h, T.h, S.h.v, OM, 1);
+    aim(S.tk, tuck ? 1 : 0, S.tk.v, OMT, 1);
+    if (fl) flight = true;
+    kick();
+  }
+  function snap() {                                                          // no springs: the window is where it should be, with a short cross-fade
+    const T = tgt();
+    if (tuck) tuckSide = tuck;
+    for (const [k, v] of [['x', T.x], ['y', T.y], ['w', T.w], ['h', T.h], ['tk', tuck ? 1 : 0]]) { const s = S[k]; s.x = s.T = v; s.v = 0; s.on = false; }
+    flight = false;
+    render();
+    if (win.animate && reduced) win.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160, easing: 'cubic-bezier(.4, 0, .2, 1)' });
+  }
+  const where = () => `${tuck ? 'Tucked at the ' + (tuck < 0 ? 'left' : 'right') + ' edge' : 'Docked ' + (dock.cy ? 'bottom ' : 'top ') + (dock.cx ? 'right' : 'left')}${big ? ', large' : ''}`;
+
+  function toggleSize() {
+    if (tuck) return;
+    big = !big;
+    go();
+    say(big ? 'Large' : 'Small');
+  }
+  function untuck() {
+    if (!tuck) return;
+    tuck = 0;
+    go(0, 0, false, true);
+    say(where());
+  }
+  function mute() {
+    const b = $('mute'), on = !b.classList.contains('is-muted');
+    b.classList.toggle('is-muted', on); b.setAttribute('aria-pressed', on); b.setAttribute('aria-label', on ? 'Unmute microphone' : 'Mute microphone');
+    say(on ? 'Muted' : 'Unmuted');
+  }
+  function end() {                                                           // the call ends, the sheet is uncovered, and a minute later the next one rings
+    if (ended) return;
+    ended = true; win.classList.add('is-ended'); say('Call ended');
+    clearTimeout(endT);
+    endT = setTimeout(() => { ended = false; secs = 0; clock.textContent = '00:00'; win.classList.remove('is-ended'); say('Calling'); }, 2400);
+  }
+  setInterval(() => { if (ended) return; secs++; clock.textContent = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0'); }, 1000);
+
+  /* one hand: a pointer or the ghost, both through down / move / up. x and y are client px, t is ms. */
+  function vel(rows, t, idx) {                                               // px/s over the last 80 ms of moves, 0 if the hand rested
+    const zero = idx.map(() => 0), b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return zero;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? zero : idx.map((j) => ((b[j] - a[j]) / dt) * 1000);
+  }
+  function down(x, y, t, ghost = false, el = null) {
+    if (held) up(t, true);
+    measure();
+    const p = local(x, y), btn = el && el.closest ? (el.closest('.cf-tab') ? 'tab' : el.closest('.cf-mute') ? 'mute' : el.closest('.cf-endb') ? 'end' : null) : null;
+    held = { x0: p.x, y0: p.y, mode: 'wait', ghost, btn, rows: [[t, S.x.x, S.y.x, S.x.x, S.y.x]], caught: false };
+    if (flight && (S.x.on || S.y.on)) { held.caught = true; S.x.on = S.y.on = false; S.x.v = S.y.v = 0; }   // a window in flight is caught where it is
+    win.classList.add('is-press');
+  }
+  function move(x, y, t) {
+    const h = held;
+    if (!h) return;
+    const p = local(x, y);
+    if (h.mode === 'wait') {
+      if (Math.hypot(p.x - h.x0, p.y - h.y0) < SLOP) return;
+      h.mode = 'drag'; h.ax = p.x; h.ay = p.y;                               // 1:1 from the commit point, so the window does not jump by the slop
+      const w = S.w.x, hh = S.h.x;
+      h.lox = Math.min(0, S.x.x); h.hix = Math.max(FW - w, S.x.x);           // out past a side is free ground when the hand took it from there
+      h.loy = 0; h.hiy = FH - hh;
+      h.rx0 = unband(S.x.x, h.lox, h.hix, DX); h.ry0 = unband(S.y.x, h.loy, h.hiy, DY);
+      S.x.on = S.y.on = false; S.x.v = S.y.v = 0;
+      if (tuck) { tuck = 0; aim(S.tk, 0, S.tk.v, OMT, 1); kick(); }
+      win.classList.remove('is-press'); win.classList.add('is-drag');
+    }
+    h.rx = h.rx0 + (p.x - h.ax); h.ry = h.ry0 + (p.y - h.ay);
+    h.hiy = FH - S.h.x;
+    S.x.x = reduced ? clamp(h.rx, h.lox, h.hix) : band(h.rx, h.lox, h.hix, DX);
+    S.y.x = reduced ? clamp(h.ry, h.loy, h.hiy) : band(h.ry, h.loy, h.hiy, DY);
+    h.rows.push([t, S.x.x, S.y.x, h.rx, h.ry]);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    render();
+  }
+  function up(t, cancel = false) {
+    const h = held;
+    if (!h) return;
+    held = null;
+    win.classList.remove('is-press', 'is-drag');
+    if (h.mode === 'wait') {                                                 // a tap
+      if (h.caught) { go(0, 0, false, true); return; }                      // a tap on a window in flight settles it on the corner it was heading for
+      if (cancel) return;
+      if (h.btn === 'tab') untuck();
+      else if (h.btn === 'mute') mute();
+      else if (h.btn === 'end') end();
+      else toggleSize();
+      return;
+    }
+    const vd = cancel ? [0, 0] : vel(h.rows, t, [1, 2]), vr = cancel ? [0, 0] : vel(h.rows, t, [3, 4]);   // as drawn (the spring starts here), and the hand's (what is projected)
+    const w = big ? WL : WS, hh = big ? HL : HS;
+    const px = h.rx + vr[0] * LOOK, py = h.ry + vr[1] * LOOK;                // where this throw is heading
+    tuck = px < -TUCK * w ? -1 : px + w > FW + TUCK * w ? 1 : 0;
+    dock.cx = tuck ? (tuck < 0 ? 0 : 1) : px + w / 2 < FW / 2 ? 0 : 1;
+    dock.cy = py + hh / 2 < FH / 2 ? 0 : 1;
+    go(vd[0], vd[1], Math.hypot(vr[0], vr[1]) > THROW, true);
+    say(where());
+  }
+  const release = () => { if (held && held.ghost) up(performance.now()); };
+
+  let ptr = null;                                                            // a real pointer
+  win.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null) return;
+    ptr = e.pointerId;
+    try { win.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    down(e.clientX, e.clientY, e.timeStamp, false, e.target);
+  });
+  win.addEventListener('pointermove', (e) => { if (e.pointerId === ptr) move(e.clientX, e.clientY, e.timeStamp); });
+  const pend = (cancel) => (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.timeStamp, cancel); };
+  win.addEventListener('pointerup', pend(false));
+  win.addEventListener('pointercancel', pend(true));
+  win.addEventListener('click', (e) => {                                     // a keyboard press on a button (a pointer's tap is handled in up())
+    if (e.detail !== 0) return;
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.classList.contains('cf-tab')) untuck(); else if (b === $('mute')) mute(); else if (b === $('end')) end();
+  });
+  win.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const onWin = e.target === win;
+    if (onWin && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleSize(); return; }
+    const dx = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0, dy = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+    if (!dx && !dy) return;
+    e.preventDefault();
+    if (tuck) { if (dx === -tuck) { untuck(); win.focus({ preventScroll: true }); } return; }
+    if (dx) { if (dock.cx === (dx > 0 ? 1 : 0)) tuck = dx; else dock.cx = dx > 0 ? 1 : 0; }
+    if (dy) dock.cy = dy > 0 ? 1 : 0;
+    go(S.x.v, S.y.v, false, true);
+    say(where());
+  });
+  new ResizeObserver(() => measure()).observe(fit);
+  addEventListener('scroll', measure, { passive: true });
+
+  measure(); snap();
+  say(where());
+  return {
+    win, tabs, KEY, down, move, up, release, snap, toggleSize, measure,
+    get held() { return held; }, get tuck() { return tuck; }, get big() { return big; }, get dock() { return dock; }, get flight() { return flight; },
+    get scale() { return sc; }, pos() { return { x: S.x.x, y: S.y.x, w: S.w.x, h: S.h.x, vx: S.x.v, vy: S.y.v, tk: S.tk.x }; },
+    toClient(lx, ly) { measure(); return { x: OX + lx * sc, y: OY + ly * sc }; },                 // card px to client px
+    center() { return { x: S.x.x + S.w.x / 2, y: S.y.x + S.h.x / 2 }; },
+    tabCenter() { return { x: tuck < 0 ? 17 : FW - 17, y: S.y.x + S.h.x / 2 }; },
+    toKey() {                                                                // one step towards the key state, by springs; true when there
+      release();
+      if (held) return false;
+      const moving = S.x.on || S.y.on || S.w.on || S.h.on || S.tk.on;
+      if (moving) return false;
+      if (tuck || dock.cx !== KEY.cx || dock.cy !== KEY.cy || big !== KEY.big) {
+        tuck = 0; dock.cx = KEY.cx; dock.cy = KEY.cy; big = KEY.big;
+        go(0, 0, false, true);
+        return false;
+      }
+      return true;
+    },
+    reset() { held = null; tuck = 0; dock = { cx: KEY.cx, cy: KEY.cy }; big = KEY.big; win.classList.remove('is-press', 'is-drag'); snap(); say(where()); },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('cf-fit');
+  // the card is drawn at 600 × 376 and scaled to the room it is given (about 80% of the width, 1.5× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.8 * W / 600, (H - 2 * pad - ui) / 376, 1.5));
+    fit.style.setProperty('--s', s.toFixed(4));
+    CF.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+  // the ghost takes hold at (fx, fy) in card px, moves dx, dy card px over ms through CF.down / move / up, as a hand does.
+  // 'flick' accelerates and lets go at speed; 'ease' arrives, rests and lets go slowly
+  async function hand(my, from, dx, dy, ms, kind, el) {
+    const c = CF.toClient(from.x, from.y), s = CF.scale;
+    if (!(await QM.ghostTo(c.x, c.y, 760))) throw 0;
+    await gap(my, 170);
+    CF.down(c.x, c.y, performance.now(), true, el);
+    const t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const now = performance.now(), p = Math.min(1, (now - t0) / ms), k = kind === 'flick' ? Math.pow(p, 1.6) : mv(p);
+      QM.ghostAt(c.x + dx * s * k, c.y + dy * s * k); CF.move(c.x + dx * s * k, c.y + dy * s * k, now);
+      if (p >= 1) break;
+    }
+    if (kind !== 'flick') await gap(my, 170);
+    CF.up(performance.now());
+  }
+  const hold = async (my, ms) => { await gap(my, ms); };
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5500 : 1800);
+      for (let i = 0; i < 40 && !CF.toKey(); i++) await gap(my, 200);          // the key state, wherever a hand left the window
+      QM.ghostShow();
+      for (;;) {
+        await hand(my, CF.center(), -230, -170, 300, 'flick');                  // a diagonal flick from the bottom right: the top left, X and Y together
+        await hold(my, 1500);
+        await hand(my, CF.center(), -60, -50, 760, 'ease');                     // pull past the card's edge: it resists, then returns
+        await hold(my, 1000);
+        await hand(my, CF.center(), 0, 150, 900, 'ease');                       // a slow drag to the far side of the middle: it settles in the bottom left
+        await hold(my, 1300);
+        await hand(my, CF.center(), 0, 0, 10, 'ease');                          // a tap: larger, anchored on its corner
+        await hold(my, 1900);
+        await hand(my, CF.center(), 0, 0, 10, 'ease');                          // and back
+        await hold(my, 1300);
+        await hand(my, CF.center(), 430, -8, 280, 'flick');                     // thrown hard at the right side: it tucks
+        await hold(my, 1800);
+        await hand(my, CF.tabCenter(), 0, 0, 10, 'ease', CF.tabs[CF.tuck || 1]);  // tap the tab: it comes back where it was
+        await hold(my, 2600);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) CF.release(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); CF.release(); }
+  if (!QM.tile && !reduced) {
+    const idle = () => CF.held || CF.win.matches(':hover');
+    const touch = (e) => {
+      if (e && e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); CF.reset(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

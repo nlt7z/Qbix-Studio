@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Picker wheel · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "picker-wheel", "title": "Picker wheel", "group": "studio", "added": "2026-11-19", "cat": "inputs", "order": 10,
+  "kind": "loop", "tone": "paper", "shot": 800,
+  "line": "3 drums · R 96 px, 21.5° a row · release projects v × 0.5 s (d 0.998) · spring response 0.4 s",
+  "summary": "A booking card for an intro call with Qbix: three real drums (day, hour, minute), each row sitting on a cylinder with rotateX and translateZ under one perspective, so rows bend away and shrink towards the top and bottom and their ink steps down with the angle. A white pill across the middle holds the chosen row at weight 500. The drum follows the pointer 1:1 from where it was grabbed; on release the velocity is projected with Apple's deceleration and handed to a spring that lands on the nearest row, so a long flick spins many rows and eases in. Past the first or last row the drum rubber-bands. The summary line below rolls its changed words once a wheel has settled.",
+  "spec": [
+    ["Drum", "rows on a cylinder: radius 96 px, 21.5° (0.375 rad) between rows, so a row is 36 px at the front; one perspective of 560 px on the wheel, the drum pushed back by its radius so the front row is at scale 1; the drum is turned by one rotateX, the rows never move"],
+    ["Ink", "alpha (1 − d / 3.1)^1.5 by distance d in rows (1, .56, .21, .03), hidden past 3.1; the row in the pill is weight 500 and scales to 1.1, hand-over at d = 0.5"],
+    ["Drag", "1:1 from the grab point, 6 px of travel before it is a drag (so a tap stays a tap); pointer capture on commit; velocity from the last 80 ms"],
+    ["Release", "target = round(position + v × 0.499 s), 0.499 = d / (1 − d) / 1000 for d = 0.998; the spring starts at the release velocity"],
+    ["Spring", "critically damped, x(t) = T + (A + B·t)·e^(−ωt); ω = 2π / 0.4 s for taps and keys; a throw uses ω = 1.5·v / distance (floor 3, cap 15.7) so it starts decelerating and never crosses the target"],
+    ["Ends", "past row 0 or the last row the drum is shown through (x·D·0.55) / (D + 0.55·|x|), D = 168 px; a throw into the end overshoots on the spring and comes back; a key at the end nudges 0.3 row"],
+    ["Input", "wheel notch (≥ 50 px) steps a row, a trackpad stream moves the drum and settles 90 ms after the last event; arrows step (Up is the next row), Page steps 3, Home and End jump, Left and Right move between wheels; each wheel is a spinbutton"],
+    ["Summary", "day, hour and minute roll under a clip (420 ms expo out, new from below when the value rose) only when their wheel settles; Book call rolls to Booked and back"],
+    ["Loop", "the ghost flicks the day wheel, drags the hour slowly, taps a minute row, books; it uses the same down / move / up as a hand, yields to a real pointer and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-19"],
+  "where": "The booking card on a Qbix launch page or a client's contact page, where a visitor picks a day and a time for an intro call without leaving the page.",
+  "rules": [
+    "The position is one number per wheel (rows, a float); the drum's rotation, every row's ink and the pill's row all come from it, so a drag, a key and the spring cannot disagree.",
+    "Every spring starts from the position and velocity on screen; a wheel that is still spinning is caught where it is and a tap on it only stops it.",
+    "A throw's spring is chosen from its own velocity and distance: it starts by slowing down, never speeds up after the finger leaves and never crosses the target, except against an end, where it overshoots into the rubber band and returns.",
+    "The rubber band is applied to the shown position only; the raw position keeps the finger's travel, so the way back is the same path.",
+    "The summary and aria values change when a wheel has settled, not while it spins; text rolls inside a clip, nothing fades.",
+    "One ink fill (Book call); the chosen row is ink type in a white pill; one lime point.",
+    "Each wheel is role=spinbutton with aria-valuemin, aria-valuemax, aria-valuenow and aria-valuetext; Up increases, as in a native time field.",
+    "Under reduced motion the drums still follow the pointer but release snaps to the nearest row with no spring or rubber band, and the summary swaps with a short cross-fade."
+  ],
+  "tags": ["picker", "wheel", "drum", "3D", "spring", "momentum", "rubber band", "spinbutton", "booking", "inputs"]
+}
+</script>
+<style data-code>
+/* Picker wheel. White surfaces with soft rings; the one ink fill is Book call, one lime point. Easings: expo out (.16,1,.3,1), ui (.4,0,.2,1).
+   The drum's transform and every row's opacity are set from script (draw()). */
+.pw-card { width: 380px; max-width: 100%; padding: 22px 24px 24px; background: #fff; color: #0B0C0D; border-radius: 20px;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
+  font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; user-select: none; -webkit-user-select: none; }
+.pw-card p, .pw-card h3 { margin: 0; }
+:where(.pw-card button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.pw-t { font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.pw-sub { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: rgba(11, 12, 13, .66); font-size: 13px; line-height: 20px; font-weight: 500; }
+.pw-pt { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16); }
+
+/* the picker: three wheels and one pill across the middle */
+.pw-picker { position: relative; height: 168px; margin-top: 14px; display: grid; grid-template-columns: 136px 1fr 56px 14px 56px; padding: 0 18px 0 24px; }
+.pw-pill { position: absolute; left: 0; right: 0; top: 50%; height: 40px; margin-top: -20px; border-radius: 12px; background: #fff; pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, .1), 0 5px 14px -6px rgba(11, 12, 13, .26);
+  transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.pw-picker.is-press .pw-pill { transform: scale(.985, .92); }
+.pw-colon { grid-column: 4; grid-row: 1; align-self: center; position: relative; z-index: 1; height: 36px; display: grid; place-items: center; pointer-events: none;
+  font: 500 22px/36px Geist, system-ui, sans-serif; padding-bottom: 3px; }
+
+/* a wheel: one perspective; the drum inside it is turned, the rows sit on it */
+.pw-wheel { grid-row: 1; grid-column: var(--c); position: relative; height: 168px; overflow: hidden; perspective: 560px; border-radius: 12px; cursor: grab; touch-action: none; outline: none; }
+.pw-wheel.is-drag, .pw-wheel.is-drag * { cursor: grabbing; }
+.pw-wheel:focus-visible { outline: 2px solid #0B0C0D; outline-offset: -2px; }
+.pw-drum { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+.pw-row { position: absolute; left: 0; right: 0; top: 50%; height: 36px; margin-top: -18px; display: flex; align-items: center; justify-content: center;
+  backface-visibility: hidden; white-space: nowrap; font: 400 20px/36px Geist, system-ui, sans-serif; letter-spacing: -.011em; font-variant-numeric: tabular-nums; }
+.pw-row > span { display: block; }
+.pw-row.is-sel { font-weight: 500; }
+.pw-wheel[data-align="end"] .pw-row { justify-content: flex-end; padding-right: 7px; }
+.pw-wheel[data-align="end"] .pw-row > span { transform-origin: 100% 50%; }
+.pw-wheel[data-align="start"] .pw-row { justify-content: flex-start; padding-left: 7px; }
+.pw-wheel[data-align="start"] .pw-row > span { transform-origin: 0 50%; }
+
+/* the summary: changed words roll under a clip (script: roll()) */
+.pw-sum { display: flex; align-items: baseline; margin-top: 14px; height: 18px; font-size: 13px; line-height: 18px; color: rgba(11, 12, 13, .66); white-space: nowrap; }
+.pw-m { font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: #0B0C0D; }
+.pw-roll { display: inline-grid; overflow: hidden; vertical-align: top; }
+.pw-roll > b { grid-area: 1 / 1; font-weight: inherit; white-space: nowrap; }
+.pw-sep { margin: 0 8px; color: rgba(11, 12, 13, .38); }
+
+/* the one ink fill */
+.pw-book { position: relative; width: 100%; height: 44px; margin-top: 14px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: #0B0C0D; color: #fff;
+  font-size: 14px; font-weight: 600; letter-spacing: -.011em; transition: transform 100ms cubic-bezier(.4, 0, .2, 1), background 160ms cubic-bezier(.4, 0, .2, 1); }
+.pw-book:hover, .pw-book.is-hot { background: #24262a; }
+.pw-book:active, .pw-book.is-press { transform: scale(.97); }
+.pw-book:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.pw-tick { flex: none; width: 0; height: 14px; margin-right: 0; overflow: hidden; transition: width 160ms cubic-bezier(.5, 0, .75, 0), margin 160ms cubic-bezier(.5, 0, .75, 0); }
+.pw-tick svg { display: block; width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.pw-book.is-booked .pw-tick { width: 14px; margin-right: 8px; transition: width 420ms cubic-bezier(.16, 1, .3, 1), margin 420ms cubic-bezier(.16, 1, .3, 1); }
+@media (prefers-reduced-motion: reduce) { .pw-card *, .pw-card *::before { transition: none !important; } }
+</style>
+<style>
+  .pww { display: grid; gap: 12px; justify-items: start; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="pww">
+    <p class="kicker">Qbix · Intro call</p>
+<!-- code -->
+<section class="pw-card" aria-labelledby="pw-title">
+  <h3 class="pw-t" id="pw-title">Book an intro call</h3>
+  <p class="pw-sub"><i class="pw-pt"></i><span>Sera is free</span></p>
+  <div class="pw-picker" id="pw-picker" role="group" aria-label="Day and time">
+    <div class="pw-pill" aria-hidden="true"></div>
+    <div class="pw-wheel" id="pw-day" style="--c:1" role="spinbutton" tabindex="0" aria-label="Day"></div>
+    <div class="pw-wheel" id="pw-hour" style="--c:3" role="spinbutton" tabindex="0" aria-label="Hour" data-align="end"></div>
+    <span class="pw-colon" aria-hidden="true">:</span>
+    <div class="pw-wheel" id="pw-min" style="--c:5" role="spinbutton" tabindex="0" aria-label="Minute" data-align="start"></div>
+  </div>
+  <p class="pw-sum" aria-hidden="true"><span class="pw-roll pw-m" id="pw-s-d" data-fit><b>Fri 20 Nov</b></span><span class="pw-sep">·</span><span class="pw-roll pw-m" id="pw-s-h"><b>10</b></span><span class="pw-m">:</span><span class="pw-roll pw-m" id="pw-s-m"><b>30</b></span><span class="pw-sep">·</span><span>with Sera</span></p>
+  <button type="button" class="pw-book" id="pw-book"><span class="pw-tick"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M1.5 7.5l3.5 3.5 7.5-8"/></svg></span><span class="pw-roll" id="pw-book-t"><b>Book call</b></span></button>
+  <p class="sr-only" id="pw-msg" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><span>Drag or flick a wheel, scroll over it, or focus one and use the arrow keys, Page, Home and End</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Picker wheel. Each wheel's position is one float (in rows). draw() turns the drum and sets every row's ink from it.
+   Release projects the velocity with d = 0.998 and springs to the nearest row, starting at the release velocity. */
+const PW = (() => {
+  const ROW = 36, R = 96, STEP = ROW / R, EDGE = 168, SLOP = 6;           // row height at the front, drum radius, radians a row, wheel height, px before a drag
+  const DECEL = 0.998, LOOK = DECEL / (1 - DECEL) / 1000;                 // 0.499 s: where a release would coast to
+  const OMEGA = (2 * Math.PI) / 0.4;                                      // spring response 0.4 s
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const pad = (n) => String(n).padStart(2, '0');
+
+  // weekdays from Fri 20 Nov 2026 (Thu 19 is today, the first row)
+  const WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MO = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const days = [];
+  for (let t = Date.UTC(2026, 10, 19); days.length < 14; t += 864e5) {
+    const d = new Date(t), w = d.getUTCDay();
+    if (w > 0 && w < 6) days.push(`${WD[w]} ${d.getUTCDate()} ${MO[d.getUTCMonth()]}`);
+  }
+  const hours = Array.from({ length: 11 }, (_, i) => 8 + i), mins = Array.from({ length: 12 }, (_, i) => i * 5);
+  const DATA = [
+    { name: 'Day', labels: days, vals: days.map((_, i) => i + 1), start: 1, part: 's-d' },
+    { name: 'Hour', labels: hours.map(pad), vals: hours, start: 2, part: 's-h' },
+    { name: 'Minute', labels: mins.map(pad), vals: mins, start: 6, part: 's-m' },
+  ];
+  const picker = document.getElementById('pw-picker'), book = document.getElementById('pw-book'), msg = document.getElementById('pw-msg');
+  const $ = (id) => document.getElementById('pw-' + id);
+
+  const wheels = ['day', 'hour', 'min'].map((id, k) => {
+    const el = $(id), D = DATA[k];
+    const w = { el, k, n: D.labels.length, labels: D.labels, vals: D.vals, name: D.name, sum: $(D.part), idx: D.start, target: D.start, pos: D.start, vel: 0, mode: 'rest', s: null, wt: 0 };
+    el.innerHTML = '<div class="pw-drum">' + D.labels.map((l, i) =>
+      `<div class="pw-row" data-i="${i}" aria-hidden="true" style="transform:rotateX(${(-i * STEP).toFixed(5)}rad) translateZ(${R}px)"><span>${l}</span></div>`).join('') + '</div>';
+    w.drum = el.firstChild;
+    w.rows = [...el.querySelectorAll('.pw-row')];
+    w.spans = w.rows.map((r) => r.firstChild);
+    w.st = w.rows.map(() => ({ o: -1, sc: -1, sel: null, v: true }));
+    el.setAttribute('aria-valuemin', String(w.vals[0])); el.setAttribute('aria-valuemax', String(w.vals[w.n - 1]));
+    aria(w);
+    return w;
+  });
+  function aria(w) {
+    w.el.setAttribute('aria-valuenow', String(w.vals[w.idx]));
+    w.el.setAttribute('aria-valuetext', w.labels[w.idx]);
+  }
+
+  // shown position: past the first or last row the drum resists (x·D·0.55)/(D + 0.55·|x|), in px
+  const rb = (x) => (x * ROW * EDGE * 0.55) / (EDGE + 0.55 * x * ROW) / ROW;
+  const disp = (w, p) => (p < 0 ? -rb(-p) : p > w.n - 1 ? w.n - 1 + rb(p - (w.n - 1)) : p);
+
+  function draw(w) {
+    const p = disp(w, w.pos);
+    w.drum.style.transform = `translateZ(${-R}px) rotateX(${(p * STEP).toFixed(5)}rad)`;
+    for (let i = 0; i < w.n; i++) {
+      const d = Math.abs(i - p), st = w.st[i], row = w.rows[i];
+      if (d > 3.1) { if (st.v) { row.style.visibility = 'hidden'; st.v = false; } continue; }
+      if (!st.v) { row.style.visibility = ''; st.v = true; }
+      const o = +Math.pow(1 - d / 3.1, 1.5).toFixed(3);
+      if (o !== st.o) { row.style.opacity = o; st.o = o; }
+      const sc = +(1 + 0.1 * Math.max(0, 1 - d)).toFixed(3);
+      if (sc !== st.sc) { w.spans[i].style.transform = sc > 1 ? `scale(${sc})` : ''; st.sc = sc; }
+      const sel = d < 0.5;
+      if (sel !== st.sel) { row.classList.toggle('is-sel', sel); st.sel = sel; }
+    }
+  }
+
+  // the settled value: aria, the summary line, and Book call back to itself
+  function commit(w) {
+    if (w.idx === w.target) return;
+    const dir = Math.sign(w.target - w.idx);
+    w.idx = w.target;
+    aria(w);
+    roll(w.sum, w.labels[w.idx], dir);
+    unbook();
+    msg.textContent = `${days[wheels[0].idx]}, ${pad(hours[wheels[1].idx])}:${pad(mins[wheels[2].idx])}`;
+  }
+
+  /* critically damped spring: x(t) = T + (A + B·t)·e^(−ωt), A = distance on screen, B = v + ωA. It starts from the position and velocity
+     on screen. A throw picks ω = 1.5·v / distance, which starts decelerating and never crosses the target (floor 3, cap = the taps' ω);
+     against an end the cap wins and it overshoots into the rubber band. A retarget without a throw caps the velocity at ω·distance. */
+  let raf = 0;
+  const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+  function springTo(w, T, v0 = 0, thrown = false) {
+    T = clamp(Math.round(T), 0, w.n - 1);
+    w.target = T; clearTimeout(w.wt);
+    if (reduced) { w.pos = T; w.vel = 0; w.s = null; w.mode = 'rest'; draw(w); commit(w); return; }
+    const A = w.pos - T;
+    let om = OMEGA, v = v0;
+    if (thrown && v * A < 0) om = clamp((1.5 * Math.abs(v)) / Math.abs(A), 3, OMEGA);
+    else if (A > 0) v = Math.max(v, -om * A);
+    else if (A < 0) v = Math.min(v, -om * A);
+    else v = 0;
+    if (A === 0 && v === 0) { w.pos = T; w.vel = 0; w.s = null; w.mode = 'rest'; draw(w); commit(w); return; }
+    w.s = { T, A, B: v + om * A, w: om, t0: performance.now() };
+    w.mode = 'spring';
+    kick();
+  }
+  function tick(now) {
+    raf = 0;
+    let live = false;
+    for (const w of wheels) {
+      if (w.mode !== 'spring' || !w.s) continue;
+      const s = w.s, t = Math.max(0, (now - s.t0) / 1000), e = Math.exp(-s.w * t);
+      const x = s.T + (s.A + s.B * t) * e, v = (s.B - s.w * (s.A + s.B * t)) * e;
+      if (t > 5 || (Math.abs(x - s.T) < 0.004 && Math.abs(v) < 0.05)) {
+        w.pos = s.T; w.vel = 0; w.s = null; w.mode = 'rest'; draw(w); commit(w);
+      } else { w.pos = x; w.vel = v; draw(w); live = true; }
+    }
+    if (live) kick();
+  }
+
+  /* one hand: a pointer or the ghost, both through down / move / up. y is client px, t is ms. */
+  let drag = null;
+  function down(w, y, t, rowEl, ghost = false) {
+    if (drag) up(t);
+    const moving = w.mode === 'spring' && Math.abs(w.vel) > 0.6;
+    clearTimeout(w.wt);
+    if (w.mode === 'spring') { w.mode = 'hold'; w.s = null; }                    // caught where it is
+    drag = { w, y0: y, p0: w.pos, s: [[t, w.pos]], on: false, row: rowEl ? +rowEl.dataset.i : -1, moving, ghost };
+    picker.classList.add('is-press');                                            // the pill dips on the press
+  }
+  function move(y, t) {
+    if (!drag) return;
+    const d = drag, w = d.w, dy = y - d.y0;
+    if (!d.on) {
+      if (Math.abs(dy) < SLOP) return;
+      d.on = true; w.mode = 'drag'; w.vel = 0; w.el.classList.add('is-drag');
+    }
+    let p = d.p0 - dy / ROW;                                                     // 1:1 from where it was grabbed
+    if (reduced) p = clamp(p, 0, w.n - 1);
+    w.pos = p;
+    d.s.push([t, p]);
+    while (d.s.length > 2 && t - d.s[0][0] > 100) d.s.shift();
+    draw(w);
+  }
+  function up(t) {
+    if (!drag) return;
+    const d = drag, w = d.w;
+    drag = null;
+    picker.classList.remove('is-press'); w.el.classList.remove('is-drag');
+    if (d.on) {
+      let v = 0;
+      const b = d.s[d.s.length - 1];
+      let a = d.s[0];
+      for (const q of d.s) if (b[0] - q[0] <= 80) { a = q; break; }
+      if (b[0] - a[0] > 8 && t - b[0] < 80) v = clamp(((b[1] - a[1]) / (b[0] - a[0])) * 1000, -60, 60);   // rows/s, positive = next rows
+      if (reduced) { springTo(w, Math.round(w.pos)); return; }
+      springTo(w, w.pos + v * LOOK, v, Math.abs(v) > 0.4);
+    } else if (d.moving) springTo(w, Math.round(w.pos));                         // a tap on a spinning wheel only stops it
+    else if (d.row >= 0) springTo(w, d.row);
+    else springTo(w, w.target);
+  }
+
+  // a real pointer: move and up are heard on the window; capture starts with the drag
+  let ptr = null;
+  const pmove = (e) => {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    const was = drag && drag.on;
+    move(e.clientY, e.timeStamp);
+    if (!was && drag && drag.on) { try { ptr.w.el.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ } }
+  };
+  const pend = (e) => {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    ptr = null;
+    removeEventListener('pointermove', pmove); removeEventListener('pointerup', pend); removeEventListener('pointercancel', pend);
+    up(e.timeStamp);
+  };
+  wheels.forEach((w) => {
+    w.el.addEventListener('pointerdown', (e) => {
+      if (e.button > 0 || ptr) return;
+      ptr = { id: e.pointerId, w };
+      w.el.focus({ preventScroll: true });
+      down(w, e.clientY, e.timeStamp, e.target.closest('.pw-row'));
+      addEventListener('pointermove', pmove); addEventListener('pointerup', pend); addEventListener('pointercancel', pend);
+    });
+
+    // wheel: a notch steps rows; a trackpad's small deltas move the drum and it settles 90 ms after the last one
+    w.el.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) return;
+      e.preventDefault();
+      if (drag && drag.w === w) return;
+      const dy = e.deltaMode === 1 ? e.deltaY * ROW : e.deltaMode === 2 ? e.deltaY * EDGE : e.deltaY;
+      if (e.deltaMode || Math.abs(dy) >= 50) { springTo(w, w.target + Math.sign(dy) * Math.max(1, Math.round(Math.abs(dy) / 100)), w.vel); return; }
+      if (w.mode === 'spring') { w.mode = 'hold'; w.s = null; }
+      w.mode = 'wheel';
+      let dp = dy / ROW;
+      if ((w.pos < 0 && dp < 0) || (w.pos > w.n - 1 && dp > 0)) dp *= 0.4;
+      w.pos = reduced ? clamp(w.pos + dp, 0, w.n - 1) : clamp(w.pos + dp, -1.5, w.n - 0.5);
+      draw(w);
+      clearTimeout(w.wt);
+      w.wt = setTimeout(() => springTo(w, Math.round(w.pos)), 90);
+    }, { passive: false });
+
+    // keys: Up is the next row (as a native time field), Page steps 3, Home and End jump, Left and Right change wheel
+    w.el.addEventListener('keydown', (e) => {
+      const k = e.key, cur = w.target;
+      let to = null;
+      if (k === 'ArrowUp') to = cur + 1; else if (k === 'ArrowDown') to = cur - 1;
+      else if (k === 'PageUp') to = cur + 3; else if (k === 'PageDown') to = cur - 3;
+      else if (k === 'Home') to = 0; else if (k === 'End') to = w.n - 1;
+      else if (k === 'ArrowLeft' || k === 'ArrowRight') {
+        const nb = wheels[w.k + (k === 'ArrowRight' ? 1 : -1)];
+        if (nb) { e.preventDefault(); nb.el.focus(); }
+        return;
+      } else return;
+      e.preventDefault();
+      const c = clamp(to, 0, w.n - 1);
+      if (c === cur && !reduced && (k === 'ArrowUp' || k === 'ArrowDown') && w.mode === 'rest') {   // against an end: a nudge, then back
+        w.pos += (k === 'ArrowUp' ? 1 : -1) * 0.3; draw(w);
+      }
+      springTo(w, c, w.vel);
+    });
+  });
+
+  /* text that changes rolls inside its clip: the old line leaves up and the new one arrives from below (reversed when the value fell) */
+  function roll(el, text, dir = 1) {
+    const cur = el.lastElementChild;
+    if (cur.textContent === text) return;
+    if (!cur.animate) { cur.textContent = text; return; }
+    if (reduced) { cur.textContent = text; cur.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160 }); return; }
+    const w0 = el.offsetWidth;
+    while (el.children.length > 2) el.firstElementChild.remove();
+    const nb = document.createElement('b'); nb.textContent = text; el.appendChild(nb);
+    const o = { duration: 420, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'both' };
+    if (el.hasAttribute('data-fit')) {          // a slot that follows its text: the width runs from the old line to the new one, so nothing after it jumps
+      nb.style.justifySelf = 'start'; const w1 = nb.offsetWidth; nb.style.justifySelf = '';
+      el.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], o).finished.then(() => { el.style.width = ''; }, () => {});
+      el.style.width = w1 + 'px';
+    }
+    cur.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-110 * dir}%)` }], o).finished.then(() => cur.remove(), () => {});
+    nb.animate([{ transform: `translateY(${110 * dir}%)` }, { transform: 'translateY(0)' }], o);
+  }
+  let booked = false;
+  function unbook() { if (booked) { booked = false; book.classList.remove('is-booked'); roll($('book-t'), 'Book call', -1); } }
+  book.addEventListener('click', () => {
+    if (booked) return;
+    booked = true; book.classList.add('is-booked'); roll($('book-t'), 'Booked');
+    msg.textContent = `Booked ${days[wheels[0].idx]} at ${pad(hours[wheels[1].idx])}:${pad(mins[wheels[2].idx])}`;
+  });
+
+  wheels.forEach(draw);
+  return {
+    wheels, down, move, up, springTo, book,
+    get drag() { return drag; },
+    reset() { wheels.forEach((w) => springTo(w, DATA[w.k].start)); },
+    release() { if (drag && drag.ghost) up(performance.now()); },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [day, hour, min] = PW.wheels;
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const centre = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+
+  // the ghost holds a wheel at its centre and moves dy px over ms through PW.down / move / up, as a hand does.
+  // 'flick' accelerates and lets go at speed; 'ease' arrives and rests before it lets go
+  async function hand(my, wh, dy, ms, kind) {
+    const [x, y0] = centre(wh.el);
+    if (!(await QM.ghostTo(x, y0, 760))) throw 0;
+    await gap(my, 160);
+    PW.down(wh, y0, performance.now(), wh.rows[Math.round(wh.pos)], true);
+    await new Promise((res) => {
+      const t0 = performance.now();
+      const f = (now) => {
+        if (my !== epoch) return res();
+        const p = Math.min(1, (now - t0) / ms), k = kind === 'flick' ? Math.pow(p, 1.5) : mv(p);
+        const y = y0 + dy * k;
+        QM.ghostAt(x, y); PW.move(y, now);
+        if (p < 1) requestAnimationFrame(f); else res();
+      };
+      requestAnimationFrame(f);
+    });
+    if (my !== epoch) throw 0;
+    if (kind !== 'flick') await gap(my, 130);
+    PW.up(performance.now());
+  }
+  async function tapRow(my, wh, i) {
+    const row = wh.rows[i], [x, y] = centre(row);
+    if (!(await QM.ghostTo(x, y, 720))) throw 0;
+    await gap(my, 160);
+    PW.down(wh, y, performance.now(), row, true);
+    await gap(my, 110);
+    PW.up(performance.now());
+    await gap(my, 300);
+  }
+  async function tapBook(my) {
+    const b = PW.book, [x, y] = centre(b);
+    if (!(await QM.ghostTo(x + 40, y, 720))) throw 0;
+    b.classList.add('is-hot'); await gap(my, 190);
+    b.classList.add('is-press'); await gap(my, 110);
+    b.classList.remove('is-press', 'is-hot'); b.click(); await gap(my, 300);
+  }
+  function rest() {
+    PW.release();
+    PW.reset();
+    if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.pw-card')) document.activeElement.blur();
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 2300 : 1500);
+      QM.ghostShow();
+      for (;;) {
+        await hand(my, day, -44, 230, 'flick');                // a flick: the day wheel spins on and eases in
+        await gap(my, 2300);
+        await hand(my, hour, -98, 1000, 'ease');               // a slow drag, hour by hour
+        await gap(my, 800);
+        await tapRow(my, min, Math.min(min.n - 1, min.target + 2));
+        await gap(my, 1000);
+        await tapBook(my);                                     // Booked
+        await QM.ghostTo(innerWidth * 0.84, innerHeight * 0.9, 700);
+        await gap(my, 2400);
+        PW.reset();                                            // the wheels roll back, Book call returns
+        await gap(my, 2200);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) PW.release(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); PW.release(); PW.book.classList.remove('is-hot', 'is-press'); }
+  if (!QM.tile && !reduced) {
+    const idle = () => PW.wheels.some((x) => x.el === document.activeElement || x.el.matches(':hover')) || PW.book.matches(':hover') || PW.drag;
+    const touch = (e) => {
+      if (e && e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) { rest(); script(); } else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('wheel', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); rest(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

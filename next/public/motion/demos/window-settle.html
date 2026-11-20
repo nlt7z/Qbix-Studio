@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Window settle · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "window-settle", "title": "Window settle", "group": "studio", "added": "2026-11-19", "cat": "scroll", "order": 40,
+  "kind": "scroll", "tone": "paper", "shot": 7900,
+  "line": "one scroll progress · full-bleed to 72% · radius 0 to 20 px · follow response 0.24 s",
+  "summary": "A product page for Strata opens on its headline. Scrolling, the app's own screen rises full-bleed over the headline, then shrinks into a rounded window with a soft shadow that grows as the corners round. The window holds while its content scrolls inside it, moodboard to tokens to code, and three captions are uncovered one after another, each lighting its state in the window. The last thing uncovered is the one ink pill. Everything is a pure function of one smoothed scroll value, so scrolling back plays it exactly in reverse.",
+  "spec": [
+    ["Progress", "the page's scroll in screens (y / height), followed by a critically damped spring (response 0.24 s, damping 1.0) so a wheel notch reads as a glide; every value below is a function of that one number, drawn in a single rAF"],
+    ["Rise", "0 to 0.95 screens: the window's top edge goes from 90% down the screen to 0, smoothstep; the headline moves up 72% of a screen with it, so it is covered from below and carried out"],
+    ["Settle", "0.65 to 1.5 screens, smoothstep: width 100% to about 72% (576 px at 800 wide, 936 px at 1280), height to its own aspect, radius 0 to 20 px, a 34 px / 70 px shadow growing to 30% ink, the ring 8%"],
+    ["Drawn screen", "one 1040 px wide layout, scaled with transform: scale(width / 1040) from the top left, its height set in design px so it fills any window shape; no will-change, so the browser rasters the text at the scale it rests on"],
+    ["Inside the window", "screens 2.0 to 2.8, 3.5 to 4.3 and 5.0 to 5.6 (smoothstep each) add up to s from 0 to 3; the panels' stack moves by min(s, 2) panels; the step in the sidebar and the panel's own rows are lit by 1 − smoothstep(0, 0.7, |s − i|), rows staggered by 0.07"],
+    ["Captions", "four slots in one mask, each at ((i − s) + (1 − arrival)) × the mask's height: the line rolls up out of the mask and the next rolls in; the Try Strata pill is the fourth slot"],
+    ["Colour", "white, ink at low alpha, the soft ring; one ink fill (the pill, uncovered last); one lime point (the dot on the live caption)"],
+    ["Reduced motion", "no sticky, no scroll: the headline, the settled window showing the tokens, all three captions and the pill in one calm page"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-19"],
+  "where": "A product page's hero for Strata, or any Qbix launch page that has one screen worth looking at closely: the screen settles into a window, the story is told while it holds, and the call to action arrives last.",
+  "rules": [
+    "Everything is a function of one smoothed scroll value. No state, no timers, no scroll direction: scrolling back is the same function run backwards.",
+    "The drawn screen is a fixed-size layout scaled by transform, never resized with the window, so its type stays crisp at full-bleed and at rest. Keep will-change off the scaled layer, or the text rasters at the wrong scale.",
+    "Full-bleed has no radius and no shadow beyond the ring; the radius and the shadow arrive with the shrink, not before.",
+    "Captions are uncovered through a mask and never faded. One live caption at a time, marked by the one lime dot.",
+    "The only ink fill on the page is the pill. In the window, states are lit with ink type and a soft ring, never a black block.",
+    "Under reduced motion the page is still and complete: settled window, every caption, the pill."
+  ],
+  "tags": ["scroll", "window", "settle", "product page", "hero", "sticky", "pinned", "Strata", "scrollytelling"]
+}
+</script>
+<style data-code>
+/* Window settle. The run is tall; the pin is sticky; script sets every position from one smoothed scroll value (draw()).
+   Colour: white and ink at low alpha, the soft ring; the one ink fill is .ws-go, the one lime point .ws-dot. */
+.ws { position: relative; height: 700vh; --ct: 30px; color: #0B0C0D; background: #fff; }
+.ws-pin { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+.ws h1, .ws h2, .ws h3, .ws p, .ws ol, .ws ul, .ws figure { margin: 0; padding: 0; }
+.ws ol, .ws ul { list-style: none; }
+
+/* the headline: covered from below, carried up by the window */
+.ws-hero { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 18px; padding: 0 6vw 3vh; text-align: center; }
+.ws-kick { font: 500 14px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+.ws-h { max-width: 12.6em; font: 300 clamp(40px, min(7vw, 11vh), 104px)/.96 Outfit, Geist, sans-serif; letter-spacing: -.04em; text-wrap: balance; }
+.ws-lede { max-width: 30em; font: 400 clamp(15px, 1.5vw, 19px)/1.5 Geist, system-ui, sans-serif; color: rgba(11, 12, 13, .66); text-wrap: balance; }
+
+/* the captions: one mask above the window, lines roll through it */
+.ws-caps { position: absolute; left: 0; right: 0; overflow: hidden; }
+.ws-cap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 6vw; text-align: center; }
+.ws-ck { display: flex; align-items: center; gap: 8px; font: 400 13px/16px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+.ws-dot { width: 9px; height: 9px; border-radius: 50%; background: #B8FF00; box-shadow: 0 0 0 1px rgba(11, 12, 13, .2); transform: scale(var(--l, 0)); }
+.ws-ct { font: 300 var(--ct)/1.08 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.ws-cs { font: 400 15px/22px Geist, system-ui, sans-serif; letter-spacing: -.011em; color: rgba(11, 12, 13, .66); }
+.ws-go { height: 48px; padding: 0 28px; margin-bottom: 2px; border: 0; border-radius: 999px; background: #0B0C0D; color: #fff; font: 600 15px/1 Geist, system-ui, sans-serif; letter-spacing: -.011em; cursor: pointer;
+  transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ws-go:active { transform: scale(.97); }
+.ws-go:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+
+/* the window: position, size, radius and shadow come from script; the screen inside is one 1040 px layout scaled to fit */
+.ws-win { position: absolute; left: 0; top: 0; overflow: hidden; background: #fff; }
+.ws-app { position: absolute; left: 0; top: 0; width: 1040px; transform-origin: 0 0; display: grid; grid-template-rows: 52px minmax(0, 1fr);
+  font: 400 16px/1.4 Geist, system-ui, sans-serif; letter-spacing: -.011em; color: #0B0C0D; -webkit-user-select: none; user-select: none; }
+.ws-app h2 { font: 300 30px/1.1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.ws-app small, .ws-mut { font: 400 14px/1.35 Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+.ws-app code, .ws-mono { font: 400 14px/1.4 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+[data-r] { clip-path: inset(0 calc((1 - var(--l, 1)) * 100%) 0 0 round var(--rr, 0px)); }
+[data-r='up'] { clip-path: inset(calc((1 - var(--l, 1)) * 100%) 0 0 0 round var(--rr, 0px)); }
+
+.ws-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 24px 0 28px; }
+.ws-logo { font: 300 24px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.ws-acts { display: flex; align-items: center; gap: 16px; font-weight: 500; }
+.ws-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.ws-body { display: grid; grid-template-columns: 208px minmax(0, 1fr); min-height: 0; }
+
+.ws-side { position: relative; padding: 8px 12px 0 20px; }
+.ws-proj { padding: 0 8px 18px; font: 300 24px/1.1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.ws-proj small { display: block; margin-top: 4px; font-family: Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+.ws-steps { position: relative; display: grid; gap: 6px; }
+.ws-steps li { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px; border-radius: 14px; color: rgba(11, 12, 13, calc(.5 + .5 * var(--l, 0)));
+  box-shadow: 0 0 0 1px rgba(11, 12, 13, calc(.09 * var(--l, 0))), 0 10px 22px -14px rgba(11, 12, 13, calc(.22 * var(--l, 0))); }
+.ws-steps b { width: 24px; font: 500 14px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; }
+.ws-steps span { display: grid; font-weight: 500; line-height: 1.25; }
+.ws-steps small { font-weight: 400; color: inherit; opacity: .8; }
+.ws-rail { position: absolute; left: -10px; top: 8px; bottom: auto; width: 2px; height: 0; border-radius: 2px; background: rgba(11, 12, 13, .1); }
+.ws-rail::after { content: ''; position: absolute; inset: 0; border-radius: 2px; background: #0B0C0D; transform-origin: 50% 0; transform: scaleY(var(--p, 0)); }
+
+.ws-pane { position: relative; overflow: hidden; min-height: 0; }
+.ws-stack { position: absolute; left: 0; top: 0; right: 0; height: 300%; transform: translateY(calc(var(--s, 0) * -33.3333%)); }
+.ws-p { height: 33.3333%; padding: 8px 32px 34px 12px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 20px; }
+.ws-ph { display: flex; align-items: baseline; justify-content: space-between; }
+
+/* 1 · moodboard */
+.ws-p1 .ws-main { display: grid; grid-template-columns: minmax(0, 1fr) 232px; gap: 28px; min-height: 0; }
+.ws-mood { display: grid; grid-template-columns: 1.1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; min-height: 0; }
+.ws-mood figure { position: relative; min-height: 0; border-radius: 16px; overflow: hidden; --rr: 16px; }
+.ws-mood img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ws-mood .a { grid-row: 1 / 3; }
+.ws-found { display: grid; align-content: start; gap: 12px; }
+.ws-sw { display: grid; gap: 10px; }
+.ws-sw li { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 12px; }
+.ws-sw i { width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .12); }
+.ws-sw code { color: rgba(11, 12, 13, .66); }
+.ws-spec { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; }
+.ws-spec b { font: 300 30px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+
+/* 2 · tokens and components */
+.ws-p2 .ws-main { display: grid; grid-template-columns: 296px minmax(0, 1fr); gap: 36px; min-height: 0; }
+.ws-tok { display: grid; align-content: start; gap: 22px; }
+.ws-tok h3, .ws-cmp h3 { margin-bottom: 8px; font: 500 14px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+.ws-tok li { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 12px; height: 34px; }
+.ws-tok li i { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .12); }
+.ws-tok li code:last-child { color: rgba(11, 12, 13, .66); }
+.ws-scale { display: flex; align-items: flex-end; gap: 14px; height: 52px; }
+.ws-scale span { display: grid; gap: 6px; justify-items: start; }
+.ws-scale i { display: block; border-radius: 3px; background: #E3E8DA; }
+.ws-rad { display: flex; gap: 14px; }
+.ws-rad span { display: grid; gap: 6px; justify-items: start; }
+.ws-rad i { width: 44px; height: 44px; box-shadow: inset 0 0 0 1.5px rgba(11, 12, 13, .3); }
+.ws-cmp { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px 14px; min-height: 0; }
+.ws-cell { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; min-height: 0; }
+.ws-cell > div { display: grid; place-content: center; justify-items: start; gap: 12px; padding: 16px 18px; border-radius: 18px; --rr: 18px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .08), 0 12px 28px -18px rgba(11, 12, 13, .2); }
+.ws-btn { display: inline-flex; align-items: center; height: 44px; padding: 0 22px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px #2F6A55; color: #2F6A55; font-weight: 600; }
+.ws-field { display: grid; gap: 4px; width: 100%; }
+.ws-field span { height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 12px; box-shadow: inset 0 0 0 1.5px #2F6A55; }
+.ws-prod { display: flex; align-items: center; gap: 12px; }
+.ws-prod img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; }
+.ws-prod b { display: block; font-weight: 500; }
+.ws-tag { display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px; background: #EEF1E8; color: #2F6A55; font-weight: 500; font-size: 14px; }
+
+/* 3 · code */
+.ws-p3 .ws-main { display: grid; grid-template-columns: 188px minmax(0, 1fr); gap: 28px; min-height: 0; }
+.ws-files { display: grid; align-content: start; gap: 6px; }
+.ws-files li { display: flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 12px; color: rgba(11, 12, 13, .5); }
+.ws-files li.on { color: #0B0C0D; box-shadow: 0 0 0 1px rgba(11, 12, 13, .1), 0 10px 22px -14px rgba(11, 12, 13, .22); }
+.ws-codewrap { display: grid; align-content: start; gap: 14px; min-height: 0; }
+.ws-code { padding: 20px 22px; border-radius: 18px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .08), 0 12px 28px -18px rgba(11, 12, 13, .2); }
+.ws-code span { display: block; height: 24px; white-space: pre; font: 400 14px/24px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: #0B0C0D; }
+.ws-code .n { display: inline-block; width: 28px; color: rgba(11, 12, 13, .3); }
+.ws-code .d { color: rgba(11, 12, 13, .5); }
+
+/* reduced motion: a still, complete page */
+.ws.is-still { height: auto; }
+.ws.is-still .ws-pin { position: relative; height: auto; overflow: visible; display: flex; flex-direction: column; align-items: center; gap: 64px; padding: 16vh 6vw 12vh; }
+.ws.is-still .ws-hero { position: static; padding: 0; transform: none !important; visibility: visible !important; }
+.ws.is-still .ws-win { position: relative; flex: none; }
+.ws.is-still .ws-caps { position: static; height: auto !important; overflow: visible; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; width: min(100%, 940px); }
+.ws.is-still .ws-cap { position: static; transform: none !important; padding: 0; justify-content: flex-start; }
+.ws.is-still .ws-win { order: 1; }
+.ws.is-still .ws-caps { order: 2; }
+.ws.is-still .ws-cap--go { grid-column: 1 / -1; margin-top: 8px; }
+</style>
+<style>
+  html:not(.qm-tile) { --ws-ui: 46px; }
+  .ws { height: calc(7 * (100vh - var(--ws-ui, 0px))); }
+  .ws-pin { height: calc(100vh - var(--ws-ui, 0px)); }
+  .ws.is-still { height: auto; }
+  .ws.is-still .ws-pin { height: auto; }
+</style>
+</head>
+<body>
+<!-- code -->
+<div class="ws" id="ws">
+  <div class="ws-pin" id="wsPin">
+    <header class="ws-hero" id="wsHero">
+      <p class="ws-kick">Qbix Labs</p>
+      <h1 class="ws-h">Strata. From moodboard to design system.</h1>
+      <p class="ws-lede">A moodboard in, a design system out: tokens, components and code.</p>
+    </header>
+
+    <div class="ws-caps" id="wsCaps">
+      <div class="ws-cap"><p class="ws-ck"><i class="ws-dot"></i>01 / 03</p><h2 class="ws-ct">Drop in a moodboard</h2><p class="ws-cs">Four images in. Strata reads the colour, type and shape.</p></div>
+      <div class="ws-cap"><p class="ws-ck"><i class="ws-dot"></i>02 / 03</p><h2 class="ws-ct">Get tokens and components</h2><p class="ws-cs">42 tokens and 6 components, named and ready to use.</p></div>
+      <div class="ws-cap"><p class="ws-ck"><i class="ws-dot"></i>03 / 03</p><h2 class="ws-ct">Ship the code</h2><p class="ws-cs">CSS variables and React, in a repo you own.</p></div>
+      <div class="ws-cap ws-cap--go"><button class="ws-go" id="wsGo" type="button">Try Strata ↗︎</button><p class="ws-cs">Strata is a Qbix Labs product.</p></div>
+    </div>
+
+    <div class="ws-win" id="wsWin" role="img" aria-label="The Strata app: a moodboard, the tokens and components made from it, and the code.">
+      <div class="ws-app" id="wsApp" aria-hidden="true">
+        <header class="ws-bar"><b class="ws-logo">Strata</b><span class="ws-acts"><span>Export code</span><img class="ws-av" src="../assets/art/ava.webp" alt=""></span></header>
+        <div class="ws-body">
+          <nav class="ws-side">
+            <p class="ws-proj">Forma<small>Spring line</small></p>
+            <ol class="ws-steps" id="wsSteps">
+              <li><b>1</b><span>Moodboard<small>4 images</small></span></li>
+              <li><b>2</b><span>Tokens<small>42 tokens</small></span></li>
+              <li><b>3</b><span>Code<small>tokens.css</small></span></li>
+            </ol>
+          </nav>
+          <div class="ws-pane"><div class="ws-stack" id="wsStack">
+
+            <section class="ws-p ws-p1">
+              <header class="ws-ph"><h2>Moodboard</h2><small>Forma · 4 images</small></header>
+              <div class="ws-main">
+                <div class="ws-mood">
+                  <figure class="a" data-r="up" data-d="0"><img src="../assets/art/vase.webp" alt=""></figure>
+                  <figure data-r="up" data-d="1"><img src="../assets/art/calla.webp" alt=""></figure>
+                  <figure data-r="up" data-d="2"><img src="../assets/art/ava.webp" alt="" style="object-position:50% 22%"></figure>
+                </div>
+                <div class="ws-found">
+                  <p class="ws-mut" data-r data-d="2">Found in your board</p>
+                  <ul class="ws-sw">
+                    <li data-r data-d="3"><i style="background:#2F6A55"></i><span>Pine</span><code>#2F6A55</code></li>
+                    <li data-r data-d="4"><i style="background:#5BA48F"></i><span>Glass</span><code>#5BA48F</code></li>
+                    <li data-r data-d="5"><i style="background:#7C9A2E"></i><span>Moss</span><code>#7C9A2E</code></li>
+                    <li data-r data-d="6"><i style="background:#F2F0E8"></i><span>Bone</span><code>#F2F0E8</code></li>
+                    <li data-r data-d="7"><i style="background:#0B0C0D"></i><span>Ink</span><code>#0B0C0D</code></li>
+                  </ul>
+                  <div class="ws-spec" data-r data-d="8"><b>Aa</b><small>Outfit Light<br>with Geist</small></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="ws-p ws-p2">
+              <header class="ws-ph"><h2>Tokens and components</h2><small>42 tokens · 6 components</small></header>
+              <div class="ws-main">
+                <div class="ws-tok">
+                  <div>
+                    <h3 data-r data-d="0">Colour</h3>
+                    <ul>
+                      <li data-r data-d="1"><i style="background:#2F6A55"></i><code>color.pine</code><code>#2F6A55</code></li>
+                      <li data-r data-d="2"><i style="background:#5BA48F"></i><code>color.glass</code><code>#5BA48F</code></li>
+                      <li data-r data-d="3"><i style="background:#7C9A2E"></i><code>color.moss</code><code>#7C9A2E</code></li>
+                      <li data-r data-d="4"><i style="background:#F2F0E8"></i><code>color.bone</code><code>#F2F0E8</code></li>
+                    </ul>
+                  </div>
+                  <div data-r data-d="5">
+                    <h3>Space</h3>
+                    <div class="ws-scale">
+                      <span><i style="width:8px;height:8px"></i><code>4</code></span><span><i style="width:16px;height:16px"></i><code>8</code></span><span><i style="width:24px;height:24px"></i><code>12</code></span><span><i style="width:32px;height:32px"></i><code>16</code></span><span><i style="width:44px;height:44px"></i><code>24</code></span>
+                    </div>
+                  </div>
+                  <div data-r data-d="6">
+                    <h3>Radius</h3>
+                    <div class="ws-rad"><span><i style="border-radius:8px"></i><code>8</code></span><span><i style="border-radius:12px"></i><code>12</code></span><span><i style="border-radius:20px"></i><code>20</code></span></div>
+                  </div>
+                </div>
+                <div class="ws-cmp">
+                  <div class="ws-cell" data-r data-d="2"><h3>Button</h3><div><span class="ws-btn">Add to bag</span></div></div>
+                  <div class="ws-cell" data-r data-d="3"><h3>Input</h3><div><label class="ws-field"><small>Email</small><span>hello@forma.studio</span></label></div></div>
+                  <div class="ws-cell" data-r data-d="4"><h3>Card</h3><div><div class="ws-prod"><img src="../assets/art/vase.webp" alt=""><span><b>Ash vase</b><code>$68</code></span></div></div></div>
+                  <div class="ws-cell" data-r data-d="5"><h3>Tag</h3><div><span class="ws-tag">New in</span></div></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="ws-p ws-p3">
+              <header class="ws-ph"><h2>Code</h2><small>tokens.css · 4.2 kB</small></header>
+              <div class="ws-main">
+                <ul class="ws-files">
+                  <li class="on" data-r data-d="0"><code>tokens.css</code></li>
+                  <li data-r data-d="1"><code>Button.tsx</code></li>
+                  <li data-r data-d="2"><code>Card.tsx</code></li>
+                </ul>
+                <div class="ws-codewrap">
+                  <div class="ws-code">
+                    <span data-r data-d="1"><b class="n">1</b>:root {</span>
+                    <span data-r data-d="2"><b class="n">2</b>  --pine: #2F6A55;</span>
+                    <span data-r data-d="3"><b class="n">3</b>  --glass: #5BA48F;</span>
+                    <span data-r data-d="4"><b class="n">4</b>  --bone: #F2F0E8;</span>
+                    <span data-r data-d="5"><b class="n">5</b>  --radius-md: 12px;</span>
+                    <span data-r data-d="6"><b class="n">6</b>  --radius-lg: 20px;</span>
+                    <span data-r data-d="7"><b class="n">7</b>}</span>
+                    <span data-r data-d="8"><b class="n">8</b></span>
+                    <span data-r data-d="8"><b class="n">9</b>.button {</span>
+                    <span data-r data-d="9"><b class="n">10</b>  border-radius: 999px;</span>
+                    <span data-r data-d="9"><b class="n">11</b>  box-shadow: inset 0 0 0 1.5px var(--pine);</span>
+                    <span data-r data-d="9"><b class="n">12</b>}</span>
+                    <span data-r data-d="10"><b class="n">13</b></span>
+                    <span data-r data-d="10"><b class="n">14</b>.card { border-radius: var(--radius-lg); }</span>
+                    <span data-r data-d="10"><b class="n">15</b>.input { border-radius: var(--radius-md); }</span>
+                  </div>
+                  <p class="ws-mut" data-r data-d="10"><code>Built in 41 s · 42 tokens · 6 components</code></p>
+                </div>
+              </div>
+            </section>
+
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+<div class="qm-ui"><span>Scroll ↓</span><span class="qm-sep">/</span><span>The screen settles into a window, then its content scrolls inside it</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Window settle. Everything below is draw(y): a pure function of one scroll value y, which follows the real scroll
+   through a critically damped spring (response 0.24 s). No state is kept between frames except the spring. */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const run = $('ws'), pin = $('wsPin'), hero = $('wsHero'), caps = $('wsCaps'), win = $('wsWin'), app = $('wsApp');
+  const slots = [...caps.children], stack = $('wsStack'), steps = [...$('wsSteps').children];
+  const panels = [...stack.children].map((p) => [...p.querySelectorAll('[data-r]')]);
+  const dots = slots.slice(0, 3).map((c) => c.querySelector('.ws-dot'));
+  const DW = 1040, DH = 650, BAR = 52, RAD = 20, DMAX = 10;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const smooth = (x) => x * x * (3 - 2 * x);
+  const seg = (v, a, b) => smooth(clamp((v - a) / (b - a)));          // 0 before a, 1 after b, smoothstep between
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const put = (el, k, v) => { if (el._v === undefined) el._v = {}; if (el._v[k] !== v) { el._v[k] = v; el.style.setProperty(k, v); } };
+
+  let W = 0, H = 0, Cz = 0, We = 0, He = 0, Te = 0, capTop = 0, capH = 0;
+  function layout() {
+    W = pin.clientWidth; H = pin.clientHeight;
+    const Pb = clamp(H * 0.06, 24, 48);
+    Cz = clamp(H * 0.22, 92, 150);                                     // room above the settled window for the captions
+    const av = H - Cz - Pb;
+    We = Math.min(Math.round(W * 0.72), Math.floor(av * DW / DH));
+    We -= (W - We) % 2;                                                // whole pixels at rest: even margins left and right
+    He = Math.round(We * DH / DW);
+    Te = Cz + Math.round((av - He) / 2);
+    capTop = 10; capH = Math.max(60, Te - 12 - capTop);
+    caps.style.top = capTop + 'px'; caps.style.height = capH + 'px';
+    run.style.setProperty('--ct', clamp(W * 0.028, 26, 40).toFixed(1) + 'px');
+  }
+
+  function draw(y) {
+    const yv = y / H;                                                  // the scroll, in screens
+    const rise = smooth(clamp(yv / 0.95));                             // the window comes up over the headline
+    const settle = smooth(clamp((yv - 0.65) / 0.85));                  // then shrinks into its place
+    const s = seg(yv, 2.0, 2.8) + seg(yv, 3.5, 4.3) + seg(yv, 5.0, 5.6);   // 0..3: the state inside the window, then the pill
+    const arrive = seg(settle, 0.55, 1);                               // the caption mask opens as the window clears it
+
+    // the window
+    const w = lerp(W, We, settle), h = lerp(H, He, settle);
+    const left = (W - w) / 2, top = lerp(Math.round(H * 0.9), 0, rise) + Te * settle;
+    const k = w / DW;
+    win.style.cssText = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;border-radius:${(RAD * settle).toFixed(2)}px;` +
+      `box-shadow:0 0 0 1px rgba(11,12,13,.08),0 ${(34 * settle).toFixed(1)}px ${(70 * settle).toFixed(1)}px ${(-26 * settle).toFixed(1)}px rgba(11,12,13,${(0.3 * settle).toFixed(3)}),` +
+      `0 -14px 40px -22px rgba(11,12,13,${(0.2 * (1 - settle)).toFixed(3)})`;
+    app.style.transform = `scale(${k})`;
+    app.style.height = h / k + 'px';                                   // design px: the layout fills any window shape
+
+    // the headline is covered from below and carried up
+    hero.style.transform = `translate3d(0,${(-H * 0.72 * rise).toFixed(2)}px,0)`;
+    hero.style.visibility = rise >= 1 ? 'hidden' : 'visible';
+
+    // captions: lines roll through one mask; the Try Strata pill is the fourth
+    slots.forEach((c, i) => { c.style.transform = `translate3d(0,${((i - s + (1 - arrive)) * capH).toFixed(2)}px,0)`; });
+    dots.forEach((d, i) => put(d, '--l', (1 - seg(Math.abs(s - i), 0, 0.7)).toFixed(3)));
+    const go = $('wsGo'); go.tabIndex = s > 2.5 ? 0 : -1;
+
+    // inside the window: the panels move, the sidebar and each panel's rows light
+    put(stack, '--s', Math.min(s, 2).toFixed(4));
+    steps.forEach((li, i) => put(li, '--l', (1 - seg(Math.abs(Math.min(s, 2) - i), 0, 0.7)).toFixed(3)));
+    put($('wsSteps'), '--p', (Math.min(s, 2) / 2).toFixed(4));
+    panels.forEach((els, i) => {
+      const lit = 1 - seg(Math.max(0, i - s), 0, 0.7);                 // lit as the panel arrives; once there it stays, and scrolls away whole
+      els.forEach((el) => put(el, '--l', smooth(clamp(lit * (1 + 0.07 * DMAX) - 0.07 * +el.dataset.d)).toFixed(3)));
+    });
+  }
+
+  // the rail beside the steps spans the list
+  const rail = document.createElement('i'); rail.className = 'ws-rail'; rail.setAttribute('aria-hidden', 'true');
+  const stepsEl = $('wsSteps'); stepsEl.appendChild(rail);
+  const sizeRail = () => { rail.style.top = steps[0].offsetTop + 'px'; rail.style.height = (steps[2].offsetTop + steps[2].offsetHeight - steps[0].offsetTop) + 'px'; };
+
+  if (reduce) {                                                        // a still, complete page: the settled window on its tokens, every caption, the pill
+    run.classList.add('is-still');
+    const fit = () => {
+      const w = Math.min(Math.round(pin.clientWidth * 0.72), 940), k = w / DW;
+      win.style.cssText = `width:${w}px;height:${Math.round(DH * k)}px;border-radius:${RAD}px;box-shadow:0 0 0 1px rgba(11,12,13,.08),0 34px 70px -26px rgba(11,12,13,.3)`;
+      app.style.transform = `scale(${k})`; app.style.height = DH + 'px';
+      put(stack, '--s', '1'); put(stepsEl, '--p', '.5');
+      steps.forEach((li, i) => put(li, '--l', i === 1 ? '1' : '0'));
+      dots.forEach((d, i) => put(d, '--l', i === 1 ? '1' : '0'));
+      panels.forEach((els) => els.forEach((el) => put(el, '--l', '1')));
+      sizeRail();
+    };
+    fit(); addEventListener('resize', fit);
+    return;
+  }
+
+  // the follow: x'' = −ω²(x − target) − 2ωx', stepped exactly, so a wheel notch glides and a reverse retraces the same values
+  const OM = (2 * Math.PI) / 0.24;
+  let cur = scrollY, vel = 0, target = scrollY, raf = 0, last = 0;
+  function tick(now) {
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000)); last = now;
+    const x = cur - target, e = Math.exp(-OM * dt), c1 = vel + OM * x;
+    cur = target + (x + c1 * dt) * e; vel = (vel - OM * c1 * dt) * e;
+    if (Math.abs(cur - target) < 0.05 && Math.abs(vel) < 0.5) { cur = target; vel = 0; }
+    draw(cur);
+    raf = cur === target ? 0 : requestAnimationFrame(tick);
+  }
+  const aim = () => { target = scrollY; if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  layout(); sizeRail(); draw(cur);
+  addEventListener('scroll', aim, { passive: true });
+  addEventListener('resize', () => { layout(); sizeRail(); draw(cur); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { sizeRail(); draw(cur); });
+})();
+</script>
+<script>
+  QM.demo({ kind: 'scroll', lead: 900, dur: 6600, hold: 1500, back: 3000, pause: 800, stops: [0.17, 0.53] });
+</script>
+</body>
+</html>
