@@ -8,12 +8,12 @@
 {
   "id": "photo-lift", "title": "Photo lift", "group": "studio", "added": "2026-11-19", "cat": "images", "order": 20,
   "kind": "loop", "tone": "paper", "shot": 800,
-  "line": "X, Y, width and height as springs · response 0.46 s · release projects v × 0.5 s (d 0.998) · paging, rubber band",
-  "summary": "Forma's shop page: a 3 × 2 grid of rounded photo tiles. Tap one and the photo lifts out of its own cell and grows into a viewer, leaving by its exact rect, while the grid behind steps back to 0.96 under a white veil and the caption, the pager and the Add to bag pill are uncovered. In the viewer a photo is dragged 1:1 from where it was grabbed and shrinks towards 0.7 with the distance, so the grid shows through; on release the velocity is projected with Apple's deceleration and decides: home into the same cell on the same path it came out of, or back to full. Sideways drags page with momentum and the photo rubber-bands at the first and last. Everything is a spring that starts from the value on screen, so any photo can be caught mid-flight.",
+  "line": "X, Y, width and height as springs · response 0.46 s · release projects v × 0.5 s (d 0.998) · paging, rubber band · lime pill",
+  "summary": "Forma's shop page: a 3 × 2 grid of rounded photo tiles. Tap one and the photo lifts out of its own cell and grows into a viewer, leaving by its exact rect, while the grid behind steps back to 0.96 under a frosted white veil and the caption, the pager and the lime Add to bag pill are uncovered. In the viewer a photo is dragged 1:1 from where it was grabbed and shrinks towards 0.7 with the distance, so the grid shows through; on release the velocity is projected with Apple's deceleration and decides: home into the same cell on the same path it came out of, or back to full. Sideways drags page with momentum and the photo rubber-bands at the first and last. Everything is a spring that starts from the value on screen, so any photo can be caught mid-flight.",
   "spec": [
     ["Rect", "the lifted photo is four springs, centre X, centre Y, width and height, in viewer pixels; height is its own spring, so the box goes from the cell's square to the photo's own aspect and object-fit: cover redraws the crop on every frame: no stretching, no transform scale on the image"],
     ["Spring", "critically damped, response 0.46 s (ω = 2π / 0.46); every retarget starts from the value and velocity on screen; the four springs of a retarget share one ω, so the box travels as a unit and in and out run on one path"],
-    ["Open", "from the cell's measured rect (taken with the grid un-scaled and the press undone) to the photo contained in the viewer; corner radius 14 → 22 px with the box's size; grid scale 1 → 0.96 and the veil 0 → 0.88 with the same measure; caption and pager are uncovered over the last half"],
+    ["Open", "from the cell's measured rect (taken with the grid un-scaled and the press undone) to the photo contained in the viewer; corner radius 14 → 22 px with the box's size; grid scale 1 → 0.96 and the veil (white with a 20 px blur) 0 → 0.9 with the same measure; caption and pager are uncovered over the last half"],
     ["Drag", "6–8 px of travel (8) before a drag is committed, then 1:1 from the commit point; down moves and scales the photo about the grab point (scale 1 → 0.7 over half the viewer height), up is a rubber band (x·D·0.55)/(D + 0.55·|x|), D = 240 px; the veil thins and the grid comes forward with the size"],
     ["Release", "projected dy = dy + v × 0.499 s (d 0.998); home when it passes max(100 px, 22% of the viewer height), else back to full; the spring starts at the measured X, Y, size velocity; a throw home picks ω = max(ω₀, 1.5·v / distance), so it starts decelerating and never crosses its cell"],
     ["Bounce", "only after a throw: back to full after an upward flick uses damping 0.8; every other spring is critically damped"],
@@ -29,7 +29,7 @@
     "The crop animates because the box changes aspect under object-fit: cover; the image is never scaled or stretched.",
     "The release is decided from the projected rest point, not from where the finger let go; the photo carries the finger's velocity into the spring.",
     "Nothing bounces on its own: damping 0.8 appears only after an upward throw; opening, going home, paging and taps are critically damped.",
-    "One ink fill (Add to bag, only in the viewer) and one lime point (In stock); the veil, the cards and the pager are white or ink type.",
+    "One lime accent: the Add to bag pill, only in the viewer, with #1d1d1f type (the In stock mark is a neutral check circle). Photos sit on #f5f5f7 with no ring, the veil is frosted white, the pager is tabular in the system face. Apple neutrals throughout.",
     "The viewer is a dialog: Escape and Shop close it, Left and Right page, the cell that opened it gets the focus back.",
     "Under reduced motion drags still follow the pointer, but release snaps, nothing springs or rubber-bands, and the viewer cross-fades in and out."
   ],
@@ -37,38 +37,39 @@
 }
 </script>
 <style data-code>
-/* Photo lift. White surfaces with soft rings; the one ink fill is Add to bag, one lime point (In stock). Easing for small feedback: ui (.4,0,.2,1).
-   Positions, sizes, radii, the veil and the grid's scale are set from script (render()): the photo is a box whose size and place are springs. */
-.pl-page, .pl-view { font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; color: #0B0C0D; -webkit-user-select: none; user-select: none; }
+/* Photo lift. A white page in the system face with Apple's neutrals; photos sit on #f5f5f7. The one accent is lime: the Add to bag pill in the viewer.
+   Easing for small feedback: ui (.4,0,.2,1). Positions, sizes, radii, the veil and the grid's scale are set from script (render()): the photo is a box whose size and place are springs. */
+.pl-page, .pl-view { --pl-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  font: 400 14px/20px var(--pl-f); letter-spacing: -.01em; color: #1d1d1f; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; }
 .pl-page p, .pl-page h2, .pl-view p, .pl-view h3 { margin: 0; }
 :where(.pl-page button, .pl-view button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
-.pl-page { --cell: 144px; width: calc(var(--cell) * 3 + 64px); padding: 18px; background: #fff; border-radius: 20px; will-change: transform;
-  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18); }
+.pl-page { --cell: 144px; width: calc(var(--cell) * 3 + 64px); padding: 20px 18px 18px; background: #fff; border-radius: 24px; will-change: transform;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .08); }
 
 /* the grid: a heading, then square cells with a name and a price under each */
 .pl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
-.pl-h { font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
+.pl-h { font: 600 24px/28px var(--pl-f); letter-spacing: -.022em; }
 .pl-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, var(--cell)); gap: 16px 14px; }
 .pl-cell { display: block; width: 100%; text-align: left; outline: none; }
-.pl-pic { display: block; width: var(--cell); height: var(--cell); border-radius: 14px; overflow: hidden; background: #fff;
-  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07); transition: transform 100ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.pl-pic { display: block; width: var(--cell); height: var(--cell); border-radius: 14px; overflow: hidden; background: #f5f5f7;
+  transition: transform 100ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
 .pl-pic img, .pl-ph img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--pos, 50% 50%); pointer-events: none; }
-.pl-cell:hover .pl-pic { box-shadow: 0 0 0 1px rgba(11, 12, 13, .16); }
+.pl-cell:hover .pl-pic { box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
 .pl-cell:active .pl-pic, .pl-cell.is-press .pl-pic { transform: scale(.97); }
-.pl-cell:focus-visible .pl-pic { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.pl-cell:focus-visible .pl-pic { outline: 2px solid #1d1d1f; outline-offset: 3px; }
 .pl-cell.is-out .pl-pic img { visibility: hidden; }               /* its photo is in the viewer: the cell is an empty slot */
 .pl-grid.is-measure .pl-pic { transform: none !important; transition: none !important; }
 .pl-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 8px; }
 .pl-nm { font-size: 13px; line-height: 18px; font-weight: 500; }
-.pl-pr { font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
+.pl-pr { font: 400 13px/18px var(--pl-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; color: #6e6e73; }
 
-/* the viewer: a fixed layer over the page; the veil, the photos, the bar and the caption */
+/* the viewer: a fixed layer over the page; the veil (a frosted white), the photos, the bar and the caption */
 .pl-view { position: fixed; left: 0; right: 0; top: 0; bottom: var(--pl-inset, 0px); z-index: 30; outline: none; touch-action: none; cursor: grab; visibility: hidden; pointer-events: none; }
 .pl-view.is-on { visibility: visible; pointer-events: auto; }
 .pl-view.is-drag, .pl-view.is-drag * { cursor: grabbing; }
-.pl-veil { position: absolute; inset: 0; background: #fff; opacity: 0; }
-.pl-ph { position: absolute; left: 0; top: 0; overflow: hidden; border-radius: 22px; background: #fff; visibility: hidden; will-change: transform;
-  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 calc(22px * var(--o, 1)) calc(48px * var(--o, 1)) calc(-22px * var(--o, 1)) rgba(11, 12, 13, calc(.4 * var(--o, 1))); }
+.pl-veil { position: absolute; inset: 0; background: #fff; opacity: 0; -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.pl-ph { position: absolute; left: 0; top: 0; overflow: hidden; border-radius: 22px; background: #f5f5f7; visibility: hidden; will-change: transform;
+  box-shadow: 0 calc(22px * var(--o, 1)) calc(48px * var(--o, 1)) calc(-22px * var(--o, 1)) rgba(0, 0, 0, calc(.4 * var(--o, 1))); }
 
 /* chrome, uncovered by --u (0 → 1 with the photo's size): the bar rises out of the top edge, the caption comes up from the bottom */
 .pl-bar, .pl-cap { position: absolute; left: 50%; width: var(--pl-rw, min(560px, calc(100% - 48px))); transform: translateX(-50%); display: flex; justify-content: space-between; align-items: center; }
@@ -76,28 +77,28 @@
 .pl-cap { bottom: 24px; height: 56px; clip-path: inset(-14px -14px 0 -14px); }
 .pl-bar > * { transform: translateY(calc((1 - var(--u, 1)) * -130%)); }
 .pl-cap > * { transform: translateY(calc((1 - var(--u, 1)) * 125%)); }
-.pl-back { display: inline-flex; align-items: center; gap: 6px; height: 36px; margin-left: -8px; padding: 0 12px 0 8px; border-radius: 999px; font-weight: 500; color: rgba(11, 12, 13, .66);
-  transition: color 160ms cubic-bezier(.4, 0, .2, 1), scale 100ms cubic-bezier(.4, 0, .2, 1); }
-.pl-back:hover { color: #0B0C0D; }
-.pl-back:active { scale: .97; }
-.pl-back svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.pl-count { font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); white-space: nowrap; }
-.pl-name { font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
-.pl-sub { display: flex; align-items: center; gap: 8px; margin-top: 2px; font-size: 13px; line-height: 20px; font-weight: 500; color: rgba(11, 12, 13, .66); }
-.pl-pt { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16); }
+.pl-back { display: inline-flex; align-items: center; gap: 4px; height: 36px; margin-left: -8px; padding: 0 12px 0 6px; border-radius: 999px; font-size: 15px; font-weight: 500; color: #1d1d1f;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), scale 100ms cubic-bezier(.4, 0, .2, 1); }
+.pl-back:hover { background: rgba(0, 0, 0, .05); }
+.pl-back:active { scale: .97; background: #e8e8ed; }
+.pl-back svg { display: block; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pl-count { font: 400 13px/20px var(--pl-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; color: #6e6e73; white-space: nowrap; }
+.pl-name { font: 600 24px/28px var(--pl-f); letter-spacing: -.022em; }
+.pl-sub { display: flex; align-items: center; gap: 7px; margin-top: 2px; font-size: 13px; line-height: 20px; font-weight: 400; letter-spacing: -.006em; color: #6e6e73; }
+.pl-pt { flex: none; width: 14px; height: 14px; fill: none; stroke: #86868b; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .pl-roll { display: inline-grid; overflow: hidden; vertical-align: top; }
 .pl-roll > b { grid-area: 1 / 1; font-weight: inherit; white-space: nowrap; }
-.pl-price { font: 400 13px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.pl-price { font: 500 13px/20px var(--pl-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; color: #1d1d1f; }
 
-/* the one ink fill */
-.pl-add { display: flex; align-items: center; justify-content: center; height: 44px; padding: 0 22px; border-radius: 999px; background: #0B0C0D; color: #fff; font-size: 14px; font-weight: 600; letter-spacing: -.011em;
-  transition: background 160ms cubic-bezier(.4, 0, .2, 1), scale 100ms cubic-bezier(.4, 0, .2, 1); }
-.pl-add:hover, .pl-add.is-hot { background: #24262a; }
+/* the one accent: a lime pill with ink type */
+.pl-add { display: flex; align-items: center; justify-content: center; height: 44px; padding: 0 22px; border-radius: 999px; background: #B8FF00; color: #1d1d1f; font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+  transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1), scale 100ms cubic-bezier(.4, 0, .2, 1); }
+.pl-add:hover, .pl-add.is-hot { box-shadow: 0 0 0 4px rgba(184, 255, 0, .35); }
 .pl-add:active, .pl-add.is-press { scale: .97; }
-.pl-add:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
-.pl-tick { flex: none; width: 0; height: 14px; margin-right: 0; overflow: hidden; transition: width 160ms cubic-bezier(.5, 0, .75, 0), margin 160ms cubic-bezier(.5, 0, .75, 0); }
-.pl-tick svg { display: block; width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.pl-add.is-added .pl-tick { width: 14px; margin-right: 8px; transition: width 420ms cubic-bezier(.16, 1, .3, 1), margin 420ms cubic-bezier(.16, 1, .3, 1); }
+.pl-add:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+.pl-tick { flex: none; width: 0; height: 16px; margin-right: 0; overflow: hidden; transition: width 160ms cubic-bezier(.5, 0, .75, 0), margin 160ms cubic-bezier(.5, 0, .75, 0); }
+.pl-tick svg { display: block; width: 16px; height: 16px; fill: none; stroke: #1d1d1f; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pl-add.is-added .pl-tick { width: 16px; margin-right: 7px; transition: width 420ms cubic-bezier(.16, 1, .3, 1), margin 420ms cubic-bezier(.16, 1, .3, 1); }
 
 /* reduced motion: the viewer cross-fades, photos swap by opacity, nothing springs */
 .pl-view.is-still { visibility: visible; opacity: 0; transition: opacity 160ms cubic-bezier(.4, 0, .2, 1); }
@@ -107,6 +108,7 @@
 </style>
 <style>
   html:not(.qm-tile) .pl-view { --pl-inset: 46px; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
 </style>
 </head>
 <body>
@@ -126,15 +128,15 @@
 <div class="pl-view" id="pl-view" role="dialog" aria-modal="true" aria-label="Photo viewer" tabindex="-1">
   <div class="pl-veil" id="pl-veil"></div>
   <div class="pl-bar" id="pl-bar">
-    <button type="button" class="pl-back" id="pl-back"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3M7.5 3.5L3 8l4.5 4.5"/></svg><span>Shop</span></button>
+    <button type="button" class="pl-back" id="pl-back"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M11 3.500L5.500 9l5.500 5.500"/></svg><span>Shop</span></button>
     <span class="pl-count" aria-hidden="true"><span class="pl-roll" id="pl-n"><b>1</b></span> / 6</span>
   </div>
   <div class="pl-cap" id="pl-cap">
     <div class="pl-info">
       <h3 class="pl-name"><span class="pl-roll" id="pl-name"><b>Ash vase</b></span></h3>
-      <p class="pl-sub"><span class="pl-roll pl-price" id="pl-price"><b>$68</b></span><i class="pl-pt"></i><span>In stock</span></p>
+      <p class="pl-sub"><span class="pl-roll pl-price" id="pl-price"><b>$68</b></span><svg class="pl-pt" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.800"/><path d="M4.600 7.100l1.700 1.700 3.100-3.500"/></svg><span>In stock</span></p>
     </div>
-    <button type="button" class="pl-add" id="pl-add"><span class="pl-tick"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M1.5 7.5l3.5 3.5 7.5-8"/></svg></span><span class="pl-roll" id="pl-add-t"><b>Add to bag</b></span></button>
+    <button type="button" class="pl-add" id="pl-add"><span class="pl-tick"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.500l3.300 3.300L13 4.500"/></svg></span><span class="pl-roll" id="pl-add-t"><b>Add to bag</b></span></button>
   </div>
   <p class="sr-only" id="pl-msg" role="status" aria-live="polite"></p>
 </div>

@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lift menu · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "lift-menu", "title": "Lift menu", "group": "studio", "added": "2026-11-20", "cat": "buttons", "order": 10,
+  "kind": "loop", "tone": "paper", "shot": 800,
+  "line": "hold 380 ms · lift 1.04 · menu from the corner · one wash on a spring (response 0.2 s)",
+  "summary": "A Strata board of three component files. Press and hold one: it sinks towards 0.96 as a progress, and if you let go early it springs back and nothing else happens. At 380 ms the card lifts to 1.04 under a deeper shadow while the board behind recedes to 0.97 under a pale veil, and a menu grows out of the card's nearest corner. Without letting go, slide onto the menu: one pale grey wash travels between the rows on a spring, and releasing on a row commits it. Release anywhere else and the menu stays open for a tap. Escape, a tap outside and a right click work, and the menu shrinks back into the corner it came from.",
+  "spec": [
+    ["Hold", "a progress, not a timer: the card's scale is the 0.96 target eased by p = t / 380 ms and followed by a stiff spring (response 0.09 s), so it always moves from where it is on screen; letting go before p = 1 sends it home on a 0.3 s spring with its velocity, and nothing opens; more than 8 px of travel abandons the hold"],
+    ["Lift", "at p = 1 the card goes to 1.04 on a critically damped spring (response 0.36 s) and its shadow deepens with the same value (0 24px 44px −6px at 20% black); the board (header, cards, veil) recedes to 0.97 about its centre on 0.42 s, the veil (the board's own #f5f5f7) to 62%; the lifted card is counter-scaled by the board's scale, so it ends at exactly 1.04 where it was"],
+    ["Menu", "184 × 192 px (as tall as the lifted card), 16 px beside the card on the side with room (the outer cards open inward, the middle one towards the half you pressed); one spring m (response 0.34 s) drives scale 0.42 → 1 and a clip-path inset from the opposite corner together, with the transform-origin on the card's corner (−16 px), and the plate's shadow scaled by the same m; closing runs the same springs back on 0.26 s from wherever they are"],
+    ["Wash", "one object, rgba(0, 0, 0, .06), 168 × 42 px, radius 10 inside an 18 px sheet with 8 px padding; its y is a spring (response 0.2 s, damping 1.0) that keeps its velocity from row to row; it appears at the row under the pointer (no travel from elsewhere) and fades out when the pointer leaves the menu; a press shrinks it to 0.975 in 100 ms"],
+    ["Select", "dragging: the row under the pointer is the wash's target (the gaps between rows belong to the nearest row); releasing on a row commits it, releasing anywhere else leaves the menu open; open and still: hover moves the wash, a press commits on release, Delete and the others behave alike"],
+    ["Commit", "the row's label rolls up inside a clip to Renaming, Duplicated, Copied or Deleted (420 ms expo out), 560 ms later the menu closes, and the board's status slot rolls to Renaming, Duplicated, Link copied or Moved to trash for 1.9 s; Rename also selects the file name in the card (a #e8e8ed wash); a live region says it for screen readers"],
+    ["Lean", "while the finger is down the lifted card leans towards it by 10% of the travel through the rubber band (x·24·0.55) / (24 + 0.55·x), 6 px at most, on a 0.28 s spring, and returns when it lets go"],
+    ["Input", "mouse, touch and pen through one down / move / up; a right click or the context-menu key opens it at once; Shift+F10 or Enter or Space on a focused card opens it; Up, Down, Home, End, a letter, Enter, Space, Escape and Tab work inside (role=menu with aria-activedescendant, role=menuitem); Left and Right move between cards"],
+    ["Loop", "the ghost holds Button.tsx, slides over Rename to Share link and lets go; lets go of Toggle.tsx early; holds Field.tsx, lets go off the menu and taps Duplicate; it calls the same down / move / up as a hand, yields to a real pointer and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-20"],
+  "where": "A Strata project's component board or a Qbix client's asset library, where every card has quick actions (rename, duplicate, share a link, delete) and a button on each card would crowd the grid.",
+  "rules": [
+    "The hold is a progress that can be abandoned: the sink follows p, releasing before 1 springs back from where it is and does nothing else. Nothing is committed until the menu is open.",
+    "Every value is a spring started from the value and velocity on screen (card, board, menu, wash), so a press during any close catches it and a new hold continues from there.",
+    "The menu belongs to the card: it grows from and returns to the card's own corner on the same path (transform-origin on the corner, scale and clip together), never from the centre.",
+    "The wash is one element that moves, not one per row; it appears where the pointer is and keeps its velocity from row to row.",
+    "A drag-select commits on release over a row and leaves the menu open anywhere else; hover, tap, keys, a right click, Escape and an outside tap are all first-class ways in and out.",
+    "One lime accent per frame: the Open pill on the lifted card (the Live dot is lime only while no card is lifted, and steps down to grey while one is). The menu is a translucent material (white at 72%, 20 px blur) with inset hairlines and a band before Delete, the wash is a 6% black fill, Delete is plain ink type. System face, Apple neutrals.",
+    "role=menu on the list, role=menuitem on the rows, aria-activedescendant for the wash, a live status line; Escape returns focus to the card when the keyboard opened the menu.",
+    "Under reduced motion the hold still takes 380 ms but nothing sinks, lifts or scales; the menu, veil and wash cross-fade in 160 ms and the piece rests on its open pose."
+  ],
+  "tags": ["context menu", "long press", "hold", "lift", "drag to select", "spring", "menu", "files", "Strata", "buttons"]
+}
+</script>
+<style data-code>
+/* Lift menu. A #f5f5f7 board of three white file cards, in the system face with Apple's neutrals. The one accent is lime: the Open pill on the lifted card
+   (the Live dot is lime only while no card is lifted). The menu is a translucent material.
+   Every transform, shadow weight, clip and opacity of what moves is set from script (render()): they are springs.
+   Easings for small UI feedback: ui (.4, 0, .2, 1); the roll of a label: expo out (.16, 1, .3, 1). */
+.lm-fit { position: relative; width: calc(608px * var(--s, 1)); height: calc(300px * var(--s, 1)); touch-action: none; }
+.lm-board { --lm-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 608px; height: 300px; transform: scale(var(--s, 1)); transform-origin: 0 0; background: #f5f5f7; border-radius: 24px;
+  font: 400 13px/18px var(--lm-f); letter-spacing: -.01em; color: #1d1d1f; touch-action: none;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-font-smoothing: antialiased; }
+.lm-board p, .lm-board h2 { margin: 0; }
+:where(.lm-board button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; }
+/* the board's own content: it recedes as one (scale about the centre) under the veil */
+.lm-in { position: absolute; inset: 0; transform-origin: 50% 50%; }
+.lm-veil { position: absolute; inset: 0; z-index: 5; border-radius: 24px; background: #f5f5f7; opacity: 0; pointer-events: none; }
+
+.lm-head { position: absolute; left: 24px; right: 24px; top: 24px; height: 52px; display: flex; justify-content: space-between; align-items: flex-start; }
+.lm-kick { color: #6e6e73; font-weight: 500; }
+.lm-h { margin-top: 2px; font: 600 24px/28px var(--lm-f); letter-spacing: -.022em; }
+.lm-stat { height: 18px; margin-top: 1px; overflow: hidden; font: 400 12px/18px var(--lm-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; color: #6e6e73; }
+.lm-roll-s { display: block; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.lm-roll-s > span { display: block; height: 18px; text-align: right; white-space: nowrap; }
+.lm-stat.is-msg .lm-roll-s { transform: translateY(-18px); }
+
+/* a file card: white, a soft ring, a shadow that deepens with --l (0 at rest, 1 fully lifted, set from script) */
+.lm-file { position: absolute; top: 92px; width: 176px; height: 184px; z-index: 1; border-radius: 18px; background: #fff; outline: none; cursor: default; --l: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 calc(24px * var(--l)) calc(10px + 34px * var(--l)) calc(-6px * var(--l)) rgba(0, 0, 0, calc(.2 * var(--l))); }
+.lm-file.is-up { z-index: 6; }
+.lm-file:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+.lm-prev { position: relative; height: 124px; }
+.lm-prev svg { position: absolute; left: 28px; top: 24px; width: 120px; height: 64px; fill: none; stroke: #86868b; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.lm-state { position: absolute; left: 14px; top: 12px; display: flex; align-items: center; gap: 6px; height: 16px; font-size: 12px; line-height: 16px; color: #6e6e73; }
+.lm-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; transition: background 160ms cubic-bezier(.4, 0, .2, 1); }
+.lm-dot.is-off { background: transparent; box-shadow: inset 0 0 0 1.5px #86868b; }
+/* one lime per frame: while a card is lifted the Open pill is the lime, and the Live dot steps down to a neutral */
+.is-lifted .lm-dot:not(.is-off) { background: #86868b; }
+.lm-foot { height: 60px; padding: 0 14px; display: flex; flex-direction: column; justify-content: center; }
+.lm-name { align-self: flex-start; padding: 0 5px; margin: 0 -5px; border-radius: 6px; font-weight: 500; background: transparent; transition: background 240ms cubic-bezier(.4, 0, .2, 1); }
+.lm-name.is-edit { background: #e8e8ed; }
+.lm-meta { font-size: 12px; line-height: 16px; color: #6e6e73; }
+/* the one accent: a lime pill, uncovered from its bottom edge by the lift (clip-path, set from script) */
+.lm-open { position: absolute; right: 10px; bottom: 10px; height: 26px; padding: 0 14px; border-radius: 999px; background: #B8FF00; color: #1d1d1f; font-weight: 600; font-size: 12px; line-height: 26px; letter-spacing: -.006em; visibility: hidden; transform-origin: 100% 100%; pointer-events: none; }
+
+/* the menu: a translucent material beside the card, grown from the card's corner (transform-origin, clip and scale are set from script) */
+.lm-menu { position: absolute; z-index: 10; width: 184px; height: 192px; visibility: hidden; outline: none; }
+.lm-shadow { position: absolute; inset: 0; border-radius: 18px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12); }
+.lm-sheet { position: relative; width: 100%; height: 100%; padding: 8px; border-radius: 18px; background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+/* the gap before Delete is a band, as in Apple's menus; the rows above it are told apart by inset hairlines */
+.lm-sheet::after { content: ''; position: absolute; left: 0; right: 0; top: 134px; height: 8px; background: rgba(0, 0, 0, .06); pointer-events: none; }
+.lm-sheet::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(rgba(0, 0, 0, .1), rgba(0, 0, 0, .1)) 38px 49.5px / calc(100% - 50px) 1px no-repeat, linear-gradient(rgba(0, 0, 0, .1), rgba(0, 0, 0, .1)) 38px 91.5px / calc(100% - 50px) 1px no-repeat; }
+.lm-item { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; width: 100%; height: 42px; padding: 0 12px; border-radius: 10px; text-align: left; cursor: pointer; font-weight: 400; font-size: 14px; letter-spacing: -.01em; }
+.lm-item:last-child { margin-top: 8px; }
+.lm-item:focus { outline: none; }
+.lm-item svg { flex: none; width: 16px; height: 16px; fill: none; stroke: #1d1d1f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.lm-lab { flex: 1; min-width: 0; display: block; height: 18px; overflow: hidden; }
+.lm-roll { display: block; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.lm-roll > span { display: block; height: 18px; white-space: nowrap; }
+.lm-item.is-done .lm-roll { transform: translateY(-18px); }
+.lm-menu.is-reset .lm-roll { transition: none; }
+/* the wash: ONE element; its y is a spring (translate3d, set from script), it never repeats per row */
+.lm-hl { position: absolute; z-index: 0; left: 8px; right: 8px; top: 0; height: 42px; border-radius: 10px; background: rgba(0, 0, 0, .06); opacity: 0; scale: 1; transition: scale 100ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.lm-hl.is-press { scale: .975; }
+.lm-hl.is-kb { box-shadow: inset 0 0 0 1.5px rgba(29, 29, 31, .5); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lm-menu { transition: opacity 160ms cubic-bezier(.4, 0, .2, 1); }
+  .lm-veil { transition: opacity 160ms cubic-bezier(.4, 0, .2, 1); }
+  .lm-hl { transition: opacity 160ms cubic-bezier(.4, 0, .2, 1); }
+  .lm-file { transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+  .lm-roll, .lm-roll-s { transition-duration: 1ms; }
+}
+</style>
+<style>
+  /* the harness's hint bar speaks the same face */
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="lm-fit" id="lm-fit">
+ <section class="lm-board" id="lm-board" role="group" aria-label="Forma components in Strata">
+  <div class="lm-in" id="lm-in">
+   <header class="lm-head">
+    <div><p class="lm-kick">Strata · Forma</p><h2 class="lm-h">Components</h2></div>
+    <p class="lm-stat" id="lm-stat" aria-hidden="true"><span class="lm-roll-s"><span>3 files</span><span id="lm-statmsg"></span></span></p>
+   </header>
+
+   <article class="lm-file" id="lm-f0" style="left:24px" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-label="Toggle.tsx, draft, edited 1 hour ago. Press and hold, or press Enter, for actions">
+    <div class="lm-prev" aria-hidden="true">
+     <p class="lm-state"><i class="lm-dot is-off"></i>Draft</p>
+     <svg viewBox="0 0 120 64"><rect x="32" y="16" width="56" height="32" rx="16"/><circle cx="48" cy="32" r="9"/><path d="M69 32h10"/></svg>
+     <button type="button" class="lm-open" tabindex="-1">Open</button>
+    </div>
+    <div class="lm-foot"><span class="lm-name">Toggle.tsx</span><span class="lm-meta">Edited 1 h ago</span></div>
+   </article>
+   <article class="lm-file" id="lm-f1" style="left:216px" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-label="Button.tsx, live, edited 2 minutes ago. Press and hold, or press Enter, for actions">
+    <div class="lm-prev" aria-hidden="true">
+     <p class="lm-state"><i class="lm-dot"></i>Live</p>
+     <svg viewBox="0 0 120 64"><rect x="14" y="15" width="92" height="34" rx="17"/><path d="M42 32h36"/></svg>
+     <button type="button" class="lm-open" tabindex="-1">Open</button>
+    </div>
+    <div class="lm-foot"><span class="lm-name">Button.tsx</span><span class="lm-meta">Edited 2 min ago</span></div>
+   </article>
+   <article class="lm-file" id="lm-f2" style="left:408px" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-label="Field.tsx, draft, edited yesterday. Press and hold, or press Enter, for actions">
+    <div class="lm-prev" aria-hidden="true">
+     <p class="lm-state"><i class="lm-dot is-off"></i>Draft</p>
+     <svg viewBox="0 0 120 64"><rect x="10" y="15" width="100" height="34" rx="10"/><path d="M26 24v16"/></svg>
+     <button type="button" class="lm-open" tabindex="-1">Open</button>
+    </div>
+    <div class="lm-foot"><span class="lm-name">Field.tsx</span><span class="lm-meta">Edited yesterday</span></div>
+   </article>
+   <div class="lm-veil" id="lm-veil"></div>
+  </div>
+
+  <div class="lm-menu" id="lm-menu" role="menu" tabindex="-1" aria-label="File actions">
+   <div class="lm-shadow" id="lm-shadow"></div>
+   <div class="lm-sheet" id="lm-sheet">
+    <div class="lm-hl" id="lm-hl" aria-hidden="true"></div>
+    <button type="button" class="lm-item" role="menuitem" id="lm-i0" tabindex="-1"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13l.7-3L11 2.700a1.200 1.200 0 0 1 1.700 0l.6.600a1.200 1.200 0 0 1 0 1.700L6 12.300 3 13z"/><path d="M9.800 3.900l2.300 2.300"/></svg><span class="lm-lab"><span class="lm-roll"><span>Rename</span><span aria-hidden="true">Renaming</span></span></span></button>
+    <button type="button" class="lm-item" role="menuitem" id="lm-i1" tabindex="-1"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.500" y="5.500" width="8" height="8" rx="2"/><path d="M10.500 5.500V4A1.500 1.500 0 0 0 9 2.500H4A1.500 1.500 0 0 0 2.500 4v5A1.500 1.500 0 0 0 4 10.500h1.500"/></svg><span class="lm-lab"><span class="lm-roll"><span>Duplicate</span><span aria-hidden="true">Duplicated</span></span></span></button>
+    <button type="button" class="lm-item" role="menuitem" id="lm-i2" tabindex="-1"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.700 9.300a2.600 2.600 0 0 0 3.700 0l2.200-2.200a2.600 2.600 0 0 0-3.700-3.700L8 4.300"/><path d="M9.300 6.700a2.600 2.600 0 0 0-3.700 0L3.400 8.900a2.600 2.600 0 0 0 3.700 3.700L8 11.700"/></svg><span class="lm-lab"><span class="lm-roll"><span>Share link</span><span aria-hidden="true">Copied</span></span></span></button>
+    <button type="button" class="lm-item" role="menuitem" id="lm-i3" tabindex="-1"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.500 4.500h11M6 4.500V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1.500M4 4.500l.6 8a1.500 1.500 0 0 0 1.500 1.400h3.800a1.500 1.500 0 0 0 1.500-1.400l.6-8"/></svg><span class="lm-lab"><span class="lm-roll"><span>Delete</span><span aria-hidden="true">Deleted</span></span></span></button>
+   </div>
+  </div>
+  <p class="sr-only" id="lm-msg" role="status" aria-live="polite"></p>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Press and hold a file, slide onto the menu and let go to pick. Let go early and it springs back. A right click, Shift+F10 or Enter opens it too; Escape or a tap outside closes it</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Lift menu. Springs for everything that moves: each card's scale (sink, lift), the lean of the lifted card, the board's recede, the menu (one value m),
+   the Open pill, the wash (y and visibility). Each starts from the value and velocity on screen. The hold is a progress p = t / 380 ms.
+   All geometry is in board pixels (the board may be drawn scaled: pointers are divided by the scale). */
+const LM = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const W = 608, H = 300, CW = 176, CH = 184, CY = 92, CXS = [24, 216, 408];          // board, card size, card tops and lefts
+  const MW = 184, MH = 192, MG = 16, RH = 42, PAD = 8, SEP = 8, NR = 4;               // menu size (as tall as the lifted card), gap to the card, row height, padding, gap before the last row
+  const MT = CY - 4;                                                                    // the lifted card grows 4 px each way: the menu's top follows
+  const HOLD = 380, SLOP = 8, SINK = 0.04, LIFT = 1.04, RECEDE = 0.03, VEIL = 0.62, LEAN = 24;
+  const KEY = { i: 1, sd: 1, cy: 0, row: 2 };                                          // the pose the piece loads in: Button.tsx lifted, Share link under the wash
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const om = (resp) => (2 * Math.PI) / resp;
+  const $ = (id) => document.getElementById('lm-' + id);
+  const fit = $('fit'), board = $('board'), inner = $('in'), veil = $('veil'), menu = $('menu'), shadow = $('shadow'), sheet = $('sheet'), hl = $('hl');
+  const stat = $('stat'), statMsg = $('statmsg'), msg = $('msg');
+  const files = [0, 1, 2].map((i) => $('f' + i));
+  const names = files.map((f) => f.querySelector('.lm-name'));
+  const pills = files.map((f) => f.querySelector('.lm-open'));
+  const items = [0, 1, 2, 3].map((i) => $('i' + i));
+  const TITLES = ['Toggle.tsx', 'Button.tsx', 'Field.tsx'];
+  const SAID = ['Renaming', 'Duplicated', 'Link copied', 'Moved to trash'];
+  const rowTop = (i) => PAD + i * RH + (i === 3 ? SEP : 0);
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) critically damped, the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: om(0.4), z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  // retarget from the value and velocity on screen; response in seconds. Reduced motion: no spring, the value is simply there
+  function aim(s, T, resp, z = 1) {
+    if (reduced) { s.x = s.T = T; s.v = 0; s.on = false; return; }
+    s.T = T; s.w = om(resp); s.z = z; s.on = true;
+  }
+  const put = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+  const S = { cs: [mk(1), mk(1), mk(1)], ox: mk(0), oy: mk(0), r: mk(0), m: mk(0), pk: mk(0), hv: mk(0), hy: mk(rowTop(0)) };
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                              // Apple's rubber band
+  const sink = (p) => 1 - SINK * (1 - (1 - p) * (1 - p));                              // the progress of the hold, quick off the mark
+
+  /* state */
+  let state = 'idle', held = null, pend = null, begun = false;                       // idle | hold | open (a menu is up, or about to be)
+  let cur = KEY.i, side = KEY.sd, cyc = KEY.cy, curRow = -1, doneRow = -1, how = 'hand', lastKey = null;
+  let OX = 0, OY = 0, sc = 1, raf = 0, last = 0, ct = 0, st = 0, nt = 0, needReset = false;
+  const say = (t) => { msg.textContent = ''; msg.textContent = t; };
+  function measure() { const r = board.getBoundingClientRect(); OX = r.left; OY = r.top; sc = r.width / W || 1; }
+  const local = (x, y) => ({ x: (x - OX) / sc, y: (y - OY) / sc });
+  const cardAt = (p) => CXS.findIndex((x) => p.x >= x && p.x <= x + CW && p.y >= CY && p.y <= CY + CH);
+  const mx = () => (side > 0 ? CXS[cur] + CW + MG : CXS[cur] - MG - MW);
+  // the row under a point in the menu (the gaps belong to the nearest row), or -1 outside it
+  function rowAt(p, slop = 6) {
+    const x0 = mx();
+    if (p.x < x0 - slop || p.x > x0 + MW + slop || p.y < MT - slop || p.y > MT + MH + slop) return -1;
+    let a = p.y - MT - PAD;
+    if (a > 3 * RH + SEP / 2) a -= SEP;
+    return clamp(Math.floor(a / RH), 0, NR - 1);
+  }
+  const inMenu = (p) => rowAt(p, 0) >= 0;
+  const inPill = (x, y) => { const r = pills[cur].getBoundingClientRect(); return x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4; };
+  function corner(i, p) {
+    const rx = p.x - (CXS[i] + CW / 2), ry = p.y - (CY + CH / 2);
+    return { sd: i === 0 ? 1 : i === 2 ? -1 : rx >= 0 ? 1 : -1, cy: ry >= 0 ? 1 : 0 };      // the outer cards open inward; the middle one towards the half pressed
+  }
+
+  /* draw everything from the springs */
+  function render() {
+    const rr = clamp(S.r.x, 0, 1), g = reduced ? 1 : 1 - RECEDE * rr;
+    inner.style.transform = g === 1 ? '' : `scale(${g.toFixed(5)})`;
+    veil.style.opacity = (VEIL * rr).toFixed(3);
+    for (let i = 0; i < 3; i++) {
+      const el = files[i], k = S.cs[i].x;
+      const l = reduced ? (i === cur && state === 'open' && rr > 0.5 ? 1 : 0) : clamp((k - 1) / (LIFT - 1), 0, 1);
+      let tx = 0, ty = 0, loc = k;
+      if (!reduced) {
+        // the lifted card sits inside the receded board: counter-scale and move it so that it ends at exactly its own size and place
+        const c = ((1 - g) / g) * l;
+        tx = c * (CXS[i] + CW / 2 - W / 2) + S.ox.x * l; ty = c * (CY + CH / 2 - H / 2) + S.oy.x * l;
+        loc = k / Math.pow(g, l);
+      }
+      el.style.transform = Math.abs(loc - 1) < 1e-4 && Math.abs(tx) < 0.01 && Math.abs(ty) < 0.01 ? '' : `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${loc.toFixed(5)})`;
+      el.style.setProperty('--l', l.toFixed(3));
+      el.classList.toggle('is-up', l > 0.01 || (i === cur && rr > 0.01));
+      const pk = i === cur ? clamp(S.pk.x, 0, 1) : 0, p = pills[i];
+      p.style.visibility = pk < 0.002 ? 'hidden' : 'visible';
+      p.style.clipPath = pk >= 1 ? '' : `inset(0 0 ${((1 - pk) * 100).toFixed(1)}% 0 round 13px)`;
+      p.style.transform = pk >= 1 || reduced ? '' : `scale(${(0.88 + 0.12 * pk).toFixed(4)})`;
+    }
+    board.classList.toggle('is-lifted', S.pk.x > 0.02);                              // one lime at a time: the Open pill, or the Live dot
+    // the menu: one value m drives the scale and the clip together; the clip is anchored on the corner the menu grew from
+    const m = clamp(S.m.x, 0, 1);
+    menu.style.visibility = m < 0.002 ? 'hidden' : 'visible';
+    if (reduced) { menu.style.opacity = m > 0.5 ? 1 : 0; menu.style.transform = ''; sheet.style.clipPath = ''; shadow.style.transform = ''; }
+    else if (m >= 1) { menu.style.transform = ''; sheet.style.clipPath = ''; shadow.style.transform = ''; }
+    else {
+      const o = ((1 - m) * 100).toFixed(2), t = cyc ? o : 0, b = cyc ? 0 : o, rt = side > 0 ? o : 0, lt = side > 0 ? 0 : o;
+      menu.style.transform = `scale(${(0.42 + 0.58 * m).toFixed(4)})`;
+      sheet.style.clipPath = `inset(${t}% ${rt}% ${b}% ${lt}% round 18px)`;
+      shadow.style.transform = `scale(${m.toFixed(4)})`;
+    }
+    const hv = clamp(S.hv.x, 0, 1);
+    hl.style.opacity = hv.toFixed(3);
+    hl.style.transform = `translate3d(0, ${S.hy.x.toFixed(2)}px, 0) scale(${reduced ? 1 : (0.96 + 0.04 * hv).toFixed(4)})`;
+  }
+
+  /* motion */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    if (held && held.mode === 'hold') {                                              // the hold is a progress: the card follows it on a stiff spring
+      const p = clamp((now - held.t0) / HOLD, 0, 1);
+      if (!reduced) aim(S.cs[held.i], sink(p), 0.09);
+      if (p >= 1) trigger();
+    }
+    let live = false;
+    for (const s of S.cs) live = step(s, dt, 0.0004, 0.01) || live;
+    live = step(S.ox, dt, 0.02, 0.5) || live; live = step(S.oy, dt, 0.02, 0.5) || live;
+    live = step(S.r, dt, 0.001, 0.01) || live; live = step(S.m, dt, 0.001, 0.01) || live; live = step(S.pk, dt, 0.001, 0.01) || live;
+    live = step(S.hv, dt, 0.002, 0.02) || live; live = step(S.hy, dt, 0.05, 2) || live;
+    if (pend && S.m.x < 0.03) begin(pend);                                           // a menu still closing finishes before the next one opens
+    if (needReset && state !== 'open' && S.m.x < 0.004) resetLabels();
+    render();
+    if (live || pend || (held && held.mode === 'hold')) kick();
+  }
+
+  /* the wash: one object. It appears at the row under the pointer, then travels with its velocity */
+  function setRow(row, kb = false) {
+    curRow = row;
+    if (row < 0) { aim(S.hv, 0, 0.2); menu.removeAttribute('aria-activedescendant'); }
+    else {
+      const T = rowTop(row);
+      if (S.hv.x < 0.04) put(S.hy, T);
+      aim(S.hv, 1, 0.2); aim(S.hy, T, 0.2);
+      menu.setAttribute('aria-activedescendant', items[row].id);
+    }
+    hl.classList.toggle('is-kb', kb && row >= 0);
+    kick();
+  }
+  const press = (on) => hl.classList.toggle('is-press', on);
+
+  /* open and close: the same path, from and back to the card's corner */
+  function place(r) {
+    cur = r.i; side = r.sd; cyc = r.cy; how = r.how; begun = true; pend = null; doneRow = -1;
+    menu.style.left = mx() + 'px'; menu.style.top = MT + 'px';
+    const oy = cyc ? MH : 0;
+    menu.style.transformOrigin = `${side > 0 ? -MG : MW + MG}px ${oy}px`;           // the card's own corner
+    shadow.style.transformOrigin = `${side > 0 ? 0 : MW}px ${oy}px`;
+    menu.setAttribute('aria-label', `Actions for ${TITLES[cur]}`);
+    files.forEach((f, k) => f.setAttribute('aria-expanded', k === cur));
+  }
+  function begin(r) {
+    place(r);
+    aim(S.cs[cur], LIFT, 0.36); aim(S.r, 1, 0.42); aim(S.m, 1, 0.34); aim(S.pk, 1, 0.34);
+    say(`Actions for ${TITLES[cur]}`);
+    if (how === 'key') { menu.style.visibility = 'visible'; menu.focus({ preventScroll: true }); setRow(0, true); }
+    kick();
+  }
+  function openFor(i, sd, cy, via) {
+    if (state === 'open' && cur === i && !pend) return;
+    const req = { i, sd, cy, how: via }, busy = state === 'open' || S.m.x > 0.03;
+    if (state === 'open') close(false);
+    state = 'open';
+    if (busy) { pend = req; begun = false; kick(); } else begin(req);
+  }
+  function trigger() {                                                               // p reached 1: lift
+    const h = held;
+    h.mode = 'sel'; h.px0 = h.pos || h.p0;
+    openFor(h.i, h.sd, h.cy, 'hand');
+  }
+  function close(kb) {
+    if (state !== 'open' && !pend) return;
+    pend = null; begun = false; state = 'idle'; clearTimeout(ct);
+    const i = cur;
+    aim(S.cs[i], 1, 0.28); aim(S.r, 0, 0.3); aim(S.m, 0, 0.26); aim(S.pk, 0, 0.22); aim(S.hv, 0, 0.2); aim(S.ox, 0, 0.28); aim(S.oy, 0, 0.28);
+    curRow = -1; menu.removeAttribute('aria-activedescendant');
+    files.forEach((f) => f.setAttribute('aria-expanded', 'false'));
+    const d = doneRow; doneRow = -1;
+    if (d >= 0) { statusRoll(SAID[d]); if (d === 0) renameFlash(i); }
+    if (kb && how === 'key') files[i].focus({ preventScroll: true });
+    needReset = true;
+    kick();
+  }
+  function commit(row) {
+    curRow = row; doneRow = row;
+    items[row].classList.add('is-done');
+    say(`${SAID[row]}: ${TITLES[cur]}`);
+    clearTimeout(ct);
+    ct = setTimeout(() => close(true), 560);
+  }
+  function resetLabels() {                                                           // back to the labels, with no roll (the menu is gone)
+    needReset = false;
+    menu.classList.add('is-reset');
+    items.forEach((b) => b.classList.remove('is-done'));
+    void menu.offsetWidth;
+    menu.classList.remove('is-reset');
+    hl.classList.remove('is-kb', 'is-press');
+  }
+  function statusRoll(t) {
+    statMsg.textContent = t; stat.classList.add('is-msg');
+    clearTimeout(st); st = setTimeout(() => stat.classList.remove('is-msg'), 1900);
+  }
+  function renameFlash(i) {                                                          // Rename selects the file's name in its card
+    names[i].classList.add('is-edit');
+    clearTimeout(nt); nt = setTimeout(() => names[i].classList.remove('is-edit'), 1700);
+  }
+
+  /* one hand: a pointer or the ghost, both through down / move / up. x and y are client px */
+  function down(x, y, t, ghost = false) {
+    if (held) up(x, y, true);
+    measure();
+    const p = local(x, y);
+    if (state === 'open') {                                                          // a menu is up: the press lands on a row, the pill, the menu's padding or outside
+      const row = begun && doneRow < 0 && S.m.x > 0.6 ? rowAt(p) : -1;
+      held = { mode: 'dismiss', ghost, pos: p, cx: x, cyl: y };
+      if (row >= 0) { held.mode = 'menu'; setRow(row); press(true); }
+      else if (begun && S.pk.x > 0.6 && inPill(x, y)) held.mode = 'pill';
+      else if (inMenu(p)) held.mode = 'dead';
+      else close(false);
+      return;
+    }
+    const i = cardAt(p);
+    if (i < 0) return;
+    const c = corner(i, p);
+    held = { mode: 'hold', i, ghost, t0: performance.now(), p0: p, pos: p, sd: c.sd, cy: c.cy, cx: x, cyl: y };
+    state = 'hold';
+    kick();
+  }
+  function move(x, y) {
+    const h = held;
+    if (!h) return;
+    const p = local(x, y);
+    h.pos = p; h.cx = x; h.cyl = y;
+    if (h.mode === 'hold') {
+      if (Math.hypot(p.x - h.p0.x, p.y - h.p0.y) > SLOP) { aim(S.cs[h.i], 1, 0.3); h.mode = 'gone'; state = 'idle'; kick(); }   // a drag is not a hold: it springs home
+      return;
+    }
+    if (h.mode === 'sel' || h.mode === 'menu') {
+      const row = begun && S.m.x > 0.5 ? rowAt(p, h.mode === 'sel' ? 4 : 10) : -1;
+      if (row !== curRow) setRow(row);
+      if (h.mode === 'sel' && !reduced && begun) {                                   // the lifted card leans towards the finger, through the rubber band
+        const dx = p.x - h.px0.x, dy = p.y - h.px0.y;
+        aim(S.ox, Math.sign(dx) * rb(Math.abs(dx) * 0.1, LEAN), 0.28); aim(S.oy, Math.sign(dy) * rb(Math.abs(dy) * 0.1, LEAN), 0.28);
+        kick();
+      }
+    }
+  }
+  function up(x, y, cancel = false) {
+    const h = held;
+    if (!h) return;
+    held = null;
+    press(false);
+    if (h.mode === 'hold') {                                                         // let go early: home from where it is, nothing else
+      state = 'idle'; aim(S.cs[h.i], 1, 0.3); kick();
+    } else if (h.mode === 'sel') {
+      aim(S.ox, 0, 0.28); aim(S.oy, 0, 0.28);
+      if (!cancel && curRow >= 0 && begun) commit(curRow);                           // released on a row: it is chosen; anywhere else the menu stays open
+      else if (curRow >= 0) setRow(-1);
+      kick();
+    } else if (h.mode === 'menu') {
+      const row = cancel ? -1 : rowAt(local(x, y), 10);
+      if (row >= 0 && begun) commit(row); else setRow(-1);
+    } else if (h.mode === 'pill') {
+      if (!cancel && inPill(x, y)) { statusRoll('Opening'); say(`Opening ${TITLES[cur]}`); close(false); }
+    }
+  }
+  const release = () => { if (held && held.ghost) up(held.cx, held.cyl, true); };
+  function hover(x, y) {                                                             // a mouse over an open menu: the wash follows
+    if (state !== 'open' || held || !begun || S.m.x < 0.5 || doneRow >= 0) return;
+    const row = rowAt(local(x, y), 0);
+    if (row !== curRow) setRow(row);
+  }
+
+  /* real input */
+  let ptr = null;
+  addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || e.ctrlKey || ptr !== null) return;
+    measure();
+    if (state !== 'open' && cardAt(local(e.clientX, e.clientY)) < 0) return;
+    ptr = e.pointerId;
+    try { e.target.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    down(e.clientX, e.clientY, e.timeStamp, false);
+  }, true);
+  addEventListener('pointermove', (e) => {
+    if (e.pointerId === ptr) move(e.clientX, e.clientY);
+    else if (ptr === null && e.pointerType === 'mouse') hover(e.clientX, e.clientY);
+  });
+  const pend2 = (cancel) => (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.clientX, e.clientY, cancel); };
+  addEventListener('pointerup', pend2(false));
+  addEventListener('pointercancel', pend2(true));
+  board.addEventListener('mousedown', (e) => { if (e.button === 0 && e.target.closest('.lm-file')) e.preventDefault(); });   // a press is not a focus: no ring after a mouse hold
+  board.addEventListener('contextmenu', (e) => {                                     // a right click opens it at once; elsewhere on the board it is the browser's
+    measure();
+    if (e.button === 0 && !e.ctrlKey) {                                              // from the keyboard (the menu key, Shift+F10): its coordinates mean nothing; the key handlers own it
+      const k = files.indexOf(document.activeElement);
+      if (k >= 0 || state === 'open') e.preventDefault();
+      if (k >= 0 && state === 'idle') openFor(k, k === 2 ? -1 : 1, 0, 'key');
+      return;
+    }
+    const p = local(e.clientX, e.clientY), i = cardAt(p);
+    if (i < 0 && state !== 'open') return;
+    e.preventDefault();
+    if (i >= 0 && !(state === 'open' && cur === i)) { const c = corner(i, p); openFor(i, c.sd, c.cy, 'hand'); }
+    else if (i < 0 && !inMenu(p)) close(false);
+  });
+  board.addEventListener('click', (e) => {                                           // a screen reader's or a script's activation of a menu item (a pointer is handled in up())
+    if (e.detail !== 0) return;
+    const b = e.target.closest('.lm-item');
+    if (b && state === 'open' && doneRow < 0) commit(items.indexOf(b));
+  });
+  files.forEach((f, i) => f.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || state === 'open') return;
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) {
+      e.preventDefault(); lastKey = e;
+      openFor(i, i === 2 ? -1 : 1, 0, 'key');
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const n = files[clamp(i + (e.key === 'ArrowRight' ? 1 : -1), 0, 2)];
+      n.focus();
+    }
+  }));
+  addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e === lastKey) return;
+    const k = e.key;
+    if (k === 'Escape') {
+      if (held && held.mode === 'hold') { aim(S.cs[held.i], 1, 0.3); held.mode = 'gone'; state = 'idle'; kick(); e.preventDefault(); }
+      else if (state === 'open') { e.preventDefault(); close(true); }
+      return;
+    }
+    if (state !== 'open' || !begun) return;
+    if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Home' || k === 'End') {
+      e.preventDefault();
+      if (doneRow >= 0) return;
+      const r = k === 'Home' ? 0 : k === 'End' ? NR - 1 : k === 'ArrowDown' ? (curRow < 0 ? 0 : (curRow + 1) % NR) : (curRow < 0 ? NR - 1 : (curRow + NR - 1) % NR);
+      setRow(r, true);
+    } else if ((k === 'Enter' || k === ' ') && !e.repeat) {
+      if (curRow >= 0 && doneRow < 0) { e.preventDefault(); commit(curRow); }
+    } else if (k === 'Tab') close(false);
+    else if (k.length === 1 && /[a-z]/i.test(k) && doneRow < 0) {                    // type a letter to jump to a row
+      for (let n = 1; n <= NR; n++) {
+        const r = (Math.max(curRow, -1) + n) % NR;
+        if (items[r].textContent.trim().toLowerCase().startsWith(k.toLowerCase())) { setRow(r, true); break; }
+      }
+    }
+  });
+  new ResizeObserver(() => measure()).observe(fit);
+  addEventListener('scroll', measure, { passive: true });
+
+  /* the key pose: Button.tsx lifted, the menu open on its right, the wash on Share link. Deterministic: no motion to wait for */
+  function pose() {
+    clearTimeout(ct); clearTimeout(st); clearTimeout(nt);
+    held = null; pend = null; ptr = null; needReset = false;
+    stat.classList.remove('is-msg'); names.forEach((n) => n.classList.remove('is-edit'));
+    menu.classList.add('is-reset'); items.forEach((b) => b.classList.remove('is-done')); void menu.offsetWidth; menu.classList.remove('is-reset');
+    S.cs.forEach((s, k) => put(s, k === KEY.i ? LIFT : 1));
+    put(S.ox, 0); put(S.oy, 0); put(S.r, 1); put(S.m, 1); put(S.pk, 1); put(S.hv, 1); put(S.hy, rowTop(KEY.row));
+    state = 'open'; place({ i: KEY.i, sd: KEY.sd, cy: KEY.cy, how: 'hand' }); curRow = KEY.row;
+    menu.setAttribute('aria-activedescendant', items[KEY.row].id);
+    hl.classList.remove('is-kb', 'is-press');
+    measure(); render();
+  }
+  pose();
+  return {
+    fit, files, down, move, up, release, hover, pose, measure, close, KEY, rowTop, rowAt, local,
+    get held() { return held; }, get state() { return state; }, get cur() { return cur; }, get row() { return curRow; }, get begun() { return begun; },
+    get scale() { return sc; }, get busy() { return !!(S.m.on || S.cs.some((s) => s.on) || S.r.on || pend); },
+    sp() { return { cs: S.cs.map((s) => s.x), r: S.r.x, m: S.m.x, hv: S.hv.x, hy: S.hy.x, pk: S.pk.x, ox: S.ox.x }; },
+    toClient(lx, ly) { measure(); return { x: OX + lx * sc, y: OY + ly * sc }; },        // board px to client px
+    menuX: () => mx(),
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('lm-fit');
+  // the board is drawn at 608 × 300 and scaled to the room it is given (about 80% of the width, 1.5× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.8 * W / 608, (H - 2 * pad - ui) / 300, 1.5));
+    fit.style.setProperty('--s', s.toFixed(4));
+    LM.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const at = (lx, ly) => LM.toClient(lx, ly);
+
+  // the ghost's hand: glide to a board point in ms (hovering as it goes) or drag with the button down
+  async function glide(my, lx, ly, ms, down) {
+    const t0 = performance.now();
+    const from = glide.pos || at(lx, ly), to = at(lx, ly);
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const now = performance.now(), p = Math.min(1, (now - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); glide.pos = { x, y };
+      if (down) LM.move(x, y); else LM.hover(x, y);
+      if (p >= 1) break;
+    }
+  }
+  async function travel(my, lx, ly, ms = 760) {                                    // from wherever the ghost is
+    const to = at(lx, ly);
+    if (!(await QM.ghostTo(to.x, to.y, ms))) throw 0;
+    glide.pos = to;
+  }
+  const hand = {
+    async down(my, lx, ly) { await travel(my, lx, ly); await gap(my, 170); const c = at(lx, ly); LM.down(c.x, c.y, performance.now(), true); },
+    up() { const p = glide.pos; LM.up(p.x, p.y); },
+  };
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5500 : 1800);
+      QM.ghostShow();
+      if (LM.state === 'open') { await travel(my, 520, 40); await gap(my, 160); await hand.down(my, 520, 40); await gap(my, 90); LM.up(glide.pos.x, glide.pos.y); await gap(my, 900); }   // a tap outside closes the pose it loaded in
+      for (;;) {
+        // 1. hold Button.tsx, slide over Rename down to Share link, let go there
+        await hand.down(my, 346, 128);
+        await gap(my, 560);                                                          // 380 ms of hold, then the lift and the menu
+        await glide(my, 462, 126, 380, true); await gap(my, 120);
+        await glide(my, 496, 200, 460, true); await gap(my, 560);
+        hand.up(); glide.pos = at(496, 200);
+        await gap(my, 2900);
+        // 2. a hold that is let go of early: it springs back, nothing opens
+        await hand.down(my, 112, 186);
+        await gap(my, 210);
+        hand.up();
+        await gap(my, 1300);
+        // 3. hold Field.tsx low on its left (the menu opens inward, from the bottom corner), let go off the menu, then tap Duplicate
+        await hand.down(my, 458, 242);
+        await gap(my, 560);
+        await glide(my, 436, 226, 300, true); await gap(my, 160);
+        hand.up(); await gap(my, 800);
+        await glide(my, 304, 120, 720, false); await gap(my, 260);
+        await glide(my, 304, 160, 300, false); await gap(my, 220);
+        { const c = glide.pos; LM.down(c.x, c.y, performance.now(), true); await gap(my, 110); LM.up(c.x, c.y); }
+        await gap(my, 3400);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) LM.release(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); LM.release(); glide.pos = null; }
+  if (!QM.tile && !reduced) {
+    const idle = () => LM.held || LM.fit.matches(':hover');
+    const touch = (e) => {
+      if (e && e.pointerType && e.pointerType !== 'mouse') return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); LM.pose(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

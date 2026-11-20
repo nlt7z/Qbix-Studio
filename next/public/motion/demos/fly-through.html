@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fly through · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "fly-through", "title": "Fly through", "group": "studio", "added": "2026-11-20", "cat": "brand", "order": 50,
+  "kind": "scroll", "tone": "paper", "shot": 5500,
+  "line": "scale = e^(k·t) about the q's counter · counter 36 px to the whole screen · section 0.92 → 1 · follow response 0.3 s",
+  "summary": "The Qbix wordmark rests in the middle of a white page with two quiet lines, Qbix Studio above and Design and build studio below. Scrolling flies the camera into the counter of the q: the wordmark scales about that point exponentially, so the approach keeps one constant speed, while the counter drifts to the middle of the screen. Inside the counter the next section is uncovered and settles from 0.92 to 1, until the counter's white is the whole screen and you are through. Everything is a pure function of one scroll value followed by a critically damped spring, so scrolling back flies out along exactly the same path.",
+  "spec": [
+    ["Progress", "the page's scroll in px, followed by a critically damped spring (response 0.3 s, damping 1.0, stepped analytically); f = scroll / 3.1 screens, 0 to 1, and every value below is a function of f alone, drawn in one rAF"],
+    ["Zoom", "scale S = e^(k·f), from 1, about the centre of the q's counter (93.5, 169.5, radius 60.5 in the 918 × 342 mark). k is solved per screen so the counter covers the screen's corners at f = 0.85 (k about 3.6 at 1280 × 800: 36 px of counter becomes 760 px), then it keeps growing to f = 1"],
+    ["Pan", "the counter's centre travels from where the q sits to the middle of the screen, smoothstep over f 0.10 to 0.85, so the hole you fly into ends centred and the section inside it is centred too"],
+    ["Vector all the way", "one full-screen SVG whose single group takes matrix(u·S, 0, 0, u·S, …); nothing is rasterised and no giant layer exists. When the circle covers all four corners the mark is hidden (nothing of it can be on screen) and the section's clip-path is dropped"],
+    ["The section", "a portal clipped to the q's white interior (the counter circle, the square corner under its right side and the gap below it, all scaled by smoothstep(f, 0.07, 0.36) so it opens from nothing), carrying the section: translated with the counter's centre, scaled 0.92 to 1 about its own middle (smoothstep, f 0.10 to 1). It is uncovered by the opening, never faded"],
+    ["Rest lines", "Qbix Studio rolls up out of its mask and Design and build studio rolls down out of its, over f 0 to 0.05 and 0.005 to 0.055, before the ink grows to meet them"],
+    ["Colour", "ink #1d1d1f on white, the i-dot lime #B8FF00 at rest and following the ink over f 0 to 0.1; in the section #f5f5f7 tiles, #6e6e73 text, and the one lime accent, the Start a brief pill"],
+    ["Reduced motion", "no pinning, no zoom: the wordmark with its lines above, the section below, in one calm page"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-20"],
+  "where": "The first screen of qbix.space or of a Qbix case study: the wordmark is the door, one scroll flies through it, and the offers and the Start a brief pill are waiting on the other side.",
+  "rules": [
+    "Everything is a function of one smoothed scroll value. No state, no timers, no direction: scrolling back is the same function run backwards, so the way out retraces the way in.",
+    "Zoom exponentially (S = e^(k·f)), never linearly, so the speed of approach is constant to the eye. Solve k from the screen so the counter just covers it.",
+    "Scale the vector. Put the mark in one screen-sized SVG and change the group's matrix; do not scale a big element or a bitmap. Hide the mark once nothing of it can be on screen.",
+    "Hold the counter's centre as the anchor, and let it drift to the middle of the screen so the hole you pass through is centred.",
+    "The next section is uncovered by a growing circle at the counter and settles from 0.92 to 1. It is never faded in. Clip it to the glyph's own white interior, and drop the clip once the circle covers the screen.",
+    "Lime is the i-dot at rest and the Start a brief pill, nothing else. The pill is the one accent in the section; the tiles are #f5f5f7 with no ring.",
+    "Under reduced motion the page is still and complete: wordmark above, section below."
+  ],
+  "tags": ["brand", "wordmark", "logo", "scroll", "zoom", "fly through", "portal", "clip-path", "vector", "exponential", "spring", "Apple", "hero"]
+}
+</script>
+<style data-code>
+/* Fly through. The run is tall, the pin is sticky, and script sets every position from one smoothed scroll value (draw()).
+   Without script, or under reduced motion, this is the still page: wordmark above, section below.
+   Type: the system face (Geist elsewhere). Neutrals #1d1d1f / #6e6e73 / #f5f5f7. The one lime: the i-dot at rest and the pill. */
+.ft { --ft-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; background: #fff; color: #1d1d1f;
+  font: 400 17px/1.47 var(--ft-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; }
+.ft :where(h1, h2, h3, p, ul) { margin: 0; padding: 0; }
+.ft :where(ul) { list-style: none; }
+
+/* the still page */
+.ft-pin { position: relative; display: flex; flex-direction: column; align-items: center; padding: 14vh 6vw 12vh; gap: 96px; }
+.ft-door { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+.ft-mask { overflow: hidden; text-align: center; }
+.ft-label { font: 500 15px/20px var(--ft-f); color: #6e6e73; }
+.ft-tag { font: 600 21px/28px var(--ft-f); letter-spacing: -.01em; }
+.ft-mark { display: block; width: min(70vw, 460px); height: auto; overflow: visible; }
+
+.ft-sec { width: 100%; display: grid; place-items: center; padding: 0 0 4vh; }
+.ft-in { width: min(1080px, 92vw); display: grid; justify-items: center; text-align: center; }
+.ft-h { font: 600 clamp(32px, min(5.4vw, 9.4vh), 68px)/1.07 var(--ft-f); letter-spacing: -.022em; }
+.ft-h span { display: block; }
+.ft-p { max-width: 30em; margin-top: clamp(10px, 1.8vh, 18px); font: 400 clamp(14px, min(1.7vw, 2.6vh), 19px)/1.47 var(--ft-f); color: #6e6e73; text-wrap: balance; }
+.ft-go { margin-top: clamp(14px, 2.6vh, 26px); height: clamp(38px, 5.6vh, 48px); padding: 0 clamp(20px, 2.6vh, 26px); border: 0; border-radius: 999px; background: #B8FF00; color: #1d1d1f;
+  font: 600 clamp(15px, 2.1vh, 17px)/1 var(--ft-f); letter-spacing: -.01em; cursor: pointer; transition: transform 100ms cubic-bezier(.4, 0, .2, 1), background-color 180ms cubic-bezier(.4, 0, .2, 1); }
+.ft-go:hover { background: #c6ff33; }
+.ft-go:active { transform: scale(.97); }
+.ft-go:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+.ft-tiles { width: 100%; margin-top: clamp(18px, 4.4vh, 44px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1.2vw, 14px); }
+.ft-tile { display: flex; flex-direction: column; min-height: clamp(118px, 27vh, 224px); padding: clamp(12px, 2.1vh, 22px) clamp(13px, 1.8vh, 22px) clamp(12px, 2vh, 20px); border-radius: clamp(16px, 2.6vh, 26px); background: #f5f5f7; text-align: left; }
+.ft-tn { font: 600 clamp(13px, 2.3vh, 19px)/1.2 var(--ft-f); letter-spacing: -.01em; }
+.ft-tb { margin-top: 4px; font: 400 clamp(12px, 1.9vh, 15px)/1.35 var(--ft-f); color: #6e6e73; text-wrap: balance; }
+.ft-tf { margin-top: auto; font: 600 clamp(17px, 3.2vh, 28px)/1.1 var(--ft-f); letter-spacing: -.022em; font-variant-numeric: tabular-nums; }
+.ft-tf small { display: block; margin-bottom: 2px; font: 400 clamp(11px, 1.6vh, 13px)/1.3 var(--ft-f); letter-spacing: -.006em; color: #86868b; }
+.ft-pic { display: block; flex: 1 1 0; min-height: 0; width: 100%; margin-top: clamp(8px, 1.6vh, 14px); border-radius: clamp(10px, 1.6vh, 14px); object-fit: cover; object-position: 50% 62%; }
+
+/* the flight: tall run, sticky pin, everything absolute */
+.ft.is-fly .ft-pin { position: sticky; top: 0; display: block; height: 100vh; padding: 0; overflow: hidden; }
+.ft.is-fly .ft-door { display: contents; }
+.ft.is-fly .ft-mark { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.ft.is-fly .ft-mask { position: absolute; left: 0; right: 0; }
+.ft.is-fly .ft-portal { position: absolute; inset: 0; pointer-events: none; }
+.ft.is-fly .ft-sec { position: absolute; inset: 0; padding: 0 0 clamp(0px, 3vh, 28px); pointer-events: auto; }
+@media (max-width: 640px) {
+  .ft-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ft-tile { min-height: 124px; }
+}
+</style>
+<style>
+  /* detail view: the pin clears the controls bar */
+  html:not(.qm-tile) { --ft-ui: 46px; }
+  .ft.is-fly { height: calc(4.6 * (100vh - var(--ft-ui, 0px))); }
+  .ft.is-fly .ft-pin { height: calc(100vh - var(--ft-ui, 0px)); }
+  body { margin: 0; background: #fff; }
+</style>
+</head>
+<body>
+<!-- code -->
+<div class="ft" id="ft">
+  <div class="ft-pin" id="ftPin">
+    <div class="ft-door">
+      <div class="ft-mask" id="ftTop"><p class="ft-label" id="ftLabel">Qbix Studio</p></div>
+      <h1 class="ft-h1" style="margin:0;font-size:0;line-height:0">
+        <svg class="ft-mark" id="ftMark" viewBox="0 0 918 342" role="img" aria-label="qbix">
+          <g id="ftG">
+            <path id="ftInk" fill="#1d1d1f" d="M131.5 230H93.5A60.5 60.5 0 1 1 154 169.5V342H187V169.5A93.5 93.5 0 1 0 93.5 263H131.5ZM280.5 0H313.5V169.5A60.5 60.5 0 1 0 374 109H337.5V76H374A93.5 93.5 0 1 1 280.5 169.5ZM583.5 77H616.5V264H583.5ZM709.5 77H752L810.01 143.99A40.5 40.5 0 0 1 810.01 197.01L752 264H709.5L790.47 170.5ZM875.5 77H918L853.92 151H847A16.5 16.5 0 0 1 830.5 134.5V128.96ZM875.5 264H918L853.92 190H847A16.5 16.5 0 0 0 830.5 206.5V212.04Z"/>
+            <path id="ftDot" fill="#B8FF00" d="M583.5 0H616.5V34H583.5Z"/>
+          </g>
+        </svg>
+      </h1>
+      <div class="ft-mask" id="ftBot"><p class="ft-tag" id="ftTag">Design and build studio</p></div>
+    </div>
+
+    <div class="ft-portal" id="ftPortal">
+      <section class="ft-sec" id="ftSec" aria-label="Qbix Studio">
+        <div class="ft-in">
+          <h2 class="ft-h"><span>Design and build.</span><span>Done right.</span></h2>
+          <p class="ft-p">We design, build and launch websites, brands and products. Seattle and the SF Bay Area.</p>
+          <button class="ft-go" id="ftGo" type="button">Start a brief</button>
+          <ul class="ft-tiles">
+            <li class="ft-tile"><h3 class="ft-tn">Design service</h3><p class="ft-tb">From moodboard to a live domain.</p><p class="ft-tf"><small>1 to 3 weeks</small>from $500</p></li>
+            <li class="ft-tile"><h3 class="ft-tn">Brand upgrade</h3><p class="ft-tb">From usable to worth sharing.</p><p class="ft-tf"><small>5 to 10 weeks</small>from $5,000</p></li>
+            <li class="ft-tile"><h3 class="ft-tn">Website refresh</h3><p class="ft-tb">For practices. Live in 7 days.</p><p class="ft-tf"><small>Fixed price</small>$600</p></li>
+            <li class="ft-tile"><h3 class="ft-tn">Strata</h3><p class="ft-tb">A moodboard in, a design system out.</p><img class="ft-pic" src="../assets/art/vase.webp" alt="" draggable="false"></li>
+          </ul>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+<div class="qm-ui"><span>Scroll ↓</span><span class="qm-sep">/</span><span>Fly into the counter of the q, and back out</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Fly through. draw(y) is a pure function of one scroll value y; y follows the real scroll through a critically damped spring.
+   The mark is one screen-sized SVG: the group's matrix does the zoom, so it is vector at every scale. */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const ft = $('ft'), pin = $('ftPin'), svg = $('ftMark'), g = $('ftG'), dot = $('ftDot'), portal = $('ftPortal'), sec = $('ftSec');
+  const top = $('ftTop'), bot = $('ftBot'), topT = $('ftLabel'), botT = $('ftTag'), go = $('ftGo');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;   // the still page: wordmark above, section below
+  ft.classList.add('is-fly');
+
+  const MW = 918, MH = 342, CX = 93.5, CY = 169.5, CR = 60.5;           // the mark's box, the q's counter
+  const RUN = 3.1;                                                      // screens of scroll, rest to through
+  const PAN0 = 0.10, PAN1 = 0.85;                                       // the counter's drift to the middle
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const smooth = (x) => x * x * (3 - 2 * x);
+  const seg = (v, a, b) => smooth(clamp((v - a) / (b - a)));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const LIME = [184, 255, 0], INK = [29, 29, 31];
+
+  let W = 0, H = 0, u = 0, k = 0, csx = 0, csy = 0, ay = 0;
+  function layout() {
+    W = pin.clientWidth; H = pin.clientHeight;
+    const wmW = Math.min(W >= 720 ? W * 0.46 : W * 0.66, 560, H * 1.15);
+    u = wmW / MW;
+    const wmH = MH * u, gap = clamp(H * 0.05, 20, 34), lh = 20, th = 28;
+    const y0 = (H - (lh + gap + wmH + gap + th)) / 2 - H * 0.012;       // the cluster, optically a hair above the middle
+    const yw = y0 + lh + gap;
+    csx = (W - wmW) / 2 + CX * u; csy = yw + CY * u;                    // where the counter sits at rest
+    top.style.top = y0 + 'px'; top.style.height = lh + 'px';
+    bot.style.top = yw + wmH + gap + 'px'; bot.style.height = th + 'px';
+    k = Math.log((1.04 * Math.hypot(W, H) / 2) / (CR * u)) / PAN1;      // the counter covers the screen's corners at f = PAN1
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    // the section's anchor: the middle of its headline, so the first thing the circle opens on is the headline
+    sec.style.transform = 'none';
+    const hr = sec.querySelector('.ft-h').getBoundingClientRect(), pr = pin.getBoundingClientRect();
+    ay = hr.top - pr.top + hr.height / 2;
+    sec.style.transformOrigin = '50% ' + ay.toFixed(1) + 'px';
+  }
+
+  function draw(y) {
+    const f = clamp(y / (RUN * H));
+    const S = Math.exp(k * f);                                          // constant speed of approach
+    const pan = seg(f, PAN0, PAN1);
+    const cx = lerp(csx, W / 2, pan), cy = lerp(csy, H / 2, pan);
+    const R = CR * u * S;                                               // the counter's radius on screen
+    const far = Math.max(Math.hypot(cx, cy), Math.hypot(W - cx, cy), Math.hypot(cx, H - cy), Math.hypot(W - cx, H - cy));
+    const covered = R >= far;                                           // the circle holds the whole screen: no ink can be in it
+
+    g.setAttribute('transform', 'matrix(' + (u * S) + ' 0 0 ' + (u * S) + ' ' + (cx - CX * u * S) + ' ' + (cy - CY * u * S) + ')');
+    svg.style.visibility = covered ? 'hidden' : 'visible';
+    const d = seg(f, 0, 0.1);                                           // the i-dot is lime at rest and follows the ink
+    dot.setAttribute('fill', 'rgb(' + LIME.map((c, i) => Math.round(lerp(c, INK[i], d))).join(',') + ')');
+
+    // the two rest lines roll out of their masks, before the ink grows to meet them
+    const a = seg(f, 0, 0.05), b = seg(f, 0.005, 0.055);
+    topT.style.transform = 'translate3d(0,' + (-112 * a).toFixed(2) + '%,0)';
+    botT.style.transform = 'translate3d(0,' + (112 * b).toFixed(2) + '%,0)';
+    top.style.visibility = a >= 1 ? 'hidden' : 'visible';
+    bot.style.visibility = b >= 1 ? 'hidden' : 'visible';
+
+    // the section: uncovered by a circle at the counter, centred on it, settling 0.92 to 1
+    const m = seg(f, 0.07, 0.36), A = u * S * m, r = CR * A;           // the opening's own scale, growing from nothing
+    // the opening is the q's white interior: the counter circle, the square corner under its right side, and the gap below it
+    const q = r.toFixed(2), L = (2 * far).toFixed(0);
+    portal.style.clipPath = covered && f > 0.36 ? 'none'
+      : 'path("M' + (cx + r).toFixed(2) + ' ' + cy.toFixed(2) + 'v' + L + 'H' + (cx + 38 * A).toFixed(2) + 'V' + (cy + r).toFixed(2) + 'H' + cx.toFixed(2) +
+        'A' + q + ' ' + q + ' 0 1 1 ' + (cx + r).toFixed(2) + ' ' + cy.toFixed(2) + 'Z")';
+    portal.style.visibility = r < 0.5 ? 'hidden' : 'visible';
+    const sc = lerp(0.92, 1, seg(f, 0.10, 1));
+    sec.style.transform = 'translate3d(' + (cx - W / 2).toFixed(2) + 'px,' + ((1 - pan) * (csy - ay)).toFixed(2) + 'px,0) scale(' + sc.toFixed(4) + ')';
+    const live = f > 0.9;                                               // the section takes pointer and focus once you are through
+    if (sec.inert !== !live) { sec.inert = !live; sec.setAttribute('aria-hidden', live ? 'false' : 'true'); }
+  }
+
+  // the follow: x'' = −ω²(x − target) − 2ωx', stepped exactly, so a wheel notch glides and a reverse retraces the same values
+  const OM = (2 * Math.PI) / 0.3;
+  let cur = scrollY, vel = 0, target = scrollY, raf = 0, last = 0;
+  function tick(now) {
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000)); last = now;
+    const x = cur - target, e = Math.exp(-OM * dt), c1 = vel + OM * x;
+    cur = target + (x + c1 * dt) * e; vel = (vel - OM * c1 * dt) * e;
+    if (Math.abs(cur - target) < 0.05 && Math.abs(vel) < 0.5) { cur = target; vel = 0; }
+    draw(cur);
+    raf = cur === target ? 0 : requestAnimationFrame(tick);
+  }
+  const aim = () => { target = scrollY; if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  layout(); draw(cur);
+  addEventListener('scroll', aim, { passive: true });
+  addEventListener('resize', () => { layout(); draw(cur); });
+})();
+</script>
+<script>
+  QM.demo({ kind: 'scroll', lead: 1500, dur: 7600, hold: 1700, back: 3600, pause: 1000, stops: [0.5, 1] });
+</script>
+</body>
+</html>

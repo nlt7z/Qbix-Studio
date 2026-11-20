@@ -8,10 +8,10 @@
 {
   "id": "stretch-slider", "title": "Stretch slider", "group": "studio", "added": "2026-11-19", "cat": "inputs", "order": 50,
   "kind": "loop", "tone": "paper", "shot": 700,
-  "line": "relative drag · rubber band D 140 px, area kept · release at v, damping 0.8 · coast d 0.998",
-  "summary": "The voice panel of Qbix's TTS Editor: two thick capsules, Volume and Speed. The value follows the hand 1:1 from where it was grabbed, never jumping to the pointer, and the one being touched turns solid ink while the other stays ink at low alpha. Pushed past an end, the whole capsule stretches along the drag through a rubber band, anchored on its far end and thinner so its area stays; letting go springs it back from the stretched length with the hand's velocity and damping 0.8. A flick coasts the value on by projection and, if the throw is heading past the end, runs into it and stretches. Speaker waves appear one by one with the volume, a gauge's ticks light with the speed, and the numbers roll digit by digit.",
+  "line": "relative drag · rubber band D 140 px, area kept · release at v, damping 0.8 · coast d 0.998 · lime fill",
+  "summary": "The voice panel of Qbix's TTS Editor: two thick capsules, Volume and Speed. The value follows the hand 1:1 from where it was grabbed, never jumping to the pointer, and the one being touched fills lime with ink type while the other rests in pale grey. Pushed past an end, the whole capsule stretches along the drag through a rubber band, anchored on its far end and thinner so its area stays; letting go springs it back from the stretched length with the hand's velocity and damping 0.8. A flick coasts the value on by projection and, if the throw is heading past the end, runs into it and stretches. Speaker waves appear one by one with the volume, a gauge's ticks light with the speed, and the numbers roll digit by digit.",
   "spec": [
-    ["Capsule", "392 × 68 px, radius 24 px in a 448 px card; a white track with a soft ring, the fill ink at 10% alpha, solid ink while touched (100 ms in, 300 ms out); a press scales it to 0.97 in 100 ms; label and value are drawn twice and clipped at the fill's edge, so the glyphs change colour mid-letter"],
+    ["Capsule", "392 × 68 px, radius 24 px in a 448 px card; a #f5f5f7 track, the fill #e8e8ed at rest and lime #B8FF00 while touched (100 ms in, 300 ms out), type and icons #1d1d1f on both; a press scales it to 0.97 in 100 ms; label and value are drawn twice and clipped at the fill's edge, so the glyphs stay seamless across it"],
     ["Drag", "6 px of travel before it is a drag; from there the value moves 1:1 with the pointer (1 px = 1 / 392 of the range) relative to where it was grabbed; pointer capture; velocity from the last 80 ms"],
     ["Stretch", "past an end the finger's travel x is shown through (x·D·0.55) / (D + 0.55·x), D = 140 px (100 px over shows 40 px, 200 px shows 62 px, never more than 140); the capsule widens by that on the dragged side, anchored on the far end, and its height is 68 · W / (W + stretch), so the area is kept (the 44 px of the held pose is 61 px tall)"],
     ["Release", "a stretched capsule springs back from its stretched length at the release velocity, response 0.32 s; damping 0.8 when the hand was moving at over 300 px/s, else 1.0; a throw back in starts at the band's own speed plus 70% of the way to the hand's (≤ 2400 px/s), which is what makes the squash past rest visible: a 1000 px/s start from 40 px dips about 4 px"],
@@ -19,8 +19,8 @@
     ["Wall", "a coast whose projection lies past an end runs into it at the speed it has there and hands 1.8× that speed (≤ 1100 px/s) to the stretch, which springs out and back at damping 0.8"],
     ["Catch", "a press freezes the value and the stretch where they are (the finger's travel is recovered from the shown stretch with the inverse of the band, so nothing jumps); a drag takes them from there"],
     ["Icons", "speaker waves are stroke-dashed by the value, each over 14% of the range from 2%, 36% and 68%; at 0% a cross is drawn in; the speed gauge lights 5 ticks at 0, 25, 50, 75 and 100% and its needle turns 180° with the value"],
-    ["Numbers", "Geist Mono; every digit is a strip of 0–9 on its own critically damped spring (response 0.26 s) that takes the shortest way round (9 to 0 is one step); hundreds and tens appear by width"],
-    ["Keys", "role=slider; arrows ±1% (±0.1×), Shift or Page ±10% (±0.5×), Home, End; against an end an arrow nudges the stretch at 240 px/s; the capsule is ink for 0.9 s after a key"],
+    ["Numbers", "the system face with tabular figures; every digit is a strip of 0–9 on its own critically damped spring (response 0.26 s) that takes the shortest way round (9 to 0 is one step); hundreds and tens appear by width"],
+    ["Keys", "role=slider; arrows ±1% (±0.1×), Shift or Page ±10% (±0.5×), Home, End; against an end an arrow nudges the stretch at 240 px/s; the capsule is lime for 0.9 s after a key"],
     ["Loop", "the ghost arrives after about 5 s (the thumbnail's moment is Volume held 44 px past its end, a fixed pose at load), catches it, pulls it back to 72%, overdrags and tugs back, flicks Speed down into its end and eases it back; it uses the same down / move / up as a hand, yields to a real pointer and resumes after 4.5 s"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-19"],
@@ -30,7 +30,7 @@
     "The finger's travel is one number (raw, in range units); the value is its clamp and the stretch is its overshoot through the rubber band. Every spring starts from the value and velocity on screen, and a catch recovers the raw travel from the stretch.",
     "Overshoot exists only after a throw. A slow release, a key and a settle are critically damped; damping 0.8 is used only when the hand was moving at over 300 px/s, when a coast hits an end and for a key's nudge against an end.",
     "The stretch is anchored on the end away from the drag and keeps the capsule's area: width and height are set together, the radius scales with the height.",
-    "One focus: only the capsule being touched (or still moving after a touch) is solid ink; the other is ink at low alpha. The one lime point is the Preview dot, and it only shows while a capsule is touched.",
+    "One focus: only the capsule being touched (or still moving after a touch) is lime, with #1d1d1f type; the other rests in #e8e8ed. The Preview dot is neutral (#86868b) and pulses while a capsule is touched, so a frame never has two limes. System face, Apple neutrals.",
     "Numbers use tabular figures and roll per digit; aria-valuenow and the live status follow the settled value, not every frame.",
     "Each capsule is role=slider with aria-valuemin, aria-valuemax, aria-valuenow and aria-valuetext.",
     "Under reduced motion the capsule still follows the pointer inside its range, but there is no stretch, no spring, no coast and no ghost: release snaps to the nearest step and the numbers change in place."
@@ -39,52 +39,51 @@
 }
 </script>
 <style data-code>
-/* Stretch slider. White surfaces with soft rings; solid ink only on the capsule being touched, one lime point (the Preview dot).
-   Easings: ui (.4,0,.2,1), expo out (.16,1,.3,1), move (.65,0,.35,1). The capsule's width, height, fill and the digits are set from script (draw()). */
-.ss-card { width: 448px; max-width: 100%; padding: 26px 28px 24px; background: #fff; color: #0B0C0D; border-radius: 22px;
-  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
-  font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; user-select: none; -webkit-user-select: none; }
+/* Stretch slider. A white card in the system face with Apple's neutrals; the capsules sit on #f5f5f7. The one accent is lime: the capsule being touched fills lime with #1d1d1f type
+   and icon (Apple's control fill); the resting one fills #e8e8ed. Easings: ui (.4,0,.2,1), expo out (.16,1,.3,1), move (.65,0,.35,1).
+   The capsule's width, height, fill and the digits are set from script (draw()). */
+.ss-card { --ss-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  width: 448px; max-width: 100%; padding: 26px 28px 24px; background: #fff; color: #1d1d1f; border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+  font: 400 14px/20px var(--ss-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; user-select: none; -webkit-user-select: none; }
 .ss-card p, .ss-card h3 { margin: 0; }
-.ss-t { font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
-.ss-sub { margin-top: 2px; color: rgba(11, 12, 13, .66); font-size: 13px; line-height: 20px; font-weight: 500; }
+.ss-t { font: 600 24px/28px var(--ss-f); letter-spacing: -.022em; }
+.ss-sub { margin-top: 2px; color: #6e6e73; font-size: 13px; line-height: 20px; font-weight: 400; letter-spacing: -.006em; }
 .ss-list { display: grid; gap: 12px; margin-top: 20px; }
 
 /* a slider: the row is the fixed slot (and the focus target); the capsule inside it is what stretches */
 .ss-row { position: relative; height: 68px; border-radius: 24px; cursor: grab; touch-action: pan-y; outline: none; }
 .ss-row.is-drag, .ss-row.is-drag * { cursor: grabbing; }
-.ss-row:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
-.ss-cap { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; border-radius: 24px; background: #fff;
-  box-shadow: 0 0 0 1px rgba(11, 12, 13, .1), 0 10px 22px -16px rgba(11, 12, 13, .3);
-  scale: 1; transition: scale 100ms cubic-bezier(.4, 0, .2, 1), box-shadow 200ms cubic-bezier(.4, 0, .2, 1); }
-.ss-row:hover .ss-cap { box-shadow: 0 0 0 1px rgba(11, 12, 13, .16), 0 10px 22px -16px rgba(11, 12, 13, .3); }
+.ss-row:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+.ss-cap { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; border-radius: 24px; background: #f5f5f7;
+  scale: 1; transition: scale 100ms cubic-bezier(.4, 0, .2, 1); }
 .ss-cap.is-press { scale: .97; }
-.ss-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; overflow: hidden; background: #E6ECDB; transition: background-color 300ms cubic-bezier(.4, 0, .2, 1); }
-.ss-cap.is-on .ss-fill { background: #0B0C0D; transition-duration: 100ms; }
+.ss-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; overflow: hidden; background: #e8e8ed; transition: background-color 300ms cubic-bezier(.4, 0, .2, 1); }
+.ss-row:hover .ss-cap:not(.is-on) .ss-fill { background: #e1e1e6; }
+.ss-cap.is-on .ss-fill { background: #B8FF00; transition-duration: 100ms; }
 
-/* the face: icon, name, value. Drawn twice: once over the track (clipped to the unfilled part) and once inside the fill (white when the fill is ink) */
+/* the face: icon, name, value. Drawn twice: once over the track (clipped to the unfilled part) and once inside the fill; both are #1d1d1f */
 .ss-layer { position: absolute; left: 0; top: 0; height: 100%; width: 100%; box-sizing: border-box; padding: 0 22px 0 20px; display: flex; align-items: center; gap: 12px;
-  white-space: nowrap; pointer-events: none; color: #0B0C0D; }
-.ss-fill .ss-layer { transition: color 0s linear 130ms; }          /* the glyphs flip colour while the fill is mid-way, so they never meet it at the same grey */
-.ss-cap.is-on .ss-fill .ss-layer { color: #fff; transition-delay: 40ms; }
+  white-space: nowrap; pointer-events: none; color: #1d1d1f; }
 .ss-ic { flex: none; width: 26px; height: 26px; display: grid; }
 .ss-ic svg { display: block; width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .ss-ic .ss-body { fill: currentColor; }
 .ss-w, .ss-x { stroke-dasharray: 1 2; }
 .ss-tk { transition: opacity 140ms cubic-bezier(.4, 0, .2, 1); }
-.ss-name { font: 500 16px/20px Geist, system-ui, sans-serif; letter-spacing: -.011em; }
-.ss-val { margin-left: auto; display: flex; align-items: center; font: 500 16px/20px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ss-name { font: 600 16px/20px var(--ss-f); letter-spacing: -.01em; }
+.ss-val { margin-left: auto; display: flex; align-items: center; font: 500 16px/20px var(--ss-f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .ss-d { display: block; flex: none; height: 20px; width: 1ch; overflow: hidden; transition: width 260ms cubic-bezier(.16, 1, .3, 1); }
 .ss-d.is-off { width: 0; }
 .ss-st { display: block; white-space: pre; line-height: 20px; will-change: transform; }
 
-/* the preview line: the one lime point plays while a capsule is touched */
+/* the preview line: a neutral dot (the lime belongs to the touched capsule) that pulses while one is touched */
 .ss-prev { display: flex; align-items: center; gap: 8px; margin-top: 20px; height: 20px; }
-.ss-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: rgba(11, 12, 13, .2); transition: background-color 200ms cubic-bezier(.4, 0, .2, 1); }
-.ss-card.is-playing .ss-dot { background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16), 0 0 0 0 rgba(184, 255, 0, .8); animation: ss-pulse 1.3s cubic-bezier(.16, 1, .3, 1) infinite; }
-@keyframes ss-pulse { to { box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16), 0 0 0 8px rgba(184, 255, 0, 0); } }
+.ss-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #d2d2d7; transition: background-color 200ms cubic-bezier(.4, 0, .2, 1); }
+.ss-card.is-playing .ss-dot { background: #86868b; box-shadow: 0 0 0 0 rgba(134, 134, 139, .55); animation: ss-pulse 1.3s cubic-bezier(.16, 1, .3, 1) infinite; }
+@keyframes ss-pulse { to { box-shadow: 0 0 0 8px rgba(134, 134, 139, 0); } }
 .ss-card.is-still *, .ss-card.is-still *::before { transition: none !important; animation: none !important; }
-.ss-prev b { font-weight: 500; letter-spacing: -.011em; }
-.ss-stat { margin-left: auto; height: 20px; overflow: hidden; font-size: 13px; line-height: 20px; font-weight: 500; color: rgba(11, 12, 13, .66); }
+.ss-prev b { font-weight: 500; font-size: 14px; letter-spacing: -.01em; }
+.ss-stat { margin-left: auto; height: 20px; overflow: hidden; font-size: 13px; line-height: 20px; font-weight: 400; letter-spacing: -.006em; color: #6e6e73; }
 .ss-stat > span { display: block; transition: transform 200ms cubic-bezier(.5, 0, .75, 0); }
 .ss-stat > span > i { display: block; height: 20px; font-style: normal; text-align: right; }
 .ss-card.is-playing .ss-stat > span { transform: translateY(-20px); transition: transform 320ms cubic-bezier(.16, 1, .3, 1); }
@@ -92,6 +91,7 @@
 </style>
 <style>
   .ssw { display: grid; gap: 12px; justify-items: start; width: 448px; max-width: 100%; }
+  .ssw .kicker, .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
 </style>
 </head>
 <body>

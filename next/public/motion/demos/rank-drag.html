@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rank drag · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "rank-drag", "title": "Rank drag", "group": "studio", "added": "2026-11-20", "cat": "data", "order": 20,
+  "kind": "loop", "tone": "paper", "shot": 700,
+  "line": "row 1:1 from the grab · tilt ±2° from velocity · every row its own spring (response 0.34 s) · flick projects v × 0.099 s",
+  "summary": "Strata's launch backlog for Forma, ranked. Press a row's handle and it lifts to 1.03 on a spring under a deeper shadow; it follows the hand 1:1 from where you grabbed it, leaning a degree or two with its velocity and settling flat when you stop. Every other row has its own critically damped spring and makes way as the lifted row passes the midpoint between two slots, retargeting from where it is if you turn round. The rank numbers roll to their new values, past the top or bottom the row rubber-bands, and on release it settles into its slot from where it is with the velocity of the hand. A flick is projected before the slot is chosen, so a quick throw upward carries to the top. A press on a row still settling catches it. Keys pick up, move, drop and cancel, and touch lifts on a long press.",
+  "spec": [
+    ["Lift", "press 0.97 in about 100 ms; at 6 px of travel (or after a 380 ms hold without moving) the row lifts to 1.03 on a critically damped spring (response 0.3 s) and its shadow deepens with the same value; the one accent is its rank badge, lime with ink type"],
+    ["Track", "1:1 from the grab offset on the vertical axis with the pointer captured; past either end of the list the row follows through (x·D·0.55) / (D + 0.55·|x|), D = 120 px, never a hard stop"],
+    ["Tilt", "target = velocity / 1000 × 1.2°, clamped to ±2°, on a critically damped spring (response 0.22 s); velocity is read over the last 80 ms of moves, so the row goes level as soon as the hand rests"],
+    ["Make way", "a slot changes when the lifted row's position is more than 0.54 of a pitch from the slot it holds; each other row has its own y spring (response 0.34 s, damping 1.0) retargeted from its position and velocity on screen, so a reversal mid-drag never jumps"],
+    ["Rank", "each badge is a strip of 1 to 5 on its own spring (response 0.28 s) so the number rolls the shortest way through the values between; the top row's badge is lime at rest, the lifted row's while lifted, and the plain Next up label follows rank 1"],
+    ["Drop", "release velocity over the last 80 ms; under 140 px/s the slot is the one held, above it the slot is round((position + v × 0.099 s) / 60 px), d = 0.99; the spring starts at the velocity drawn on screen, and above 420 px/s it is a throw (damping 0.8, ω = max(2π / 0.34, 1.5·v / distance))"],
+    ["Catch", "a press on a row still settling freezes it where it is (zero drift) and a drag takes it from there; a press and release without moving sends it on to its slot"],
+    ["Keys", "Space or Enter picks up the focused row, Up and Down (Home, End) move it one slot with every row flowing on its spring, Space or Enter drops, Escape returns it to the slot it came from; a polite live line says it (Checkout moved to 2 of 5)"],
+    ["Touch", "the handle drags at once (touch-action none); anywhere else on the row a 380 ms hold lifts it, and a swipe before that scrolls the page as usual"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-20"],
+  "where": "A Strata board or a client's own admin where a short list is ranked by hand: a launch backlog, the order of products on Forma's shop page, which services Willow Counseling shows first, a brief's priorities.",
+  "rules": [
+    "Everything that moves is a spring started from the value and velocity on screen. The lifted row is the exception while the hand holds it: it is the hand's, 1:1 from the grab offset.",
+    "The other rows each have their own critically damped spring; a slot change only retargets them, so the list flows rather than snaps, and a reversal keeps their velocity.",
+    "The slot is chosen from the projected rest point (d = 0.99) when the hand was moving, from the held slot when it was not; the drop spring starts at the row's own velocity.",
+    "Damping 0.8 appears only after a throw. A slow drop, a catch, a key move and every other row are critically damped.",
+    "Past the first or last slot the row rubber-bands; it never stops hard. The raw, unbanded position is kept for the projection.",
+    "One lime accent (the lifted row's rank badge, or the top row's at rest); Next up is plain text. Rows are #f5f5f7 and whiten as they lift, resting fills are #e8e8ed, the handle is three lines. System face, Apple neutrals.",
+    "A row can always be grabbed: mid-settle, mid-throw, while others are still flowing. No state locks out the hand.",
+    "Keyboard and pointer share one code path and one live line. Escape puts the row back where it came from.",
+    "Under reduced motion drags still follow the pointer inside the list, but release, reorder and rank changes snap in place with a 160 ms cross-fade, with no springs, tilt or rubber band."
+  ],
+  "tags": ["reorder", "rank", "sortable list", "drag", "spring", "momentum", "flick", "rubber band", "keyboard", "backlog", "priorities"]
+}
+</script>
+<style data-code>
+/* Rank drag. A launch backlog, ranked by hand, in the system face with Apple's neutrals. The one accent is lime: the rank badge of the lifted row (of the top row at rest).
+   Next up is plain text. Position, scale, tilt, shadow weight (--l) and the rolling rank are set from script (render()): they are springs.
+   Easing for small UI feedback: ui (.4, 0, .2, 1); arrivals expo out (.16, 1, .3, 1); exits (.5, 0, .75, 0). */
+.rd-fit { position: relative; width: calc(440px * var(--s, 1)); height: calc(368px * var(--s, 1)); }
+.rd-card { --rd-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 440px; height: 368px; transform: scale(var(--s, 1)); transform-origin: 0 0;
+  font: 400 13px/18px var(--rd-f); letter-spacing: -.01em; color: #1d1d1f; -webkit-user-select: none; user-select: none; -webkit-font-smoothing: antialiased; }
+
+.rd-head { height: 76px; }
+.rd-kick { color: #6e6e73; }
+.rd-h { margin-top: 6px; font: 600 30px/34px var(--rd-f); letter-spacing: -.022em; }
+
+/* the list: every row is placed from script, so the rows are free to cross each other */
+.rd-list { position: relative; height: 292px; margin: 0; padding: 0; list-style: none; }
+.rd-row { position: absolute; left: 0; top: 0; z-index: 1; width: 100%; height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 8px 0 10px; border-radius: 14px; background: #f5f5f7;
+  box-shadow: 0 calc(14px * var(--l, 0)) calc(8px + 28px * var(--l, 0)) calc(-14px * var(--l, 0)) rgba(0, 0, 0, calc(.34 * var(--l, 0)));
+  cursor: grab; touch-action: pan-y; outline: none; will-change: transform; --l: 0; }
+.rd-row { background: color-mix(in srgb, #fff min(100%, calc(var(--l, 0) * 100%)), #f5f5f7); }          /* the row whitens as it lifts, on the same spring as its shadow */
+.rd-row:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+
+/* the rank: a strip of 1 to 5 behind a window, so it rolls. #e8e8ed at rest, lime for the one focus. */
+.rd-badge { position: relative; flex: none; width: 32px; height: 32px; border-radius: 10px; overflow: hidden; transform: translateZ(0); background: #e8e8ed; color: #1d1d1f;
+  font: 600 15px/32px var(--rd-f); letter-spacing: -.01em; font-variant-numeric: tabular-nums;
+  transition: background 200ms cubic-bezier(.4, 0, .2, 1), color 200ms cubic-bezier(.4, 0, .2, 1); }
+.rd-strip { display: block; will-change: transform; }
+.rd-strip i { display: block; height: 32px; text-align: center; font-style: normal; }
+.is-ink .rd-badge { background: #B8FF00; color: #1d1d1f; }
+
+.rd-name { flex: 1; min-width: 0; font: 500 16px/20px var(--rd-f); letter-spacing: -.011em; white-space: nowrap; }
+
+/* Next up: plain text on the top row, uncovered from the left on arrival and covered quickly on leaving, so two never show together. */
+.rd-next { flex: none; display: flex; align-items: center; color: #6e6e73; font-size: 13px; white-space: nowrap;
+  clip-path: inset(0 100% 0 0); transition: clip-path 140ms cubic-bezier(.5, 0, .75, 0); }
+.is-next .rd-next { clip-path: inset(0); transition: clip-path 380ms cubic-bezier(.16, 1, .3, 1) 120ms; }
+
+.rd-own { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: #e8e8ed;
+  font: 500 11px/1 var(--rd-f); letter-spacing: 0; color: #6e6e73; }
+
+/* the handle: three lines; a hit area wider than the glyph, and it drags at once on touch */
+.rd-grip { position: relative; flex: none; width: 28px; height: 36px; display: grid; place-items: center; color: #86868b; touch-action: none; cursor: grab;
+  transition: color 160ms cubic-bezier(.4, 0, .2, 1); }
+.rd-grip::before { content: ''; position: absolute; inset: -4px -2px; }
+.rd-row:hover .rd-grip, .is-lift .rd-grip { color: #6e6e73; }
+.rd-grip svg { display: block; width: 16px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+
+@media (prefers-reduced-motion: reduce) { .rd-badge, .rd-grip, .rd-next { transition-duration: 1ms !important; transition-delay: 0s !important; } }
+</style>
+<style>
+  /* the harness's hint bar speaks the same face */
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="rd-fit" id="rd-fit">
+ <section class="rd-card" id="rd-card" aria-label="Forma launch backlog, ranked">
+  <header class="rd-head"><p class="rd-kick">Strata · Forma launch</p><h2 class="rd-h">Backlog</h2></header>
+  <ol class="rd-list" id="rd-list" role="list" aria-describedby="rd-help">
+   <li class="rd-row" data-id="hero" data-name="Hero copy" data-own="Ava" role="listitem" aria-setsize="5">
+    <span class="rd-badge" aria-hidden="true"><span class="rd-strip"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></span></span>
+    <span class="rd-name">Hero copy</span>
+    <span class="rd-next" aria-hidden="true">Next up</span>
+    <span class="rd-own" aria-hidden="true">AV</span>
+    <span class="rd-grip" aria-hidden="true"><svg viewBox="0 0 16 18"><path d="M2 4.500h12M2 9h12M2 13.500h12"/></svg></span>
+   </li>
+   <li class="rd-row" data-id="grid" data-name="Product grid" data-own="Sam" role="listitem" aria-setsize="5">
+    <span class="rd-badge" aria-hidden="true"><span class="rd-strip"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></span></span>
+    <span class="rd-name">Product grid</span>
+    <span class="rd-next" aria-hidden="true">Next up</span>
+    <span class="rd-own" aria-hidden="true">SM</span>
+    <span class="rd-grip" aria-hidden="true"><svg viewBox="0 0 16 18"><path d="M2 4.500h12M2 9h12M2 13.500h12"/></svg></span>
+   </li>
+   <li class="rd-row" data-id="checkout" data-name="Checkout" data-own="Sera" role="listitem" aria-setsize="5">
+    <span class="rd-badge" aria-hidden="true"><span class="rd-strip"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></span></span>
+    <span class="rd-name">Checkout</span>
+    <span class="rd-next" aria-hidden="true">Next up</span>
+    <span class="rd-own" aria-hidden="true">SE</span>
+    <span class="rd-grip" aria-hidden="true"><svg viewBox="0 0 16 18"><path d="M2 4.500h12M2 9h12M2 13.500h12"/></svg></span>
+   </li>
+   <li class="rd-row" data-id="care" data-name="Care guide" data-own="Noor" role="listitem" aria-setsize="5">
+    <span class="rd-badge" aria-hidden="true"><span class="rd-strip"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></span></span>
+    <span class="rd-name">Care guide</span>
+    <span class="rd-next" aria-hidden="true">Next up</span>
+    <span class="rd-own" aria-hidden="true">NO</span>
+    <span class="rd-grip" aria-hidden="true"><svg viewBox="0 0 16 18"><path d="M2 4.500h12M2 9h12M2 13.500h12"/></svg></span>
+   </li>
+   <li class="rd-row" data-id="e404" data-name="404 page" data-own="Li" role="listitem" aria-setsize="5">
+    <span class="rd-badge" aria-hidden="true"><span class="rd-strip"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></span></span>
+    <span class="rd-name">404 page</span>
+    <span class="rd-next" aria-hidden="true">Next up</span>
+    <span class="rd-own" aria-hidden="true">LI</span>
+    <span class="rd-grip" aria-hidden="true"><svg viewBox="0 0 16 18"><path d="M2 4.500h12M2 9h12M2 13.500h12"/></svg></span>
+   </li>
+  </ol>
+  <p class="sr-only" id="rd-help">Ranked list. Space picks up the focused task, the arrow keys move it, Space drops it, Escape puts it back.</p>
+  <p class="sr-only" id="rd-msg" role="status" aria-live="polite"></p>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag a row by its handle (on touch, hold a row), flick one to the top, or catch one as it settles. Keys: arrows to the row, Space to pick up, arrows to move, Space to drop, Escape to cancel</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Rank drag. Every row has a y spring; a lifted row has the hand instead. Rows also have springs for lift (shadow and scale), press, tilt and the rank strip.
+   Everything is in list pixels (the card may be drawn scaled: the pointer is divided by the scale). Release projects a flick with d = 0.99. */
+const RD = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = 2 * Math.PI;
+  const OM = TAU / 0.34, OML = TAU / 0.3, OMR = TAU / 0.28, OMT = TAU / 0.22, OMP = TAU / 0.1;   // response in seconds: rows, lift, rank roll, tilt, press
+  const LOOK = 0.99 / (1 - 0.99) / 1000;                                    // 0.099 s: where a release coasts to (d = 0.99, the snappy one)
+  const W = 440, RH = 52, GAP = 8, P = RH + GAP, N = 5, TOP = (N - 1) * P;  // row width and height, the pitch, the number of rows, y of the last slot
+  const SLOP = 6, HOLD = 380, FLICK = 140, THROW = 420, DB = 120;           // px before a drag, ms of a long press, px/s that moves the projected slot, px/s that is a throw, rubber-band dimension
+  const LIFT = 0.03, TILT = 1.2, TMAX = 2, POSEY = 1.3 * P, POSET = -1.4;   // lift scale, degrees per 1000 px/s, tilt cap, the key pose (a row held between two slots)
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const $ = (id) => document.getElementById('rd-' + id);
+  const fit = $('fit'), list = $('list'), msg = $('msg');
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) when critically damped, the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OM, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+  const to = (s, T, v, w, z, now) => { if (reduced || now) { s.x = s.T = T; s.v = 0; s.on = false; } else aim(s, T, v, w, z); };   // no springs under reduced motion
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                      // rubber band, Apple's, constant 0.55
+  const rbInv = (r, D) => { r = Math.min(r, D * 0.9); return (r * D) / (0.55 * (D - r)); };
+  const band = (v, lo, hi, D) => (v < lo ? lo - rb(lo - v, D) : v > hi ? hi + rb(v - hi, D) : v);
+  const unband = (d, lo, hi, D) => (d < lo ? lo - rbInv(lo - d, D) : d > hi ? hi + rbInv(d - hi, D) : d);
+
+  /* the rows */
+  const R = Array.from(list.children).map((el, i) => ({
+    el, i, id: el.dataset.id, name: el.dataset.name, own: el.dataset.own, strip: el.querySelector('.rd-strip'),
+    y: mk(i * P), l: mk(0), pr: mk(0), tl: mk(0), rk: mk(i), rank: i, slotT: i, rkT: i, ink: false, next: false, tf: '', lv: NaN, kv: '', lab: '',
+  }));
+  const KEY = R.slice(), byId = Object.fromEntries(R.map((r) => [r.id, r])), byEl = new Map(R.map((r) => [r.el, r]));
+  let order = R.slice(), hr = null, hmode = null, ins = 0, orig = 0, held = null, ptr = null, raf = 0, last = 0, OX = 0, OY = 0, sc = 1, cur = R[0], nudgeT = 0;
+  const say = (t) => { msg.textContent = t; };
+
+  /* where each row is: the logical order, with the lifted row put at the slot it hovers over */
+  const live = () => { const o = order.filter((r) => r !== hr); if (hr) o.splice(ins, 0, hr); return o; };
+  function place(r, i, now) {
+    if (r.rkT !== i) {
+      if (reduced && r.el.animate && !now) r.el.animate([{ opacity: 0.35 }, { opacity: 1 }], { duration: 160, easing: 'cubic-bezier(.4, 0, .2, 1)' });
+      r.rkT = i; to(r.rk, i, r.rk.v, OMR, 1, now);
+    }
+    r.rank = i;
+    if (r === hr && (hmode === 'ptr' || hmode === 'pose')) return;             // the hand (or the pose) has this one
+    if (r.slotT !== i) { r.slotT = i; to(r.y, i * P, r.y.v, OM, 1, now); }
+  }
+  function flags() {                                                          // one ink badge and one Next up, always
+    for (const r of R) {
+      const ink = hr ? r === hr : r.rank === 0, next = r.rank === 0;
+      if (ink !== r.ink) { r.ink = ink; r.el.classList.toggle('is-ink', ink); }
+      if (next !== r.next) { r.next = next; r.el.classList.toggle('is-next', next); }
+      const lab = `${r.name}, ${r.rank + 1} of ${N}`;
+      if (lab !== r.lab) { r.lab = lab; r.el.setAttribute('aria-label', lab); r.el.setAttribute('aria-posinset', r.rank + 1); }
+    }
+  }
+  function layout(now) { live().forEach((r, i) => place(r, i, now)); flags(); kick(); }
+
+  /* draw everything from the springs */
+  function render(r) {
+    const s = 1 + LIFT * r.l.x - LIFT * r.pr.x;
+    const tf = `translate3d(0, ${r.y.x.toFixed(2)}px, 0) rotate(${r.tl.x.toFixed(3)}deg) scale(${s.toFixed(4)})`;
+    if (tf !== r.tf) { r.el.style.transform = tf; r.tf = tf; }
+    const l = +clamp(r.l.x, 0, 1.2).toFixed(3);
+    if (l !== r.lv) { r.el.style.setProperty('--l', l); r.el.style.zIndex = l > 0.004 ? 5 : 1; r.lv = l; }
+    const k = (-r.rk.x * 32).toFixed(2);
+    if (k !== r.kv) { r.strip.style.transform = `translate3d(0, ${k}px, 0)`; r.kv = k; }
+  }
+
+  /* velocity over the last 80 ms of moves: rows are [t, drawn y, raw y]; 0 if the hand rested */
+  function vel(rows, t, j) {
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return 0;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? 0 : ((b[j] - a[j]) / dt) * 1000;
+  }
+
+  /* motion */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let lv = false;
+    const hand = held && held.mode === 'drag' ? held : null;
+    for (const r of R) {
+      if (!(r === hr && (hmode === 'ptr' || hmode === 'pose'))) lv = step(r.y, dt, 0.05, 3) || lv;
+      let tT = 0;                                                             // the lean follows velocity, and only the lifted row leans
+      if (!reduced && r === hr) tT = hmode === 'pose' ? POSET : hand ? clamp((vel(hand.rows, now, 1) / 1000) * TILT, -TMAX, TMAX) : hmode === 'kb' ? clamp((r.y.v / 1000) * TILT, -TMAX, TMAX) : 0;
+      if (r.tl.T !== tT) aim(r.tl, tT, r.tl.v, OMT, 1);
+      lv = step(r.l, dt, 0.002, 0.05) || lv;
+      lv = step(r.pr, dt, 0.002, 0.05) || lv;
+      lv = step(r.tl, dt, 0.005, 0.05) || lv;
+      lv = step(r.rk, dt, 0.002, 0.05) || lv;
+      render(r);
+    }
+    if (hand || (hmode === 'kb' && hr && hr.y.on)) lv = true;
+    if (lv) kick();
+  }
+  // ω for a throw: a release that is heading for the target decelerates from the first frame (ω ≥ 1.5·v / distance), so the overshoot stays small
+  function pick(s, T, v, thr) {
+    let w = OM;
+    if (thr) { const D = T - s.x; if (v * D > 0) w = Math.min(40, Math.max(OM, (1.5 * v) / D)); }
+    return w;
+  }
+
+  /* lifting and dropping, shared by the hand and the keys */
+  function lift(r, mode) {
+    hr = r; hmode = mode; r.slotT = -1;
+    to(r.l, 1, r.l.v, OML, 1); to(r.pr, 0, r.pr.v, OMP, 1);
+    r.el.classList.add('is-lift');
+    layout();
+  }
+  function drop(vd = 0, thr = false) {                                       // the row goes to the slot it hovers over, from where it is and at the velocity it has
+    const r = hr;
+    if (!r) return;
+    order = live();
+    const T = ins * P;
+    hr = null; hmode = null; r.slotT = -1;
+    r.el.classList.remove('is-lift');
+    layout();
+    to(r.y, T, vd, pick(r.y, T, vd, thr), thr ? 0.8 : 1);
+    to(r.l, 0, r.l.v, OML, 1);
+    kick();
+  }
+
+  /* the pose: a row lifted between two slots, the others parted around it. The thumbnail's frame; a hand takes it over, anything else lets it go. */
+  function pose() {
+    held = null; ptr = null; clearTimeout(nudgeT);
+    for (const r of R) r.el.classList.remove('is-lift');
+    order = KEY.slice(); hr = R[2]; hmode = 'pose'; ins = 1; hr.slotT = -1; hr.el.classList.add('is-lift');
+    layout(true);
+    hr.y.x = hr.y.T = POSEY; hr.l.x = hr.l.T = 1; hr.tl.x = hr.tl.T = reduced ? 0 : POSET;
+    for (const r of R) { r.y.v = r.l.v = r.tl.v = 0; r.y.on = r.l.on = r.tl.on = r.pr.on = false; if (r !== hr) { r.l.x = r.l.T = 0; r.tl.x = r.tl.T = 0; } r.pr.x = r.pr.T = 0; render(r); }
+    flags();
+  }
+  const endPose = () => { if (hmode === 'pose') drop(0, false); };
+
+  /* one hand: a pointer or the ghost, both through down / move / up. x and y are client px, t is ms. */
+  function measure() {
+    const r = list.getBoundingClientRect();
+    OX = r.left; OY = r.top; sc = r.width / W || 1;
+  }
+  const local = (x, y) => ({ x: (x - OX) / sc, y: (y - OY) / sc });
+  function commit(h, p) {                                                    // the press becomes a drag: 1:1 from here, so the row does not jump by the slop
+    const r = h.row;
+    clearTimeout(h.timer);
+    h.mode = 'drag'; h.ay = p.y;
+    r.y.on = false; r.y.v = 0;
+    h.ry0 = unband(r.y.x, 0, TOP, DB); h.ry = h.ry0;
+    ins = order.indexOf(r);
+    lift(r, 'ptr');
+  }
+  function down(x, y, t, ghost = false, target = null, type = 'mouse') {
+    if (held) up(t, true);
+    if (hmode === 'kb') { say(`Dropped, ${hr.name} is ${ins + 1} of ${N}`); drop(hr.y.v, false); }
+    measure();
+    const p = local(x, y);
+    const r = typeof target === 'string' ? byId[target] : target && target.closest ? byEl.get(target.closest('.rd-row')) : null;
+    if (!r) return;
+    if (hmode === 'pose' && r !== hr) endPose();
+    const h = held = { row: r, x0: p.x, y0: p.y, mode: 'wait', ghost, type, handle: ghost || !!(target && target.closest && target.closest('.rd-grip')), rows: [[t, r.y.x, r.y.x]], caught: false, timer: 0, ay: 0, ry0: 0, ry: 0, lastP: p };
+    h.lp = type === 'touch' && !h.handle;                                     // anywhere but the handle, a touch has to hold (a swipe is the page's)
+    if (hmode === 'pose' && r === hr) { hmode = 'ptr'; h.mode = 'drag'; h.ay = p.y; h.ry0 = r.y.x; h.ry = r.y.x; return; }   // taking the pose over: it is already lifted
+    cur = r; syncTab();
+    if (r.y.on) { r.y.on = false; r.y.v = 0; h.caught = true; }               // a row in flight is caught where it is
+    to(r.pr, 1, r.pr.v, OMP, 1);
+    kick();
+    h.timer = setTimeout(() => { if (held === h && h.mode === 'wait') commit(h, h.lastP); }, HOLD);
+  }
+  function move(x, y, t) {
+    const h = held;
+    if (!h || h.mode === 'off') return;
+    const p = local(x, y), r = h.row;
+    if (h.mode === 'wait') {
+      h.lastP = p;
+      const d = Math.hypot(p.x - h.x0, p.y - h.y0);
+      if (h.lp) { if (d > 8) { clearTimeout(h.timer); h.mode = 'off'; to(r.pr, 0, r.pr.v, OMP, 1); kick(); } return; }
+      if (d < SLOP) return;
+      commit(h, p);
+    }
+    h.ry = h.ry0 + (p.y - h.ay);
+    const yb = reduced ? clamp(h.ry, 0, TOP) : band(h.ry, 0, TOP, DB);
+    r.y.x = yb;
+    h.rows.push([t, yb, h.ry]);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    const f = clamp(yb / P, 0, N - 1);                                        // a slot changes a little past the midpoint, so the rows do not flutter on it
+    if (Math.abs(f - ins) > 0.54) { ins = clamp(Math.round(f), 0, N - 1); layout(); }
+    render(r);
+    kick();
+  }
+  function up(t, cancel = false) {
+    const h = held;
+    if (!h) return;
+    held = null;
+    clearTimeout(h.timer);
+    const r = h.row;
+    if (h.mode !== 'drag') {                                                 // a tap, a cancelled hold or a catch
+      to(r.pr, 0, r.pr.v, OMP, 1);
+      if (h.caught) to(r.y, r.rank * P, 0, OM, 1);                            // let go of a caught row without moving it: on to its slot
+      kick();
+      return;
+    }
+    const vd = cancel ? 0 : vel(h.rows, t, 1), vr = cancel ? 0 : vel(h.rows, t, 2);   // as drawn (the spring starts here), and the hand's (what is projected)
+    if (Math.abs(vr) > FLICK) ins = clamp(Math.round((h.ry + vr * LOOK) / P), 0, N - 1);
+    drop(vd, Math.abs(vr) > THROW);
+    say(`${r.name} moved to ${ins + 1} of ${N}`);
+  }
+  const release = () => { if (held && held.ghost) up(performance.now()); };
+
+  list.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null) return;
+    if (!e.target.closest('.rd-row')) return;
+    ptr = e.pointerId;
+    try { list.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    down(e.clientX, e.clientY, e.timeStamp, false, e.target, e.pointerType);
+  });
+  list.addEventListener('pointermove', (e) => { if (e.pointerId === ptr) move(e.clientX, e.clientY, e.timeStamp); });
+  const pend = (cancel) => (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.timeStamp, cancel); };
+  list.addEventListener('pointerup', pend(false));
+  list.addEventListener('pointercancel', pend(true));
+  list.addEventListener('touchmove', (e) => { if (held && held.mode === 'drag' && e.cancelable) e.preventDefault(); }, { passive: false });
+  list.addEventListener('contextmenu', (e) => { if (held && held.type === 'touch') e.preventDefault(); });
+  list.addEventListener('dragstart', (e) => e.preventDefault());
+
+  /* keys: the focused row is picked up with Space, moved with the arrows (every row flows on its spring), dropped with Space, Escape puts it back */
+  function syncTab() { for (const r of R) r.el.tabIndex = r === cur ? 0 : -1; }
+  function kbMove(to_) {
+    const n = clamp(to_, 0, N - 1);
+    if (n === ins) {                                                         // against an end: a small nudge that returns
+      say(`${hr.name} is already ${ins === 0 ? 'first' : 'last'}`);
+      if (!reduced) { const d = ins === 0 ? -1 : 1; aim(hr.y, ins * P + d * 12, hr.y.v + d * 120, TAU / 0.16, 1); kick(); clearTimeout(nudgeT); nudgeT = setTimeout(() => { if (hmode === 'kb' && hr) { aim(hr.y, ins * P, hr.y.v, OM, 1); kick(); } }, 130); }
+      return;
+    }
+    ins = n; layout();
+    say(`${hr.name} moved to ${ins + 1} of ${N}`);
+  }
+  list.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const r = byEl.get(e.target.closest ? e.target.closest('.rd-row') : null);
+    if (!r) return;
+    if (hmode === 'pose') endPose();
+    const key = e.key, act = key === ' ' || key === 'Enter', dy = key === 'ArrowDown' ? 1 : key === 'ArrowUp' ? -1 : 0;
+    if (hmode === 'kb' && hr === r) {
+      if (act) { e.preventDefault(); say(`Dropped. ${r.name} is ${ins + 1} of ${N}`); drop(r.y.v, false); }
+      else if (key === 'Escape') { e.preventDefault(); ins = orig; layout(); say(`Cancelled. ${r.name} is back at ${orig + 1} of ${N}`); drop(r.y.v, false); }
+      else if (dy) { e.preventDefault(); kbMove(ins + dy); }
+      else if (key === 'Home') { e.preventDefault(); kbMove(0); }
+      else if (key === 'End') { e.preventDefault(); kbMove(N - 1); }
+      return;
+    }
+    if (hr) return;
+    if (act) { e.preventDefault(); orig = ins = order.indexOf(r); lift(r, 'kb'); say(`Picked up ${r.name}, ${ins + 1} of ${N}. Arrow keys move it, Space drops it, Escape cancels.`); return; }
+    const k = order.indexOf(r), n = dy ? k + dy : key === 'Home' ? 0 : key === 'End' ? N - 1 : -1;
+    if (n >= 0 && n < N && n !== k) { e.preventDefault(); cur = order[n]; syncTab(); cur.el.focus(); }
+  });
+  list.addEventListener('focusin', (e) => { const r = byEl.get(e.target.closest ? e.target.closest('.rd-row') : null); if (r) { cur = r; syncTab(); } });
+  list.addEventListener('focusout', (e) => { if (hmode === 'kb' && !list.contains(e.relatedTarget)) drop(0, false); });
+  new ResizeObserver(() => measure()).observe(fit);
+  addEventListener('scroll', measure, { passive: true });
+
+  syncTab(); flags(); measure(); pose();
+  return {
+    list, down, move, up, release, measure, pose,
+    get held() { return held; }, get posed() { return hmode === 'pose'; }, get scale() { return sc; }, get order() { return order.map((r) => r.id); },
+    pos(id) { const r = byId[id]; return { y: r.y.x, v: r.y.v, tl: r.tl.x, l: r.l.x, rk: r.rk.x, rank: r.rank, ink: r.ink, next: r.next }; },
+    handle(id) { measure(); return { x: OX + (W - 24) * sc, y: OY + (byId[id].y.x + RH / 2) * sc }; },   // client px of a row's handle, where it is now
+    toKey() {                                                                // one step towards the key order, by springs; true when there
+      release();
+      if (held) return false;
+      if (hmode === 'kb') drop(0, false);
+      endPose();
+      if (R.some((r) => r.y.on)) return false;
+      if (order.some((r, i) => r !== KEY[i])) { order = KEY.slice(); layout(); return false; }
+      return true;
+    },
+    reset() { pose(); say(''); },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('rd-fit');
+  // the card is drawn at 440 × 368 and scaled to the room it is given (about 80% of the width, 1.5× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.8 * W / 440, (H - 2 * pad - 36 - ui) / 368, 1.5));
+    fit.style.setProperty('--s', s.toFixed(4));
+    RD.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+  // the ghost takes hold of a row's handle and moves its hand through segments [dy list px, ms, kind] by RD.down / move / up, as a hand does.
+  // 'flick' accelerates and lets go at speed; 'ease' arrives, rests and lets go slowly
+  async function hand(my, id, segs) {
+    const c = RD.handle(id), s = RD.scale;
+    if (!(await QM.ghostTo(c.x, c.y, 760))) throw 0;
+    await gap(my, 170);
+    RD.down(c.x, c.y, performance.now(), true, id);
+    let y0 = c.y, kind = 'ease';
+    for (const [dy, ms, k] of segs) {
+      kind = k;
+      const t0 = performance.now();
+      for (;;) {
+        await raf();
+        if (my !== epoch) throw 0;
+        const now = performance.now(), p = Math.min(1, (now - t0) / ms), e = k === 'flick' ? Math.pow(p, 1.6) : mv(p), y = y0 + dy * s * e;
+        QM.ghostAt(c.x, y); RD.move(c.x, y, now);
+        if (p >= 1) break;
+      }
+      y0 += dy * s;
+    }
+    if (kind !== 'flick') await gap(my, 190);
+    RD.up(performance.now());
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5500 : 1800);
+      QM.ghostShow();
+      if (RD.posed) { await hand(my, 'checkout', [[36, 800, 'ease']]); await gap(my, 1300); }   // takes the pose over and sets it down in its own slot
+      else for (let i = 0; i < 40 && !RD.toKey(); i++) await gap(my, 200);      // the key order, wherever a hand left the rows
+      for (;;) {
+        await hand(my, 'checkout', [[-140, 280, 'flick']]);                      // a flick up: the top, past the top a little, and back
+        await gap(my, 1700);
+        await hand(my, 'e404', [[-64, 820, 'ease']]);                            // 404 page up one
+        await gap(my, 1500);
+        await hand(my, 'checkout', [[100, 800, 'ease'], [-50, 460, 'ease'], [70, 560, 'ease']]);   // Checkout down two, turning back once on the way
+        await gap(my, 1300);
+        await hand(my, 'care', [[-64, 820, 'ease']]);                            // Care guide up one: the list is as it began
+        await gap(my, 1300);
+        await hand(my, 'hero', [[-46, 640, 'ease']]);                            // pulled past the top: it resists, then returns
+        await gap(my, 2200);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) RD.release(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); RD.release(); }
+  if (!QM.tile && !reduced) {
+    const idle = () => RD.held || RD.list.matches(':hover');
+    const touch = (e) => {
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); RD.reset(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

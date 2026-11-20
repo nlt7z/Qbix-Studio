@@ -8,17 +8,17 @@
 {
   "id": "picker-wheel", "title": "Picker wheel", "group": "studio", "added": "2026-11-19", "cat": "inputs", "order": 10,
   "kind": "loop", "tone": "paper", "shot": 800,
-  "line": "3 drums · R 96 px, 21.5° a row · release projects v × 0.5 s (d 0.998) · spring response 0.4 s",
-  "summary": "A booking card for an intro call with Qbix: three real drums (day, hour, minute), each row sitting on a cylinder with rotateX and translateZ under one perspective, so rows bend away and shrink towards the top and bottom and their ink steps down with the angle. A white pill across the middle holds the chosen row at weight 500. The drum follows the pointer 1:1 from where it was grabbed; on release the velocity is projected with Apple's deceleration and handed to a spring that lands on the nearest row, so a long flick spins many rows and eases in. Past the first or last row the drum rubber-bands. The summary line below rolls its changed words once a wheel has settled.",
+  "line": "3 drums · R 96 px, 21.5° a row · release projects v × 0.5 s (d 0.998) · spring response 0.4 s · lime pill",
+  "summary": "A booking card for an intro call with Qbix: three real drums (day, hour, minute), each row sitting on a cylinder with rotateX and translateZ under one perspective, so rows bend away and shrink towards the top and bottom and their ink steps down with the angle. A pale wash across the middle (the way Apple's pickers mark the choice) holds the chosen row at weight 500. The drum follows the pointer 1:1 from where it was grabbed; on release the velocity is projected with Apple's deceleration and handed to a spring that lands on the nearest row, so a long flick spins many rows and eases in. Past the first or last row the drum rubber-bands. The summary line below rolls its changed words once a wheel has settled.",
   "spec": [
     ["Drum", "rows on a cylinder: radius 96 px, 21.5° (0.375 rad) between rows, so a row is 36 px at the front; one perspective of 560 px on the wheel, the drum pushed back by its radius so the front row is at scale 1; the drum is turned by one rotateX, the rows never move"],
-    ["Ink", "alpha (1 − d / 3.1)^1.5 by distance d in rows (1, .56, .21, .03), hidden past 3.1; the row in the pill is weight 500 and scales to 1.1, hand-over at d = 0.5"],
+    ["Ink", "#1d1d1f at alpha (1 − d / 3.1)^1.5 by distance d in rows (1, .56, .21, .03), hidden past 3.1; the row in the wash (rgba(0, 0, 0, .05), radius 10) is weight 500 and scales to 1.1, hand-over at d = 0.5"],
     ["Drag", "1:1 from the grab point, 6 px of travel before it is a drag (so a tap stays a tap); pointer capture on commit; velocity from the last 80 ms"],
     ["Release", "target = round(position + v × 0.499 s), 0.499 = d / (1 − d) / 1000 for d = 0.998; the spring starts at the release velocity"],
     ["Spring", "critically damped, x(t) = T + (A + B·t)·e^(−ωt); ω = 2π / 0.4 s for taps and keys; a throw uses ω = 1.5·v / distance (floor 3, cap 15.7) so it starts decelerating and never crosses the target"],
     ["Ends", "past row 0 or the last row the drum is shown through (x·D·0.55) / (D + 0.55·|x|), D = 168 px; a throw into the end overshoots on the spring and comes back; a key at the end nudges 0.3 row"],
     ["Input", "wheel notch (≥ 50 px) steps a row, a trackpad stream moves the drum and settles 90 ms after the last event; arrows step (Up is the next row), Page steps 3, Home and End jump, Left and Right move between wheels; each wheel is a spinbutton"],
-    ["Summary", "day, hour and minute roll under a clip (420 ms expo out, new from below when the value rose) only when their wheel settles; Book call rolls to Booked and back"],
+    ["Summary", "day, hour and minute roll under a clip (420 ms expo out, new from below when the value rose) only when their wheel settles; Book call rolls to Booked and back (the pill stays lime)"],
     ["Loop", "the ghost flicks the day wheel, drags the hour slowly, taps a minute row, books; it uses the same down / move / up as a hand, yields to a real pointer and resumes after 4.5 s"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-19"],
@@ -29,7 +29,7 @@
     "A throw's spring is chosen from its own velocity and distance: it starts by slowing down, never speeds up after the finger leaves and never crosses the target, except against an end, where it overshoots into the rubber band and returns.",
     "The rubber band is applied to the shown position only; the raw position keeps the finger's travel, so the way back is the same path.",
     "The summary and aria values change when a wheel has settled, not while it spins; text rolls inside a clip, nothing fades.",
-    "One ink fill (Book call); the chosen row is ink type in a white pill; one lime point.",
+    "One lime accent: the Book call pill, with #1d1d1f type (the Sera dot is neutral grey). The chosen row is ink type in a pale wash. System face, Apple neutrals, numbers tabular in the same face.",
     "Each wheel is role=spinbutton with aria-valuemin, aria-valuemax, aria-valuenow and aria-valuetext; Up increases, as in a native time field.",
     "Under reduced motion the drums still follow the pointer but release snaps to the nearest row with no spring or rubber band, and the summary swaps with a short cross-fade."
   ],
@@ -37,33 +37,33 @@
 }
 </script>
 <style data-code>
-/* Picker wheel. White surfaces with soft rings; the one ink fill is Book call, one lime point. Easings: expo out (.16,1,.3,1), ui (.4,0,.2,1).
-   The drum's transform and every row's opacity are set from script (draw()). */
-.pw-card { width: 380px; max-width: 100%; padding: 22px 24px 24px; background: #fff; color: #0B0C0D; border-radius: 20px;
-  box-shadow: 0 0 0 1px rgba(11, 12, 13, .07), 0 12px 32px -16px rgba(11, 12, 13, .18);
-  font: 400 14px/20px Geist, system-ui, sans-serif; letter-spacing: -.006em; user-select: none; -webkit-user-select: none; }
+/* Picker wheel. A white card in the system face with Apple's neutrals; the one accent is lime: the Book call pill. The selection is a pale wash across the middle,
+   as in Apple's pickers. Easings: expo out (.16,1,.3,1), ui (.4,0,.2,1). The drum's transform and every row's opacity are set from script (draw()). */
+.pw-card { --pw-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  width: 380px; max-width: 100%; padding: 24px 24px 24px; background: #fff; color: #1d1d1f; border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+  font: 400 15px/21px var(--pw-f); letter-spacing: -.01em; user-select: none; -webkit-user-select: none; -webkit-font-smoothing: antialiased; }
 .pw-card p, .pw-card h3 { margin: 0; }
 :where(.pw-card button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
-.pw-t { font: 300 24px/28px Outfit, Geist, sans-serif; letter-spacing: -.03em; }
-.pw-sub { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: rgba(11, 12, 13, .66); font-size: 13px; line-height: 20px; font-weight: 500; }
-.pw-pt { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .16); }
+.pw-t { font: 600 24px/28px var(--pw-f); letter-spacing: -.022em; }
+.pw-sub { display: flex; align-items: center; gap: 7px; margin-top: 4px; color: #6e6e73; font-size: 13px; line-height: 20px; font-weight: 400; letter-spacing: -.006em; }
+.pw-pt { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #86868b; }
 
-/* the picker: three wheels and one pill across the middle */
+/* the picker: three wheels and one wash across the middle */
 .pw-picker { position: relative; height: 168px; margin-top: 14px; display: grid; grid-template-columns: 136px 1fr 56px 14px 56px; padding: 0 18px 0 24px; }
-.pw-pill { position: absolute; left: 0; right: 0; top: 50%; height: 40px; margin-top: -20px; border-radius: 12px; background: #fff; pointer-events: none;
-  box-shadow: 0 0 0 1px rgba(11, 12, 13, .1), 0 5px 14px -6px rgba(11, 12, 13, .26);
-  transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
-.pw-picker.is-press .pw-pill { transform: scale(.985, .92); }
+.pw-pill { position: absolute; left: 0; right: 0; top: 50%; height: 40px; margin-top: -20px; border-radius: 10px; background: rgba(0, 0, 0, .05); pointer-events: none;
+  transition: transform 100ms cubic-bezier(.4, 0, .2, 1), background 100ms cubic-bezier(.4, 0, .2, 1); }
+.pw-picker.is-press .pw-pill { transform: scale(.985, .92); background: #e8e8ed; }
 .pw-colon { grid-column: 4; grid-row: 1; align-self: center; position: relative; z-index: 1; height: 36px; display: grid; place-items: center; pointer-events: none;
-  font: 500 22px/36px Geist, system-ui, sans-serif; padding-bottom: 3px; }
+  font: 500 21px/36px var(--pw-f); padding-bottom: 3px; }
 
 /* a wheel: one perspective; the drum inside it is turned, the rows sit on it */
-.pw-wheel { grid-row: 1; grid-column: var(--c); position: relative; height: 168px; overflow: hidden; perspective: 560px; border-radius: 12px; cursor: grab; touch-action: none; outline: none; }
+.pw-wheel { grid-row: 1; grid-column: var(--c); position: relative; height: 168px; overflow: hidden; perspective: 560px; border-radius: 10px; cursor: grab; touch-action: none; outline: none; }
 .pw-wheel.is-drag, .pw-wheel.is-drag * { cursor: grabbing; }
-.pw-wheel:focus-visible { outline: 2px solid #0B0C0D; outline-offset: -2px; }
+.pw-wheel:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
 .pw-drum { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
 .pw-row { position: absolute; left: 0; right: 0; top: 50%; height: 36px; margin-top: -18px; display: flex; align-items: center; justify-content: center;
-  backface-visibility: hidden; white-space: nowrap; font: 400 20px/36px Geist, system-ui, sans-serif; letter-spacing: -.011em; font-variant-numeric: tabular-nums; }
+  backface-visibility: hidden; white-space: nowrap; font: 400 20px/36px var(--pw-f); letter-spacing: -.016em; font-variant-numeric: tabular-nums; }
 .pw-row > span { display: block; }
 .pw-row.is-sel { font-weight: 500; }
 .pw-wheel[data-align="end"] .pw-row { justify-content: flex-end; padding-right: 7px; }
@@ -72,25 +72,26 @@
 .pw-wheel[data-align="start"] .pw-row > span { transform-origin: 0 50%; }
 
 /* the summary: changed words roll under a clip (script: roll()) */
-.pw-sum { display: flex; align-items: baseline; margin-top: 14px; height: 18px; font-size: 13px; line-height: 18px; color: rgba(11, 12, 13, .66); white-space: nowrap; }
-.pw-m { font: 400 13px/18px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: #0B0C0D; }
+.pw-sum { display: flex; align-items: baseline; margin-top: 14px; height: 18px; font-size: 13px; line-height: 18px; letter-spacing: -.006em; font-variant-numeric: tabular-nums; color: #6e6e73; white-space: nowrap; }
+.pw-m { font: 500 13px/18px var(--pw-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; color: #1d1d1f; }
 .pw-roll { display: inline-grid; overflow: hidden; vertical-align: top; }
 .pw-roll > b { grid-area: 1 / 1; font-weight: inherit; white-space: nowrap; }
-.pw-sep { margin: 0 8px; color: rgba(11, 12, 13, .38); }
+.pw-sep { margin: 0 8px; color: #86868b; }
 
-/* the one ink fill */
-.pw-book { position: relative; width: 100%; height: 44px; margin-top: 14px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: #0B0C0D; color: #fff;
-  font-size: 14px; font-weight: 600; letter-spacing: -.011em; transition: transform 100ms cubic-bezier(.4, 0, .2, 1), background 160ms cubic-bezier(.4, 0, .2, 1); }
-.pw-book:hover, .pw-book.is-hot { background: #24262a; }
+/* the one accent: a lime pill with ink type */
+.pw-book { position: relative; width: 100%; height: 44px; margin-top: 14px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: #B8FF00; color: #1d1d1f;
+  font-size: 15px; font-weight: 600; letter-spacing: -.01em; transition: transform 100ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.pw-book:hover, .pw-book.is-hot { box-shadow: 0 0 0 4px rgba(184, 255, 0, .35); }
 .pw-book:active, .pw-book.is-press { transform: scale(.97); }
-.pw-book:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
-.pw-tick { flex: none; width: 0; height: 14px; margin-right: 0; overflow: hidden; transition: width 160ms cubic-bezier(.5, 0, .75, 0), margin 160ms cubic-bezier(.5, 0, .75, 0); }
-.pw-tick svg { display: block; width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.pw-book.is-booked .pw-tick { width: 14px; margin-right: 8px; transition: width 420ms cubic-bezier(.16, 1, .3, 1), margin 420ms cubic-bezier(.16, 1, .3, 1); }
+.pw-book:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+.pw-tick { flex: none; width: 0; height: 16px; margin-right: 0; overflow: hidden; transition: width 160ms cubic-bezier(.5, 0, .75, 0), margin 160ms cubic-bezier(.5, 0, .75, 0); }
+.pw-tick svg { display: block; width: 16px; height: 16px; fill: none; stroke: #1d1d1f; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pw-book.is-booked .pw-tick { width: 16px; margin-right: 7px; transition: width 420ms cubic-bezier(.16, 1, .3, 1), margin 420ms cubic-bezier(.16, 1, .3, 1); }
 @media (prefers-reduced-motion: reduce) { .pw-card *, .pw-card *::before { transition: none !important; } }
 </style>
 <style>
   .pww { display: grid; gap: 12px; justify-items: start; }
+  .pww .kicker, .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
 </style>
 </head>
 <body>
@@ -109,7 +110,7 @@
     <div class="pw-wheel" id="pw-min" style="--c:5" role="spinbutton" tabindex="0" aria-label="Minute" data-align="start"></div>
   </div>
   <p class="pw-sum" aria-hidden="true"><span class="pw-roll pw-m" id="pw-s-d" data-fit><b>Fri 20 Nov</b></span><span class="pw-sep">·</span><span class="pw-roll pw-m" id="pw-s-h"><b>10</b></span><span class="pw-m">:</span><span class="pw-roll pw-m" id="pw-s-m"><b>30</b></span><span class="pw-sep">·</span><span>with Sera</span></p>
-  <button type="button" class="pw-book" id="pw-book"><span class="pw-tick"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M1.5 7.5l3.5 3.5 7.5-8"/></svg></span><span class="pw-roll" id="pw-book-t"><b>Book call</b></span></button>
+  <button type="button" class="pw-book" id="pw-book"><span class="pw-tick"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.500l3.300 3.300L13 4.500"/></svg></span><span class="pw-roll" id="pw-book-t"><b>Book call</b></span></button>
   <p class="sr-only" id="pw-msg" role="status" aria-live="polite"></p>
 </section>
 <!-- /code -->

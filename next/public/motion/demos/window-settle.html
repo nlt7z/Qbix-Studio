@@ -8,8 +8,8 @@
 {
   "id": "window-settle", "title": "Window settle", "group": "studio", "added": "2026-11-19", "cat": "scroll", "order": 40,
   "kind": "scroll", "tone": "paper", "shot": 7900,
-  "line": "one scroll progress · full-bleed to 72% · radius 0 to 20 px · follow response 0.24 s",
-  "summary": "A product page for Strata opens on its headline. Scrolling, the app's own screen rises full-bleed over the headline, then shrinks into a rounded window with a soft shadow that grows as the corners round. The window holds while its content scrolls inside it, moodboard to tokens to code, and three captions are uncovered one after another, each lighting its state in the window. The last thing uncovered is the one ink pill. Everything is a pure function of one smoothed scroll value, so scrolling back plays it exactly in reverse.",
+  "line": "one scroll progress · full-bleed to 72% · radius 0 to 20 px · follow response 0.24 s · lime pill",
+  "summary": "A product page for Strata opens on its headline. Scrolling, the app's own screen rises full-bleed over the headline, then shrinks into a rounded window with a soft shadow that grows as the corners round. The window holds while its content scrolls inside it, moodboard to tokens to code, and three captions are uncovered one after another, each lighting its state in the window. The last thing uncovered is the lime Try Strata pill. Everything is a pure function of one smoothed scroll value, so scrolling back plays it exactly in reverse.",
   "spec": [
     ["Progress", "the page's scroll in screens (y / height), followed by a critically damped spring (response 0.24 s, damping 1.0) so a wheel notch reads as a glide; every value below is a function of that one number, drawn in a single rAF"],
     ["Rise", "0 to 0.95 screens: the window's top edge goes from 90% down the screen to 0, smoothstep; the headline moves up 72% of a screen with it, so it is covered from below and carried out"],
@@ -17,7 +17,7 @@
     ["Drawn screen", "one 1040 px wide layout, scaled with transform: scale(width / 1040) from the top left, its height set in design px so it fills any window shape; no will-change, so the browser rasters the text at the scale it rests on"],
     ["Inside the window", "screens 2.0 to 2.8, 3.5 to 4.3 and 5.0 to 5.6 (smoothstep each) add up to s from 0 to 3; the panels' stack moves by min(s, 2) panels; the step in the sidebar and the panel's own rows are lit by 1 − smoothstep(0, 0.7, |s − i|), rows staggered by 0.07"],
     ["Captions", "four slots in one mask, each at ((i − s) + (1 − arrival)) × the mask's height: the line rolls up out of the mask and the next rolls in; the Try Strata pill is the fourth slot"],
-    ["Colour", "white, ink at low alpha, the soft ring; one ink fill (the pill, uncovered last); one lime point (the dot on the live caption)"],
+    ["Colour", "the system face and Apple neutrals; the drawn Strata screen has a translucent toolbar (white at 72%, 20 px blur, hairline), a #f5f5f7 sidebar and #f5f5f7 tiles; one lime accent: the Try Strata pill (uncovered last), and the dot on the live caption is gone before it arrives"],
     ["Reduced motion", "no sticky, no scroll: the headline, the settled window showing the tokens, all three captions and the pill in one calm page"]
   ],
   "source": ["Qbix Motion · Studio · 2026-11-19"],
@@ -26,8 +26,8 @@
     "Everything is a function of one smoothed scroll value. No state, no timers, no scroll direction: scrolling back is the same function run backwards.",
     "The drawn screen is a fixed-size layout scaled by transform, never resized with the window, so its type stays crisp at full-bleed and at rest. Keep will-change off the scaled layer, or the text rasters at the wrong scale.",
     "Full-bleed has no radius and no shadow beyond the ring; the radius and the shadow arrive with the shrink, not before.",
-    "Captions are uncovered through a mask and never faded. One live caption at a time, marked by the one lime dot.",
-    "The only ink fill on the page is the pill. In the window, states are lit with ink type and a soft ring, never a black block.",
+    "Captions are uncovered through a mask and never faded. One live caption at a time, marked by a lime dot.",
+    "One lime accent on the page: the Try Strata pill, with #1d1d1f type. The live caption's lime dot fades out before the pill rolls in, so a frame never holds both. In the window, states are lit with ink type and a pale wash (rgba(0, 0, 0, .06)), never a black block. System face and Apple neutrals; tabular numbers in the same face, code in SF Mono.",
     "Under reduced motion the page is still and complete: settled window, every caption, the pill."
   ],
   "tags": ["scroll", "window", "settle", "product page", "hero", "sticky", "pinned", "Strata", "scrollytelling"]
@@ -35,111 +35,120 @@
 </script>
 <style data-code>
 /* Window settle. The run is tall; the pin is sticky; script sets every position from one smoothed scroll value (draw()).
-   Colour: white and ink at low alpha, the soft ring; the one ink fill is .ws-go, the one lime point .ws-dot. */
-.ws { position: relative; height: 700vh; --ct: 30px; color: #0B0C0D; background: #fff; }
+   Look: the system face with Apple's neutrals. White page, the drawn Strata screen with a #f5f5f7 sidebar and a translucent toolbar; the one accent is lime:
+   the Try Strata pill (the lime dot on the live caption is gone by the time it arrives). */
+.ws { --ws-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; --ws-m: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  position: relative; height: 700vh; --ct: 30px; color: #1d1d1f; background: #fff; font-family: var(--ws-f); -webkit-font-smoothing: antialiased; }
 .ws-pin { position: sticky; top: 0; height: 100vh; overflow: hidden; }
 .ws h1, .ws h2, .ws h3, .ws p, .ws ol, .ws ul, .ws figure { margin: 0; padding: 0; }
 .ws ol, .ws ul { list-style: none; }
 
 /* the headline: covered from below, carried up by the window */
-.ws-hero { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 18px; padding: 0 6vw 3vh; text-align: center; }
-.ws-kick { font: 500 14px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
-.ws-h { max-width: 12.6em; font: 300 clamp(40px, min(7vw, 11vh), 104px)/.96 Outfit, Geist, sans-serif; letter-spacing: -.04em; text-wrap: balance; }
-.ws-lede { max-width: 30em; font: 400 clamp(15px, 1.5vw, 19px)/1.5 Geist, system-ui, sans-serif; color: rgba(11, 12, 13, .66); text-wrap: balance; }
+.ws-hero { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 16px; padding: 0 6vw 3vh; text-align: center; }
+.ws-kick { font: 600 clamp(16px, 1.5vw, 21px)/1.2 var(--ws-f); letter-spacing: -.01em; color: #6e6e73; }
+.ws-h { max-width: 12.6em; font: 600 clamp(38px, min(6.2vw, 10vh), 92px)/1.07 var(--ws-f); letter-spacing: -.022em; text-wrap: balance; }
+.ws-lede { max-width: 30em; font: 400 clamp(16px, 1.5vw, 21px)/1.47 var(--ws-f); letter-spacing: -.01em; color: #6e6e73; text-wrap: balance; }
 
 /* the captions: one mask above the window, lines roll through it */
 .ws-caps { position: absolute; left: 0; right: 0; overflow: hidden; }
 .ws-cap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 6vw; text-align: center; }
-.ws-ck { display: flex; align-items: center; gap: 8px; font: 400 13px/16px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: rgba(11, 12, 13, .66); }
-.ws-dot { width: 9px; height: 9px; border-radius: 50%; background: #B8FF00; box-shadow: 0 0 0 1px rgba(11, 12, 13, .2); transform: scale(var(--l, 0)); }
-.ws-ct { font: 300 var(--ct)/1.08 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
-.ws-cs { font: 400 15px/22px Geist, system-ui, sans-serif; letter-spacing: -.011em; color: rgba(11, 12, 13, .66); }
-.ws-go { height: 48px; padding: 0 28px; margin-bottom: 2px; border: 0; border-radius: 999px; background: #0B0C0D; color: #fff; font: 600 15px/1 Geist, system-ui, sans-serif; letter-spacing: -.011em; cursor: pointer;
-  transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ws-ck { display: flex; align-items: center; gap: 8px; font: 500 13px/16px var(--ws-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; color: #6e6e73; }
+.ws-dot { width: 9px; height: 9px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); transform: scale(var(--l, 0)); }
+.ws-ct { font: 600 var(--ct)/1.1 var(--ws-f); letter-spacing: -.022em; }
+.ws-cs { font: 400 16px/1.47 var(--ws-f); letter-spacing: -.01em; color: #6e6e73; }
+.ws-go { height: 48px; padding: 0 28px; margin-bottom: 2px; border: 0; border-radius: 999px; background: #B8FF00; color: #1d1d1f; font: 600 16px/1 var(--ws-f); letter-spacing: -.01em; cursor: pointer;
+  transition: transform 100ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.ws-go:hover { box-shadow: 0 0 0 4px rgba(184, 255, 0, .35); }
 .ws-go:active { transform: scale(.97); }
-.ws-go:focus-visible { outline: 2px solid #0B0C0D; outline-offset: 3px; }
+.ws-go:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
 
 /* the window: position, size, radius and shadow come from script; the screen inside is one 1040 px layout scaled to fit */
 .ws-win { position: absolute; left: 0; top: 0; overflow: hidden; background: #fff; }
 .ws-app { position: absolute; left: 0; top: 0; width: 1040px; transform-origin: 0 0; display: grid; grid-template-rows: 52px minmax(0, 1fr);
-  font: 400 16px/1.4 Geist, system-ui, sans-serif; letter-spacing: -.011em; color: #0B0C0D; -webkit-user-select: none; user-select: none; }
-.ws-app h2 { font: 300 30px/1.1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
-.ws-app small, .ws-mut { font: 400 14px/1.35 Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
-.ws-app code, .ws-mono { font: 400 14px/1.4 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  font: 400 16px/1.4 var(--ws-f); letter-spacing: -.01em; color: #1d1d1f; -webkit-user-select: none; user-select: none; }
+.ws-app h2 { font: 600 28px/1.1 var(--ws-f); letter-spacing: -.022em; }
+.ws-app small, .ws-mut { font: 400 14px/1.35 var(--ws-f); letter-spacing: -.006em; color: #6e6e73; }
+.ws-app code, .ws-mono { font: 400 14px/1.4 var(--ws-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; }
 [data-r] { clip-path: inset(0 calc((1 - var(--l, 1)) * 100%) 0 0 round var(--rr, 0px)); }
 [data-r='up'] { clip-path: inset(calc((1 - var(--l, 1)) * 100%) 0 0 0 round var(--rr, 0px)); }
 
-.ws-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 24px 0 28px; }
-.ws-logo { font: 300 24px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
-.ws-acts { display: flex; align-items: center; gap: 16px; font-weight: 500; }
+/* the toolbar: a translucent material with a hairline, window dots at the left */
+.ws-bar { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 0 16px 0 20px; background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 1px 0 rgba(0, 0, 0, .08); }
+.ws-dots { display: flex; gap: 8px; width: 112px; }
+.ws-dots i { width: 12px; height: 12px; border-radius: 50%; background: #d2d2d7; }
+.ws-logo { font: 600 17px/1 var(--ws-f); letter-spacing: -.022em; }
+.ws-acts { display: flex; align-items: center; gap: 12px; width: 112px; justify-content: flex-end; }
+.ws-exp { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #e8e8ed; }
+.ws-exp svg { display: block; width: 18px; height: 18px; fill: none; stroke: #1d1d1f; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .ws-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
 .ws-body { display: grid; grid-template-columns: 208px minmax(0, 1fr); min-height: 0; }
 
-.ws-side { position: relative; padding: 8px 12px 0 20px; }
-.ws-proj { padding: 0 8px 18px; font: 300 24px/1.1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
-.ws-proj small { display: block; margin-top: 4px; font-family: Geist, system-ui, sans-serif; letter-spacing: -.006em; }
-.ws-steps { position: relative; display: grid; gap: 6px; }
-.ws-steps li { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px; border-radius: 14px; color: rgba(11, 12, 13, calc(.5 + .5 * var(--l, 0)));
-  box-shadow: 0 0 0 1px rgba(11, 12, 13, calc(.09 * var(--l, 0))), 0 10px 22px -14px rgba(11, 12, 13, calc(.22 * var(--l, 0))); }
-.ws-steps b { width: 24px; font: 500 14px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: 0; }
+.ws-side { position: relative; padding: 16px 12px 0 20px; background: #f5f5f7; }
+.ws-proj { padding: 0 8px 18px; font: 600 22px/1.1 var(--ws-f); letter-spacing: -.022em; }
+.ws-proj small { display: block; margin-top: 4px; font-weight: 400; letter-spacing: -.006em; }
+.ws-steps { position: relative; display: grid; gap: 4px; }
+.ws-steps li { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px; border-radius: 12px; color: rgba(29, 29, 31, calc(.55 + .45 * var(--l, 0)));
+  background: rgba(0, 0, 0, calc(.06 * var(--l, 0))); }
+.ws-steps svg { flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .ws-steps span { display: grid; font-weight: 500; line-height: 1.25; }
 .ws-steps small { font-weight: 400; color: inherit; opacity: .8; }
-.ws-rail { position: absolute; left: -10px; top: 8px; bottom: auto; width: 2px; height: 0; border-radius: 2px; background: rgba(11, 12, 13, .1); }
-.ws-rail::after { content: ''; position: absolute; inset: 0; border-radius: 2px; background: #0B0C0D; transform-origin: 50% 0; transform: scaleY(var(--p, 0)); }
+.ws-rail { position: absolute; left: -10px; top: 8px; bottom: auto; width: 2px; height: 0; border-radius: 2px; background: rgba(0, 0, 0, .1); }
+.ws-rail::after { content: ''; position: absolute; inset: 0; border-radius: 2px; background: #1d1d1f; transform-origin: 50% 0; transform: scaleY(var(--p, 0)); }
 
 .ws-pane { position: relative; overflow: hidden; min-height: 0; }
 .ws-stack { position: absolute; left: 0; top: 0; right: 0; height: 300%; transform: translateY(calc(var(--s, 0) * -33.3333%)); }
-.ws-p { height: 33.3333%; padding: 8px 32px 34px 12px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 20px; }
+.ws-p { height: 33.3333%; padding: 20px 32px 34px 28px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 20px; }
 .ws-ph { display: flex; align-items: baseline; justify-content: space-between; }
 
 /* 1 · moodboard */
 .ws-p1 .ws-main { display: grid; grid-template-columns: minmax(0, 1fr) 232px; gap: 28px; min-height: 0; }
 .ws-mood { display: grid; grid-template-columns: 1.1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; min-height: 0; }
-.ws-mood figure { position: relative; min-height: 0; border-radius: 16px; overflow: hidden; --rr: 16px; }
+.ws-mood figure { position: relative; min-height: 0; border-radius: 18px; overflow: hidden; --rr: 18px; background: #f5f5f7; }
 .ws-mood img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ws-mood .a { grid-row: 1 / 3; }
 .ws-found { display: grid; align-content: start; gap: 12px; }
 .ws-sw { display: grid; gap: 10px; }
 .ws-sw li { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 12px; }
-.ws-sw i { width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .12); }
-.ws-sw code { color: rgba(11, 12, 13, .66); }
+.ws-sw i { width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); }
+.ws-sw code { color: #6e6e73; }
 .ws-spec { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; }
-.ws-spec b { font: 300 30px/1 Outfit, Geist, sans-serif; letter-spacing: -.035em; }
+.ws-spec b { font: 600 30px/1 var(--ws-f); letter-spacing: -.022em; }
 
 /* 2 · tokens and components */
 .ws-p2 .ws-main { display: grid; grid-template-columns: 296px minmax(0, 1fr); gap: 36px; min-height: 0; }
 .ws-tok { display: grid; align-content: start; gap: 22px; }
-.ws-tok h3, .ws-cmp h3 { margin-bottom: 8px; font: 500 14px/1.3 Geist, system-ui, sans-serif; letter-spacing: -.006em; color: rgba(11, 12, 13, .66); }
+.ws-tok h3, .ws-cmp h3 { margin-bottom: 8px; font: 500 14px/1.3 var(--ws-f); letter-spacing: -.006em; color: #6e6e73; }
 .ws-tok li { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 12px; height: 34px; }
-.ws-tok li i { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(11, 12, 13, .12); }
-.ws-tok li code:last-child { color: rgba(11, 12, 13, .66); }
+.ws-tok li i { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); }
+.ws-tok li code:last-child { color: #6e6e73; }
 .ws-scale { display: flex; align-items: flex-end; gap: 14px; height: 52px; }
 .ws-scale span { display: grid; gap: 6px; justify-items: start; }
-.ws-scale i { display: block; border-radius: 3px; background: #E3E8DA; }
+.ws-scale i { display: block; border-radius: 3px; background: #e8e8ed; }
 .ws-rad { display: flex; gap: 14px; }
 .ws-rad span { display: grid; gap: 6px; justify-items: start; }
-.ws-rad i { width: 44px; height: 44px; box-shadow: inset 0 0 0 1.5px rgba(11, 12, 13, .3); }
+.ws-rad i { width: 44px; height: 44px; box-shadow: inset 0 0 0 1.5px #86868b; }
 .ws-cmp { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px 14px; min-height: 0; }
 .ws-cell { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; min-height: 0; }
-.ws-cell > div { display: grid; place-content: center; justify-items: start; gap: 12px; padding: 16px 18px; border-radius: 18px; --rr: 18px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .08), 0 12px 28px -18px rgba(11, 12, 13, .2); }
+.ws-cell > div { display: grid; place-content: center; justify-items: start; gap: 12px; padding: 16px 18px; border-radius: 18px; --rr: 18px; background: #f5f5f7; }
 .ws-btn { display: inline-flex; align-items: center; height: 44px; padding: 0 22px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px #2F6A55; color: #2F6A55; font-weight: 600; }
 .ws-field { display: grid; gap: 4px; width: 100%; }
-.ws-field span { height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 12px; box-shadow: inset 0 0 0 1.5px #2F6A55; }
+.ws-field span { height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1.5px #2F6A55; }
 .ws-prod { display: flex; align-items: center; gap: 12px; }
 .ws-prod img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; }
-.ws-prod b { display: block; font-weight: 500; }
-.ws-tag { display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px; background: #EEF1E8; color: #2F6A55; font-weight: 500; font-size: 14px; }
+.ws-prod b { display: block; font-weight: 600; }
+.ws-tag { display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 999px; background: #e8e8ed; color: #2F6A55; font-weight: 500; font-size: 14px; }
 
 /* 3 · code */
 .ws-p3 .ws-main { display: grid; grid-template-columns: 188px minmax(0, 1fr); gap: 28px; min-height: 0; }
-.ws-files { display: grid; align-content: start; gap: 6px; }
-.ws-files li { display: flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 12px; color: rgba(11, 12, 13, .5); }
-.ws-files li.on { color: #0B0C0D; box-shadow: 0 0 0 1px rgba(11, 12, 13, .1), 0 10px 22px -14px rgba(11, 12, 13, .22); }
+.ws-files { display: grid; align-content: start; gap: 4px; }
+.ws-files li { display: flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 12px; color: #6e6e73; }
+.ws-files li.on { color: #1d1d1f; background: rgba(0, 0, 0, .06); }
 .ws-codewrap { display: grid; align-content: start; gap: 14px; min-height: 0; }
-.ws-code { padding: 20px 22px; border-radius: 18px; box-shadow: 0 0 0 1px rgba(11, 12, 13, .08), 0 12px 28px -18px rgba(11, 12, 13, .2); }
-.ws-code span { display: block; height: 24px; white-space: pre; font: 400 14px/24px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.02em; color: #0B0C0D; }
-.ws-code .n { display: inline-block; width: 28px; color: rgba(11, 12, 13, .3); }
-.ws-code .d { color: rgba(11, 12, 13, .5); }
+.ws-code { padding: 20px 22px; border-radius: 18px; background: #f5f5f7; }
+.ws-code span { display: block; height: 24px; white-space: pre; font: 400 14px/24px var(--ws-m); letter-spacing: 0; color: #1d1d1f; }
+.ws-code .n { display: inline-block; width: 28px; font-weight: 400; color: #86868b; }
+.ws-code .d { color: #6e6e73; }
 
 /* reduced motion: a still, complete page */
 .ws.is-still { height: auto; }
@@ -158,6 +167,7 @@
   .ws-pin { height: calc(100vh - var(--ws-ui, 0px)); }
   .ws.is-still { height: auto; }
   .ws.is-still .ws-pin { height: auto; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
 </style>
 </head>
 <body>
@@ -179,14 +189,14 @@
 
     <div class="ws-win" id="wsWin" role="img" aria-label="The Strata app: a moodboard, the tokens and components made from it, and the code.">
       <div class="ws-app" id="wsApp" aria-hidden="true">
-        <header class="ws-bar"><b class="ws-logo">Strata</b><span class="ws-acts"><span>Export code</span><img class="ws-av" src="../assets/art/ava.webp" alt=""></span></header>
+        <header class="ws-bar"><span class="ws-dots"><i></i><i></i><i></i></span><b class="ws-logo">Strata</b><span class="ws-acts"><span class="ws-exp"><svg viewBox="0 0 18 18"><path d="M9 11.500V2.800M5.800 5.600L9 2.500l3.200 3.100"/><path d="M5.500 8H5a1.500 1.500 0 0 0-1.500 1.500v4A1.500 1.500 0 0 0 5 15h8a1.500 1.500 0 0 0 1.500-1.500v-4A1.500 1.500 0 0 0 13 8h-.5"/></svg></span><img class="ws-av" src="../assets/art/ava.webp" alt=""></span></header>
         <div class="ws-body">
           <nav class="ws-side">
             <p class="ws-proj">Forma<small>Spring line</small></p>
             <ol class="ws-steps" id="wsSteps">
-              <li><b>1</b><span>Moodboard<small>4 images</small></span></li>
-              <li><b>2</b><span>Tokens<small>42 tokens</small></span></li>
-              <li><b>3</b><span>Code<small>tokens.css</small></span></li>
+              <li><svg viewBox="0 0 22 22"><rect x="3" y="4.500" width="16" height="13" rx="3"/><circle cx="8" cy="9.500" r="1.500"/><path d="M3.500 15.500l4.500-4 3.500 3 2.500-2 5 4"/></svg><span>Moodboard<small>4 images</small></span></li>
+              <li><svg viewBox="0 0 22 22"><rect x="3.500" y="3.500" width="6.500" height="6.500" rx="2"/><rect x="12" y="3.500" width="6.500" height="6.500" rx="2"/><rect x="3.500" y="12" width="6.500" height="6.500" rx="2"/><rect x="12" y="12" width="6.500" height="6.500" rx="2"/></svg><span>Tokens<small>42 tokens</small></span></li>
+              <li><svg viewBox="0 0 22 22"><path d="M8 6.500L3.500 11 8 15.500M14 6.500l4.500 4.500-4.500 4.500M12.200 4.500l-2.400 13"/></svg><span>Code<small>tokens.css</small></span></li>
             </ol>
           </nav>
           <div class="ws-pane"><div class="ws-stack" id="wsStack">
@@ -208,7 +218,7 @@
                     <li data-r data-d="6"><i style="background:#F2F0E8"></i><span>Bone</span><code>#F2F0E8</code></li>
                     <li data-r data-d="7"><i style="background:#0B0C0D"></i><span>Ink</span><code>#0B0C0D</code></li>
                   </ul>
-                  <div class="ws-spec" data-r data-d="8"><b>Aa</b><small>Outfit Light<br>with Geist</small></div>
+                  <div class="ws-spec" data-r data-d="8"><b>Aa</b><small>Display 600<br>Text 400</small></div>
                 </div>
               </div>
             </section>
@@ -330,8 +340,8 @@
     const left = (W - w) / 2, top = lerp(Math.round(H * 0.9), 0, rise) + Te * settle;
     const k = w / DW;
     win.style.cssText = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;border-radius:${(RAD * settle).toFixed(2)}px;` +
-      `box-shadow:0 0 0 1px rgba(11,12,13,.08),0 ${(34 * settle).toFixed(1)}px ${(70 * settle).toFixed(1)}px ${(-26 * settle).toFixed(1)}px rgba(11,12,13,${(0.3 * settle).toFixed(3)}),` +
-      `0 -14px 40px -22px rgba(11,12,13,${(0.2 * (1 - settle)).toFixed(3)})`;
+      `box-shadow:0 0 0 1px rgba(0,0,0,.08),0 ${(34 * settle).toFixed(1)}px ${(70 * settle).toFixed(1)}px ${(-26 * settle).toFixed(1)}px rgba(0,0,0,${(0.3 * settle).toFixed(3)}),` +
+      `0 -14px 40px -22px rgba(0,0,0,${(0.2 * (1 - settle)).toFixed(3)})`;
     app.style.transform = `scale(${k})`;
     app.style.height = h / k + 'px';                                   // design px: the layout fills any window shape
 
@@ -341,7 +351,7 @@
 
     // captions: lines roll through one mask; the Try Strata pill is the fourth
     slots.forEach((c, i) => { c.style.transform = `translate3d(0,${((i - s + (1 - arrive)) * capH).toFixed(2)}px,0)`; });
-    dots.forEach((d, i) => put(d, '--l', (1 - seg(Math.abs(s - i), 0, 0.7)).toFixed(3)));
+    dots.forEach((d, i) => put(d, '--l', (1 - seg(s > i ? (s - i) * 1.75 : i - s, 0, 0.7)).toFixed(3)));   // past its caption the dot is gone by 0.4 screens: it never meets the Try Strata pill
     const go = $('wsGo'); go.tabIndex = s > 2.5 ? 0 : -1;
 
     // inside the window: the panels move, the sidebar and each panel's rows light
@@ -363,11 +373,11 @@
     run.classList.add('is-still');
     const fit = () => {
       const w = Math.min(Math.round(pin.clientWidth * 0.72), 940), k = w / DW;
-      win.style.cssText = `width:${w}px;height:${Math.round(DH * k)}px;border-radius:${RAD}px;box-shadow:0 0 0 1px rgba(11,12,13,.08),0 34px 70px -26px rgba(11,12,13,.3)`;
+      win.style.cssText = `width:${w}px;height:${Math.round(DH * k)}px;border-radius:${RAD}px;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 34px 70px -26px rgba(0,0,0,.3)`;
       app.style.transform = `scale(${k})`; app.style.height = DH + 'px';
       put(stack, '--s', '1'); put(stepsEl, '--p', '.5');
       steps.forEach((li, i) => put(li, '--l', i === 1 ? '1' : '0'));
-      dots.forEach((d, i) => put(d, '--l', i === 1 ? '1' : '0'));
+      dots.forEach((d) => put(d, '--l', '0'));          // the pill is the one lime of the still
       panels.forEach((els) => els.forEach((el) => put(el, '--l', '1')));
       sizeRail();
     };

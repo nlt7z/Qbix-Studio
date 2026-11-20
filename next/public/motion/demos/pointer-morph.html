@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pointer morph · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pointer-morph", "title": "Pointer morph", "group": "studio", "added": "2026-11-20", "cat": "cursor", "order": 30,
+  "kind": "pointer", "tone": "paper", "shot": 1200,
+  "line": "one pointer · x, y, width, height, radius on springs · becomes the button, the caret, a dot on the lime pill",
+  "summary": "A Forma page toolbar with the system cursor hidden inside the card. The pointer is one soft circle on a stiff spring behind the real one. Over a button it grows into that button's own highlight, a pale grey wash with the button's radius, and the icon drifts a few pixels towards the pointer inside it. Between neighbours the wash travels and reshapes instead of snapping. Over the page text it becomes a thin caret the height of the line. Over the lime Publish pill it does not wash: the pointer shrinks to a white dot and the pill lifts 1 px with a soft ring. Leaving, it shrinks to the circle and carries the pointer's velocity out of the card.",
+  "spec": [
+    ["Object", "one element, five springs from the value on screen: x, y, width, height, radius (all critically damped, damping 1.0), plus the opacities of three layers (grey wash, ink, white dot) so colour changes are springs too, never cross-fades on a timer"],
+    ["Free", "a 16 px circle, ink at 20%; x and y follow the real pointer on response 0.075 s; size and radius on 0.16 s"],
+    ["Button", "the wash takes the button's own box and radius (40 px tall, 12 px) on response 0.17 s, #e8e8ed; its centre leans towards the pointer by 10% (3 px at most); the icon moves 22% of the pointer's offset from the button's centre (4 px across, 3 px down at most) and the label 40% of that, each on its own spring (0.2 s)"],
+    ["Between", "a hit area 2 px bigger than each button closes the 4 px gaps, and the button you are on holds 6 px more, so the edge does not flicker; the wash is the same object, it travels and reshapes on its springs"],
+    ["Text", "a 2.5 px caret bar 40 px tall on the title and 18 px on the body line; x follows the pointer on 0.075 s, y chooses the line under it on 0.16 s, ink at 72%"],
+    ["Publish", "no wash: the pointer becomes a 9 px white dot with an ink edge on the lime pill and the pill lifts 1 px (one spring, 0.2 s) with a ring of 4 px at 35% lime and a soft shadow that grow with it"],
+    ["Press", "pointerdown scales the highlight and the button's content to 0.97 on a stiff spring (0.09 s); the free circle to 0.82; the pill 0.97 with the lift kept; released on 0.14 s"],
+    ["Leave", "on the card's edge the pointer shrinks to the circle, takes 40% of the pointer's last 80 ms of velocity added to its own, and fades on 0.14 s while the system cursor comes back; the same path in reverse when it enters"],
+    ["Cursor", "hidden only inside the card and only for a fine pointer (cursor: none under .is-morph); touch, a coarse pointer, reduced motion and everything outside the card keep the system cursor and plain :hover and :active states"],
+    ["Loop", "the ghost is this pointer: it rests on Comment, visits Preview, Publish, the title, a body line, leaves, returns over Back, clicks Share and comes home; a real mouse takes over and the ghost resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-20"],
+  "where": "A page editor in a Qbix client's CMS handover (a Forma page, a launch page): the toolbar's buttons, a title to edit and the one Publish action, where a cursor that becomes what it is over tells you what a click will do.",
+  "rules": [
+    "The pointer is one object. Every property (x, y, width, height, radius, the three colour layers) is a spring that starts from the value and velocity on screen, so changing target mid-flight never jumps.",
+    "Over a control it becomes that control's own highlight: its box and its radius, #e8e8ed, the grey of a control part. Over text it is a caret the height of the line. The lime element is not washed.",
+    "The icon moves a few pixels towards the pointer inside the highlight (parallax); it never leaves its button and returns on its own spring.",
+    "The system cursor is hidden only inside the card and only for a fine pointer. Touch, a coarse pointer, reduced motion and the keyboard keep the normal cursor and normal :hover, :active and :focus-visible states, which this CSS defines.",
+    "A press is felt on pointerdown: the highlight and the button scale to 0.97 together; the click itself is the button's own.",
+    "Nothing is hit-tested by the pointer's size: targets are the buttons' own boxes with a small margin, so the wash never lands on the wrong button.",
+    "One lime element (Publish) and no other accent (Draft saved is a neutral check); system face, Apple neutrals; the free circle is ink at low alpha and exists only as a pointer.",
+    "Under reduced motion the custom pointer is off: the system cursor and plain hover states, with Comment resting in its hover colour."
+  ],
+  "tags": ["pointer", "cursor", "adaptive", "morph", "highlight", "caret", "toolbar", "spring", "parallax", "Forma"]
+}
+</script>
+<style data-code>
+/* Pointer morph. A white Forma page card in the system face with Apple's neutrals; the one accent is the lime Publish pill (there is no lime dot: Draft saved is a neutral check).
+   The pointer (.pm-ptr) is one element whose size, radius, position and layer opacities are springs set from script.
+   Hover and press for touch, a coarse pointer and reduced motion are plain CSS (below), switched off while .is-morph is on.
+   Easings: ui (.4, 0, .2, 1) for small feedback, expo out (.16, 1, .3, 1) for the status roll. */
+.pm-fit { position: relative; width: calc(540px * var(--s, 1)); height: calc(240px * var(--s, 1)); }
+.pm { --pm-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 540px; height: 240px; transform: scale(var(--s, 1)); transform-origin: 0 0; isolation: isolate;
+  background: #fff; border-radius: 24px; color: #1d1d1f; font: 400 14px/20px var(--pm-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04); }
+:where(.pm button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; }
+
+/* the toolbar: 40 px buttons, 4 px apart, 12 px from the card's edge; icon and label start 26 px in, like the title below */
+.pm-bar { position: absolute; left: 12px; right: 12px; top: 12px; height: 40px; display: flex; align-items: center; gap: 4px; }
+.pm-b { position: relative; height: 40px; padding: 0 14px; border-radius: 12px; cursor: pointer; font-weight: 500; -webkit-tap-highlight-color: transparent; transition: background 140ms cubic-bezier(.4, 0, .2, 1); }
+.pm-b:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; background: #e8e8ed; }
+/* content sits above the pointer (z-index 2); the pointer sits above a button's own fill (z-index 1) */
+.pm-in { position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; height: 100%; transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.pm-ic { flex: none; width: 16px; height: 16px; fill: none; stroke: #1d1d1f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.pm-lb { display: block; white-space: nowrap; }
+.pm-pub { margin-left: auto; padding: 0 20px; border-radius: 999px; font-weight: 600; color: #1d1d1f; }
+.pm-pub:focus-visible { background: none; outline-offset: 3px; }
+.pm-pubbg { position: absolute; inset: 0; border-radius: 999px; background: #B8FF00; transition: transform 160ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+
+/* the page: a status line with a neutral check, a title, a body of two lines */
+.pm-st { position: absolute; left: 26px; top: 78px; width: 200px; height: 20px; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 400; color: #6e6e73; }
+.pm-dot { flex: none; width: 14px; height: 14px; fill: none; stroke: #86868b; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.pm-sl { display: block; height: 20px; overflow: hidden; }
+.pm-roll { display: block; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.pm-roll > span { display: block; height: 20px; white-space: nowrap; }
+.pm-st.is-msg .pm-roll { transform: translateY(-20px); }
+.pm-h { position: absolute; z-index: 2; left: 26px; top: 106px; width: fit-content; font: 600 40px/44px var(--pm-f); letter-spacing: -.022em; cursor: text; }
+.pm-p { position: absolute; z-index: 2; left: 26px; top: 166px; width: 440px; font-size: 15px; line-height: 22px; color: #6e6e73; text-wrap: pretty; cursor: text; }
+
+/* the pointer: one box; its three layers (grey wash, ink, white dot) take their opacity from script */
+.pm-ptr { position: absolute; left: 0; top: 0; z-index: 1; width: 0; height: 0; opacity: 0; visibility: hidden; pointer-events: none; }
+.pm-pl { position: absolute; inset: 0; border-radius: inherit; }
+.pm-pl-s { background: #e8e8ed; opacity: 0; }
+.pm-pl-i { background: rgba(29, 29, 31, .2); }
+.pm-pl-w { background: #fff; opacity: 0; box-shadow: 0 0 0 1.5px #1d1d1f; }   /* the dot's own edge: it stays a dot over the lime pill's letters */
+
+/* a fine pointer, motion allowed: the system cursor is hidden in the card and the pointer takes over */
+.pm.is-morph, .pm.is-morph * { cursor: none; }
+.pm.is-morph .pm-b { transition: none; }
+.pm.is-morph .pm-in, .pm.is-morph .pm-pubbg { transition: none; }
+
+/* plain states: touch, a coarse pointer, reduced motion */
+.pm:not(.is-morph) .pm-b:not(.pm-pub):hover, .pm .pm-b.is-rest:not(.pm-pub) { background: #e8e8ed; }
+.pm:not(.is-morph) .pm-b:active .pm-in { transform: scale(.97); }
+.pm:not(.is-morph) .pm-pub:hover .pm-pubbg { transform: translateY(-1px); box-shadow: 0 0 0 4px rgba(184, 255, 0, .35), 0 6px 14px -6px rgba(0, 0, 0, .3); }
+.pm:not(.is-morph) .pm-pub:hover .pm-in { transform: translateY(-1px); }
+.pm:not(.is-morph) .pm-pub:active .pm-pubbg, .pm:not(.is-morph) .pm-pub:active .pm-in { transform: translateY(-1px) scale(.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-roll { transition-duration: 1ms; }
+}
+</style>
+<style>
+/* the pointer is the ghost in this piece: the harness's arrow stays off */
+.qm-ghost { display: none !important; }
+</style>
+<style>
+  /* the harness's hint bar speaks the same face */
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="pm-fit" id="pm-fit">
+ <section class="pm" id="pm-card" role="group" aria-label="Forma page toolbar">
+  <div class="pm-ptr" id="pm-ptr" aria-hidden="true"><i class="pm-pl pm-pl-s" id="pm-ls"></i><i class="pm-pl pm-pl-i" id="pm-li"></i><i class="pm-pl pm-pl-w" id="pm-lw"></i></div>
+
+  <div class="pm-bar" role="toolbar" aria-label="Page">
+   <button type="button" class="pm-b" data-say="Back to pages"><span class="pm-in"><svg class="pm-ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8H3.500M7.500 4L3.500 8l4 4"/></svg><span class="pm-lb">Back</span></span></button>
+   <button type="button" class="pm-b" data-say="Link copied"><span class="pm-in"><svg class="pm-ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 10V2.500M5 5l3-3 3 3M3 8.500v3A1.500 1.500 0 0 0 4.500 13h7a1.500 1.500 0 0 0 1.500-1.500v-3"/></svg><span class="pm-lb">Share</span></span></button>
+   <button type="button" class="pm-b" data-say="Comment added"><span class="pm-in"><svg class="pm-ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.500C3 3.700 3.700 3 4.500 3h7c.8 0 1.500.7 1.500 1.500v5c0 .8-.7 1.500-1.500 1.500H8l-3 2.500V11h-.5C3.700 11 3 10.300 3 9.500z"/></svg><span class="pm-lb">Comment</span></span></button>
+   <button type="button" class="pm-b" data-say="Preview ready"><span class="pm-in"><svg class="pm-ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.500 8S4 3.500 8 3.500 14.500 8 14.500 8 12 12.500 8 12.500 1.500 8 1.500 8z"/><circle cx="8" cy="8" r="2"/></svg><span class="pm-lb">Preview</span></span></button>
+   <button type="button" class="pm-b pm-pub" data-say="Publishing to forma.studio"><span class="pm-pubbg"></span><span class="pm-in"><span class="pm-lb">Publish</span></span></button>
+  </div>
+
+  <p class="pm-st" id="pm-stat"><svg class="pm-dot" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.800"/><path d="M4.600 7.200l1.700 1.700 3.100-3.500"/></svg><span class="pm-sl"><span class="pm-roll"><span>Draft saved</span><span id="pm-msg" aria-hidden="true"></span></span></span></p>
+  <h2 class="pm-h" data-text data-caret="40">Spring collection</h2>
+  <p class="pm-p" data-text data-caret="18">Hand-thrown vases and bowls, glazed in Seattle. Every piece ships in 3 days.</p>
+  <p class="sr-only" id="pm-live" role="status" aria-live="polite"></p>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Move over the toolbar and the page text. Click a button. Publish only lifts. On touch the usual hover and press states apply</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Pointer morph. One pointer element, five springs (x, y, width, height, radius) and three layer opacities, each started from the value
+   and velocity on screen. What the pointer is over decides only the targets. Geometry is in card pixels (the card may be drawn scaled:
+   pointers are divided by the scale). */
+const PM = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(pointer: fine)').matches;
+  const canMorph = fine && !reduced;
+  const W = 540, H = 240;
+  const FREE = 16, CARET = 2.5, DOT = 9, MAGNET = 0.1, PAR = 0.22, PARMAX = 4;           // sizes, how the wash and the icon lean towards the pointer
+  const KEY = { b: 2, dx: -22, dy: -7 };                                                    // the pose the piece loads in: Comment under the wash, the pointer left of its centre
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const om = (resp) => (2 * Math.PI) / resp;
+  const $ = (id) => document.getElementById('pm-' + id);
+  const fit = $('fit'), card = $('card'), ptr = $('ptr'), lS = $('ls'), lI = $('li'), lW = $('lw');
+  const stat = $('stat'), statMsg = $('msg'), live = $('live');
+  const btns = Array.from(card.querySelectorAll('.pm-b'));
+  const parts = btns.map((b) => ({ el: b, pub: b.classList.contains('pm-pub'), inn: b.querySelector('.pm-in'), ic: b.querySelector('.pm-ic'), lb: b.querySelector('.pm-lb'), bg: b.querySelector('.pm-pubbg') }));
+  const texts = Array.from(card.querySelectorAll('[data-text]'));
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt), critically damped (a damped cosine below 1). It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: om(0.2), z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  // retarget from the value and velocity on screen; response in seconds
+  function aim(s, T, resp, z = 1) { s.T = T; s.w = om(resp); s.z = z; s.on = true; }
+  const put = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+  const PX = [0.02, 0.4], UNIT = [0.0015, 0.015];                                         // rest thresholds for pixels and for 0..1 values
+  const S = { x: mk(), y: mk(), w: mk(), h: mk(), r: mk(), a: mk(), sg: mk(), ik: mk(0.2), wh: mk(), pr: mk() };
+  const UNITS = { a: 1, sg: 1, ik: 1, wh: 1, pr: 1 };
+  const B = btns.map(() => ({ ix: mk(), iy: mk(), pr: mk(), lf: mk() }));
+
+  /* targets: the buttons' own boxes and the text blocks, measured in card px */
+  let sc = 1, TG = [];
+  const rect = () => card.getBoundingClientRect();
+  function measure() {
+    const cr = rect();
+    sc = cr.width / W || 1;
+    const bs = parts.map((p, bi) => {
+      const r = p.el.getBoundingClientRect();
+      return { k: 'b', bi, pub: p.pub, x: (r.left - cr.left) / sc, y: (r.top - cr.top) / sc, w: r.width / sc, h: r.height / sc, rad: parseFloat(getComputedStyle(p.el).borderTopLeftRadius) || 12 };
+    });
+    const ts = texts.map((el) => {
+      const r = el.getBoundingClientRect(), cs = getComputedStyle(el), lh = parseFloat(cs.lineHeight) || 22;
+      return { k: 't', el, x: (r.left - cr.left) / sc, y: (r.top - cr.top) / sc, w: r.width / sc, h: r.height / sc, lh, lines: Math.max(1, Math.round(r.height / sc / lh)), ch: Number(el.dataset.caret) || 18 };
+    });
+    TG = bs.concat(ts);
+  }
+  const inBox = (g, mx, my, px, py) => px >= g.x - mx && px <= g.x + g.w + mx && py >= g.y - my && py <= g.y + g.h + my;
+  let cur = null;                                                                          // the target under the pointer, or null
+  function pick(px, py) {
+    // the button you are on keeps 6 px of slack; a neighbour's box (2 px bigger, closing the 4 px gaps) takes over at once
+    const bt = TG.filter((g) => g.k === 'b');
+    if (cur && cur.k === 'b' && inBox(cur, 2, 2, px, py)) return cur;
+    for (const g of bt) if (inBox(g, 2, 2, px, py)) return g;
+    if (cur && cur.k === 'b' && inBox(cur, 6, 6, px, py)) return cur;
+    for (const g of TG) if (g.k === 't' && inBox(g, 8, 0, px, py)) return g;
+    return null;
+  }
+
+  /* the pointer's own velocity, over the last 80 ms */
+  let hist = [];
+  function vel() {
+    const n = hist.length;
+    if (n < 2) return { x: 0, y: 0 };
+    const b = hist[n - 1];
+    let a = hist[0];
+    for (const h of hist) if (b.t - h.t <= 80) { a = h; break; }
+    const dt = (b.t - a.t) / 1000;
+    return dt > 0.008 ? { x: (b.x - a.x) / dt, y: (b.y - a.y) / dt } : { x: 0, y: 0 };
+  }
+
+  /* draw everything from the springs */
+  let mode = 'out', pressed = false, pp = { x: 0, y: 0 };
+  function render() {
+    const a = clamp(S.a.x, 0, 1), pr = clamp(S.pr.x, 0, 1);
+    const k = mode === 'btn' ? 0.03 : mode === 'pub' ? 0.03 : mode === 'free' ? 0.18 : 0;     // how far a press shrinks it, by what it is
+    const w = Math.max(0, S.w.x), h = Math.max(0, S.h.x);
+    ptr.style.visibility = a < 0.004 ? 'hidden' : 'visible';
+    ptr.style.opacity = a.toFixed(3);
+    ptr.style.width = w.toFixed(2) + 'px'; ptr.style.height = h.toFixed(2) + 'px'; ptr.style.borderRadius = Math.max(0, S.r.x).toFixed(2) + 'px';
+    ptr.style.transform = `translate3d(${(S.x.x - w / 2).toFixed(2)}px, ${(S.y.x - h / 2).toFixed(2)}px, 0) scale(${(1 - k * pr).toFixed(4)})`;
+    lS.style.opacity = clamp(S.sg.x, 0, 1).toFixed(3);
+    lI.style.background = `rgba(29, 29, 31, ${clamp(S.ik.x, 0, 1).toFixed(3)})`;
+    lW.style.opacity = clamp(S.wh.x, 0, 1).toFixed(3);
+    parts.forEach((p, i) => {
+      const b = B[i], bp = clamp(b.pr.x, 0, 1);
+      if (p.pub) {
+        const lf = clamp(b.lf.x, 0, 1), t = lf < 0.001 && bp < 0.001 ? '' : `translateY(${(-lf).toFixed(3)}px) scale(${(1 - 0.03 * bp).toFixed(4)})`;
+        p.bg.style.transform = t; p.inn.style.transform = t;
+        p.bg.style.boxShadow = lf < 0.001 ? '' : `0 0 0 ${(4 * lf).toFixed(2)}px rgba(184, 255, 0, ${(0.35 * lf).toFixed(3)}), 0 ${(6 * lf).toFixed(2)}px ${(14 * lf).toFixed(2)}px -6px rgba(0, 0, 0, ${(0.3 * lf).toFixed(3)})`;
+      } else {
+        p.inn.style.transform = bp < 0.001 ? '' : `scale(${(1 - 0.03 * bp).toFixed(4)})`;
+        const rest = Math.abs(b.ix.x) < 0.01 && Math.abs(b.iy.x) < 0.01;
+        p.ic.style.transform = rest ? '' : `translate(${b.ix.x.toFixed(2)}px, ${b.iy.x.toFixed(2)}px)`;
+        p.lb.style.transform = rest ? '' : `translate(${(b.ix.x * 0.4).toFixed(2)}px, ${(b.iy.x * 0.4).toFixed(2)}px)`;
+      }
+    });
+  }
+
+  /* motion */
+  let raf = 0, last = 0;
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let live = false;
+    for (const key in S) live = step(S[key], dt, ...(UNITS[key] ? UNIT : PX)) || live;
+    for (const b of B) { live = step(b.ix, dt, ...PX) || live; live = step(b.iy, dt, ...PX) || live; live = step(b.pr, dt, ...UNIT) || live; live = step(b.lf, dt, ...UNIT) || live; }
+    render();
+    if (live) kick();
+  }
+
+  /* what the pointer is over decides the targets; nothing else */
+  function apply(m, g, px, py) {
+    if (m === 'free') {
+      aim(S.x, px, 0.075); aim(S.y, py, 0.075);
+      aim(S.w, FREE, 0.16); aim(S.h, FREE, 0.16); aim(S.r, FREE / 2, 0.16);
+      aim(S.sg, 0, 0.14); aim(S.ik, 0.2, 0.14); aim(S.wh, 0, 0.14);
+    } else if (m === 'btn') {
+      const cx = g.x + g.w / 2, cy = g.y + g.h / 2;
+      aim(S.x, cx + clamp((px - cx) * MAGNET, -3, 3), 0.17); aim(S.y, cy + clamp((py - cy) * MAGNET, -2.5, 2.5), 0.17);
+      aim(S.w, g.w, 0.17); aim(S.h, g.h, 0.17); aim(S.r, g.rad, 0.17);
+      aim(S.sg, 1, 0.14); aim(S.ik, 0, 0.14); aim(S.wh, 0, 0.14);
+    } else if (m === 'pub') {
+      aim(S.x, px, 0.075); aim(S.y, py, 0.075);
+      aim(S.w, DOT, 0.16); aim(S.h, DOT, 0.16); aim(S.r, DOT / 2, 0.16);
+      aim(S.sg, 0, 0.14); aim(S.ik, 0, 0.14); aim(S.wh, 0.95, 0.14);
+    } else {                                                                                 // text: a caret the height of the line under the pointer
+      const line = clamp(Math.floor((py - g.y) / g.lh), 0, g.lines - 1);
+      aim(S.x, px, 0.075); aim(S.y, g.y + (line + 0.5) * g.lh, 0.16);
+      aim(S.w, CARET, 0.16); aim(S.h, g.ch, 0.16); aim(S.r, CARET / 2, 0.16);
+      aim(S.sg, 0, 0.14); aim(S.ik, 0.72, 0.14); aim(S.wh, 0, 0.14);
+    }
+    TG.forEach((t) => {                                                                      // the icons lean towards the pointer, or return on their own springs
+      if (t.k !== 'b') return;
+      const b = B[t.bi], on = g === t && m === 'btn', cx = t.x + t.w / 2, cy = t.y + t.h / 2;
+      aim(b.ix, on ? clamp((px - cx) * PAR, -PARMAX, PARMAX) : 0, 0.2);
+      aim(b.iy, on ? clamp((py - cy) * PAR, -PARMAX * 0.75, PARMAX * 0.75) : 0, 0.2);
+      aim(b.lf, t.pub && m === 'pub' && g === t ? 1 : 0, 0.2);
+      if (!(g === t && (m === 'btn' || m === 'pub')) && b.pr.T !== 0) aim(b.pr, 0, 0.14);    // moved off while pressed: the press lets go
+    });
+    kick();
+  }
+  function drive(px, py) {
+    const g = pick(px, py), m = !g ? 'free' : g.k === 't' ? 'text' : g.pub ? 'pub' : 'btn';
+    if (m !== mode) {
+      if (m === 'free' && mode !== 'out') { const v = vel(); S.x.v += v.x * 0.4; S.y.v += v.y * 0.4; }   // shrinking back to the circle, carrying the pointer's velocity
+      mode = m;
+      ptr.style.zIndex = m === 'pub' ? 3 : 1;                                           // the dot rides above the pill's label; everything else sits under content
+      if (pressed && m !== 'btn' && m !== 'pub') aim(S.pr, pressed && m === 'free' ? 1 : 0, 0.09);
+    }
+    cur = g; pp = { x: px, y: py };
+    apply(m, g, px, py);
+  }
+  function enter(px, py) {                                                                  // the same path as leaving, backwards: the circle grows where the pointer came in
+    if (S.a.x < 0.03) { put(S.x, px); put(S.y, py); put(S.w, 5); put(S.h, 5); put(S.r, 2.5); put(S.sg, 0); put(S.ik, 0.2); put(S.wh, 0); put(S.pr, 0); }
+    aim(S.a, 1, 0.12);
+    mode = 'free';
+  }
+  function exit() {
+    if (mode === 'out') return;
+    const v = vel();
+    S.x.v += v.x * 0.4; S.y.v += v.y * 0.4;
+    mode = 'out'; cur = null; pressed = false; ptr.style.zIndex = 1;
+    aim(S.a, 0, 0.14); aim(S.w, FREE * 0.7, 0.14); aim(S.h, FREE * 0.7, 0.14); aim(S.r, FREE * 0.35, 0.14);
+    aim(S.sg, 0, 0.12); aim(S.ik, 0.2, 0.12); aim(S.wh, 0, 0.12); aim(S.pr, 0, 0.14);
+    B.forEach((b) => { aim(b.ix, 0, 0.2); aim(b.iy, 0, 0.2); aim(b.lf, 0, 0.2); aim(b.pr, 0, 0.14); });
+    kick();
+  }
+
+  /* one hand: the real pointer or the ghost, both through move / down / up. x and y are client px */
+  const local = (x, y) => { const r = rect(); return { x: (x - r.left) / sc, y: (y - r.top) / sc }; };
+  function move(x, y) {
+    if (!canMorph) return;
+    card.classList.add('is-morph');
+    const p = local(x, y), now = performance.now();
+    hist.push({ t: now, x: p.x, y: p.y });
+    while (hist.length && now - hist[0].t > 160) hist.shift();
+    if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) {
+      if (mode !== 'out') { exit(); aim(S.x, p.x, 0.075); aim(S.y, p.y, 0.075); }   // out with the pointer, still following it as it fades
+      return;
+    }
+    if (mode === 'out') enter(p.x, p.y);
+    drive(p.x, p.y);
+  }
+  function down() {
+    if (!canMorph || mode === 'out' || pressed) return;
+    pressed = true;
+    if (mode === 'btn' || mode === 'pub') { aim(S.pr, 1, 0.09); aim(B[cur.bi].pr, 1, 0.09); }
+    else if (mode === 'free') aim(S.pr, 1, 0.09);
+    kick();
+  }
+  function up() {
+    if (!pressed) return;
+    pressed = false;
+    aim(S.pr, 0, 0.14); B.forEach((b) => { if (b.pr.T !== 0) aim(b.pr, 0, 0.14); });
+    kick();
+  }
+  const leave = () => { up(); exit(); };
+
+  /* real input: a mouse or a pen morphs the pointer; touch gets the plain states */
+  addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
+    if (canMorph) move(e.clientX, e.clientY);
+  }, { passive: true });
+  addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') { card.classList.remove('is-morph'); exit(); return; }
+    if (e.button === 0 && canMorph) { move(e.clientX, e.clientY); down(); }
+  }, { passive: true });
+  addEventListener('pointerup', up, { passive: true });
+  addEventListener('pointercancel', up, { passive: true });
+  document.documentElement.addEventListener('mouseleave', () => { if (canMorph) leave(); });
+
+  /* the status line: a click rolls a short message up, 1.9 s later it rolls back */
+  let st = 0;
+  function say(t) {
+    statMsg.textContent = t; stat.classList.add('is-msg');
+    live.textContent = ''; live.textContent = t;
+    clearTimeout(st); st = setTimeout(() => stat.classList.remove('is-msg'), 1900);
+  }
+  btns.forEach((b) => b.addEventListener('click', () => say(b.dataset.say)));
+
+  /* the key pose: Comment under the wash, the icon drifted towards the pointer. Deterministic: nothing to wait for */
+  function settle() { for (const k in S) put(S[k], S[k].T); B.forEach((b) => { for (const k in b) put(b[k], b[k].T); }); }
+  function pose() {
+    measure();
+    hist = []; cur = null; mode = 'out'; pressed = false;
+    clearTimeout(st); stat.classList.remove('is-msg');
+    if (!canMorph) { if (reduced && btns[KEY.b]) btns[KEY.b].classList.add('is-rest'); card.classList.remove('is-morph'); return; }
+    card.classList.add('is-morph');
+    const g = TG.find((t) => t.k === 'b' && t.bi === KEY.b), px = g.x + g.w / 2 + KEY.dx, py = g.y + g.h / 2 + KEY.dy;
+    put(S.a, 1); mode = 'free'; drive(px, py); put(S.a, 1);
+    settle(); render();
+  }
+  new ResizeObserver(() => { measure(); if (mode !== 'out') drive(pp.x, pp.y); }).observe(fit);
+  if (canMorph) {
+    card.classList.add('is-morph');
+    addEventListener('pointerdown', () => btns.forEach((b) => b.classList.remove('is-rest')), { passive: true, once: true });
+  } else {
+    addEventListener('pointermove', () => btns.forEach((b) => b.classList.remove('is-rest')), { passive: true, once: true });
+  }
+  pose();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!hist.length && mode !== 'out') pose(); else measure(); });
+  return {
+    fit, card, move, down, up, leave, pose, measure, canMorph,
+    get mode() { return mode; }, get pressed() { return pressed; }, get scale() { return sc; }, get targets() { return TG; }, get btns() { return btns; },
+    sp() { return { x: S.x.x, y: S.y.x, w: S.w.x, h: S.h.x, r: S.r.x, a: S.a.x, sg: S.sg.x, ik: S.ik.x, wh: S.wh.x, pr: S.pr.x, ix: B.map((b) => b.ix.x), lf: B[4].lf.x }; },
+    toClient(lx, ly) { const r = rect(); return { x: r.left + lx * sc, y: r.top + ly * sc }; },
+    get busy() { return !!(raf); },
+    KEY,
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('pm-fit');
+  // the card is drawn at 540 × 240 and scaled to the room it is given (about 80% of the width, 1.5× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.8 * W / 540, (H - 2 * pad - ui) / 240, 1.5));
+    fit.style.setProperty('--s', s.toFixed(4));
+    PM.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  /* the ghost IS this pointer (the harness's arrow is off). A closed loop in card px: it rests on Comment, visits Preview, Publish, the title, a body line,
+     leaves, comes back over Back, clicks Share and is home on Comment again. path(t) is a pure function of t, so the loop is deterministic. */
+  const ease = QM.bezier(0.65, 0, 0.35, 1);
+  const lerp = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+  const gp = { press: false, click: -1 };
+  let segs = null, total = 0;
+  function build() {
+    const T = PM.targets, bt = T.filter((g) => g.k === 'b'), tx = T.filter((g) => g.k === 't');
+    if (!bt.length || !tx.length) return false;
+    const c = (i, dx = 0, dy = 0) => [bt[i].x + bt[i].w / 2 + dx, bt[i].y + bt[i].h / 2 + dy];
+    const K = c(PM.KEY.b, PM.KEY.dx, PM.KEY.dy);
+    const ti = tx[0], pa = tx[1];
+    const P = [
+      { to: K, d: 2.6, hold: true },                                  // home: Comment under the wash (the thumbnail's moment)
+      { to: c(3, 12, -5), d: 0.9 }, { to: c(3, 12, -5), d: 0.9, hold: true },
+      { to: c(4, -12, 3), d: 0.85 }, { to: c(4, -12, 3), d: 1.7, hold: true },   // over the lime pill: a dot, the pill lifts
+      { to: [ti.x + 70, ti.y + ti.h / 2 + 2], d: 1.15 }, { to: [ti.x + 70, ti.y + ti.h / 2 + 2], d: 0.5, hold: true },
+      { to: [ti.x + ti.w - 40, ti.y + ti.h / 2 + 2], d: 1.2 }, { to: [ti.x + ti.w - 40, ti.y + ti.h / 2 + 2], d: 0.4, hold: true },
+      { to: [pa.x + 170, pa.y + pa.lh * 1.5], d: 0.95 }, { to: [pa.x + 170, pa.y + pa.lh * 1.5], d: 1.0, hold: true },
+      { to: [PM.card.offsetWidth + 60, PM.card.offsetHeight + 30], d: 1.1 },       // out of the card
+      { to: [PM.card.offsetWidth + 60, PM.card.offsetHeight + 30], d: 0.6, hold: true },
+      { to: [-44, 66], d: 0.01 },
+      { to: c(0, -4, 2), d: 1.15 }, { to: c(0, -4, 2), d: 0.7, hold: true },       // back in over Back
+      { to: c(1, 6, 3), d: 0.7 }, { to: c(1, 6, 3), d: 0.55, hold: true, click: [0.18, 0.34] },   // Share, clicked
+      { to: K, d: 0.85 },
+    ];
+    segs = []; let from = K, t = 0;                                    // the loop closes on home
+    P.forEach((s) => { segs.push({ a: from, b: s.to, t0: t, d: s.d, click: s.click, hold: s.hold }); t += s.d; from = s.to; });
+    total = t;
+    return true;
+  }
+  let lastKey = '';
+  function path(tt) {
+    const key = PM.card.offsetWidth + '|' + PM.targets.length;
+    if (!segs || key !== lastKey) { lastKey = key; if (!build()) return [0, 0]; }
+    let u = tt % total;
+    gp.press = false;
+    for (const s of segs) {
+      if (u <= s.d) {
+        if (s.click && u >= s.click[0] && u <= s.click[1]) gp.press = true;
+        const p = lerp(s.a, s.b, s.hold ? 1 : ease(u / s.d));
+        gp.target = s.click && u >= s.click[0] ? s.b : null;
+        const r = PM.toClient(p[0], p[1]);
+        return [r.x, r.y];
+      }
+      u -= s.d;
+    }
+    const r = PM.toClient(segs[0].b[0], segs[0].b[1]);
+    return [r.x, r.y];
+  }
+  let ghostDown = false;
+  function move(x, y, isGhost) {
+    if (reduced && isGhost) return;
+    PM.move(x, y);
+    if (isGhost) {                                                      // the ghost clicks through the same down / up as a hand
+      if (gp.press && !ghostDown) { ghostDown = true; PM.down(); }
+      else if (!gp.press && ghostDown) { ghostDown = false; PM.up(); const b = PM.btns[1]; if (b) b.click(); }
+    }
+  }
+  function leave() { ghostDown = false; PM.leave(); }
+
+  // a real mouse that rests outside the card for 4.5 s hands the pointer back to the ghost
+  let idleT = 0;
+  addEventListener('pointermove', (e) => {
+    if (QM.tile || reduced || (e.pointerType && e.pointerType !== 'mouse')) return;
+    clearTimeout(idleT);
+    idleT = setTimeout(function again() {
+      if (PM.mode !== 'out' || PM.card.matches(':hover')) idleT = setTimeout(again, 1500);
+      else window.dispatchEvent(new MessageEvent('message', { data: { qm: 'cmd', cmd: 'replay' } }));
+    }, 4500);
+  }, { passive: true });
+
+  QM.demo({ kind: 'pointer', move, leave, path });
+})();
+</script>
+</body>
+</html>
