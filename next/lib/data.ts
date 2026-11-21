@@ -41,7 +41,7 @@ export const services: Service[] = [
     blurb:
       'From moodboard to a live domain. We design it, write the code, and ship it ready for business. Done in one to three weeks.',
     tags: ['Marketing site', 'Portfolio', 'Brand'],
-    priceFrom: '$500',
+    priceFrom: '$400',
     typical: '1 to 3 weeks',
   },
   {
@@ -60,24 +60,36 @@ export const services: Service[] = [
 // ----- FIXED-PRICE OFFERS (own landing pages, Stripe checkout) --------------
 
 /**
- * Live Stripe Payment Links for the fixed-price offers (same-tab checkout).
- * If a link is ever left empty, its "Start" button falls back to an email to
- * CONTACT_EMAIL with the offer named in the subject.
+ * Stripe Payment Links for the fixed-price offers (same-tab checkout).
+ * If a link is empty, its "Start" button opens an email to CONTACT_EMAIL with
+ * the offer named in the subject (checkoutHref below), so it's never a dead end.
+ *
+ * Nov 20, 2026: the per-listing kit ($99, video $49) and the $300 deposit were
+ * replaced by two plans: $350 a month for 4 listings, and a $400 website, all
+ * in. The new Payment Links are not made yet, so these fall back to email.
+ * Retired links (left active in Stripe for older emails):
+ *   https://buy.stripe.com/14AfZ946b4J11o04zi6Vq00  $99 Listing Launch Kit
+ *   https://buy.stripe.com/5kQbIT1Y31wP5Eg3ve6Vq01  $49 listing video only
+ *   https://buy.stripe.com/4gMeV5auz4J16Ik6Hq6Vq02  $300 practice deposit
  */
 export const CHECKOUT = {
-  listingKit: 'https://buy.stripe.com/14AfZ946b4J11o04zi6Vq00',        // $99, Listing Launch Kit
-  listingVideo: 'https://buy.stripe.com/5kQbIT1Y31wP5Eg3ve6Vq01',      // $49, listing video only
-  practiceDeposit: 'https://buy.stripe.com/4gMeV5auz4J16Ik6Hq6Vq02',   // $300 deposit, Practice Website Refresh
+  listingKit: '',       // $350 a month, Listing Launch Kit (4 listings)
+  listingVideo: '',     // retired
+  practiceDeposit: '',  // $400 one payment, Practice Website Refresh, all in
 };
 
+/** A checkout link, or an email that names the offer when the link is empty. */
+export const checkoutHref = (href: string, offer: string) =>
+  href || `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Start: ${offer}`)}`;
+
 /**
- * Exclusive-offer pricing, shown as the sale price next to the regular price
- * struck through. One source for both offer pages and the homepage cards.
+ * Plan pricing. One source for both offer pages and the homepage cards.
+ * `was` is empty now: no struck-through regular price.
  */
 export const PRICES = {
-  listingKit: { now: '$99', was: '$249' },
-  listingVideo: { now: '$49', was: '$99' },
-  practice: { now: '$600', was: '$800', deposit: '$300' },
+  listingKit: { now: '$350', was: '', unit: 'a month', listings: 4 },
+  listingVideo: { now: '', was: '' },
+  practice: { now: '$400', was: '', deposit: '' },
 };
 
 export type Offer = {
@@ -99,14 +111,13 @@ export const offers: Offer[] = [
     slug: 'listing-kit',
     href: '/listing-kit',
     num: '03',
-    audience: 'Real estate agents · per listing',
+    audience: 'Real estate agents · 4 listings a month',
     title: 'Listing Launch Kit',
     blurb:
-      'A print flyer, five social posts, and a 30-second video for one property. Ready to share in 48 hours.',
+      'A print flyer, five social posts, and a 30-second video for each listing, four listings a month. Ready to share in 48 hours.',
     tags: ['Print flyer', '5 social posts', '30s video'],
-    priceLead: 'Per listing',
+    priceLead: 'Per month',
     price: PRICES.listingKit.now,
-    wasPrice: PRICES.listingKit.was,
     typical: '48 hours',
   },
   {
@@ -116,11 +127,10 @@ export const offers: Offer[] = [
     audience: 'Solo practices · therapists',
     title: 'Practice Website Refresh',
     blurb:
-      'A calm, clean website for your practice, rebuilt in one week. Your words, your photos, and it works on any phone.',
-    tags: ['3 to 5 pages', 'Mobile first', 'You own it'],
-    priceLead: 'Flat',
+      'A calm, clean website for your practice, rebuilt in one week, plus posters and a business kit. Your words, your photos, and it works on any phone.',
+    tags: ['3 to 5 pages', 'Posters', 'Business kit'],
+    priceLead: 'All in',
     price: PRICES.practice.now,
-    wasPrice: PRICES.practice.was,
     typical: '7 days',
   },
 ];

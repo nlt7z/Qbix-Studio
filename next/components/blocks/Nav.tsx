@@ -21,15 +21,15 @@ const SERVICES = [
   {
     group: 'For AI teams',
     items: [
-      { href: '/#services', name: 'Design service', line: 'From moodboard to a live domain. From $500.' },
+      { href: '/#services', name: 'Design service', line: 'From moodboard to a live domain. From $400.' },
       { href: '/#brand', name: 'Brand upgrade', line: 'From usable to worth sharing. From $5,000.' },
     ],
   },
   {
     group: 'For business',
     items: [
-      { href: '/listing-kit', name: 'Listing Launch Kit', line: 'Ready to share in 48 hours. $99 per listing.' },
-      { href: '/practice-websites', name: 'Practice Website Refresh', line: 'A calm website, live in 7 days. $600 flat.' },
+      { href: '/listing-kit', name: 'Listing Launch Kit', line: 'Ready to share in 48 hours. $350 a month for 4 listings.' },
+      { href: '/practice-websites', name: 'Practice Website Refresh', line: 'A calm website, posters and a business kit. $400 all in.' },
       { href: '/samples', name: 'Samples', line: 'Short videos and posters we made for local businesses.' },
     ],
   },
@@ -42,7 +42,7 @@ const SHEET: { title: string; href: string; aud: 'ai' | 'business'; items: { nam
     href: '/',
     aud: 'ai',
     items: [
-      { name: 'Design service', note: 'From $500', href: '/#services' },
+      { name: 'Design service', note: 'From $400', href: '/#services' },
       { name: 'Brand upgrade', note: 'From $5,000', href: '/#brand' },
       { name: 'Products', note: 'Strata, AI Bidding and more', href: '/products/strata' },
     ],
@@ -52,8 +52,8 @@ const SHEET: { title: string; href: string; aud: 'ai' | 'business'; items: { nam
     href: '/business',
     aud: 'business',
     items: [
-      { name: 'Listing Launch Kit', note: '$99 per listing', href: '/listing-kit' },
-      { name: 'Practice Website Refresh', note: '$600 flat', href: '/practice-websites' },
+      { name: 'Listing Launch Kit', note: '$350 a month', href: '/listing-kit' },
+      { name: 'Practice Website Refresh', note: '$400 all in', href: '/practice-websites' },
       { name: 'Samples', note: '18 local businesses', href: '/samples' },
     ],
   },

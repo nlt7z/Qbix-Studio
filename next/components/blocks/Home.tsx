@@ -32,22 +32,19 @@ import '@/app/home.css';
 // the brand upgrade's 3D (three.js), loaded on the page only
 const KovaLayers = dynamic(() => import('@/components/blocks/three/KovaLayers'), { ssr: false });
 
-const was = (p: { now: string; was: string }) => (
-  <>
-    {p.now} <del>{p.was}</del>
-  </>
-);
+// Nov 20, 2026: no struck-through regular prices; the price is the price.
+const was = (p: { now: string; was: string }) => <>{p.now}</>;
 
 // the hero's two services, side by side under the claim: each opens its own part of the page (or its page)
 type Offer = { k: string; name: string; line: string; tl: string; time: string; pl: string; price: ReactNode; href: string; pic: string; vid?: string; board?: boolean; forma?: boolean };
 const OFFERS: Record<Audience, Offer[]> = {
   ai: [
-    { k: 'web', name: 'Design service', line: 'From moodboard to a live domain.', tl: 'Ready in', time: '1 to 3 weeks', pl: 'Starts at', price: '$500', href: '#services', pic: '', forma: true },
+    { k: 'web', name: 'Design service', line: 'From moodboard to a live domain.', tl: 'Ready in', time: '1 to 3 weeks', pl: 'Starts at', price: '$400', href: '#services', pic: '', forma: true },
     { k: 'brand', name: 'Brand upgrade', line: 'From usable to worth sharing.', tl: 'Ready in', time: '5 to 10 weeks', pl: 'Starts at', price: '$5,000', href: '#brand', pic: '', board: true },
   ],
   business: [
-    { k: 'kit', name: 'Listing Launch Kit', line: 'A flyer, five posts and a video.', tl: 'Ready in', time: '48 hours', pl: 'Per listing', price: was(PRICES.listingKit), href: '/listing-kit', pic: '/samples/justin-allen/thumb.webp', vid: '/samples/justin-allen/preview.mp4' },
-    { k: 'practice', name: 'Practice Website Refresh', line: 'A calm website for your practice.', tl: 'Live in', time: '7 days', pl: 'Flat', price: was(PRICES.practice), href: '/practice-websites', pic: '/motion/thumbs/practice-story.jpg' },
+    { k: 'kit', name: 'Listing Launch Kit', line: 'A flyer, five posts and a video, 4 listings a month.', tl: 'Ready in', time: '48 hours', pl: 'Per month', price: was(PRICES.listingKit), href: '/listing-kit', pic: '/samples/justin-allen/thumb.webp', vid: '/samples/justin-allen/preview.mp4' },
+    { k: 'practice', name: 'Practice Website Refresh', line: 'A calm website, posters and a business kit.', tl: 'Live in', time: '7 days', pl: 'All in', price: was(PRICES.practice), href: '/practice-websites', pic: '/motion/thumbs/practice-story.jpg' },
   ],
 };
 
@@ -351,7 +348,7 @@ function Page() {
               <span className="nb">From moodboard</span> <span className="nb">to a <Mark>live domain.</Mark></span>
             </Rise>
             <div className="acts">
-              <Meta items={[['Starts at', '$500'], ['Takes', '1 to 3 weeks']]} />
+              <Meta items={[['Starts at', '$400'], ['Takes', '1 to 3 weeks']]} />
             </div>
           </>
         }
@@ -456,7 +453,7 @@ function Page() {
             <Steps items={['Print flyer', 'Five social posts', 'A 30-second video']} />
             <div className="acts">
               <Btn href="/listing-kit">See the kit</Btn>
-              <Meta items={[['Per listing', was(PRICES.listingKit)], ['Takes', '48 hours']]} />
+              <Meta items={[['Per month', was(PRICES.listingKit)], ['Takes', '48 hours']]} />
             </div>
           </>
         }
@@ -482,7 +479,7 @@ function Page() {
             <Steps items={['A short questionnaire', 'Your new homepage in 3 days', 'Live in 7 days']} />
             <div className="acts">
               <Btn href="/practice-websites">See the refresh</Btn>
-              <Meta items={[['Flat', was(PRICES.practice)], ['Takes', '7 days']]} />
+              <Meta items={[['All in', was(PRICES.practice)], ['Takes', '7 days']]} />
             </div>
           </>
         }
@@ -516,8 +513,8 @@ function Page() {
           <Rows
             v={cv}
             rows={[
-              { href: '/listing-kit', t: 'Listing Launch Kit', d: 'A flyer, five posts and a 30-second video, in 48 hours.', e: <>{PRICES.listingKit.now}<del>{PRICES.listingKit.was}</del></>, img: '/samples/justin-allen/thumb.webp' },
-              { href: '/practice-websites', t: 'Practice Website Refresh', d: 'A calm website for your practice, live in 7 days.', e: <>{PRICES.practice.now}<del>{PRICES.practice.was}</del></>, img: '/motion/thumbs/practice-story.jpg' },
+              { href: '/listing-kit', t: 'Listing Launch Kit', d: 'A flyer, five posts and a 30-second video, 4 listings a month.', e: <>{PRICES.listingKit.now}<small className="state">/mo</small></>, img: '/samples/justin-allen/thumb.webp' },
+              { href: '/practice-websites', t: 'Practice Website Refresh', d: 'A calm website, posters and a business kit, live in 7 days.', e: <>{PRICES.practice.now}</>, img: '/motion/thumbs/practice-story.jpg' },
               { href: '/samples', t: 'Samples', d: 'Videos and posters we made for local businesses.', e: '↗︎', img: '/samples/hemphill-tree-farm/thumb.webp' },
             ]}
           />
@@ -536,7 +533,7 @@ function Page() {
           <Rows
             v={cv}
             rows={[
-              { href: '/#services', t: 'Design service', d: 'From moodboard to a live domain in 1 to 3 weeks.', e: <><small className="state">from</small> $500</>, img: '/motion/thumbs/forma.jpg' },
+              { href: '/#services', t: 'Design service', d: 'From moodboard to a live domain in 1 to 3 weeks.', e: <><small className="state">from</small> $400</>, img: '/motion/thumbs/forma.jpg' },
               { href: '/#brand', t: 'Brand upgrade', d: 'From usable to worth sharing, merged into your repo.', e: <><small className="state">from</small> $5,000</>, img: '/motion/thumbs/kova.jpg' },
               { href: '/products/strata', t: 'Strata', d: 'A moodboard in, a working design system out.', e: 'Live ↗︎', img: '/previews/strata.jpg' },
             ]}

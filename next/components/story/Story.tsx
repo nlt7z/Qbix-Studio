@@ -297,7 +297,7 @@ function OfferChapters() {
         foot={
           <>
             <p className="ch-meta">
-              <span><b>{PRICES.listingKit.now}</b> <del>{PRICES.listingKit.was}</del> per listing</span>
+              <span><b>{PRICES.listingKit.now}</b> a month, 4 listings</span>
               <span>{kit.typical}</span>
             </p>
             <div className="ch-acts"><Act href={kit.href}>See the kit</Act></div>
@@ -325,7 +325,7 @@ function OfferChapters() {
         foot={
           <>
             <p className="ch-meta">
-              <span><b>{PRICES.practice.now}</b> <del>{PRICES.practice.was}</del> flat</span>
+              <span><b>{PRICES.practice.now}</b> all in</span>
               <span>{practice.typical}</span>
             </p>
             <div className="ch-acts"><Act href={practice.href}>See the refresh</Act></div>

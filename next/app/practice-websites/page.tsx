@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { BOOKING_URL, CHECKOUT, CONTACT_EMAIL, PRICES } from '@/lib/data';
+import { BOOKING_URL, CHECKOUT, CONTACT_EMAIL, PRICES, checkoutHref } from '@/lib/data';
 import Btn from '@/components/blocks/Btn';
 import Chapter, { Steps } from '@/components/blocks/Chapter';
 import Footer from '@/components/blocks/Footer';
@@ -11,7 +11,7 @@ import { up } from '@/components/blocks/up';
 
 const SITE_URL = 'https://qbix.space';
 const DESC =
-  'Websites for solo therapy practices, rebuilt in one week. Your words, your photos, a calm design that works on any phone. Exclusive offer: $600 flat, regular $800. $300 to start, $300 at launch.';
+  'Websites for solo therapy practices, rebuilt in one week, plus posters and a business kit. Your words, your photos, a calm design that works on any phone. $400, all in, one payment.';
 
 export const metadata: Metadata = {
   title: 'Practice Website Refresh: a website as calm as your office',
@@ -24,9 +24,9 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Qbix',
     locale: 'en_US',
-    images: [{ url: '/og/practice-websites.png', width: 1200, height: 630, alt: 'Practice Website Refresh: a website that feels as calm as your office. $600 flat, regular $800.' }],
+    images: [{ url: '/og/practice-websites.png', width: 1200, height: 630, alt: 'Practice Website Refresh: a website that feels as calm as your office. $400, all in.' }],
     url: `${SITE_URL}/practice-websites`,
-    title: 'Practice Website Refresh: $600 flat, regular $800',
+    title: 'Practice Website Refresh: $400, all in',
     description: DESC,
   },
   twitter: {
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     site: '@QbixStudio',
     creator: '@QbixStudio',
     images: ['/og/practice-websites.png'],
-    title: 'Practice Website Refresh: $600 flat, regular $800',
+    title: 'Practice Website Refresh: $400, all in',
     description: DESC,
   },
 };
@@ -48,15 +48,14 @@ const jsonLd = {
   serviceType: 'Website design for private practices',
   provider: { '@id': `${SITE_URL}/#organization` },
   url: `${SITE_URL}/practice-websites`,
-  offers: { '@type': 'Offer', name: 'Practice Website Refresh', price: '600', priceCurrency: 'USD' },
+  offers: { '@type': 'Offer', name: 'Practice Website Refresh, all in', price: '400', priceCurrency: 'USD' },
 };
 
 const PRICE = PRICES.practice;
-const ACT = `Start my website, ${PRICE.deposit} deposit`;
-
-
-const was = <del aria-label={`Regular price ${PRICE.was}`}>{PRICE.was}</del>;
-const split = `${PRICE.deposit} to start, ${PRICE.deposit} when the site goes live.`;
+const ACT = `Start my website, ${PRICE.now}`;
+const HREF = checkoutHref(CHECKOUT.practiceDeposit, 'Practice Website Refresh, all in');
+const split = `One payment of ${PRICE.now}. Posters and a business kit included.`;
+const KIT = 'business cards, logo files, social profile images and an email signature';
 
 // what you get, one stop of the tour each (the scene's seven states, in its order)
 const GET: [string, ReactNode][] = [
@@ -123,7 +122,7 @@ export default function PracticeWebsitesPage() {
             </div>
             <div {...up(200)}>
               <div className="conv" data-tone="black">
-                <p className="conv-q">Exclusive offer. For solo practices.</p>
+                <p className="conv-q">All in. For solo practices.</p>
                 <dl className="conv-out">
                   <div className="conv-cell">
                     <dt>Live in</dt>
@@ -132,16 +131,14 @@ export default function PracticeWebsitesPage() {
                     </dd>
                   </div>
                   <div className="conv-cell">
-                    <dt>Flat</dt>
-                    <dd>
-                      {PRICE.now} {was}
-                    </dd>
+                    <dt>All in</dt>
+                    <dd>{PRICE.now}</dd>
                   </div>
                 </dl>
                 <p className="conv-get">
-                  <b>{split}</b> 3 to 5 pages that work on every phone, built in your name.
+                  <b>{split}</b> 3 to 5 pages that work on every phone, built in your name. The business kit: {KIT}.
                 </p>
-                <Btn href={CHECKOUT.practiceDeposit} wide>
+                <Btn href={HREF} wide>
                   {ACT}
                 </Btn>
                 <p className="conv-foot">
@@ -190,7 +187,7 @@ export default function PracticeWebsitesPage() {
                 ))}
               </div>
               <div className="acts">
-                <Btn href={CHECKOUT.practiceDeposit}>{ACT}</Btn>
+                <Btn href={HREF}>{ACT}</Btn>
               </div>
             </>
           }
@@ -245,16 +242,17 @@ export default function PracticeWebsitesPage() {
           <div className="in">
             <div>
               <p className="kicker">
-                Price <span>· Exclusive offer</span>
+                Price <span>· All in</span>
               </p>
               <p className="pr-price" {...up()}>
                 <span>{PRICE.now}</span>
-                {was}
-                <span className="pr-price-u">flat</span>
+                <span className="pr-price-u">all in</span>
               </p>
-              <p className="pr-sign-split">{split}</p>
+              <p className="pr-sign-split">
+                {split} The business kit: {KIT}.
+              </p>
               <div className="acts">
-                <Btn href={CHECKOUT.practiceDeposit}>{ACT}</Btn>
+                <Btn href={HREF}>{ACT}</Btn>
                 <a className="link" href={BOOKING_URL}>
                   Book a call
                 </a>

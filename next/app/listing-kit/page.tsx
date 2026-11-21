@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { CHECKOUT, CONTACT_EMAIL, PRICES } from '@/lib/data';
+import { CHECKOUT, CONTACT_EMAIL, PRICES, checkoutHref } from '@/lib/data';
 import { LISTING_SAMPLES } from '@/lib/samples';
 import Btn from '@/components/blocks/Btn';
 import Chapter, { Steps } from '@/components/blocks/Chapter';
@@ -14,7 +14,7 @@ import { up } from '@/components/blocks/up';
 
 const SITE_URL = 'https://qbix.space';
 const DESC =
-  'A print flyer, five social posts, and a 30-second video for one property, ready to share in 48 hours. Made by a designer, delivered as files you own. Exclusive offer: $99 per listing, regular $249.';
+  'A print flyer, five social posts, and a 30-second video for each listing, ready to share in 48 hours. Four listings a month for $350. Made by a designer, delivered as files you own.';
 
 export const metadata: Metadata = {
   title: 'Listing Launch Kit: your listing, ready to share in 48 hours',
@@ -27,9 +27,9 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Qbix',
     locale: 'en_US',
-    images: [{ url: '/og/listing-kit.png', width: 1200, height: 630, alt: 'Listing Launch Kit: your listing, ready to share in 48 hours. $99 per listing, regular $249.' }],
+    images: [{ url: '/og/listing-kit.png', width: 1200, height: 630, alt: 'Listing Launch Kit: your listing, ready to share in 48 hours. $350 a month for 4 listings.' }],
     url: `${SITE_URL}/listing-kit`,
-    title: 'Listing Launch Kit: $99 per listing, regular $249',
+    title: 'Listing Launch Kit: $350 a month for 4 listings',
     description: DESC,
   },
   twitter: {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     site: '@QbixStudio',
     creator: '@QbixStudio',
     images: ['/og/listing-kit.png'],
-    title: 'Listing Launch Kit: $99 per listing, regular $249',
+    title: 'Listing Launch Kit: $350 a month for 4 listings',
     description: DESC,
   },
 };
@@ -51,19 +51,12 @@ const jsonLd = {
   serviceType: 'Real estate listing marketing design',
   provider: { '@id': `${SITE_URL}/#organization` },
   url: `${SITE_URL}/listing-kit`,
-  offers: [
-    { '@type': 'Offer', name: 'Listing Launch Kit', price: '99', priceCurrency: 'USD', url: CHECKOUT.listingKit },
-    { '@type': 'Offer', name: 'Listing video only', price: '49', priceCurrency: 'USD', url: CHECKOUT.listingVideo },
-  ],
+  offers: [{ '@type': 'Offer', name: 'Listing Launch Kit, monthly plan (4 listings)', price: '350', priceCurrency: 'USD', url: `${SITE_URL}/listing-kit` }],
 };
 
 const KIT = PRICES.listingKit;
-const VIDEO = PRICES.listingVideo;
-const KIT_ACT = `Start my listing kit, ${KIT.now}`;
-const VIDEO_ACT = `Just the video, ${VIDEO.now}`;
-
-
-const was = (p: string) => <del aria-label={`Regular price ${p}`}>{p}</del>;
+const KIT_ACT = `Start my plan, ${KIT.now} a month`;
+const KIT_HREF = checkoutHref(CHECKOUT.listingKit, 'Listing Launch Kit, monthly plan');
 
 const ask = (
   <>
@@ -71,56 +64,28 @@ const ask = (
   </>
 );
 
-// the converter: the kit, or just its video
+// the converter: the monthly plan
 const OPTIONS: ConvItem[] = [
   {
     k: 'kit',
-    label: 'The full kit',
-    sub: 'Flyer, five posts and a video',
+    label: 'The monthly plan',
+    sub: 'Four listings a month',
     tlabel: 'Ready in',
     time: (
       <>
         48 <small>hours</small>
       </>
     ),
-    plabel: 'Per listing',
-    price: (
-      <>
-        {KIT.now} {was(KIT.was)}
-      </>
-    ),
+    plabel: 'Per month',
+    price: <>{KIT.now}</>,
     get: (
       <>
-        <b>Print flyer, 5 social posts, 30-second video,</b> editable copies, and one round of changes.
+        <b>For each listing: a print flyer, 5 social posts and a 30-second video.</b> Send your own photos or clips and we
+        work them in, free.
       </>
     ),
-    href: CHECKOUT.listingKit,
+    href: KIT_HREF,
     act: KIT_ACT,
-  },
-  {
-    k: 'video',
-    label: 'Just the video',
-    sub: '30 seconds, vertical',
-    tlabel: 'Length',
-    time: (
-      <>
-        30 <small>seconds</small>
-      </>
-    ),
-    plabel: 'Per listing',
-    price: (
-      <>
-        {VIDEO.now} {was(VIDEO.was)}
-      </>
-    ),
-    get: (
-      <>
-        <b>Just the video.</b> Vertical, built from your listing photos, with music and captions. Ready for Reels, TikTok, and
-        YouTube Shorts.
-      </>
-    ),
-    href: CHECKOUT.listingVideo,
-    act: VIDEO_ACT,
   },
 ];
 
@@ -130,10 +95,10 @@ const GET: [string, string][] = [
   ['5 social posts', 'Just Listed, Open House, a feature detail, the neighborhood, and In Escrow. Sized for Instagram feed and Stories.'],
   ['30-second video', 'Vertical, built from your listing photos, with music and captions. Ready for Reels, TikTok, and YouTube Shorts.'],
   ['Editable copies', 'A Canva link, so you can change the price or open house date yourself.'],
-  ['One round of changes', 'Ask for changes once, then get your final files.'],
+  ['Free changes', 'Send your own photos or clips, or tell us what to change, and we update the files at no charge.'],
 ];
 
-const HOW = ['Pay and send your listing link, plus your logo if you have one.', 'Get drafts in 48 hours.', 'Ask for changes once, then get your final files.'];
+const HOW = ['Start the plan and send your listing link, plus your logo if you have one.', 'Get drafts in 48 hours.', 'Ask for changes, then get your final files. Send the next listing any time that month.'];
 
 const FAQ: { q: string; a: ReactNode; open?: boolean }[] = [
   { q: 'Do you need to visit the house?', a: 'No. Everything comes from your listing photos and details.' },
@@ -160,7 +125,7 @@ export default function ListingKitPage() {
           <div className="in">
             <div className="lk-hero-say">
               <p className="kicker">
-                Listing Launch Kit <span>· Real estate agents, per listing</span>
+                Listing Launch Kit <span>· Real estate agents, 4 listings a month</span>
               </p>
               <Rise as="h1" className="display" fit={{ max: 150, min: 30 }}>
                 <Line>Your listing,</Line>
@@ -170,17 +135,17 @@ export default function ListingKitPage() {
                 </Line>
               </Rise>
               <p className="lede" {...up()}>
-                A print flyer, five social posts, and a 30-second video for one property. Made by a designer, delivered as
-                files you own.
+                A print flyer, five social posts, and a 30-second video for each listing, four listings a month. Made by a
+                designer, delivered as files you own.
               </p>
               <ul className="points" {...up(120)}>
                 <li>Drafts in 48 hours</li>
                 <li>No visit to the house</li>
-                <li>One round of changes</li>
+                <li>Free changes with your own photos</li>
               </ul>
             </div>
             <div {...up(200)}>
-              <Converter question="Exclusive offer. What do you need?" items={OPTIONS} foot={ask} />
+              <Converter question="One plan, four listings a month." items={OPTIONS} foot={ask} />
             </div>
           </div>
         </section>
@@ -219,7 +184,7 @@ export default function ListingKitPage() {
           copy={
             <>
               <p className="kicker">
-                Listing Launch Kit <span>· For one property</span>
+                Listing Launch Kit <span>· For each listing</span>
               </p>
               <Rise className="h2">What you get.</Rise>
               <Steps items={GET.map(([k]) => k)} />
@@ -229,7 +194,7 @@ export default function ListingKitPage() {
                 ))}
               </div>
               <div className="acts">
-                <Btn href={CHECKOUT.listingKit}>{KIT_ACT}</Btn>
+                <Btn href={KIT_HREF}>{KIT_ACT}</Btn>
               </div>
             </>
           }
@@ -286,21 +251,17 @@ export default function ListingKitPage() {
           <div className="in">
             <div>
               <p className="kicker">
-                Price <span>· Exclusive offer</span>
+                Price <span>· Monthly plan</span>
               </p>
               <p className="lk-price" {...up()}>
                 <span>{KIT.now}</span>
-                {was(KIT.was)}
-                <span className="lk-price-u">per listing</span>
+                <span className="lk-price-u">a month</span>
               </p>
               <p className="lk-sign-video">
-                Just the video: <b>{VIDEO.now}</b> {was(VIDEO.was)}
+                Four listings a month. For each one: a print flyer, five social posts and a 30-second video.
               </p>
               <div className="acts">
-                <Btn href={CHECKOUT.listingKit}>{KIT_ACT}</Btn>
-                <a className="link" href={CHECKOUT.listingVideo}>
-                  {VIDEO_ACT}
-                </a>
+                <Btn href={KIT_HREF}>{KIT_ACT}</Btn>
               </div>
               <p className="lk-sign-note">
                 Secure checkout through Stripe. Questions first? Email{' '}

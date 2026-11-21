@@ -91,8 +91,8 @@ export default function SamplesPage() {
           </div>
           <dl className="figs">
             <div className="fig">
-              <dt>$99</dt>
-              <dd>A print flyer, five social posts, and a 30-second video for one property. Regular $249.</dd>
+              <dt>$350</dt>
+              <dd>A month for 4 listings: a print flyer, five social posts, and a 30-second video for each.</dd>
             </div>
             <div className="fig">
               <dt>48 hours</dt>
