@@ -6,6 +6,7 @@ import Chapter, { Steps } from '@/components/blocks/Chapter';
 import Footer from '@/components/blocks/Footer';
 import { Line, Mark, Rise } from '@/components/blocks/Rise';
 import { PracticeHero, PracticeTourScene } from '@/components/scenes/Practice';
+import { PicturesOn } from '@/components/scene/pictures';
 import './practice.css';
 import { up } from '@/components/blocks/up';
 
@@ -191,7 +192,11 @@ export default function PracticeWebsitesPage() {
               </div>
             </>
           }
-          scene={<PracticeTourScene />}
+          scene={
+            <PicturesOn>
+              <PracticeTourScene />
+            </PicturesOn>
+          }
         />
 
         {/* black: how it works, three days */}
@@ -266,7 +271,9 @@ export default function PracticeWebsitesPage() {
             </div>
             <div className="pr-live" data-chapter="">
               <div className="scene" data-tone="dark">
-                <PracticeHero />
+                <PicturesOn>
+                  <PracticeHero />
+                </PicturesOn>
               </div>
             </div>
           </div>

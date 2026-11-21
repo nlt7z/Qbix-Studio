@@ -9,6 +9,7 @@ import Footer from '@/components/blocks/Footer';
 import { Line, Mark, Rise } from '@/components/blocks/Rise';
 import VCard from '@/components/blocks/VCard';
 import { ListingHero, ListingTour } from '@/components/scenes/Listing';
+import { PicturesOn } from '@/components/scene/pictures';
 import './listing.css';
 import { up } from '@/components/blocks/up';
 
@@ -198,7 +199,11 @@ export default function ListingKitPage() {
               </div>
             </>
           }
-          scene={<ListingTour />}
+          scene={
+            <PicturesOn>
+              <ListingTour />
+            </PicturesOn>
+          }
         />
 
         {/* black: why it matters, and the three steps */}
@@ -272,7 +277,9 @@ export default function ListingKitPage() {
             </div>
             <div className="lk-kit" data-chapter="">
               <div className="scene" data-tone="dark">
-                <ListingHero />
+                <PicturesOn>
+                  <ListingHero />
+                </PicturesOn>
               </div>
             </div>
           </div>
