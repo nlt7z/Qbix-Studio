@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marquee select · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "marquee-select", "title": "Marquee select", "group": "studio", "added": "2026-11-24", "cat": "cursor", "order": 40,
+  "kind": "loop", "tone": "paper", "shot": 900,
+  "line": "marquee 1:1 from the press · rings drawn on as the edge crosses · weight lag 0.13 s + 0.025 s a card · release projects v × 0.099 s",
+  "summary": "A Strata board for Forma's launch: nine white component cards on #f5f5f7. Press on empty canvas and drag: after 4 px a marquee grows from the press point exactly with the pointer, a thin ink edge, a faint wash, 6 px corners. As its edge crosses a card the card's 2 px ink ring is drawn on and the card lifts on a spring, and a card the box leaves lets go the same way. Once anything is selected a translucent bar rises under the selection with a rolling count in the one lime badge, and Group, Align and Delete as quiet text buttons. On release the marquee is covered towards the corner you let go in. Dragging a selected card moves the whole selection 1:1 from the grab point, the others following on slightly softer springs so the group has weight; a release projects a little, the cards settle, and the group is held inside the board by a rubber band.",
+  "spec": [
+    ["Marquee", "starts after 4 px of travel (a 380 ms hold on touch), from the press point, and follows the pointer exactly: no spring, no smoothing; 1 px ink edge at 34%, a 3.5% ink wash, 6 px corners; Shift adds to what is already selected"],
+    ["Hit test", "the marquee rect against each card's on-screen rect in board pixels, every pointer move; a group is one unit, touching one member takes all of them"],
+    ["Ring", "a 2 px #1d1d1f ring 4 px outside the card, one path from the top centre drawn clockwise by a critically damped spring (response 0.3 s in, 0.2 s out), so it draws on as the edge crosses and draws back as it leaves; the card lifts 1.02 and −2 px with its shadow on a 0.3 s spring"],
+    ["Count bar", "a translucent bar (white at 72%, 20 px blur, 1 px edge) under the selection's bounds, 16 px below, flipped above when there is no room and always inside the board; it rises on one spring (response 0.36 s, uncovered from its bottom edge, 14 px of travel) and follows the selection on its own 0.3 s springs; the count rolls through a strip of digits (0.28 s) inside the one lime badge"],
+    ["Release", "the marquee is covered towards the release corner, clip-path inset collapsing to that corner in 240 ms ease-in"],
+    ["Move", "the grabbed card is exact from the grab offset (anchored where the 6 px of slop ended, so nothing jumps); the others chase the same offset on critically damped springs of 0.13 s plus 0.025 s for each card further from the grabbed one (at most five); everything lifts to 1.035 while it is held"],
+    ["Release and bounds", "the group is kept inside the board by a rubber band (x·D·0.55) / (D + 0.55·|x|), D = 90 px, measured on the group's bounds; release over 140 px/s is projected by v × 0.099 s (d = 0.99) and clamped to the board; over 420 px/s it is a throw (damping 0.8), otherwise critically damped"],
+    ["Actions", "Group draws one 2 px ring round the bounds (the cards' own rings step down) and turns into Ungroup; Align puts rows on one top and columns on one left, springing 0.32 s; Delete covers the cards under a clip (0.34 s) and a toast offers Undo for 6 s, which uncovers them and selects them again (Cmd/Ctrl+Z too)"],
+    ["Keys", "Tab goes through the cards, Space or Enter toggles one, Cmd/Ctrl+A selects all, arrows nudge the selection 8 px (Shift 32 px) on a 0.22 s spring, Delete deletes, Escape clears; with nothing selected the arrows move focus"],
+    ["Loop", "the thumbnail rests on a marquee held over four cards; a ghost then widens it to six, narrows it to two, lets go over four, moves them with a lag, pulls past the board's edge, aligns, groups, clears, shift-selects two cards, deletes and undoes; it calls the same down / move / up as a hand and yields to a real pointer, resuming after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-24"],
+  "where": "A Strata board or a Qbix client's asset canvas, where a designer drags a box round a handful of components to move, align, group or remove them together.",
+  "rules": [
+    "The marquee is the hand's: 1:1 from the press point, no easing. Everything it causes (rings, lifts, the bar, the count) is a spring started from the value on screen, so a box dragged back and forth never jumps.",
+    "Selection comes from hit-testing the marquee against the cards' on-screen rects, live, on every move. A card the box leaves lets go on the same path it came in by.",
+    "Lime is the count badge and nothing else. The selection is told apart by a 2 px ink ring and a lift, never by a fill; the bar is a translucent material with text buttons.",
+    "Dragging a selected card is the whole selection's: the grabbed card is exact, the others follow on softer springs (a lag that reads as weight), the group is clamped to the board by a rubber band, and a release projects only a little.",
+    "A group is one unit: clicking, marquee-touching or Shift-clicking any member takes them all, and the group's ring replaces the cards' own.",
+    "Delete only covers; Undo uncovers the same cards by the same path. Nothing fades.",
+    "Pointer, touch and keys share one path: a click selects one card, Shift toggles, Escape or a click on empty canvas clears, a long press on touch starts the marquee, and the cards are real options in a multi-select listbox with a live status line.",
+    "Under reduced motion the piece rests on its marquee pose; the marquee still follows the pointer, everything else changes in place with a short cross-fade and no springs."
+  ],
+  "tags": ["marquee", "rubber band select", "selection", "canvas", "drag", "spring", "group", "align", "keyboard", "Strata", "cursor"]
+}
+</script>
+<style data-code>
+/* Marquee select. A Strata board on #f5f5f7: nine white cards of drawn components. Lime is the count badge and nothing else; the selection is a 2 px ink ring.
+   Position, lift, ring, cover, the bar and the toast are set from script (render()): they are springs. The marquee is the hand's, set directly.
+   Easing for small UI feedback: ui (.4, 0, .2, 1); the marquee's cover: in (.5, 0, .75, 0). */
+.mq-fit { position: relative; width: calc(720px * var(--s, 1)); height: calc(456px * var(--s, 1)); }
+.mq-board { --mq-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 720px; height: 456px; transform: scale(var(--s, 1)); transform-origin: 0 0; overflow: hidden; border-radius: 26px; background: #f5f5f7;
+  font: 400 13px/18px var(--mq-f); letter-spacing: -.01em; color: #1d1d1f; cursor: default; touch-action: pan-y;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-font-smoothing: antialiased; }
+.mq-board p { margin: 0; }
+:where(.mq-board button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; }
+.mq-board.is-marq { cursor: crosshair; }
+.mq-board.is-drag, .mq-board.is-drag .mq-item { cursor: grabbing; }
+.mq-top { position: absolute; left: 28px; top: 15px; font-size: 12px; line-height: 16px; font-weight: 500; color: #6e6e73; pointer-events: none; }
+.mq-cards { position: absolute; inset: 0; }
+
+/* a card: white, no ring, a shadow that deepens with --l (0 at rest, 1 selected, set from script) */
+.mq-item { position: absolute; left: 0; top: 0; z-index: 1; border-radius: 18px; background: #fff; outline: none; will-change: transform; touch-action: none; --l: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 calc(6px + 12px * var(--l)) calc(18px + 14px * var(--l)) calc(-8px - 2px * var(--l)) rgba(0, 0, 0, calc(.1 + .1 * var(--l))); }
+.mq-item.is-sel { cursor: grab; }
+.mq-item:focus-visible { outline: 2px dotted #1d1d1f; outline-offset: 8px; }
+.mq-in { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.mq-ring { position: absolute; left: -6px; top: -6px; overflow: visible; pointer-events: none; }
+.mq-ring path, .mq-gring path { fill: none; stroke: #1d1d1f; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.mq-gring { position: absolute; left: 0; top: 0; z-index: 6; width: 720px; height: 456px; overflow: visible; pointer-events: none; }
+
+/* the components, drawn: button, switches, slider, type, palette, segmented control, avatars, progress, field */
+.mq-cap { font-size: 12px; line-height: 16px; color: #6e6e73; }
+.mq-row { display: flex; gap: 8px; }
+.mq-pill { display: inline-flex; align-items: center; justify-content: center; height: 36px; border-radius: 18px; font: 600 14px/1 var(--mq-f); letter-spacing: -.01em; }
+.mq-ink { width: 86px; background: #1d1d1f; color: #fff; }
+.mq-soft { width: 74px; background: #e8e8ed; color: #1d1d1f; }
+.mq-sw { display: flex; align-items: center; justify-content: space-between; width: 160px; height: 28px; font-weight: 500; }
+.mq-sw + .mq-sw { margin-top: 12px; }
+.mq-tg { position: relative; flex: none; width: 42px; height: 26px; border-radius: 13px; background: #e8e8ed; }
+.mq-tg::after { content: ''; position: absolute; left: 2px; top: 2px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .28); }
+.mq-tg.is-on { background: #1d1d1f; }
+.mq-tg.is-on::after { transform: translateX(16px); }
+.mq-sl { width: 170px; }
+.mq-sl p { display: flex; justify-content: space-between; font-weight: 500; }
+.mq-sl b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.mq-track { position: relative; height: 4px; margin-top: 22px; border-radius: 2px; background: #e8e8ed; }
+.mq-track i { position: absolute; left: 0; top: 0; bottom: 0; width: 72%; border-radius: 2px; background: #1d1d1f; }
+.mq-track u { position: absolute; left: 72%; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .08), 0 2px 6px rgba(0, 0, 0, .26); }
+.mq-type { display: flex; align-items: center; gap: 18px; }
+.mq-aa { font: 600 66px/1 var(--mq-f); letter-spacing: -.04em; }
+.mq-wt { font-size: 12px; line-height: 18px; color: #6e6e73; }
+.mq-wt span { display: block; }
+.mq-wt .m { font-weight: 500; }
+.mq-wt .s { font-weight: 600; color: #1d1d1f; }
+.mq-pal { display: flex; gap: 5px; margin-bottom: 10px; }
+.mq-pal i { width: 26px; height: 26px; border-radius: 9px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06); }
+.mq-seg { display: grid; grid-template-columns: repeat(3, 1fr); width: 172px; height: 32px; margin-top: 10px; padding: 2px; border-radius: 10px; background: #e8e8ed; font-weight: 500; text-align: center; line-height: 28px; color: #6e6e73; }
+.mq-seg .is-on { border-radius: 8px; background: #fff; color: #1d1d1f; box-shadow: 0 1px 3px rgba(0, 0, 0, .14); }
+.mq-faces { display: flex; margin-top: 10px; }
+.mq-faces i { width: 36px; height: 36px; margin-left: -8px; border-radius: 50%; background-repeat: no-repeat; filter: grayscale(1) contrast(1.05); box-shadow: 0 0 0 2px #fff; }
+.mq-faces i:first-child { margin-left: 0; }
+.mq-faces b { display: grid; place-items: center; width: 36px; height: 36px; margin-left: -8px; border-radius: 50%; background: #e8e8ed; box-shadow: 0 0 0 2px #fff; font-size: 12px; font-weight: 600; }
+.mq-prog { display: flex; align-items: center; gap: 14px; }
+.mq-ringp { position: relative; flex: none; width: 64px; height: 64px; display: grid; place-items: center; font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; }
+.mq-ringp svg { position: absolute; inset: 0; width: 64px; height: 64px; transform: rotate(-90deg); fill: none; stroke-width: 6; }
+.mq-ringp .t { stroke: #e8e8ed; }
+.mq-ringp .a { stroke: #1d1d1f; stroke-linecap: round; stroke-dasharray: 137.3 163.4; }
+.mq-prog h3 { margin: 0; font: 600 15px/20px var(--mq-f); letter-spacing: -.01em; }
+.mq-fld { width: 166px; margin-top: 8px; height: 36px; padding: 0 12px; border-radius: 10px; background: #f5f5f7; line-height: 36px; font-weight: 400; }
+.mq-fld::after { content: ''; display: inline-block; width: 1.5px; height: 16px; margin: 0 0 -3px 1px; background: #1d1d1f; }
+
+/* the marquee: the hand's. A thin ink edge at low alpha, a faint wash, 6 px corners. Covered towards the release corner by clip-path. */
+.mq-marq { position: absolute; left: 0; top: 0; z-index: 8; width: 0; height: 0; display: none; pointer-events: none; border-radius: 6px; background: rgba(29, 29, 31, .035); box-shadow: inset 0 0 0 1px rgba(29, 29, 31, .34); }
+
+/* the count bar and the toast: translucent material; the shadow is its own layer so the cover can clip the pane */
+.mq-bar, .mq-toast { position: absolute; left: 0; top: 0; z-index: 10; visibility: hidden; pointer-events: none; will-change: transform; --v: 0; }
+.mq-bar { height: 44px; }
+.mq-toast { height: 40px; }
+.mq-sh { position: absolute; inset: 0; border-radius: 22px; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); opacity: var(--v); }
+.mq-pane { position: relative; display: flex; align-items: center; height: 100%; padding: 0 8px 0 10px; border-radius: 22px; white-space: nowrap;
+  background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); clip-path: inset(calc((1 - var(--v)) * 100%) 0 0 0 round 22px); }
+.mq-count { display: flex; align-items: center; gap: 8px; padding-right: 6px; }
+.mq-num { position: relative; width: 24px; height: 22px; overflow: hidden; border-radius: 11px; background: #B8FF00; color: #1d1d1f; transform: translateZ(0);
+  font: 600 13px/22px var(--mq-f); font-variant-numeric: tabular-nums; text-align: center; }
+.mq-strip { display: block; will-change: transform; }
+.mq-strip i { display: block; height: 22px; font-style: normal; }
+.mq-cl { width: 56px; color: #6e6e73; }
+.mq-sep { flex: none; width: 1px; height: 18px; margin: 0 6px 0 2px; background: rgba(0, 0, 0, .1); }
+.mq-act { width: 64px; height: 32px; border-radius: 16px; font-weight: 500; cursor: pointer; text-align: center; transition: background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1); }
+.mq-act:hover, .mq-act.is-hot { background: rgba(0, 0, 0, .05); }
+.mq-act:active, .mq-act.is-press { transform: scale(.96); background: rgba(0, 0, 0, .08); }
+.mq-act[aria-disabled="true"] { color: #86868b; cursor: default; background: none; transform: none; }
+.mq-act:focus-visible, .mq-undo:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
+.mq-toast .mq-pane { padding: 0 6px 0 18px; }
+.mq-tmsg { margin-right: 6px; color: #1d1d1f; }
+.mq-undo { height: 28px; padding: 0 12px; border-radius: 14px; font-weight: 600; cursor: pointer; transition: background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.mq-undo:hover, .mq-undo.is-hot { background: rgba(0, 0, 0, .05); }
+.mq-undo:active, .mq-undo.is-press { transform: scale(.96); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mq-act, .mq-undo { transition-duration: 1ms !important; }
+  .mq-ring, .mq-gring path, .mq-bar, .mq-toast { transition: opacity 160ms cubic-bezier(.4, 0, .2, 1); }
+}
+</style>
+<style>
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="mq-fit" id="mq-fit">
+ <section class="mq-board" id="mq-board" aria-label="Forma launch board">
+  <p class="mq-top" aria-hidden="true">Strata · Forma launch</p>
+  <div class="mq-cards" id="mq-cards" role="listbox" aria-multiselectable="true" aria-label="Components" aria-describedby="mq-help">
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Button" tabindex="0" data-id="button" data-x="28" data-y="54" data-w="200" data-h="104">
+    <div class="mq-in"><div class="mq-row"><span class="mq-pill mq-ink">Start</span><span class="mq-pill mq-soft">Later</span></div></div></div>
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Switch" tabindex="0" data-id="switch" data-x="262" data-y="66" data-w="192" data-h="96">
+    <div class="mq-in"><div class="mq-sw"><span>Notifications</span><i class="mq-tg is-on"></i></div><div class="mq-sw"><span>Auto-save</span><i class="mq-tg"></i></div></div></div>
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Slider" tabindex="0" data-id="slider" data-x="486" data-y="50" data-w="206" data-h="108">
+    <div class="mq-in"><div class="mq-sl"><p><span>Opacity</span><b>72%</b></p><div class="mq-track"><i></i><u></u></div></div></div></div>
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Type sample" tabindex="0" data-id="type" data-x="38" data-y="180" data-w="208" data-h="120">
+    <div class="mq-in"><div class="mq-type"><span class="mq-aa">Aa</span><span class="mq-wt"><span>Regular</span><span class="m">Medium</span><span class="s">Semibold</span></span></div></div></div>
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Colour row" tabindex="0" data-id="colour" data-x="276" data-y="192" data-w="178" data-h="104">
+    <div class="mq-in"><div class="mq-pal"><i style="background:#1d1d1f"></i><i style="background:#6e6e73"></i><i style="background:#c3d2e3"></i><i style="background:#e6d9c6"></i><i style="background:#e8e8ed"></i></div><p class="mq-cap">Neutral · 5 tones</p></div></div>
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Segmented control" tabindex="0" data-id="seg" data-x="486" data-y="178" data-w="206" data-h="112">
+    <div class="mq-in"><p class="mq-cap">Range</p><div class="mq-seg"><span>Day</span><span class="is-on">Week</span><span>Month</span></div></div></div>
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Avatars" tabindex="0" data-id="faces" data-x="28" data-y="326" data-w="190" data-h="98">
+    <div class="mq-in"><p class="mq-cap">Reviewers</p><div class="mq-faces"><i style="background-image:url(../assets/art/ava.webp);background-size:92px auto;background-position:-31.700px -25.200px"></i><i style="background-image:url(../assets/art/sam.webp);background-size:115px auto;background-position:-12px -8px"></i><i style="background-image:url(../assets/art/you.webp);background-size:126px auto;background-position:-45px -20.600px"></i><b>+4</b></div></div></div>
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Progress ring" tabindex="0" data-id="ring" data-x="250" data-y="320" data-w="212" data-h="104">
+    <div class="mq-in"><div class="mq-prog"><span class="mq-ringp"><svg viewBox="0 0 64 64"><circle class="t" cx="32" cy="32" r="26"/><circle class="a" cx="32" cy="32" r="26"/></svg>84%</span><span><h3>Deploy</h3><p class="mq-cap">forma.studio</p></span></div></div></div>
+   <div class="mq-item" role="option" aria-selected="false" aria-label="Text field" tabindex="0" data-id="field" data-x="494" data-y="326" data-w="198" data-h="98">
+    <div class="mq-in"><p class="mq-cap">Email</p><div class="mq-fld">contact@qbix.space</div></div></div>
+  </div>
+
+  <div class="mq-marq" id="mq-marq" aria-hidden="true"></div>
+
+  <div class="mq-bar" id="mq-bar" role="toolbar" aria-label="Selection actions">
+   <i class="mq-sh"></i>
+   <div class="mq-pane">
+    <span class="mq-count"><span class="mq-num" aria-hidden="true"><span class="mq-strip" id="mq-strip"><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></span></span><span class="mq-cl">selected</span></span>
+    <i class="mq-sep"></i>
+    <button type="button" class="mq-act" data-act="group">Group</button>
+    <button type="button" class="mq-act" data-act="align">Align</button>
+    <button type="button" class="mq-act" data-act="delete">Delete</button>
+   </div>
+  </div>
+
+  <div class="mq-toast" id="mq-toast" role="group" aria-label="Deleted">
+   <i class="mq-sh"></i>
+   <div class="mq-pane"><span class="mq-tmsg" id="mq-tmsg">4 cards deleted</span><button type="button" class="mq-undo" data-act="undo">Undo</button></div>
+  </div>
+ </section>
+ <p class="sr-only" id="mq-help">Drag on empty canvas to select a group of cards. Tab goes through the cards, Space toggles one, Command or Control A selects all, arrow keys nudge the selection, Escape clears.</p>
+ <p class="sr-only" id="mq-msg" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag on empty canvas to box-select (on touch, hold first), drag a selected card to move them all, Shift-click to add, Cmd/Ctrl+A for all, arrows to nudge, Escape to clear</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Marquee select. Every card has springs for x, y, lift, ring, cover and press; the marquee itself is the hand's (set directly, 1:1).
+   Everything is in board pixels (the board may be drawn scaled: the pointer is divided by the scale). Hit tests use the cards' on-screen rects.
+   Release projects a throw with d = 0.99. */
+const MQ = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = 2 * Math.PI, R = (s) => TAU / s;                                // a response in seconds as an angular frequency
+  const OMC = R(0.32), OML = R(0.3), OMO = R(0.2), OMP = R(0.1), OMD = R(0.34), OMU = R(0.22), OMB = R(0.36), OMX = R(0.3), OMK = R(0.28), OMG = R(0.44), OMN = R(0.22);
+  const LOOK = 0.99 / (1 - 0.99) / 1000;                                      // 0.099 s: where a release coasts to (d = 0.99)
+  const W = 720, H = 456, PX = 20, PT = 44, PB = 20, DB = 90;                  // the board, the room kept round the cards, rubber-band dimension
+  const SLOPM = 4, SLOPC = 6, HOLD = 380, TOL = 8, FLICK = 140, THROW = 420;   // px before a marquee, before a drag; ms of a touch hold; px/s that is projected, that is a throw
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const $ = (id) => document.getElementById('mq-' + id);
+  const fit = $('fit'), board = $('board'), marq = $('marq'), bar = $('bar'), strip = $('strip'), toast = $('toast'), tmsg = $('tmsg'), msg = $('msg');
+  const acts = Object.fromEntries(Array.from(bar.querySelectorAll('.mq-act')).map((b) => [b.dataset.act, b]));
+  acts.undo = toast.querySelector('.mq-undo');
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) when critically damped, the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OMC, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+  const to = (s, T, v, w, z, now) => { if (reduced || now) { s.x = s.T = T; s.v = 0; s.on = false; } else aim(s, T, v, w, z); };   // no springs under reduced motion
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                      // rubber band, Apple's, constant 0.55
+  const rbInv = (r, D) => { r = Math.min(r, D * 0.9); return (r * D) / (0.55 * (D - r)); };
+  const band = (v, lo, hi, D) => (v < lo ? lo - rb(lo - v, D) : v > hi ? hi + rb(v - hi, D) : v);
+
+  /* a rounded rect as one path that starts at the middle of the top edge and runs clockwise, so a dash offset draws it on from there */
+  const rr = (x, y, w, h, r) => {
+    const f = (n) => +n.toFixed(2), c = f(x + w / 2);
+    return `M${c} ${f(y)}H${f(x + w - r)}A${r} ${r} 0 0 1 ${f(x + w)} ${f(y + r)}V${f(y + h - r)}A${r} ${r} 0 0 1 ${f(x + w - r)} ${f(y + h)}H${f(x + r)}A${r} ${r} 0 0 1 ${f(x)} ${f(y + h - r)}V${f(y + r)}A${r} ${r} 0 0 1 ${f(x + r)} ${f(y)}H${c}`;
+  };
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const mkpath = (cls, w, h) => {
+    const s = document.createElementNS(svgNS, 'svg'), p = document.createElementNS(svgNS, 'path');
+    s.setAttribute('class', cls); s.setAttribute('width', w); s.setAttribute('height', h); s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('aria-hidden', 'true');
+    p.setAttribute('pathLength', '1'); s.appendChild(p);
+    return [s, p];
+  };
+
+  /* the cards */
+  const C = Array.from($('cards').children).map((el, i) => {
+    const hx = +el.dataset.x, hy = +el.dataset.y, w = +el.dataset.w, h = +el.dataset.h;
+    el.style.width = w + 'px'; el.style.height = h + 'px';
+    const [svg, path] = mkpath('mq-ring', w + 12, h + 12);
+    path.setAttribute('d', rr(2, 2, w + 8, h + 8, 22));                       // 4 px outside the card, 2 px stroke
+    el.appendChild(svg);
+    return { el, i, id: el.dataset.id, name: el.getAttribute('aria-label'), w, h, hx, hy, ring: path, svg,
+      x: mk(hx), y: mk(hy), l: mk(0), rg: mk(0), dl: mk(0), pr: mk(0), dg: mk(0),
+      sel: false, gone: false, grp: null, tf: '', lv: NaN, rv: NaN, cv: '', zv: 0 };
+  });
+  const byId = Object.fromEntries(C.map((c) => [c.id, c])), byEl = new Map(C.map((c) => [c.el, c]));
+  const G = [];                                                              // groups: { m: cards, gr: spring, svg, path, d, dead, gone }
+  const bv = mk(0), bx = mk(0), by = mk(0), rk = mk(0), tv = mk(0);            // the bar's rise, x, y, the count's roll; the toast's rise
+  let BW = 316, count = 0, lastDel = null, toastT = 0, tOn = false;
+  let held = null, ptr = null, raf = 0, last = 0, OX = 0, OY = 0, sc = 1, cur = C[0], cov = null;
+  const sel = () => C.filter((c) => c.sel);
+  const say = (t) => { msg.textContent = t; };
+  const plural = (n) => `${n} card${n === 1 ? '' : 's'}`;
+  const members = (c) => (c.grp ? c.grp.m : [c]);
+
+  function bounds(list, live = true) {
+    let a = 1e9, b = 1e9, c2 = -1e9, d = -1e9;
+    for (const c of list) { const x = live ? c.x.x : c.x.T, y = live ? c.y.x : c.y.T; a = Math.min(a, x); b = Math.min(b, y); c2 = Math.max(c2, x + c.w); d = Math.max(d, y + c.h); }
+    return { x0: a, y0: b, x1: c2, y1: d };
+  }
+
+  /* selection: the one place that changes it. Groups are units. Rings, lifts, the count and the bar follow. */
+  function setSel(next) {
+    for (const g of G) if (!g.dead && !g.gone && g.m.some((c) => next.has(c))) g.m.forEach((c) => next.add(c));
+    let changed = false;
+    for (const c of C) {
+      const on = next.has(c) && !c.gone;
+      if (on === c.sel) continue;
+      c.sel = on; changed = true;
+      to(c.l, on ? 1 : 0, c.l.v, OML, 1);
+      c.el.setAttribute('aria-selected', on);
+      c.el.classList.toggle('is-sel', on);
+    }
+    if (!changed) return;
+    syncRings(); syncBar(); zfix(); kick();
+  }
+  function syncRings() {
+    for (const c of C) { const T = c.sel && !c.grp && !c.gone ? 1 : 0; if (T !== c.rg.T || (!c.rg.on && c.rg.x !== T)) to(c.rg, T, c.rg.v, T ? OML : OMO, 1); }
+    for (const g of G) { const T = !g.dead && !g.gone && g.m[0].sel ? 1 : 0; if (T !== g.gr.T) to(g.gr, T, g.gr.v, T ? OMG : OMO, 1); }
+  }
+  function zfix() {
+    const d = held && held.kind === 'card' && held.mode === 'drag';
+    for (const c of C) {
+      const z = c.gone ? 0 : d ? (c === held.card ? 6 : c.sel ? 5 : 1) : c.sel ? 3 : 1;
+      if (z !== c.zv) { c.zv = z; c.el.style.zIndex = z; }
+    }
+  }
+
+  /* the bar: up when anything is selected; the count rolls; Group turns into Ungroup on a whole group; Group and Align need two */
+  function exactGroup(S) { return G.find((g) => !g.dead && !g.gone && g.m.length === S.length && S.every((c) => c.grp === g)); }
+  function syncBar() {
+    const S = sel(), n = S.length;
+    if (n) {
+      count = n; to(rk, n, rk.v, OMK, 1);
+      const un = !!exactGroup(S);
+      acts.group.textContent = un ? 'Ungroup' : 'Group';
+      acts.group.setAttribute('aria-disabled', un || n > 1 ? 'false' : 'true');
+      acts.align.setAttribute('aria-disabled', n > 1 ? 'false' : 'true');
+    }
+    to(bv, n ? 1 : 0, bv.v, n ? OMB : R(0.22), 1);
+    bar.style.pointerEvents = n ? 'auto' : 'none';
+    bar.setAttribute('aria-hidden', n ? 'false' : 'true');
+    for (const b of bar.querySelectorAll('button')) b.tabIndex = n ? 0 : -1;
+  }
+  function barSpot() {                                                       // under the selection's bounds, flipped above when there is no room, always inside the board
+    const S = sel();
+    if (!S.length) return null;
+    const b = bounds(S), bh = 44, gap = 16 + (S.some((c) => c.grp && !c.grp.dead) ? 10 : 0);
+    let y = b.y1 + gap;
+    if (y + bh > H - 10) { const up = b.y0 - gap - bh; y = up >= 10 ? up : H - 10 - bh; }
+    return { x: clamp((b.x0 + b.x1) / 2 - BW / 2, 10, W - 10 - BW), y: Math.round(y) };
+  }
+
+  /* the toast: Undo for a while after a delete */
+  function toastShow(n) {
+    tmsg.textContent = `${plural(n)} deleted`;
+    toast.style.left = '0px';
+    const tw = toast.offsetWidth || 220;
+    toast.dataset.x = Math.round((W - tw) / 2);
+    tOn = true; to(tv, 1, tv.v, OMB, 1); toast.style.pointerEvents = 'auto';
+    clearTimeout(toastT); toastT = setTimeout(toastHide, 6000);
+    kick();
+  }
+  function toastHide(permanent = true) {
+    clearTimeout(toastT);
+    tOn = false; to(tv, 0, tv.v, R(0.22), 1); toast.style.pointerEvents = 'none';
+    if (permanent) lastDel = null;
+    kick();
+  }
+
+  /* actions */
+  function align() {
+    const S = sel();
+    if (S.length < 2) return;
+    const lines = (key, size, gapMin) => {                                    // cluster by position, give every cluster its smallest value
+      const o = S.slice().sort((a, b) => a[key].T - b[key].T), out = new Map();
+      let i = 0;
+      while (i < o.length) { let j = i + 1; while (j < o.length && o[j][key].T - o[j - 1][key].T < gapMin) j++; const lo = o[i][key].T; for (let k = i; k < j; k++) out.set(o[k], lo); i = j; }
+      return out;
+    };
+    const ys = lines('y', 'h', 56), xs = lines('x', 'w', 80);
+    let moved = 0;
+    for (const c of S) {
+      const tx = xs.get(c), ty = ys.get(c);
+      if (Math.abs(tx - c.x.T) > 0.5 || Math.abs(ty - c.y.T) > 0.5) moved++;
+      to(c.x, tx, c.x.v, OMC, 1); to(c.y, ty, c.y.v, OMC, 1);
+    }
+    say(moved ? `Aligned ${plural(S.length)}` : 'Already aligned');
+    kick();
+  }
+  function group() {
+    const S = sel();
+    const ex = exactGroup(S);
+    if (ex) { ungroup(ex); say('Ungrouped'); return; }
+    if (S.length < 2) return;
+    for (const g of new Set(S.map((c) => c.grp).filter(Boolean))) ungroup(g);
+    const [svg, path] = mkpath('mq-gring', W, H);
+    board.insertBefore(svg, marq);
+    const g = { m: S.slice(), gr: mk(0), svg, path, d: '', dead: false, gone: false, ov: NaN };
+    S.forEach((c) => { c.grp = g; });
+    G.push(g);
+    syncRings(); syncBar(); kick();
+    say(`Grouped ${plural(S.length)}`);
+  }
+  function ungroup(g) {
+    g.dead = true; g.m.forEach((c) => { if (c.grp === g) c.grp = null; });
+    to(g.gr, 0, g.gr.v, OMO, 1);
+    syncRings(); syncBar(); kick();
+  }
+  function del() {
+    const S = sel();
+    if (!S.length) return;
+    const groups = G.filter((g) => !g.dead && S.includes(g.m[0]));
+    S.forEach((c) => { c.gone = true; to(c.dl, 1, c.dl.v, OMD, 1); c.el.tabIndex = -1; c.el.setAttribute('aria-hidden', 'true'); });
+    groups.forEach((g) => { g.gone = true; });
+    lastDel = { cards: S, groups };
+    setSel(new Set());
+    setTimeout(() => toastShow(S.length), reduced ? 0 : 120);
+    say(`${plural(S.length)} deleted. Undo is available`);
+    kick();
+  }
+  function undo() {
+    if (!lastDel) return;
+    const { cards, groups } = lastDel;
+    lastDel = null;
+    cards.forEach((c) => { c.gone = false; to(c.dl, 0, c.dl.v, OMU, 1); c.el.tabIndex = 0; c.el.removeAttribute('aria-hidden'); });
+    groups.forEach((g) => { g.gone = false; });
+    toastHide(false);
+    setSel(new Set(cards));
+    say(`${plural(cards.length)} restored`);
+    kick();
+  }
+  function act(name) {
+    if (name === 'undo') undo();
+    else if (acts[name] && acts[name].getAttribute('aria-disabled') === 'true') return;
+    else if (name === 'group') group();
+    else if (name === 'align') align();
+    else if (name === 'delete') del();
+  }
+  function nudge(dx, dy) {
+    const S = sel();
+    if (!S.length) return;
+    const b = bounds(S, false);
+    dx = clamp(dx, PX - b.x0, W - PX - b.x1); dy = clamp(dy, PT - b.y0, H - PB - b.y1);
+    if (!dx && !dy) return;
+    for (const c of S) { to(c.x, c.x.T + dx, c.x.v, OMN, 1); to(c.y, c.y.T + dy, c.y.v, OMN, 1); }
+    kick();
+  }
+
+  /* draw everything from the springs */
+  function render(c) {
+    const s = 1 + 0.02 * c.l.x + 0.015 * c.dg.x - 0.03 * c.pr.x;
+    const tf = `translate3d(${c.x.x.toFixed(2)}px, ${(c.y.x - 2 * c.l.x - 1.5 * c.dg.x).toFixed(2)}px, 0) scale(${s.toFixed(4)})`;
+    if (tf !== c.tf) { c.el.style.transform = tf; c.tf = tf; }
+    const l = +clamp(c.l.x + 0.6 * c.dg.x, 0, 1.6).toFixed(3);
+    if (l !== c.lv) { c.el.style.setProperty('--l', l); c.lv = l; }
+    const rg = +clamp(c.rg.x, 0, 1).toFixed(3);
+    if (rg !== c.rv) {
+      c.rv = rg;
+      if (reduced) c.svg.style.opacity = rg; else c.svg.style.display = rg < 0.003 ? 'none' : '';
+      c.ring.style.strokeDashoffset = reduced ? 0 : (1 - rg).toFixed(3);
+    }
+    const d = +clamp(c.dl.x, 0, 1).toFixed(3);
+    const cv = d <= 0 ? '' : d >= 0.999 ? 'h' : `inset(${(-40 + d * (c.h + 80)).toFixed(1)}px -40px -40px -40px)`;
+    if (cv !== c.cv) {
+      c.cv = cv;
+      c.el.style.clipPath = cv === 'h' ? 'inset(100% 0 0 0)' : cv;
+      c.el.style.visibility = cv === 'h' ? 'hidden' : '';
+    }
+  }
+  const sv = { b: NaN, t: NaN, k: '', x: NaN, y: NaN };
+  function renderBar() {
+    const v = +clamp(bv.x, 0, 1).toFixed(3);
+    if (v !== sv.b) { sv.b = v; bar.style.setProperty('--v', v); bar.style.visibility = v > 0.003 ? 'visible' : 'hidden'; }
+    const tfb = `translate3d(${bx.x.toFixed(2)}px, ${(by.x + (1 - v) * 14).toFixed(2)}px, 0)`;
+    if (tfb !== sv.k) { sv.k = tfb; bar.style.transform = tfb; }
+    const k = (-rk.x * 22).toFixed(2);
+    if (k !== sv.x) { sv.x = k; strip.style.transform = `translate3d(0, ${k}px, 0)`; }
+    const t = +clamp(tv.x, 0, 1).toFixed(3);
+    if (t !== sv.t) {
+      sv.t = t; toast.style.setProperty('--v', t); toast.style.visibility = t > 0.003 ? 'visible' : 'hidden';
+      toast.style.transform = `translate3d(${toast.dataset.x || 0}px, ${H - 12 - 40 + (1 - t) * 10}px, 0)`;
+    }
+  }
+  function renderGroup(g) {
+    const b = bounds(g.m), p = 12, d = rr(b.x0 - p, b.y0 - p, b.x1 - b.x0 + 2 * p, b.y1 - b.y0 + 2 * p, 30);
+    if (d !== g.d) { g.d = d; g.path.setAttribute('d', d); }
+    const v = +clamp(g.gr.x, 0, 1).toFixed(3);
+    if (v !== g.ov) { g.ov = v; if (reduced) g.svg.style.opacity = v; else g.svg.style.display = v < 0.003 ? 'none' : ''; g.path.style.strokeDashoffset = reduced ? 0 : (1 - v).toFixed(3); }
+  }
+  function renderAll() { C.forEach(render); G.forEach(renderGroup); renderBar(); }
+
+  /* motion */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let lv = false;
+    const hand = held && held.kind === 'card' && held.mode === 'drag' ? held : null;
+    for (const c of C) {
+      if (!(hand && c === hand.card)) { lv = step(c.x, dt, 0.05, 3) || lv; lv = step(c.y, dt, 0.05, 3) || lv; }
+      lv = step(c.l, dt, 0.002, 0.05) || lv;
+      lv = step(c.rg, dt, 0.002, 0.05) || lv;
+      lv = step(c.dl, dt, 0.002, 0.05) || lv;
+      lv = step(c.pr, dt, 0.002, 0.05) || lv;
+      lv = step(c.dg, dt, 0.002, 0.05) || lv;
+    }
+    for (const g of G) lv = step(g.gr, dt, 0.002, 0.05) || lv;
+    // the bar follows the selection's bounds as they are on screen
+    const spot = barSpot();
+    if (spot) {
+      if (bv.x < 0.02 && bv.T === 1) { bx.x = bx.T = spot.x; by.x = by.T = spot.y; bx.on = by.on = false; }   // it rises where it will stay, not from where it was
+      else {
+        if (Math.abs(spot.x - bx.T) > 0.05) to(bx, spot.x, bx.v, OMX, 1);
+        if (Math.abs(spot.y - by.T) > 0.05) to(by, spot.y, by.v, OMX, 1);
+      }
+    }
+    lv = step(bx, dt, 0.05, 3) || lv; lv = step(by, dt, 0.05, 3) || lv;
+    lv = step(bv, dt, 0.002, 0.05) || lv; lv = step(rk, dt, 0.002, 0.05) || lv; lv = step(tv, dt, 0.002, 0.05) || lv;
+    for (let i = G.length - 1; i >= 0; i--) if (G[i].dead && !G[i].gr.on && G[i].gr.x <= 0.003) { G[i].svg.remove(); G.splice(i, 1); }
+    renderAll();
+    if (lv || hand) kick();                                                  // runs only while something moves or is held
+  }
+
+  /* velocity over the last 80 ms of moves: rows are [t, ...values]; 0 if the hand rested */
+  function vel(rows, t, j) {
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return 0;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? 0 : ((b[j] - a[j]) / dt) * 1000;
+  }
+  function pick(s, T, v, thr) {                                              // ω for a throw: it decelerates from the first frame when heading for the target
+    let w = OMC;
+    if (thr) { const D = T - s.x; if (v * D > 0) w = Math.min(40, Math.max(OMC, (1.5 * v) / D)); }
+    return w;
+  }
+
+  /* one hand: a pointer or the ghost, both through down / move / up. x and y are client px, t is ms. */
+  function measure() {
+    const r = board.getBoundingClientRect();
+    OX = r.left; OY = r.top; sc = r.width / W || 1;
+  }
+  const local = (x, y) => ({ x: clamp((x - OX) / sc, 0, W), y: clamp((y - OY) / sc, 0, H) });
+  const client = (x, y) => { measure(); return { x: OX + x * sc, y: OY + y * sc }; };
+  const setMode = (k) => { board.classList.toggle('is-marq', k === 'marq'); board.classList.toggle('is-drag', k === 'drag'); };
+
+  function startMarq(h) {
+    h.mode = 'marq'; h.px = { x: h.x0, y: h.y0 };
+    if (cov) { cov.cancel(); cov = null; }
+    marq.style.clipPath = ''; marq.style.display = 'block';
+    setMode('marq'); zfix();
+  }
+  function marqMove(h, p) {
+    h.px = p;
+    const x = Math.min(h.x0, p.x), y = Math.min(h.y0, p.y), w = Math.abs(p.x - h.x0), hh = Math.abs(p.y - h.y0);
+    marq.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`; marq.style.width = w.toFixed(2) + 'px'; marq.style.height = hh.toFixed(2) + 'px';
+    const next = new Set(h.base);
+    for (const c of C) {                                                     // the marquee against each card's on-screen rect
+      if (c.gone) continue;
+      if (x < c.x.x + c.w && x + w > c.x.x && y < c.y.x + c.h && y + hh > c.y.x) members(c).forEach((m) => next.add(m));
+    }
+    setSel(next);
+  }
+  function coverMarq(h) {                                                    // covered towards the release corner
+    if (reduced || !marq.animate) { marq.style.display = 'none'; return; }
+    const right = h.px.x >= h.x0, bottom = h.px.y >= h.y0;
+    const end = `inset(${bottom ? '100%' : '0'} ${right ? '0' : '100%'} ${bottom ? '0' : '100%'} ${right ? '100%' : '0'})`;
+    const a = marq.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: end }], { duration: 240, easing: 'cubic-bezier(.5, 0, .75, 0)', fill: 'forwards' });
+    cov = a;
+    a.onfinish = () => { if (cov === a) { marq.style.display = 'none'; a.cancel(); cov = null; } };
+  }
+
+  function commitDrag(h, p) {                                                // the press becomes a drag: 1:1 from here, so nothing jumps by the slop
+    clearTimeout(h.timer);
+    h.mode = 'drag'; h.ax = p.x; h.ay = p.y; h.rdx = 0; h.rdy = 0;
+    const set = sel();
+    h.set = set.slice().sort((a, b) => Math.hypot(a.x.x - h.card.x.x, a.y.x - h.card.y.x) - Math.hypot(b.x.x - h.card.x.x, b.y.x - h.card.y.x));
+    h.sx = h.set.map((c) => c.x.x); h.sy = h.set.map((c) => c.y.x);
+    const b = bounds(set);
+    h.lox = PX - b.x0; h.hix = W - PX - b.x1; h.loy = PT - b.y0; h.hiy = H - PB - b.y1;
+    h.rows = [[performance.now(), 0, 0, 0, 0]];
+    h.set.forEach((c) => { to(c.dg, 1, c.dg.v, OML, 1); to(c.pr, 0, c.pr.v, OMP, 1); });
+    const g = h.card; g.x.on = false; g.x.v = 0; g.y.on = false; g.y.v = 0;
+    setMode('drag'); zfix(); kick();
+  }
+  function dragMove(h, p, t) {
+    h.rdx = p.x - h.ax; h.rdy = p.y - h.ay;
+    const dx = reduced ? clamp(h.rdx, h.lox, h.hix) : band(h.rdx, h.lox, h.hix, DB);
+    const dy = reduced ? clamp(h.rdy, h.loy, h.hiy) : band(h.rdy, h.loy, h.hiy, DB);
+    h.set.forEach((c, i) => {
+      if (c === h.card) { c.x.x = c.x.T = h.sx[i] + dx; c.y.x = c.y.T = h.sy[i] + dy; return; }   // the grabbed card is exact
+      if (reduced) { c.x.x = c.x.T = h.sx[i] + dx; c.y.x = c.y.T = h.sy[i] + dy; return; }
+      const w = R(0.13 + 0.025 * Math.min(5, i));                              // the others lag a little, the further the more: that is the weight
+      aim(c.x, h.sx[i] + dx, c.x.v, w, 1); aim(c.y, h.sy[i] + dy, c.y.v, w, 1);
+    });
+    h.rows.push([t, dx, h.rdx, dy, h.rdy]);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    kick();
+  }
+  function release(h, t, cancel) {
+    const vdx = cancel ? 0 : vel(h.rows, t, 1), vdy = cancel ? 0 : vel(h.rows, t, 3);   // as drawn (the spring starts here)
+    const vrx = cancel ? 0 : vel(h.rows, t, 2), vry = cancel ? 0 : vel(h.rows, t, 4);   // and the hand's (what is projected)
+    const sp = Math.hypot(vrx, vry), thr = sp > THROW;
+    const px = h.rdx + (sp > FLICK ? vrx * LOOK : 0), py = h.rdy + (sp > FLICK ? vry * LOOK : 0);
+    const dx = clamp(px, h.lox, h.hix), dy = clamp(py, h.loy, h.hiy);
+    h.set.forEach((c, i) => {
+      const Tx = h.sx[i] + dx, Ty = h.sy[i] + dy, own = c === h.card;
+      const vx = own ? vdx : c.x.v, vy = own ? vdy : c.y.v;
+      to(c.x, Tx, vx, pick(c.x, Tx, vx, thr), thr ? 0.8 : 1);
+      to(c.y, Ty, vy, pick(c.y, Ty, vy, thr), thr ? 0.8 : 1);
+      to(c.dg, 0, c.dg.v, OML, 1);
+    });
+    setMode('');
+  }
+
+  function down(x, y, t, ghost = false, target = null, type = 'mouse', shift = false) {
+    if (held) up(t, true);
+    measure();
+    const p = local(x, y);
+    let c = typeof target === 'string' ? byId[target] : target && target.closest ? byEl.get(target.closest('.mq-item')) : null;
+    if (c && c.gone) c = null;
+    const h = held = { kind: c ? 'card' : 'canvas', mode: 'wait', card: c, ghost, type, shift, x0: p.x, y0: p.y, lastP: p, timer: 0, rows: [], base: new Set(), wasSel: false };
+    if (!c) {
+      if (shift) sel().forEach((m) => h.base.add(m));
+      if (type === 'touch') h.timer = setTimeout(() => { if (held === h && h.mode === 'wait') startMarq(h); }, HOLD);   // a swipe is the page's, a hold is the marquee's
+      return;
+    }
+    h.wasSel = c.sel;
+    if (!c.sel) { const s = new Set(shift ? sel() : []); members(c).forEach((m) => s.add(m)); setSel(s); }
+    to(c.pr, 1, c.pr.v, OMP, 1);
+    cur = c;
+    kick();
+  }
+  function move(x, y, t) {
+    const h = held;
+    if (!h || h.mode === 'off') return;
+    const p = local(x, y);
+    h.lastP = p;
+    if (h.mode === 'wait') {
+      const d = Math.hypot(p.x - h.x0, p.y - h.y0);
+      if (h.kind === 'canvas') {
+        if (h.type === 'touch') { if (d > TOL) { clearTimeout(h.timer); h.mode = 'off'; } return; }
+        if (d < SLOPM) return;
+        startMarq(h);
+      } else {
+        if (d < SLOPC) return;
+        commitDrag(h, p);
+      }
+    }
+    if (h.mode === 'marq') marqMove(h, p);
+    else if (h.mode === 'drag') dragMove(h, p, t);
+  }
+  function up(t, cancel = false) {
+    const h = held;
+    if (!h) return;
+    held = null;
+    clearTimeout(h.timer);
+    if (h.kind === 'canvas') {
+      if (h.mode === 'marq') {
+        if (cancel && !h.ghost) setSel(new Set());
+        coverMarq(h); setMode(''); zfix();
+        const n = sel().length;
+        say(n ? `${plural(n)} selected` : 'Nothing selected');
+      } else if (h.mode === 'wait' && !cancel && !h.shift) { setSel(new Set()); say('Selection cleared'); }
+      return;
+    }
+    const c = h.card;
+    to(c.pr, 0, c.pr.v, OMP, 1);
+    if (h.mode === 'drag') { release(h, t, cancel); zfix(); say(`${plural(h.set.length)} moved`); kick(); return; }
+    if (!cancel && h.mode === 'wait') {                                       // a click: Shift toggles, otherwise this card alone
+      if (h.shift && h.wasSel) { const s = new Set(sel()); members(c).forEach((m) => s.delete(m)); setSel(s); }
+      else if (!h.shift && h.wasSel && sel().length > 1) setSel(new Set(members(c)));
+      const n = sel().length;
+      say(n ? `${plural(n)} selected` : 'Nothing selected');
+    }
+    kick();
+  }
+  const letgo = () => { if (held && held.ghost) up(performance.now()); };
+
+  board.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null) return;
+    if (e.target.closest('.mq-bar, .mq-toast')) return;
+    ptr = e.pointerId;
+    try { board.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    down(e.clientX, e.clientY, e.timeStamp, false, e.target, e.pointerType, e.shiftKey);
+  });
+  board.addEventListener('pointermove', (e) => { if (e.pointerId === ptr) move(e.clientX, e.clientY, e.timeStamp); });
+  const pend = (cancel) => (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.timeStamp, cancel); };
+  board.addEventListener('pointerup', pend(false));
+  board.addEventListener('pointercancel', pend(true));
+  board.addEventListener('touchmove', (e) => { if (held && held.mode !== 'wait' && held.mode !== 'off' && e.cancelable) e.preventDefault(); }, { passive: false });
+  board.addEventListener('contextmenu', (e) => { if (held && held.type === 'touch') e.preventDefault(); });
+  board.addEventListener('dragstart', (e) => e.preventDefault());
+  board.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act); });
+
+  /* keys: Tab goes through the cards, Space or Enter toggles, Cmd/Ctrl+A all, arrows nudge, Escape clears, Delete deletes, Cmd/Ctrl+Z undoes */
+  function focusToward(dx, dy) {
+    const from = cur && !cur.gone ? cur : C.find((c) => !c.gone);
+    if (!from) return;
+    const fx = from.x.x + from.w / 2, fy = from.y.x + from.h / 2;
+    let best = null, bs = 1e9;
+    for (const c of C) {
+      if (c === from || c.gone) continue;
+      const ax = c.x.x + c.w / 2 - fx, ay = c.y.x + c.h / 2 - fy, along = ax * dx + ay * dy, across = Math.abs(ax * dy - ay * dx);
+      if (along <= 4) continue;
+      const s = along + across * 1.6;
+      if (s < bs) { bs = s; best = c; }
+    }
+    if (best) { cur = best; best.el.focus(); }
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented) return;
+    const mod = e.metaKey || e.ctrlKey, k = e.key;
+    if (mod && (k === 'a' || k === 'A')) { e.preventDefault(); setSel(new Set(C.filter((c) => !c.gone))); say(`${plural(sel().length)} selected`); return; }
+    if (mod && (k === 'z' || k === 'Z') && lastDel) { e.preventDefault(); undo(); return; }
+    if (mod || e.altKey) return;
+    if (e.target.closest && e.target.closest('.mq-bar, .mq-toast') && (k === ' ' || k === 'Enter')) return;   // buttons keep their own keys
+    if (k === 'Escape') { if (held) up(performance.now(), true); setSel(new Set()); say('Selection cleared'); return; }
+    if (k === 'Delete' || k === 'Backspace') { if (sel().length) { e.preventDefault(); del(); } return; }
+    const dx = k === 'ArrowRight' ? 1 : k === 'ArrowLeft' ? -1 : 0, dy = k === 'ArrowDown' ? 1 : k === 'ArrowUp' ? -1 : 0;
+    if (dx || dy) {
+      if (!board.contains(document.activeElement) && document.activeElement !== document.body) return;
+      e.preventDefault();
+      if (sel().length) nudge(dx * (e.shiftKey ? 32 : 8), dy * (e.shiftKey ? 32 : 8));
+      else focusToward(dx, dy);
+      return;
+    }
+    const c = byEl.get(e.target.closest ? e.target.closest('.mq-item') : null);
+    if (c && (k === ' ' || k === 'Enter')) {
+      e.preventDefault();
+      const s = new Set(sel());
+      if (c.sel) members(c).forEach((m) => s.delete(m)); else members(c).forEach((m) => s.add(m));
+      setSel(s);
+      say(`${c.name} ${c.sel ? 'selected' : 'deselected'}. ${plural(sel().length)} selected`);
+    }
+  });
+  board.addEventListener('focusin', (e) => { const c = byEl.get(e.target.closest ? e.target.closest('.mq-item') : null); if (c) cur = c; });
+
+  /* everything back to the key state: by springs, or at once */
+  function home(now) {
+    if (held) { clearTimeout(held.timer); held = null; }
+    ptr = null; setMode('');
+    if (cov) { cov.cancel(); cov = null; }
+    marq.style.display = 'none';
+    toastHide(false); lastDel = null;
+    for (const g of G) if (!g.dead) ungroup(g);
+    for (const c of C) {
+      c.gone = false; c.el.tabIndex = 0; c.el.removeAttribute('aria-hidden');
+      to(c.x, c.hx, c.x.v, OMC, 1, now); to(c.y, c.hy, c.y.v, OMC, 1, now); to(c.dl, 0, c.dl.v, OMU, 1, now); to(c.dg, 0, c.dg.v, OML, 1, now); to(c.pr, 0, c.pr.v, OMP, 1, now);
+    }
+    setSel(new Set());
+    syncRings(); syncBar(); zfix(); kick();
+  }
+  function settle() {                                                        // every spring to its target at once
+    const all = [bx, by, bv, rk, tv];
+    C.forEach((c) => all.push(c.x, c.y, c.l, c.rg, c.dl, c.pr, c.dg)); G.forEach((g) => all.push(g.gr));
+    const spot = barSpot();
+    if (spot) { bx.T = spot.x; by.T = spot.y; }
+    for (const s of all) { s.x = s.T; s.v = 0; s.on = false; }
+    for (let i = G.length - 1; i >= 0; i--) if (G[i].dead) { G[i].svg.remove(); G.splice(i, 1); }
+    renderAll();
+  }
+  /* the thumbnail's frame: a marquee held over four cards, rings on, the bar up with 4. A hand (the ghost, a mouse) takes it over. */
+  function pose() {
+    home(true);
+    const h = held = { kind: 'canvas', mode: 'wait', card: null, ghost: true, pose: true, type: 'mouse', shift: false, x0: 14, y0: 36, lastP: { x: 14, y: 36 }, timer: 0, rows: [], base: new Set() };
+    startMarq(h); marqMove(h, { x: 448, y: 266 });
+    settle();
+    count = 4; rk.x = rk.T = 4; renderBar();
+  }
+  function btnRect(name) { const b = acts[name]; measure(); const r = b.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+  const ro = new ResizeObserver(() => measure());
+  ro.observe(fit);
+  addEventListener('scroll', measure, { passive: true });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { BW = bar.offsetWidth || BW; });
+
+  measure(); BW = bar.offsetWidth || BW;
+  pose();
+  return {
+    board, down, move, up, letgo, measure, pose, home, act, client, btnRect,
+    get held() { return held; }, get posed() { return !!(held && held.pose); }, get scale() { return sc; },
+    get hand() { return held && held.px ? held.px : null; },
+    center(id) { const c = byId[id]; return { x: c.x.x + c.w / 2, y: c.y.x + c.h / 2 }; },
+    cards() { return C.map((c) => ({ id: c.id, x: c.x.x, y: c.y.x, w: c.w, h: c.h, sel: c.sel, gone: c.gone, grp: !!c.grp, l: c.l.x, rg: c.rg.x, dl: c.dl.x })); },
+    bar() { return { v: bv.x, x: bx.x, y: by.x, count, rk: rk.x }; },
+    settled() { return !raf && !C.some((c) => c.x.on || c.y.on || c.l.on || c.rg.on || c.dl.on) && !bx.on && !by.on && !bv.on; },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('mq-fit');
+  // the board is drawn at 720 × 456 and scaled to the room it is given (about 90% of the width, 1.5× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.9 * W / 720, (H - 2 * pad - ui) / 456, 1.5));
+    fit.style.setProperty('--s', s.toFixed(4));
+    MQ.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  let epoch = 0, resumeT = 0, gp = { x: 0, y: 0 };                           // gp: where the ghost's hand is, in board px
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const put = () => { const c = MQ.client(gp.x, gp.y); QM.ghostAt(c.x, c.y); return c; };
+
+  // the ghost's hand glides to a board point over ms; with the button down it calls MQ.move on every frame, as a hand does
+  async function glide(my, bx, by, ms, down = false, ease = mv) {
+    const x0 = gp.x, y0 = gp.y, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const now = performance.now(), p = Math.min(1, (now - t0) / ms), e = ease(p);
+      gp = { x: x0 + (bx - x0) * e, y: y0 + (by - y0) * e };
+      const c = put();
+      if (down) MQ.move(c.x, c.y, now);
+      if (p >= 1) break;
+    }
+  }
+  const tap = async (my, id, shift = false) => {                             // a click on a card, as a hand
+    const c = MQ.center(id);
+    await glide(my, c.x, c.y, 700);
+    await gap(my, 150);
+    const k = MQ.client(c.x, c.y);
+    MQ.down(k.x, k.y, performance.now(), true, id, 'mouse', shift);
+    await gap(my, 110);
+    MQ.up(performance.now());
+  };
+  const press = async (my, name) => {                                        // a click on a bar button
+    const r = MQ.btnRect(name), c = MQ.client(0, 0);
+    gp = { x: (r.x - c.x) / MQ.scale, y: (r.y - c.y) / MQ.scale };
+    const b = document.querySelector(`.mq-act[data-act="${name}"]`);
+    b.classList.add('is-hot'); await gap(my, 200);
+    b.classList.add('is-press'); await gap(my, 110);
+    b.classList.remove('is-press', 'is-hot');
+    MQ.act(name);
+  };
+  const toBtn = async (my, name) => {                                        // glide to a button where it is (the bar may still be settling)
+    await gap(my, 120);
+    const r = MQ.btnRect(name), c = MQ.client(0, 0);
+    await glide(my, (r.x - c.x) / MQ.scale, (r.y - c.y) / MQ.scale, 760);
+    const r2 = MQ.btnRect(name);                                              // it may have moved a little: follow it
+    gp = { x: (r2.x - c.x) / MQ.scale, y: (r2.y - c.y) / MQ.scale }; put();
+  };
+  const calm = async (my, ms = 4000) => { const t0 = performance.now(); await gap(my, 160); while (!MQ.settled() && performance.now() - t0 < ms) await gap(my, 80); };
+
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5500 : 1800);
+      QM.ghostShow();
+      for (let round = 0; ; round++) {
+        if (MQ.posed) { const h = MQ.hand; gp = { x: h.x, y: h.y }; put(); await gap(my, 350); }
+        else {                                                                // from rest: press on empty canvas and drag a box over four cards
+          MQ.home(); await calm(my);
+          if (round === 0 && gp.x === 0) gp = { x: 640, y: 430 };
+          await glide(my, 14, 36, 800);
+          await gap(my, 150);
+          const k = MQ.client(14, 36); MQ.down(k.x, k.y, performance.now(), true, null, 'mouse', false);
+          await glide(my, 448, 266, 1000, true);
+          await gap(my, 350);
+        }
+        await glide(my, 650, 316, 900, true);                                 // out to six cards, back to two (rings draw back), then over four
+        await gap(my, 250);
+        await glide(my, 300, 140, 820, true);
+        await gap(my, 250);
+        await glide(my, 468, 272, 800, true);
+        await gap(my, 300);
+        MQ.up(performance.now());
+        await gap(my, 1500);
+
+        // move the four: the grabbed card is exact, the others lag; pull past the board's edge (rubber band) and let go
+        const c5 = MQ.center('colour');
+        await glide(my, c5.x, c5.y, 800);
+        await gap(my, 180);
+        let k = MQ.client(c5.x, c5.y);
+        MQ.down(k.x, k.y, performance.now(), true, 'colour', 'mouse', false);
+        await gap(my, 120);
+        await glide(my, c5.x + 44, c5.y + 36, 650, true);
+        await gap(my, 220);
+        await glide(my, c5.x - 70, c5.y - 60, 1000, true);
+        await gap(my, 360);
+        MQ.up(performance.now());
+        await calm(my);
+        await gap(my, 500);
+
+        await toBtn(my, 'align'); await press(my, 'align');
+        await calm(my); await gap(my, 700);
+        await toBtn(my, 'group'); await press(my, 'group');
+        await gap(my, 1600);
+
+        // a click on empty canvas clears; then a card, Shift on a second, Delete, Undo
+        await glide(my, 360, 442, 800);
+        await gap(my, 150);
+        k = MQ.client(360, 442); MQ.down(k.x, k.y, performance.now(), true, null, 'mouse', false);
+        await gap(my, 90); MQ.up(performance.now());
+        await gap(my, 1100);
+        await tap(my, 'slider'); await gap(my, 450);
+        await tap(my, 'seg', true); await gap(my, 1200);
+        await toBtn(my, 'delete'); await press(my, 'delete');
+        await gap(my, 1900);
+        { const r = MQ.btnRect('undo'), c = MQ.client(0, 0); await glide(my, (r.x - c.x) / MQ.scale, (r.y - c.y) / MQ.scale, 800); }
+        await gap(my, 200);
+        { const b = document.querySelector('.mq-undo'); b.classList.add('is-hot'); await gap(my, 200); b.classList.add('is-press'); await gap(my, 110); b.classList.remove('is-press', 'is-hot'); MQ.act('undo'); }
+        await gap(my, 1700);
+        await glide(my, 360, 442, 800);
+        k = MQ.client(360, 442); MQ.down(k.x, k.y, performance.now(), true, null, 'mouse', false);
+        await gap(my, 90); MQ.up(performance.now());
+        await gap(my, 1400);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) MQ.letgo(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); MQ.letgo(); }
+  if (!QM.tile && !reduced) {
+    const idle = () => MQ.held || MQ.board.matches(':hover');
+    const touch = () => {
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  // park the ghost at the corner of the posed marquee, where the hand is
+  const park = () => { if (reduced || !MQ.posed) return; const h = MQ.hand; gp = { x: h.x, y: h.y }; put(); QM.ghostShow(); };
+  QM.demo({ kind: 'loop', restart() { stopScript(); MQ.pose(); if (!reduced) { park(); script(); } } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { park(); script(); }, 300));
+})();
+</script>
+</body>
+</html>

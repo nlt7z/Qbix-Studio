@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canvas split · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "canvas-split", "title": "Canvas split", "group": "studio", "added": "2026-11-24", "cat": "cards", "order": 50,
+  "kind": "loop", "tone": "paper", "shot": 900,
+  "line": "one split spring 0.48 s open, 0.42 s close · chip rect to panel on x, y, width, height springs · release projects v × 0.099 s to 330, 410, 500 or closed · sentences rewritten in place, heights measured",
+  "summary": "A Qbix chat about Forma's spring launch in a wide white window. The agent's last reply ends in a file chip, Launch post, Draft 1. Press it and the chip itself leaves its place and grows into the canvas: its rect flies and expands on four springs from the exact rect it had on screen, its label travelling along to become the panel's header title, while one split spring narrows the chat column, its text re-wrapping live and the bubbles staying on the column's edges. The document's lines are then uncovered 30 ms apart. Click a sentence in the canvas and a small translucent bar offers Shorter and Warmer; choosing one covers the old words, uncovers the new ones, and every line below glides to its new place on a spring from a measured height, while the version label rolls from Draft 1 to Draft 2. The divider between chat and canvas is dragged 1:1 with a rubber band at its limits and lets go onto the nearest of three widths, or closes the canvas if it is thrown far right. Closing sends the panel back into the chip, wherever the chip now is, and every move can be reversed halfway.",
+  "spec": [
+    ["Split", "one spring S, the canvas region's width in px (0 closed, 330, 410 or 500 docked); the chat column is W − S wide and its text column min(560, that − 44), centred, so every line re-wraps on every frame; the panel's rect is a function of S in the docked state, so chat and canvas can never disagree"],
+    ["Open", "the chip's rect is measured on screen (getBoundingClientRect divided by the window's scale) and the panel starts exactly there as four springs, x, y, width and height, response 0.48 s, critically damped, shared with S; the corner radius 14 → 20 px and the header offsets follow the height spring, so the chip, the flight and the panel are one object"],
+    ["Label", "the chip's glyph and label sit in a group whose offset inside the panel goes from the chip's (14, 15) to the header's (18, 16) and whose size goes from 14 to 16 px with the same measure; the Draft label (the one lime dot and a rolling digit) is right-anchored and travels the same way, so there is exactly one lime in every frame"],
+    ["Lines", "the sheet is uncovered from its top 90 ms in, then each line of the document (title, two paragraphs, three rows, the date) is uncovered 30 ms apart from 180 ms (clip-path from the top and a 10 px slide, springs of 0.34 s); the document keeps the width it will have, so nothing re-wraps during the flight"],
+    ["Close", "the panel's four springs now chase the chip's live rect (it moves while the chat widens), response 0.42 s, the lines covered at once; a close that starts mid-open reverses with its velocity, and a press on the chip's hole mid-close reopens"],
+    ["Divider", "6–8 px hit strip, 3 px of travel before a drag; then 1:1 from that point, S = S₀ − Δx; past 300 or 530 the rubber band (x·D·0.55)/(D + 0.55·|x|), D = 90 px; release projects the hand's S by v × 0.099 s (d = 0.99), over 140 px/s, then takes the nearest of 330, 410, 500, or closes below 190; over 420 px/s is a throw (damping 0.8, deceleration from the first frame); double click goes to 410"],
+    ["Keys", "the divider is a focusable separator: Left and Right move it 24 px (Shift 72), Home and End the narrowest and widest; Escape closes the canvas; sentences are buttons (Enter or Space selects and moves focus to the bar, arrows move between Shorter and Warmer)"],
+    ["Rewrite", "the old words are covered left to right (170 ms ease-in, 14 ms apart), the sentence is replaced, the heights below are measured, every later word of the paragraph and every later line glides from where it was to where it now is (springs 0.44 s), and the new words are uncovered 26 ms apart (260 ms expo out); the draft digit rolls on a 0.34 s spring"],
+    ["Loop", "the thumbnail rests on the open canvas with a sentence selected and the bar up; a ghost then takes Shorter, picks another sentence for Warmer, drags the divider to wide, narrow and half and closes the canvas by a throw, Escape and the close glyph in turn, reopening through the chip; it calls the same pointer and key handlers as a hand and yields to a real one"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-24"],
+  "where": "A Qbix client's review chat, where the agent hands over a launch post, a case study or a brief as a file and the client edits it beside the conversation without leaving it.",
+  "rules": [
+    "One value, the split S, decides the layout: the chat's width and the canvas panel's rect come from it, so text re-wraps live and nothing is ever laid out twice.",
+    "The shared element is the chip itself: it starts from its exact on-screen rect, ends on the panel's, and comes home to wherever the chip is when the canvas closes. Four springs, one response, started from the value and speed on screen, so open and close can be reversed at any frame.",
+    "The chip's words travel: the label becomes the header title and the Draft label stays right-anchored, both placed from the same progress as the panel's height. The chip is left as an empty outline that says Editing in canvas.",
+    "Lime is the live dot beside the Draft label and nothing else. The selection is a grey wash drawn left to right; the bar is a translucent material with text buttons.",
+    "A rewrite covers and uncovers words, it never fades them. The heights are measured after the swap and every moved line springs from its old place, so a longer sentence pushes the page down smoothly and a shorter one pulls it up.",
+    "The divider follows the hand exactly, rubber-bands at its limits, and lets go with a projected landing on one of three widths, or closed. A throw may overshoot a little (damping 0.8); everything else is critically damped.",
+    "Pointer, touch and keys share one path: the chip and the close glyph are buttons, the divider is a separator with arrow keys, sentences are buttons, Escape closes. A status line announces opening, closing, selection and each draft.",
+    "Under reduced motion the piece rests open with a sentence selected; every change happens in place and nothing is animated."
+  ],
+  "tags": ["canvas", "split view", "shared element", "chat", "divider", "rubber band", "rewrite", "text reflow", "spring", "keyboard", "agent", "cards"]
+}
+</script>
+<style data-code>
+/* Canvas split. A chat in a white window; the agent's file chip opens into a canvas panel on the right.
+   Everything that moves is set from script (render): the split S, the panel's x, y, width and height, the line covers, the bar. Words are covered and uncovered with clip-path.
+   Colours: Apple neutrals #1d1d1f #6e6e73 #86868b, grounds #fff #f5f5f7, fills #e8e8ed; lime #B8FF00 is the live dot beside the Draft label. */
+.cs-fit { position: relative; width: calc(760px * var(--s, 1)); height: calc(470px * var(--s, 1)); }
+.cs-win { --cs-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 760px; height: 470px; transform: scale(var(--s, 1)); transform-origin: 0 0; overflow: hidden; border-radius: 22px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 30px 60px -28px rgba(0, 0, 0, .3);
+  font: 400 15px/21px var(--cs-f); letter-spacing: -.01em; color: #1d1d1f; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cs-win p { margin: 0; }
+.cs-win :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; }
+
+/* the chat column: W − S wide, its text column centred and at most 560 */
+.cs-chat { position: absolute; left: 0; top: 0; width: 760px; height: 100%; overflow: hidden; }
+.cs-col { position: absolute; top: 0; bottom: 0; left: 100px; width: 560px; }
+.cs-win h2.cs-chead { font-family: var(--cs-f); text-wrap: nowrap; }
+.cs-chead { position: absolute; left: 0; right: 0; top: 10px; height: 52px; display: flex; align-items: center; font-size: 16px; line-height: 20px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; }
+.cs-msgs { position: absolute; left: 0; right: 0; top: 62px; bottom: 74px; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26px); mask-image: linear-gradient(to bottom, transparent 0, #000 26px); }
+.cs-m { display: flex; flex-direction: column; align-items: flex-start; flex: none; }
+.cs-m.is-u { align-items: flex-end; }
+.cs-bub { max-width: 86%; padding: 9px 15px; border-radius: 20px; background: #f5f5f7; }
+.cs-agent { max-width: 100%; }
+.cs-comp { position: absolute; left: 0; right: 0; bottom: 16px; height: 44px; display: flex; align-items: center; padding: 0 6px 0 18px; border-radius: 22px; background: #fff; color: #86868b; white-space: nowrap; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .1), 0 6px 16px -8px rgba(0, 0, 0, .14); }
+.cs-comp span { flex: 1; min-width: 0; overflow: hidden; }
+.cs-comp i { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #e8e8ed; color: #86868b; }
+.cs-comp svg, .cs-gl, .cs-xg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.cs-comp svg { width: 18px; height: 18px; }
+
+/* the chip: the shared element. Its words live in .cs-cc, so a press can scale them while its box stays the box that is measured. */
+.cs-chip { position: relative; display: inline-flex; align-items: center; height: 48px; max-width: 100%; margin-top: 10px; padding: 0 14px; border-radius: 14px; background: #f5f5f7; cursor: pointer; text-align: left; white-space: nowrap;
+  transition: background 100ms cubic-bezier(.4, 0, .2, 1); }
+.cs-chip:hover { background: #efeff2; }
+.cs-chip:active { background: #ebebef; }
+.cs-cc { display: inline-flex; align-items: center; transition: transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.cs-chip:active .cs-cc { transform: scale(.97); }
+.cs-gl { flex: none; width: 18px; height: 18px; color: #1d1d1f; }
+.cs-cl { margin-left: 8px; font-size: 14px; line-height: 18px; font-weight: 600; letter-spacing: -.01em; }
+.cs-chip .cs-ver { margin-left: 14px; }
+/* once the panel has left, the chip is an outline that says where the document is */
+.cs-chip.is-hole { background: transparent; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .09); cursor: default; }
+.cs-chip.is-hole .cs-cc { visibility: hidden; }
+.cs-cap { position: absolute; left: 16px; top: 0; bottom: 0; display: flex; align-items: center; font-size: 13px; line-height: 18px; color: #86868b; pointer-events: none;
+  clip-path: inset(0 100% 0 0); transition: clip-path 120ms cubic-bezier(.5, 0, .75, 0); }
+.cs-chip.is-hole .cs-cap { clip-path: inset(0 0 0 0); transition: clip-path 320ms cubic-bezier(.16, 1, .3, 1) 180ms; }
+
+/* the Draft label: the live dot (the one lime) and a digit that rolls */
+.cs-ver { display: inline-flex; align-items: center; gap: 6px; height: 18px; font-size: 13px; line-height: 18px; font-weight: 500; color: #6e6e73; white-space: nowrap; }
+.cs-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .12); transform: scale(var(--k, 1)); }
+.cs-vt { display: block; height: 18px; }
+.cs-n { display: inline-block; position: relative; width: 8px; height: 18px; overflow: hidden; vertical-align: top; font-variant-numeric: tabular-nums; }
+.cs-ns { display: block; will-change: transform; }
+.cs-ns i { display: block; height: 18px; line-height: 18px; }
+
+/* the canvas panel: #f5f5f7 like the chip it grew from; its radius, header offsets and shadow follow --q (0 chip, 1 open) */
+.cs-panel { position: absolute; left: 0; top: 0; z-index: 5; visibility: hidden; outline: none; border-radius: calc(14px + 6px * var(--q, 0)); background: #f5f5f7;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, calc(.05 * var(--q, 0))), 0 14px 36px -14px rgba(0, 0, 0, calc(.22 * var(--q, 0))); }
+.cs-pclip { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+.cs-fly { position: absolute; left: 0; top: 0; display: flex; align-items: center; height: var(--gh, 18px); font-size: var(--fs, 14px); line-height: 18px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; pointer-events: none; will-change: transform; }
+.cs-fly .cs-gl { width: var(--gh, 18px); height: var(--gh, 18px); }
+.cs-fly .cs-ft { margin-left: 8px; }
+.cs-pver { position: absolute; left: 0; top: 0; will-change: transform; }
+.cs-x { position: absolute; right: 12px; top: 12px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #6e6e73; cursor: pointer; --cx: 0;
+  clip-path: circle(calc(var(--cx) * 72%) at 50% 50%); transition: background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.cs-x:hover { background: rgba(0, 0, 0, .06); }
+.cs-x:active { transform: scale(.94); background: rgba(0, 0, 0, .09); }
+.cs-xg { width: 14px; height: 14px; stroke-width: 1.7; }
+.cs-sheet { position: absolute; left: 10px; top: 52px; right: 10px; bottom: 10px; overflow: hidden auto; scrollbar-width: none; border-radius: 14px; background: #fff;
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .05); touch-action: pan-y; }
+.cs-sheet::-webkit-scrollbar { display: none; }
+
+/* the document: lines are units, each uncovered by clip-path and a short slide, each carrying its own glide offset */
+.cs-doc { position: relative; padding: 22px 24px 18px; }
+.cs-u { position: relative; will-change: transform; }
+.cs-win h1.cs-u { margin: 0 0 14px; font: 600 24px/28px var(--cs-f); letter-spacing: -.022em; text-wrap: pretty; }
+.cs-win p.cs-u { margin: 0 0 10px; font-size: 15px; line-height: 22px; text-wrap: pretty; }
+.cs-win p.cs-u.is-last { margin: 14px 0 0; }
+.cs-row { display: flex; justify-content: space-between; height: 30px; line-height: 30px; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08); }
+.cs-row.r1 { box-shadow: inset 0 1px 0 rgba(0, 0, 0, .08), inset 0 -1px 0 rgba(0, 0, 0, .08); }
+.cs-row b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.cs-s { cursor: pointer; border-radius: 5px; outline: none; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  background: linear-gradient(rgba(0, 0, 0, .085), rgba(0, 0, 0, .085)) no-repeat 0 0 / 0% 100%; transition: background-size 280ms cubic-bezier(.16, 1, .3, 1), background-color 120ms cubic-bezier(.4, 0, .2, 1); }
+.cs-s:hover { background-color: rgba(0, 0, 0, .04); }
+.cs-s.is-sel { background-size: 100% 100%; }
+.cs-s:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.cs-w { display: inline-block; }
+
+/* the selection bar: a translucent pane, uncovered from its bottom edge; its shadow is its own layer so the cover can clip the pane */
+.cs-bar { position: absolute; left: 0; top: 0; z-index: 8; height: 36px; visibility: hidden; pointer-events: none; will-change: transform; --v: 0; }
+.cs-sh { position: absolute; inset: 0; border-radius: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); opacity: var(--v); }
+.cs-pane { position: relative; display: flex; align-items: center; height: 100%; padding: 0 4px; border-radius: 18px; white-space: nowrap;
+  background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); clip-path: inset(calc((1 - var(--v)) * 100%) 0 0 0 round 18px); }
+.cs-ba { height: 28px; padding: 0 14px; border-radius: 14px; font-size: 13px; font-weight: 500; line-height: 28px; cursor: pointer;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1); }
+.cs-ba:hover, .cs-ba.is-hot { background: rgba(0, 0, 0, .05); }
+.cs-ba:active, .cs-ba.is-press { transform: scale(.96); background: rgba(0, 0, 0, .08); }
+.cs-ba[aria-disabled="true"] { color: #a1a1a6; cursor: default; background: none; transform: none; }
+.cs-ba:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
+.cs-sep { flex: none; width: 1px; height: 16px; background: rgba(0, 0, 0, .1); }
+
+/* the divider: a strip you can grab, with a small pill that is uncovered once the panel is open */
+.cs-div { position: absolute; left: 0; top: 10px; z-index: 6; width: 20px; height: 450px; cursor: col-resize; touch-action: none; outline: none; visibility: hidden; --dq: 0; }
+.cs-div i { position: absolute; left: 8px; top: 203px; width: 4px; height: 44px; border-radius: 2px; background: rgba(0, 0, 0, .18); transform: scaleY(var(--dq)); transition: background 160ms cubic-bezier(.4, 0, .2, 1), width 160ms cubic-bezier(.4, 0, .2, 1), left 160ms cubic-bezier(.4, 0, .2, 1); }
+.cs-div:hover i, .cs-div.is-hold i { background: rgba(0, 0, 0, .34); width: 5px; left: 7.5px; }
+.cs-div.is-drag i { background: rgba(0, 0, 0, .5); }
+.cs-div:focus-visible i { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #1d1d1f; }
+.cs-win.is-drag, .cs-win.is-drag * { cursor: col-resize !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cs-s, .cs-ba, .cs-x, .cs-chip, .cs-cc, .cs-div i { transition-duration: 1ms !important; }
+  .cs-cap { transition: none !important; }
+}
+</style>
+<style>
+  html, body { background: #f5f5f7; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; background: #f5f5f7; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="cs-fit" id="cs-fit">
+ <section class="cs-win" id="cs-win" aria-label="Forma launch, chat and canvas">
+  <div class="cs-chat" id="cs-chat">
+   <div class="cs-col" id="cs-col">
+    <h2 class="cs-chead">Forma launch</h2>
+    <div class="cs-msgs" id="cs-msgs">
+     <div class="cs-m is-u"><p class="cs-bub">Forma's spring line goes live on 12 March.</p></div>
+     <div class="cs-m"><p class="cs-agent">Great. Want me to write the launch post?</p></div>
+     <div class="cs-m is-u"><p class="cs-bub">Yes. Short and warm.</p></div>
+     <div class="cs-m">
+      <p class="cs-agent">Here is a draft. A headline, two paragraphs and the date.</p>
+      <button type="button" class="cs-chip" id="cs-chip" aria-expanded="false" aria-controls="cs-panel" aria-label="Launch post, Draft 1. Open in canvas">
+       <span class="cs-cc" id="cs-cc">
+        <svg class="cs-gl" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 2.5h6L15 6v10a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 16V4a1.5 1.5 0 0 1 1.5-1.5zM11.5 2.5V6H15M7 10h6M7 13h4"/></svg>
+        <span class="cs-cl">Launch post</span>
+        <span class="cs-ver" id="cs-cver" aria-hidden="true"><i class="cs-dot"></i><span class="cs-vt">Draft <span class="cs-n"><span class="cs-ns"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></span></span></span></span>
+       </span>
+       <span class="cs-cap" aria-hidden="true">Editing in canvas</span>
+      </button>
+     </div>
+    </div>
+    <div class="cs-comp" aria-hidden="true"><span>Ask for a change</span><i><svg viewBox="0 0 20 20"><path d="M10 15.5V5M5.6 9.4L10 5l4.4 4.4"/></svg></i></div>
+   </div>
+  </div>
+
+  <div class="cs-panel" id="cs-panel" role="region" aria-label="Launch post canvas" tabindex="-1">
+   <div class="cs-pclip">
+    <div class="cs-fly" id="cs-fly"><svg class="cs-gl" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 2.5h6L15 6v10a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 4 16V4a1.5 1.5 0 0 1 1.5-1.5zM11.5 2.5V6H15M7 10h6M7 13h4"/></svg><span class="cs-ft"><span id="cs-title">Launch post</span></span></div>
+    <span class="cs-ver cs-pver" id="cs-pver" role="img" aria-label="Draft 1"><i class="cs-dot"></i><span class="cs-vt" aria-hidden="true">Draft <span class="cs-n"><span class="cs-ns"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></span></span></span></span>
+    <button type="button" class="cs-x" id="cs-x" aria-label="Close canvas"><svg class="cs-xg" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
+    <div class="cs-sheet" id="cs-sheet">
+     <div class="cs-doc" id="cs-doc">
+      <h1 class="cs-u"><span class="cs-s" data-i="0" role="button" tabindex="0" aria-pressed="false">Spring, by hand.</span></h1>
+      <p class="cs-u"><span class="cs-s" data-i="1" role="button" tabindex="0" aria-pressed="false">Meet the spring line.</span> <span class="cs-s" data-i="2" role="button" tabindex="0" aria-pressed="false">Twelve pieces, each thrown and glazed by hand in our studio.</span></p>
+      <p class="cs-u"><span class="cs-s" data-i="3" role="button" tabindex="0" aria-pressed="false">Three new glazes: ash green, soft white and a deep ink.</span> <span class="cs-s" data-i="4" role="button" tabindex="0" aria-pressed="false">No two pieces match, and that is the point.</span></p>
+      <div class="cs-u cs-row r1"><span>Ash vase</span><b>$68</b></div>
+      <div class="cs-u cs-row"><span>Loop tray</span><b>$46</b></div>
+      <div class="cs-u cs-row"><span>Pressed tumbler</span><b>$28</b></div>
+      <p class="cs-u is-last"><span class="cs-s" data-i="5" role="button" tabindex="0" aria-pressed="false">Orders open on 12 March at forma.studio.</span></p>
+     </div>
+    </div>
+   </div>
+   <div class="cs-bar" id="cs-bar" role="toolbar" aria-label="Rewrite the selected sentence">
+    <i class="cs-sh"></i>
+    <div class="cs-pane">
+     <button type="button" class="cs-ba" data-dir="-1">Shorter</button>
+     <i class="cs-sep"></i>
+     <button type="button" class="cs-ba" data-dir="1">Warmer</button>
+    </div>
+   </div>
+  </div>
+
+  <div class="cs-div" id="cs-div" role="separator" aria-orientation="vertical" aria-label="Resize canvas" tabindex="-1"><i></i></div>
+ </section>
+ <p class="sr-only" id="cs-msg" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Press the file chip to open the canvas. Click a sentence for Shorter or Warmer. Drag the divider (throw it right to close), double-click it to reset, arrow keys move it, Escape closes</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Canvas split. One split spring S (the canvas region's width: 0 closed) decides the layout: the chat column is W − S wide, and when the canvas is docked
+   its panel is a function of S. Opening and closing fly the panel from and to the chip's rect on four springs (x, y, width, height) that share S's response.
+   Every spring starts from the value and the speed on screen, so anything can be reversed or grabbed mid-flight.
+   Sentences are words in inline-blocks: a rewrite covers them, swaps them, measures the new heights, glides everything that moved and uncovers the new words. */
+const CS = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = 2 * Math.PI, R = (s) => TAU / s;                               // a response in seconds as an angular frequency
+  const OMO = R(0.48), OMC = R(0.42), OMS = R(0.3), OMD = R(0.4), OMU = R(0.34), OMB = R(0.36), OMX = R(0.3), OMR = R(0.34), OMG = R(0.44);
+  const W = 760, H = 470, PM = 10, PG = 8, CH = 48, HH = 52, PADC = 22, COLMAX = 560;      // window, panel margin and gap, chip and header heights, chat padding and text column
+  const SNAPS = [330, 410, 500], SMIN = 300, SMAX = 530, DB = 90, CLOSE_BELOW = 190;      // docked widths, the divider's limits, rubber-band dimension, closes below this
+  const LOOK = 0.099, FLICK = 140, THROW = 420, SLOP = 3, BH = 36;                          // projection (d = 0.99), px/s that is projected, that is a throw, px before a drag
+  const EIN = 'cubic-bezier(.5, 0, .75, 0)', EOUT = 'cubic-bezier(.16, 1, .3, 1)';
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  /* the copy: each sentence as [shorter, as written, warmer] */
+  const SENT = [
+    ['By hand.', 'Spring, by hand.', 'Spring, made by hand for you.'],
+    ['Meet spring.', 'Meet the spring line.', 'Come and meet the spring line.'],
+    ['Twelve pieces, all made by hand.', 'Twelve pieces, each thrown and glazed by hand in our studio.', 'Twelve pieces, each thrown and glazed by hand in our little studio.'],
+    ['Three new glazes.', 'Three new glazes: ash green, soft white and a deep ink.', 'We mixed three new glazes for you: ash green, soft white and a deep ink.'],
+    ['No two match.', 'No two pieces match, and that is the point.', 'No two pieces match, and we love that about them.'],
+    ['Orders open 12 March.', 'Orders open on 12 March at forma.studio.', 'Orders open on 12 March at forma.studio. Come and say hello.']
+  ];
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) when critically damped, the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OMO, z: 1, on: false });
+  function step(s, dt, eps = 0.05, veps = 3) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z = 1) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+  const to = (s, T, v, w, z = 1) => { if (reduced) { s.x = s.T = T; s.v = 0; s.on = false; } else aim(s, T, v, w, z); };   // no springs under reduced motion
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                      // rubber band, Apple's constant 0.55
+  const band = (v, lo, hi, D) => (v < lo ? lo - rb(lo - v, D) : v > hi ? hi + rb(v - hi, D) : v);
+  const dockOf = (Sv) => ({ x: W - Sv + PG, y: PM, w: Sv - PG - PM, h: H - 2 * PM });  // the panel's rect for a split of Sv
+
+  const $ = (id) => document.getElementById('cs-' + id);
+  const win = $('win'), chat = $('chat'), col = $('col'), chip = $('chip'), panel = $('panel'), fly = $('fly'), pver = $('pver'), cver = $('cver'), xb = $('x'), sheet = $('sheet'), doc = $('doc');
+  const bar = $('bar'), dv = $('div'), msg = $('msg'), title = $('title');
+  const baBtns = Array.from(bar.querySelectorAll('.cs-ba'));
+  const strips = Array.from(document.querySelectorAll('.cs-ns')), dots = Array.from(document.querySelectorAll('.cs-dot'));
+
+  const S = mk(0), RX = mk(0), RY = mk(PM), RW = mk(0), RH = mk(H - 2 * PM);   // the split, and the panel's rect
+  const SH = mk(0), XB = mk(0), BV = mk(0), BX = mk(0), BY = mk(0), RK = mk(1), DK = mk(0);   // sheet cover, close glyph, bar rise / x / y, draft roll, dot kick
+  let opened = false, flying = false, Sdock = 410, docW = 410 - 38, held = null, ptr = null, selI = -1, busy = false, draft = 1, epoch = 0, raf = 0, last = 0, sc = 1, BW = 150, cw = 206, verW = 66;
+  let revT = [];
+  const say = (t) => { msg.textContent = ''; setTimeout(() => { msg.textContent = t; }, 20); };
+
+  /* the document: sentences are buttons made of words, lines are units with their own glide */
+  const sents = Array.from(doc.querySelectorAll('.cs-s')).map((el, i) => ({ el, i, t: 0, words: [] }));
+  const U = Array.from(doc.querySelectorAll('.cs-u')).map((el) => ({ el, dy: mk(0), cv: mk(0), tf: '', cl: '' }));
+  const GW = new Set();                                                      // words that are gliding: { el, x, y }
+  function setWords(s, text) {
+    s.el.textContent = '';
+    s.words = text.split(' ').map((t, k, a) => {
+      const w = document.createElement('span');
+      w.className = 'cs-w'; w.textContent = t;
+      s.el.appendChild(w);
+      if (k < a.length - 1) s.el.appendChild(document.createTextNode(' '));
+      return w;
+    });
+    s.el.setAttribute('aria-label', text);
+  }
+  sents.forEach((s) => setWords(s, SENT[s.i][1]));
+
+  /* measuring: the chip's rect in the window's own pixels (the window may be drawn scaled) */
+  function measure() {
+    sc = win.getBoundingClientRect().width / W || 1;
+    const c = chip.getBoundingClientRect();
+    if (c.width) cw = c.width / sc;
+    verW = cver.offsetWidth || verW;
+    BW = bar.offsetWidth || BW;
+  }
+  function chipRect() {
+    const r = chip.getBoundingClientRect(), o = win.getBoundingClientRect();
+    return { x: (r.left - o.left) / sc, y: (r.top - o.top) / sc, w: r.width / sc, h: r.height / sc };
+  }
+  const qOf = () => clamp((RH.x - CH) / (H - 2 * PM - CH), 0, 1);
+  const canDrag = () => opened && !flying && qOf() > 0.98;
+  const canEdit = () => opened && !flying && qOf() > 0.98;
+
+  /* layout from the springs */
+  const lc = { xd: NaN, cl: NaN, cw: NaN };
+  function layoutChat() {
+    const xd = W - S.x, colW = clamp(xd - 2 * PADC, 0, COLMAX), left = (xd - colW) / 2;
+    if (xd !== lc.xd) { lc.xd = xd; chat.style.width = xd.toFixed(2) + 'px'; dv.style.left = (xd - 6).toFixed(2) + 'px'; }
+    if (left !== lc.cl) { lc.cl = left; col.style.left = left.toFixed(2) + 'px'; }
+    if (colW !== lc.cw) { lc.cw = colW; col.style.width = colW.toFixed(2) + 'px'; }
+  }
+  const lp = { k: '', q: NaN, dw: NaN };
+  function layoutPanel() {
+    const q = qOf(), x = RX.x, y = RY.x, w = RW.x, h = RH.x;
+    const k = x.toFixed(2) + '|' + y.toFixed(2) + '|' + w.toFixed(2) + '|' + h.toFixed(2);
+    if (k !== lp.k) {
+      lp.k = k;
+      panel.style.left = x.toFixed(2) + 'px'; panel.style.top = y.toFixed(2) + 'px'; panel.style.width = w.toFixed(2) + 'px'; panel.style.height = h.toFixed(2) + 'px';
+      pver.style.transform = `translate3d(${lerp(cw - 14 - verW, w - 52 - verW, q).toFixed(2)}px, ${lerp(15, 17, q).toFixed(2)}px, 0)`;
+    }
+    const qv = +q.toFixed(3);
+    if (qv !== lp.q) {
+      lp.q = qv;
+      panel.style.setProperty('--q', qv);
+      fly.style.transform = `translate3d(${lerp(14, 18, qv).toFixed(2)}px, ${lerp(15, 16, qv).toFixed(2)}px, 0)`;
+      fly.style.setProperty('--gh', lerp(18, 20, qv).toFixed(2) + 'px');
+      fly.style.setProperty('--fs', lerp(14, 16, qv).toFixed(2) + 'px');
+      dv.style.setProperty('--dq', +clamp((qv - 0.85) / 0.15, 0, 1).toFixed(3));
+    }
+    if (docW !== lp.dw) { lp.dw = docW; doc.style.width = docW.toFixed(2) + 'px'; }
+    panel.style.visibility = 'visible';
+  }
+  function dockRect() {                                                      // docked: the panel is the split's, with its speed
+    const d = dockOf(S.x);
+    RX.x = RX.T = d.x; RX.v = -S.v; RY.x = RY.T = d.y; RY.v = 0; RW.x = RW.T = d.w; RW.v = S.v; RH.x = RH.T = d.h; RH.v = 0;
+    RX.on = RY.on = RW.on = RH.on = false;
+    docW = S.x - PG - PM - 20;
+  }
+  function renderSheet() {
+    const v = +clamp(SH.x, 0, 1).toFixed(3);
+    if (v !== renderSheet.v) { renderSheet.v = v; sheet.style.clipPath = v >= 0.999 ? 'none' : `inset(0 0 ${((1 - v) * 100).toFixed(2)}% 0 round 14px)`; sheet.style.visibility = v < 0.003 ? 'hidden' : ''; }
+    const c = +clamp(XB.x, 0, 1).toFixed(3);
+    if (c !== renderSheet.c) { renderSheet.c = c; xb.style.setProperty('--cx', c); xb.style.pointerEvents = c > 0.5 ? 'auto' : 'none'; xb.style.visibility = c < 0.003 ? 'hidden' : ''; }
+  }
+  function renderUnits() {
+    for (const u of U) {
+      const cv = clamp(u.cv.x, 0, 1);
+      const tf = `translate3d(0, ${(u.dy.x + (1 - cv) * 10).toFixed(2)}px, 0)`;
+      if (tf !== u.tf) { u.tf = tf; u.el.style.transform = tf; }
+      const cl = cv >= 0.999 ? 'none' : cv < 0.003 ? 'hidden' : `inset(0 0 ${((1 - cv) * 100).toFixed(2)}% 0)`;
+      if (cl !== u.cl) { u.cl = cl; u.el.style.clipPath = cl === 'hidden' ? 'inset(0 0 100% 0)' : cl; u.el.style.visibility = cl === 'hidden' ? 'hidden' : ''; }
+    }
+  }
+  function renderGlides() {
+    for (const g of GW) g.el.style.transform = g.x.on || g.y.on ? `translate3d(${g.x.x.toFixed(2)}px, ${g.y.x.toFixed(2)}px, 0)` : '';
+  }
+  function renderRoll() {
+    const t = `translate3d(0, ${(-(RK.x - 1) * 18).toFixed(2)}px, 0)`;
+    if (t !== renderRoll.t) { renderRoll.t = t; strips.forEach((n) => { n.style.transform = t; }); }
+    const k = (1 + 0.45 * clamp(DK.x, 0, 1)).toFixed(3);
+    if (k !== renderRoll.k) { renderRoll.k = k; dots.forEach((d) => d.style.setProperty('--k', k)); }
+  }
+  function renderBar() {
+    const v = +clamp(BV.x, 0, 1).toFixed(3);
+    if (v !== renderBar.v) { renderBar.v = v; bar.style.setProperty('--v', v); bar.style.visibility = v > 0.003 ? 'visible' : 'hidden'; bar.style.pointerEvents = v > 0.5 ? 'auto' : 'none'; }
+    const tf = `translate3d(${BX.x.toFixed(2)}px, ${(BY.x + (1 - v) * 10).toFixed(2)}px, 0)`;
+    if (tf !== renderBar.tf) { renderBar.tf = tf; bar.style.transform = tf; }
+  }
+  function renderDiv() {
+    const on = opened || flying;
+    dv.style.visibility = on ? 'visible' : 'hidden';
+    dv.style.pointerEvents = canDrag() ? 'auto' : 'none';
+    dv.tabIndex = canDrag() ? 0 : -1;
+  }
+
+  /* the bar sits above the selected sentence, or below it when that covers fewer other lines; it follows the sentence as it is on screen */
+  function barSpot() {
+    if (selI < 0) return null;
+    const own = sents[selI].el.closest('.cs-u'), rs = sents[selI].el.getClientRects(), pr = panel.getBoundingClientRect();
+    if (!rs.length) return null;
+    let l = 1e9, r = -1e9;
+    for (const q of rs) { l = Math.min(l, q.left); r = Math.max(r, q.right); }
+    const first = rs[0], lastR = rs[rs.length - 1], pw = pr.width / sc, ph = pr.height / sc;
+    const x = clamp(((l + r) / 2 - pr.left) / sc - BW / 2, 10, Math.max(10, pw - 10 - BW));
+    const ya = (first.top - pr.top) / sc - 7 - BH, yb = (lastR.bottom - pr.top) / sc + 7;
+    const rects = U.filter((u) => u.el !== own).map((u) => u.el.getBoundingClientRect());
+    const hits = (y) => {                                                     // how many other lines the bar would sit on
+      if (y < HH + 4 || y + BH > ph - 10) return 99;
+      const t = pr.top + y * sc, b = t + BH * sc;
+      return rects.filter((q) => q.height > 0 && q.top < b - 4 && q.bottom > t + 4).length;
+    };
+    const y = hits(ya) <= hits(yb) ? ya : yb;
+    return { x, y: Math.round(clamp(y, 8, ph - 10 - BH)) };
+  }
+  function syncBar() {
+    const on = selI >= 0 && opened;
+    to(BV, on ? 1 : 0, BV.v, on ? OMB : R(0.22));
+    const t = on ? sents[selI].t : 0;
+    baBtns.forEach((b) => {
+      const d = +b.dataset.dir, off = busy || !on || t + d < -1 || t + d > 1;
+      b.setAttribute('aria-disabled', off ? 'true' : 'false');
+    });
+    kick();
+  }
+  function select(i) {
+    if (busy || !canEdit() || i === selI) return;
+    if (selI >= 0) { sents[selI].el.classList.remove('is-sel'); sents[selI].el.setAttribute('aria-pressed', 'false'); }
+    selI = i;
+    sents[i].el.classList.add('is-sel'); sents[i].el.setAttribute('aria-pressed', 'true');
+    syncBar();
+    say('Sentence selected. Shorter or Warmer');
+  }
+  function deselect() {
+    if (selI >= 0) { sents[selI].el.classList.remove('is-sel'); sents[selI].el.setAttribute('aria-pressed', 'false'); }
+    selI = -1;
+    syncBar();
+  }
+
+  /* a rewrite: cover the old words, swap, measure, glide everything that moved, uncover the new words */
+  function setDraft(n) {
+    draft = Math.min(9, n);
+    to(RK, draft, RK.v, OMR);
+    DK.x = 1; DK.v = 0; to(DK, 0, 0, R(0.5));
+    pver.setAttribute('aria-label', 'Draft ' + draft);
+    chip.setAttribute('aria-label', `Launch post, Draft ${draft}. ${opened ? 'Editing in canvas' : 'Open in canvas'}`);
+    kick();
+  }
+  async function rewrite(dir) {
+    if (busy || selI < 0 || !canEdit()) return;
+    const i = selI, s = sents[i], nt = s.t + dir;
+    if (nt < -1 || nt > 1) return;
+    const my = epoch, text = SENT[i][nt + 1], old = s.words;
+    busy = true; syncBar();
+    say(dir < 0 ? 'Making it shorter' : 'Making it warmer');
+    if (!reduced) {
+      old.forEach((w, k) => w.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 100%)' }], { duration: 170, delay: 14 * k, easing: EIN, fill: 'forwards' }));
+      await sleep(170 + 14 * (old.length - 1) + 30);
+      if (my !== epoch) return;
+    }
+    // before: where every later word and every line is on screen
+    const unit = s.el.closest('.cs-u'), all = Array.from(unit.querySelectorAll('.cs-w')), after = all.slice(all.indexOf(old[old.length - 1]) + 1);
+    const wPre = after.map((w) => { const r = w.getBoundingClientRect(); return { x: r.left / sc, y: r.top / sc }; });
+    const uPre = U.map((u) => u.el.getBoundingClientRect().top / sc);
+    setWords(s, text);
+    s.t = nt;
+    // after: the heights are measured with every transform cleared, then each thing starts from where it was
+    after.forEach((w) => { w.style.transform = ''; });
+    U.forEach((u) => { u.el.style.transform = 'none'; });
+    const wPost = after.map((w) => { const r = w.getBoundingClientRect(); return { x: r.left / sc, y: r.top / sc }; });
+    const uPost = U.map((u) => u.el.getBoundingClientRect().top / sc);
+    U.forEach((u, k) => {
+      const d = uPre[k] - uPost[k] - (1 - clamp(u.cv.x, 0, 1)) * 10;
+      u.dy.x = d; u.tf = '';
+      if (reduced) { u.dy.x = u.dy.T = 0; u.dy.v = 0; u.dy.on = false; } else aim(u.dy, 0, u.dy.v, OMG);
+    });
+    after.forEach((w, k) => {
+      const g = w.g || (w.g = { el: w, x: mk(0), y: mk(0) });
+      g.x.x = wPre[k].x - wPost[k].x; g.y.x = wPre[k].y - wPost[k].y;
+      if (reduced) { g.x.x = g.y.x = 0; g.x.on = g.y.on = false; } else { aim(g.x, 0, 0, OMG); aim(g.y, 0, 0, OMG); GW.add(g); }
+    });
+    renderUnits(); renderGlides();
+    setDraft(draft + 1);
+    if (!reduced) {
+      s.words.forEach((w, k) => {
+        w.style.clipPath = 'inset(0 100% 0 0)';
+        const a = w.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 260, delay: 60 + 26 * k, easing: EOUT, fill: 'both' });
+        a.onfinish = () => { a.cancel(); w.style.clipPath = ''; };
+      });
+      kick();
+      await sleep(60 + 26 * (s.words.length - 1) + 260 + 30);
+      if (my !== epoch) return;
+    }
+    busy = false; syncBar(); kick();
+    say(`Draft ${draft}. ${text}`);
+  }
+
+  /* opening and closing */
+  const at = (ms, fn) => { if (reduced || ms <= 0) fn(); else revT.push(setTimeout(fn, ms)); };
+  function reveal(on) {
+    revT.forEach(clearTimeout); revT = [];
+    if (on) {
+      at(90, () => { to(SH, 1, SH.v, R(0.4)); kick(); });
+      at(150, () => { to(XB, 1, XB.v, R(0.3)); kick(); });
+      U.forEach((u, i) => at(180 + 30 * i, () => { to(u.cv, 1, u.cv.v, R(0.34)); kick(); }));
+    } else {
+      to(SH, 0, SH.v, R(0.2)); to(XB, 0, XB.v, R(0.16));
+      U.forEach((u) => to(u.cv, 0, u.cv.v, R(0.16)));
+    }
+  }
+  const hole = (on) => { chip.classList.toggle('is-hole', on); chip.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+  function open(byKey) {
+    if (opened) return;
+    measure();
+    const hidden = !flying;                                                   // fully closed: start from the chip's exact rect
+    const c = chipRect();
+    opened = true;
+    if (hidden) {
+      cw = c.w; S.x = 0; S.v = 0;
+      RX.x = c.x; RY.x = c.y; RW.x = c.w; RH.x = c.h; RX.v = RY.v = RW.v = RH.v = 0;
+      docW = Sdock - 38; lp.k = ''; lp.q = NaN;
+    }
+    hole(true); flying = true;
+    const d = dockOf(Sdock);
+    to(S, Sdock, S.v, OMO); to(RX, d.x, RX.v, OMO); to(RY, d.y, RY.v, OMO); to(RW, d.w, RW.v, OMO); to(RH, d.h, RH.v, OMO);
+    reveal(true);
+    setDraft(draft);
+    renderAll();                                                              // drawn at once: the panel is exactly on the chip before the chip is emptied
+    say('Canvas open');
+    if (byKey) setTimeout(() => panel.focus({ preventScroll: true }), 30);
+    kick();
+  }
+  function close(refocus) {
+    if (!opened) return;
+    const inside = panel.contains(document.activeElement);
+    if (!flying) dockRect();                                                  // docked: the springs start from the split's value and speed
+    opened = false; flying = true;
+    deselect(); reveal(false);
+    to(S, 0, S.v, OMC);
+    const c = chipRect();
+    to(RX, c.x, RX.v, OMC); to(RY, c.y, RY.v, OMC); to(RW, c.w, RW.v, OMC); to(RH, c.h, RH.v, OMC);
+    chip.setAttribute('aria-expanded', 'false');
+    if (inside || refocus) chip.focus({ preventScroll: true });
+    renderDiv();
+    say('Canvas closed');
+    kick();
+  }
+  function endClose() {                                                       // the panel has landed in the chip: the chip is itself again
+    flying = false;
+    panel.style.visibility = 'hidden'; lp.k = '';
+    hole(false);
+    S.x = S.T = 0; S.v = 0; S.on = false;
+    setDraft(draft);
+    renderDiv();
+  }
+
+  /* motion */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let lv = false;
+    if (!held || held.mode !== 'drag') lv = step(S, dt, 0.05, 3) || lv;
+    layoutChat();
+    if (opened || flying) {
+      if (flying) {
+        if (!opened) {                                                        // coming home: the chip moves while the chat widens, so its rect is read every frame
+          const c = chipRect();
+          cw = c.w;
+          RX.T = c.x; RY.T = c.y; RW.T = c.w; RH.T = c.h; RX.on = RY.on = RW.on = RH.on = true;
+          if (reduced) { RX.x = c.x; RY.x = c.y; RW.x = c.w; RH.x = c.h; }
+        }
+        lv = step(RX, dt) || lv; lv = step(RY, dt) || lv; lv = step(RW, dt) || lv; lv = step(RH, dt) || lv;
+        if (!(RX.on || RY.on || RW.on || RH.on || S.on)) { if (opened) { flying = false; dockRect(); } else endClose(); }
+      } else dockRect();
+      if (opened || flying) layoutPanel();
+    }
+    lv = step(SH, dt, 0.002, 0.05) || lv; lv = step(XB, dt, 0.002, 0.05) || lv;
+    for (const u of U) { lv = step(u.cv, dt, 0.002, 0.05) || lv; lv = step(u.dy, dt, 0.05, 3) || lv; }
+    for (const g of GW) { const a = step(g.x, dt, 0.05, 3), b = step(g.y, dt, 0.05, 3); if (!a && !b) { g.el.style.transform = ''; GW.delete(g); } else lv = true; }
+    lv = step(RK, dt, 0.002, 0.05) || lv; lv = step(DK, dt, 0.002, 0.05) || lv;
+    // the bar follows its sentence as it is on screen
+    const spot = (opened || flying) ? barSpot() : null;
+    if (spot) {
+      if (BV.x < 0.02 && BV.T === 1) { BX.x = BX.T = spot.x; BY.x = BY.T = spot.y; BX.on = BY.on = false; }   // it rises where it will stay
+      else {
+        if (Math.abs(spot.x - BX.T) > 0.05) to(BX, spot.x, BX.v, OMX);
+        if (Math.abs(spot.y - BY.T) > 0.05) to(BY, spot.y, BY.v, OMX);
+      }
+    }
+    lv = step(BX, dt) || lv; lv = step(BY, dt) || lv; lv = step(BV, dt, 0.002, 0.05) || lv;
+    renderSheet(); renderUnits(); renderGlides(); renderRoll(); renderBar(); renderDiv();
+    if (lv || held) kick();                                                   // runs only while something moves or is held
+  }
+
+  /* the divider: 1:1 from where the slop ended, a rubber band at its limits, a projected landing on release */
+  function vel(rows, t, j) {                                                  // px/s over the last 80 ms of moves; 0 if the hand rested
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return 0;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? 0 : ((b[j] - a[j]) / dt) * 1000;
+  }
+  function snapTo(T, v, thr) {                                                // a throw decelerates from its first frame instead of crossing the target
+    Sdock = T;
+    let w = OMS;
+    if (thr) { const D = T - S.x; if (v * D > 0) w = Math.min(40, Math.max(OMS, (1.5 * v) / D)); }
+    to(S, T, v, w, thr ? 0.8 : 1);
+    dv.setAttribute('aria-valuenow', Math.round(T)); dv.setAttribute('aria-valuetext', `Canvas ${Math.round((T / W) * 100)}% of the window`);
+    kick();
+  }
+  function dragStart(x, id) {
+    held = { id, x0: x, ax: x, S0: S.x, mode: 'wait', rows: [], raw: S.x };
+    dv.classList.add('is-hold');
+  }
+  function dragMove(x, t) {
+    const h = held;
+    if (!h) return;
+    if (h.mode === 'wait') {
+      if (Math.abs(x - h.x0) < SLOP * sc) return;
+      h.mode = 'drag'; h.ax = x; h.S0 = S.x; S.on = false; S.v = 0; h.rows = [[t, S.x, S.x]];
+      dv.classList.add('is-drag'); win.classList.add('is-drag');
+    }
+    const raw = h.S0 - (x - h.ax) / sc;                                       // the pointer moves right, the canvas gets narrower
+    h.raw = raw;
+    const v = reduced ? clamp(raw, SMIN, SMAX) : band(raw, SMIN, SMAX, DB);
+    S.x = S.T = v; S.v = 0; S.on = false;
+    h.rows.push([t, v, raw]);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    kick();
+  }
+  function dragEnd(t, cancel) {
+    const h = held;
+    if (!h) return;
+    held = null; ptr = null;
+    dv.classList.remove('is-hold', 'is-drag'); win.classList.remove('is-drag');
+    if (h.mode !== 'drag') return;
+    const vs = cancel ? 0 : vel(h.rows, t, 1), vr = cancel ? 0 : vel(h.rows, t, 2), sp = Math.abs(vr);
+    const proj = h.raw + (sp > FLICK ? vr * LOOK : 0);                         // where the hand's release coasts to
+    if (proj < CLOSE_BELOW) { S.v = vs; close(); return; }
+    const tgt = SNAPS.reduce((a, b) => (Math.abs(b - proj) < Math.abs(a - proj) ? b : a));
+    snapTo(tgt, vs, sp > THROW);
+  }
+  dv.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null || !canDrag()) return;
+    ptr = e.pointerId;
+    try { dv.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic pointer has nothing to capture */ }
+    dragStart(e.clientX, e.pointerId);
+    e.preventDefault();
+  });
+  addEventListener('pointermove', (e) => { if (e.pointerId === ptr) dragMove(e.clientX, e.timeStamp); });
+  const pend = (cancel) => (e) => { if (e.pointerId === ptr) dragEnd(e.timeStamp, cancel); };
+  addEventListener('pointerup', pend(false));
+  addEventListener('pointercancel', pend(true));
+  dv.addEventListener('dblclick', () => { if (canDrag()) snapTo(410, S.v, false); });
+  dv.addEventListener('dragstart', (e) => e.preventDefault());
+  const letgo = () => { if (held && held.id === 73) dragEnd(performance.now(), true); };   // the ghost's hand only (pointer id 73)
+  dv.addEventListener('keydown', (e) => {
+    if (!canDrag() || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key, st = e.shiftKey ? 72 : 24;
+    let T = null;
+    if (k === 'ArrowLeft') T = S.T + st; else if (k === 'ArrowRight') T = S.T - st;
+    else if (k === 'Home') T = SMIN; else if (k === 'End') T = SMAX;
+    if (T === null) return;
+    e.preventDefault();
+    snapTo(clamp(T, SMIN, SMAX), S.v, false);
+  });
+
+  /* the rest of the input: the chip, the close glyph, sentences, the bar, Escape */
+  chip.addEventListener('click', (e) => { if (!opened) open(e.detail === 0); else if (flying) close(true); else panel.focus({ preventScroll: true }); });   // a press mid-flight reverses it
+  xb.addEventListener('click', (e) => { e.stopPropagation(); close(true); });
+  panel.addEventListener('click', () => { if (!opened && flying) open(false); });   // a press on the panel while it flies home reverses it
+  doc.addEventListener('click', (e) => {
+    const el = e.target.closest ? e.target.closest('.cs-s') : null;
+    if (el) { select(+el.dataset.i); return; }
+    if (!busy && canEdit()) deselect();
+  });
+  doc.addEventListener('keydown', (e) => {
+    const el = e.target.closest ? e.target.closest('.cs-s') : null;
+    if (!el || (e.key !== 'Enter' && e.key !== ' ')) return;
+    e.preventDefault();
+    select(+el.dataset.i);
+    const b = baBtns.find((x) => x.getAttribute('aria-disabled') !== 'true');
+    if (b) setTimeout(() => b.focus({ preventScroll: true }), 40);
+  });
+  bar.addEventListener('click', (e) => { const b = e.target.closest('.cs-ba'); if (b && b.getAttribute('aria-disabled') !== 'true') rewrite(+b.dataset.dir); });
+  bar.addEventListener('keydown', (e) => {
+    const i = baBtns.indexOf(document.activeElement);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); baBtns[clamp(i + (e.key === 'ArrowRight' ? 1 : -1), 0, 1)].focus(); }
+    else if (e.key === 'ArrowUp' && selI >= 0) { e.preventDefault(); sents[selI].el.focus({ preventScroll: true }); }
+  });
+  sheet.addEventListener('scroll', () => kick(), { passive: true });
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Escape' && opened) { e.preventDefault(); letgo(); close(); }
+  });
+
+  /* back to a clean state (the loop calls this while the canvas is closed) */
+  function reset() {
+    epoch++; busy = false;
+    sents.forEach((s) => { if (s.t !== 0 || s.words.length === 0) { s.t = 0; setWords(s, SENT[s.i][1]); } s.el.classList.remove('is-sel'); s.el.setAttribute('aria-pressed', 'false'); });
+    for (const g of GW) { g.el.style.transform = ''; } GW.clear();
+    U.forEach((u) => { u.dy.x = u.dy.T = 0; u.dy.v = 0; u.dy.on = false; });
+    selI = -1;
+    draft = 1; to(RK, 1, RK.v, OMR); pver.setAttribute('aria-label', 'Draft 1');
+    chip.setAttribute('aria-label', `Launch post, Draft 1. ${opened ? 'Editing in canvas' : 'Open in canvas'}`);
+    syncBar(); kick();
+  }
+  function settle() {                                                         // every spring to its target at once
+    const all = [S, RX, RY, RW, RH, SH, XB, BV, BX, BY, RK, DK];
+    U.forEach((u) => all.push(u.cv, u.dy));
+    const spot = barSpot();
+    if (spot) { BX.T = spot.x; BY.T = spot.y; }
+    for (const s of all) { s.x = s.T; s.v = 0; s.on = false; }
+    GW.clear();
+    renderAll();
+  }
+  function renderAll() { layoutChat(); if (opened || flying) layoutPanel(); renderSheet(); renderUnits(); renderGlides(); renderRoll(); renderBar(); renderDiv(); }
+  /* the thumbnail's frame: open at 410, the closing sentence selected, the bar up */
+  function pose() {
+    revT.forEach(clearTimeout); revT = [];
+    if (held) { held = null; ptr = null; dv.classList.remove('is-hold', 'is-drag'); win.classList.remove('is-drag'); }
+    opened = false; flying = false; selI = -1;
+    reset();
+    measure();
+    opened = true; Sdock = 410;
+    hole(true);
+    S.x = S.T = 410; S.v = 0; S.on = false;
+    dockRect(); lp.k = ''; lp.q = NaN;
+    SH.T = 1; XB.T = 1; U.forEach((u) => { u.cv.T = 1; u.dy.T = 0; });
+    RK.T = 1; DK.T = 0;
+    layoutChat(); layoutPanel();
+    selI = 5;
+    sents[5].el.classList.add('is-sel'); sents[5].el.setAttribute('aria-pressed', 'true');
+    BV.T = 1; syncBar();
+    settle();
+    dv.setAttribute('aria-valuemin', SMIN); dv.setAttribute('aria-valuemax', SMAX); dv.setAttribute('aria-valuenow', 410); dv.setAttribute('aria-valuetext', 'Canvas 54% of the window');
+    BV.x = BV.T = 1; settle();
+    kick();
+  }
+
+  measure();
+  pose();
+  return {
+    win, chip, panel, bar, dv, xb, sents, open, close, pose, reset, measure, letgo, select, rewrite, layout: renderAll, snapTo,
+    get opened() { return opened; }, get flying() { return flying; }, get busy() { return busy; }, get sel() { return selI; }, get draft() { return draft; }, get scale() { return sc; },
+    get held() { return held; },
+    tone(i) { return sents[i].t; },
+    split() { return { S: S.x, T: S.T, dock: Sdock, rect: [RX.x, RY.x, RW.x, RH.x], q: qOf(), chat: W - S.x }; },
+    barBtn(dir) { return baBtns.find((b) => +b.dataset.dir === dir); },
+    settled() { return !raf && !flying && !busy && !S.on && !BV.on; }
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('cs-fit');
+  // the window is drawn at 760 × 470 and scaled to the room it is given (about 94% of the width, 1.6× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.94 * W / 760, (H - 2 * pad - ui) / 470, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+    CS.measure(); CS.layout();
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(() => { size(); if (!touched) CS.pose(); });
+  let touched = false;
+
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  // the ghost's events: the ones a hand makes, untrusted so the page can tell them apart
+  const fire = (type, x, y, down = false) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 73, isPrimary: true, button: type === 'pointermove' ? -1 : 0, buttons: down ? 1 : 0, view: window }));
+    return t;
+  };
+  const centre = (el, dx = 0.5, dy = 0.5) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width * dx, y: r.top + r.height * dy }; };
+  async function glide(my, to, ms = 760, down = false, ease = mv) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y, down);
+      if (p >= 1) break;
+    }
+  }
+  async function until(my, ok, max = 6000) { let t = 0; while (!ok() && t < max) { await gap(my, 80); t += 80; } }
+  async function tap(my, el) {                                               // press, hold a moment, release, click: a hand on a button
+    const { x, y } = pos;
+    if (el) el.classList.add('is-hot');
+    await gap(my, 160);
+    if (el) el.classList.add('is-press');
+    const t = fire('pointerdown', x, y, true); await gap(my, 100);
+    fire('pointerup', x, y);
+    if (el) el.classList.remove('is-press', 'is-hot');
+    t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  async function click(my, el, dx = 0.5, dy = 0.5, ms = 760) { await glide(my, centre(el, dx, dy), ms); await gap(my, 110); await tap(my, el.classList.contains('cs-ba') ? el : null); }
+  const sentPoint = (i) => {                                                 // a point inside the sentence that is really the sentence under the pointer (the bar may sit on part of it)
+    const el = CS.sents[i].el, rs = Array.from(el.getClientRects()).filter((r) => r.width > 30).sort((a, b) => b.width - a.width);
+    for (const r of rs) for (const f of [0.45, 0.2, 0.7, 0.9, 0.1]) {
+      const x = r.left + r.width * f, y = r.top + r.height * 0.5, t = document.elementFromPoint(x, y);
+      if (t && t.closest && t.closest('.cs-s') === el) return { x, y };
+    }
+    const r = rs[0];
+    return { x: r.left + r.width * 0.45, y: r.top + r.height * 0.5 };
+  };
+  async function pickSentence(my, i) {
+    if (CS.sel === i) return;
+    await glide(my, sentPoint(i), 820); await gap(my, 120); await tap(my);
+    await until(my, () => CS.sel === i, 1500); await gap(my, 750);
+  }
+  async function choose(my, i, dir) {
+    const d = CS.tone(i) + dir < -1 || CS.tone(i) + dir > 1 ? -dir : dir;
+    await click(my, CS.barBtn(d), 0.5, 0.5, 820);
+    await until(my, () => CS.busy, 800); await until(my, () => !CS.busy, 5000);
+    await gap(my, 1700);
+  }
+  async function dragDivider(my, dxDesign, ms, ease = mv, hold = 1400) {      // press on the divider, move by dxDesign window px, let go
+    const r = CS.dv.getBoundingClientRect(), p0 = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    await glide(my, p0, 800); await gap(my, 180);
+    fire('pointerdown', p0.x, p0.y, true);
+    await gap(my, 90);
+    await glide(my, { x: p0.x + dxDesign * CS.scale, y: p0.y + 6 }, ms, true, ease);
+    fire('pointerup', pos.x, pos.y);
+    await gap(my, hold);
+  }
+  async function key(my, k, after = 600) { document.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); await gap(my, after); }
+  async function ensureOpen(my) {
+    if (CS.opened) return;
+    await click(my, CS.chip, 0.4, 0.5, 900);
+    await until(my, () => CS.opened && !CS.flying, 3000); await gap(my, 1500);
+  }
+  async function closed(my) { await until(my, () => !CS.opened && !CS.flying, 4000); await gap(my, 1500); }
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 5200 : 3600) : 700);
+      QM.ghostShow();
+      for (let round = 0; ; round++) {
+        await ensureOpen(my);
+        if (CS.held) CS.letgo();
+        if (round === 0 && CS.sel >= 0 && CS.sel !== 3 && CS.sel !== 2) await choose(my, CS.sel, -1);   // from the pose: the bar is already up, take Shorter
+        // Shorter on a sentence, Warmer on another
+        await pickSentence(my, 3); await choose(my, 3, -1);
+        await pickSentence(my, 2); await choose(my, 2, 1);
+        // the divider: wide, narrow, half
+        const S0 = CS.split().S;
+        await dragDivider(my, -(500 - S0) - 8, 900);
+        await dragDivider(my, 176, 1000);
+        await dragDivider(my, -84, 800);
+        // close: a throw, Escape, the close glyph, in turn
+        const how = round % 3;
+        if (how === 0) await dragDivider(my, 330, 300, (p) => p * p * (3 - 2 * p) * 0.4 + p * p * p * 0.6, 200);
+        else if (how === 1) await key(my, 'Escape', 200);
+        else await click(my, CS.xb, 0.5, 0.5, 800);
+        await closed(my);
+        CS.reset(); await gap(my, 1100);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() {
+    epoch++; QM.ghostHide(); CS.letgo();
+    if (pos) { pos = null; fire('pointermove', -10, -10); }
+    document.querySelectorAll('.cs-ba.is-hot, .cs-ba.is-press').forEach((b) => b.classList.remove('is-hot', 'is-press'));
+  }
+  if (!QM.tile && !reduced) {
+    const idle = () => CS.win.matches(':hover') || (CS.win.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                                // the ghost's own events do not count
+      touched = true;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true, capture: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); touched = false; CS.pose(); if (!reduced) script(true); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (!touched) script(true); }, 300));
+})();
+</script>
+</body>
+</html>

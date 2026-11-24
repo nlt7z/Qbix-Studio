@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan rewrite · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "plan-rewrite", "title": "Plan rewrite", "group": "studio", "added": "2026-11-24", "cat": "agent", "order": 20,
+  "kind": "loop", "tone": "paper", "shot": 150,
+  "line": "every row its own y spring (0.32 s) · struck, then covered · 2 steps uncovered 60 ms apart · numbers roll · one lime arc",
+  "summary": "A Qbix agent is refreshing Forma's product page and shows its plan as a numbered list that edits itself. The step being worked on has a lime arc drawn round its number; a finished step draws a tick in one stroke and steps down to secondary. Then the agent changes its mind: Rewrite all copy is struck by a line drawn left to right, two smaller steps are uncovered under it 60 ms apart, the rows below glide down on their own springs, the numbers roll to their new values, the old step is covered and the rest close up. A one-line reason is uncovered under the revised step and folds away. Later a step is lifted and travels over its neighbour. Pause stops the agent, tapping a pending step skips it (struck, covered, the rest close up) and an Undo line stays for five seconds. Every edit starts from where things are on screen, so a skip in the middle of a revision never breaks the layout.",
+  "spec": [
+    ["List", "the plan is data (an array of steps); every edit changes the array and one layout pass gives every row a target y (44 px rows, +12 px under a step with a reason); each row is one element with its own critically damped spring on y (response 0.32 s) that starts from the value and velocity on screen, so any edit can land in the middle of any other; the card's height is a spring too (0.34 s), centred in its frame"],
+    ["Active", "a 28 px cell holds the step's number: a track ring is drawn round it (0.3 s) and the one lime arc follows the step's progress, 18% to 100% (a spring on the target, response 0.3 s), clockwise from twelve; stroke 3 px, round caps; when the step is done the arc is erased on in the same direction and the next arc starts 340 ms later, so there is never a second lime"],
+    ["Done", "the number is covered upward (a clip, 0.3 s) and a tick is drawn in one stroke 80 ms later (stroke-dashoffset 1 to 0, pathLength 1, response 0.3 s); the text goes from #1d1d1f to #6e6e73 in 240 ms"],
+    ["Revise", "at 1.4 s into Rewrite all copy: the strike line is drawn left to right (scaleX 0 to 1, response 0.42 s), at 560 ms two new rows are inserted under it, uncovered from their top edge 110 ms and 170 ms later (60 ms apart, arrive 0.3 s), the rows below glide 88 px on their own springs and the numbers roll (0.34 s, tabular), 500 ms after that the reason is uncovered under the first new step (+12 px), at 1.3 s the old step is covered upward (0.14 s) and the rows close up 44 px; the reason folds away 4.2 s after it came"],
+    ["Move", "Check contrast lifts (scale 1.02, a white ground and a soft shadow on a 0.22 s spring), travels two rows up over Rebuild the product grid on a slower y spring (0.46 s) while Rebuild glides down (0.32 s), both numbers roll, a reason is uncovered under it and the row puts itself down when it has arrived"],
+    ["Skip", "tap or press a pending step: the strike line is drawn (0.42 s), 380 ms later the row is covered upward and the rest close up on their springs, the numbers roll, and an Undo line is uncovered at the foot of the card for 5 s; Undo (or Cmd/Ctrl+Z) puts the step back where it was, uncovered, the rows below gliding down; a second skip rolls the Undo line's words"],
+    ["Header", "Step N of M rolls: N and M are digit columns on springs (0.3 s) so Step 3 of 5 becomes Step 3 of 6 in place; Done rolls up under it at the end; Paused is uncovered after it; Pause and Resume roll inside a fixed-width pill, and Run again takes its place in lime when the plan is done"],
+    ["Input", "the agent's clock freezes on Pause; a choreography already in flight (a strike, a move) finishes; Tab visits Pause, each pending step and Undo; Enter and Space skip; focus moves to Undo after a keyboard skip and back to the step after Undo; a press is a 0.985 spring in 100 ms"],
+    ["Loop", "the page loads on a pose that is played, not drawn: the revision starts at once and the world is stepped 1.4 s at 60 Hz, so the page loads 1.4 s into the revision and the first frames have the old step struck, the two new ones in, a tick above and the lime arc drawn; after about 5 s a ghost pauses, taps a pending step, reads the Undo line, resumes; it uses the same pointer and click events as a hand, yields to any real pointer, touch or key and resumes after 4.5 s; when the plan is done the card rewrites itself back to five steps and runs again"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-24"],
+  "where": "A Strata run in a Qbix client's project view, or a case study about how the studio works with an agent: the plan is on screen while the agent works, the client can see why it changed and can pause it or skip a step.",
+  "rules": [
+    "The list is data and every edit is animated from it: add, strike, remove, move and skip change the array and one layout pass; nothing is keyframed per edit, so edits can overlap.",
+    "Each row has its own y spring that starts from the value on screen; the card's height is a spring. A skip in the middle of a revision, a pause in the middle of a move, an Undo in the middle of a close-up all land cleanly.",
+    "Things are covered and uncovered, never faded: a struck step is covered upward, new steps and reasons are uncovered from their top edge, the number is covered when the tick is drawn. A row that leaves is covered faster than the rows below close up, so nothing overlaps.",
+    "Exactly one lime: the arc of the step being worked on, or the Run again pill when the plan is done. The tick, the strike, the reason and the Undo line are ink and neutrals.",
+    "Numbers are tabular and roll to their new value on a spring; the header's Step N of M rolls in place; text that changes (Pause, Resume, Undo line) rolls inside a clip of fixed width.",
+    "The plan is a real ordered list; every pending step is a real button named Skip plus its words; aria-current marks the active step and a polite live region says what was revised, moved, skipped and undone.",
+    "System face, Apple neutrals (#1d1d1f, #6e6e73, #86868b, #f5f5f7, #e8e8ed), a white card, 1.7 px round strokes.",
+    "Under reduced motion the card rests on the revised plan (two ticks, the arc on the first new step, the reason shown, Paused with a Resume pill), springs are instant and the ghost does not run."
+  ],
+  "tags": ["agent", "plan", "revision", "steps", "progress arc", "tick", "skip", "undo", "spring", "FLIP", "pause", "Strata", "Forma", "list"]
+}
+</script>
+<style data-code>
+/* Plan rewrite. An agent's plan as a numbered list in the system face with Apple's neutrals, on a white card.
+   Every row is absolutely positioned: its y, its cover (clip-path), its number roll, ring, tick and strike are set from script (render()),
+   because they are springs. The one lime is the active step's arc (.pr-arc) or, at the end, the Run again pill. */
+.pr-card { --pr-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --pr-out: cubic-bezier(.16, 1, .3, 1); --pr-ui: cubic-bezier(.4, 0, .2, 1);
+  position: absolute; left: 0; top: 0; width: 480px; height: 412px; overflow: hidden; border-radius: 24px; background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04);
+  color: #1d1d1f; font: 400 16px/22px var(--pr-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.pr-card :where(svg) { display: block; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.pr-card :where(h2, p, ol) { margin: 0; padding: 0; }
+.pr-card :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the header: the goal, the rolling step line, the one quiet control */
+.pr-hd { position: relative; height: 78px; }
+.pr-ttl { position: absolute; left: 20px; top: 19px; font: 600 17px/22px var(--pr-f); letter-spacing: -.01em; }
+.pr-sub { position: absolute; left: 20px; top: 43px; width: 240px; height: 18px; overflow: hidden; font: 400 13px/18px var(--pr-f); letter-spacing: -.006em; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.pr-subs { display: block; transition: transform 420ms var(--pr-out); }
+.pr-sl { display: block; height: 18px; white-space: pre; }
+.pr-card.is-done .pr-subs { transform: translateY(-18px); }
+.pr-r { display: inline-block; width: 1ch; height: 18px; overflow: hidden; vertical-align: top; }
+.pr-rc { display: block; will-change: transform; }
+.pr-rc > i { display: block; height: 18px; font-style: normal; }
+.pr-pz { display: inline-block; margin-left: 4px; clip-path: inset(0 100% 0 0); transition: clip-path 360ms var(--pr-out); }
+.pr-card.is-paused .pr-pz { clip-path: inset(0 0 0 0); }
+/* Pause, Resume and Run again roll inside one fixed pill; the pill is lime only when the plan is done */
+.pr-pp { position: absolute; right: 20px; top: 23px; width: 108px; height: 32px; overflow: hidden; border-radius: 999px; background: #f5f5f7;
+  transition: background-color 200ms var(--pr-ui), scale 100ms var(--pr-ui); }
+.pr-pp:hover { background: #e8e8ed; }
+.pr-pp:active { scale: .97; }
+.pr-pp.is-lime { background: #B8FF00; }
+.pr-pp.is-lime:hover { background: #c4ff2e; }
+.pr-ppc { display: block; transition: transform 420ms var(--pr-out); }
+.pr-pl { display: flex; align-items: center; justify-content: center; gap: 6px; height: 32px; font: 500 13px/32px var(--pr-f); letter-spacing: -.006em; white-space: nowrap; }
+.pr-pl svg { width: 14px; height: 14px; stroke-width: 1.7; }
+
+/* the list */
+.pr-body { position: absolute; left: 0; right: 0; top: 78px; bottom: 0; }
+.pr-list { position: absolute; inset: 0; list-style: none; }
+.pr-row { position: absolute; left: 8px; top: 0; width: 464px; height: 44px; border-radius: 12px; will-change: transform, clip-path; --lf: 0;
+  background: rgba(255, 255, 255, var(--lf)); box-shadow: 0 10px 28px -8px rgba(0, 0, 0, calc(var(--lf) * .22)), 0 0 0 1px rgba(0, 0, 0, calc(var(--lf) * .05)); }
+.pr-row::before { content: ''; position: absolute; inset: 0; border-radius: 12px; background: rgba(0, 0, 0, .045); opacity: 0; transition: opacity 140ms var(--pr-ui); }
+.pr-row[data-state='pending']:hover::before, .pr-row.is-hot::before, .pr-row:has(.pr-hit:focus-visible)::before { opacity: 1; }
+.pr-row[hidden], .pr-un[hidden] { display: none; }
+/* the number cell: a ring (track and arc), the digits (a column that rolls), the tick */
+.pr-n { position: absolute; left: 12px; top: 8px; width: 28px; height: 28px; }
+.pr-ring { position: absolute; inset: 0; width: 28px; height: 28px; transform: rotate(-90deg); }
+.pr-ring circle { stroke-dasharray: 1 2; visibility: hidden; }
+.pr-tr { stroke: #e8e8ed; stroke-width: 2.5; }
+.pr-arc { stroke: #B8FF00; stroke-width: 3.2; }
+.pr-dg { position: absolute; inset: 0; overflow: hidden; }
+.pr-dc { display: block; will-change: transform; }
+.pr-dc > i { display: block; height: 28px; font: 500 15px/28px var(--pr-f); font-style: normal; text-align: center; font-variant-numeric: tabular-nums; color: #86868b; transition: color 200ms var(--pr-ui); }
+.pr-row[data-state='active'] .pr-dc > i { color: #1d1d1f; }
+.pr-tk { position: absolute; inset: 0; width: 28px; height: 28px; stroke: #1d1d1f; stroke-width: 2; }
+.pr-tk path { stroke-dasharray: 1 2; visibility: hidden; }
+/* the text and its strike: the line is drawn left to right over the words */
+.pr-lb { position: absolute; left: 52px; top: 0; height: 44px; display: flex; align-items: center; }
+.pr-lbi { position: relative; display: inline-block; white-space: nowrap; }
+.pr-tx { transition: color 240ms var(--pr-ui); }
+.pr-row[data-state='done'] .pr-tx { color: #6e6e73; }
+.pr-row[data-state='struck'] .pr-tx, .pr-row[data-state='skipped'] .pr-tx { color: #86868b; }
+.pr-st { position: absolute; left: -2px; right: -2px; top: 50%; height: 1.6px; margin-top: .4px; border-radius: 1px; background: #1d1d1f; transform: scaleX(0); transform-origin: 0 50%; visibility: hidden; }
+.pr-sk { position: absolute; right: 16px; top: 0; font: 500 13px/44px var(--pr-f); letter-spacing: -.006em; color: #6e6e73; clip-path: inset(0 100% 0 0); transition: clip-path 260ms var(--pr-out); }
+.pr-row[data-state='pending']:hover .pr-sk, .pr-row.is-hot .pr-sk, .pr-row:has(.pr-hit:focus-visible) .pr-sk { clip-path: inset(0 0 0 0); }
+.pr-hit { position: absolute; inset: 0; border-radius: 12px !important; background: transparent !important; }
+.pr-hit:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
+.pr-hit[hidden] { display: none; }
+/* a reason sits under its step, uncovered from the top and folded back into it */
+.pr-ex { position: absolute; inset: 0; pointer-events: none; }
+.pr-nt { position: absolute; left: 60px; top: 0; width: 404px; height: 18px; font: 400 13px/18px var(--pr-f); letter-spacing: -.006em; color: #6e6e73; white-space: nowrap; will-change: transform, clip-path; }
+/* the Undo line, at the foot of the list */
+.pr-un { position: absolute; left: 8px; top: 0; width: 464px; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 6px 0 12px; will-change: transform, clip-path; }
+.pr-unt { flex: 1; min-width: 0; height: 20px; overflow: hidden; font: 400 14px/20px var(--pr-f); letter-spacing: -.006em; color: #6e6e73; }
+.pr-unc { display: block; will-change: transform; transition: transform 420ms var(--pr-out); }
+.pr-unc > span { display: block; height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-unb { height: 30px; padding: 0 12px !important; border-radius: 999px !important; font: 500 14px/30px var(--pr-f); letter-spacing: -.006em; color: #1d1d1f; transition: background-color 140ms var(--pr-ui), scale 100ms var(--pr-ui); }
+.pr-unb:hover { background: rgba(0, 0, 0, .05); }
+.pr-unb:active { scale: .97; }
+@media (prefers-reduced-motion: reduce) {
+  .pr-card *, .pr-card *::before, .pr-card *::after { transition: none !important; }
+}
+</style>
+<style>
+  /* the stage: a quiet #f5f5f7 ground; the card is drawn at 480 px wide and scaled to the room it has */
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  .pr-fit { position: relative; }
+  .pr-world { position: absolute; left: 0; top: 0; width: 480px; height: 412px; transform-origin: 0 0; transform: scale(var(--s, 1)); }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="pr-fit" id="pr-fit"><div class="pr-world" id="pr-world">
+<!-- code -->
+<section class="pr-card" id="pr-card" aria-labelledby="pr-ttl">
+  <header class="pr-hd">
+    <h2 class="pr-ttl" id="pr-ttl">Refresh Forma’s product page</h2>
+    <p class="pr-sub"><span class="sr-only" id="pr-sr">Step 1 of 5</span><span class="pr-subs" aria-hidden="true"><span class="pr-sl">Step <span class="pr-r"><span class="pr-rc" id="pr-rn"></span></span> of <span class="pr-r"><span class="pr-rc" id="pr-rm"></span></span><span class="pr-pz">· Paused</span></span><span class="pr-sl">Done</span></span></p>
+    <button class="pr-pp" id="pr-pp" type="button" aria-label="Pause the agent"><span class="pr-ppc" id="pr-ppc">
+      <span class="pr-pl"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M4.6 3v8M9.4 3v8"/></svg>Pause</span>
+      <span class="pr-pl"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M4.8 3.2l5.2 3.8-5.2 3.8z"/></svg>Resume</span>
+      <span class="pr-pl"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M11.2 5.4A4.6 4.6 0 1 0 11.6 8.6M11.4 2.6v3h-3"/></svg>Run again</span>
+    </span></button>
+  </header>
+  <div class="pr-body">
+    <ol class="pr-list" id="pr-list" role="list" aria-label="Plan"></ol>
+    <div class="pr-ex" id="pr-ex" aria-hidden="true"></div>
+    <div class="pr-un" id="pr-un" hidden><span class="pr-unt"><span class="pr-unc" id="pr-unc"></span></span><button class="pr-unb" id="pr-unb" type="button">Undo</button></div>
+  </div>
+  <p class="sr-only" id="pr-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  </div></div>
+  <div class="qm-ui"><span>Pause the agent, or tap a pending step to skip it. Undo, or Cmd or Ctrl and Z, brings it back. Tab reaches every control</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Plan rewrite. The plan is an array; every edit changes it and one layout pass (relayout) gives every row its target y and number.
+   Everything that moves is a critically damped spring that starts from the value and velocity on screen (and so can be retargeted at any moment):
+   each row's y, its cover p (a clip-path), its number roll, ring, tick, strike and lift, a reason's cover, the card's height.
+   The agent is a clock that only runs while the plan is not paused; the choreography of an edit (later()) runs on its own clock. */
+const PR = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const ROW = 44, NOTEH = 12, NOTEY = 35, HEADH = 78, PADB = 12, UNDOH = 44, WH = 412, CELL = 28, RH = 18;
+  const RESP = { row: 0.32, moved: 0.46, arrive: 0.3, leave: 0.14, num: 0.34, arc: 0.3, tick: 0.3, strike: 0.42, lift: 0.22, press: 0.1, noteIn: 0.3, noteOut: 0.18, card: 0.34, hdr: 0.3 };
+  const REVISE_AT = 0.56;  // s after the strike starts, the two new rows are inserted
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const mk = (x = 0, resp = 0.3, eps = 0.002) => ({ x, v: 0, T: x, w: TAU / resp, on: false, eps });
+  function step(s, dt) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  function aim(s, T, resp) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+    kick();
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+
+  /* the plan: five steps; the agent revises step 3 while it works on it, and moves the last step up later */
+  const PLAN = [
+    { k: 'brief', t: 'Read the brief and tokens', dur: 2.4 },
+    { k: 'audit', t: 'Audit the current page', dur: 2.6 },
+    { k: 'copy', t: 'Rewrite all copy', dur: 3.0 },
+    { k: 'grid', t: 'Rebuild the product grid', dur: 3.2 },
+    { k: 'check', t: 'Check contrast', dur: 2.2 }
+  ];
+  const REV = { key: 'copy', at: 1.4, why: 'Client asked for a lighter edit', to: [
+    { k: 'head', t: 'Tighten the headline', dur: 3.4 }, { k: 'care', t: 'Shorten care notes', dur: 3.2 }] };
+  const MOVE = { key: 'check', before: 'grid', after: 'care', at: 0.3, why: 'Colours first, then the grid' };
+  const SR = { pending: 'Pending', active: 'In progress', done: 'Done', struck: 'Replaced', skipped: 'Skipped' };
+
+  const $ = (id) => document.getElementById(id);
+  const card = $('pr-card'), list = $('pr-list'), ex = $('pr-ex'), pill = $('pr-pp'), pillc = $('pr-ppc'), live = $('pr-live'), srl = $('pr-sr');
+  const rnc = $('pr-rn'), rmc = $('pr-rm');
+  const S = { t: 0, run: 0, paused: false, finished: false, limeOn: false, revised: false, moved: false, cur: null, vis: true, say: 0 };
+  const H = mk(WH, RESP.card, 0.05), HN = mk(1, RESP.hdr), HM = mk(5, RESP.hdr);
+  let plan = [], rows = [], K = new Map(), Q = [], raf = 0, last = 0, inFrame = false;
+  const UN = { el: $('pr-un'), tx: $('pr-unc'), btn: $('pr-unb'), y: mk(0, RESP.row, 0.05), p: mk(0, RESP.arrive), on: false, want: false, rec: null, tok: 0 };
+
+  const say = (m) => { live.textContent = ''; clearTimeout(S.say); S.say = setTimeout(() => { live.textContent = m; }, 40); };
+  const mkEl = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+  for (let d = 0; d <= 9; d++) { const a = mkEl('i'), b = mkEl('i'); a.textContent = b.textContent = d; rnc.append(a); rmc.append(b); }
+
+  /* the clock of the edits: later(ms, fn) runs on the same clock as the springs, so it stops with them and never races them */
+  function later(ms, fn) { Q.push({ at: S.t + ms / 1000, fn }); Q.sort((a, b) => a.at - b.at); kick(); }
+  function pump() { while (Q.length && Q[0].at <= S.t) Q.shift().fn(); }
+
+  /* a row: the number cell, the words and their strike, the Skip hint, the real button */
+  function mkRow(st) {
+    const el = mkEl('li', 'pr-row');
+    el.hidden = true;
+    el.innerHTML = '<span class="pr-n" aria-hidden="true"><svg class="pr-ring" viewBox="0 0 28 28" focusable="false"><circle class="pr-tr" cx="14" cy="14" r="11.5" pathLength="1"/><circle class="pr-arc" cx="14" cy="14" r="11.5" pathLength="1"/></svg>'
+      + '<span class="pr-dg"><span class="pr-dc">' + '123456789'.replace(/./g, '<i>$&</i>') + '</span></span>'
+      + '<svg class="pr-tk" viewBox="0 0 28 28" focusable="false"><path d="M8.4 14.8l3.9 3.9 7.4-8.6" pathLength="1"/></svg></span>'
+      + '<span class="pr-lb"><span class="pr-lbi"><span class="pr-tx"></span><i class="pr-st"></i></span></span>'
+      + '<span class="pr-sk" aria-hidden="true">Skip</span><span class="sr-only pr-ss"></span><button class="pr-hit" type="button"></button>';
+    const q = (c) => el.querySelector(c);
+    const r = { key: st.k, text: st.t, dur: st.dur, el, state: 'pending', t: 0, ghosted: false, on: false, want: false, numT: 1, ty: 0, moving: false, note: null, dead: false,
+      y: mk(0, RESP.row, 0.05), p: mk(0, RESP.arrive), nm: mk(1, RESP.num), tr: mk(0, RESP.arc), v: mk(0, RESP.arc), d: mk(0, RESP.tick), cv: mk(0, 0.2), s: mk(0, RESP.strike), lf: mk(0, RESP.lift), pz: mk(1, RESP.press, 0.0005),
+      dg: q('.pr-dg'), dc: q('.pr-dc'), trc: q('.pr-tr'), arc: q('.pr-arc'), tkp: q('.pr-tk path'), st: q('.pr-st'), ss: q('.pr-ss'), hit: q('.pr-hit') };
+    q('.pr-tx').textContent = st.t;
+    r.hit.setAttribute('aria-label', 'Skip ' + st.t);
+    r.hit.addEventListener('click', () => skip(r));
+    r.hit.addEventListener('pointerdown', (e) => { if (e.button === 0) aim(r.pz, 0.985, RESP.press); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => r.hit.addEventListener(ev, () => { if (r.pz.T !== 1) aim(r.pz, 1, RESP.press); }));
+    setState(r, 'pending');
+    list.append(el);
+    rows.push(r); K.set(r.key, r);
+    return r;
+  }
+  function setState(r, st) {
+    r.state = st; r.el.dataset.state = st;
+    r.ss.textContent = '. ' + SR[st];
+    if (st === 'active') r.el.setAttribute('aria-current', 'step'); else r.el.removeAttribute('aria-current');
+    r.hit.hidden = st !== 'pending';
+  }
+
+  /* the layout: which rows, in what order, at which y and with which number. Rows that stay retarget their springs; rows that come are put
+     in place (and uncovered by reveal()); rows that go are covered by unput(). A struck row stays in the plan, with its height, until it is covered. */
+  function put(r, ty) {
+    r.want = true;
+    if (!r.on) { r.on = true; r.el.hidden = false; snap(r.y, ty); snap(r.p, 0); snap(r.nm, r.numT); r.fresh = true; }
+    else aim(r.y, ty, r.moving ? RESP.moved : RESP.row);
+  }
+  function unput(r) {
+    r.want = false; r.hit.hidden = true; r.el.setAttribute('aria-hidden', 'true');
+    aim(r.p, 0, RESP.leave);
+    if (r.note && r.note.want) hideNote(r, true);
+  }
+  function reveal(r, ms) { r.fresh = false; r.el.removeAttribute('aria-hidden'); later(ms, () => { if (r.want) aim(r.p, 1, RESP.arrive); }); }
+  function relayout() {
+    let y = 0, n = 0;
+    for (const r of plan) {
+      if (!r.ghosted) { n++; r.numT = n; }
+      r.ty = y;
+      put(r, y);
+      if (!r.ghosted && r.nm.T !== r.numT) aim(r.nm, r.numT, RESP.num);
+      y += ROW + (r.note && r.note.want ? NOTEH : 0);
+    }
+    if (UN.want) {
+      if (!UN.on) { UN.on = true; UN.el.hidden = false; snap(UN.y, y); snap(UN.p, 0); UN.fresh = true; } else aim(UN.y, y, RESP.row);
+      y += UNDOH;
+    }
+    aim(H, HEADH + y + PADB, RESP.card);
+  }
+  function syncHeader(now) {
+    const liveRows = plan.filter((r) => !r.ghosted), M = liveRows.length, done = liveRows.filter((r) => r.state === 'done').length;
+    const N = clamp(done + 1, 1, Math.max(1, M));
+    if (now) { snap(HN, N); snap(HM, M); } else { aim(HN, N, RESP.hdr); aim(HM, M, RESP.hdr); }
+    srl.textContent = S.finished ? 'Done' : `Step ${N} of ${M}`;
+    card.classList.toggle('is-done', S.finished);
+  }
+
+  /* reasons */
+  function showNote(r, text) {
+    if (!r.note) { const el = mkEl('div', 'pr-nt'); ex.append(el); r.note = { el, p: mk(0, RESP.noteIn), want: false }; }
+    r.note.el.textContent = text; r.note.want = true; snap(r.note.p, 0);
+    relayout();
+    later(60, () => { if (r.note.want) aim(r.note.p, 1, RESP.noteIn); });
+  }
+  function hideNote(r, quick) {
+    if (!r.note || !r.note.want) return;
+    r.note.want = false;
+    aim(r.note.p, 0, quick ? RESP.leave : RESP.noteOut);
+    if (!quick) relayout();
+  }
+
+  /* the agent: a clock that runs only while it is not paused; the active step's arc follows its progress */
+  function activate(r) {
+    if (r.state !== 'pending') return;
+    setState(r, 'active'); S.cur = r; r.prog = r.t / r.dur;
+    aim(r.tr, 1, RESP.arc); aim(r.v, 0.18 + 0.82 * clamp(r.prog, 0, 1), RESP.arc);
+    syncHeader();
+  }
+  function nextPending() { return plan.find((r) => r.state === 'pending'); }
+  function finish(r) {
+    setState(r, 'done'); S.cur = null;
+    aim(r.tr, 2, RESP.arc); aim(r.v, 2, RESP.arc); aim(r.cv, 1, 0.2);
+    later(80, () => aim(r.d, 1, RESP.tick));
+    syncHeader();
+    later(340, () => { const n = nextPending(); if (n) activate(n); else complete(); });
+  }
+  function complete() {
+    S.finished = true; syncHeader(); syncPill(); say('All steps done.');
+    later(500, () => { S.limeOn = true; syncPill(); });
+    if (!reduced) later(4200, () => { if (S.finished) rebuild(true); });
+  }
+  function agent(dt) {
+    const r = S.cur;
+    if (!r || S.paused) return;
+    r.t += dt; r.prog = r.t / r.dur;
+    r.v.T = 0.18 + 0.82 * clamp(r.prog, 0, 1); r.v.on = !reduced; if (reduced) r.v.x = r.v.T;
+    if (r.key === REV.key && !S.revised && r.t >= REV.at) { revise(); return; }
+    if (r.key === MOVE.after && !S.moved && r.prog >= MOVE.at) tryMove();
+    if (r.prog >= 1) finish(r);
+  }
+
+  /* a revision: the old step is struck, two steps are uncovered under it 60 ms apart, the rows below glide, the numbers roll, a reason is
+     uncovered under the first, the old step is covered and the rest close up */
+  function revise() {
+    const old = K.get(REV.key);
+    if (!old || old.state !== 'active') return;
+    S.revised = true; S.cur = null;
+    setState(old, 'struck');
+    aim(old.s, 1, RESP.strike); aim(old.tr, 0, 0.45); aim(old.v, 0, 0.45); aim(old.cv, 1, 0.2);
+    say(`Plan revised. ${old.text} is replaced by two smaller steps. ${REV.why}.`);
+    later(REVISE_AT * 1000, () => {
+      if (plan.indexOf(old) < 0) return;
+      old.ghosted = true;
+      const rs = REV.to.map(mkRow);
+      plan.splice(plan.indexOf(old) + 1, 0, ...rs);
+      old.el.after(rs[0].el); rs[0].el.after(rs[1].el);
+      relayout();
+      rs.forEach((r, j) => reveal(r, 110 + 60 * j));
+      later(110, () => activate(rs[0]));
+      later(650, () => { if (rs[0].want) showNote(rs[0], REV.why); });
+      later(1300, () => { const i = plan.indexOf(old); if (i >= 0) plan.splice(i, 1); unput(old); relayout(); syncHeader(); });
+      if (!reduced) later(650 + 4200, () => hideNote(rs[0]));
+      syncHeader();
+    });
+  }
+  /* a move: the step lifts, travels over its neighbour on a slower spring, puts itself down */
+  function tryMove() {
+    const c = K.get(MOVE.key), g = K.get(MOVE.before);
+    if (!c || !g || c.state !== 'pending' || g.state !== 'pending' || plan.indexOf(c) < plan.indexOf(g)) return;
+    S.moved = true; c.moving = true;
+    aim(c.lf, 1, RESP.lift);
+    say(`Plan revised. ${c.text} moves above ${g.text}. ${MOVE.why}.`);
+    later(150, () => {
+      const i = plan.indexOf(c), j = plan.indexOf(g);
+      if (i < 0 || j < 0 || i < j) { c.moving = false; aim(c.lf, 0, RESP.lift); return; }
+      plan.splice(i, 1); plan.splice(plan.indexOf(g), 0, c);
+      g.el.before(c.el);
+      relayout();
+    });
+    later(1100, () => { c.moving = false; aim(c.lf, 0, RESP.lift); });
+    later(950, () => { if (c.want && plan.indexOf(c) >= 0) showNote(c, MOVE.why); });
+    if (!reduced) later(950 + 3600, () => hideNote(c));
+  }
+
+  /* skip and undo: a pending step is struck, covered, the rest close up; an Undo line is uncovered at the foot for five seconds */
+  function skip(r) {
+    if (r.state !== 'pending') return;
+    const hadFocus = document.activeElement === r.hit;
+    setState(r, 'skipped');
+    aim(r.s, 1, RESP.strike); aim(r.cv, 1, 0.2);
+    r.hit.hidden = true;
+    say(`Skipped ${r.text}.`);
+    const idx = plan.indexOf(r);
+    later(380, () => {
+      if (r.state !== 'skipped' || plan.indexOf(r) < 0) return;
+      r.ghosted = true;
+      plan.splice(plan.indexOf(r), 1);
+      unput(r); relayout(); syncHeader();
+      showUndo({ r, idx });
+      if (hadFocus) UN.btn.focus({ preventScroll: true });
+    });
+  }
+  function rollUn(text) {
+    const col = UN.tx;
+    if (reduced || !UN.want) { col.textContent = ''; const s = mkEl('span'); s.textContent = text; col.append(s); col.style.transition = 'none'; col.style.transform = ''; return; }
+    clearTimeout(col._t);
+    while (col.children.length > 1) col.firstElementChild.remove();
+    const s = mkEl('span'); s.textContent = text; col.append(s);
+    col.style.transition = 'none'; col.style.transform = 'translateY(0)'; void col.offsetHeight;
+    col.style.transition = ''; col.style.transform = 'translateY(-20px)';
+    col._t = setTimeout(() => { while (col.children.length > 1) col.firstElementChild.remove(); col.style.transition = 'none'; col.style.transform = ''; void col.offsetHeight; col.style.transition = ''; }, 460);
+  }
+  function showUndo(rec) {
+    const first = !UN.want;
+    UN.rec = rec;
+    rollUn(`Skipped “${rec.r.text}”`);
+    UN.want = true; relayout();
+    const tok = ++UN.tok;
+    if (first || UN.p.T === 0) later(100, () => { if (UN.want && UN.tok === tok) aim(UN.p, 1, RESP.arrive); });
+    later(5100, () => { if (UN.tok === tok) hideUndo(); });
+  }
+  function hideUndo() { UN.want = false; UN.rec = null; aim(UN.p, 0, RESP.leave); relayout(); }
+  function undoSkip() {
+    const rec = UN.rec;
+    if (!rec) return;
+    const r = rec.r, hadFocus = document.activeElement === UN.btn;
+    hideUndo();
+    if (r.state !== 'skipped') return;
+    setState(r, 'pending');
+    if (plan.indexOf(r) >= 0) {           // undone while it was still being struck: the strike is drawn back
+      r.ghosted = false; aim(r.s, 0, RESP.strike); aim(r.cv, 0, 0.2); relayout(); syncHeader();
+    } else {
+      r.ghosted = false; snap(r.s, 0); snap(r.cv, 0);
+      const i = clamp(rec.idx, 0, plan.length), nx = plan[i];
+      plan.splice(i, 0, r);
+      if (nx) nx.el.before(r.el); else list.append(r.el);
+      relayout(); reveal(r, 70); syncHeader();
+    }
+    say(`${r.text} is back in the plan.`);
+    if (hadFocus) r.hit.focus({ preventScroll: true });
+  }
+
+  /* the one quiet control: Pause, Resume, and Run again (lime, only when the plan is done) */
+  function syncPill() {
+    const m = S.finished ? 2 : S.paused ? 1 : 0;
+    pillc.style.transform = `translateY(${-32 * m}px)`;
+    pill.classList.toggle('is-lime', m === 2 && S.limeOn);
+    pill.setAttribute('aria-label', ['Pause the agent', 'Resume the agent', 'Run again'][m]);
+    card.classList.toggle('is-paused', S.paused && !S.finished);
+  }
+  function togglePause() {
+    if (S.finished) { rebuild(true); return; }
+    S.paused = !S.paused; syncPill(); say(S.paused ? 'Paused.' : 'Resumed.'); kick();
+  }
+  pill.addEventListener('click', togglePause);
+  UN.btn.addEventListener('click', undoSkip);
+  document.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && (e.key === 'z' || e.key === 'Z') && UN.rec) { e.preventDefault(); undoSkip(); } });
+
+  /* the whole plan, written again: the old rows are covered, the five steps are uncovered 40 ms apart, the first one starts */
+  function rebuild(animated) {
+    Q.length = 0; S.run++;
+    S.paused = false; S.finished = false; S.limeOn = false; S.revised = false; S.moved = false; S.cur = null;
+    rows.forEach((r) => {
+      r.dead = true; r.want = false; r.hit.hidden = true; r.el.setAttribute('aria-hidden', 'true');
+      if (r.note) { r.note.want = false; aim(r.note.p, 0, RESP.leave); }
+      if (animated && r.on) aim(r.p, 0, RESP.leave); else { snap(r.p, 0); r.on = false; r.el.hidden = true; }
+    });
+    UN.want = false; UN.rec = null; UN.tok++;
+    if (animated && UN.on) aim(UN.p, 0, RESP.leave); else { snap(UN.p, 0); UN.on = false; UN.el.hidden = true; }
+    K = new Map(); plan = PLAN.map(mkRow);
+    relayout(); syncHeader(!animated); syncPill();
+    if (animated) { plan.forEach((r, i) => reveal(r, 240 + 40 * i)); later(240 + 40 * 5 + 380, () => activate(plan[0])); }
+    else plan.forEach((r) => { snap(r.p, 1); r.fresh = false; r.el.removeAttribute('aria-hidden'); });
+    if (!animated) { snap(H, HEADH + plan.length * ROW + PADB); H.on = false; }
+  }
+  /* the pose the piece loads in (the thumbnail): two ticks, Rewrite all copy struck, its two replacements in, the reason arriving */
+  function pose() {
+    rebuild(false);
+    const [a, b, c] = plan;
+    [a, b].forEach((r) => { setState(r, 'done'); snap(r.d, 1); snap(r.cv, 1); snap(r.tr, 2); snap(r.v, 2); });
+    c.t = 1.15; activate(c); snap(c.tr, 1); snap(c.v, c.v.T);
+    syncHeader(true);
+    // the pose is played, not drawn: the revision starts now and the world is stepped 1.4 s at 60 Hz, so the first frame is the same on a slow machine and a fast one
+    c.t = REV.at; agent(0.001);
+    if (reduced) { advance(2.4); S.paused = true; syncPill(); }    // a complete still: the revised plan, paused, the reason shown
+    else advance(1.4);
+    render();
+    kick();
+  }
+
+  /* one step of the world, and one frame that writes it */
+  function simStep(dt) {
+    S.t += dt; pump(); agent(dt);
+    let any = false;
+    [H, HN, HM, UN.y, UN.p].forEach((s) => { any = step(s, dt) || any; });
+    for (const r of rows) {
+      if (r.note) any = step(r.note.p, dt) || any;
+      if (!r.on) continue;
+      ['y', 'p', 'nm', 'tr', 'v', 'd', 'cv', 's', 'lf', 'pz'].forEach((k) => { any = step(r[k], dt) || any; });
+      if (!r.want && r.p.x < 0.002 && !r.p.on) { r.on = false; r.el.hidden = true; }
+    }
+    if (UN.on && !UN.want && UN.p.x < 0.002 && !UN.p.on) { UN.on = false; UN.el.hidden = true; }
+    if (rows.some((r) => r.dead && !r.on)) rows = rows.filter((r) => { if (r.dead && !r.on) { r.el.remove(); if (r.note) r.note.el.remove(); return false; } return true; });
+    return any || Q.length > 0 || (S.cur && !S.paused);
+  }
+  function advance(sec) { for (let i = 0, n = Math.round(sec * 60); i < n; i++) simStep(1 / 60); }
+  function render() {
+    const hh = H.x;
+    card.style.height = hh.toFixed(2) + 'px';
+    const cy = (WH - hh) / 2;
+    card.style.transform = `translate3d(0, ${(H.on ? cy : Math.round(cy)).toFixed(2)}px, 0)`;
+    for (const r of rows) {
+      if (r.note) {
+        const n = r.note, pp = clamp(n.p.x, 0, 1);
+        n.el.style.visibility = pp < 0.002 ? 'hidden' : 'visible';
+        n.el.style.transform = `translate3d(0, ${(r.y.x + NOTEY).toFixed(2)}px, 0)`;
+        n.el.style.clipPath = pp >= 0.999 ? 'none' : `inset(0 0 ${((1 - pp) * 100).toFixed(2)}% 0)`;
+      }
+      if (!r.on) continue;
+      const pp = clamp(r.p.x, 0, 1), lf = clamp(r.lf.x, 0, 1), st = r.el.style;
+      st.transform = `translate3d(0, ${r.y.x.toFixed(2)}px, 0)`;
+      st.clipPath = pp >= 0.999 ? 'none' : `inset(0 0 ${((1 - pp) * 100).toFixed(2)}% 0)`;
+      st.setProperty('--lf', lf.toFixed(3));
+      st.scale = ((1 + 0.02 * lf) * r.pz.x).toFixed(4);
+      st.zIndex = lf > 0.01 ? 3 : '';
+      r.dc.style.transform = `translate3d(0, ${(-(r.nm.x - 1) * CELL).toFixed(2)}px, 0)`;
+      r.dg.style.clipPath = r.cv.x < 0.003 ? 'none' : `inset(0 0 ${(clamp(r.cv.x, 0, 1) * 100).toFixed(2)}% 0)`;
+      const t = r.tr.x, a = r.v.x, d = r.d.x, s = clamp(r.s.x, 0, 1);
+      r.trc.style.strokeDashoffset = (1 - t).toFixed(4); r.trc.style.visibility = t > 0.004 && t < 1.996 ? 'visible' : 'hidden';
+      r.arc.style.strokeDashoffset = (1 - a).toFixed(4); r.arc.style.visibility = a > 0.004 && a < 1.996 ? 'visible' : 'hidden';
+      r.tkp.style.strokeDashoffset = (1 - clamp(d, 0, 1)).toFixed(4); r.tkp.style.visibility = d > 0.005 ? 'visible' : 'hidden';
+      r.st.style.transform = `scaleX(${s.toFixed(4)})`; r.st.style.visibility = s > 0.003 ? 'visible' : 'hidden';
+    }
+    if (UN.on) {
+      const pp = clamp(UN.p.x, 0, 1);
+      UN.el.style.transform = `translate3d(0, ${UN.y.x.toFixed(2)}px, 0)`;
+      UN.el.style.clipPath = pp >= 0.999 ? 'none' : `inset(0 0 ${((1 - pp) * 100).toFixed(2)}% 0)`;
+    }
+    rnc.style.transform = `translate3d(0, ${(-HN.x * RH).toFixed(2)}px, 0)`;
+    rmc.style.transform = `translate3d(0, ${(-HM.x * RH).toFixed(2)}px, 0)`;
+  }
+  function frame(now) {
+    raf = 0;
+    if (!S.vis || document.hidden) return;
+    const dt = clamp((now - last) / 1000 || 0.016, 0.001, 0.034);
+    last = now;
+    inFrame = true;
+    const more = simStep(dt);
+    render();
+    inFrame = false;
+    if (more) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (raf || inFrame || !S.vis || document.hidden) return; last = performance.now(); raf = requestAnimationFrame(frame); }
+  // off screen and in a hidden tab the clock stops; it carries on from where it was
+  if ('IntersectionObserver' in window) new IntersectionObserver((es) => { S.vis = es[es.length - 1].isIntersecting; if (S.vis) kick(); }).observe(card);
+  document.addEventListener('visibilitychange', kick);
+
+  pose();
+  return {
+    S, card, pill, undoBtn: UN.btn, pose, rebuild, skip, undoSkip, togglePause, render, kick, advance,
+    plan: () => plan, row: (k) => K.get(k), hasUndo: () => !!UN.rec,
+    running: () => !!S.cur && !S.paused && !S.finished,
+    pending: () => plan.filter((r) => r.state === 'pending'),
+    snapshot() { return { plan: plan.map((r) => `${r.key}:${r.state}:${r.numT}`), paused: S.paused, finished: S.finished, run: S.run, H: H.x, undo: !!UN.rec, ys: plan.map((r) => +r.y.x.toFixed(1)), ty: plan.map((r) => r.ty) }; }
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('pr-fit'), world = document.getElementById('pr-world');
+  // the card is drawn 480 px wide in a 412 px frame and scaled to the room it is given
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    let s = Math.max(0.5, Math.min(0.9 * W / 480, (H - 2 * pad - ui) / 412, 1.4));
+    s = Math.round(44 * s) / 44;          // a row is a whole number of pixels tall, so nothing rests on a fraction
+    fit.style.width = (480 * s).toFixed(2) + 'px'; fit.style.height = (412 * s).toFixed(2) + 'px';
+    world.style.setProperty('--s', s.toFixed(4));
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(size);
+
+  /* the ghost: it moves the same pointer and clicks the same buttons a hand does (untrusted events on the same handlers) */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const fire = (type, x, y, Ctor = PointerEvent) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 74, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  async function glide(my, to, ms = 760) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y);
+      if (p >= 1) break;
+    }
+  }
+  const mid = (el, fx = 0.55) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width * fx, y: r.top + r.height * 0.52 }; };
+  async function tap(my) {
+    const { x, y } = pos;
+    const el = fire('pointerdown', x, y); await gap(my, 110); fire('pointerup', x, y);
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  async function until(my, ok, max = 90000) { let t = 0; while (!ok() && t < max) { await gap(my, 100); t += 100; } }
+  const away = () => { const r = PR.card.getBoundingClientRect(); return { x: Math.min(innerWidth - 24, r.right + 28), y: r.top + r.height * 0.55 }; };
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 5000 : 3600) : 800);
+      let cycle = 0;
+      for (;;) {
+        // the agent is working; the ghost pauses it, taps a pending step, reads the Undo line, resumes
+        await until(my, () => PR.running() && PR.pending().length > 0 && (cycle === 0 || PR.S.cur.key === 'care'));
+        QM.ghostShow();
+        await glide(my, mid(PR.pill, 0.5), 760); await gap(my, 260); await tap(my);              // Pause
+        await gap(my, 1300);
+        const want = cycle % 2 ? 'check' : 'grid', pend = PR.pending();
+        const tgt = pend.find((r) => r.key === want) || pend[pend.length - 1];
+        if (tgt && tgt.state === 'pending') {
+          await glide(my, mid(tgt.el, 0.6), 700); tgt.el.classList.add('is-hot'); await gap(my, 700);
+          await tap(my); tgt.el.classList.remove('is-hot');                                    // Skip
+          await gap(my, 2400);
+          if (cycle % 2 && PR.hasUndo()) { await glide(my, mid(PR.undoBtn, 0.5), 700); await gap(my, 260); await tap(my); await gap(my, 1500); }   // Undo
+        }
+        await glide(my, mid(PR.pill, 0.5), 720); await gap(my, 260); await tap(my);              // Resume
+        await gap(my, 500);
+        await glide(my, away(), 800); QM.ghostHide(); pos = null; fire('pointermove', -10, -10);
+        // the plan runs to its end and is written again; then once more
+        const run = PR.S.run;
+        await until(my, () => PR.S.run !== run);
+        cycle++;
+        await gap(my, 600);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() {
+    epoch++; QM.ghostHide();
+    document.querySelectorAll('.pr-row.is-hot').forEach((el) => el.classList.remove('is-hot'));
+    if (pos) { pos = null; fire('pointermove', -10, -10); }
+  }
+  if (!QM.tile && !reduced) {
+    const busyHand = () => PR.card.matches(':hover') || (PR.card.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                    // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!busyHand()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); if (reduced) PR.pose(); else PR.rebuild(true); if (!reduced) script(true); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => script(true), 300));
+})();
+</script>
+</body>
+</html>

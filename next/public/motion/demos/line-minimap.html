@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Line minimap · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "line-minimap", "title": "Line minimap", "group": "studio", "added": "2026-11-24", "cat": "scroll", "order": 30,
+  "kind": "scroll", "tone": "paper", "shot": 1300,
+  "line": "22 lines from 22 blocks · 2.5 px · 20 / 32 px at rest · reading σ 2.4 lines · pointer +28 px, σ 42 px · spring 0.17 s · lime end cap",
+  "summary": "A Forma case study in a reading column inside a white window, and on its right edge a rail with one short line for every heading and paragraph, built from the real blocks. The line at the reading position is ink and longest, its neighbours step down with distance, so a ripple runs along the rail as the page scrolls. Bring the pointer to the rail and the lines near it lengthen on a Gaussian of their distance, each on its own spring, and one label travels between them, uncovered to the left, swapping the section name under a clip. A click scrolls there on a spring; pressing and dragging scrubs the page with the pointer, and a release carries on with projection.",
+  "spec": [
+    ["Lines", "one per h1, h2 and p of the article, read from the DOM when the page lays out; 2.5 px thick, 20 px long for a paragraph and 32 px for a heading, 13 px apart with 11 px more before each section, #86868b at rest, right-aligned on the rail's edge and grown leftward by scaleX"],
+    ["Reading position", "the window's scrollTop (design px) followed by a critically damped spring, response 0.14 s, mapped to a continuous line number p by the blocks' centres; the reading line runs from 16% to 84% of the window's height as the page goes from top to end, so the first and the last line are both reachable"],
+    ["Ripple", "w = exp(−((i − p) / 2.4)²) for every line: length + 12 px × w, colour #86868b to #1d1d1f by w, so the line at p is ink and longest and the neighbours step down (0.84 at 1 line, 0.50 at 2, 0.21 at 3)"],
+    ["Pointer", "a Gaussian on each line's distance d to the pointer, 28 px × exp(−(d / 42 px)²) (×1.2 while pressed), one critically damped spring per line (response 0.17 s) that starts from the length on screen, so a fast pass leaves a wave; the lines under it darken to 55% ink, never to the reading line's full ink"],
+    ["Label", "one 15 px object that travels between lines on a spring (response 0.18 s) to the line under the pointer or the focused link; it is uncovered from the rail leftward (clip inset and a 12 px slide, response 0.26 s) and covered again at 0.18 s; the section name is swapped under a clip, the old name rolls out 100% and the new one in from the side it is coming from, continuing from wherever a roll was when it is retargeted"],
+    ["Click", "the line's block is scrolled to the reading position on a spring (response 0.55 s) from the value and speed on screen; a second click retargets it without a jump; a wheel, touch or key lets go"],
+    ["Drag", "a press responds at once (the lines swell 20%), travel of 6 px commits a drag; then the page follows the pointer's place on the rail 1:1 through a spring of response 0.07 s; on release the speed of the last 90 ms is projected 0.499 s ahead (d = 0.998), and the scroll spring (0.55 s) takes over from its own position and speed"],
+    ["Keyboard", "a nav with a list of real links, aria-current on the line at the reading position; Tab enters the rail once (roving tabindex on the current link), arrows, Home and End move between links, Enter goes there; focus shows the label and magnifies as a pointer would, with a ring on the line"],
+    ["Reduced motion", "a still on mid-article: no springs, no ripple (only the current line is ink and long), the label on the current section; hovering, clicking and scrolling by hand change everything in place"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-24"],
+  "where": "A long case study or a docs page on a Qbix site: the contents sit beside the reading column as a rail of lines, so a reader sees where they are, how long it is, and can jump or scrub without a heavy sidebar.",
+  "rules": [
+    "Build the rail from the article's own blocks (h1, h2, p) and read their positions from the DOM; a line has no text of its own, so editing the article keeps the rail true. Headings are longer than paragraphs.",
+    "The reading position is one smoothed scroll value; every line's ink and length is a pure function of it (plus the pointer's spring), never a state, so scrolling back retraces the ripple.",
+    "Magnify with a Gaussian on distance and one spring per line, started from the length on screen. Lengthen, never move: the pitch of the lines does not change, so the pointer never loses its line.",
+    "The label is one object, not one per line. It moves on a spring, is uncovered by a clip, and swaps its text under a clip; nothing fades.",
+    "Dragging maps the pointer's place on the rail to the page 1:1 and releases with projection from the speed it had; a tap is a tap (under 6 px), and a click on a line scrolls on a spring that can be caught and retargeted.",
+    "Lime is a 4 × 10 px cap at the end of the current line and nothing else; the photos are not lime. A real nav with links (roving tabindex, arrows), focus shows the label, and reduced motion is a still with the label on the current section."
+  ],
+  "tags": ["scroll", "minimap", "table of contents", "rail", "magnify", "gaussian", "spring", "drag to scrub", "case study", "Forma", "nav"]
+}
+</script>
+<style data-code>
+/* Line minimap. A fixed 760 × 440 window (script scales it to fit), a real scroll area inside it, and a rail of lines on its right edge.
+   Look: the system face, Apple neutrals; the one lime is the 4 × 10 px cap at the end of the current line. */
+.lm { --lm-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: relative; background: #f5f5f7; color: #1d1d1f; font-family: var(--lm-f); -webkit-font-smoothing: antialiased; }
+.lm-pin { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+.lm h1, .lm h2, .lm p, .lm ol, .lm figure { margin: 0; padding: 0; }
+.lm-fit { position: absolute; left: 0; top: 0; width: 760px; height: 440px; transform-origin: 0 0; }
+.lm-win { position: absolute; inset: 0; border-radius: 22px; overflow: hidden; background: #fff;   /* border-radius and overflow only, as every window of the set */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 30px 64px -30px rgba(0, 0, 0, .3); }
+@media (prefers-reduced-transparency: reduce) { .lm-bar { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+/* the page's bar: translucent, its hairline arrives with the first rows beneath it */
+.lm-bar { position: absolute; left: 0; right: 0; top: 0; height: 40px; z-index: 2; display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, .86); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.lm-bar::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(0, 0, 0, .08); opacity: var(--lm-line, 0); }
+.lm-bar b { font: 500 13px/16px var(--lm-f); letter-spacing: -.006em; color: #6e6e73; }
+.lm-dots { position: absolute; left: 16px; top: 16px; display: flex; gap: 7px; }
+.lm-dots i { width: 8px; height: 8px; border-radius: 50%; background: #d2d2d7; }
+
+/* the reading column: native scrolling, no bar */
+.lm-scroll { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; outline: none; }
+.lm-scroll::-webkit-scrollbar { display: none; }
+.lm-scroll:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -4px; border-radius: 22px; }
+.lm-art { position: relative; width: 380px; margin-left: 56px; padding: 78px 0 110px; }
+.lm-kick { display: block; font: 600 13px/16px var(--lm-f); letter-spacing: -.006em; color: #6e6e73; margin-bottom: 8px; }
+.lm-art h1 { font: 600 34px/37px var(--lm-f); letter-spacing: -.022em; text-wrap: balance; }
+.lm-art .lm-lede { margin-top: 14px; font: 400 17px/24px var(--lm-f); letter-spacing: -.01em; color: #6e6e73; }
+.lm-art h2 { margin-top: 40px; font: 600 21px/25px var(--lm-f); letter-spacing: -.014em; }
+.lm-art h2 + p { margin-top: 8px; }
+.lm-art p { font: 400 15px/22px var(--lm-f); letter-spacing: -.01em; text-wrap: pretty; }
+.lm-art p + p { margin-top: 12px; }
+.lm .lm-fig { margin: 24px 0 -4px; }                                    /* (.lm figure resets margins, so this must out-rank it) */
+.lm-fig img { display: block; width: 380px; height: 190px; object-fit: cover; border-radius: 16px; background: #f5f5f7; filter: grayscale(.92) brightness(1.1) contrast(1.02); }
+.lm-fig figcaption { margin-top: 9px; font: 400 12px/16px var(--lm-f); letter-spacing: -.004em; color: #6e6e73; }
+
+/* the rail: a nav of real links; every line is the bar inside a link. Its box is the pointer's reach. */
+.lm-rail { position: absolute; right: 0; top: 0; width: 140px; padding: 16px 0; z-index: 3; cursor: pointer;
+  touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.lm-rail.is-drag { cursor: grabbing; }
+.lm-rail ol { position: relative; list-style: none; }
+.lm-rail li { height: 13px; }
+.lm-rail li.is-sec { margin-top: 11px; }
+.lm-rail a { position: relative; display: block; height: 13px; outline: none; color: inherit; text-decoration: none; }
+.lm-rail i { position: absolute; right: 40px; top: 5.25px; width: 84px; height: 2.5px; border-radius: 1.25px; background: #86868b; transform-origin: 100% 50%; transform: scaleX(.2); }
+.lm-rail a:focus-visible i { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1d1d1f; }
+.lm-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* the one lime: a cap on the end of the current line, moved by the same smoothed value as the ripple */
+.lm-mark { position: absolute; right: 36px; top: 0; width: 4px; height: 10px; border-radius: 2px; background: #B8FF00; pointer-events: none; }
+/* the one label: right-aligned just left of the longest a line can grow; script sets its y, its width, its clip and its roll */
+.lm-tag { position: absolute; top: 0; right: 134px; height: 20px; pointer-events: none; clip-path: inset(0 0 0 100%); }
+.lm-tc { position: relative; display: block; height: 20px; overflow: hidden; }
+.lm-t { position: absolute; right: 0; top: 0; white-space: nowrap; font: 500 15px/20px var(--lm-f); letter-spacing: -.008em; color: #1d1d1f; }
+</style>
+<style>
+  html:not(.qm-tile) { --lm-ui: 46px; }
+  html, body { background: #f5f5f7; }
+  body { margin: 0; }
+  .lm-pin { height: calc(100vh - var(--lm-ui, 0px)); }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; background: #f5f5f7; }
+</style>
+</head>
+<body>
+<!-- code -->
+<div class="lm" id="lm">
+  <div class="lm-pin" id="lmPin">
+    <div class="lm-fit" id="lmFit">
+      <div class="lm-win">
+        <div class="lm-scroll" id="lmScroll" tabindex="0" role="region" aria-label="Forma case study">
+          <article class="lm-art" id="lmArt">
+            <span class="lm-kick">Case study · Forma</span>
+            <h1 data-rail="Overview">A shop for clay. Built in three weeks.</h1>
+            <p class="lm-lede">Forma makes ceramics in a studio of four. Qbix designed and built the shop that sells them, from the first brief to a live domain.</p>
+
+            <h2>The brief</h2>
+            <p>Forma's site was three years old and took orders by email. They wanted one thing: a page that looks like the work, and a shop a customer can finish in two minutes.</p>
+            <p>We read 200 past orders before drawing anything. Nearly all began with a photo, so the photos became the structure.</p>
+            <p>Scope was fixed at one week of design and two of build.</p>
+
+            <h2>Moodboard to palette</h2>
+            <p>We pinned 30 photographs of raw clay, bone china and wet glaze to one board, then cut it to six.</p>
+            <p>The palette came from the shelf, not a swatch book: chalk, clay, a pale celadon and ink. Nothing else gets a colour.</p>
+
+            <h2>Type and grid</h2>
+            <p>One typeface, set large and tight. A 12-column grid holds a product, its price and its care note without a box around any of them.</p>
+            <p>Every photo is cropped to the same ratio, so a shelf of 40 pieces reads as one calm wall.</p>
+            <figure class="lm-fig"><img src="../assets/art/vase.webp" alt="A ribbed glass tumbler turned over, a small flower resting on its base, on a deep green ground" width="700" height="1050" style="object-position:50% 47%"><figcaption>Product photo, as cropped for the shop grid.</figcaption></figure>
+
+            <h2>Components</h2>
+            <p>Cards, buttons and form fields are components with tokens behind them. There are 41, each drawn once and used wherever it fits.</p>
+            <p>A product card has four states. Hover shows the second photo, and the price never moves.</p>
+            <p>Strata keeps the tokens and the code in step, so a colour changed once changes everywhere.</p>
+
+            <h2>Build and preview</h2>
+            <p>Pages are built in Next.js and sent to a preview link on every change. Forma's team reviewed on their phones, between kilns.</p>
+            <p>Two review rounds, 19 comments, each one closed within a day.</p>
+            <figure class="lm-fig"><img src="../assets/art/calla.webp" alt="A ribbed glass tumbler with a pale flower lying across its rim, on a green ground" width="900" height="600" style="object-position:40% 50%"><figcaption>The second hero, shot on the studio shelf.</figcaption></figure>
+
+            <h2>Launch</h2>
+            <p>The shop went live on forma.studio on a Tuesday, 21 days after the first call. Orders in the first month ran 38% above the month before.</p>
+            <p>Qbix still looks after it. A new drop is a new page and an hour of work.</p>
+          </article>
+        </div>
+
+        <header class="lm-bar" aria-hidden="true"><span class="lm-dots"><i></i><i></i><i></i></span><b>forma.studio</b></header>
+
+        <nav class="lm-rail" id="lmRail" aria-label="Contents">
+          <ol id="lmList"></ol><!-- one li, link and line for each block of the article, built by script -->
+          <span class="lm-tag" id="lmTag" aria-hidden="true"><span class="lm-tc"><span class="lm-t"></span><span class="lm-t"></span></span></span>
+          <b class="lm-mark" id="lmMark" aria-hidden="true"></b>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+<div class="qm-ui"><span>Scroll ↓</span><span class="qm-sep">/</span><span>Hover the rail, click a line, press and drag along it. Tab goes to the rail, arrows move</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Line minimap. The reading position is one smoothed scroll value (the window's scrollTop, a critically damped spring); every line's ink and
+   length is a function of it, plus one spring per line for the pointer's Gaussian. A click or a drag moves the scroll area on a spring, and the
+   page's own scroll (the harness's, the scrollbar's) and the area's are one value. Reduced motion: a still, everything changes in place. */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const root = $('lm'), pin = $('lmPin'), fit = $('lmFit'), sc = $('lmScroll'), art = $('lmArt'), nav = $('lmRail'), ol = $('lmList'), tag = $('lmTag'), mark = $('lmMark');
+  const bar = root.querySelector('.lm-bar'), tc = tag.firstElementChild, tx = [...tc.children];
+  const DW = 760, DH = 440, BAR = 40, PITCH = 13, LMAX = 84;
+  const L_P = 20, L_H = 32, READ = 12, SIG = 2.4, GAUSS = 28, SIGP = 42, RA = 0.16, RB = 0.68, DRAG_PX = 6;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const smooth = (x) => x * x * (3 - 2 * x);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const REST = [134, 134, 139], INK = [29, 29, 31];
+
+  /* the rail is built from the article's own blocks */
+  const blocks = [...art.querySelectorAll('h1, h2, p')];
+  const secs = [], secOf = [], rows = [];
+  let paras = 0;
+  blocks.forEach((el, i) => {
+    const head = el.tagName === 'H1' || el.tagName === 'H2';
+    if (head) { secs.push((el.dataset.rail || el.textContent).trim()); paras = 0; } else paras++;
+    secOf.push(secs.length - 1);
+    if (!el.id) el.id = 'lm-b' + i;
+    const li = document.createElement('li'), a = document.createElement('a'), sr = document.createElement('span'), bar_ = document.createElement('i');
+    if (el.tagName === 'H2') li.className = 'is-sec';
+    a.href = '#' + el.id; a.tabIndex = -1; a.draggable = false;      // a link would start a native drag and cancel the pointer
+    sr.className = 'lm-sr'; sr.textContent = head ? el.textContent.trim() : secs[secs.length - 1] + ', paragraph ' + paras;
+    a.append(sr, bar_); li.append(a); ol.append(li);
+    rows.push({ li, a, bar: bar_, base: head ? L_H : L_P });
+  });
+  const N = rows.length, links = rows.map((r) => r.a);
+
+  /* geometry, measured from the DOM */
+  let k = 1, max = 0, hS = DH, cy = [], lineY = [];
+  let posed = null;
+  const poseLine = () => secOf.indexOf(3) + 2;                         // the still's reading line: the last paragraph of the fourth section, with the photo just below it
+  function layout() {
+    const W = pin.clientWidth, H = pin.clientHeight;
+    const raw = Math.min((W - 2 * clamp(W * 0.025, 10, 40)) / DW, (H - 2 * clamp(H * 0.05, 14, 44)) / DH, 2.4);
+    k = Math.max(8, Math.floor(raw * 40)) / 40;                        // whole pixels at rest: 760 k and 440 k are integers when k = m / 40
+    fit.style.transform = `translate(${Math.round((W - DW * k) / 2)}px,${Math.round((H - DH * k) / 2)}px) scale(${k})`;
+    hS = sc.clientHeight; max = Math.max(0, sc.scrollHeight - hS);
+    cy = blocks.map((el) => el.offsetTop + el.offsetHeight / 2);
+    nav.style.top = Math.round(BAR + (DH - BAR - nav.offsetHeight) / 2) + 'px';
+    lineY = rows.map((r) => ol.offsetTop + r.li.offsetTop + PITCH / 2);
+    if (!reduce) root.style.height = innerHeight + max * k + 'px';     // the page's own run: its scroll maps 1:1 onto the area's
+    if (posed) sc.scrollTop = sOf(poseLine());
+  }
+
+  /* the reading position: a continuous line number p from a scroll value, and back */
+  function pOf(s) {
+    const yr = s + hS * (RA + RB * (max > 0 ? s / max : 0));
+    if (yr <= cy[0]) return 0;
+    if (yr >= cy[N - 1]) return N - 1;
+    let i = 0;
+    while (i < N - 2 && yr > cy[i + 1]) i++;
+    return i + (yr - cy[i]) / (cy[i + 1] - cy[i]);
+  }
+  function sOf(p) {
+    p = clamp(p, 0, N - 1);
+    const i = Math.min(N - 2, Math.floor(p)), yr = cy[i] + (cy[i + 1] - cy[i]) * (p - i);
+    return clamp((yr - RA * hS) / (1 + (RB * hS) / Math.max(1, max)), 0, max);
+  }
+  const yOfP = (p) => { p = clamp(p, 0, N - 1); const i = Math.min(N - 2, Math.floor(p)); return lerp(lineY[i], lineY[i + 1], p - i); };
+  function pOfY(y) {
+    if (y <= lineY[0]) return 0;
+    if (y >= lineY[N - 1]) return N - 1;
+    let i = 0;
+    while (i < N - 2 && y > lineY[i + 1]) i++;
+    return i + (y - lineY[i]) / (lineY[i + 1] - lineY[i]);
+  }
+  const nearest = (y) => { let b = 0; for (let i = 1; i < N; i++) if (Math.abs(lineY[i] - y) < Math.abs(lineY[b] - y)) b = i; return b; };
+
+  /* springs: x'' = −ω²(x − target) − 2ωx', stepped exactly (critically damped, no overshoot) */
+  let inst = false;
+  const S = (st, target, resp, dt) => {
+    if (reduce || inst) { st.x = target; st.v = 0; return; }
+    const om = (2 * Math.PI) / resp, x = st.x - target, e = Math.exp(-om * dt), c1 = st.v + om * x;
+    st.x = target + (x + c1 * dt) * e; st.v = (st.v - om * c1 * dt) * e;
+  };
+  const near = (st, target, ex = 0.04, ev = 0.4) => Math.abs(st.x - target) < ex && Math.abs(st.v) < ev;
+
+  const cur = { x: 0, v: 0 };                    // the smoothed scroll: the reading position
+  const ps = { x: 0, v: 0 };                     // the area's own scroll when a click, a drag or a throw moves it
+  const pr = { x: 0, v: 0 };                     // the press
+  const gs = rows.map(() => ({ x: 0, v: 0 }));   // one spring per line: the pointer's share of its length
+  const tcv = { x: 1, v: 0 }, ty = { x: 0, v: 0 }, ro = { x: 1, v: 0 };   // the label: cover, y, roll
+  let pt = 0, prog = false, focusIdx = -1, raf = 0, last = 0;
+  const P = { on: false, y: 0, down: false };    // the pointer on the rail (real or the ghost's)
+  const press = { on: false, y0: 0, drag: false, s: [], touch: false };
+  let tSec = -1, a0 = 0, dir = 1, wA = 0, wB = 0, shownIdx = -1, cache = new Map();
+  const put = (el, prop, v) => { let c = cache.get(el); if (!c) cache.set(el, (c = {})); if (c[prop] !== v) { c[prop] = v; el.style[prop] = v; } };
+  const setScroll = (v) => { sc.scrollTop = clamp(v, 0, max); };
+
+  function setTexts(a, b) {
+    tx[0].textContent = secs[a]; tx[1].textContent = secs[b];
+    wA = tx[0].offsetWidth; wB = tx[1].offsetWidth;
+  }
+
+  function step(dt) {
+    let busy = false;
+    if (prog) {                                                          // a click, a drag or a throw: the area scrolls on its own spring
+      S(ps, pt, press.drag ? 0.07 : 0.55, dt); setScroll(ps.x);
+      if (!press.drag && near(ps, pt, 0.3, 4)) { prog = false; setScroll(pt); } else busy = true;
+    }
+    S(cur, sc.scrollTop, prog ? 0.1 : 0.14, dt);
+    if (near(cur, sc.scrollTop)) { cur.x = sc.scrollTop; cur.v = 0; } else busy = true;
+    S(pr, P.down ? 1 : 0, 0.1, dt); if (Math.abs(pr.x - (P.down ? 1 : 0)) > 0.002) busy = true;
+    const p = pOf(cur.x), ci = Math.round(p);
+
+    /* where the pointer is, for the lines: the pointer on the rail, else the focused link */
+    const ey = P.on ? P.y : focusIdx >= 0 ? lineY[focusIdx] : null;
+    const gp = GAUSS * (1 + 0.2 * pr.x);
+    for (let i = 0; i < N; i++) {
+      const r = rows[i], d = i - p, w = reduce ? (i === ci ? 1 : 0) : Math.exp(-(d * d) / (SIG * SIG));
+      const tg = ey !== null && !reduce ? gp * Math.exp(-(((lineY[i] - ey) / SIGP) ** 2)) : 0;
+      S(gs[i], tg, 0.17, dt); if (!near(gs[i], tg, 0.05, 0.5)) busy = true;
+      const len = clamp(r.base + READ * w + gs[i].x, 4, LMAX), t = Math.max(w, 0.55 * clamp(gs[i].x / GAUSS));
+      put(r.bar, 'transform', `scaleX(${(len / LMAX).toFixed(4)})`);
+      put(r.bar, 'backgroundColor', `rgb(${Math.round(lerp(REST[0], INK[0], t))},${Math.round(lerp(REST[1], INK[1], t))},${Math.round(lerp(REST[2], INK[2], t))})`);
+    }
+    put(mark, 'transform', `translate3d(0,${(yOfP(reduce ? ci : p) - 5).toFixed(2)}px,0)`);
+    put(bar, '--lm-line', smooth(clamp((cur.x - 4) / 20)).toFixed(3));
+    if (ci !== shownIdx) {                                               // the current link: aria-current, and Tab lands on it
+      shownIdx = ci;
+      links.forEach((a, i) => { if (i === ci) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+      if (!nav.contains(document.activeElement)) links.forEach((a, i) => { a.tabIndex = i === ci ? 0 : -1; });
+    }
+
+    /* the label: one object, on the line under the pointer (or the focused link) */
+    const inRange = ey !== null && ey >= lineY[0] - 20 && ey <= lineY[N - 1] + 20;
+    const li = inRange ? nearest(ey) : reduce ? ci : -1;
+    const want = li >= 0 ? secOf[li] : -1, hidden = tcv.x > 0.985;
+    if (want >= 0 && want !== tSec) {
+      if (hidden || reduce || tSec < 0) { setTexts(want, want); ro.x = 1; ro.v = 0; a0 = 0; tSec = want; }
+      else if (ro.x >= 0.5) {                                            // retarget: continue from where the incoming name is
+        a0 = (1 - ro.x) * dir; dir = want > tSec ? 1 : -1;
+        setTexts(tSec, want); ro.x = 0; ro.v = 0; tSec = want;
+      }
+    }
+    S(tcv, li >= 0 ? 0 : 1, li >= 0 ? 0.26 : 0.18, dt); if (Math.abs(tcv.x - (li >= 0 ? 0 : 1)) > 0.002) busy = true;
+    if (li >= 0) { if (hidden) { ty.x = lineY[li]; ty.v = 0; } S(ty, lineY[li], 0.18, dt); if (!near(ty, lineY[li], 0.05, 0.5)) busy = true; }
+    S(ro, 1, 0.28, dt); if (ro.x < 0.999) busy = true;
+    const wNow = ro.x < 0.999 ? Math.max(wA, wB) : wB;                // wide enough for both names while one rolls out and the other in
+    put(tc, 'width', wNow.toFixed(2) + 'px');
+    put(tx[0], 'transform', `translate3d(0,${(lerp(a0, -dir, ro.x) * 100).toFixed(2)}%,0)`);
+    put(tx[1], 'transform', `translate3d(0,${(lerp(dir, 0, ro.x) * 100).toFixed(2)}%,0)`);
+    put(tag, 'transform', `translate3d(${(tcv.x * 12).toFixed(2)}px,${(ty.x - 10).toFixed(2)}px,0)`);
+    put(tag, 'clipPath', `inset(0 0 0 ${(tcv.x * wNow).toFixed(2)}px)`);
+    return busy;
+  }
+  function tick(now) {
+    const dt = clamp((now - last) / 1000, 0.001, 0.05); last = now;
+    raf = step(dt) ? requestAnimationFrame(tick) : 0;
+  }
+  const wake = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  const snap = () => { inst = true; step(0.016); inst = false; };      // put every spring on its target (the pose, a resize)
+
+  /* the pointer, real or the ghost's: the same four calls */
+  const railY = (cY) => (cY - nav.getBoundingClientRect().top) / k;
+  function feed(cY) { P.y = railY(cY); P.on = true; posed = null; wake(); }
+  function leave() { if (press.on) return; P.on = false; wake(); }
+  function pressBegin(cY, touch) {
+    P.down = true; P.on = true; press.on = true; press.y0 = cY; press.drag = false; press.s.length = 0; press.touch = !!touch; posed = null;
+    P.y = railY(cY); wake();
+  }
+  function scrollToLine(i) {                                          // from the value and the speed on screen
+    const t = sOf(i);
+    if (reduce) { setScroll(t); wake(); return; }
+    if (!prog) { ps.x = sc.scrollTop; ps.v = 0; }
+    pt = t; prog = true; wake();
+  }
+  function pressMove(cY) {
+    P.y = railY(cY); P.on = true;
+    if (press.on && !press.drag && Math.abs(cY - press.y0) >= DRAG_PX) {   // a drag is committed after a few px: a tap stays a tap
+      press.drag = true; nav.classList.add('is-drag');
+      if (!prog) { ps.x = sc.scrollTop; ps.v = 0; }
+      prog = true;
+    }
+    if (press.drag) {
+      pt = sOf(pOfY(P.y));                                             // the page is where the pointer is on the rail
+      const now = performance.now(); press.s.push([now, pt]);
+      while (press.s.length > 2 && now - press.s[0][0] > 120) press.s.shift();
+      if (reduce) setScroll(pt);
+    }
+    wake();
+  }
+  function pressEnd(cancel) {
+    if (!press.on) return;
+    press.on = false; P.down = false; nav.classList.remove('is-drag');
+    if (press.drag) {
+      const now = performance.now(), s = press.s, lastS = s[s.length - 1];
+      let v = 0;
+      if (s.length > 1 && now - lastS[0] < 70) {                       // the speed over the last ~80 ms
+        const first = s.find((q) => lastS[0] - q[0] <= 90) || s[0], dts = (lastS[0] - first[0]) / 1000;
+        if (dts > 0.012) v = (lastS[1] - first[1]) / dts;
+      }
+      press.drag = false;
+      if (!reduce) pt = clamp(pt + (v / 1000) * (0.998 / (1 - 0.998)), 0, max);   // projection: where it would come to rest
+      else setScroll(pt);
+      if (Math.abs(pt - sc.scrollTop) < 0.5 && Math.abs(ps.v) < 4) prog = false;
+    } else if (!cancel) scrollToLine(nearest(P.y));
+    if (press.touch) P.on = false;
+    wake();
+  }
+  const clientAt = (x, y) => { const r = nav.getBoundingClientRect(); return [r.left + x * k, r.top + y * k]; };
+
+  /* real pointers on the rail */
+  nav.addEventListener('pointerenter', (e) => { if (e.pointerType === 'touch') return; feed(e.clientY); });
+  nav.addEventListener('pointermove', (e) => { if (e.pointerType === 'touch' && !press.on) return; if (press.on) pressMove(e.clientY); else feed(e.clientY); });
+  nav.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch') leave(); });
+  nav.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    try { nav.setPointerCapture(e.pointerId); } catch (_) { /* not capturable */ }
+    pressBegin(e.clientY, e.pointerType === 'touch');
+  });
+  const up = (cancel) => (e) => {
+    const was = press.on;
+    pressEnd(cancel);
+    if (was && e.pointerType !== 'touch') { const r = nav.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) leave(); }
+  };
+  nav.addEventListener('pointerup', up(false));
+  nav.addEventListener('pointercancel', up(true));
+  nav.addEventListener('lostpointercapture', up(true));
+  nav.addEventListener('dragstart', (e) => e.preventDefault());
+  /* a click from the keyboard (Enter on a link); a pointer's click was already handled on release */
+  nav.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (e.detail === 0) { const a = e.target.closest('a'), i = links.indexOf(a); if (i >= 0) scrollToLine(i); }
+  });
+
+  /* keyboard: Tab enters once (roving tabindex), arrows move between links, focus shows the label */
+  nav.addEventListener('focusin', (e) => {
+    const i = links.indexOf(e.target.closest('a'));
+    if (i < 0) return;
+    let vis = true; try { vis = e.target.matches(':focus-visible'); } catch (_) { /* old engines */ }
+    focusIdx = vis ? i : -1;
+    links.forEach((a, j) => { a.tabIndex = j === i ? 0 : -1; });
+    wake();
+  });
+  nav.addEventListener('focusout', (e) => { if (!nav.contains(e.relatedTarget)) { focusIdx = -1; shownIdx = -1; wake(); } });
+  nav.addEventListener('keydown', (e) => {
+    const i = links.indexOf(document.activeElement);
+    if (i < 0) return;
+    const to = { ArrowDown: i + 1, ArrowRight: i + 1, ArrowUp: i - 1, ArrowLeft: i - 1, Home: 0, End: N - 1 }[e.key];
+    if (to === undefined) return;
+    e.preventDefault(); links[clamp(to, 0, N - 1)].focus();
+  });
+
+  /* the page's scroll and the area's scroll are one value: the harness (and the page's own scrollbar) drives the page, the wheel drives the area */
+  let expectArea = null, expectPage = null;
+  addEventListener('scroll', () => {
+    if (reduce) return;
+    if (expectPage !== null && Math.abs(scrollY - expectPage) < 1.2) { expectPage = null; return; }
+    expectPage = null;
+    const t = scrollY / k;
+    if (Math.abs(sc.scrollTop - t) > 1.2 / k + 0.3) { sc.scrollTop = t; expectArea = sc.scrollTop; }
+    wake();
+  }, { passive: true });
+  sc.addEventListener('scroll', () => {
+    if (!reduce) {
+      if (expectArea !== null && Math.abs(sc.scrollTop - expectArea) < 0.5) expectArea = null;
+      else {
+        expectArea = null;
+        const yy = sc.scrollTop * k;
+        if (Math.abs(scrollY - yy) > 1.2) { expectPage = yy; scrollTo(0, yy); expectPage = scrollY; }
+      }
+    }
+    wake();
+  }, { passive: true });
+  const letGo = () => { prog = false; };
+  sc.addEventListener('wheel', letGo, { passive: true });
+  sc.addEventListener('touchstart', letGo, { passive: true });
+  sc.addEventListener('keydown', letGo);
+
+  layout();
+  if (reduce) {                                                          // a still on mid-article; the area still scrolls by hand
+    root.classList.add('is-still');
+    sc.scrollTop = sOf(poseLine()); cur.x = sc.scrollTop; snap();
+    addEventListener('resize', () => { layout(); sc.scrollTop = clamp(sc.scrollTop, 0, max); wake(); });
+  } else {
+    sc.scrollTop = scrollY / k; cur.x = sc.scrollTop; snap();
+    addEventListener('resize', () => { layout(); wake(); });
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); if (reduce || posed) { cur.x = sc.scrollTop; snap(); } wake(); });
+
+  /* a handle for driving the rail from script: the ghost uses exactly the calls a real pointer does */
+  window.lmRail = {
+    nav, N, secs, secOf, get k() { return k; }, get lineY() { return lineY; }, get P() { return P; }, get cur() { return cur; }, get max() { return max; },
+    pose(line) {                                                         // a still pose: mid-article, the pointer on the rail `line` lines below the reading line
+      if (reduce) return;
+      posed = true; layout(); cur.x = sc.scrollTop; ps.x = cur.x;
+      const ci = Math.round(pOf(cur.x));
+      P.y = lineY[clamp(ci + line, 0, N - 1)]; P.on = true; snap(); wake();
+    },
+    clientAt, feed: (cX, cY, inside) => { if (press.on) pressMove(cY); else if (inside) feed(cY); else leave(); },
+    press: (cY) => pressBegin(cY, false), release: (cancel) => pressEnd(cancel), leave, snap,
+    heading: (s) => secOf.indexOf(s),
+  };
+})();
+</script>
+<script>
+  /* The tile's script: the harness scrolls the page down and back; before that, a pose and a ghost that drives the rail through the same calls a real pointer makes. */
+  (function () {
+    const R = window.lmRail, tileLike = QM.tile || QM.live;
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const ease = QM.bezier(0.65, 0, 0.35, 1), easeIn = (t) => t * t * (3 - 2 * t) * 0.6 + t * 0.4;
+    let tok = 0, loops = 0, gx = 0, gy = 0;
+    if (tileLike && !QM.reduced) R.pose(6);
+
+    const sleepTo = (t0, ms, my) => new Promise((res) => setTimeout(() => res(my === tok), Math.max(0, t0 + ms - performance.now())));
+    function glide(x, y, ms, my, curve = ease) {                       // the ghost moves like a hand, and the rail hears every point
+      return new Promise((res) => {
+        const x0 = gx, y0 = gy, t0 = performance.now();
+        const stepG = (now) => {
+          if (my !== tok) return res(false);
+          const p = Math.min(1, (now - t0) / ms), q = curve(p);
+          gx = x0 + (x - x0) * q; gy = y0 + (y - y0) * q;
+          QM.ghostAt(gx, gy);
+          const r = R.nav.getBoundingClientRect();
+          R.feed(gx, gy, gx >= r.left && gx <= r.right && gy >= r.top && gy <= r.bottom);
+          if (p < 1) requestAnimationFrame(stepG); else res(true);
+        };
+        requestAnimationFrame(stepG);
+      });
+    }
+    let acting = false;
+    function stop() { if (!acting) return; acting = false; tok++; QM.ghostHide(); R.release(true); R.leave(); }
+
+    /* the ghost's act, on absolute times from its start: sweep the lines, tap a heading, press and drag up the rail, let go with speed, leave */
+    async function act(b, first, my) {
+      acting = true;
+      const t0 = performance.now(), L = R.lineY, X = R.nav.getBoundingClientRect().width / R.k - 52;
+      const at = (ms) => sleepTo(t0, ms, my);
+      const pos = (i) => R.clientAt(X, L[i]);
+      const h4 = R.heading(4), h2 = R.heading(2);
+      QM.ghostShow();
+      if (first) { const r = R.nav.getBoundingClientRect(); gx = r.left + X * R.k; gy = r.top + R.P.y * R.k; }   // where the pose's pointer is
+      else { const p = pos(3); gx = p[0] + 110; gy = p[1] + 40; }
+      QM.ghostAt(gx, gy);
+      if (!(await at(b))) return;
+      let q = pos(h4);
+      if (!(await glide(q[0], q[1], 1000, my))) return;                    // sweeps the lines: the label travels and swaps its name
+      if (!(await at(b + 1300))) return;
+      R.press(gy); if (!(await at(b + 1400))) return;                      // a tap: the page scrolls there on a spring
+      R.release(false);
+      if (!(await at(b + 2900))) return;
+      R.press(gy); if (!(await at(b + 3300))) return;                      // press and drag up the rail: the page follows 1:1
+      q = pos(h2); if (!(await glide(q[0], q[1] + 14, 1000, my, easeIn))) return;
+      R.release(false);                                                    // let go with speed: the scroll carries on, projected
+      if (!(await at(b + 5800))) return;
+      q = R.clientAt(X + 150, L[Math.min(R.N - 1, h2 + 3)]); if (!(await glide(q[0], q[1], 520, my))) return;
+      QM.ghostHide(); R.leave(); acting = false;
+      await at(b + 6600);
+    }
+
+    QM.demo({
+      kind: 'scroll', hold: 1200, back: 3200, pause: 800,
+      get dur() { return tileLike ? 6900 : 4600; },                       // the tile's stops are top, mid-article and near the end; the detail view starts from the top already
+      get stops() { return tileLike ? [0, 0.5, 0.92] : [0.5, 0.92]; },
+      get lead() {                                                       // the first loop opens on the pose; every loop then starts with the ghost on the rail
+        if (!tileLike || QM.reduced) return 700;
+        const first = loops++ === 0, b = first ? 4300 : 500, my = ++tok;
+        act(b, first, my);
+        return b + 6700;
+      },
+    });
+    /* a real hand on the rail lets the harness's autoplay go (it listens for a wheel), and takes the ghost's place at once */
+    ['pointerenter', 'pointerdown'].forEach((t) => R.nav.addEventListener(t, (e) => { if (e.isTrusted && e.pointerType !== 'touch') window.dispatchEvent(new WheelEvent('wheel')); }));
+    ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach((t) => addEventListener(t, (e) => { if (e.isTrusted && QM.live) stop(); }, { passive: true, capture: true }));
+    addEventListener('pointermove', (e) => { if (e.isTrusted && QM.live && e.pointerType === 'mouse') stop(); }, { passive: true });
+  })();
+</script>
+</body>
+</html>

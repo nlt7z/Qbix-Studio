@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command pages · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "command-pages", "title": "Command pages", "group": "studio", "added": "2026-11-24", "cat": "inputs", "order": 10,
+  "kind": "loop", "tone": "paper", "shot": 900,
+  "line": "every row's y is its own spring (0.32 s) · leaving rows covered, arriving rows uncovered · one wash travels on a spring · pages push under a clip",
+  "summary": "Strata's command palette over a quiet board: a translucent white panel with a real search field and two groups of commands. Typing filters on springs: rows that stay glide to their new places from where they are on screen, rows that leave are covered by a clip and rows that arrive are uncovered, matched letters step up in weight without moving a single glyph, group labels come and go with their rows and the panel's height is a spring. One pale wash travels between rows with the arrow keys or the pointer and follows a row that is moving. Return on Change theme... pushes a page into the same panel: the list leaves left under a clip, the new one slides in from the right, a chip is uncovered in the search line and the height springs. Backspace on an empty search or Esc pops back by the same path, at any moment of the push. Choosing a theme draws a tick in one stroke.",
+  "spec": [
+    ["Rows", "every row is one element with its own critically damped spring on y (response 0.32 s) that starts from the value on screen, so a keystroke in the middle of a glide never jumps; 44 px rows, 28 px group labels, 560 px panel, 24 px radius; the targets come from one layout pass over the filtered, ranked list"],
+    ["Cover", "a row's presence is a second spring (0 to 1): arriving 0.24 s, leaving 0.14 s; it drives clip-path inset(0 0 (1 - p) 100% 0), so a row is uncovered from its top edge and covered back up into it, never faded; a row that comes back mid-leave is simply uncovered again from where it is; a hidden row that returns appears at its place, it does not travel from nowhere"],
+    ["Match", "each word of the query must match a row's label as a substring (a word start ranks first), else as letters in order, else a keyword; matched letters go from 400 to 600 and the others to #6e6e73; every glyph is its own span whose letter-spacing is the measured difference between its regular and bold advance, so the label's width is reserved and nothing moves when the weight steps"],
+    ["Wash", "one #e8e8ed object, 544 × 44, radius 12: its y is a spring (response 0.2 s) whose target is the selected row's live y every frame, so it follows a row that is still gliding; its height is a second spring to 0 when nothing matches; arrow keys, Home, End, Page keys, Ctrl+N and Ctrl+P, and the pointer (only when it really moves) pick the row; a press shrinks it to 0.98 in 100 ms"],
+    ["Pill", "the one lime: a 30 × 24 pill with the return glyph that lives inside the wash and travels with it; running a command swaps the glyph for a tick drawn in one stroke (stroke-dashoffset 1 to 0 on a pathLength of 1, 420 ms expo out) that is taken back 1 s later"],
+    ["Page", "one spring T (response 0.44 s) runs both pages: the new list slides in from the right by its own width, its left edge is the seam W(1 - T); the old list moves left by 140 px under a clip that follows the same seam, so it is covered from its right edge as fast as the new one arrives; the search line is two layers (one per page, each drawing its own text, chip and placeholder) under the same seam, and the chip is uncovered left to right from T = 0.3; the panel height is its own spring (0.34 s) aimed at the active page's list"],
+    ["Pop", "Backspace on an empty query, Esc, or the end of a commit run T back to 0 from wherever it is with the velocity it has, so a pop in the middle of a push turns round without a jump; the first page's query is restored in the search line, and the page being left keeps its own text until the seam covers it"],
+    ["Commit", "choosing Light, Dark or Match system draws the tick on that row in one stroke while the previous one is taken back from its start, holds 340 ms, then pops; the row on the first page rolls to the new theme name (420 ms expo out, inside a clip)"],
+    ["Input", "a real input (its text is transparent: each page's layer draws the text, so a clip can cover it) with role=combobox, aria-controls on the active listbox and aria-activedescendant on the selected option; native selection and paste work; the caret is drawn (1.5 px, solid for 0.5 s after every key, then blinking) so it shows in a frame without focus; any key pressed on the page focuses the field first"],
+    ["Loop", "the thumbnail's pose is the query ne with Change theme... under the wash; after about 5 s a ghost moves the wash with arrows, pushes the page, picks a theme, pops, clears the query, types o and r, then uses the mouse to push and pick again; it types with the same key and input events as a hand, yields to any real pointer, touch or key and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-24"],
+  "where": "The command palette of Strata and of a Qbix client's dashboard, wherever a product has a few dozen commands and a few settings with their own list of values, so a setting is one more page in the same panel and not a second dialog.",
+  "rules": [
+    "Every row's y is its own spring that starts from the value on screen. Typing, deleting and arrowing at any speed retargets springs; nothing is re-laid out and nothing jumps.",
+    "Rows are covered and uncovered by a clip, never faded. A row leaves from where it stands and the rows below close up; a row that arrives is uncovered in the place it will keep.",
+    "The wash is one element. Its target is the selected row's live position, so it keeps up with a row that is still moving, and it keeps its velocity from row to row.",
+    "A bold match must not move the text: the weight steps up and each glyph's letter-spacing takes back the extra advance, so the width of every label is the same at any query.",
+    "A page is pushed and popped by one spring that can be reversed at any moment; the two lists and the two search layers share a seam, so the old one is covered exactly as fast as the new one arrives.",
+    "Exactly one lime at any time: the return pill inside the wash. The tick is ink; the chip, the wash and the shortcuts are neutrals.",
+    "Real text editing in a real input; Home, End, PageUp and PageDown move the wash (the arrow keys keep the caret movement a text field needs: Left, Right and Cmd+arrows). role=combobox with a listbox, options, aria-selected and aria-activedescendant; a status line says the count and the page.",
+    "System face, Apple neutrals (#1d1d1f, #6e6e73, #86868b, #f5f5f7, #e8e8ed); a translucent panel (white at 72%, 24 px blur); icons drawn inline with 1.7 px round strokes.",
+    "Under reduced motion the list filters, the wash moves, the page pushes and pops and the tick appears in place with no spring, clip or ghost, and the piece rests on its pose."
+  ],
+  "tags": ["command palette", "search", "filter", "nested page", "breadcrumb", "FLIP", "spring", "listbox", "combobox", "clip", "Strata", "inputs"]
+}
+</script>
+<style data-code>
+/* Command pages. A Strata command palette in the system face with Apple's neutrals: a translucent white panel, a search line, a list.
+   Rows are absolutely positioned and every y, every cover (clip-path) and the panel's height are set from script: they are springs.
+   The one lime is the pill inside the wash (.cp-hl); the wash is one element that travels, so rows themselves never get a background. */
+.cp-panel, .cp-meas { --cp-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --cp-ui: cubic-bezier(.4, 0, .2, 1); --cp-out: cubic-bezier(.16, 1, .3, 1); --cp-in: cubic-bezier(.5, 0, .75, 0); }
+.cp-panel { position: absolute; left: 0; top: 0; width: 560px; height: 434px; overflow: hidden; border-radius: 24px;
+  background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12), 0 36px 80px -24px rgba(0, 0, 0, .16);
+  color: #1d1d1f; font: 400 15px/20px var(--cp-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cp-panel :where(svg) { display: block; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the search line: a magnifier, a chip that is uncovered when a page is pushed, and the field (a real input, a placeholder, a drawn caret) */
+.cp-search { position: relative; height: 56px; cursor: text; }
+.cp-search::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(0, 0, 0, .1); }
+.cp-mag { position: absolute; z-index: 2; left: 20px; top: 18px; width: 20px; height: 20px; color: #86868b; }
+.cp-sl { position: absolute; left: 0; top: 0; width: 560px; height: 56px; }
+.cp-chip { position: absolute; left: 52px; top: 15px; height: 26px; padding: 0 10px; border-radius: 13px; background: rgba(0, 0, 0, .06);
+  font: 500 13px/26px var(--cp-f); letter-spacing: -.006em; white-space: nowrap; clip-path: inset(0 100% 0 0 round 13px); }
+.cp-qt, .cp-ph { position: absolute; left: 52px; top: 0; font-size: 17px; line-height: 56px; white-space: pre; pointer-events: none; }
+.cp-qt { color: #1d1d1f; }
+.cp-ph { color: #86868b; }
+.cp-ph.is-off { visibility: hidden; }
+.cp-sl.has-chip .cp-qt, .cp-sl.has-chip .cp-ph { left: calc(52px + var(--cw, 100px) + 8px); }
+/* the real input sits over the live layer; its text is drawn by the layer (so a page's text can be covered by a clip), its caret is drawn too */
+.cp-input { position: absolute; left: 52px; top: 0; width: 480px; height: 56px; margin: 0; padding: 0; border: 0; border-radius: 0; outline: none; background: transparent;
+  font: 400 17px/56px var(--cp-f); letter-spacing: -.01em; color: transparent; caret-color: transparent; -webkit-user-select: text; user-select: text; }
+.cp-input::selection { background: rgba(29, 29, 31, .14); color: transparent; }
+.cp-caret { position: absolute; left: 52px; top: 17px; width: 1.5px; height: 22px; border-radius: 1px; background: #1d1d1f; display: none; animation: cp-a 1.1s steps(1) .5s infinite; }
+.cp-sl.has-chip .cp-caret { left: calc(52px + var(--cw, 100px) + 8px); }
+.cp-caret.b { animation-name: cp-b; }
+.cp-caret.is-long { animation-delay: 1.6s; }
+@keyframes cp-a { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+@keyframes cp-b { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+
+/* the lists: the wash first, then the pages (one listbox each) on top of it */
+.cp-lists { position: absolute; left: 0; right: 0; top: 56px; bottom: 0; }
+.cp-view { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 1; }
+.cp-row, .cp-gl, .cp-empty { position: absolute; left: 8px; top: 0; width: 544px; will-change: transform, clip-path; }
+.cp-row { height: 44px; display: flex; align-items: center; padding: 0 12px 0 14px; border-radius: 12px; cursor: pointer; }
+.cp-gl { height: 28px; padding: 9px 0 0 14px; font: 500 12px/16px var(--cp-f); letter-spacing: -.006em; color: #6e6e73; }
+.cp-empty { height: 56px; display: grid; place-items: center; font: 400 14px/20px var(--cp-f); color: #86868b; }
+.cp-ic { flex: none; width: 20px; height: 20px; margin-right: 12px; color: #6e6e73; }
+.cp-ic svg, .cp-chev, .cp-tick { width: 20px; height: 20px; }
+.cp-lb { flex: 1; min-width: 0; font-size: 15px; line-height: 20px; white-space: pre; }
+/* matched letters: 400 to 600; each glyph's letter-spacing (--ls, measured) takes back the extra width, so the label never changes width */
+.cp-lb .c { font-weight: 400; transition: font-weight 160ms var(--cp-ui), letter-spacing 160ms var(--cp-ui), color 160ms var(--cp-ui); }
+.cp-lb .c.on { font-weight: 600; letter-spacing: calc(-.01em + var(--ls, 0em)); }
+.cp-lb.has-q .c:not(.on) { color: #6e6e73; }
+.cp-meta { position: absolute; right: 50px; top: 0; height: 44px; display: flex; align-items: center; gap: 4px; font-size: 13px; line-height: 18px; color: #86868b; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cp-chev { width: 14px; height: 14px; color: #86868b; }
+.cp-roll { display: block; height: 18px; overflow: hidden; }
+.cp-rollin { display: block; transition: transform 420ms var(--cp-out); }
+.cp-rollin > span { display: block; height: 18px; text-align: right; }
+.cp-meta.no-t .cp-rollin { transition: none; }
+/* the tick: one stroke, drawn by its dash offset (pathLength 1); the current theme keeps it, a commit draws it, the old one is taken back from its start */
+.cp-tick { position: absolute; right: 52px; top: 12px; color: #1d1d1f; stroke-width: 1.9; }
+.cp-tick path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 150ms var(--cp-in); }
+.cp-row.is-cur .cp-tick path { stroke-dashoffset: 0; transition: stroke-dashoffset 420ms var(--cp-out); }
+.cp-row.was-cur .cp-tick path { stroke-dashoffset: -1; }
+.cp-tick.no-t path { transition: none; }
+
+/* the wash: one object, its y and height are springs set from script; the lime pill rides inside it */
+.cp-hl { position: absolute; left: 8px; top: 0; width: 544px; height: 44px; z-index: 0; overflow: hidden; border-radius: 12px; background: #e8e8ed; visibility: hidden; scale: 1; transition: scale 100ms var(--cp-ui); }
+.cp-hl.is-press { scale: .98; }
+.cp-pill { position: absolute; right: 10px; top: 50%; width: 30px; height: 24px; margin-top: -12px; border-radius: 12px; background: #B8FF00; color: #1d1d1f; }
+.cp-pill svg { position: absolute; left: 7px; top: 3px; width: 18px; height: 18px; stroke-width: 1.8; }
+.cp-pill .cp-ret { transition: clip-path 160ms var(--cp-in); }
+.cp-pill .cp-ok path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 150ms var(--cp-in); }
+.cp-pill.is-done .cp-ret { clip-path: inset(0 0 0 100%); }
+.cp-pill.is-done .cp-ok path { stroke-dashoffset: 0; transition: stroke-dashoffset 420ms var(--cp-out) 80ms; }
+
+.cp-meas { position: absolute; left: -9999px; top: 0; visibility: hidden; white-space: pre; letter-spacing: -.01em; pointer-events: none; font-family: var(--cp-f); }
+@media (prefers-reduced-motion: reduce) {
+  .cp-panel *, .cp-panel *::before, .cp-panel *::after { transition: none !important; }
+  .cp-caret { animation: none; opacity: 1; }
+}
+</style>
+<style>
+  /* the stage: a quiet #f5f5f7 board, the app behind the palette drawn faintly in its own scale */
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  .cp-fit { position: relative; --cp-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; }
+  .cp-world { position: absolute; left: 0; top: 0; width: 560px; height: 434px; transform: scale(var(--s, 1)); transform-origin: 0 0; }
+  .cp-bg { position: absolute; inset: 0; pointer-events: none; font: 400 13px/18px var(--cp-f); letter-spacing: -.006em; color: #86868b; }
+  .cp-card { position: absolute; top: 352px; width: 240px; height: 200px; padding: 18px 20px; border-radius: 22px; background: #fff; box-shadow: 0 4px 24px rgba(0, 0, 0, .06); }
+  .cp-card b { display: block; font: 600 15px/20px var(--cp-f); letter-spacing: -.01em; color: #6e6e73; }
+  .cp-card span { display: block; margin-top: 1px; }
+  .cp-card i { position: absolute; display: block; background: #e8e8ed; }
+  .cp-card .r { border-radius: 999px; }
+  .cp-card .q { border-radius: 8px; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="cp-fit" id="cp-fit">
+    <div class="cp-world" id="cp-world">
+      <div class="cp-bg" aria-hidden="true">
+        <div class="cp-card" style="left:-100px"><b>Forma</b><span>forma.studio</span>
+          <i class="r" style="left:20px;top:80px;width:52px;height:52px"></i><i class="r" style="left:88px;top:86px;width:112px;height:10px"></i><i class="r" style="left:88px;top:108px;width:72px;height:10px"></i><i class="q" style="left:20px;top:148px;width:200px;height:10px"></i></div>
+        <div class="cp-card" style="left:160px"><b>Kova</b><span>Money app</span>
+          <i class="q" style="left:20px;top:80px;width:36px;height:68px"></i><i class="q" style="left:68px;top:100px;width:36px;height:48px"></i><i class="q" style="left:116px;top:88px;width:36px;height:60px"></i><i class="q" style="left:164px;top:116px;width:36px;height:32px"></i><i class="r" style="left:20px;top:166px;width:120px;height:10px"></i></div>
+        <div class="cp-card" style="left:420px"><b>Willow Counseling</b><span>Intake form</span>
+          <i class="q" style="left:20px;top:80px;width:200px;height:30px"></i><i class="q" style="left:20px;top:122px;width:200px;height:30px"></i><i class="r" style="left:20px;top:166px;width:96px;height:10px"></i></div>
+      </div>
+<!-- code -->
+<section class="cp-panel" id="cp-panel" aria-label="Command palette">
+  <div class="cp-search" id="cp-search">
+    <svg class="cp-mag" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="8.6" cy="8.6" r="5.4"/><path d="M12.6 12.6L16.4 16.4"/></svg>
+    <div class="cp-sl" id="cp-sl0" aria-hidden="true"><span class="cp-qt" id="cp-qt0"></span><span class="cp-ph" id="cp-ph0">Search commands</span><i class="cp-caret" id="cp-caret0"></i></div>
+    <div class="cp-sl has-chip" id="cp-sl1" aria-hidden="true"><span class="cp-chip" id="cp-chip">Change theme</span><span class="cp-qt" id="cp-qt1"></span><span class="cp-ph" id="cp-ph1">Search themes</span><i class="cp-caret" id="cp-caret1"></i></div>
+    <input class="cp-input" id="cp-input" type="text" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls="cp-lb-root" aria-label="Search commands" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="24">
+  </div>
+  <div class="cp-lists" id="cp-lists">
+    <div class="cp-hl" id="cp-hl" aria-hidden="true"><span class="cp-pill" id="cp-pill"><svg class="cp-ret" viewBox="0 0 20 20" focusable="false"><path d="M14.6 5.2v4.1a2 2 0 0 1-2 2H5.4M8.2 8.4l-2.9 2.9 2.9 2.9"/></svg><svg class="cp-ok" viewBox="0 0 20 20" focusable="false"><path d="M4.8 10.6l3.6 3.6 6.9-7.6" pathLength="1"/></svg></span></div>
+    <!-- the pages (role=listbox, options) are built by the script -->
+  </div>
+  <p class="sr-only" id="cp-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+    </div>
+    <span class="cp-meas" id="cp-meas" aria-hidden="true"></span>
+  </div>
+  <div class="qm-ui"><span>Type to filter. Up, Down, Home, End, Page Up and Page Down move the wash, Return runs, and Change theme... opens a page. Backspace on an empty search or Esc goes back</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Command pages. Every value that moves is a critically damped spring that starts from the value and velocity on screen:
+   each row's y and its cover p (a clip-path), the wash's y and height, the page seam T and the panel's height. layout() turns the numbers into styles.
+   The list is a pure function of the query (applyQuery): it decides which rows are in, in what order, and at which y; springs do the rest. */
+const CP = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const PW = 560, SEARCH = 56, PADT = 6, PADB = 8, ROW = 44, LAB = 28, EMP = 56, AOLD = 140, X0 = 52, CHIPGAP = 8, MAXH = 434, PAGE = 5;
+  const RESP = { row: 0.32, arrive: 0.24, leave: 0.14, hl: 0.2, hv: 0.16, panel: 0.34, page: 0.44 };
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const mk = (x = 0, resp = 0.3, eps = 0.02) => ({ x, v: 0, T: x, w: TAU / resp, on: false, eps });
+  function step(s, dt) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  function aim(s, T, resp) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+    kick();
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+
+  /* the icons: 20 px grid, 1.7 px round strokes, drawn in the manner of a symbol set */
+  const IC = {
+    plus: '<rect x="3.5" y="3.5" width="13" height="13" rx="3.6"/><path d="M10 7v6M7 10h6"/>',
+    tray: '<path d="M10 12V3.8M6.9 6.8L10 3.7l3.1 3.1"/><path d="M4 11.2v3a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3"/>',
+    half: '<circle cx="10" cy="10" r="6.6"/><path d="M10 3.4a6.6 6.6 0 0 1 0 13.2z" fill="currentColor"/>',
+    person: '<circle cx="8.2" cy="6.9" r="2.8"/><path d="M3.4 16c.35-3 2.3-4.7 4.8-4.7s4.45 1.7 4.8 4.7"/><path d="M15.4 6.3v4M13.4 8.3h4"/>',
+    page: '<rect x="4.2" y="3" width="11.6" height="14" rx="3"/><path d="M7.5 8h5M7.5 11.5h3"/>',
+    sun: '<circle cx="10" cy="10" r="3.1"/><path d="M10 2.8v1.6M10 15.6v1.6M2.8 10h1.6M15.6 10h1.6M4.9 4.9l1.1 1.1M14 14l1.1 1.1M15.1 4.9L14 6M6 14l-1.1 1.1"/>',
+    moon: '<path d="M15.8 11.6A6.4 6.4 0 0 1 8.4 4.2a6.4 6.4 0 1 0 7.4 7.4z"/>',
+    display: '<rect x="3" y="4" width="14" height="9.4" rx="2.4"/><path d="M7.4 16.4h5.2M10 13.4v3"/>'
+  };
+  const svg = (n) => `<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">${IC[n]}</svg>`;
+  const THEMES = ['light', 'dark', 'system'], THEME_NAMES = ['Light', 'Dark', 'System'];
+
+  /* the pages: groups of items. kw are words that find a row without lighting any of its letters */
+  const DEF = [
+    { id: 'root', name: 'Commands', ph: 'Search commands', empty: 'No commands', groups: [
+      { label: 'Actions', items: [
+        { k: 'new', t: 'New component', ic: 'plus', meta: '⌘N', kw: 'create add' },
+        { k: 'export', t: 'Export tokens', ic: 'tray', meta: '⌘E', kw: 'css json download' },
+        { k: 'theme', t: 'Change theme…', ic: 'half', push: 1, roll: 1, kw: 'dark light appearance mode' },
+        { k: 'invite', t: 'Invite teammate', ic: 'person', meta: '⌘I', kw: 'share people' }] },
+      { label: 'Go to', items: [
+        { k: 'forma', t: 'Forma', ic: 'page', meta: 'forma.studio', kw: 'ceramics' },
+        { k: 'kova', t: 'Kova', ic: 'page', meta: 'Money app', kw: 'finance cards' },
+        { k: 'willow', t: 'Willow Counseling', ic: 'page', meta: 'Practice', kw: 'practice dana' }] }] },
+    { id: 'theme', name: 'Change theme', ph: 'Search themes', empty: 'No themes', groups: [
+      { label: 'Appearance', items: [
+        { k: 'light', t: 'Light', ic: 'sun', kw: 'bright day' },
+        { k: 'dark', t: 'Dark', ic: 'moon', kw: 'night' },
+        { k: 'system', t: 'Match system', ic: 'display', kw: 'auto' }] }] }
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const panel = $('cp-panel'), search = $('cp-search'), lists = $('cp-lists'), hl = $('cp-hl'), pill = $('cp-pill'), input = $('cp-input'), chip = $('cp-chip');
+  const sl = [$('cp-sl0'), $('cp-sl1')], qt = [$('cp-qt0'), $('cp-qt1')], phs = [$('cp-ph0'), $('cp-ph1')], carets = [$('cp-caret0'), $('cp-caret1')];
+  const live = $('cp-live'), meas = $('cp-meas');
+  const S = { act: 0, driver: 'user', soft: false, busy: false, theme: 'light', timer: 0, runTimer: 0, say: 0, kbd: false };
+  const H = mk(MAXH, RESP.panel, 0.15), T = mk(0, RESP.page, 0.0008), HLY = mk(0, RESP.hl, 0.15), HLV = mk(0, RESP.hv, 0.002);
+  let pages = [], raf = 0, last = 0, blink = 0, chipW = 100, lastX = -1, lastY = -1;
+  const mkEl = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+
+  /* text widths come from a hidden span outside the scaled world, so they are in design px */
+  const wc = new Map();
+  function tw(str, fs, weight = 400) {
+    const k = fs + '|' + weight + '|' + str;
+    let w = wc.get(k);
+    if (w === undefined) { meas.style.fontSize = fs + 'px'; meas.style.fontWeight = weight; meas.textContent = str; w = meas.getBoundingClientRect().width; wc.set(k, w); }
+    return w;
+  }
+  const say = (m) => { live.textContent = ''; clearTimeout(S.say); S.say = setTimeout(() => { live.textContent = m; }, 40); };
+
+  /* matching: each word of the query is a substring of the label (a word start ranks first), else its letters in order, else a keyword */
+  function match(label, q, kw) {
+    q = q.trim().toLowerCase();
+    if (!q) return { score: 0, idx: [] };
+    const L = label.toLowerCase(), idx = new Set();
+    let score = 0;
+    for (const tk of q.split(/\s+/)) {
+      let at = 0, found = -1;
+      for (;;) {
+        const i = L.indexOf(tk, at);
+        if (i < 0) break;
+        if (found < 0) found = i;
+        if (i === 0 || L[i - 1] === ' ') { found = i; break; }
+        at = i + 1;
+      }
+      if (found >= 0) {
+        score += (found === 0 || L[found - 1] === ' ' ? 100 : 60) - found * 0.5 + tk.length;
+        for (let k = 0; k < tk.length; k++) idx.add(found + k);
+        continue;
+      }
+      const pos = []; let from = 0, ok = true;
+      for (const ch of tk) { const i = L.indexOf(ch, from); if (i < 0) { ok = false; break; } pos.push(i); from = i + 1; }
+      if (ok) {
+        let gaps = 0; for (let k = 1; k < pos.length; k++) gaps += pos[k] - pos[k - 1] - 1;
+        score += 24 - gaps - pos[0] * 0.3; pos.forEach((p) => idx.add(p)); continue;
+      }
+      if (kw && tk.length > 1 && kw.indexOf(tk) >= 0) { score += 8; continue; }
+      return null;
+    }
+    return { score, idx: Array.from(idx) };
+  }
+
+  /* building: a page is a listbox; its rows (group labels, options, the empty line) are all absolutely positioned and each has a y and a cover */
+  function mkRow(pg, kind, key, cls) {
+    const el = mkEl('div', cls);
+    el.style.display = 'none';
+    const r = { pg, kind, key, el, y: mk(0, RESP.row, 0.15), p: mk(0, RESP.arrive, 0.002), on: false, want: false, mask: '' };
+    el._row = r; pg.rows.push(r); pg.byKey.set(key, r); pg.el.append(el);
+    return r;
+  }
+  function mkItem(pg, it, g) {
+    const r = mkRow(pg, 'item', it.k, 'cp-row'), el = r.el;
+    r.it = it; r.g = g;
+    el.setAttribute('role', 'option'); el.id = `cp-o-${pg.def.id}-${it.k}`; el.setAttribute('aria-selected', 'false'); el.setAttribute('aria-label', it.t);
+    el.innerHTML = `<span class="cp-ic">${svg(it.ic)}</span><span class="cp-lb"></span>`;
+    r.lb = el.querySelector('.cp-lb');
+    r.chars = Array.from(it.t).map((ch) => { const i = mkEl('i', 'c'); i.textContent = ch; r.lb.append(i); return i; });
+    if (it.roll) {
+      el.insertAdjacentHTML('beforeend', `<span class="cp-meta"><span class="cp-roll"><span class="cp-rollin">${THEME_NAMES.map((n) => `<span>${n}</span>`).join('')}</span></span><svg class="cp-chev" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M7.6 4.8L12.8 10l-5.2 5.2"/></svg></span>`);
+      r.rollin = el.querySelector('.cp-rollin'); r.rollmeta = el.querySelector('.cp-meta');
+    } else if (it.meta) el.insertAdjacentHTML('beforeend', `<span class="cp-meta">${it.meta}</span>`);
+    if (pg.def.id === 'theme') el.insertAdjacentHTML('beforeend', '<svg class="cp-tick" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4.6 10.8l3.7 3.7 7.1-8" pathLength="1"/></svg>');
+    return r;
+  }
+  function buildPage(def, idx) {
+    const el = mkEl('div', 'cp-view');
+    el.id = 'cp-lb-' + def.id; el.setAttribute('role', 'listbox'); el.setAttribute('aria-label', def.name);
+    const pg = { def, idx, el, q: '', selKey: null, rows: [], byKey: new Map(), order: [], seq: [], seqKey: '', contentH: PADT + PADB };
+    def.groups.forEach((g) => {
+      const lr = mkRow(pg, 'label', 'g:' + g.label, 'cp-gl'); lr.el.textContent = g.label; lr.el.setAttribute('aria-hidden', 'true'); g.row = lr;
+      g.items.forEach((it) => { it.row = mkItem(pg, it, g); });
+    });
+    pg.empty = mkRow(pg, 'empty', 'empty', 'cp-empty'); pg.empty.el.textContent = def.empty; pg.empty.el.setAttribute('aria-hidden', 'true');
+    lists.append(el);
+    return pg;
+  }
+  /* every glyph's letter-spacing takes back what its bold advance adds, so a label is exactly as wide bold as regular */
+  function reserve() {
+    pages.forEach((pg) => pg.rows.forEach((r) => {
+      if (!r.chars) return;
+      r.chars.forEach((c) => { const ch = c.textContent, d = tw(ch, 15, 400) - tw(ch, 15, 600); c.style.setProperty('--ls', (d / 15).toFixed(4) + 'em'); });
+    }));
+    chipW = Math.ceil(tw('Change theme', 13, 500)) + 20;
+    chip.style.width = chipW + 'px'; search.style.setProperty('--cw', chipW + 'px');
+  }
+
+  /* the layout: which rows, in what order, at which y. Rows that stay retarget their y; rows that come are put in place and uncovered; rows that go are covered */
+  function put(row, ty, o) {
+    row.want = true; row.el.style.pointerEvents = ''; row.el.removeAttribute('aria-hidden');
+    if (row.kind === 'label' || row.kind === 'empty') row.el.setAttribute('aria-hidden', 'true');
+    if (!row.on || o.snap) {
+      snap(row.y, ty); snap(row.p, o.snap ? 1 : 0);
+      row.on = true; row.el.style.display = '';
+      if (!o.snap) aim(row.p, 1, RESP.arrive);
+    } else { aim(row.y, ty, RESP.row); aim(row.p, 1, RESP.arrive); }
+  }
+  function drop(row, o) {
+    row.want = false; row.el.style.pointerEvents = 'none'; row.el.setAttribute('aria-hidden', 'true');
+    if (!row.on) return;
+    if (o.snap) { snap(row.p, 0); row.on = false; row.el.style.display = 'none'; } else aim(row.p, 0, RESP.leave);
+  }
+  function setMask(r, idx) {
+    const k = idx.join(',');
+    if (k === r.mask) return;
+    r.mask = k;
+    const set = new Set(idx);
+    r.chars.forEach((c, i) => c.classList.toggle('on', set.has(i)));
+    r.lb.classList.toggle('has-q', idx.length > 0);
+  }
+  function applyQuery(pg, o = {}) {
+    let y = PADT;
+    const seq = [], order = [];
+    pg.def.groups.forEach((g) => {
+      const ms = [];
+      g.items.forEach((it, i) => { const m = match(it.t, pg.q, it.kw); if (m) ms.push({ it, i, m }); });
+      ms.sort((a, b) => b.m.score - a.m.score || a.i - b.i);
+      if (!ms.length) return;
+      put(g.row, y, o); seq.push(g.row); y += LAB;
+      ms.forEach((x) => { put(x.it.row, y, o); setMask(x.it.row, x.m.idx); seq.push(x.it.row); order.push(x.it.row); y += ROW; });
+    });
+    if (!order.length) { put(pg.empty, y, o); seq.push(pg.empty); y += EMP; }
+    pg.rows.forEach((r) => { if (seq.indexOf(r) < 0) drop(r, o); });
+    // the DOM follows the visual order (so reading order is right); rows that leave stay beneath
+    const sk = seq.map((r) => r.key).join('|');
+    if (sk !== pg.seqKey) { pg.seqKey = sk; seq.forEach((r) => pg.el.append(r.el)); }
+    pg.seq = seq; pg.order = order; pg.contentH = y + PADB;
+    let key = pg.selKey;
+    if (o.sel && order.some((r) => r.key === o.sel)) key = o.sel;
+    else if (o.first || !order.some((r) => r.key === key)) key = order[0] ? order[0].key : null;
+    setSel(pg, key);
+    if (pg === pages[S.act]) { if (o.snap) snap(H, SEARCH + pg.contentH); else aim(H, SEARCH + pg.contentH, RESP.panel); }
+    if (o.snap && pg === pages[S.act]) { const sr = key && pg.byKey.get(key); if (sr) { snap(HLY, sr.y.x); snap(HLV, 1); } else snap(HLV, 0); }
+    kick();
+  }
+  function setSel(pg, key) {
+    pg.selKey = key;
+    pg.rows.forEach((r) => { if (r.kind === 'item') r.el.setAttribute('aria-selected', r.key === key ? 'true' : 'false'); });
+    if (pg === pages[S.act]) { const r = key && pg.byKey.get(key); if (r) input.setAttribute('aria-activedescendant', r.el.id); else input.removeAttribute('aria-activedescendant'); }
+    kick();
+  }
+  const announce = () => { const pg = pages[S.act]; say(pg.order.length ? `${pg.order.length} ${pg.order.length === 1 ? 'result' : 'results'}` : pg.def.empty); };
+
+  /* the selection: arrows, Home, End, the Page keys, the pointer */
+  function move(how) {
+    const pg = pages[S.act], ord = pg.order, n = ord.length;
+    if (!n) return;
+    let i = ord.findIndex((r) => r.key === pg.selKey);
+    if (how === 'first') i = 0; else if (how === 'last') i = n - 1;
+    else if (how === 'pgdn') i = Math.min(n - 1, Math.max(0, i) + PAGE); else if (how === 'pgup') i = Math.max(0, (i < 0 ? 0 : i) - PAGE);
+    else i = (Math.max(0, i) + (how === 'down' ? 1 : -1) + n) % n;
+    setSel(pg, ord[i].key);
+  }
+
+  /* pages: push and pop run the same spring T in opposite directions; a pop in the middle of a push just turns it round */
+  function pageUI() {
+    const pg = pages[S.act];
+    input.setAttribute('aria-label', S.act ? 'Search themes in Change theme' : pg.def.ph);
+    input.setAttribute('aria-controls', pg.el.id);
+    input.style.left = (X0 + (S.act ? chipW + CHIPGAP : 0)) + 'px';
+    pages.forEach((p) => { const here = p === pg; if (here) { p.el.removeAttribute('aria-hidden'); p.el.inert = false; } else { p.el.setAttribute('aria-hidden', 'true'); p.el.inert = true; } });
+    syncText();
+  }
+  // the search line is two layers, one per page, each drawing its own page's text: both go under the same seam as the lists
+  function syncText() { pages.forEach((p, i) => { const v = i === S.act ? input.value : p.q; qt[i].textContent = v; phs[i].classList.toggle('is-off', !!v); }); }
+  function push() {
+    if (S.act === 1) return;
+    clearTimeout(S.timer); S.busy = false;
+    const th = pages[1];
+    S.act = 1;
+    if (T.x < 0.02) { th.q = ''; applyQuery(th, { snap: true, sel: S.theme }); } else applyQuery(th, { sel: th.selKey || S.theme });
+    input.value = th.q; pageUI(); layCaret();
+    aim(T, 1, RESP.page);
+    aim(H, SEARCH + th.contentH, RESP.panel);
+    say('Change theme. ' + th.order.length + ' themes.');
+    restartBlink();
+  }
+  function pop() {
+    if (S.act === 0) return;
+    clearTimeout(S.timer); S.busy = false;
+    rollMeta(false);
+    const root = pages[0];
+    S.act = 0;
+    input.value = root.q; pageUI(); layCaret();
+    setSel(root, root.selKey);
+    aim(T, 0, RESP.page);
+    aim(H, SEARCH + root.contentH, RESP.panel);
+    say('Commands. ' + root.order.length + ' results.');
+    restartBlink();
+  }
+  function rollMeta(instant) {
+    const r = pages[0].byKey.get('theme');
+    if (!r || !r.rollin) return;
+    r.rollmeta.classList.toggle('no-t', !!instant);
+    r.rollin.style.transform = `translateY(${-18 * THEMES.indexOf(S.theme)}px)`;
+    if (instant) { void r.rollin.offsetWidth; r.rollmeta.classList.remove('no-t'); }
+  }
+  function setCur(instant) {
+    pages[1].rows.forEach((r) => {
+      if (r.kind !== 'item') return;
+      const tk = r.el.querySelector('.cp-tick'), now = r.key === S.theme, was = r.el.classList.contains('is-cur');
+      if (instant) tk.classList.add('no-t');
+      r.el.classList.toggle('was-cur', was && !now);
+      r.el.classList.toggle('is-cur', now);
+      if (now) r.el.classList.remove('was-cur');
+      if (instant) { void tk.getBoundingClientRect(); tk.classList.remove('no-t'); }
+    });
+  }
+
+  /* activating a row: a command runs (the pill's glyph becomes a tick), a theme is chosen (the row's tick is drawn, then the page pops), Change theme... opens its page */
+  function activate() {
+    const pg = pages[S.act], r = pg.selKey && pg.byKey.get(pg.selKey);
+    if (!r || !r.want || r.kind !== 'item') return;
+    if (r.it.push) { push(); return; }
+    if (S.busy) return;
+    if (pg.idx === 1) {
+      S.busy = true; S.theme = r.key; setCur(false);
+      say('Theme set to ' + r.it.t + '.');
+      S.timer = setTimeout(() => { S.busy = false; if (S.act === 1) pop(); }, reduced ? 300 : 760);
+    } else {
+      pill.classList.add('is-done');
+      say('Ran ' + r.it.t + '.');
+      clearTimeout(S.runTimer);
+      S.runTimer = setTimeout(() => pill.classList.remove('is-done'), reduced ? 700 : 1100);
+    }
+  }
+  function clearQuery() {
+    const pg = pages[S.act]; if (!input.value) return;
+    input.value = ''; pg.q = ''; syncText();
+    applyQuery(pg, { first: true }); layCaret(); restartBlink(); announce();
+  }
+
+  /* keys: the same handler for a hand and the ghost */
+  function onKey(e) {
+    S.driver = e.isTrusted === false ? 'ghost' : 'user'; S.soft = S.driver === 'ghost';
+    if (e.isComposing || e.metaKey || e.altKey) return;
+    const k = e.key, pg = pages[S.act];
+    if (e.ctrlKey) { if (k === 'n' || k === 'j') { e.preventDefault(); move('down'); } else if (k === 'p' || k === 'k') { e.preventDefault(); move('up'); } return; }
+    if (k === 'ArrowDown') { e.preventDefault(); move('down'); }
+    else if (k === 'ArrowUp') { e.preventDefault(); move('up'); }
+    else if (k === 'Home') { e.preventDefault(); move('first'); }
+    else if (k === 'End') { e.preventDefault(); move('last'); }
+    else if (k === 'PageDown') { e.preventDefault(); move('pgdn'); }
+    else if (k === 'PageUp') { e.preventDefault(); move('pgup'); }
+    else if (k === 'Enter') { e.preventDefault(); activate(); }
+    else if (k === 'Escape') { e.preventDefault(); if (S.act === 1) pop(); else clearQuery(); }
+    else if (k === 'Backspace' && !input.value && S.act === 1) { e.preventDefault(); pop(); }
+    else { S.kbd = true; caretSoon(); }
+    if (k.length !== 1 && k !== 'Backspace') S.kbd = true;
+  }
+  input.addEventListener('keydown', onKey);
+  input.addEventListener('keyup', caretSoon);
+  input.addEventListener('select', caretSoon);
+  input.addEventListener('pointerup', caretSoon);
+  input.addEventListener('focus', () => { S.soft = false; layCaret(); restartBlink(); });
+  input.addEventListener('blur', () => { layCaret(); });
+  input.addEventListener('input', () => {
+    const pg = pages[S.act]; pg.q = input.value;
+    syncText();
+    applyQuery(pg, { first: true }); layCaret(); restartBlink(); clearTimeout(S.ann); S.ann = setTimeout(announce, 320);
+  });
+  // a key pressed with nothing focused goes to the field: focus first, then the key does its work there
+  document.addEventListener('keydown', (e) => {
+    if (e.isTrusted === false || document.activeElement === input || e.metaKey || e.ctrlKey || e.altKey) return;
+    const a = document.activeElement;
+    if (a && a !== document.body && !panel.contains(a)) return;
+    const k = e.key, nav = ['ArrowDown', 'ArrowUp', 'Home', 'End', 'PageDown', 'PageUp', 'Enter', 'Escape', 'Backspace'].indexOf(k) >= 0;
+    if (!nav && k.length !== 1) return;
+    input.focus({ preventScroll: true });
+    if (nav && k !== 'Backspace') onKey(e);
+    else if (k === 'Backspace') onKey(e);
+  });
+  panel.addEventListener('mousedown', (e) => { if (e.target === input) return; e.preventDefault(); input.focus({ preventScroll: true }); });
+
+  /* pointer: moving it over a row selects it (only when it really moves, so rows gliding under a still pointer do not steal the wash) */
+  const rowAt = (e) => { const t = e.target; const el = t && t.closest ? t.closest('.cp-row') : null; const r = el && el._row; return r && r.want && r.pg === pages[S.act] ? r : null; };
+  lists.addEventListener('pointermove', (e) => {
+    if (Math.hypot(e.clientX - lastX, e.clientY - lastY) < 1) return;
+    lastX = e.clientX; lastY = e.clientY;
+    if (e.isTrusted !== false) S.soft = false;
+    const r = rowAt(e); if (r && r.key !== r.pg.selKey) setSel(r.pg, r.key);
+  });
+  lists.addEventListener('pointerdown', (e) => { if (e.button > 0) return; if (rowAt(e)) hl.classList.add('is-press'); });
+  const unpress = () => hl.classList.remove('is-press');
+  document.addEventListener('pointerup', unpress, { passive: true });
+  document.addEventListener('pointercancel', unpress, { passive: true });
+  lists.addEventListener('click', (e) => { S.driver = e.isTrusted === false ? 'ghost' : 'user'; const r = rowAt(e); if (!r) return; setSel(r.pg, r.key); activate(); });
+
+  /* the drawn caret: a native one is not painted in a frame without focus, and a tile never has it */
+  function restartBlink() { blink ^= 1; carets.forEach((c) => { c.classList.toggle('b', !!blink); c.classList.remove('is-long'); }); }
+  function caretSoon() { requestAnimationFrame(() => { layCaret(); restartBlink(); }); }
+  function layCaret() {
+    const on = (document.activeElement === input || S.soft) && input.selectionStart === input.selectionEnd;
+    carets.forEach((c, i) => {
+      const show = on && i === S.act;
+      c.style.display = show ? 'block' : 'none';
+      if (show) c.style.transform = `translateX(${Math.max(0, tw(input.value.slice(0, input.selectionStart), 17, 400) - input.scrollLeft).toFixed(2)}px)`;
+    });
+  }
+
+  /* one frame: step every spring, keep the wash on its row, hide rows that are fully covered, then write the styles */
+  function frame(now) {
+    raf = 0;
+    const dt = Math.min(0.034, Math.max(0.001, (now - last) / 1000 || 0.016));
+    last = now;
+    const pg = pages[S.act], sr = pg.selKey ? pg.byKey.get(pg.selKey) : null;
+    if (sr && sr.want && sr.on) {
+      if (HLV.x < 0.02) snap(HLY, sr.y.x);
+      HLY.T = sr.y.x;
+      if (Math.abs(HLY.x - HLY.T) > 0.01 || Math.abs(HLY.v) > 0.1) HLY.on = true;
+      if (HLV.T !== 1) { HLV.T = 1; HLV.on = !reduced; if (reduced) HLV.x = 1; HLV.w = TAU / RESP.hv; }
+    } else if (HLV.T !== 0) { HLV.T = 0; HLV.on = !reduced; if (reduced) HLV.x = 0; }
+    let any = false;
+    [H, T, HLY, HLV].forEach((s) => { any = step(s, dt) || any; });
+    pages.forEach((p) => p.rows.forEach((r) => {
+      if (!r.on) return;
+      any = step(r.y, dt) || any; any = step(r.p, dt) || any;
+      if (!r.want && r.p.x < 0.002 && !r.p.on) { r.on = false; r.el.style.display = 'none'; }
+    }));
+    layout();
+    if (any) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+  function layout() {
+    panel.style.height = H.x.toFixed(2) + 'px';
+    pages.forEach((p) => p.rows.forEach((r) => {
+      if (!r.on) return;
+      const pp = clamp(r.p.x, 0, 1);
+      r.el.style.transform = `translate3d(0, ${r.y.x.toFixed(2)}px, 0)`;
+      r.el.style.clipPath = pp >= 0.999 ? 'none' : `inset(0 0 ${((1 - pp) * 100).toFixed(2)}% 0)`;
+    }));
+    // a page change: the new page slides in from the right (its left edge is the seam, W (1 - T)); the old one moves left by 140 px under a clip that
+    // follows the seam, so it is covered from its right edge as fast as the new one arrives; the search line's two layers do the same
+    const t = clamp(T.x, 0, 1), s0 = t > 0.0005, s1 = t < 0.9995;
+    const old = s0 ? `translate3d(${(-AOLD * t).toFixed(2)}px, 0, 0)` : '', oc = `inset(0 ${((PW - AOLD) * t).toFixed(2)}px 0 ${(AOLD * t).toFixed(2)}px)`;
+    const nw = s1 ? `translate3d(${(PW * (1 - t)).toFixed(2)}px, 0, 0)` : '';
+    pages[0].el.style.transform = old; pages[0].el.style.clipPath = s0 ? oc : 'none'; pages[0].el.style.visibility = t >= 0.999 ? 'hidden' : 'visible';
+    pages[1].el.style.transform = nw; pages[1].el.style.visibility = t <= 0.001 ? 'hidden' : 'visible';
+    sl[0].style.transform = old; sl[0].style.clipPath = s0 ? `inset(0 ${((PW - AOLD) * t).toFixed(2)}px 0 ${(44 + AOLD * t).toFixed(2)}px)` : 'none'; sl[0].style.visibility = t >= 0.999 ? 'hidden' : 'visible';
+    sl[1].style.transform = nw; sl[1].style.visibility = t <= 0.001 ? 'hidden' : 'visible';
+    const c = clamp((t - 0.3) / 0.7, 0, 1);
+    chip.style.clipPath = c < 0.001 ? 'inset(0 100% 0 0 round 13px)' : c > 0.999 ? 'none' : `inset(0 ${((1 - c) * 100).toFixed(2)}% 0 0 round 13px)`;
+    // the wash
+    const hv = clamp(HLV.x, 0, 1), h = ROW * hv;
+    hl.style.visibility = hv < 0.003 ? 'hidden' : 'visible';
+    hl.style.height = h.toFixed(2) + 'px';
+    hl.style.transform = `translate3d(0, ${(HLY.x + (ROW - h) / 2).toFixed(2)}px, 0)`;
+    layCaret();
+  }
+
+  /* back to the start, instantly: the pose the piece loads in (the thumbnail) is the query ne, Change theme... under the wash */
+  function reset() {
+    clearTimeout(S.timer); clearTimeout(S.runTimer); S.busy = false;
+    pill.classList.remove('is-done'); hl.classList.remove('is-press');
+    S.act = 0; S.theme = 'light'; setCur(true); rollMeta(true);
+    snap(T, 0);
+    pages[1].q = ''; pages[1].selKey = null;
+  }
+  function pose() {
+    reset();
+    S.soft = true; S.driver = 'ghost';
+    const root = pages[0];
+    root.q = 'ne'; input.value = 'ne';
+    try { input.setSelectionRange(2, 2); } catch (e) { /* nothing */ }
+    applyQuery(pages[1], { snap: true, sel: S.theme });
+    applyQuery(root, { snap: true, sel: 'theme' });
+    pageUI(); layout(); carets.forEach((c) => { c.classList.add('is-long'); c.classList.remove('b'); });
+    kick();
+  }
+  function remeasure() { wc.clear(); reserve(); }
+  pages = DEF.map(buildPage);
+  remeasure();
+  pose();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { const fresh = CP_fresh(); remeasure(); if (fresh) pose(); else layout(); });
+  function CP_fresh() { return S.act === 0 && pages[0].q === 'ne' && pages[0].selKey === 'theme' && S.soft; }
+
+  return {
+    S, panel, input, lists, pages: () => pages, hl, pill, T, H,
+    pose, reset, layout, kick, push, pop, activate, move, clearQuery,
+    get fresh() { return CP_fresh() && !T.on; },
+    // the ghost types the way a hand does: a keydown, the text going into the field, an input event
+    typeChar(ch) {
+      S.driver = 'ghost'; S.soft = true;
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: ch, bubbles: true, cancelable: true }));
+      input.setRangeText(ch, input.selectionStart, input.selectionEnd, 'end');
+      input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ch }));
+      input.dispatchEvent(new KeyboardEvent('keyup', { key: ch, bubbles: true }));
+    },
+    back() {
+      S.driver = 'ghost'; S.soft = true;
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true }));
+      const s = input.selectionStart;
+      if (input.value && s > 0) { input.setRangeText('', s - 1, s, 'end'); input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' })); }
+    },
+    key(k) { S.driver = 'ghost'; S.soft = true; input.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })); },
+    snapshot() { const pg = pages[S.act]; return { act: S.act, q: input.value, sel: pg.selKey, order: pg.order.map((r) => r.key), theme: S.theme, T: T.x, H: H.x, hy: HLY.x, busy: S.busy }; }
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('cp-fit'), world = document.getElementById('cp-world');
+  // the panel is drawn at 560 px wide and 434 px tall (its tallest) and scaled to the room it is given
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.5, Math.min(0.86 * W / 560, (H - 2 * pad - ui) / 434, 1.4));
+    fit.style.setProperty('--s', s.toFixed(4));
+    fit.style.width = (560 * s).toFixed(2) + 'px'; fit.style.height = (434 * s).toFixed(2) + 'px';
+    world.style.setProperty('--s', s.toFixed(4));
+    CP.layout();
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(size);
+
+  /* the ghost: it presses the same keys and moves the same pointer a hand does (untrusted events on the same handlers) */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const fire = (type, x, y, Ctor = PointerEvent) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 73, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  async function glide(my, to, ms = 760) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y);
+      if (p >= 1) break;
+    }
+  }
+  async function tap(my) {
+    const { x, y } = pos;
+    const el = fire('pointerdown', x, y); await gap(my, 100); fire('pointerup', x, y);
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  const rowEl = (pi, key) => CP.pages()[pi].byKey.get(key).el;
+  async function hover(my, pi, key, ms = 620) { const r = rowEl(pi, key).getBoundingClientRect(); await glide(my, { x: r.left + r.width * 0.42, y: r.top + r.height * 0.5 }, ms); }
+  async function click(my, pi, key) { await hover(my, pi, key); await gap(my, 360); await tap(my); }
+  async function type(my, str, d = 96) { for (let i = 0; i < str.length; i++) { CP.typeChar(str[i]); await gap(my, d + ((i * 37) % 5) * 12); } }
+  async function erase(my, n, d = 120) { for (let i = 0; i < n; i++) { CP.back(); await gap(my, d); } }
+  async function key(my, k, after = 560) { CP.key(k); await gap(my, after); }
+  async function until(my, ok, max = 4000) { let t = 0; while (!ok() && t < max) { await gap(my, 100); t += 100; } }
+  const val = () => CP.input.value;
+  async function idle(my) {
+    if (CP.S.act === 1) { CP.key('Escape'); await gap(my, 300); await until(my, () => !CP.T.on); await gap(my, 500); }
+    if (val()) { while (val()) { CP.back(); await gap(my, 90); } await gap(my, 800); }
+  }
+  async function theme(my, key) {            // from the first page with Change theme... under the wash: push, move the wash, choose
+    await key_(my, 'Enter', 1100);
+    const cur = CP.S.theme, order = ['light', 'dark', 'system'], d = order.indexOf(key) - order.indexOf(cur);
+    for (let i = 0; i < Math.abs(d); i++) await key_(my, d > 0 ? 'ArrowDown' : 'ArrowUp', 640);
+    await gap(my, 200);
+    await key_(my, 'Enter', 1900);           // tick, hold, pop
+    await until(my, () => CP.S.act === 0 && !CP.T.on); await gap(my, 700);
+  }
+  const key_ = key;
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 5000 : 3600) : 700);
+      for (;;) {
+        // 1 · the wash by keys, then a page
+        if (!(first && CP.fresh)) { await idle(my); await type(my, 'ne'); await gap(my, 900); await key(my, 'ArrowDown', 100); }
+        first = false;
+        await key(my, 'ArrowDown', 700); await key(my, 'ArrowDown', 700);
+        await key(my, 'ArrowUp', 640); await key(my, 'ArrowUp', 640);
+        await key(my, 'ArrowUp', 640); await key(my, 'ArrowDown', 700);
+        await theme(my, CP.S.theme === 'dark' ? 'light' : 'dark');
+        // 2 · type, delete: rows leave and arrive
+        await gap(my, 500);
+        await erase(my, 2, 150); await gap(my, 1000);
+        await key(my, 'End', 700); await key(my, 'Home', 700);
+        await type(my, 'o', 120); await gap(my, 1100);
+        await type(my, 'r', 120); await gap(my, 1300);
+        await erase(my, 1, 200); await gap(my, 600); await erase(my, 1, 200); await gap(my, 1100);
+        await type(my, 'ex', 100); await gap(my, 900);
+        await key(my, 'Enter', 1900);               // a command runs: the pill's glyph becomes a tick
+        await erase(my, 2, 100); await gap(my, 900);
+        // 3 · the pointer: hover moves the wash, a click opens the page, a click chooses
+        QM.ghostShow();
+        await hover(my, 0, 'forma', 900); await gap(my, 500);
+        await hover(my, 0, 'kova', 560); await gap(my, 360);
+        await click(my, 0, 'theme'); await gap(my, 1000);
+        await click(my, 1, CP.S.theme === 'system' ? 'light' : 'system');
+        await gap(my, 1600); await until(my, () => CP.S.act === 0 && !CP.T.on);
+        await gap(my, 500);
+        await glide(my, { x: innerWidth * 0.84, y: innerHeight * 0.88 }, 800);
+        QM.ghostHide(); pos = null; fire('pointermove', -10, -10);
+        await gap(my, 1800);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() {
+    epoch++; QM.ghostHide();
+    if (pos) { pos = null; fire('pointermove', -10, -10); }
+  }
+  if (!QM.tile && !reduced) {
+    const busyHand = () => CP.panel.matches(':hover') || CP.panel.contains(document.activeElement) && document.activeElement !== document.body;
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                    // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!busyHand()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); CP.pose(); if (!reduced) script(true); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => script(true), 300));
+})();
+</script>
+</body>
+</html>
