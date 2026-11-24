@@ -66,16 +66,17 @@ export const services: Service[] = [
  *
  * Nov 20, 2026: the per-listing kit ($99, video $49) and the $300 deposit were
  * replaced by two plans: $350 a month for 4 listings, and a $400 website, all
- * in. The new Payment Links are not made yet, so these fall back to email.
+ * in. Their Payment Links were made Nov 24 (Stripe products "Monthly Plan" and
+ * "Website, All In").
  * Retired links (left active in Stripe for older emails):
  *   https://buy.stripe.com/14AfZ946b4J11o04zi6Vq00  $99 Listing Launch Kit
  *   https://buy.stripe.com/5kQbIT1Y31wP5Eg3ve6Vq01  $49 listing video only
  *   https://buy.stripe.com/4gMeV5auz4J16Ik6Hq6Vq02  $300 practice deposit
  */
 export const CHECKOUT = {
-  listingKit: '',       // $350 a month, Listing Launch Kit (4 listings)
+  listingKit: 'https://buy.stripe.com/cNicMXauz4J1d6I4zi6Vq08',      // $350 a month, Monthly Plan (4 listings)
   listingVideo: '',     // retired
-  practiceDeposit: '',  // $400 one payment, Practice Website Refresh, all in
+  practiceDeposit: 'https://buy.stripe.com/8x25kvauzfnF7Mo2ra6Vq09', // $400 one payment, Website, All In
 };
 
 /** A checkout link, or an email that names the offer when the link is empty. */
