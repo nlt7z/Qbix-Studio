@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blur edge · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "blur-edge", "title": "Blur edge", "group": "studio", "added": "2026-11-23", "cat": "scroll", "order": 50,
+  "kind": "scroll", "tone": "paper", "shot": 4100,
+  "line": "5 blur layers 1 to 16 px · 104 px edges · title 34 to 17 px over 56 px · response 0.16 s · lime tab pill",
+  "summary": "A Strata Library window: a large title over a grid of component cards, product photos and drawn controls. Scrolling, the title shrinks and travels into the top bar as a centred 17 px title, while the cards pass under an edge that goes from sharp to soft with no step: five stacked backdrop blurs, each through its own gradient mask. The same edge sits under a floating translucent tab bar at the bottom, whose lime pill is the one lime and slides on a spring to the section in view. The hairline under the bar fades in only once cards are beneath it. At the top, pulling down stretches the title.",
+  "spec": [
+    ["One value", "the window's own scroll area (scrollTop, design px) followed by a critically damped spring, response 0.16 s; the title's scale, x and y, the letter spacing, the bar's hairline and the tab pill are drawn from it and from the overscroll, nothing else, so scrolling back retraces every value"],
+    ["Title", "collapse progress p = scroll / 56 px, clamped; y runs 78 to 26 px linearly with p (the title travels with the content), scale 1 to 0.5 (34 px to 17 px) and x from 20 px to the centre on smoothstep(p); letter spacing −0.022em to −0.010em, weight 600 throughout, one element so nothing cross-fades"],
+    ["Blur layers", "five stacked layers per edge, backdrop blur 1, 2, 4, 8 and 16 px, weakest first; each is only as tall as its own gradient (104, 89, 73, 54 and 35 px of the edge's 104 px), opaque from 46, 31, 17, 6 and 0 px from the window's outer edge and transparent at its end, so the blur falls off from about 18 px at the edge to nothing and a strong blur costs a small box"],
+    ["Top edge", "104 px: the 52 px bar and a 52 px fade; a white veil from 60% to 0 on an eased five-stop gradient; the hairline (1 px, 8% ink) is seg(scroll, 60, 96) so it arrives with the first row of cards under the bar"],
+    ["Bottom edge", "the same five layers mirrored, 104 px, under a floating tab bar (288 × 56 px, radius 28, white at 72%, 20 px blur and 180% saturation, ring 8%, shadow); the cards leave 118 px of padding so the last row clears it"],
+    ["Tab pill", "lime #B8FF00, 92 × 44 px, x on a spring (response 0.32 s) toward the section in view (Components, Tokens, Code); it stretches by up to 18 px with speed; a tab press scrolls the area on its own spring (response 0.5 s) and holds the pill on that tab until it arrives; a wheel, touch or key lets go"],
+    ["Rubber band", "at the top a wheel or touch pull adds to a pull value; the window shows (x·D·0.55) / (D + 0.55·x), D = 440 px; the cards and title follow it, the title also scales by 0.11% per px; released, it springs back from the value and speed on screen (response 0.3 s)"],
+    ["Reduced transparency", "solid bars: no blur layers, a white 52 px bar and a white strip under a solid tab bar, same hairline"],
+    ["Reduced motion", "a still: the title collapsed (scroll 170 px), cards under both blurs, the page does not run, tabs jump"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-23"],
+  "where": "Strata's Library screen, or any Qbix app view with a large title: a long list of cards under floating chrome, where a hard edge or a flat frosted slab would cut the pictures off.",
+  "rules": [
+    "Soften an edge with several layers of rising blur, each behind its own gradient mask, never one blur with one mask: one layer shows a step where its mask ends. Order them weakest first, strongest last, and keep the blur layers siblings above the scroller, never inside it.",
+    "The title is one element: scale, x and y come from the scroll value, so there is no cross-fade and no state; the bar's hairline is drawn from the same value and appears only when content is beneath.",
+    "Do not use clip-path, filter, mask or opacity on an ancestor of a blur layer: each one starts a new backdrop root and the layers blur nothing. Round the window with border-radius and overflow only.",
+    "Lime is the selected tab's pill and nothing else; the drawn controls are ink and grey. Under reduced transparency the bars are solid, under reduced motion the page is a still with the title collapsed.",
+    "Overscroll at the top is a rubber band on the pulled amount, and it releases from the value and speed on screen; it only stretches the title and moves the content, it never scales the layout."
+  ],
+  "tags": ["scroll", "blur", "progressive blur", "large title", "navigation bar", "tab bar", "rubber band", "translucent", "Strata", "backdrop-filter"]
+}
+</script>
+<style data-code>
+/* Blur edge. A fixed 600 × 440 window (script scales it to fit), a real scroll area inside it, and two edges of stacked backdrop blurs.
+   Look: the system face, Apple neutrals, a white window; the one lime is the selected tab's pill. */
+.be { --be-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; --be-m: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  position: relative; background: #fff; color: #1d1d1f; font-family: var(--be-f); -webkit-font-smoothing: antialiased; }
+.be-pin { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+.be h1, .be h2, .be h3, .be p, .be ul, .be pre { margin: 0; padding: 0; }
+.be ul { list-style: none; }
+
+.be-fit { position: absolute; left: 0; top: 0; width: 600px; height: 440px; transform-origin: 0 0; }
+.be-win { position: absolute; inset: 0; border-radius: 22px; overflow: hidden; background: #fff;   /* border-radius and overflow only: a clip-path, mask or filter here would start a backdrop root */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 30px 64px -30px rgba(0, 0, 0, .34); }
+
+/* the scroll area: native scrolling, no bar */
+.be-scroll { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; outline: none; }
+.be-scroll::-webkit-scrollbar { display: none; }
+.be-scroll:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -4px; border-radius: 22px; }
+.be-body { position: relative; padding: 0 20px 118px; }
+.be-head { height: 140px; padding-top: 100px; }
+.be-sub { font: 400 15px/20px var(--be-f); letter-spacing: -.01em; color: #6e6e73; }
+
+.be-sec + .be-sec { margin-top: 30px; }
+.be-sh { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.be-sh h2 { font: 600 20px/24px var(--be-f); letter-spacing: -.014em; }
+.be-sh span { font: 400 13px/16px var(--be-f); letter-spacing: -.006em; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.be-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 14px; }
+.be-card h3 { margin-top: 8px; font: 600 13px/18px var(--be-f); letter-spacing: -.008em; }
+.be-card p { font: 400 12px/16px var(--be-f); letter-spacing: -.004em; color: #6e6e73; }
+.be-pic { position: relative; height: 148px; border-radius: 16px; overflow: hidden; background: #f5f5f7; display: grid; place-items: center; }
+.be-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; }
+
+/* drawn components: crisp, light, grey and ink (lime is the tab pill's) */
+.be-sw { position: relative; width: 58px; height: 34px; border-radius: 17px; background: #1d1d1f; }
+.be-sw i { position: absolute; top: 3px; right: 3px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); }
+.be-sl { width: 116px; display: grid; gap: 14px; justify-items: center; }
+.be-sl b { font: 600 22px/1 var(--be-f); letter-spacing: -.022em; font-variant-numeric: tabular-nums; }
+.be-sl span { position: relative; width: 100%; height: 4px; border-radius: 2px; background: #d2d2d7; }
+.be-sl span::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 64%; border-radius: 2px; background: #1d1d1f; }
+.be-sl span::after { content: ''; position: absolute; left: 64%; top: -10px; width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .1), 0 2px 6px rgba(0, 0, 0, .22); }
+.be-seg { display: flex; padding: 2px; width: 134px; border-radius: 9px; background: #e8e8ed; font: 500 12px/28px var(--be-f); text-align: center; color: #6e6e73; }
+.be-seg i { flex: 1; font-style: normal; border-radius: 7px; }
+.be-seg i:nth-child(2) { background: #fff; color: #1d1d1f; box-shadow: 0 1px 3px rgba(0, 0, 0, .14), 0 0 0 .5px rgba(0, 0, 0, .05); }
+.be-fld { width: 128px; display: grid; gap: 6px; }
+.be-fld small { font: 500 12px/14px var(--be-f); color: #6e6e73; }
+.be-fld span { height: 38px; padding: 0 12px; display: flex; align-items: center; border-radius: 10px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .1); font: 400 14px/1 var(--be-f); letter-spacing: -.01em; white-space: nowrap; }
+.be-fld span::after { content: ''; width: 1.5px; height: 17px; margin-left: 1px; background: #1d1d1f; }
+.be-ramp { display: flex; gap: 6px; }
+.be-ramp i { width: 20px; height: 82px; border-radius: 10px; }
+.be-aa { font: 600 58px/1 var(--be-f); letter-spacing: -.034em; }
+.be-rad { display: flex; gap: 8px; align-items: flex-end; }
+.be-rad i { width: 32px; height: 32px; background: #fff; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .1); }
+.be-rad i:nth-child(1) { border-radius: 6px; } .be-rad i:nth-child(2) { border-radius: 12px; } .be-rad i:nth-child(3) { border-radius: 16px; }
+.be-shd { width: 66px; height: 66px; border-radius: 18px; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 10px 26px rgba(0, 0, 0, .14); }
+.be-spc { display: grid; gap: 7px; }
+.be-spc i { display: block; height: 7px; border-radius: 3.5px; background: #86868b; }
+.be-mot { width: 124px; height: 72px; overflow: visible; fill: none; stroke: #1d1d1f; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.be-mot .be-g { stroke: #d2d2d7; stroke-dasharray: 2 5; }
+.be-mot circle { fill: #1d1d1f; stroke: none; }
+.be-code { margin-bottom: 12px; padding: 14px 16px 15px; border-radius: 18px; background: #f5f5f7; }
+.be-code header { display: flex; justify-content: space-between; margin-bottom: 8px; font: 600 13px/16px var(--be-f); letter-spacing: -.008em; }
+.be-code header span { font-weight: 400; color: #6e6e73; }
+.be-code pre { font: 400 12px/18px var(--be-m); color: #1d1d1f; white-space: pre; overflow: hidden; }
+.be-code pre em { font-style: normal; color: #6e6e73; }
+
+/* the edges: five layers, weakest first. Each is a backdrop blur seen through its own gradient: opaque from --a, then transparent at the layer's own end (--h),
+   so a strong blur costs only a small box. 0 is the window's outer edge (the strongest blur), 104 px is where the edge ends in sharp content. */
+.be-fade { position: absolute; left: 0; right: 0; height: 104px; pointer-events: none; z-index: 2; }
+.be-fade--top { top: 0; --d: to bottom; }
+.be-fade--bot { bottom: 0; --d: to top; }
+.be-fade i { position: absolute; left: 0; right: 0; height: var(--h); -webkit-backdrop-filter: blur(var(--b)); backdrop-filter: blur(var(--b));
+  -webkit-mask-image: linear-gradient(var(--d), #000 var(--a), transparent); mask-image: linear-gradient(var(--d), #000 var(--a), transparent); }
+.be-fade--top i { top: 0; } .be-fade--bot i { bottom: 0; }
+.be-fade i:nth-child(1) { --b: 1px;  --h: 104px; --a: 46px; }
+.be-fade i:nth-child(2) { --b: 2px;  --h: 89px;  --a: 31px; }
+.be-fade i:nth-child(3) { --b: 4px;  --h: 73px;  --a: 17px; }
+.be-fade i:nth-child(4) { --b: 8px;  --h: 54px;  --a: 6px; }
+.be-fade i:nth-child(5) { --b: 16px; --h: 35px;  --a: 0px; }
+.be-fade::after { content: ''; position: absolute; inset: 0;                       /* a white veil that fades on an eased curve, so the title and the tabs read over photos */
+  background: linear-gradient(var(--d), rgba(255, 255, 255, .6), rgba(255, 255, 255, .5) 16%, rgba(255, 255, 255, .34) 36%, rgba(255, 255, 255, .17) 58%, rgba(255, 255, 255, .05) 80%, rgba(255, 255, 255, 0)); }
+
+/* the bar: chrome above the blur */
+.be-bar { position: absolute; left: 0; right: 0; top: 0; height: 52px; z-index: 3; pointer-events: none; }
+.be-line { position: absolute; left: 0; right: 0; top: 51px; height: 1px; background: rgba(0, 0, 0, .08); opacity: 0; }
+.be-ic { position: absolute; top: 10px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #1d1d1f; cursor: pointer; pointer-events: auto; display: grid; place-items: center;
+  transition: background-color 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.be-ic:hover { background: rgba(0, 0, 0, .05); }
+.be-ic:active { background: rgba(0, 0, 0, .08); transform: scale(.94); }
+.be-ic svg, .be-tab svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.be-title { position: absolute; left: 0; top: 0; height: 40px; font: 600 34px/40px var(--be-f); letter-spacing: -.022em; white-space: nowrap; transform-origin: 0 50%; transform: translate(20px, 58px); }
+
+/* the floating tab bar and its lime pill */
+.be-tabs { position: absolute; left: 156px; bottom: 14px; width: 288px; height: 56px; padding: 6px; z-index: 3; border-radius: 28px; display: flex; box-sizing: border-box;
+  background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12); }
+.be-pill { position: absolute; left: 6px; top: 6px; width: 92px; height: 44px; border-radius: 22px; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06); }
+.be-tab { position: relative; flex: 1; height: 44px; padding: 0; border: 0; border-radius: 22px; background: transparent; cursor: pointer; display: grid; justify-items: center; align-content: center; gap: 1px;
+  font: 500 11px/13px var(--be-f); letter-spacing: -.002em; color: #6e6e73; transition: color 200ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.be-tab:active { transform: scale(.95); }
+.be-tab[aria-current='true'] { color: #1d1d1f; font-weight: 600; }
+
+/* reduced transparency, or no backdrop-filter: solid bars */
+.be.is-solid .be-fade i, .be.is-solid .be-fade::after { display: none; }
+.be.is-solid .be-fade--top { height: 52px; background: #fff; }
+.be.is-solid .be-fade--bot { height: 84px; background: #fff; box-shadow: 0 -1px 0 rgba(0, 0, 0, .06); }
+.be.is-solid .be-tabs { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+@media (prefers-reduced-transparency: reduce) {
+  .be-fade i, .be-fade::after { display: none; }
+  .be-fade--top { height: 52px; background: #fff; }
+  .be-fade--bot { height: 84px; background: #fff; box-shadow: 0 -1px 0 rgba(0, 0, 0, .06); }
+  .be-tabs { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+</style>
+<style>
+  html:not(.qm-tile) { --be-ui: 46px; }
+  body { margin: 0; background: #fff; }
+  .be-pin { height: calc(100vh - var(--be-ui, 0px)); }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<!-- code -->
+<div class="be" id="be">
+  <div class="be-pin" id="bePin">
+    <div class="be-fit" id="beFit">
+      <div class="be-win">
+        <div class="be-scroll" id="beScroll" tabindex="0" role="region" aria-label="Library">
+          <div class="be-body" id="beBody">
+            <div class="be-head"><p class="be-sub">9 components, 6 tokens, 3 snippets</p></div>
+
+            <section class="be-sec" aria-labelledby="beH0">
+              <div class="be-sh"><h2 id="beH0">Components</h2><span>9</span></div>
+              <ul class="be-grid">
+                <li class="be-card"><div class="be-pic"><img src="../assets/art/bottle.webp" alt="" width="354" height="296" style="object-position:50% 40%"></div><h3>Carafe</h3><p>Photo · Product</p></li>
+                <li class="be-card"><div class="be-pic"><span class="be-sw"><i></i></span></div><h3>Switch</h3><p>Control · 4 states</p></li>
+                <li class="be-card"><div class="be-pic"><img src="../assets/art/vase.webp" alt="" width="354" height="296" style="object-position:50% 50%"></div><h3>Vase</h3><p>Photo · Product</p></li>
+                <li class="be-card"><div class="be-pic"><div class="be-sl"><b>64</b><span></span></div></div><h3>Slider</h3><p>Control · Continuous</p></li>
+                <li class="be-card"><div class="be-pic"><img src="../assets/art/glass.webp" alt="" width="354" height="296" style="object-position:40% 50%"></div><h3>Glassware</h3><p>Photo · Set of 2</p></li>
+                <li class="be-card"><div class="be-pic"><div class="be-seg"><i>Day</i><i>Week</i><i>Month</i></div></div><h3>Segmented</h3><p>Control · 3 options</p></li>
+                <li class="be-card"><div class="be-pic"><img src="../assets/art/calla.webp" alt="" width="354" height="296" style="object-position:62% 50%"></div><h3>Calla</h3><p>Photo · Still life</p></li>
+                <li class="be-card"><div class="be-pic"><div class="be-fld"><small>Email</small><span>hi@forma.co</span></div></div><h3>Text field</h3><p>Input · 5 states</p></li>
+                <li class="be-card"><div class="be-pic"><img src="../assets/art/container.webp" alt="" width="354" height="296" style="object-position:50% 50%"></div><h3>Container</h3><p>Photo · Product</p></li>
+              </ul>
+            </section>
+
+            <section class="be-sec" aria-labelledby="beH1">
+              <div class="be-sh"><h2 id="beH1">Tokens</h2><span>6</span></div>
+              <ul class="be-grid">
+                <li class="be-card"><div class="be-pic"><div class="be-ramp"><i style="background:#1d1d1f"></i><i style="background:#6e6e73"></i><i style="background:#a1a1a6"></i><i style="background:#d2d2d7"></i><i style="background:#fff"></i></div></div><h3>Neutrals</h3><p>Colour · 5 steps</p></li>
+                <li class="be-card"><div class="be-pic"><span class="be-aa">Aa</span></div><h3>Display</h3><p>Type · 600, −0.022em</p></li>
+                <li class="be-card"><div class="be-pic"><div class="be-rad"><i></i><i></i><i></i></div></div><h3>Radius</h3><p>Shape · 6, 12, 16 px</p></li>
+                <li class="be-card"><div class="be-pic"><span class="be-shd"></span></div><h3>Raised</h3><p>Shadow · 2 layers</p></li>
+                <li class="be-card"><div class="be-pic"><div class="be-spc"><i style="width:14px"></i><i style="width:28px"></i><i style="width:42px"></i><i style="width:56px"></i><i style="width:84px"></i></div></div><h3>Spacing</h3><p>Scale · 4 pt grid</p></li>
+                <li class="be-card"><div class="be-pic"><svg class="be-mot" viewBox="0 0 124 72" aria-hidden="true"><path class="be-g" d="M2 62H122M2 10H122"/><path d="M2 62C34 62 44 10 80 10c18 0 30 0 42 0"/><circle cx="122" cy="10" r="4.500"/></svg></div><h3>Spring</h3><p>Motion · 0.3 s</p></li>
+              </ul>
+            </section>
+
+            <section class="be-sec" aria-labelledby="beH2">
+              <div class="be-sh"><h2 id="beH2">Code</h2><span>3</span></div>
+              <div class="be-code"><header>tokens.css<span>CSS</span></header><pre>:root {
+  <em>--ink:</em> #1d1d1f;
+  <em>--fill:</em> #f5f5f7;
+  <em>--radius-card:</em> 20px;
+}</pre></div>
+              <div class="be-code"><header>Switch.tsx<span>React</span></header><pre>export function Switch({ on, onChange }) {
+  return &lt;button role="switch" aria-checked={on}
+    className="switch" onClick={() =&gt; onChange(!on)} /&gt;;
+}</pre></div>
+              <div class="be-code"><header>motion.json<span>JSON</span></header><pre>{ "spring": { "response": 0.3, "damping": 1 },
+  "press": { "scale": 0.97, "ms": 100 } }</pre></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="be-fade be-fade--top" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="be-fade be-fade--bot" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+        <header class="be-bar">
+          <button class="be-ic" type="button" aria-label="Sidebar" style="left:12px"><svg viewBox="0 0 20 20"><rect x="2.500" y="4" width="15" height="12" rx="3.200"/><path d="M8 4v12"/></svg></button>
+          <h1 class="be-title" id="beTitle">Library</h1>
+          <button class="be-ic" type="button" aria-label="Search" style="right:48px"><svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="5.500"/><path d="M13.200 13.200L17 17"/></svg></button>
+          <button class="be-ic" type="button" aria-label="New component" style="right:12px"><svg viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg></button>
+          <i class="be-line" id="beLine"></i>
+        </header>
+
+        <nav class="be-tabs" id="beTabs" aria-label="Library sections">
+          <i class="be-pill" id="bePill"></i>
+          <button class="be-tab" type="button" aria-current="true"><svg viewBox="0 0 20 20"><rect x="3" y="3" width="5.500" height="5.500" rx="1.800"/><rect x="11.500" y="3" width="5.500" height="5.500" rx="1.800"/><rect x="3" y="11.500" width="5.500" height="5.500" rx="1.800"/><rect x="11.500" y="11.500" width="5.500" height="5.500" rx="1.800"/></svg>Components</button>
+          <button class="be-tab" type="button"><svg viewBox="0 0 20 20"><path d="M10 2.800c3 3.600 5 6 5 8.600a5 5 0 0 1-10 0c0-2.600 2-5 5-8.600z"/></svg>Tokens</button>
+          <button class="be-tab" type="button"><svg viewBox="0 0 20 20"><path d="M7.500 6L3.500 10l4 4M12.500 6l4 4-4 4"/></svg>Code</button>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- /code -->
+<div class="qm-ui"><span>Scroll ↓</span><span class="qm-sep">/</span><span>The title collapses into the bar. Pull down at the top to stretch it</span></div>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Blur edge. Everything that moves is a function of the window's scroll area: its scrollTop, followed by a critically damped spring (response 0.16 s),
+   and of the overscroll at the top. The blur itself is plain CSS: nothing in script touches it. */
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const root = $('be'), pin = $('bePin'), fit = $('beFit'), sc = $('beScroll'), body = $('beBody'), ttl = $('beTitle'), line = $('beLine'), pill = $('bePill');
+  const tabs = [...document.querySelectorAll('.be-tab')], secs = [...body.querySelectorAll('.be-sec')];
+  const DW = 600, DH = 440, TY0 = 78, TY1 = 26, TX0 = 20, TS = 0.5, COLLAPSE = 56, TABW = 92, REST = 170;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const smooth = (x) => x * x * (3 - 2 * x);
+  const seg = (v, a, b) => smooth(clamp((v - a) / (b - a)));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const rubber = (x) => (x * 440 * 0.55) / (440 + 0.55 * x);
+  const supportsBlur = typeof CSS !== 'undefined' && CSS.supports && (CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)'));
+  if (!supportsBlur || matchMedia('(prefers-reduced-transparency: reduce)').matches) root.classList.add('is-solid');
+
+  let k = 1, max = 0, tw0 = 0, tw1 = 0, tops = [];
+  function layout() {
+    const W = pin.clientWidth, H = pin.clientHeight;
+    const raw = Math.min((W - 2 * clamp(W * 0.04, 12, 56)) / DW, (H - 2 * clamp(H * 0.036, 16, 40)) / DH, 2.4);
+    const m = Math.max(8, Math.floor(raw * 40));                       // whole pixels at rest: 600 k and 440 k are integers when k = m / 40
+    k = m / 40;
+    fit.style.transform = `translate(${Math.round((W - DW * k) / 2)}px,${Math.round((H - DH * k) / 2)}px) scale(${k})`;
+    ttl.style.letterSpacing = '-0.022em'; tw0 = ttl.offsetWidth; ttl.style.letterSpacing = '-0.01em'; tw1 = ttl.offsetWidth;
+    max = Math.max(0, sc.scrollHeight - sc.clientHeight);
+    tops = secs.map((s) => s.offsetTop);
+    if (!reduce) root.style.height = H + max * k + 'px';              // the page's own run: its scroll maps 1:1 onto the area's
+  }
+
+  /* springs: x'' = −ω²(x − target) − 2ωx', stepped exactly (critically damped, no overshoot) */
+  const spring = (st, target, resp, dt) => {
+    const om = (2 * Math.PI) / resp, x = st.x - target, e = Math.exp(-om * dt), c1 = st.v + om * x;
+    st.x = target + (x + c1 * dt) * e; st.v = (st.v - om * c1 * dt) * e;
+  };
+  const near = (st, target, ex = 0.04, ev = 0.4) => Math.abs(st.x - target) < ex && Math.abs(st.v) < ev;
+
+  const cur = { x: 0, v: 0 };            // the followed scroll
+  const ov = { x: 0, v: 0 };             // the overscroll shown at the top
+  const tp = { x: 0, v: 0 };             // the pill, in tabs
+  const ps = { x: 0, v: 0 };             // a tab press's own scroll
+  let pull = 0, lastPull = -1e9, touching = false, prog = false, pt = 0, forced = -1, raf = 0, last = 0;
+  const put = (el, prop, v) => { const c = el._c || (el._c = {}); if (c[prop] !== v) { c[prop] = v; el.style[prop] = v; } };
+
+  function sectionIn(y) {
+    let i = 0;
+    for (let j = 0; j < tops.length; j++) if (y + 260 >= tops[j]) i = j;
+    return y >= max - 4 ? tops.length - 1 : i;
+  }
+
+  function draw() {
+    const y = cur.x, o = ov.x;
+    const p = clamp(y / COLLAPSE), e = smooth(p);
+    const s = lerp(1, TS, e) * (1 + o * 0.0011);
+    const tw = lerp(tw0, tw1, e) * s;
+    const x = lerp(TX0, (DW - tw) / 2, e);
+    const ty = lerp(TY0, TY1, p) + o * (1 - p);
+    put(ttl, 'transform', `translate(${x.toFixed(2)}px,${(ty - 20).toFixed(2)}px) scale(${s.toFixed(4)})`);
+    put(ttl, 'letterSpacing', `${lerp(-0.022, -0.01, e).toFixed(4)}em`);
+    put(line, 'opacity', seg(y, 60, 96).toFixed(3));
+    put(body, 'transform', o > 0.01 ? `translate3d(0,${o.toFixed(2)}px,0)` : 'none');
+    const stretch = Math.min(18, Math.abs(tp.v) * TABW * 0.05);
+    pill.style.transform = `translate3d(${(tp.x * TABW - stretch / 2).toFixed(2)}px,0,0)`;
+    pill.style.width = (TABW + stretch).toFixed(2) + 'px';
+  }
+
+  function tick(now) {
+    const dt = clamp((now - last) / 1000, 0.001, 0.12); last = now;
+    let busy = false;
+    if (prog) {                                                          // a tab press: the area scrolls on its own spring
+      spring(ps, pt, 0.5, dt); sc.scrollTop = ps.x;
+      if (near(ps, pt, 0.3, 4)) { prog = false; sc.scrollTop = pt; forced = -1; } else busy = true;
+    }
+    spring(cur, sc.scrollTop, 0.16, dt);
+    if (near(cur, sc.scrollTop)) { cur.x = sc.scrollTop; cur.v = 0; } else busy = true;
+    const pulling = pull > 0 && (touching || now - lastPull < 100);      // a wheel pull is held 1:1 while the wheel is still turning
+    if (pulling) { const nx = rubber(pull); ov.v = (nx - ov.x) / dt; ov.x = nx; busy = true; }
+    else { pull = 0; spring(ov, 0, 0.3, dt); if (near(ov, 0, 0.05, 1)) { ov.x = 0; ov.v = 0; } else busy = true; }
+    const want = forced >= 0 ? forced : sectionIn(sc.scrollTop);
+    spring(tp, want, 0.32, dt);
+    if (near(tp, want, 0.002, 0.01)) { tp.x = want; tp.v = 0; } else busy = true;
+    tabs.forEach((b, i) => b.setAttribute('aria-current', String(i === want)));
+    draw();
+    raf = busy ? requestAnimationFrame(tick) : 0;
+  }
+  const wake = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+
+  /* the page's scroll and the area's scroll are one value: the harness (and the page's own scrollbar) drives the page, the wheel drives the area */
+  let expectArea = null, expectPage = null;
+  addEventListener('scroll', () => {
+    if (reduce) return;
+    if (expectPage !== null && Math.abs(scrollY - expectPage) < 1.2) { expectPage = null; return; }
+    expectPage = null;
+    const t = scrollY / k;
+    if (Math.abs(sc.scrollTop - t) > 1.2 / k + 0.3) { sc.scrollTop = t; expectArea = sc.scrollTop; }
+    wake();
+  }, { passive: true });
+  sc.addEventListener('scroll', () => {
+    if (!reduce) {
+      if (expectArea !== null && Math.abs(sc.scrollTop - expectArea) < 0.5) expectArea = null;
+      else {
+        expectArea = null;
+        const yy = sc.scrollTop * k;
+        if (Math.abs(scrollY - yy) > 1.2) { expectPage = yy; scrollTo(0, yy); expectPage = scrollY; }
+      }
+    }
+    if (reduce) { cur.x = sc.scrollTop; tp.x = sectionIn(sc.scrollTop); tabs.forEach((b, i) => b.setAttribute('aria-current', String(i === tp.x))); draw(); } else wake();
+  }, { passive: true });
+
+  /* rubber band at the top: a wheel or a touch pull past scrollTop 0 */
+  const letGo = () => { prog = false; forced = -1; };
+  if (!reduce) {
+    sc.addEventListener('wheel', (e) => {
+      letGo();
+      const dy = (e.deltaY * (e.deltaMode === 1 ? 16 : 1)) / k;
+      if ((sc.scrollTop <= 0 && dy < 0) || pull > 0) {
+        e.preventDefault();
+        pull = Math.max(0, pull - dy); lastPull = performance.now(); wake();
+      }
+    }, { passive: false });
+    let ty = 0;
+    sc.addEventListener('touchstart', (e) => { letGo(); touching = false; ty = e.touches[0].clientY; }, { passive: true });
+    sc.addEventListener('touchmove', (e) => {
+      const d = (e.touches[0].clientY - ty) / k;
+      if (sc.scrollTop <= 0 && d > 0) { e.preventDefault(); touching = true; pull = d; wake(); }
+      else if (touching) { touching = false; pull = 0; wake(); }                 // dragged back up past where it began: the area scrolls again
+    }, { passive: false });
+    sc.addEventListener('touchend', () => { touching = false; lastPull = 0; wake(); }, { passive: true });
+    sc.addEventListener('keydown', letGo);
+  }
+
+  /* a tab press scrolls to its section */
+  tabs.forEach((b, i) => b.addEventListener('click', () => {
+    const t = clamp(i === 0 ? 0 : tops[i] - 72, 0, max);
+    if (reduce) { sc.scrollTop = t; return; }
+    ps.x = sc.scrollTop; ps.v = 0; pt = t; prog = true; forced = i; wake();
+  }));
+
+  layout();
+  if (reduce) {                                                          // a still: the title collapsed, cards under both blurs; the area still scrolls by hand
+    root.classList.add('is-still');
+    sc.scrollTop = REST; cur.x = sc.scrollTop; tp.x = sectionIn(cur.x);
+    tabs.forEach((b, i) => b.setAttribute('aria-current', String(i === tp.x)));
+    draw();
+    addEventListener('resize', () => { layout(); draw(); });
+  } else {
+    sc.scrollTop = scrollY / k; cur.x = sc.scrollTop; tp.x = sectionIn(cur.x); draw();
+    addEventListener('resize', () => { layout(); wake(); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); wake(); });
+  }
+})();
+</script>
+<script>
+  QM.demo({ kind: 'scroll', lead: 800, dur: 8400, hold: 1500, back: 3600, pause: 900, stops: [0.13, 0.45, 0.88] });
+</script>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parallel runs · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "parallel-runs", "title": "Parallel runs", "group": "studio", "added": "2026-11-23", "cat": "agent", "order": 10,
+  "kind": "loop", "tone": "paper", "shot": 1400,
+  "line": "3 lanes · 5.6 s, 8.2 s, 11.0 s · steps roll · fold springs 40 ms apart · lean 1.02 · one lime",
+  "summary": "Strata is asked to make Forma's product card calmer and runs three variants at once, one lane each. Every lane draws its own product card as it goes: a dashed frame, a skeleton, three trial layouts for the photo, the photo, the name, the price, the Add chip. A step line rolls (Reading tokens, Trying 3 layouts, Setting type, Checking contrast), a thin bar fills and a tabular timer counts; the lanes run at different speeds and a finished lane settles with a drawn check. Hover or focus a finished lane and it leans forward while the others step back. Use this folds the other two away (their widths spring to nothing, contents clipped, 40 ms apart) and the chosen lane grows into the panel and shows what changed. Run again brings the lanes back from wherever they are.",
+  "spec": [
+    ["Lanes", "one board 642 × 370 px (a #f5f5f7 tile, radius 24), three white lanes of 190 × 264 px, radius 18, 12 px apart; each lane is a head (name, check, timer), a 156 px well with the live card, and a 44 px foot; a lane's contents are laid out at their own width, so a lane that folds is clipped, never reflowed"],
+    ["Runs", "5.6 s, 8.2 s and 11.0 s; each lane's progress is its own piecewise curve of time (plateaus and bursts, so the lanes overtake each other), and the bar shows a spring (response 0.16 s) that follows it, so a restart sends the bar and the card back from where they are on a 0.3 s spring"],
+    ["Build", "everything on the card is a function of progress p: frame uncovered from the top 0.03 to 0.15, three trial heights for the photo at 0.20, 0.28 and 0.38 (height on 420 ms expo out), the final layout and the photo (uncovered top down) from 0.50, name 0.52, price 0.62, Add chip 0.74, a slight settle (0.985 to 1) from 0.88; the three cards differ in corner (18, 8, 28 px), padding (12, 8, 10 px), photo shape and type (11 / 600, 12 / 700, 11 / 600)"],
+    ["Steps", "Reading tokens, Trying 3 layouts (from 0.20), Setting type (0.50), Checking contrast (0.75) roll in an 18 px clip on 420 ms expo out; the timer is tabular, one decimal, and stops at the lane's own time; done is a drawn check (circle then tick, stroke-dashoffset from the done spring, response 0.42 s) and the foot rolls from the bar to the Use this pill"],
+    ["Lean", "hover or keyboard focus on a finished lane: scale 1.02 and a deeper shadow on a spring (response 0.3 s); the other lanes go to 0.985; a press on a lane eases it to 0.99; mouse and pen lean on hover, touch just chooses"],
+    ["Choose", "Use this (or a click or tap anywhere on a finished lane) makes the lane the anchor: the other two lanes' widths are springs to 0 (response 0.42 s, aimed at −0.1 and clamped at 0 so a lane reaches nothing in finite time and never lingers as a sliver, started 0 ms and 40 ms apart), the gap goes with them, and the chosen lane takes the remainder of the row (190 to 594 px); its growth g is read from its own width, so nothing can disagree; the card slides left and scales 1.08 on g, four rows of what changed are uncovered one after another, the pill narrows to 128 px and rolls to Applied, and Applied to Product card is uncovered"],
+    ["Again", "Run again (or any pick being replaced) retargets from where everything is: the clock restarts, the folded lanes grow back 40 ms apart, a still-running lane's bar and card rewind on the 0.3 s spring; choosing a different lane mid-unfold keeps the widths continuous because the old anchor's slot becomes its own spring value"],
+    ["Lime", "exactly one: the leading running lane's bar while any lane runs; the pill of the lane under the pointer or focus once it is done; Applied on the chosen lane; otherwise the pill of the best contrast lane; changes on a 200 ms colour transition"],
+    ["Input", "Tab goes through Run again and the finished lanes' Use this buttons; Left and Right move between finished lanes, Enter and Space use one, Escape unfolds the chosen lane without rerunning; Run again works at any time"],
+    ["Loop", "after 5 s in a tile the ghost hovers lane one, then lane two, waits for lane three to finish, hovers it, picks the middle lane, lets the fold and the panel read, presses Run again and waits for the new run; it dispatches the same pointer and click events as a hand (untrusted ones), yields to any real pointer, touch or key and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-23"],
+  "where": "A Strata project's design run, or a Qbix case study about how the studio explores: one brief goes out to three variants, the client or designer sees them build side by side, picks the calmest and moves on.",
+  "rules": [
+    "Everything drawn is a function of the run clock and a few springs; nothing is keyframed, so a lane can be left, grabbed or retargeted at any moment without a jump.",
+    "A lane's contents keep their own width while its width changes: folding clips, it never reflows. The chosen lane's growth is read from its width, not run as a second animation.",
+    "The fold is staggered (40 ms) and returns on the same path: Run again and Escape unfold the lanes with the same springs.",
+    "Exactly one lime per frame, always the thing to look at next: the lane that is furthest along, then the lane you are on, then the lane you chose.",
+    "Only finished lanes can be leaned on, chosen or focused; a lane that is still running is not a button, and folded lanes are inert.",
+    "Hover and focus do the same: keyboard focus leans the lane exactly as a pointer does.",
+    "System face, Apple neutrals, numbers tabular in the same face; icons are 1.6 px round strokes; the one picture is a product render on a #f5f5f7 well.",
+    "Under reduced motion the piece rests on three finished lanes, springs become instant, the pill and the fold change in place, and nothing leans."
+  ],
+  "tags": ["agent", "parallel runs", "variants", "progress", "timer", "spring", "fold", "choose", "Strata", "Forma", "agent runs"]
+}
+</script>
+<style data-code>
+/* Parallel runs. A #f5f5f7 board in the system face with Apple's neutrals; three white lanes, each drawing its own Forma product card.
+   The one accent is lime, one thing at a time (script puts .is-lime on a bar fill or a pill). Every width, offset, scale, clip and fill
+   of what moves is set from script (render()): they are springs and a run clock. Easings: expo out (.16, 1, .3, 1), ui (.4, 0, .2, 1). */
+.pr-fit { position: relative; width: calc(642px * var(--s, 1)); height: calc(370px * var(--s, 1)); }
+.pr-board { --pr-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 642px; height: 370px; padding: 22px 24px 24px; transform: scale(var(--s, 1)); transform-origin: 0 0;
+  border-radius: 24px; background: #f5f5f7; color: #1d1d1f;
+  font: 400 13px/18px var(--pr-f); letter-spacing: -.006em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; }
+.pr-board p, .pr-board h2, .pr-board ul { margin: 0; padding: 0; }
+.pr-board ul { list-style: none; }
+:where(.pr-board button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+.pr-head { display: flex; justify-content: space-between; align-items: flex-start; height: 44px; margin-bottom: 16px; }
+.pr-kick { color: #6e6e73; }
+.pr-h { margin-top: 2px; font: 600 17px/22px var(--pr-f); letter-spacing: -.01em; }
+.pr-hr { display: flex; align-items: center; gap: 14px; height: 32px; margin-top: 2px; }
+.pr-stat { height: 20px; overflow: hidden; color: #6e6e73; font-variant-numeric: tabular-nums; text-align: right; }
+.pr-sr { display: block; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.pr-sr > span { display: block; height: 20px; line-height: 20px; white-space: nowrap; }
+.pr-again { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 11px; border-radius: 999px; background: #fff; font-weight: 500;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .04);
+  transition: transform 100ms cubic-bezier(.4, 0, .2, 1), background 160ms cubic-bezier(.4, 0, .2, 1); }
+.pr-again:hover { background: #ececf0; }
+.pr-again.is-press { transform: scale(.97); }
+.pr-again svg { width: 14px; height: 14px; fill: none; stroke: #1d1d1f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  transition: transform 640ms cubic-bezier(.16, 1, .3, 1); }
+.pr-again:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+
+/* the lanes: absolutely placed from script, each laid out at its own width (--iw) and clipped by the lane */
+.pr-lanes { position: relative; height: 264px; }
+.pr-lane { position: absolute; top: 0; height: 264px; overflow: hidden; border-radius: 18px; background: #fff; --l: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 calc(16px * var(--l)) calc(8px + 28px * var(--l)) calc(-8px * var(--l)) rgba(0, 0, 0, calc(.2 * var(--l))); }
+.pr-in { position: absolute; left: 0; top: 0; width: var(--iw, 190px); height: 264px; padding: 12px; }
+.pr-lh { display: flex; justify-content: space-between; align-items: center; height: 20px; }
+.pr-ln { font-weight: 600; font-size: 13px; }
+.pr-lt { display: flex; align-items: center; gap: 5px; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.pr-tm { display: inline-block; min-width: 38px; text-align: right; }
+.pr-ck { width: 14px; height: 14px; fill: none; stroke: #1d1d1f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.pr-ck * { stroke-dasharray: 1; stroke-dashoffset: 1; }
+
+/* the well and the card being built in it */
+.pr-well { position: relative; height: 156px; margin-top: 10px; overflow: hidden; border-radius: 12px; background: #f5f5f7; }
+.pr-ph, .pr-card { position: absolute; left: 0; top: 0; width: var(--cw); height: var(--ch); border-radius: var(--cr); }
+.pr-ph { border: 1.5px dashed rgba(0, 0, 0, .2); }
+.pr-card { display: flex; flex-direction: column; padding: var(--cp); background: #fff; }
+.pr-pw { position: relative; flex: none; align-self: stretch; height: var(--ih); border-radius: var(--ir); overflow: hidden; background: #e8e8ed;
+  transition: height 420ms cubic-bezier(.16, 1, .3, 1); }
+.pr-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 66%; }
+.pr-meta { margin-top: auto; display: flex; flex-direction: column; gap: 3px; }
+.pr-nm, .pr-pr { position: relative; align-self: flex-start; white-space: nowrap; }
+.pr-nm { font-weight: 600; font-size: var(--nf, 11px); line-height: 14px; }
+.pr-pr { color: #6e6e73; font-size: 11px; line-height: 14px; font-variant-numeric: tabular-nums; }
+.pr-sk { position: absolute; left: 0; right: 0; top: 2px; bottom: 2px; border-radius: 4px; background: #e8e8ed; }
+.pr-row { display: flex; justify-content: space-between; align-items: center; }
+.pr-add { display: inline-flex; align-items: center; justify-content: center; height: 20px; padding: 0 9px; border-radius: 999px; background: #e8e8ed; font-weight: 600; font-size: 11px; }
+/* three takes on the same card */
+.pr-card[data-v='tight'] { --nf: 12px; }
+.pr-card[data-v='tight'] .pr-nm { font-weight: 700; }
+.pr-card[data-v='tight'] .pr-meta { display: grid; grid-template-columns: 1fr auto; column-gap: 6px; row-gap: 5px; align-items: center; }
+.pr-card[data-v='tight'] .pr-row { display: contents; }
+.pr-card[data-v='tight'] .pr-pr { justify-self: end; grid-column: 2; grid-row: 1; font-size: 12px; font-weight: 700; color: #1d1d1f; }
+.pr-card[data-v='tight'] .pr-add { grid-column: 1 / 3; grid-row: 2; border-radius: 4px; height: 18px; }
+.pr-card[data-v='soft'] .pr-pw { align-self: center; aspect-ratio: 1; width: auto; }
+.pr-card[data-v='soft'] .pr-meta { align-items: center; gap: 2px; }
+.pr-card[data-v='soft'] .pr-nm, .pr-card[data-v='soft'] .pr-pr { align-self: center; }
+.pr-card[data-v='soft'] .pr-row { flex-direction: column; gap: 4px; }
+
+/* what changed: four rows beside the card, uncovered when the lane has grown */
+.pr-spec { position: absolute; left: 270px; top: 11px; width: 274px; }
+.pr-spec li { display: flex; justify-content: space-between; align-items: center; height: 34px; box-shadow: 0 1px 0 rgba(0, 0, 0, .1); font-variant-numeric: tabular-nums; }
+.pr-spec li:last-child { box-shadow: none; }
+.pr-spec span { color: #6e6e73; }
+.pr-spec b { font-weight: 500; }
+
+/* the foot: a step line over a bar while it runs; a pill when it is done. They swap by rolling. */
+.pr-foot { position: relative; height: 44px; margin-top: 10px; overflow: hidden; }
+.pr-run, .pr-done { position: absolute; left: 0; right: 0; top: 0; height: 44px; }
+.pr-step { height: 18px; margin-top: 4px; overflow: hidden; font-weight: 500; }
+.pr-roll { display: block; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.pr-roll > span { display: block; height: 18px; white-space: nowrap; }
+.pr-bar { position: absolute; left: 0; right: 0; top: 30px; height: 6px; border-radius: 3px; background: #e8e8ed; overflow: hidden; }
+.pr-fill { display: block; height: 100%; width: 0; border-radius: 3px; background: #86868b; transition: background 200ms cubic-bezier(.4, 0, .2, 1); }
+.pr-fill.is-lime { background: #B8FF00; }
+.pr-done { display: flex; align-items: center; }
+.pr-ap { position: absolute; left: 0; top: 13px; white-space: nowrap; font-weight: 500; }
+.pr-use { position: relative; margin-left: auto; width: 100%; height: 36px; border-radius: 999px; background: #e8e8ed; font-weight: 600; text-align: center;
+  transition: transform 100ms cubic-bezier(.4, 0, .2, 1), background 200ms cubic-bezier(.4, 0, .2, 1); }
+.pr-use.is-lime { background: #B8FF00; }
+.pr-use.is-press { transform: scale(.97); }
+.pr-use:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.pr-ul { display: block; height: 18px; overflow: hidden; }
+.pr-ulr > span { display: block; height: 18px; line-height: 18px; }
+.pr-ulr { display: block; transition: transform 420ms cubic-bezier(.16, 1, .3, 1); }
+.pr-use.is-set .pr-ulr { transform: translateY(-18px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-sr, .pr-roll, .pr-ulr, .pr-pw, .pr-again svg { transition-duration: 1ms; }
+}
+</style>
+<style>
+  /* the harness's hint bar speaks the same face */
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="pr-fit" id="pr-fit">
+ <section class="pr-board" id="pr-board" role="group" aria-label="Three parallel runs in Strata">
+  <header class="pr-head">
+   <div><p class="pr-kick">Strata · Forma</p><h2 class="pr-h">Make the product card calmer.</h2></div>
+   <div class="pr-hr">
+    <p class="pr-stat" id="pr-stat" aria-hidden="true"><span class="pr-sr" id="pr-sr"><span>Running 3 variants</span><span>1 of 3 ready</span><span>2 of 3 ready</span><span>Pick one to apply</span><span>Applied</span></span></p>
+    <button type="button" class="pr-again" id="pr-again"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.200 8A5.200 5.200 0 1 1 11.700 4.300"/><path d="M12.600 1.800v2.900H9.700"/></svg>Run again</button>
+   </div>
+  </header>
+
+  <div class="pr-lanes" id="pr-lanes">
+   <article class="pr-lane" data-i="0" aria-label="Airy">
+    <div class="pr-in">
+     <div class="pr-lh"><span class="pr-ln">Airy</span><span class="pr-lt"><svg class="pr-ck" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.300" pathLength="1"/><path d="M5.200 8.300l2 2 3.700-4" pathLength="1"/></svg><span class="pr-tm">0.0 s</span></span></div>
+     <div class="pr-well" aria-hidden="true">
+      <div class="pr-ph"></div>
+      <div class="pr-card" data-v="airy">
+       <div class="pr-pw"><img class="pr-img" src="../assets/art/vase.webp" alt="" draggable="false"></div>
+       <div class="pr-meta">
+        <div class="pr-nm"><i class="pr-sk"></i><span>Fluted vase</span></div>
+        <div class="pr-row"><div class="pr-pr"><i class="pr-sk"></i><span>$48</span></div><span class="pr-add">Add</span></div>
+       </div>
+      </div>
+      <ul class="pr-spec"><li><span>Corner radius</span><b>18 px</b></li><li><span>Padding</span><b>12 px</b></li><li><span>Name</span><b>11 · 600</b></li><li><span>Contrast</span><b>7.4 : 1</b></li></ul>
+     </div>
+     <div class="pr-foot">
+      <div class="pr-run"><div class="pr-step" aria-hidden="true"><span class="pr-roll"><span>Reading tokens</span><span>Trying 3 layouts</span><span>Setting type</span><span>Checking contrast</span></span></div><div class="pr-bar"><i class="pr-fill"></i></div></div>
+      <div class="pr-done"><p class="pr-ap">Applied to Product card</p><button type="button" class="pr-use" aria-label="Use Airy"><span class="pr-ul"><span class="pr-ulr"><span>Use this</span><span>Applied</span></span></span></button></div>
+     </div>
+    </div>
+   </article>
+
+   <article class="pr-lane" data-i="1" aria-label="Tight">
+    <div class="pr-in">
+     <div class="pr-lh"><span class="pr-ln">Tight</span><span class="pr-lt"><svg class="pr-ck" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.300" pathLength="1"/><path d="M5.200 8.300l2 2 3.700-4" pathLength="1"/></svg><span class="pr-tm">0.0 s</span></span></div>
+     <div class="pr-well" aria-hidden="true">
+      <div class="pr-ph"></div>
+      <div class="pr-card" data-v="tight">
+       <div class="pr-pw"><img class="pr-img" src="../assets/art/vase.webp" alt="" draggable="false"></div>
+       <div class="pr-meta">
+        <div class="pr-nm"><i class="pr-sk"></i><span>Fluted vase</span></div>
+        <div class="pr-row"><div class="pr-pr"><i class="pr-sk"></i><span>$48</span></div><span class="pr-add">Add</span></div>
+       </div>
+      </div>
+      <ul class="pr-spec"><li><span>Corner radius</span><b>8 px</b></li><li><span>Padding</span><b>8 px</b></li><li><span>Name</span><b>12 · 700</b></li><li><span>Contrast</span><b>9.1 : 1</b></li></ul>
+     </div>
+     <div class="pr-foot">
+      <div class="pr-run"><div class="pr-step" aria-hidden="true"><span class="pr-roll"><span>Reading tokens</span><span>Trying 3 layouts</span><span>Setting type</span><span>Checking contrast</span></span></div><div class="pr-bar"><i class="pr-fill"></i></div></div>
+      <div class="pr-done"><p class="pr-ap">Applied to Product card</p><button type="button" class="pr-use" aria-label="Use Tight"><span class="pr-ul"><span class="pr-ulr"><span>Use this</span><span>Applied</span></span></span></button></div>
+     </div>
+    </div>
+   </article>
+
+   <article class="pr-lane" data-i="2" aria-label="Soft">
+    <div class="pr-in">
+     <div class="pr-lh"><span class="pr-ln">Soft</span><span class="pr-lt"><svg class="pr-ck" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.300" pathLength="1"/><path d="M5.200 8.300l2 2 3.700-4" pathLength="1"/></svg><span class="pr-tm">0.0 s</span></span></div>
+     <div class="pr-well" aria-hidden="true">
+      <div class="pr-ph"></div>
+      <div class="pr-card" data-v="soft">
+       <div class="pr-pw"><img class="pr-img" src="../assets/art/vase.webp" alt="" draggable="false"></div>
+       <div class="pr-meta">
+        <div class="pr-nm"><i class="pr-sk"></i><span>Fluted vase</span></div>
+        <div class="pr-row"><div class="pr-pr"><i class="pr-sk"></i><span>$48</span></div><span class="pr-add">Add</span></div>
+       </div>
+      </div>
+      <ul class="pr-spec"><li><span>Corner radius</span><b>28 px</b></li><li><span>Padding</span><b>10 px</b></li><li><span>Name</span><b>11 · 600</b></li><li><span>Contrast</span><b>8.2 : 1</b></li></ul>
+     </div>
+     <div class="pr-foot">
+      <div class="pr-run"><div class="pr-step" aria-hidden="true"><span class="pr-roll"><span>Reading tokens</span><span>Trying 3 layouts</span><span>Setting type</span><span>Checking contrast</span></span></div><div class="pr-bar"><i class="pr-fill"></i></div></div>
+      <div class="pr-done"><p class="pr-ap">Applied to Product card</p><button type="button" class="pr-use" aria-label="Use Soft"><span class="pr-ul"><span class="pr-ulr"><span>Use this</span><span>Applied</span></span></span></button></div>
+     </div>
+    </div>
+   </article>
+  </div>
+  <p class="sr-only" id="pr-msg" role="status" aria-live="polite"></p>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Press a finished lane to use it and the others fold away. Left and Right move between lanes, Escape unfolds</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Parallel runs. A run clock T (seconds) and springs. Each lane's progress p is a curve of T, followed by a spring; the card, the step line, the bar and the
+   timer are all functions of p. Layout is a row of slots: a folded lane's slot is a spring f (1 = open, 0 = folded); the anchor lane (the chosen one) takes the remainder,
+   so its growth is read from its own width. Every spring starts from the value and velocity on screen. */
+const PR = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const WR = 594, GAP = 12, TOT = WR + GAP, U = TOT / 3, W0 = U - GAP, FH = 44, STEP_H = 18, ROW = 20; // row width, gap, slot, lane width (190), foot height
+  const D = [5.6, 8.2, 11.0];                                                                          // run times in seconds
+  const CUR = [                                                                                        // progress as a curve of time: plateaus and bursts
+    [[0, 0], [.1, .1], [.2, .2], [.38, .46], [.52, .5], [.74, .82], [1, 1]],
+    [[0, 0], [.14, .16], [.3, .3], [.4, .52], [.6, .66], [.86, .8], [1, 1]],
+    [[0, 0], [.08, .12], [.26, .2], [.5, .48], [.68, .7], [.9, .9], [1, 1]],
+  ];
+  const V = [                                                                                          // the three takes on the card
+    { cw: 108, ch: 130, cp: 12, cr: 18, ih: 58, ir: '11px', c: [64, 48, 61] },
+    { cw: 126, ch: 112, cp: 8, cr: 8, ih: 52, ir: '4px', c: [58, 44, 55] },
+    { cw: 112, ch: 136, cp: 10, cr: 28, ih: 56, ir: '50%', c: [60, 48, 57] },
+  ];
+  const FOLD = -0.1, NAMES = ['Airy', 'Tight', 'Soft'], BEST = 1, STEPS = [0, .2, .5, .75];
+  const KEY_T = 3.6;                                                                                   // the pose the piece loads in: three lanes part-way, A the furthest
+  const WELL_W = (w) => w - 24, WELL_H = 156, CX = 134;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const ramp = (p, a, b) => clamp((p - a) / (b - a), 0, 1);
+  const ez = (k) => 1 - Math.pow(1 - k, 3);
+  const om = (resp) => (2 * Math.PI) / resp;
+  const $ = (id) => document.getElementById('pr-' + id);
+  const fit = $('fit'), board = $('board'), lanesEl = $('lanes'), srEl = $('sr'), againBtn = $('again'), msg = $('msg');
+  const curve = (i, u) => { const c = CUR[i]; u = clamp(u, 0, 1); for (let k = 1; k < c.length; k++) if (u <= c[k][0]) { const [a, b] = [c[k - 1], c[k]]; return a[1] + (b[1] - a[1]) * ((u - a[0]) / (b[0] - a[0])); } return 1; };
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt), critically damped; it always starts from the x and v on screen */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: om(0.4), on: false });
+  function step(s, dt, eps = 0.0008, veps = 0.01) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < eps && Math.abs(s.v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, resp) => { if (reduced) { s.x = s.T = T; s.v = 0; s.on = false; return; } s.T = T; s.w = om(resp); s.on = true; };
+  const put = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+  const S = { p: [mk(), mk(), mk()], dn: [mk(), mk(), mk()], f: [mk(1), mk(1), mk(1)], sc: [mk(1), mk(1), mk(1)] };
+
+  /* the lanes' parts */
+  const L = Array.from(lanesEl.querySelectorAll('.pr-lane')).map((el, i) => {
+    const q = (s) => el.querySelector(s), v = V[i];
+    ['cw', 'ch', 'cp', 'cr', 'ih'].forEach((k) => el.style.setProperty('--' + k, v[k] + 'px'));
+    el.style.setProperty('--ir', v.ir);
+    return { el, inn: q('.pr-in'), tm: q('.pr-tm'), ck: q('.pr-ck'), ckC: q('.pr-ck circle'), ckP: q('.pr-ck path'), well: q('.pr-well'), card: q('.pr-card'), pw: q('.pr-pw'), img: q('.pr-img'),
+      nm: q('.pr-nm > span'), nsk: q('.pr-nm .pr-sk'), pr: q('.pr-pr > span'), psk: q('.pr-pr .pr-sk'), add: q('.pr-add'), spec: Array.from(el.querySelectorAll('.pr-spec li')),
+      phEl: q('.pr-ph'), roll: q('.pr-roll'), fill: q('.pr-fill'), run: q('.pr-run'), done: q('.pr-done'), ap: q('.pr-ap'), use: q('.pr-use'), cache: {} };
+  });
+
+  /* state */
+  let T = KEY_T, anchor = -1, applied = -1, ph = -1, fi = -1, press = -1, lastIdx = -1, lastReady = -1, rewind = 0;
+  let raf = 0, last = 0, visible = true, stag = [];
+  const say = (t) => { msg.textContent = ''; msg.textContent = t; };
+  const isDone = (i) => T >= D[i];
+  const lean = () => (anchor >= 0 || applied >= 0 ? -1 : ph >= 0 ? ph : fi);
+
+  function slots() {
+    const s = S.f.map((f) => Math.max(0, f.x) * U);
+    if (anchor >= 0) { let o = 0; for (let i = 0; i < 3; i++) if (i !== anchor) o += s[i]; s[anchor] = Math.max(U, TOT - o); }
+    return s;
+  }
+  const widthOf = (s) => s - GAP * Math.min(1, s / U);
+
+  function render() {
+    const sl = slots();
+    let left = 0, ready = 0, leader = -1, lp = -1;
+    const running = D.some((d) => T < d);
+    for (let i = 0; i < 3; i++) if (isDone(i)) ready++;
+    for (let i = 0; i < 3; i++) if (!isDone(i) && S.p[i].x > lp) { lp = S.p[i].x; leader = i; }
+    const lv = lean();
+    // who holds the one lime
+    let owner = { k: 'none', i: -1 };
+    if (applied >= 0) owner = { k: 'pill', i: applied };
+    else if (lv >= 0 && isDone(lv)) owner = { k: 'pill', i: lv };
+    else if (running) owner = { k: 'fill', i: leader };
+    else owner = { k: 'pill', i: BEST };
+
+    for (let i = 0; i < 3; i++) {
+      const l = L[i], v = V[i], p = clamp(S.p[i].x, 0, 1), w = widthOf(sl[i]), dn = clamp(S.dn[i].x, 0, 1);
+      const g = i === anchor ? clamp((w - W0) / (WR - W0), 0, 1) : 0, gg = ez(g);
+      const folded = w < 1;
+      // placement and lean
+      l.el.style.left = left.toFixed(2) + 'px';
+      l.el.style.width = Math.max(0, w).toFixed(2) + 'px';
+      l.el.style.visibility = folded ? 'hidden' : '';
+      l.inn.style.setProperty('--iw', Math.max(W0, w).toFixed(2) + 'px');
+      const sc = S.sc[i].x;
+      l.el.style.transform = Math.abs(sc - 1) < 0.0004 ? '' : `scale(${sc.toFixed(4)})`;
+      l.el.style.setProperty('--l', clamp((sc - 1) / 0.02, 0, 1).toFixed(3));
+      left += sl[i];
+      // timer, check
+      const t = Math.min(T, D[i]), txt = t.toFixed(1) + ' s';
+      if (l.cache.tm !== txt) { l.tm.textContent = txt; l.cache.tm = txt; }
+      l.ck.style.visibility = dn < 0.03 ? 'hidden' : '';                   // a zero-length round dash would draw a dot
+      l.ckC.style.strokeDashoffset = (1 - ramp(dn, 0, .6)).toFixed(3);
+      l.ckP.style.strokeDashoffset = (1 - ramp(dn, .4, 1)).toFixed(3);
+      // steps
+      const si = p >= STEPS[3] ? 3 : p >= STEPS[2] ? 2 : p >= STEPS[1] ? 1 : 0;
+      if (l.cache.si !== si) { l.roll.style.transform = `translateY(${-si * STEP_H}px)`; l.cache.si = si; }
+      l.fill.style.width = (p * 100).toFixed(2) + '%';
+      l.fill.classList.toggle('is-lime', owner.k === 'fill' && owner.i === i);
+      // the foot swaps from the bar to the pill
+      l.run.style.transform = dn > 0.0005 ? `translateY(${(-dn * FH).toFixed(2)}px)` : '';
+      l.done.style.transform = dn < 0.9995 ? `translateY(${((1 - dn) * FH).toFixed(2)}px)` : '';
+      const live = isDone(i) && (i === anchor || (!folded && anchor < 0 && sl[i] > U * 0.5));
+      if (l.cache.live !== live) { l.done.inert = !live; l.cache.live = live; }
+      l.use.classList.toggle('is-lime', owner.k === 'pill' && owner.i === i);
+      const setL = applied === i;
+      if (l.cache.set !== setL) { l.use.classList.toggle('is-set', setL); l.use.setAttribute('aria-pressed', setL ? 'true' : 'false'); l.use.setAttribute('aria-label', (setL ? 'Applied: ' : 'Use ') + NAMES[i]); l.cache.set = setL; }
+      // the pill narrows and the line beside it is uncovered as the lane grows
+      l.use.style.width = g > 0.001 ? (w - 24 - (w - 24 - 128) * gg).toFixed(2) + 'px' : '';
+      l.ap.style.clipPath = g > 0.001 ? `inset(0 ${((1 - ramp(g, .5, .95)) * 100).toFixed(1)}% 0 0)` : 'inset(0 100% 0 0)';
+
+      // the card, from progress alone
+      const sh = ramp(p, .03, .15), ww = WELL_W(Math.max(W0, w));
+      const cxm = ww / 2 + (CX - ww / 2) * gg;
+      l.card.style.left = l.phEl.style.left = (cxm - v.cw / 2).toFixed(2) + 'px';
+      l.card.style.top = l.phEl.style.top = ((WELL_H - v.ch) / 2).toFixed(2) + 'px';
+      l.phEl.style.transform = l.card.style.transform = `scale(${(1 + 0.08 * gg) * (0.985 + 0.015 * ramp(p, .88, 1))})`;
+      l.card.style.clipPath = sh >= 1 ? 'none' : `inset(0 0 ${((1 - ez(sh)) * 100).toFixed(2)}% 0 round ${v.cr}px)`;
+      const stage = p < .2 ? v.ih : p < .28 ? v.c[0] : p < .38 ? v.c[1] : p < .5 ? v.c[2] : v.ih;
+      if (l.cache.stage !== stage) { l.pw.style.height = stage + 'px'; l.cache.stage = stage; }
+      l.img.style.clipPath = `inset(0 0 ${((1 - ez(ramp(p, .5, .66))) * 100).toFixed(2)}% 0)`;
+      const kn = ez(ramp(p, .52, .64)), kp = ez(ramp(p, .62, .72)), ka = ez(ramp(p, .74, .84));
+      l.nm.style.clipPath = `inset(0 ${((1 - kn) * 100).toFixed(2)}% 0 0)`; l.nsk.style.clipPath = `inset(0 0 0 ${(kn * 100).toFixed(2)}%)`;
+      l.pr.style.clipPath = `inset(0 ${((1 - kp) * 100).toFixed(2)}% 0 0)`; l.psk.style.clipPath = `inset(0 0 0 ${(kp * 100).toFixed(2)}%)`;
+      l.add.style.clipPath = `inset(0 ${((1 - ka) * 100).toFixed(2)}% 0 0)`;
+      l.spec.forEach((li, k) => { li.style.clipPath = g > 0.001 ? `inset(0 ${((1 - ez(ramp(g, .5 + k * .08, .86 + k * .04))) * 100).toFixed(1)}% 0 0)` : 'inset(0 100% 0 0)'; });
+      l.spec[0].parentNode.style.visibility = g > 0.001 ? '' : 'hidden';
+    }
+    // header
+    const idx = applied >= 0 ? 4 : ready === 3 ? 3 : ready;
+    if (idx !== lastIdx) {
+      srEl.style.transform = `translateY(${-idx * ROW}px)`; lastIdx = idx;
+      if (lastReady !== -1) say(applied >= 0 ? `${NAMES[applied]} applied to Product card` : ready === 3 ? 'All three variants are ready. Pick one to apply.' : ready === 0 ? 'Running 3 variants' : `${ready} of 3 variants ready`);
+    }
+    lastReady = ready;
+  }
+
+  /* the loop: run clock, retarget the springs from the state, step, draw; stops when nothing moves */
+  function frame(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.05); last = now;
+    const was = D.some((d) => T < d);
+    if (was) T += dt;
+    for (let i = 0; i < 3; i++) {
+      aim(S.p[i], curve(i, T / D[i]), rewind > 0 ? 0.3 : 0.16);
+      aim(S.dn[i], isDone(i) ? 1 : 0, 0.42);
+      const lv = lean();
+      aim(S.sc[i], press === i ? 0.99 : lv < 0 ? 1 : i === lv ? 1.02 : 0.985, 0.3);
+    }
+    if (rewind > 0) rewind = Math.max(0, rewind - dt);
+    let alive = was;
+    for (let i = 0; i < 3; i++) { alive = step(S.p[i], dt) || alive; alive = step(S.dn[i], dt) || alive; alive = step(S.f[i], dt) || alive; alive = step(S.sc[i], dt) || alive; }
+    // an unfold that has finished: the anchor stops being the remainder
+    if (anchor >= 0 && applied < 0 && !stag.length && S.f.every((f, i) => i === anchor || (!f.on && f.x >= 0.999 && f.T === 1))) { put(S.f[anchor], 1); anchor = -1; }
+    if (stag.length) alive = true;
+    render();
+    if (alive && visible && !document.hidden) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (!raf && visible) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+  if ('IntersectionObserver' in window) new IntersectionObserver((e) => { visible = e[e.length - 1].isIntersecting; if (visible) kick(); }).observe(fit);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(); });
+
+  /* the fold: the other lanes' slots go to 0 (or back to 1), 40 ms apart; the anchor keeps the remainder */
+  function setFolds(open, from) {
+    stag.forEach(clearTimeout); stag = [];
+    let n = 0;
+    for (let j = 0; j < 3; j++) {
+      if (j === from) continue;
+      // a fold aims a little past 0 (and the width is clamped), so the lane reaches nothing in finite time instead of lingering as a sliver
+      const go = () => { if (open) S.f[j].x = Math.max(0, S.f[j].x); aim(S.f[j], open ? 1 : FOLD, 0.42); kick(); };
+      if (reduced || n === 0) go(); else stag.push(setTimeout(() => { stag.shift(); go(); }, n * 40));
+      n++;
+    }
+  }
+  function freezeAnchor() {                                            // before the anchor changes: its slot becomes its own spring value, so nothing jumps
+    if (anchor < 0) return;
+    const sl = slots();
+    S.f[anchor].x = sl[anchor] / U; S.f[anchor].v = 0;
+  }
+  function pick(i) {
+    if (!isDone(i) || applied === i) return;
+    freezeAnchor();
+    anchor = i; applied = i; ph = -1;
+    // the new anchor's own slot is the remainder; the others fold
+    setFolds(false, i);
+    if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.pr-lane') && document.activeElement !== L[i].use) L[i].use.focus({ preventScroll: true });
+    kick(); render();
+  }
+  function unfold() {
+    if (anchor < 0) return;
+    applied = -1;
+    setFolds(true, anchor);
+    kick();
+  }
+  function again() {
+    const hadFocusInLane = !!(document.activeElement && document.activeElement.closest && document.activeElement.closest('.pr-lane'));
+    T = 0; rewind = 0.8; applied = -1; ph = -1; fi = -1;
+    if (anchor >= 0) setFolds(true, anchor);
+    else { stag.forEach(clearTimeout); stag = []; }
+    const svg = againBtn.querySelector('svg'); svg.dataset.r = String((+svg.dataset.r || 0) + 360); svg.style.transform = `rotate(${svg.dataset.r}deg)`;
+    if (hadFocusInLane) againBtn.focus({ preventScroll: true });
+    kick();
+  }
+
+  /* pose: the deterministic state it loads in (or the finished still under reduced motion) */
+  function pose() {
+    stag.forEach(clearTimeout); stag = [];
+    anchor = -1; applied = -1; ph = -1; fi = -1; press = -1; rewind = 0;
+    T = reduced ? 99 : KEY_T; lastIdx = -1; lastReady = -1;
+    for (let i = 0; i < 3; i++) { put(S.f[i], 1); put(S.sc[i], 1); put(S.p[i], curve(i, T / D[i])); put(S.dn[i], isDone(i) ? 1 : 0); L[i].cache = {}; }
+    render(); kick();
+  }
+
+  /* input: the same handlers for a hand and for the ghost (it dispatches untrusted pointer and click events) */
+  const laneOf = (t) => { const e = t && t.closest ? t.closest('.pr-lane') : null; return e ? +e.dataset.i : -1; };
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
+    const i = laneOf(e.target), n = i >= 0 && isDone(i) && anchor < 0 && !e.target.closest('[inert]') ? i : -1;
+    if (n !== ph) { ph = n; kick(); }
+  }, { passive: true });
+  document.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest ? e.target.closest('.pr-again, .pr-use') : null;
+    if (b) b.classList.add('is-press');
+    const i = laneOf(e.target);
+    if (i >= 0 && isDone(i) && !b) { press = i; kick(); }
+  }, { passive: true });
+  const unpress = () => { document.querySelectorAll('.is-press').forEach((b) => b.classList.remove('is-press')); if (press >= 0) { press = -1; kick(); } };
+  document.addEventListener('pointerup', unpress, { passive: true });
+  document.addEventListener('pointercancel', unpress, { passive: true });
+  lanesEl.addEventListener('click', (e) => { const i = laneOf(e.target); if (i >= 0) pick(i); });
+  againBtn.addEventListener('click', again);
+  board.addEventListener('focusin', (e) => { const i = laneOf(e.target); fi = i >= 0 && e.target.matches(':focus-visible') ? i : -1; kick(); });
+  board.addEventListener('focusout', (e) => { if (!board.contains(e.relatedTarget)) { fi = -1; kick(); } });
+  board.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && applied >= 0) { e.preventDefault(); unfold(); return; }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const i = laneOf(e.target); if (i < 0) return;
+      const live = L.map((l, k) => k).filter((k) => !L[k].done.inert);
+      const n = live[live.indexOf(i) + (e.key === 'ArrowRight' ? 1 : -1)];
+      if (n !== undefined) { e.preventDefault(); L[n].use.focus(); }
+    }
+  });
+
+  pose();
+  return {
+    fit, board, L, D, pick, again, unfold, pose, kick,
+    get T() { return T; }, get anchor() { return anchor; }, get applied() { return applied; }, get ph() { return ph; }, isDone,
+    sp() { return { T, p: S.p.map((s) => s.x), f: S.f.map((s) => s.x), sc: S.sc.map((s) => s.x), dn: S.dn.map((s) => s.x) }; },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = PR.fit;
+  // the board is drawn at 642 × 370 and scaled to the room it is given (about 80% of the width, 1.5× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.8 * W / 642, (H - 2 * pad - ui) / 370, 1.5));
+    fit.style.setProperty('--s', s.toFixed(4));
+  }
+  size();
+  addEventListener('resize', size);
+
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  // the ghost's events: the same ones a hand makes, untrusted so the page can tell them apart
+  const fire = (type, x, y, Ctor = PointerEvent) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 71, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  const rect = (el) => el.getBoundingClientRect();
+  const laneAt = (i) => { const r = rect(PR.L[i].well); return { x: r.left + r.width * 0.5, y: r.top + r.height * 0.55 }; };
+  const centre = (el) => { const r = rect(el); return { x: r.left + r.width * 0.55, y: r.top + r.height * 0.55 }; };
+  const away = () => { const r = rect(PR.board); return { x: Math.min(innerWidth - 24, r.right + 30), y: r.top + r.height * 0.5 }; };
+
+  async function glide(my, to, ms = 760) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y);
+      if (p >= 1) break;
+    }
+  }
+  async function until(my, ok) { while (!ok()) await gap(my, 100); }
+  async function click(my, el) {
+    await glide(my, centre(el), 620);
+    await gap(my, 160);
+    const { x, y } = pos;
+    fire('pointerdown', x, y); await gap(my, 110); fire('pointerup', x, y);
+    const t = document.elementFromPoint(x, y); if (t) t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5000 : 1800);
+      QM.ghostShow();
+      if (PR.applied >= 0) { await click(my, PR.board.querySelector('#pr-again')); await gap(my, 700); }
+      for (;;) {
+        // hover the first lane when it is done, then the second, wait for the third
+        await until(my, () => PR.isDone(0)); await glide(my, laneAt(0), 700); await gap(my, 1000);
+        await until(my, () => PR.isDone(1)); await glide(my, laneAt(1), 620); await gap(my, 1100);
+        await glide(my, laneAt(2), 620); await until(my, () => PR.isDone(2)); await gap(my, 1000);
+        // pick the middle one
+        await glide(my, laneAt(1), 640); await gap(my, 800);
+        await click(my, PR.L[1].use); await gap(my, 3600);
+        // run again, and step out of the way while the lanes come back and run
+        await click(my, PR.board.querySelector('#pr-again')); await gap(my, 500);
+        await glide(my, away(), 900);
+        await gap(my, 600);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); if (pos) { pos = null; fire('pointermove', -10, -10); } }
+  if (!QM.tile && !reduced) {
+    const idle = () => PR.board.matches(':hover') || PR.board.contains(document.activeElement);
+    const touch = (e) => {
+      if (e && !e.isTrusted) return;                                           // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); PR.pose(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

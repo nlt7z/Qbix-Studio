@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Symbol draw · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "symbol-draw", "title": "Symbol draw", "group": "studio", "added": "2026-11-23", "cat": "buttons", "order": 20,
+  "kind": "loop", "tone": "paper", "shot": 900,
+  "line": "5 symbols · 28 px, 2 px strokes · every state is a stroke drawn on or off · one progress number each, on a spring",
+  "summary": "The media bar of Qbix's TTS Editor preview: five icon buttons whose symbols change by drawing their own strokes. Mute draws a slash across the speaker while its waves draw off one after the other. Save retraces its outline and fills from the bottom. Download drops its arrow into the tray line, the line becomes the progress as it draws left to right, then hands over to a tick. Signal draws four bars to the level you drag on the button, 1:1 with the hand and with a rubber band at 0 and 4. Repeat draws its loop arrow by arrow and adds a 1. Each symbol is one progress number on a spring, so a second press mid-draw turns the stroke round from where it is.",
+  "spec": [
+    ["Symbols", "28 px symbols (a 22-unit viewBox), 2 px strokes, round caps and joins, inline SVG paths with pathLength 1; each state change is stroke-dashoffset on those paths, never a cross-fade; strokes that are not drawn rest as a track at 28% ink"],
+    ["Progress", "one number per symbol on a critically damped spring from the value and velocity on screen (response 0.42 s Mute, 0.5 s Save, 0.3 s Download, Signal and Repeat 0.3 s and 0.4 s); a second press retargets it, so the stroke turns round exactly where it is"],
+    ["Mute", "0 to 1: outer wave off over 0 to 0.38, inner wave off over 0.14 to 0.5, the slash on over 0.42 to 1 (corner to corner) across an intact speaker"],
+    ["Save", "0 to 1: the outline retracts to 38% over 0 to 0.3, draws back over 0.3 to 0.8 while the fill rises from the bottom over 0.35 to 0.95"],
+    ["Download", "0 to 3: the arrow sinks 2.6 units and its shaft shortens to a stub but the arrow stays in view (0 to 1), the tray line empties and fills left to right with the real progress (1 to 2, 3.2 s after a 0.38 s start), then the arrow and line draw off and a tick draws on (2 to 3)"],
+    ["Signal", "0 to 4: bar i is drawn over the value from i to i + 1, so 2.4 draws two bars and 40% of the third; drag 22 px per step, 1:1 from where it was grabbed after 6 px of travel; past 0 or 4 the symbol shifts by (x·14·0.55) / (14 + 0.55·x) px; release projects with d 0.99 to the nearest step and springs there at the hand's velocity"],
+    ["Repeat", "0 to 2: top line 0 to 0.3, its head 0.26 to 0.44, bottom line 0.4 to 0.7, its head 0.66 to 0.84, the 1 from 1 to 1.5; off, repeat all, repeat one"],
+    ["Press", "on pointerdown the pill scales to 0.94 in 100 ms; the state changes on release (click), with the keyboard too; Signal also takes arrows, Home and End"],
+    ["Lime", "one pill, 64 × 44 px: it sits behind the symbol that was turned on last and travels to the one before it when that is turned off (springs, 0.38 s and 0.34 s), shrinks to nothing when none is on"],
+    ["Loop", "the thumbnail's pose is Mute with its slash 60% across an intact speaker, Download at 58%, Save filled and Signal at 3, all held; after about 5 s a ghost reverses Mute mid-draw, saves, downloads, drags Signal up to 3, past 4 and back, steps Repeat and puts it all back; it uses the same pointer and click events as a hand, yields to any real pointer, touch or key and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-23"],
+  "where": "The preview bar of the TTS Editor in Qbix Labs, and any toolbar on a Qbix product page where a state change (mute, save, download, a level) should be seen as the symbol being drawn rather than swapped.",
+  "rules": [
+    "A symbol's state is one number. Every stroke's offset is computed from it, so any state can be left halfway and the draw turns round from where it stands.",
+    "Draw, never swap: a stroke that leaves is drawn off, a stroke that arrives is drawn on, parts are staggered in the order a hand would draw them. A stroke at zero length is not drawn at all (no stray round cap).",
+    "Springs start from the value and velocity on screen and are critically damped; nothing bounces. The Signal bars follow the hand with no smoothing while it is held.",
+    "Press feedback is on pointerdown (0.94, 100 ms); the state changes on release.",
+    "Exactly one lime at any time: the pill behind the symbol turned on last. The other on states read through ink labels and their drawn state alone.",
+    "Real buttons: aria-pressed on Mute and Save, aria-label updated on Download, Signal and Repeat, status text in a polite live region. Keyboard: Tab, Space or Enter; Signal also takes arrows, Home and End.",
+    "System face, Apple neutrals (#1d1d1f, #6e6e73, #f5f5f7 washes at 5% ink), lime as the one accent, icons drawn inline in the manner of SF Symbols.",
+    "Under reduced motion every state switches in place: no draw, no spring, no pill travel, no ghost; Download goes straight to its tick."
+  ],
+  "tags": ["icons", "symbols", "stroke", "draw", "dashoffset", "toolbar", "spring", "interruptible", "variable", "signal", "mute", "download", "buttons", "TTS"]
+}
+</script>
+<style data-code>
+/* Symbol draw. A white card in the system face with Apple's neutrals. Five buttons, each a 64 × 44 pill holding a 28 px symbol (a 22-unit viewBox, 1.6 units = 2 px strokes) and a 12 px label.
+   Every symbol is SVG paths with pathLength 1: .sd-d paths are drawn by stroke-dashoffset (set from script), .sd-t paths are the dim track under them.
+   The one lime is a single pill (.sd-lime) that script moves behind the symbol turned on last. Easings: ui (.4,0,.2,1), expo out (.16,1,.3,1), in (.5,0,.75,0). */
+.sd-card { --sd-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: relative; width: 370px; background: #fff; color: #1d1d1f; border-radius: 24px; box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+  font: 400 13px/18px var(--sd-f); letter-spacing: -.006em; -webkit-font-smoothing: antialiased; transform-origin: 0 0; transform: scale(var(--s, 1));
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.sd-card p, .sd-card h3 { margin: 0; }
+.sd-head { padding: 18px 20px 0; }
+.sd-t { font: 600 17px/22px var(--sd-f); letter-spacing: -.01em; }
+.sd-sub { margin-left: 6px; font: 400 13px/22px var(--sd-f); letter-spacing: -.006em; color: #6e6e73; }
+
+.sd-row { position: relative; display: grid; grid-template-columns: repeat(5, 70px); justify-content: center; margin-top: 14px; }
+.sd-btn { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 66px; margin: 0; padding: 0; border: 0; background: none;
+  font: inherit; letter-spacing: inherit; color: inherit; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+.sd-btn[data-id="sig"] { touch-action: pan-y; }
+.sd-btn[data-id="sig"].is-drag, .sd-btn[data-id="sig"].is-drag * { cursor: grabbing; }
+.sd-pill { position: relative; display: grid; place-items: center; width: 64px; height: 44px; border-radius: 999px; scale: 1; transition: scale 100ms cubic-bezier(.4, 0, .2, 1); }
+.sd-btn.is-press .sd-pill { scale: .94; }
+.sd-wash { position: absolute; inset: 0; border-radius: inherit; background: rgba(0, 0, 0, .05); opacity: 0; transition: opacity 150ms cubic-bezier(.4, 0, .2, 1); }
+@media (hover: hover) {
+  .sd-btn:hover .sd-wash { opacity: 1; transition-duration: 200ms; }
+  .sd-btn.is-host:hover .sd-wash { opacity: 0; }
+}
+.sd-btn:focus-visible .sd-pill { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.sd-lab { font-weight: 500; font-size: 12px; line-height: 16px; color: #6e6e73; transition: color 200ms cubic-bezier(.4, 0, .2, 1); }
+.sd-btn.is-on .sd-lab { color: #1d1d1f; }
+/* the one lime: width and x are springs, set from script; it hides itself when it has no width */
+.sd-lime { position: absolute; left: 0; top: 0; z-index: 0; width: 0; height: 44px; border-radius: 999px; background: #B8FF00; visibility: hidden; pointer-events: none;
+  scale: 1; transition: scale 100ms cubic-bezier(.4, 0, .2, 1); }
+.sd-lime.is-press { scale: .94; }
+
+/* the symbols */
+.sd-ic { position: relative; display: block; width: 28px; height: 28px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sd-ic .sd-d { stroke-dasharray: 1 1; }
+.sd-ic .sd-t { opacity: .28; }
+.sd-ic .sd-bf { fill: currentColor; stroke: none; }
+
+.sd-foot { display: flex; align-items: center; height: 45px; margin-top: 14px; padding: 0 20px; border-top: 1px solid rgba(0, 0, 0, .08); }
+.sd-stat { position: relative; flex: 1; height: 18px; overflow: hidden; font-variant-numeric: tabular-nums; }
+.sd-stat > span { position: absolute; left: 0; top: 0; white-space: nowrap; color: #1d1d1f; }
+@media (prefers-reduced-motion: reduce) { .sd-card *, .sd-card *::before { transition: none !important; } }
+</style>
+<style>
+  .sdw { display: grid; gap: 12px; justify-items: start; }
+  .sdw .kicker, .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+  .sd-fit { position: relative; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sdw">
+    <p class="kicker">Qbix · TTS Editor</p>
+    <div class="sd-fit" id="sd-fit">
+<!-- code -->
+<section class="sd-card" id="sd-card" aria-labelledby="sd-title">
+  <div class="sd-head"><h3 class="sd-t" id="sd-title">Preview<span class="sd-sub">Maple · 24 kHz</span></h3></div>
+  <div class="sd-row" role="group" aria-label="Preview controls">
+    <i class="sd-lime" aria-hidden="true"></i>
+
+    <button class="sd-btn" type="button" data-id="mute" aria-pressed="false">
+      <span class="sd-pill"><i class="sd-wash"></i>
+        <svg class="sd-ic" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
+          <g>
+            <path d="M2.8 8.2h3l5-4.2v14l-5-4.2h-3z"/>
+            <path class="sd-d sd-w1" pathLength="1" d="M13.62 8.46a3.8 3.8 0 0 1 0 5.08"/>
+            <path class="sd-d sd-w2" pathLength="1" d="M16 6.32a7 7 0 0 1 0 9.36"/>
+          </g>
+          <path class="sd-d sd-slash" pathLength="1" d="M3.5 3.5L18.5 18.5"/>
+        </svg>
+      </span><span class="sd-lab">Mute</span>
+    </button>
+
+    <button class="sd-btn" type="button" data-id="bm" aria-pressed="false">
+      <span class="sd-pill"><i class="sd-wash"></i>
+        <svg class="sd-ic" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
+          <defs><clipPath id="sd-bc"><rect class="sd-bfc" x="0" y="19" width="22" height="0"/></clipPath></defs>
+          <path class="sd-bf" clip-path="url(#sd-bc)" d="M11 14.2L4.8 18.6V5.2a2 2 0 0 1 2-2h8.4a2 2 0 0 1 2 2v13.4z"/>
+          <path class="sd-d sd-bo" pathLength="1" d="M11 14.2L4.8 18.6V5.2a2 2 0 0 1 2-2h8.4a2 2 0 0 1 2 2v13.4z"/>
+        </svg>
+      </span><span class="sd-lab">Save</span>
+    </button>
+
+    <button class="sd-btn" type="button" data-id="dl" aria-label="Download Maple.m4a">
+      <span class="sd-pill"><i class="sd-wash"></i>
+        <svg class="sd-ic" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
+          <defs><clipPath id="sd-dc"><rect x="0" y="0" width="22" height="17.2"/></clipPath></defs>
+          <g clip-path="url(#sd-dc)"><g class="sd-arr">
+            <path class="sd-d sd-ash" pathLength="1" d="M11 13.6V3.4"/>
+            <path class="sd-d sd-al" pathLength="1" d="M11 13.6L6.9 9.5"/>
+            <path class="sd-d sd-ar" pathLength="1" d="M11 13.6L15.1 9.5"/>
+          </g></g>
+          <path class="sd-d sd-t sd-trk" pathLength="1" d="M3.8 18.2h14.4"/>
+          <path class="sd-d sd-bar" pathLength="1" d="M3.8 18.2h14.4"/>
+          <path class="sd-d sd-tick" pathLength="1" d="M5 11.4l4.2 4.2L17 6.6"/>
+        </svg>
+      </span><span class="sd-lab">Download</span>
+    </button>
+
+    <button class="sd-btn" type="button" data-id="sig" aria-label="Signal, 0 of 4. Drag sideways to set it">
+      <span class="sd-pill"><i class="sd-wash"></i>
+        <svg class="sd-ic" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><g class="sd-sg">
+          <path class="sd-t" d="M4.4 18v-3.4M8.8 18v-6.9M13.2 18v-10.4M17.6 18v-13.9"/>
+          <path class="sd-d sd-sb" pathLength="1" d="M4.4 18v-3.4"/>
+          <path class="sd-d sd-sb" pathLength="1" d="M8.8 18v-6.9"/>
+          <path class="sd-d sd-sb" pathLength="1" d="M13.2 18v-10.4"/>
+          <path class="sd-d sd-sb" pathLength="1" d="M17.6 18v-13.9"/>
+        </g></svg>
+      </span><span class="sd-lab">Signal</span>
+    </button>
+
+    <button class="sd-btn" type="button" data-id="rep" aria-label="Repeat off">
+      <span class="sd-pill"><i class="sd-wash"></i>
+        <svg class="sd-ic" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
+          <path class="sd-t" d="M4.2 10.2v-1a3.4 3.4 0 0 1 3.4-3.4h10.2M15.2 3.4l2.6 2.4-2.6 2.4M17.8 11.8v1a3.4 3.4 0 0 1-3.4 3.4H4.2M6.8 13.8l-2.6 2.4 2.6 2.4"/>
+          <path class="sd-d sd-ra" pathLength="1" d="M4.2 10.2v-1a3.4 3.4 0 0 1 3.4-3.4h10.2"/>
+          <path class="sd-d sd-rh1" pathLength="1" d="M15.2 3.4l2.6 2.4-2.6 2.4"/>
+          <path class="sd-d sd-rb" pathLength="1" d="M17.8 11.8v1a3.4 3.4 0 0 1-3.4 3.4H4.2"/>
+          <path class="sd-d sd-rh2" pathLength="1" d="M6.8 13.8l-2.6 2.4 2.6 2.4"/>
+          <path class="sd-d sd-r1" pathLength="1" d="M9.7 9.9l1.9-1.7v5.6"/>
+        </svg>
+      </span><span class="sd-lab">Repeat</span>
+    </button>
+  </div>
+  <div class="sd-foot"><div class="sd-stat" aria-hidden="true"></div></div>
+  <p class="sr-only" id="sd-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+    </div>
+  </div>
+  <div class="qm-ui"><span>Press a symbol. Drag Signal sideways, past either end. Press again while it draws, or Tab to a symbol and use Space, and arrows on Signal</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Symbol draw. Every symbol is one progress number on a spring (U): Mute and Save 0..1, Download 0..3 (drop, progress, tick), Signal 0..4 (bars), Repeat 0..2.
+   draw() turns those numbers into stroke-dashoffsets; nothing else moves a stroke. A press retargets the spring from the value and velocity on screen,
+   so a second press turns the stroke round where it is. Signal also follows a held pointer 1:1 (no smoothing) and rubber-bands past 0 and 4.
+   The lime is one pill: it is behind the symbol that was turned on last (a stack), and travels back down the stack when that one is turned off. */
+const SD = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const sm = (x, a, b) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };   // a smoothstep window of x over [a, b]
+  const PPU = 22, D = 14, SLOP = 6, LOOK = 0.099, THROW = 300;   // Signal: design px per step, rubber-band dimension, px before a drag, d 0.99 look-ahead, px/s that counts as a throw
+  const DL_WAIT = 380, DL_RUN = 3200, PILL = 64;                  // Download: ms before the progress starts, ms of progress; the pill's width
+  const IDS = ['mute', 'bm', 'dl', 'sig', 'rep'];
+  const RESP = { mute: 0.42, bm: 0.5, dl: 0.3, sig: 0.3, rep: 0.4 };
+
+  /* a spring: the critically damped closed form (a damped cosine below 1). It always starts from the x and v on screen. */
+  const mk = (x = 0, resp = 0.4) => ({ x, v: 0, T: x, w: TAU / resp, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const rb = (x) => (x * D * 0.55) / (D + 0.55 * x);                       // the rubber band, Apple's 0.55, and its inverse (to catch a stretched symbol without a jump)
+  const rbInv = (r) => { r = Math.min(r, D * 0.98); return (r * D) / (0.55 * (D - r)); };
+
+  const card = document.getElementById('sd-card'), row = card.querySelector('.sd-row'), lime = row.querySelector('.sd-lime');
+  const statEl = card.querySelector('.sd-stat'), liveEl = document.getElementById('sd-live');
+  const btn = {};
+  IDS.forEach((id) => { btn[id] = row.querySelector(`[data-id="${id}"]`); });
+  const $ = (s) => card.querySelector(s), $$ = (s) => Array.from(card.querySelectorAll(s));
+  const el = {
+    w1: $('.sd-w1'), w2: $('.sd-w2'), slash: $('.sd-slash'), bo: $('.sd-bo'), bfc: $('.sd-bfc'),
+    arr: $('.sd-arr'), ash: $('.sd-ash'), al: $('.sd-al'), ar: $('.sd-ar'), trk: $('.sd-trk'), bar: $('.sd-bar'), tick: $('.sd-tick'),
+    sg: $('.sd-sg'), sb: $$('.sd-sb'), ra: $('.sd-ra'), rh1: $('.sd-rh1'), rb: $('.sd-rb'), rh2: $('.sd-rh2'), r1: $('.sd-r1'),
+  };
+
+  const U = { mute: mk(0, RESP.mute), bm: mk(0, RESP.bm), dl: mk(0, RESP.dl), sig: mk(0, RESP.sig), rep: mk(0, RESP.rep) };
+  const E = mk(0, 0.32);                                  // Signal's rubber band: the symbol's shift in px, signed
+  const P = { x: mk(0, 0.38), w: mk(0, 0.34) };           // the lime pill: centre x and width
+  const want = { mute: 0, bm: 0, sig: 0, rep: 0 };        // where each state is heading (what the user asked for)
+  const dl = { state: 'idle', t0: 0 };                    // idle, run, done
+  let frozen = false, stack = [], host = null, lastHost = null, drag = null, swallow = false, raf = 0, last = 0;
+
+  /* a stroke at offset 1 is drawn nowhere; at zero length a round cap would still show a dot, so it is hidden there */
+  function put(e, o, on = '1') {
+    const k = Math.round(clamp(o, 0, 1) * 1000);
+    if (e._k === k) return;
+    e._k = k; e.style.strokeDashoffset = String(k / 1000); e.style.opacity = k >= 995 ? '0' : on;
+  }
+  function draw() {
+    const m = U.mute.x;                                                       // Mute: waves off, outer first, then the slash on
+    put(el.w2, sm(m, 0, 0.38)); put(el.w1, sm(m, 0.14, 0.5));
+    put(el.slash, 1 - sm(m, 0.42, 1));
+    const b = U.bm.x;                                                         // Save: the outline retracts and is drawn back, the fill rises
+    put(el.bo, 0.62 * sm(b, 0, 0.3) - 0.62 * sm(b, 0.3, 0.8));
+    const f = sm(b, 0.35, 0.95), fh = +(16.6 * f).toFixed(2), ky = 'f' + fh;
+    if (el.bfc._k !== ky) { el.bfc._k = ky; el.bfc.setAttribute('y', (19.2 - fh).toFixed(2)); el.bfc.setAttribute('height', fh); }
+    const u = U.dl.x;                                                         // Download: the arrow sinks to a stub above the tray, the line is the progress, then a tick
+    const ty = (2.6 * sm(u, 0, 0.7) + 1.4 * sm(u, 2, 2.8)).toFixed(2);
+    if (el.arr._k !== ty) { el.arr._k = ty; el.arr.setAttribute('transform', `translate(0 ${ty})`); }
+    put(el.ash, 0.4 * sm(u, 0.1, 0.8) + 0.6 * sm(u, 2, 2.6));
+    put(el.al, sm(u, 2.2, 2.8)); put(el.ar, sm(u, 2.2, 2.8));
+    put(el.bar, u <= 1 ? sm(u, 0.6, 1) : u <= 2 ? 1 - (u - 1) : sm(u, 2, 2.6));
+    put(el.trk, sm(u, 2.35, 3), '.28'); put(el.tick, 1 - sm(u, 2.45, 3));
+    const v = U.sig.x;                                                        // Signal: bar i is drawn over the value from i to i + 1
+    el.sb.forEach((bar, i) => put(bar, 1 - clamp(v - i, 0, 1)));
+    const sx = E.x.toFixed(2);
+    if (el.sg._k !== sx) { el.sg._k = sx; el.sg.style.transform = `translateX(${sx}px)`; }
+    const r = U.rep.x;                                                        // Repeat: line, head, line, head, then the 1
+    put(el.ra, 1 - sm(r, 0, 0.3)); put(el.rh1, 1 - sm(r, 0.26, 0.44)); put(el.rb, 1 - sm(r, 0.4, 0.7)); put(el.rh2, 1 - sm(r, 0.66, 0.84)); put(el.r1, 1 - sm(r, 1, 1.5));
+  }
+
+  /* what is on, and which was turned on last */
+  const isOn = {
+    mute: () => want.mute === 1, bm: () => want.bm === 1, dl: () => dl.state !== 'idle', rep: () => want.rep > 0,
+    sig: () => (drag && drag.on ? U.sig.x >= 0.5 : want.sig > 0),
+  };
+  function sync() {
+    IDS.forEach((id) => {
+      const o = isOn[id](), i = stack.indexOf(id);
+      if (o && i < 0) stack.push(id); else if (!o && i >= 0) stack.splice(i, 1);
+      btn[id].classList.toggle('is-on', o);
+    });
+    host = stack.length ? stack[stack.length - 1] : null;
+    IDS.forEach((id) => btn[id].classList.toggle('is-host', id === host));
+  }
+  function pill(dt) {
+    const hb = host && btn[host], cx = hb ? hb.offsetLeft + hb.offsetWidth / 2 : P.x.T, wT = hb ? PILL : 0;
+    if (host !== lastHost) {
+      if (hb && P.w.x < 1) { P.x.x = P.x.T = cx; P.x.v = 0; }              // from nothing it grows where the symbol is
+      lastHost = host;
+    }
+    P.x.T = cx; P.w.T = wT;
+    if (reduced) { P.x.x = cx; P.w.x = wT; P.x.on = P.w.on = false; }
+    else { P.x.on = P.w.on = true; step(P.x, dt, 0.05, 3); step(P.w, dt, 0.05, 3); }
+    const w = P.w.x, x = P.x.x - w / 2;
+    lime.style.width = w.toFixed(2) + 'px';
+    lime.style.transform = `translate3d(${x.toFixed(2)}px, 0, 0)`;
+    lime.style.visibility = w < 0.6 ? 'hidden' : 'visible';
+    return Math.abs(P.x.x - P.x.T) > 0.05 || Math.abs(P.w.x - P.w.T) > 0.05;
+  }
+
+  /* the status line: a new message rolls up from below, the old one leaves faster (240 ms against 420 ms) */
+  let cur = null;
+  function say(key, text, sr) {
+    if (cur && cur.k === key) { if (cur.textContent !== text) cur.textContent = text; return; }
+    Array.from(statEl.children).forEach((c) => { if (c !== cur) c.remove(); });
+    const n = document.createElement('span');
+    n.textContent = text; n.k = key;
+    statEl.appendChild(n);
+    if (cur && !reduced) {
+      const o = cur;
+      o.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-18px)' }], { duration: 240, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' }).onfinish = () => o.remove();
+      n.animate([{ transform: 'translateY(18px)' }, { transform: 'translateY(0)' }], { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' });
+    } else if (cur) cur.remove();
+    cur = n;
+    if (sr !== false) liveEl.textContent = sr || text;
+  }
+  const FILE = 'Maple.m4a';
+  const pct = () => Math.round(clamp(U.dl.x - 1, 0, 1) * 100);
+  function aria(id) {
+    const b = btn[id];
+    if (id === 'mute' || id === 'bm') b.setAttribute('aria-pressed', want[id] ? 'true' : 'false');
+    else if (id === 'dl') b.setAttribute('aria-label', dl.state === 'idle' ? `Download ${FILE}` : dl.state === 'run' ? `Downloading ${FILE}. Press to cancel` : `Downloaded ${FILE}. Press to remove`);
+    else if (id === 'sig') b.setAttribute('aria-label', `Signal, ${want.sig} of 4. Drag sideways to set it`);
+    else if (id === 'rep') b.setAttribute('aria-label', ['Repeat off', 'Repeat all', 'Repeat one'][want.rep]);
+  }
+
+  /* motion */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let live = false;
+    if (!frozen) {
+      if (dl.state === 'run') {
+        const q = clamp((now - dl.t0 - DL_WAIT) / DL_RUN, 0, 1);
+        U.dl.T = 1 + q; U.dl.on = true; live = true;
+        if (q >= 1) { dl.state = 'done'; U.dl.T = 3; aria('dl'); say('dlend', 'Downloaded · 1.2 MB'); }
+        else say('dl', `Downloading ${FILE} · ${pct()}%`, `Downloading ${FILE}`);
+      }
+      IDS.forEach((id) => { if (id === 'sig' && drag && drag.on) return; if (step(U[id], dt, 0.0004, 0.02)) live = true; });
+      if (step(E, dt, 0.05, 3)) live = true;
+      sync();
+      if (pill(dt)) live = true;
+      if (drag && drag.on) live = true;
+    }
+    draw();
+    if (live) kick();
+  }
+  function go(id, T, v) {
+    const s = U[id];
+    if (reduced) { s.x = s.T = T; s.v = 0; s.on = false; return; }
+    s.T = T; s.on = true; s.z = 1; if (v !== undefined) s.v = v;
+    kick();
+  }
+  // let go of the held pose: everything resumes from where it is drawn
+  function thaw() {
+    if (!frozen) return;
+    frozen = false;
+    if (dl.state === 'run') dl.t0 = performance.now() - DL_WAIT - clamp(U.dl.x - 1, 0, 1) * DL_RUN;
+    IDS.forEach((id) => { U[id].on = Math.abs(U[id].x - U[id].T) > 1e-4; });
+    kick();
+  }
+
+  /* the states */
+  function toggle(id) {
+    thaw();
+    want[id] = want[id] ? 0 : 1;
+    go(id, want[id]); aria(id); sync(); kick();
+    if (id === 'mute') say('mute', want.mute ? 'Muted' : 'Sound on');
+    else say('bm', want.bm ? 'Saved to Library' : 'Removed from Library');
+  }
+  function download() {
+    thaw();
+    if (dl.state === 'idle') {
+      dl.state = 'run'; dl.t0 = performance.now();
+      if (reduced) { dl.state = 'done'; U.dl.x = U.dl.T = 3; say('dlend', 'Downloaded · 1.2 MB'); }
+      else say('dl', `Downloading ${FILE} · 0%`, `Downloading ${FILE}`);
+    } else {
+      say('dlx', dl.state === 'run' ? 'Download cancelled' : 'Download removed');
+      dl.state = 'idle'; go('dl', 0);
+    }
+    aria('dl'); sync(); kick();
+  }
+  function setLevel(n, v) {
+    thaw();
+    n = clamp(Math.round(n), 0, 4);
+    want.sig = n; go('sig', n, v); aria('sig'); sync(); kick();
+    say('sig', n ? `Signal ${n} of 4` : 'Signal off');
+  }
+  function cycleRepeat() {
+    thaw();
+    want.rep = (want.rep + 1) % 3;
+    go('rep', want.rep); aria('rep'); sync(); kick();
+    say('rep', ['Repeat off', 'Repeat all', 'Repeat one'][want.rep]);
+  }
+
+  /* Signal under the hand: the value is the finger's travel from where it was grabbed (22 px a step), no smoothing while held;
+     past 0 or 4 the travel goes through the rubber band into a shift of the symbol. Release projects the value and springs to the nearest step. */
+  const scale = () => card.getBoundingClientRect().width / card.offsetWidth || 1;
+  const ppc = () => PPU * scale();                                          // client px a step
+  function rawOf() {                                                       // the finger's travel at this moment, recovered from what is on screen
+    const e = E.x;
+    if (Math.abs(e) > 0.3) { const o = rbInv(Math.abs(e)) / PPU; return e > 0 ? 4 + o : -o; }
+    return U.sig.x;
+  }
+  function sigDown(x, t, ghost) {
+    thaw();
+    const flying = U.sig.on || E.on, raw = rawOf();
+    U.sig.on = false; U.sig.v = 0; E.on = false; E.v = 0;                  // a press catches it where it is
+    drag = { x0: x, raw0: raw, raw, on: false, q: [[t, raw, E.x]], ghost, flying };
+  }
+  function sigMove(x, t) {
+    const d = drag;
+    if (!d) return;
+    if (!d.on) {
+      if (Math.abs(x - d.x0) < SLOP) return;
+      d.on = true; d.x0 = x; btn.sig.classList.add('is-drag');
+    }
+    let raw = d.raw0 + (x - d.x0) / ppc();
+    if (reduced) raw = clamp(raw, 0, 4);
+    d.raw = raw; U.sig.x = clamp(raw, 0, 4);
+    const over = raw > 4 ? (raw - 4) * PPU : raw < 0 ? raw * PPU : 0;
+    E.x = over ? Math.sign(over) * rb(Math.abs(over)) : 0;
+    d.q.push([t, raw, E.x]);
+    while (d.q.length > 2 && t - d.q[0][0] > 100) d.q.shift();
+    draw(); kick();
+  }
+  function sigUp(t, cancel) {
+    const d = drag;
+    if (!d) return;
+    drag = null;
+    btn.sig.classList.remove('is-drag');
+    if (!d.on) {                                                            // a tap: it was a catch, or a click that follows
+      if (d.flying) { swallow = true; setTimeout(() => { swallow = false; }, 0); if (E.x) { E.on = true; E.T = 0; E.z = 1; } setLevel(Math.round(clamp(U.sig.x, 0, 4)), 0); }
+      return;
+    }
+    swallow = true; setTimeout(() => { swallow = false; }, 0);
+    const b = d.q[d.q.length - 1];
+    let a = d.q[0];
+    for (const q of d.q) if (b[0] - q[0] <= 80) { a = q; break; }
+    let vr = 0, ve = 0;                                                     // the hand's velocity in steps/s, and the shift's in px/s
+    if (!cancel && b[0] - a[0] > 8 && t - b[0] < 80) { vr = clamp(((b[1] - a[1]) / (b[0] - a[0])) * 1000, -40, 40); ve = ((b[2] - a[2]) / (b[0] - a[0])) * 1000; }
+    const raw = d.raw, p = raw + vr * LOOK, n = Math.round(clamp(p, 0, 4));
+    if (reduced) { U.sig.x = n; E.x = 0; setLevel(n); return; }
+    const thr = Math.abs(vr) * ppc() > THROW, A = U.sig.x - n;
+    let v0 = vr;
+    if (A * v0 < 0) v0 = Math.sign(v0) * Math.min(Math.abs(v0), U.sig.w * Math.abs(A));   // a velocity into the target never crosses it
+    if (!E.x && (p > 4.4 || p < -0.4)) ve = Math.sign(vr) * Math.min(260, Math.abs(vr) * PPU * 0.5);   // thrown at an end: it runs into it
+    setLevel(n, v0);
+    if (E.x || ve) { E.T = 0; E.v = ve; E.w = TAU / 0.32; E.z = thr ? 0.8 : 1; E.on = true; }
+  }
+  btn.sig.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key, cur0 = want.sig;
+    let to = null, dir = 0;
+    if (k === 'ArrowRight' || k === 'ArrowUp') { to = cur0 + 1; dir = 1; } else if (k === 'ArrowLeft' || k === 'ArrowDown') { to = cur0 - 1; dir = -1; }
+    else if (k === 'Home') { to = 0; dir = -1; } else if (k === 'End') { to = 4; dir = 1; } else return;
+    e.preventDefault();
+    if (drag) return;
+    const c = clamp(to, 0, 4);
+    if (c === cur0 && !reduced && k.startsWith('Arrow')) { thaw(); E.x = 0; E.T = 0; E.v = dir * 200; E.w = TAU / 0.32; E.z = 1; E.on = true; kick(); }   // against an end: a nudge, then back
+    else setLevel(c, U.sig.on ? U.sig.v : 0);
+  });
+
+  /* input: the same handlers for a hand and for the ghost (it dispatches untrusted pointer and click events) */
+  const press = (id, on) => { btn[id].classList.toggle('is-press', on); if (host === id) lime.classList.toggle('is-press', on); };
+  IDS.forEach((id) => btn[id].addEventListener('pointerdown', (e) => { if (e.button > 0) return; press(id, true); }));
+  const unpress = () => { IDS.forEach((id) => btn[id].classList.remove('is-press')); lime.classList.remove('is-press'); };
+  document.addEventListener('pointerup', unpress, { passive: true });
+  document.addEventListener('pointercancel', unpress, { passive: true });
+  btn.mute.addEventListener('click', () => toggle('mute'));
+  btn.bm.addEventListener('click', () => toggle('bm'));
+  btn.dl.addEventListener('click', download);
+  btn.rep.addEventListener('click', cycleRepeat);
+  btn.sig.addEventListener('click', () => { if (swallow) return; setLevel((want.sig + 1) % 5); });
+
+  let ptr = null;
+  btn.sig.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr) return;
+    ptr = { id: e.pointerId, ghost: !e.isTrusted };
+    sigDown(e.clientX, e.timeStamp, !e.isTrusted);
+    try { btn.sig.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic pointer cannot be captured */ }
+  });
+  const pmove = (e) => { if (ptr && e.pointerId === ptr.id) sigMove(e.clientX, e.timeStamp); };
+  const pend = (cancel) => (e) => { if (!ptr || e.pointerId !== ptr.id) return; ptr = null; sigUp(e.timeStamp, cancel); };
+  addEventListener('pointermove', pmove);
+  addEventListener('pointerup', pend(false));
+  addEventListener('pointercancel', pend(true));
+
+  /* the pose the piece loads in (the thumbnail): Mute with its slash 60% across an intact speaker, Download at 58%, Save filled, Signal at 3; all held until something is pressed */
+  function pose() {
+    drag = null; ptr = null; unpress();
+    dl.state = reduced ? 'done' : 'run';
+    want.mute = reduced ? 0 : 1; want.bm = 1; want.sig = 3; want.rep = 0;
+    const set = (id, x, T) => { U[id].x = x; U[id].T = T === undefined ? x : T; U[id].v = 0; U[id].on = false; };
+    set('mute', reduced ? 0 : 0.75, want.mute); set('bm', 1); set('sig', 3); set('rep', 0); set('dl', reduced ? 3 : 1.58);
+    E.x = E.T = 0; E.v = 0; E.on = false;
+    stack = reduced ? ['bm', 'sig', 'dl'] : ['bm', 'sig', 'mute', 'dl'];
+    frozen = !reduced;
+    sync();
+    const hb = btn[host];
+    P.x.x = P.x.T = hb.offsetLeft + hb.offsetWidth / 2; P.w.x = P.w.T = PILL; P.x.v = P.w.v = 0; lastHost = host;
+    pill(0.016); lime.classList.remove('is-press');
+    IDS.forEach(aria);
+    cur = null; statEl.textContent = '';
+    if (reduced) say('dlend', 'Downloaded · 1.2 MB', false);
+    else say('dl', `Downloading ${FILE} · 58%`, false);
+    draw();
+  }
+  // back to nothing on, quietly (the ghost's reset): every symbol is drawn back from where it is
+  function rest() {
+    thaw();
+    want.mute = want.bm = want.sig = want.rep = 0; dl.state = 'idle';
+    IDS.forEach((id) => { go(id, 0); aria(id); });
+    sync(); kick();
+    say('rest', 'Ready');
+  }
+  new ResizeObserver(() => { sync(); const hb = btn[host]; if (hb) { P.x.x = P.x.T = hb.offsetLeft + hb.offsetWidth / 2; pill(0); } }).observe(card);
+  pose();
+  return {
+    btn, card, want, dl, pose, rest, thaw, ppc, rawNow: rawOf, scale,
+    get frozen() { return frozen; }, get drag() { return drag; }, get host() { return host; },
+    snap() { return { mute: U.mute.x, bm: U.bm.x, dl: U.dl.x, sig: U.sig.x, rep: U.rep.x, E: E.x, pill: [P.x.x, P.w.x], stack: stack.slice(), host }; },
+    releaseGhost() { if (drag && drag.ghost) { const d = drag; ptr = null; sigUp(performance.now()); return d; } },
+    clearPress: unpress,
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('sd-fit'), card = SD.card;
+  // the card is drawn at 360 px wide and scaled to the room it is given (about 72% of the width, 1.6× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const cw = card.offsetWidth, ch = card.offsetHeight;
+    const s = Math.max(0.5, Math.min(0.72 * W / cw, (H - 2 * pad - ui - 40) / ch, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+    fit.style.width = (cw * s).toFixed(2) + 'px'; fit.style.height = (ch * s).toFixed(2) + 'px';
+  }
+  size();
+  addEventListener('resize', size);
+
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  // the ghost's events: the same ones a hand makes, untrusted so the page can tell them apart
+  const fire = (type, x, y, Ctor = PointerEvent) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 71, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  const centre = (el) => { const r = el.querySelector('.sd-pill').getBoundingClientRect(); return { x: r.left + r.width * 0.5, y: r.top + r.height * 0.5 }; };
+  async function glide(my, to, ms = 760) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y);
+      if (p >= 1) break;
+    }
+  }
+  async function until(my, ok) { while (!ok()) await gap(my, 100); }
+  async function tap(my) {                                                  // a press where the ghost is: down, 100 ms, up, click
+    const { x, y } = pos;
+    fire('pointerdown', x, y); await gap(my, 100); fire('pointerup', x, y);
+    const t = document.elementFromPoint(x, y); if (t) t.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  async function click(my, el) { await glide(my, centre(el), 620); await gap(my, 170); await tap(my); }
+  // drag Signal to a raw value (steps), through segments { to, ms }; the first 6 px of a drag are not counted
+  async function dragSig(my, segs, hold = 0) {
+    const el = SD.btn.sig, c = centre(el);
+    await glide(my, c, 620); await gap(my, 170);
+    let { x } = pos; const y = pos.y;
+    fire('pointerdown', x, y);
+    let raw = SD.rawNow(), first = true;
+    for (const g of segs) {
+      let dx = (g.to - raw) * SD.ppc(); if (first) dx += Math.sign(dx || 1) * 7;
+      first = false;
+      const t0 = performance.now(), x0 = x;
+      for (;;) {
+        await raf();
+        if (my !== epoch) throw 0;
+        const p = Math.min(1, (performance.now() - t0) / g.ms), nx = x0 + dx * mv(p);
+        QM.ghostAt(nx, y); pos = { x: nx, y }; fire('pointermove', nx, y);
+        if (p >= 1) break;
+      }
+      x = x0 + dx; raw = g.to;
+      if (g.hold) await gap(my, g.hold);
+    }
+    if (hold) await gap(my, hold);
+    fire('pointerup', x, y);
+  }
+  const ensure = async (my, id, val) => { if ((SD.want[id] || 0) !== val) await click(my, SD.btn[id]); };
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 5000 : 3600) : 700);
+      QM.ghostShow();
+      if (!SD.frozen && (SD.want.mute || SD.want.bm || SD.want.sig || SD.want.rep || SD.dl.state !== 'idle')) { SD.rest(); await gap(my, 1300); }
+      for (;;) {
+        await click(my, SD.btn.mute); await gap(my, 190); await tap(my);            // press, and press again while the slash is drawing: it turns round
+        await gap(my, 700);
+        await ensure(my, 'mute', 1); await gap(my, 1500);
+        await ensure(my, 'bm', 1); await gap(my, 1300);
+        if (SD.dl.state === 'idle') await click(my, SD.btn.dl);
+        await until(my, () => SD.dl.state === 'done'); await gap(my, 1200);
+        await dragSig(my, [{ to: 3.2, ms: 1000, hold: 200 }], 250); await gap(my, 900);   // up to 3
+        await dragSig(my, [{ to: 4.9, ms: 800, hold: 450 }, { to: 2, ms: 700 }], 150); await gap(my, 1200);   // past the end, held, and back to 2
+        await click(my, SD.btn.rep); await gap(my, 1000);
+        await click(my, SD.btn.rep); await gap(my, 1300);
+        await ensure(my, 'rep', 0); if (SD.want.rep) { await click(my, SD.btn.rep); }
+        await gap(my, 700);
+        await ensure(my, 'mute', 0); await gap(my, 700);
+        await ensure(my, 'bm', 0); await gap(my, 700);
+        if (SD.dl.state !== 'idle') await click(my, SD.btn.dl);
+        await gap(my, 800);
+        await dragSig(my, [{ to: -0.3, ms: 900 }], 100); await gap(my, 1500);
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() {
+    epoch++; QM.ghostHide(); SD.releaseGhost(); SD.clearPress();
+    if (pos) { pos = null; fire('pointermove', -10, -10); }
+  }
+  if (!QM.tile && !reduced) {
+    const idle = () => SD.card.matches(':hover') || !!SD.card.querySelector(':focus-visible') || !!SD.drag;
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                                // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); SD.pose(); if (!reduced) script(true); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => script(true), 300));
+})();
+</script>
+</body>
+</html>

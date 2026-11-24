@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live rescale · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "live-rescale", "title": "Live rescale", "group": "studio", "added": "2026-11-23", "cat": "data", "order": 40,
+  "kind": "loop", "tone": "paper", "shot": 520,
+  "line": "0.9 s samples · 27 s window · range spring 0.55 s up, 1.6 s down · ticks 1, 2, 5 × 10ⁿ · digits roll · one lime",
+  "summary": "Forma's live checkout during a launch: a line of orders per minute that slides left on one constant clock while each new sample eases into the right edge. When a spike arrives the y-range, a critically damped spring, widens smoothly and the line flattens under it; the gridlines slide to their new values, the tick numbers roll to them, new ticks are uncovered and the ones that leave are covered, and the step between ticks (1, 2 or 5 times a power of ten) only changes when the count of ticks leaves a band, so it never flickers. The range relaxes slowly once the peak has slid off the left edge. The big header number rolls digit by digit. Hover scrubs a crosshair: the bubble follows on a spring, snaps to the nearest sample and keeps tracking while the data streams. The only lime is the live end dot.",
+  "spec": [
+    ["Card", "600 × 372 px, white, radius 24, drawn at its own size and scaled to the room (about 1.07× in a tile, up to 1.5×); header 84 px (caption 13 px #6e6e73, the value 56 / 60 px weight 600 with tabular figures, and the peak at 22 px on the right); the chart is 510 × 206 px with a 34 px label gutter, a canvas for the grid and one for the line (its left 40 px fade out on the canvas), both drawn at devicePixelRatio × scale"],
+    ["Clock", "one simulated clock T advances by the frame's dt (capped at 50 ms) and draws everything; samples arrive every 0.9 s; the chart shows a time one sample behind (T − 0.9 s) so the head can ease between two known samples; the line slides at 18.9 px/s (17 px per sample, 30 samples, a 27 s window) and a 5 s time axis slides with it, behind a soft mask at both ends"],
+    ["Head", "the newest point is always at the right edge: its value eases from the last sample to the new one over the first 72% of the 0.9 s (cubic out), the line is a monotone cubic through the points so it never overshoots; the end dot is 5.5 px lime with a 1.5 px #1d1d1f ring and breathes once per sample, a lime ring growing from 5.5 to 14.5 px and fading over 0.9 s"],
+    ["Range", "y = 0 to a top that is a critically damped spring: the target is 1.22 × the highest sample in the window (never under 60); response 0.55 s when it widens, 1.6 s when it relaxes, both critically damped, always starting from the value and velocity on screen; the peak leaves the left edge about 27 s after it arrived, which is when the range lets go"],
+    ["Ticks", "tick slot k sits at k × step, where step is a spring too (response 0.9 s) toward a nice step: 1, 2 or 5 × 10ⁿ chosen so the top is about 5 steps; hysteresis: the step is kept while top / step stays between 3.2 and 8, so it only changes when the count leaves that band (20 → 50 happens when the top passes 160). A slot's line and label always agree (the label is the rounded value of its own line, so numbers roll through, 20 to 50 as 24, 31, 38 …), slots beyond the top are covered by a spring (response 0.4 s, the line wipes out from the right, the label closes from its middle) and uncovered the same way"],
+    ["Numbers", "header value and peak: each digit is a strip of 0 to 9 on its own critically damped spring (response 0.28 s) that takes the shortest way round, 1 ch wide so the number never shoves; leading places close by width in 260 ms (expo out)"],
+    ["Crosshair", "hover (mouse, pen or touch drag; touch-action pan-y) picks the nearest sample to the pointer; the crosshair x and y are springs (response 0.16 s) toward that sample's current position, so it snaps and then keeps sliding with the data; the bubble (96 × 46 px, translucent white, 20 px blur) follows on its own spring (0.26 s), sits above the point, and steps to the side when the point is near the top; it fades with a spring (0.2 s). Keys: Left and Right move it one sample, Escape clears, S sends a spike"],
+    ["Spike", "the detail view's Spike button adds a burst starting at the next sample: five samples of ramp (12, 30, 55, 82, 100%), then a tail that decays with a 2.7 sample time constant; the peak is at least 154 to 194 orders and 1.5 times what is in view (capped at 420), so a second press still moves the axis; the same shape runs on a schedule (one at 2.7 s of the clock and then every 34 s) so the piece never rests; under reduced motion it steps the chart ahead to the peak in place"],
+    ["Data", "deterministic: a hash of the sample index and the seed 2611 gives every sample, a baseline of about 46 with two slow waves and noise, plus the bursts; the 40 samples before the first frame come from the same function"],
+    ["Pose", "the tile loads at 5.82 s of the clock, computed by running the same update at 1/60 s steps, and holds that frame for 1.2 s so the thumbnail is the same every time: 0.42 s after the fourth ramp sample (174 orders), the step 20 → 50 about four fifths through (ticks 0, 44, 88, 132, 177), the top almost there, the header settled at 174; then the clock runs. The ghost arrives after 5 s (3 s in the detail view), glides in, scrubs left, scrubs back and leaves; it calls the same hover as a hand, yields to any real pointer, touch or key and returns after 4.5 s"],
+    ["Pause", "the loop stops when the card is off screen (IntersectionObserver) or the tab is hidden and continues from the same clock, so nothing jumps; under reduced motion it draws one still at 18.5 s with the spike across the middle and the range settled, and the crosshair still follows the pointer, instantly"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-23"],
+  "where": "The launch day dashboard in a Qbix case study or a Strata project's live view: orders, builds or visits per minute while a campaign goes out, where a sudden jump should be followed by the eye, not jerk the axis.",
+  "rules": [
+    "One clock draws everything. The line slides at a constant rate and only the head eases; the range, the step, the slots, the digits and the crosshair are springs that start from the value and velocity on screen.",
+    "Springs are critically damped (response 0.16 to 1.6 s). Nothing overshoots: a spike must not push the line out of the chart, the head and the range both settle without bounce.",
+    "A gridline and its number are one thing: the label shows the value of its own line at that frame, so a tick that stays rolls its number as it slides, and a tick that arrives or leaves is uncovered or covered, never popped.",
+    "The tick step is a nice number (1, 2 or 5 times a power of ten) and is changed only by hysteresis, when the number of ticks leaves a band, never by the range's every move.",
+    "The range follows the data on screen: it widens at once, it relaxes slowly, and it can only relax once the peak has left the window.",
+    "Exactly one lime per frame: the live end dot and its breath. Line #1d1d1f, a faint area, hairline grid, #86868b axis numbers; the crosshair marker is white with an ink ring. System face, Apple neutrals, figures tabular.",
+    "The crosshair snaps to a sample and keeps following it while the data streams; the bubble's value and time are the sample's own. Touch scrubs horizontally and leaves vertical scroll alone.",
+    "Pause when off screen or hidden and resume on the same clock. Under reduced motion draw one complete still chart with a spike in it; hovering still reads values, with no springs."
+  ],
+  "tags": ["chart", "live", "streaming", "rescale", "axis", "ticks", "spring", "crosshair", "numbers", "tabular", "data", "orders", "Forma"]
+}
+</script>
+<style data-code>
+/* Live rescale. A white card in the system face with Apple's neutrals; the line #1d1d1f, a faint area, a hairline grid, axis numbers #86868b.
+   The one accent is the lime end dot, drawn on the canvas. Everything that moves (the line, the grid, the tick numbers, the digits, the crosshair
+   and the bubble) is set from script from one clock; the only CSS transition is a leading digit closing (expo out .16, 1, .3, 1).
+   The card is drawn at 600 × 372 and scaled by --s. */
+.lr-fit { position: relative; width: calc(600px * var(--s, 1)); height: calc(372px * var(--s, 1)); }
+.lr-card { --lr-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 600px; height: 372px; padding: 24px 28px 0; transform: scale(var(--s, 1)); transform-origin: 0 0;
+  border-radius: 24px; background: #fff; color: #1d1d1f; box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+  font: 400 13px/18px var(--lr-f); letter-spacing: -.006em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; }
+.lr-card p { margin: 0; }
+.lr-head { display: flex; justify-content: space-between; align-items: flex-end; height: 82px; }
+.lr-cap { height: 18px; color: #6e6e73; white-space: nowrap; }
+.lr-num { --lh: 60px; display: flex; height: 60px; margin-top: 4px; font: 600 56px/60px var(--lr-f); letter-spacing: -.022em; font-variant-numeric: tabular-nums; }
+.lr-side { text-align: right; padding-bottom: 3px; }
+.lr-pk { --lh: 28px; display: flex; justify-content: flex-end; height: 28px; margin-top: 2px; font: 600 22px/28px var(--lr-f); letter-spacing: -.016em; font-variant-numeric: tabular-nums; }
+.lr-d { display: block; flex: none; width: 1ch; height: var(--lh); overflow: hidden; transition: width 260ms cubic-bezier(.16, 1, .3, 1); }
+.lr-d.is-off { width: 0; }
+.lr-st { display: block; white-space: pre; line-height: var(--lh); will-change: transform; }
+
+/* the chart: a grid canvas, the tick numbers, the line canvas (its left end fades under a mask), the bubble, the time axis */
+.lr-chart { position: relative; height: 238px; margin-top: 10px; outline: none; border-radius: 8px; }
+.lr-chart:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 6px; }
+.lr-cv { position: absolute; left: 0; top: 0; width: 558px; height: 216px; display: block; }
+.lr-data { cursor: crosshair; touch-action: pan-y; }
+.lr-ylab { position: absolute; left: 0; top: 0; width: 28px; height: 226px; overflow: hidden; pointer-events: none; }
+.lr-yl { position: absolute; right: 0; top: 0; height: 16px; line-height: 16px; font-size: 12px; color: #86868b; text-align: right; font-variant-numeric: tabular-nums; will-change: transform; }
+.lr-xlab { position: absolute; left: 34px; top: 218px; width: 510px; height: 20px; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 30px, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(90deg, transparent, #000 30px, #000 calc(100% - 26px), transparent); }
+.lr-xl { position: absolute; left: 0; top: 2px; width: 64px; text-align: center; font-size: 12px; line-height: 16px; color: #86868b; font-variant-numeric: tabular-nums; will-change: transform; }
+.lr-bub { position: absolute; left: 0; top: 0; width: 96px; height: 46px; padding: 6px 11px 0; border-radius: 12px; opacity: 0; pointer-events: none; will-change: transform, opacity;
+  background: rgba(255, 255, 255, .78); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12); }
+.lr-bub b { display: block; font: 600 15px/20px var(--lr-f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lr-bub i { display: block; font-style: normal; font-size: 12px; line-height: 16px; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.lr-card.is-still *, .lr-card.is-still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .lr-d { transition-duration: 1ms; } }
+</style>
+<style>
+  .lrw { display: grid; gap: 12px; justify-items: start; width: max-content; max-width: 100%; }
+  .lrw .kicker, .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+  .qm-ui button.lr-spike { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; height: 30px; padding: 0 16px; border-radius: 999px; background: #fff; color: #1d1d1f; font-weight: 500;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .1), 0 1px 2px rgba(0, 0, 0, .05); transition: transform 100ms cubic-bezier(.4, 0, .2, 1), background 160ms cubic-bezier(.4, 0, .2, 1); }
+  .qm-ui button.lr-spike:hover { background: #ececf0; color: #1d1d1f; }
+  .qm-ui button.lr-spike:active { transform: scale(.97); }
+  .qm-ui button.lr-spike:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="lrw">
+    <p class="kicker">Forma · Launch day</p>
+<!-- code -->
+<div class="lr-fit" id="lr-fit"><section class="lr-card is-still" id="lr-card" aria-label="Orders per minute, live">
+  <header class="lr-head">
+    <div><p class="lr-cap">Orders per minute</p><div class="lr-num" id="lr-num" aria-hidden="true"></div></div>
+    <div class="lr-side"><p class="lr-cap">Peak</p><div class="lr-pk" id="lr-pk" aria-hidden="true"></div></div>
+  </header>
+  <div class="lr-chart" id="lr-chart" tabindex="0" role="group" aria-label="Live line chart of orders per minute over the last 27 seconds. Left and right arrows scrub, S sends a spike.">
+    <canvas class="lr-cv" id="lr-grid" aria-hidden="true"></canvas>
+    <div class="lr-ylab" id="lr-ylab" aria-hidden="true"></div>
+    <canvas class="lr-cv lr-data" id="lr-data" aria-hidden="true"></canvas>
+    <div class="lr-bub" id="lr-bub" aria-hidden="true"><b></b><i></i></div>
+    <div class="lr-xlab" id="lr-xlab" aria-hidden="true"></div>
+  </div>
+  <p class="sr-only" id="lr-msg" role="status" aria-live="polite"></p>
+</section></div>
+<!-- /code -->
+  </div>
+  <div class="qm-ui"><button class="lr-spike" id="lr-spike" type="button">Spike</button><span>Send a burst of orders and watch the axis follow. Hover the chart to scrub, or focus it and use the arrow keys</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Live rescale. One clock T (seconds) draws everything. Samples arrive every 0.9 s from a seeded function; the chart shows time T - 0.9 so its head can
+   ease from the last sample to the newest. The y-range (top), the tick step and each tick slot's cover are critically damped springs, so a spike
+   widens the range, the gridlines slide and the numbers roll; the tick step changes only by hysteresis. Crosshair and bubble are springs too. */
+const LR = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+  const card = $('lr-card'), chart = $('lr-chart'), gridC = $('lr-grid'), dataC = $('lr-data'), ylab = $('lr-ylab'), xlab = $('lr-xlab'), bub = $('lr-bub'), msg = $('lr-msg');
+  const gx = gridC.getContext('2d'), dx = dataC.getContext('2d');
+  // geometry in the card's own px: label gutter, plot, room for the end dot's breath; the plot's top pad and height
+  const GUT = 34, WP = 510, WC = GUT + WP + 14, R = GUT + WP, PADT = 10, HP = 206, BOT = PADT + HP, HC = BOT;
+  const P = 0.9, WIN = 30, DX = WP / WIN, V = DX / P, SEED = 2611, CLOCK0 = 14 * 3600 + 2 * 60;   // 0.9 s samples, 30 of them in view (27 s), 18.9 px/s
+  const TAU = 2 * Math.PI, W_UP = TAU / 0.55, W_DOWN = TAU / 1.6, W_STEP = TAU / 0.9, W_SLOT = TAU / 0.4, W_CH = TAU / 0.16, W_BUB = TAU / 0.26, W_FADE = TAU / 0.2, W_DIG = TAU / 0.28;
+  const NS = 9, BW = 96, BH = 46, POSE_T = 5.82, STILL_T = 18.5;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const pad2 = (n) => (n < 10 ? '0' : '') + n;
+  const fmt = (s) => { s = Math.floor(s); return pad2(Math.floor(s / 3600) % 24) + ':' + pad2(Math.floor(s / 60) % 60) + ':' + pad2(s % 60); };
+
+  /* a critically damped spring: the closed form, always from the x and v on screen */
+  const mk = (x = 0) => ({ x, v: 0, t: x });
+  function spring(s, dt, w) {
+    const A = s.x - s.t, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.t + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.t) < 1e-4 && Math.abs(s.v) < 1e-3) { s.x = s.t; s.v = 0; }
+  }
+
+  /* the data: a hash of the sample index and the seed, a baseline of about 46, plus bursts (a five-sample ramp, then a decaying tail) */
+  const hash = (a, b = 0) => { let h = (Math.imul(a | 0, 374761393) + Math.imul(b | 0, 668265263) + Math.imul(SEED, 2246822519)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+  const RAMP = [0.12, 0.3, 0.55, 0.82, 1], AUTO_N0 = 3, AUTO_EVERY = 38;
+  const burst = (n, n0, A) => { const k = n - n0; if (k < 0 || k > 22) return 0; return A * (k < 5 ? RAMP[k] : Math.exp(-(k - 4) / 2.7)) * (1 + 0.1 * (hash(n, 2) - 0.5)); };
+  let events = [], userN = 0;
+  function gen(n) {
+    let v = 46 + 6 * Math.sin(n * 0.37) + 3.5 * Math.sin(n * 0.91 + 1.3) + 8 * (hash(n, 1) - 0.5);
+    const q = Math.floor((n - AUTO_N0) / AUTO_EVERY);
+    if (q >= 0) v += burst(n, AUTO_N0 + q * AUTO_EVERY, 112 + 36 * hash(q, 3));
+    for (const e of events) v += burst(n, e.n0, e.A);
+    return Math.max(8, Math.round(v));
+  }
+
+  /* the digits of a number: each place is a strip of 0 to 9 (three times over) on its own spring, taking the shortest way round */
+  function roller(el, lh, places) {
+    const strip = Array.from({ length: 30 }, (_, i) => i % 10).join('\n');
+    el.innerHTML = places.map(() => `<span class="lr-d"><span class="lr-st">${strip}</span></span>`).join('');
+    const ds = [...el.children].map((d, i) => ({ d, st: d.firstChild, p: places[i], dg: 0, pos: 10, tgt: 10, vel: 0, off: false }));
+    const draw = (o) => { o.st.style.transform = `translateY(${(-o.pos * lh).toFixed(2)}px)`; };
+    return {
+      set(n, instant) {
+        for (const o of ds) {
+          const dg = Math.floor(n / o.p) % 10;
+          if (instant || reduced) { o.dg = dg; o.pos = o.tgt = 10 + dg; o.vel = 0; draw(o); }
+          else if (dg !== o.dg) { o.tgt += ((dg - o.dg + 15) % 10) - 5; o.dg = dg; }
+          const off = o.p > 1 && n < o.p;
+          if (off !== o.off) { o.off = off; o.d.classList.toggle('is-off', off); }
+        }
+      },
+      step(dt) {
+        for (const o of ds) {
+          if (o.tgt >= 20) { o.tgt -= 10; o.pos -= 10; } else if (o.tgt < 10) { o.tgt += 10; o.pos += 10; }
+          if (o.pos === o.tgt && !o.vel) continue;
+          const A = o.pos - o.tgt, B = o.vel + W_DIG * A, e = Math.exp(-W_DIG * dt);
+          let x = o.tgt + (A + B * dt) * e, v = (B - W_DIG * (A + B * dt)) * e;
+          if (Math.abs(x - o.tgt) < 0.003 && Math.abs(v) < 0.03) { x = o.tgt; v = 0; }
+          o.pos = x; o.vel = v; draw(o);
+        }
+      },
+    };
+  }
+  const hdr = roller($('lr-num'), 60, [100, 10, 1]), pkr = roller($('lr-pk'), 28, [100, 10, 1]);
+
+  /* state: the clock, the samples that have arrived, and the springs */
+  let T = 0, nNext = 1, nMin = -40, S = [];
+  const top = mk(70), step = mk(20), slots = [], ch = { x: mk(), y: mk(), a: mk(), bx: mk(), by: mk() };
+  let stepT = 20, hdrN = -1, pkN = -1, ptr = null, X = [], Y = [], n0 = 0, tv = 0, fr = 0, headV = 0, chIdx = -1, bubKey = '', msgT = 0;
+  for (let k = 0; k < NS; k++) {
+    const el = document.createElement('span'); el.className = 'lr-yl'; el.style.visibility = 'hidden'; ylab.appendChild(el);
+    slots.push({ s: mk(k < 4 ? 1 : 0), el, on: false, txt: '' });
+  }
+  const xls = Array.from({ length: 9 }, () => { const el = document.createElement('span'); el.className = 'lr-xl'; xlab.appendChild(el); return el; });
+  const val = (n) => S[n - nMin];
+
+  /* a nice step: 1, 2 or 5 times a power of ten, about 5 of them to the top; the one in use is kept while its count stays in a band (hysteresis) */
+  function pickStep(Tt, cur) {
+    if (cur && Tt / cur >= 3.2 && Tt / cur <= 8) return cur;
+    let best = cur || 20, bd = 1e9;
+    for (let e = 0; e <= 4; e++) for (const m of [1, 2, 5]) { const c = m * Math.pow(10, e), d = Math.abs(Tt / c - 5); if (d < bd) { bd = d; best = c; } }
+    return best;
+  }
+
+  function reset() {
+    T = 0; nNext = 1; nMin = -40; S = []; events = []; userN = 0;
+    for (let n = -40; n <= 0; n++) S.push(gen(n));
+    const i = Math.floor((T - P) / P);
+    let M = 0; for (let n = i - WIN - 1; n <= i + 1; n++) M = Math.max(M, val(n));
+    const need = Math.max(60, M * 1.22);
+    stepT = pickStep(need, 0);
+    top.x = top.t = need; top.v = 0; step.x = step.t = stepT; step.v = 0;
+    slots.forEach((o, k) => { o.s.x = o.s.t = k * stepT <= need ? 1 : 0; o.s.v = 0; });
+    ch.a.x = ch.a.t = 0; ch.a.v = 0; ptr = null; chIdx = -1; hdrN = -1; pkN = -1;
+    hdr.set(val(i + 1), true); hdrN = val(i + 1); pkr.set(M, true); pkN = M;
+  }
+
+  /* the frame: advance the clock and the data, aim the springs, step them */
+  function update(dt) {
+    T += dt;
+    while (nNext * P <= T) { S.push(gen(nNext)); nNext++; }
+    while (S.length > 90) { S.shift(); nMin++; }
+    tv = T - P;
+    const i = Math.floor(tv / P);
+    fr = tv / P - i;
+    let M = 0; for (let n = i - WIN - 1; n <= i + 1; n++) M = Math.max(M, val(n));
+    const need = Math.max(60, M * 1.22);
+    top.t = need; stepT = pickStep(need, stepT); step.t = stepT;
+    spring(top, dt, need > top.x ? W_UP : W_DOWN); spring(step, dt, W_STEP);
+    slots.forEach((o, k) => { o.s.t = k * stepT <= need + 1e-6 ? 1 : 0; spring(o.s, dt, W_SLOT); });
+    const cur = val(i + 1);
+    if (cur !== hdrN) { hdrN = cur; hdr.set(cur); }
+    if (M !== pkN) { pkN = M; pkr.set(M); }
+    hdr.step(dt); pkr.step(dt);
+    layout();
+    aimCross();
+    spring(ch.x, dt, W_CH); spring(ch.y, dt, W_CH); spring(ch.a, dt, W_FADE); spring(ch.bx, dt, W_BUB); spring(ch.by, dt, W_BUB);
+  }
+
+  /* the line's points: sample i is f of a step left of the edge, the head sits on the edge and eases to the newest sample over the first 72% */
+  const yv = (v) => BOT - (v / Math.max(20, top.x)) * HP;
+  function layout() {
+    const i = Math.floor(tv / P), a = val(i), b = val(i + 1), u = Math.min(1, fr / 0.72);
+    headV = a + (b - a) * (1 - Math.pow(1 - u, 3));
+    n0 = i - WIN - 2; X = []; Y = [];
+    for (let n = n0; n <= i; n++) { X.push(R - (fr + (i - n)) * DX); Y.push(yv(val(n))); }
+    X.push(R); Y.push(yv(headV));
+  }
+
+  /* the crosshair snaps to the sample nearest the pointer, and its spring then follows that sample as it slides */
+  function aimCross() {
+    if (!ptr) { ch.a.t = 0; return; }
+    let j = -1, bd = 1e9;
+    for (let k = 0; k < X.length; k++) { if (X[k] < GUT - 1) continue; const d = Math.abs(X[k] - ptr.x); if (d < bd) { bd = d; j = k; } }
+    if (j < 0) { ch.a.t = 0; return; }
+    if (ch.a.x < 0.02 || reduced) { ch.x.x = X[j]; ch.y.x = Y[j]; ch.x.v = ch.y.v = 0; }
+    ch.x.t = X[j]; ch.y.t = Y[j]; ch.a.t = 1; chIdx = j;
+    // the bubble sits above the point; near the top it steps to the side of it
+    const above = Y[j] - 14 - BH >= PADT - 16;
+    let tx = X[j], ty = Y[j] - 14 - BH;
+    if (!above) { const left = X[j] > GUT + WP * 0.5; tx = X[j] + (left ? -1 : 1) * (BW / 2 + 16); ty = Y[j] - BH / 2; }
+    tx = clamp(tx, GUT + BW / 2, R + 8 - BW / 2); ty = clamp(ty, PADT - 16, BOT - BH);
+    if (ch.a.x < 0.02 || reduced) { ch.bx.x = tx; ch.by.x = ty; ch.bx.v = ch.by.v = 0; }
+    ch.bx.t = tx; ch.by.t = ty;
+  }
+
+  /* drawing: the grid canvas, the tick numbers, the line canvas, the bubble, the time axis */
+  let K = 1, dpr = 1, kx = 1, ky = 1;
+  function resize() {
+    const w = card.getBoundingClientRect().width;
+    dpr = window.devicePixelRatio || 1; K = dpr * ((w / 600) || 1);
+    for (const c of [gridC, dataC]) { c.width = Math.max(1, Math.round(WC * K)); c.height = Math.max(1, Math.round(HC * K)); }
+    kx = gridC.width / WC; ky = gridC.height / HC;
+  }
+  function draw() {
+    const hw = Math.max(1, Math.round(dpr)), hair = hw / K, snap = (y) => (Math.floor(y * K) + hw / 2) / K;
+    gx.setTransform(kx, 0, 0, ky, 0, 0); gx.clearRect(0, 0, WC, HC); gx.lineWidth = hair;
+    for (let k = 0; k < NS; k++) {
+      const o = slots[k], v = k * step.x, y = yv(v), a = o.s.x;
+      if (a < 0.004 || y < PADT - 0.6 || y > BOT + 0.6) { if (o.on) { o.on = false; o.el.style.visibility = 'hidden'; } continue; }
+      const yy = snap(y);
+      gx.strokeStyle = k === 0 ? '#d2d2d7' : '#e8e8ed';
+      gx.beginPath(); gx.moveTo(GUT, yy); gx.lineTo(GUT + a * WP, yy); gx.stroke();
+      const t = String(Math.round(v));
+      if (t !== o.txt) { o.txt = t; o.el.textContent = t; }
+      if (!o.on) { o.on = true; o.el.style.visibility = 'visible'; }
+      o.el.style.transform = `translateY(${(yy - 8).toFixed(2)}px)`;
+      o.el.style.clipPath = `inset(${(50 * (1 - a)).toFixed(1)}% 0)`;
+    }
+
+    dx.setTransform(kx, 0, 0, ky, 0, 0); dx.clearRect(0, 0, WC, HC);
+    dx.save(); dx.beginPath(); dx.rect(GUT, 0, WC - GUT, HC); dx.clip();
+    const n = X.length, d = [], m = new Array(n);
+    for (let k = 0; k < n - 1; k++) d[k] = (Y[k + 1] - Y[k]) / (X[k + 1] - X[k]);
+    m[0] = d[0]; m[n - 1] = d[n - 2];
+    for (let k = 1; k < n - 1; k++) m[k] = d[k - 1] * d[k] <= 0 ? 0 : (d[k - 1] + d[k]) / 2;
+    for (let k = 0; k < n - 1; k++) {
+      if (d[k] === 0) { m[k] = m[k + 1] = 0; continue; }
+      const p = m[k] / d[k], q = m[k + 1] / d[k], s2 = p * p + q * q;
+      if (s2 > 9) { const tt = 3 / Math.sqrt(s2); m[k] = tt * p * d[k]; m[k + 1] = tt * q * d[k]; }
+    }
+    const trace = () => { for (let k = 0; k < n - 1; k++) { const h = X[k + 1] - X[k]; dx.bezierCurveTo(X[k] + h / 3, Y[k] + (m[k] * h) / 3, X[k + 1] - h / 3, Y[k + 1] - (m[k + 1] * h) / 3, X[k + 1], Y[k + 1]); } };
+    let hi = BOT; for (const y of Y) if (y < hi) hi = y;
+    const g = dx.createLinearGradient(0, hi, 0, BOT); g.addColorStop(0, 'rgba(29,29,31,.10)'); g.addColorStop(1, 'rgba(29,29,31,0)');
+    dx.beginPath(); dx.moveTo(X[0], BOT); dx.lineTo(X[0], Y[0]); trace(); dx.lineTo(X[n - 1], BOT); dx.closePath(); dx.fillStyle = g; dx.fill();
+    dx.beginPath(); dx.moveTo(X[0], Y[0]); trace(); dx.lineWidth = 2; dx.lineJoin = 'round'; dx.lineCap = 'round'; dx.strokeStyle = '#1d1d1f'; dx.stroke();
+    // the line and its area fade out over the first 40 px of the plot, where they slide off the left edge
+    const fd = dx.createLinearGradient(GUT, 0, GUT + 40, 0); fd.addColorStop(0, 'rgba(0,0,0,1)'); fd.addColorStop(1, 'rgba(0,0,0,0)');
+    dx.globalCompositeOperation = 'destination-out'; dx.fillStyle = fd; dx.fillRect(GUT, 0, 40, HC); dx.globalCompositeOperation = 'source-over';
+    dx.restore();
+
+    // the crosshair: a hairline, a white marker with an ink ring, then the bubble
+    const a = clamp(ch.a.x, 0, 1);
+    if (a > 0.004) {
+      dx.save(); dx.globalAlpha = a;
+      const cx = ch.x.x, cy = Math.min(ch.y.x, BOT);
+      dx.beginPath(); dx.moveTo(cx, PADT - 4); dx.lineTo(cx, BOT); dx.lineWidth = hair; dx.strokeStyle = 'rgba(29,29,31,.32)'; dx.stroke();
+      dx.beginPath(); dx.arc(cx, cy, 4.5, 0, TAU); dx.fillStyle = '#fff'; dx.fill(); dx.lineWidth = 2; dx.strokeStyle = '#1d1d1f'; dx.stroke();
+      dx.restore();
+    }
+    // the live end dot: lime with an ink ring, and one breath per sample
+    const hy = clamp(Y[n - 1], 5, BOT), br = 1 - fr;
+    if (br > 0.002) { dx.beginPath(); dx.arc(R, hy, 5.5 + 9 * (1 - Math.pow(1 - fr, 3)), 0, TAU); dx.lineWidth = 2; dx.strokeStyle = `rgba(184,255,0,${(0.6 * br * br).toFixed(3)})`; dx.stroke(); }
+    dx.beginPath(); dx.arc(R, hy, 5.5, 0, TAU); dx.fillStyle = '#B8FF00'; dx.fill(); dx.lineWidth = 1.5; dx.strokeStyle = '#1d1d1f'; dx.stroke();
+
+    if (a > 0.004 && chIdx >= 0) {
+      const head = chIdx === n - 1, nn = n0 + chIdx, v = head ? Math.round(headV) : val(nn), key = v + '|' + (head ? 'now' : nn);
+      if (key !== bubKey) {
+        bubKey = key; bub.firstChild.textContent = v + ' orders'; bub.lastChild.textContent = fmt(CLOCK0 + (head ? tv : nn * P));
+      }
+      bub.style.opacity = a.toFixed(3); bub.style.transform = `translate3d(${(ch.bx.x - BW / 2).toFixed(1)}px, ${ch.by.x.toFixed(1)}px, 0)`;
+    } else if (bub.style.opacity !== '0') bub.style.opacity = '0';
+
+    // the time axis: a label every 5 s, sliding left with the line
+    const lo = Math.ceil((tv - (WP + 40) / V) / 5), hiN = Math.floor((tv + 40 / V) / 5);
+    for (let q = 0; q < xls.length; q++) {
+      const m5 = lo + q, el = xls[q];
+      if (m5 > hiN) { el.style.visibility = 'hidden'; continue; }
+      el.style.visibility = 'visible';
+      const t = fmt(CLOCK0 + m5 * 5);
+      if (el.textContent !== t) el.textContent = t;
+      const x = R - GUT - (tv - m5 * 5) * V - 32;
+      el.style.transform = `translateX(${(Math.round(x * K) / K).toFixed(2)}px)`;
+    }
+  }
+
+  /* the loop: pauses off screen and in a hidden tab, and continues on the same clock */
+  let raf = 0, last = 0, started = false, held = false, vis = true;
+  const live = () => started && !held && vis && !document.hidden && !reduced;
+  function loop(now) { raf = 0; if (!live()) return; const dt = clamp((now - last) / 1000, 0.001, 0.05); last = now; update(dt); draw(); raf = requestAnimationFrame(loop); }
+  function kick() { if (!raf && live()) { last = performance.now(); raf = requestAnimationFrame(loop); } }
+  new IntersectionObserver((es) => { vis = es[es.length - 1].isIntersecting; kick(); }).observe(card);
+  document.addEventListener('visibilitychange', kick);
+
+  const ff = (until) => { while (T < until) update(1 / 60); };
+  function refresh() { layout(); aimCross(); if (reduced) { for (const s of [ch.x, ch.y, ch.a, ch.bx, ch.by]) { s.x = s.t; s.v = 0; } } draw(); }
+  function pose() {
+    reset();
+    ff(reduced ? STILL_T : POSE_T);
+    refresh();
+    card.classList.add('is-still');
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('is-still')));
+  }
+
+  /* the pointer: a hand or the ghost; px, py in the card's own px */
+  function toLocal(cx, cy) { const r = dataC.getBoundingClientRect(); return { x: ((cx - r.left) * WC) / r.width, y: ((cy - r.top) * HC) / r.height }; }
+  function hover(cx, cy, ghost = false) {
+    const p = toLocal(cx, cy);
+    if (p.x < GUT - 4 || p.x > R + 14 || p.y < 0 || p.y > HC + 8) { leave(); return; }
+    ptr = { x: clamp(p.x, GUT, R), y: p.y, ghost };
+    if (reduced) { refresh(); announce(); } else kick();
+  }
+  function leave(onlyGhost = false) {
+    if (!ptr || (onlyGhost && !ptr.ghost)) return;
+    ptr = null; chIdx = -1;
+    if (reduced) refresh();
+  }
+  function announce() {
+    clearTimeout(msgT);
+    msgT = setTimeout(() => { if (chIdx >= 0) { const head = chIdx === X.length - 1; msg.textContent = `${head ? Math.round(headV) : val(n0 + chIdx)} orders per minute at ${fmt(CLOCK0 + (head ? tv : (n0 + chIdx) * P))}`; } }, 350);
+  }
+  dataC.addEventListener('pointermove', (e) => { hover(e.clientX, e.clientY); });
+  dataC.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') hover(e.clientX, e.clientY); });
+  dataC.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') leave(); });
+  dataC.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') leave(); });
+  dataC.addEventListener('pointercancel', () => leave());
+  /* a spike on demand: a burst that starts at the next sample */
+  function spike() {
+    // a burst the axis has to answer: at least 154 to 194 orders, and 1.5 times what is already in view (capped at 420), so a second press still moves the range
+    const i = Math.floor(tv / P); let M = 0; for (let n = i - WIN - 1; n <= i + 1; n++) M = Math.max(M, val(n));
+    events.push({ n0: nNext, A: Math.min(420, Math.max(154 + 40 * hash(userN++, 9), 1.5 * M)) - 46 });
+    msg.textContent = 'Spike: a burst of orders is arriving';
+    if (reduced) { ff(T + 5.4); refresh(); } else kick();      // reduced motion: the chart steps ahead to the spike's peak in place
+  }
+  chart.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (k === 'ArrowLeft' || k === 'ArrowRight') {
+      e.preventDefault();
+      const x = ptr ? ptr.x : (ch.x.x || R);
+      ptr = { x: clamp(x + (k === 'ArrowLeft' ? -DX : DX), GUT, R), y: PADT + HP / 2, ghost: false };
+      if (reduced) { refresh(); announce(); } else { kick(); announce(); }
+    } else if (k === 'Escape') { leave(); } else if (k === 's' || k === 'S') { spike(); }
+  });
+  chart.addEventListener('blur', () => { if (ptr && !ptr.ghost && !dataC.matches(':hover')) leave(); });
+  new ResizeObserver(() => { resize(); if (!live()) draw(); }).observe(card.parentElement);
+
+  resize(); pose();
+  return {
+    card, chart, dataC, pose, spike, hover, leave, kick, hdr, pkr, ffTo: ff,
+    // hold: ms the pose stays still before the clock runs (a tile holds its key frame for a moment so its picture is the same every time)
+    begin(hold = 0) { started = true; if (hold) { held = true; setTimeout(() => { held = false; kick(); }, hold); } kick(); },
+    plot() { const r = dataC.getBoundingClientRect(), sx = r.width / WC, sy = r.height / HC; return { l: r.left + GUT * sx, r: r.left + R * sx, t: r.top + PADT * sy, b: r.top + BOT * sy }; },
+    get state() { return { T, top: top.x, topT: top.t, step: step.x, stepT, n: nNext, head: headV, x: ch.x.x, a: ch.a.x, hdr: hdrN, pk: pkN, ptr: !!ptr }; },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('lr-fit');
+  // the card is drawn at 600 × 372 and scaled to the room it is given (about 80% of the width, 1.5× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const s = Math.max(0.4, Math.min((0.8 * W) / 600, (H - 2 * pad - ui - 32) / 372, 1.5));
+    fit.style.setProperty('--s', s.toFixed(4));
+  }
+  size();
+  addEventListener('resize', size);
+  document.getElementById('lr-spike').addEventListener('click', () => LR.spike());
+
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  // the ghost uses the chart's own hover, exactly as a hand does, so the tile shows the real crosshair
+  async function glide(my, to, ms, hov) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y };
+      if (hov) LR.hover(x, y, true);
+      if (p >= 1) break;
+    }
+  }
+  const at = (f, g = 0.5) => { const p = LR.plot(); return { x: p.l + (p.r - p.l) * f, y: p.t + (p.b - p.t) * g }; };
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5000 : 3000);
+      QM.ghostShow();
+      for (;;) {
+        await glide(my, at(0.93, 0.42), 800, true);                 // in from the right, onto the newest samples
+        await gap(my, 900);
+        await glide(my, at(0.5, 0.5), 2600, true); await gap(my, 700);   // scrub back through the data
+        await glide(my, at(0.18, 0.4), 2200, true); await gap(my, 800);
+        await glide(my, at(0.72, 0.5), 2400, true); await gap(my, 1100);
+        LR.leave(true);
+        await glide(my, { x: LR.plot().r + 40, y: LR.plot().t + 40 }, 900, false);
+        QM.ghostHide(); pos = null;
+        await gap(my, 8000);
+        QM.ghostShow();
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); pos = null; LR.leave(true); }
+  if (!QM.tile && !reduced) {
+    const idle = () => LR.chart.matches(':hover') || LR.chart.contains(document.activeElement);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); LR.pose(); if (!reduced) script(); } });
+  requestAnimationFrame(() => { LR.begin(QM.tile ? 1200 : 0); if (!reduced) script(); });          // the face is the system's; nothing here waits for a font, so the pose's moment is the same every load
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt slots · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "prompt-slots", "title": "Prompt slots", "group": "studio", "added": "2026-11-23", "cat": "inputs", "order": 30,
+  "kind": "loop", "tone": "paper", "shot": 900,
+  "line": "chip flies on springs, 13 to 20 px · blanks open into pills · pill width springs with the text · one lime ring travels slot to slot",
+  "summary": "Strata's composer with three template chips above it. Press one and the chip flies from its exact rect to the first line of the composer, its words growing from 13 to 20 px on the way. There its blanks open into rounded slots holding placeholder words, and the words after each blank glide to make room. Typing replaces a placeholder and the pill's width follows the text on a spring, so nothing snaps. Tab and Shift+Tab move one lime ring from slot to slot on springs. Enter on the last slot, or the send button, lifts the filled sentence into a sent bubble above. Escape folds the template back into its chip by the same path. The slots are real inputs: caret, selection, paste, Backspace on an empty slot back to the one before.",
+  "spec": [
+    ["Flight", "four springs on one response (0.38 s, critically damped): x, y, width and font size (13 to 20 px) of the flyer, a copy of the chip's own words; the chip's padding and white fill go to nothing on the way, so it lands as plain text on the exact pixels of the sentence's first words; Escape runs the same springs back to the chip's measured rect"],
+    ["Reflow", "the sentence is built from the chip's own phrases, so the landed words sit where the chip's words were; each blank is a 20 px ellipsis that opens into a 30 px pill (the pill fill and the placeholder uncovered by the pill's own width, 0 to 0.6 of one 0.52 s spring), then the words that were not in the chip open left to right (0.1 to 0.6 and on) and the full stop last"],
+    ["Slot width", "each slot's width is a spring (response 0.3 s) aimed at the measured width of its text or placeholder plus 12 px each side (32 px at least, 262 px at most); the input inside is already as wide as the text and the pill clips it, so the text never scrolls and the words after it glide"],
+    ["Ring", "one lime ring (3 px) around the active slot, four springs on response 0.34 s from the rect on screen to the new slot's live rect, diagonal across a line break; once it has arrived it sits on the pill's exact rect, so while you type it grows with the pill"],
+    ["Keys", "Tab and Shift+Tab step (and wrap), Enter steps on and sends on the last slot, Backspace on an empty slot goes to the end of the slot before, Left at the start and Right at the end cross into the neighbour, Escape folds, Tab out of the last slot goes to Send when it is enabled"],
+    ["Send", "the filled sentence is rebuilt as a bubble on the same pixels (slots as tokens); x, y and font size spring (response 0.46 s) from the composer's first line (20 px) to the top right of the thread (16 px), the lime fill uncovered with the shrink; the greeting or the last bubble slides up out of the way; a bubble goes sage as soon as the next template or message starts, so there is one lime; the chip that was used is uncovered again, 460 ms expo out"],
+    ["Text", "real inputs (maxlength 22, no scroll), native selection and paste; the caret is drawn (1.5 px, blinking 1.1 s, restarted on every move) so it shows in a tile that does not have focus; Tab and Enter arrive with all text selected so typing replaces"],
+    ["Loop", "the thumbnail's pose is Write a launch post unfolded with Kova in the first slot and the ring on the second; after about 5 s a ghost types the second slot, sends, then picks a chip and folds it with Escape, then fills Compare with Tab and Shift+Tab, then Write a launch post again; it uses the same key and input handlers as a hand, yields to any real pointer, touch or key and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-23"],
+  "where": "The composer of Strata and any Qbix Labs assistant, and a client's brief form on a launch page, where a starting template should become a sentence with blanks the visitor fills in without leaving the keyboard.",
+  "rules": [
+    "The chip that was pressed is the thing that moves: it leaves its exact rect and lands on the exact pixels of the sentence's first words, and Escape takes the same path home. Nothing is faded in somewhere else.",
+    "The sentence is made of the chip's own phrases, in em units, so the chip's words, the flyer's words and the composer's words are one layout at three sizes.",
+    "A slot's width is a spring aimed at its measured text. The input is always as wide as its text and the pill clips it, so typing never scrolls and the words after it glide instead of jumping.",
+    "Exactly one lime at any time: the ring on the active slot, then the bubble once the sentence is sent, which goes sage as soon as the next template or message starts. Send is ink when enabled and sage when not.",
+    "Real text editing: a real input per slot, native selection, paste and caret movement; Backspace on an empty slot and the arrows at a slot's edge cross to the neighbour. The caret is drawn so it shows without focus.",
+    "Send stays disabled until every slot holds text. Each input is labelled with the slot's name and its place (Client, 1 of 2); the status line announces the template, the send and the fold.",
+    "System face, Apple neutrals (#1d1d1f, #6e6e73, #f5f5f7, #e8e8ed), lime where Apple would use blue; icons drawn inline with 1.8 px round strokes.",
+    "Under reduced motion the template opens, moves, folds and sends in place with no flight, spring, ring travel or ghost, and the piece rests on the unfolded pose."
+  ],
+  "tags": ["composer", "prompt", "template", "slots", "shared element", "flight", "spring", "tab", "inputs", "caret", "bubble", "Strata"]
+}
+</script>
+<style data-code>
+/* Prompt slots. A Strata composer in the system face with Apple's neutrals.
+   Three template chips sit above it. A chip is built from phrases (.ps-ph): its words (.ps-tt) and an ellipsis (.ps-dd2) for each blank, all in em, so the same phrases
+   make the chip (13 px), the flyer (13 to 20 px) and the sentence in the composer (20 px) with the same layout.
+   In the sentence each blank is a pill (.ps-pill) holding a real input; its width is set from script (a spring). The one lime is the ring (.ps-ring), an element on springs. */
+.ps-fit { --ps-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --ps-ui: cubic-bezier(.4, 0, .2, 1); --ps-out: cubic-bezier(.16, 1, .3, 1); --ps-in: cubic-bezier(.5, 0, .75, 0);
+  position: relative; }
+.ps-panel { position: relative; width: 520px; padding: 16px 20px 16px; background: #f5f5f7; color: #1d1d1f; border-radius: 28px;
+  font: 400 15px/20px var(--ps-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased;
+  transform-origin: 0 0; transform: scale(var(--s, 1)); -webkit-touch-callout: none; touch-action: manipulation; }
+.ps-panel button { font: inherit; letter-spacing: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+.ps-panel h3, .ps-panel p { margin: 0; }
+
+/* the thread: the greeting, then the last sent bubble */
+.ps-thread { position: relative; height: 76px; overflow: hidden; }
+.ps-greet { position: absolute; left: 0; top: 26px; font: 600 21px/26px var(--ps-f); letter-spacing: -.018em; color: #1d1d1f; translate: 0 0;
+  transition: translate 320ms var(--ps-in); }
+.ps-greet.is-gone { translate: 0 -64px; }
+
+/* template chips */
+.ps-chips { display: flex; gap: 8px; margin-top: 6px; }
+.ps-chip { position: relative; display: flex; align-items: center; height: 34px; padding: 0 14px; border: 0; border-radius: 17px; background: #fff; color: #1d1d1f;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .04); scale: 1; outline: none;
+  transition: scale 100ms var(--ps-ui), box-shadow 200ms var(--ps-ui), color 200ms var(--ps-ui), clip-path 0ms; }
+.ps-chip::after { content: ''; position: absolute; inset: 0; border-radius: inherit; border: 1px dashed rgba(0, 0, 0, .2); opacity: 0; transition: opacity 200ms var(--ps-ui); pointer-events: none; }
+@media (hover: hover) { .ps-chip:hover { box-shadow: 0 0 0 1px rgba(0, 0, 0, .16), 0 1px 3px rgba(0, 0, 0, .06); } }
+.ps-chip.is-press { scale: .96; }
+.ps-chip:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.ps-chip.is-dim { color: rgba(29, 29, 31, .42); pointer-events: none; cursor: default; box-shadow: 0 0 0 1px rgba(0, 0, 0, .05); }
+.ps-chip.is-away { background: transparent; box-shadow: none; pointer-events: none; }
+.ps-chip.is-away::after { opacity: 1; }
+.ps-chip.is-away:focus-visible { outline-color: transparent; }
+.ps-chip.is-away .ps-cw { visibility: hidden; }
+.ps-chip.is-back { transition: scale 100ms var(--ps-ui), box-shadow 200ms var(--ps-ui), color 200ms var(--ps-ui), clip-path 460ms var(--ps-out); }
+
+/* phrases: the chip's words and the sentence's words share these */
+.ps-cw { display: flex; column-gap: .3em; font-size: 13px; line-height: 34px; letter-spacing: -.011em; white-space: nowrap; }
+.ps-ph { display: flex; align-items: center; }
+.ps-tt { display: inline-block; white-space: nowrap; }
+.ps-ph.has-slot .ps-tt { padding-right: .3em; }
+.ps-dd2 { display: inline-block; }
+
+/* the composer */
+.ps-comp { position: relative; margin-top: 14px; padding: 16px 20px; background: #fff; border-radius: 24px; box-shadow: 0 4px 24px rgba(0, 0, 0, .08); }
+.ps-field { position: relative; min-height: 68px; font-size: 20px; line-height: 34px; letter-spacing: -.011em; }
+.ps-free { position: absolute; left: 0; top: 0; width: calc(100% - 44px); height: 34px; margin: 0; padding: 0; border: 0; outline: none; background: transparent;
+  font: 400 20px/34px var(--ps-f); letter-spacing: -.011em; color: #1d1d1f; caret-color: #1d1d1f; user-select: text; -webkit-user-select: text; transition: opacity 200ms var(--ps-ui); }
+.ps-free::placeholder { color: #86868b; opacity: 1; }
+.ps-free.is-off { opacity: 0; visibility: hidden; transition: opacity 120ms var(--ps-ui), visibility 0s 120ms; }
+.ps-sent { position: absolute; left: 0; top: 0; right: 44px; display: flex; flex-wrap: wrap; align-content: flex-start; column-gap: .3em; row-gap: 4px; visibility: hidden; }
+.ps-sent.is-on { visibility: visible; }
+.ps-i { flex: none; height: 34px; white-space: nowrap; }
+.ps-main { display: block; overflow: hidden; height: 34px; }
+.ps-tail { display: block; overflow: hidden; height: 34px; white-space: nowrap; }
+.ps-pill { position: relative; flex: none; width: 0; height: 30px; border-radius: 15px; overflow: hidden; background: rgba(232, 232, 237, var(--k, 1)); cursor: text; }
+.ps-dd { position: absolute; left: 0; top: 0; line-height: 30px; white-space: nowrap; }
+.ps-in { position: absolute; left: 12px; top: 0; height: 30px; width: 40px; margin: 0; padding: 0; border: 0; border-radius: 0; outline: none; background: transparent;
+  font: 500 20px/30px var(--ps-f); letter-spacing: -.011em; color: #1d1d1f; caret-color: transparent; user-select: text; -webkit-user-select: text; }
+.ps-in::placeholder { color: #6e6e73; opacity: 1; font-weight: 400; }
+.ps-in::selection { background: rgba(29, 29, 31, .16); color: #1d1d1f; }
+.ps-caret { position: absolute; top: 4px; left: 0; width: 1.5px; height: 22px; border-radius: 1px; background: #1d1d1f; display: none; animation: ps-a 1.1s steps(1) infinite; }
+.ps-caret.b { animation-name: ps-b; }
+@keyframes ps-a { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+@keyframes ps-b { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+/* the one lime: a ring on springs around the active slot */
+.ps-ring { position: absolute; left: 0; top: 0; z-index: 2; width: 0; height: 0; border-radius: 999px; box-shadow: 0 0 0 3px #B8FF00; opacity: 0; pointer-events: none; will-change: transform; }
+
+.ps-hint { height: 16px; margin: 10px 0 0 4px; font: 400 12px/16px var(--ps-f); letter-spacing: -.006em; color: #6e6e73; }
+.ps-hint b { font-weight: 500; color: #1d1d1f; }
+.ps-send { position: absolute; right: 12px; bottom: 12px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 999px; background: #1d1d1f; color: #fff; scale: 1; outline: none;
+  transition: background 200ms var(--ps-ui), color 200ms var(--ps-ui), scale 100ms var(--ps-ui); }
+.ps-send svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ps-send:disabled { background: #e8e8ed; color: #a1a1a6; cursor: default; }
+.ps-send.is-press:not(:disabled) { scale: .94; }
+.ps-send:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+
+/* the flyer: a copy of the chip's words, on springs from the chip's rect to the sentence's first words */
+.ps-fly { position: absolute; left: 0; top: 0; z-index: 4; display: none; align-items: center; height: 34px; pointer-events: none; will-change: transform; }
+.ps-fly.is-on { display: flex; }
+.ps-fly::before { content: ''; position: absolute; inset: 0; border-radius: 17px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .04); opacity: calc(1 - var(--p, 0)); }
+.ps-fly .ps-cw { position: relative; }
+
+/* the sent bubble: the sentence again, at 20 px on the composer's pixels, shrinking to 16 px in the thread */
+.ps-bub { position: absolute; left: 0; top: 0; z-index: 3; color: #1d1d1f; font-size: 20px; line-height: 1.7em; letter-spacing: -.011em; pointer-events: none; will-change: transform;
+  translate: 0 0; opacity: 1; transition: translate 300ms var(--ps-in), opacity 300ms var(--ps-in); }
+.ps-bub.is-out { translate: 0 -34px; opacity: 0; }
+.ps-bub.is-calm .ps-bg { background: #e8e8ed; }
+.ps-bg { position: absolute; inset: -.5em -.82em; border-radius: 1.25em; background: #B8FF00; opacity: var(--bgo, 0); transition: background 320ms var(--ps-ui); }
+.ps-bc { position: relative; display: flex; flex-direction: column; row-gap: .2em; width: max-content; }
+.ps-bc.is-wrap { flex-direction: row; flex-wrap: wrap; align-content: flex-start; column-gap: .3em; }
+.ps-bl { display: flex; column-gap: .3em; }
+.ps-bph { display: flex; align-items: center; height: 1.7em; white-space: nowrap; }
+.ps-bt.has-slot { padding-right: .3em; }
+.ps-tok { display: block; height: 1.5em; line-height: 1.5em; padding: 0 .6em; border-radius: 999px; background: rgba(29, 29, 31, .1); font-weight: 500; }
+
+.ps-meas { position: absolute; left: -9999px; top: 0; visibility: hidden; white-space: pre; font: 400 20px/34px var(--ps-f); letter-spacing: -.011em; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .ps-panel *, .ps-panel *::before, .ps-panel *::after { transition: none !important; animation: none !important; } .ps-caret { opacity: 1; } }
+</style>
+<style>
+  .psw { display: grid; gap: 12px; justify-items: start; }
+  .psw .kicker, .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="psw">
+    <p class="kicker">Qbix · Strata</p>
+    <div class="ps-fit" id="ps-fit">
+<!-- code -->
+<section class="ps-panel" id="ps-panel" aria-label="Strata composer">
+  <div class="ps-thread" id="ps-thread"><h3 class="ps-greet" id="ps-greet">Pick a template. Fill the blanks.</h3></div>
+
+  <div class="ps-chips" id="ps-chips" role="group" aria-label="Templates">
+    <button class="ps-chip" type="button" data-t="0" aria-label="Template: Write a launch post for, blank"><span class="ps-cw"><span class="ps-ph has-slot"><span class="ps-tt">Write a launch post for</span><span class="ps-dd2">…</span></span></span></button>
+    <button class="ps-chip" type="button" data-t="1" aria-label="Template: Compare, blank, and, blank"><span class="ps-cw"><span class="ps-ph has-slot"><span class="ps-tt">Compare</span><span class="ps-dd2">…</span></span><span class="ps-ph has-slot"><span class="ps-tt">and</span><span class="ps-dd2">…</span></span></span></button>
+    <button class="ps-chip" type="button" data-t="2" aria-label="Template: Turn, blank, into a brief"><span class="ps-cw"><span class="ps-ph has-slot"><span class="ps-tt">Turn</span><span class="ps-dd2">…</span></span><span class="ps-ph"><span class="ps-tt">into a brief</span></span></span></button>
+  </div>
+
+  <div class="ps-comp" id="ps-comp">
+    <div class="ps-field" id="ps-field">
+      <input class="ps-free" id="ps-free" type="text" maxlength="60" placeholder="Ask Strata to make something" aria-label="Message to Strata" autocomplete="off" spellcheck="false">
+      <div class="ps-sent" id="ps-sent" role="group" aria-label="Template"></div>
+      <i class="ps-ring" id="ps-ring" aria-hidden="true"></i>
+    </div>
+    <button class="ps-send" id="ps-send" type="button" aria-label="Send" disabled><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 15.5V5M5.6 9.4L10 5l4.4 4.4"/></svg></button>
+  </div>
+  <p class="ps-hint" id="ps-hint"><b>Return</b> to send</p>
+
+  <div class="ps-fly" id="ps-fly" aria-hidden="true"></div>
+  <p class="sr-only" id="ps-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+      <span class="ps-meas" id="ps-meas" aria-hidden="true"></span>
+    </div>
+  </div>
+  <div class="qm-ui"><span>Press a chip. Type in a slot. Tab and Shift+Tab move the ring, Backspace on an empty slot goes back, Return on the last slot sends, Esc folds it back</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Prompt slots. Everything that moves is a spring (critically damped, from the value and velocity on screen):
+   the flyer's x, y, width and size, OPEN (the sentence unfolding: blanks become pills, the missing words and the full stop open), each slot's width W,
+   the lime ring's x, y, width and height, and the sent bubble's x, y and size. layout() turns those numbers into styles; nothing else moves a thing.
+   Text is real: one input per slot. Its width is the text's measured width (so it never scrolls) and the pill, whose width is the spring, clips it. */
+const PS = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const sm = (x, a, b) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const FS = 20, CFS = 13, CPAD = 14, BFS = 16, PADX = 12, MINP = 32, MAXP = 262, MAXLEN = 22;
+  const RESP = { fly: 0.38, open: 0.52, slot: 0.3, ring: 0.34, bub: 0.46 };
+
+  const TPL = [
+    { name: 'Write a launch post', ph: [
+      { t: 'Write a launch post for', s: { ph: 'Forma', name: 'Client' }, tc: 1, sc: 1 },
+      { t: 'about', s: { ph: 'the spring line', name: 'Launch' }, tc: 0, sc: 0, tail: '.' }] },
+    { name: 'Compare two layouts', ph: [
+      { t: 'Compare', s: { ph: 'the old grid', name: 'First layout' }, tc: 1, sc: 1 },
+      { t: 'and', s: { ph: 'the new grid', name: 'Second layout' }, tc: 1, sc: 1, tail: '.' }] },
+    { name: 'Turn notes into a brief', ph: [
+      { t: 'Turn', s: { ph: 'the call notes', name: 'Source' }, tc: 1, sc: 1 },
+      { t: 'into a brief', tc: 1, tail: '.' }] }
+  ];
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const mk = (x = 0, resp = 0.4, eps = 0.02) => ({ x, v: 0, T: x, w: TAU / resp, on: false, eps });
+  function step(s, dt) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  function aim(s, T, resp) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+    kick();
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+
+  const $ = (id) => document.getElementById(id);
+  const panel = $('ps-panel'), thread = $('ps-thread'), greet = $('ps-greet'), chipsEl = $('ps-chips'), field = $('ps-field'), sent = $('ps-sent'), ringEl = $('ps-ring');
+  const free = $('ps-free'), sendBtn = $('ps-send'), hint = $('ps-hint'), live = $('ps-live'), flyEl = $('ps-fly'), meas = $('ps-meas');
+  const chips = Array.from(chipsEl.querySelectorAll('.ps-chip'));
+  const mkEl = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+
+  const FL = { x: mk(0, RESP.fly, 0.25), y: mk(0, RESP.fly, 0.25), w: mk(0, RESP.fly, 0.25), p: mk(0, RESP.fly, 0.0012) };
+  const OPEN = mk(0, RESP.open, 0.0008);
+  const RING = { x: mk(0, RESP.ring, 0.2), y: mk(0, RESP.ring, 0.2), w: mk(0, RESP.ring, 0.2), h: mk(0, RESP.ring, 0.2), docked: true, a: 0 };
+  const BUB = { x: mk(0, RESP.bub, 0.2), y: mk(0, RESP.bub, 0.2), f: mk(FS, RESP.bub, 0.01) };
+  const S = { t: null, act: -1, landed: false, closing: false, sending: false, driver: 'user', soft: false, flyOn: false, flyDir: 'in', flyChip: -1 };
+  let phr = [], slots = [], flyCw = null, bub = null, dotsW = 0, raf = 0, last = 0, blink = 0;
+
+  /* measuring: text widths come from a hidden span outside the scaled panel, so they are in design px */
+  const wcache = new Map();
+  function tw(str, weight = 400) {
+    const k = weight + '|' + str;
+    let w = wcache.get(k);
+    if (w === undefined) { meas.style.fontWeight = weight; meas.textContent = str; w = meas.getBoundingClientRect().width; wcache.set(k, w); }
+    return w;
+  }
+  const sc = () => panel.getBoundingClientRect().width / panel.offsetWidth || 1;
+  const rel = (el, base, s) => { const r = el.getBoundingClientRect(), b = base.getBoundingClientRect(); return { x: (r.left - b.left) / s, y: (r.top - b.top) / s, w: r.width / s, h: r.height / s }; };
+  const say = (m) => { live.textContent = ''; setTimeout(() => { live.textContent = m; }, 30); };
+  const needW = (sl) => { const v = sl.inp.value; return clamp(Math.ceil(tw(v || sl.d.ph, v ? 500 : 400)) + PADX * 2, MINP, MAXP); };
+
+  /* build the sentence for a template: phrases of [words][blank][full stop] */
+  function build(t) {
+    const T = TPL[t];
+    sent.textContent = ''; phr = []; slots = [];
+    sent.setAttribute('aria-label', T.name);
+    const nS = T.ph.filter((p) => p.s).length;
+    T.ph.forEach((d) => {
+      const el = mkEl('div', 'ps-i ps-ph' + (d.s ? ' has-slot' : ''));
+      const P = { d, el };
+      P.main = mkEl('span', 'ps-main'); P.tt = mkEl('span', 'ps-tt', d.t); P.main.append(P.tt); el.append(P.main);
+      if (d.s) {
+        const sl = { d: d.s, P, si: slots.length, c: !!d.sc, vis: 1, kk: 1 };
+        sl.pill = mkEl('span', 'ps-pill'); sl.dd = mkEl('span', 'ps-dd', '…');
+        const inp = sl.inp = document.createElement('input');
+        inp.className = 'ps-in'; inp.type = 'text'; inp.maxLength = MAXLEN; inp.placeholder = d.s.ph; inp.autocomplete = 'off'; inp.spellcheck = false;
+        inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('autocorrect', 'off');
+        inp.setAttribute('aria-label', `${d.s.name}, ${sl.si + 1} of ${nS}`);
+        inp.enterKeyHint = sl.si === nS - 1 ? 'send' : 'next';
+        sl.caret = mkEl('i', 'ps-caret'); sl.caret.setAttribute('aria-hidden', 'true');
+        sl.pill.append(sl.dd, inp, sl.caret); el.append(sl.pill);
+        P.slot = sl; slots.push(sl); wire(sl);
+      }
+      if (d.tail) { P.tail = mkEl('span', 'ps-tail', d.tail); el.append(P.tail); }
+      sent.append(el); phr.push(P);
+    });
+    const s = sc();
+    phr.forEach((P) => {
+      P.tnat = P.tt.getBoundingClientRect().width / s;
+      if (P.tail) P.tailNat = P.tail.getBoundingClientRect().width / s;
+    });
+    slots.forEach((sl) => { sl.W = mk(needW(sl), RESP.slot, 0.02); });
+  }
+
+  /* OPEN → every width. A covered part (in the chip) is on screen from the start; the others open left to right as OPEN runs */
+  function applyOpen() {
+    const o = OPEN.x;
+    let j = 0;
+    phr.forEach((P) => {
+      const tv = P.d.tc ? 1 : sm(o, 0.1 + 0.16 * j, 0.6 + 0.16 * j++);
+      P.main.style.width = tv >= 0.999 ? '' : (P.tnat * tv).toFixed(2) + 'px';
+      const sl = P.slot;
+      if (sl) {
+        let w, kk;
+        if (sl.c) { kk = sm(o, 0, 0.6); w = dotsW + (sl.W.x - dotsW) * kk; } else { kk = sm(o, 0.1 + 0.16 * j, 0.6 + 0.16 * j++); w = sl.W.x * kk; }
+        sl.kk = kk;
+        sl.pill.style.width = w.toFixed(2) + 'px';
+        sl.pill.style.setProperty('--k', kk.toFixed(3));
+        sl.dd.style.opacity = sl.c ? (1 - sm(kk, 0, 0.35)).toFixed(3) : '0';
+        sl.inp.style.left = (PADX * kk).toFixed(2) + 'px';
+        sl.inp.style.opacity = sm(kk, 0.2, 0.7).toFixed(3);
+        const v = sl.inp.value;
+        sl.inp.style.width = (Math.ceil(tw(v || sl.d.ph, v ? 500 : 400)) + 4) + 'px';
+      }
+      if (P.tail) { const f = sm(o, 0.55, 1); P.tail.style.width = f >= 0.999 ? '' : (P.tailNat * f).toFixed(2) + 'px'; }
+    });
+  }
+  // where the chip's words land: the first line of the sentence, as wide as the chip's words are at 20 px
+  function landBox() {
+    const s = sc(), r = rel(sent, panel, s);
+    let w = 0, n = 0;
+    phr.forEach((P) => {
+      let pw = 0;
+      if (P.d.tc) pw += P.tnat;
+      if (P.slot && P.slot.c) pw += dotsW;
+      if (pw) { w += pw; n++; }
+    });
+    return { x: r.x, y: r.y, w: w + (n - 1) * 0.3 * FS };
+  }
+
+  /* the flyer */
+  function showFly(t) {
+    flyEl.textContent = '';
+    flyCw = chips[t].querySelector('.ps-cw').cloneNode(true);
+    flyEl.append(flyCw);
+    flyEl.classList.add('is-on'); S.flyOn = true;
+  }
+  function layFly() {
+    if (!S.flyOn) return;
+    const p = clamp(FL.p.x, 0, 1);
+    flyEl.style.transform = `translate(${FL.x.x.toFixed(2)}px, ${FL.y.x.toFixed(2)}px)`;
+    flyEl.style.width = FL.w.x.toFixed(2) + 'px';
+    flyEl.style.setProperty('--p', p.toFixed(4));
+    flyCw.style.fontSize = (CFS + (FS - CFS) * p).toFixed(3) + 'px';
+    flyCw.style.marginLeft = (CPAD * (1 - p)).toFixed(2) + 'px';
+  }
+  const flyTo = (b, p) => { aim(FL.x, b.x); aim(FL.y, b.y); aim(FL.w, b.w); aim(FL.p, p); };
+  const flyAt = (b, p) => { snap(FL.x, b.x); snap(FL.y, b.y); snap(FL.w, b.w); snap(FL.p, p); };
+  const chipBox = (t) => { const r = rel(chips[t], panel, sc()); return { x: r.x, y: r.y, w: r.w }; };
+
+  /* open a template: the chip becomes the flyer, flies, lands as the sentence's first words, and the sentence unfolds */
+  const calm = () => { if (bub) bub.el.classList.add('is-calm'); };   // one lime at a time: a sent bubble goes quiet once the next thing starts
+  function openT(t) {
+    if (S.sending) return;
+    if (S.t !== null && !(S.flyOn && S.flyDir === 'out' && S.t === t)) return;
+    const again = S.t === t;
+    S.t = t; S.closing = false;
+    if (!again) {
+      calm();
+      build(t); snap(OPEN, 0); applyOpen();
+      chips[t].classList.add('is-away');
+      chips.forEach((c, i) => { if (i !== t) { c.classList.add('is-dim'); c.disabled = true; } });
+      free.classList.add('is-off'); free.disabled = true;
+      showFly(t); flyAt(chipBox(t), 0); S.flyChip = t;
+    }
+    S.flyDir = 'in'; S.landed = false;
+    syncSend(); setHint();
+    say(`${TPL[t].name}. ${slots.length} blank${slots.length > 1 ? 's' : ''}.`);
+    if (reduced) { flyAt(landBox(), 1); layFly(); land(); return; }
+    flyTo(landBox(), 1);
+  }
+  function land() {
+    S.flyOn = false; flyEl.classList.remove('is-on');
+    S.landed = true; sent.inert = false; sent.classList.add('is-on');
+    aim(OPEN, 1);
+    setActive(0, 'all');
+    syncSend(); setHint();
+  }
+  // Escape: the blanks close, the words that came in go back out, then the flyer takes the same road home
+  function fold() {
+    if (S.t === null || S.sending) return;
+    if (S.landed) {
+      S.closing = true; S.act = -1; sent.inert = true;
+      if (document.activeElement && sent.contains(document.activeElement)) document.activeElement.blur();
+      aim(OPEN, 0);
+      syncSend();
+      say('Template closed.');
+      if (reduced) { snap(OPEN, 0); applyOpen(); startOut(); }
+    } else if (S.flyOn && S.flyDir === 'in') {
+      S.flyDir = 'out'; flyTo(chipBox(S.t), 0);
+      if (reduced) { flyAt(chipBox(S.t), 0); arrive(); }
+      say('Template closed.');
+    }
+  }
+  function startOut() {
+    S.closing = false; S.landed = false; S.act = -1;
+    sent.classList.remove('is-on');
+    showFly(S.t);
+    flyAt(landBox(), 1); layFly();
+    S.flyDir = 'out';
+    if (reduced) { flyAt(chipBox(S.t), 0); arrive(); return; }
+    flyTo(chipBox(S.t), 0);
+  }
+  function arrive() {
+    const t = S.t;
+    S.flyOn = false; flyEl.classList.remove('is-on');
+    if (t !== null) chips[t].classList.remove('is-away');
+    endTemplate();
+    if (t !== null && S.driver === 'user' && chips[t]) { try { chips[t].focus({ preventScroll: true }); } catch (e) { /* nothing */ } }
+  }
+  function endTemplate() {
+    S.t = null; S.landed = false; S.closing = false; S.act = -1;
+    chips.forEach((c) => { c.classList.remove('is-dim', 'is-away'); c.disabled = false; });
+    sent.classList.remove('is-on'); sent.textContent = ''; phr = []; slots = [];
+    free.disabled = false; free.classList.remove('is-off');
+    RING.docked = true;
+    syncSend(); setHint();
+  }
+
+  /* slots: the active one, the keys, the clicks */
+  function setActive(i, how) {
+    if (!S.landed || i < 0 || i >= slots.length) return;
+    const sl = slots[i];
+    RING.docked = !(S.act >= 0 && S.act !== i && RING.a > 0.5);   // a ring that is not on screen starts on its slot; one that is travels there
+    S.act = i; S.soft = S.driver !== 'user';
+    const n = sl.inp.value.length;
+    if (!S.soft) sl.inp.focus({ preventScroll: true });
+    if (how === 'all') sl.inp.setSelectionRange(0, n); else if (how === 'end') sl.inp.setSelectionRange(n, n); else if (how === 'start') sl.inp.setSelectionRange(0, 0);
+    restartBlink(); kick();
+  }
+  const firstEmpty = () => slots.findIndex((s) => !s.inp.value.trim());
+  const canSend = () => S.t !== null ? S.landed && !S.closing && !S.sending && slots.length > 0 && firstEmpty() < 0 : !S.sending && !!free.value.trim();
+  function syncSend() { sendBtn.disabled = !canSend(); }
+  function setHint() {
+    if (S.t === null) hint.innerHTML = '<b>Return</b> to send';
+    else if (canSend()) hint.innerHTML = '<b>Return</b> to send · <b>Esc</b> folds it';
+    else hint.innerHTML = '<b>Tab</b> next slot · <b>Esc</b> folds it';
+  }
+  function onInput(sl) {
+    sl.W.T = needW(sl); sl.W.on = !reduced; if (reduced) sl.W.x = sl.W.T;
+    syncSend(); setHint(); layout(); restartBlink(); kick();
+  }
+  function wire(sl) {
+    const inp = sl.inp, pill = sl.pill;
+    inp.addEventListener('input', () => onInput(sl));
+    inp.addEventListener('keydown', (e) => {
+      S.driver = e.isTrusted === false ? 'ghost' : 'user';
+      if (e.isComposing) return;
+      const n = slots.length, i = sl.si, k = e.key;
+      if (k === 'Tab') {
+        if (e.shiftKey) { e.preventDefault(); setActive((i - 1 + n) % n, 'all'); }
+        else if (i < n - 1) { e.preventDefault(); setActive(i + 1, 'all'); }
+        else if (!canSend()) { e.preventDefault(); setActive(Math.max(0, firstEmpty()), 'all'); }
+      } else if (k === 'Enter') {
+        e.preventDefault();
+        if (i < n - 1) setActive(i + 1, 'all');
+        else if (canSend()) doSend();
+        else { const f = firstEmpty(); if (f >= 0 && f !== i) setActive(f, 'all'); }
+      } else if (k === 'Backspace' && !inp.value && i > 0) { e.preventDefault(); setActive(i - 1, 'end'); }
+      else if (k === 'ArrowLeft' && !e.shiftKey && inp.selectionStart === 0 && inp.selectionEnd === 0 && i > 0) { e.preventDefault(); setActive(i - 1, 'end'); }
+      else if (k === 'ArrowRight' && !e.shiftKey && inp.selectionStart === inp.value.length && inp.selectionEnd === inp.value.length && i < n - 1) { e.preventDefault(); setActive(i + 1, 'start'); }
+      else caretSoon();
+    });
+    inp.addEventListener('keyup', caretSoon);
+    inp.addEventListener('focus', () => { S.driver = 'user'; S.soft = false; if (S.act !== sl.si && S.landed) { RING.docked = !(S.act >= 0 && RING.a > 0.5); S.act = sl.si; kick(); } caretSoon(); });
+    inp.addEventListener('blur', () => { if (S.driver === 'user') caretSoon(); });
+    inp.addEventListener('select', caretSoon);
+    inp.addEventListener('pointermove', (e) => { if (e.buttons) caretSoon(); });
+    inp.addEventListener('pointerup', caretSoon);
+    // a click on a slot that is not the active one selects it (all its text); on the active one the browser places the caret
+    pill.addEventListener('mousedown', (e) => {
+      if (!S.landed) return;
+      S.driver = 'user';
+      if (S.act !== sl.si || e.target !== inp) { e.preventDefault(); setActive(sl.si, S.act === sl.si ? 'end' : 'all'); }
+    });
+    pill.addEventListener('click', (e) => { S.driver = e.isTrusted === false ? 'ghost' : 'user'; if (S.landed && S.act !== sl.si) setActive(sl.si, 'all'); });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && S.t !== null && !e.defaultPrevented) { S.driver = e.isTrusted === false ? 'ghost' : 'user'; e.preventDefault(); fold(); }
+  });
+  chips.forEach((c, i) => {
+    c.addEventListener('pointerdown', (e) => { if (e.button > 0) return; c.classList.add('is-press'); });
+    c.addEventListener('click', (e) => { S.driver = e.isTrusted === false ? 'ghost' : 'user'; openT(i); });
+  });
+  sendBtn.addEventListener('pointerdown', (e) => { if (e.button > 0) return; sendBtn.classList.add('is-press'); });
+  sendBtn.addEventListener('click', (e) => { S.driver = e.isTrusted === false ? 'ghost' : 'user'; doSend(); });
+  const unpress = () => { sendBtn.classList.remove('is-press'); chips.forEach((c) => c.classList.remove('is-press')); };
+  document.addEventListener('pointerup', unpress, { passive: true });
+  document.addEventListener('pointercancel', unpress, { passive: true });
+  free.addEventListener('input', () => { syncSend(); if (free.value) calm(); });
+  free.addEventListener('keydown', (e) => { S.driver = e.isTrusted === false ? 'ghost' : 'user'; if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); doSend(); } });
+
+  /* the drawn caret: native carets are not painted in a frame without focus, and a tile never has it */
+  function restartBlink() { blink ^= 1; slots.forEach((s) => s.caret.classList.toggle('b', !!blink)); }
+  function caretSoon() { requestAnimationFrame(() => { layCaret(); restartBlink(); }); }
+  function layCaret() {
+    slots.forEach((sl, i) => {
+      const inp = sl.inp;
+      const on = S.landed && !S.closing && S.act === i && (S.soft || document.activeElement === inp) && inp.selectionStart === inp.selectionEnd;
+      sl.caret.style.display = on ? 'block' : 'none';
+      if (on) sl.caret.style.left = (PADX * sl.kk + tw(inp.value.slice(0, inp.selectionStart), 500)).toFixed(2) + 'px';
+    });
+  }
+
+  /* the ring: springs while it travels, the pill's exact rect once it has arrived */
+  function layRing(dt, s) {
+    const on = S.landed && !S.closing && !S.sending && S.act >= 0 && slots[S.act];
+    const a = on ? 1 : 0;
+    RING.a = reduced ? a : RING.a + (a - RING.a) * (1 - Math.exp(-dt * 20));
+    if (Math.abs(RING.a - a) < 0.01) RING.a = a;
+    ringEl.style.opacity = RING.a.toFixed(3);
+    if (!on) return RING.a !== a;
+    const r = rel(slots[S.act].pill, field, s);
+    const set = [[RING.x, r.x], [RING.y, r.y], [RING.w, r.w], [RING.h, r.h]];
+    let busy = false;
+    if (RING.docked || reduced) set.forEach(([sp, T]) => snap(sp, T));
+    else {
+      let near = true;
+      set.forEach(([sp, T]) => { sp.T = T; sp.on = true; if (Math.abs(sp.x - T) > 0.4 || Math.abs(sp.v) > 8) near = false; });
+      if (near) { set.forEach(([sp, T]) => snap(sp, T)); RING.docked = true; } else busy = true;
+    }
+    ringEl.style.transform = `translate(${RING.x.x.toFixed(2)}px, ${RING.y.x.toFixed(2)}px)`;
+    ringEl.style.width = RING.w.x.toFixed(2) + 'px'; ringEl.style.height = RING.h.x.toFixed(2) + 'px';
+    return busy || RING.a !== a;
+  }
+
+  /* send: the filled sentence is rebuilt as a bubble on the same pixels and lifts into the thread */
+  function doSend() {
+    if (!canSend()) return;
+    const s = sc(), tpl = S.t !== null;
+    const parts = tpl ? phr.map((P) => ({ t: P.d.t, v: P.slot ? P.slot.inp.value.trim() : null, tail: P.d.tail })) : [{ t: free.value.trim(), v: null }];
+    const text = tpl ? parts.map((p) => (p.v ? `${p.t} ${p.v}` : p.t) + (p.tail || '')).join(' ') : parts[0].t;
+    const origin = tpl ? rel(sent, panel, s) : rel(free, panel, s);
+    if (bub) { const old = bub; old.el.classList.add('is-out'); setTimeout(() => old.el.remove(), 340); }
+    greet.classList.add('is-gone');
+    // the bubble: 20 px on the composer's pixels, wrapped as the composer wraps it
+    const el = mkEl('div', 'ps-bub'), bg = mkEl('i', 'ps-bg'), bc = mkEl('div', 'ps-bc');
+    el.setAttribute('aria-hidden', 'true');
+    parts.forEach((p) => {
+      const ph = mkEl('div', 'ps-bph');
+      if (p.t) ph.append(mkEl('span', 'ps-bt' + (p.v ? ' has-slot' : ''), p.t));
+      if (p.v) ph.append(mkEl('span', 'ps-tok', p.v));
+      if (p.tail) ph.append(mkEl('span', 'ps-bt', p.tail));
+      bc.append(ph);
+    });
+    el.append(bg, bc); panel.append(el);
+    // wrap the phrases as the composer wraps them, then fix each line as a row of its own, so a hair of difference at 16 px can never re-wrap the bubble
+    bc.classList.add('is-wrap'); bc.style.width = (tpl ? sent.offsetWidth : field.offsetWidth) + 'px';
+    const rows = [];
+    Array.from(bc.children).forEach((c) => { const y = Math.round(c.getBoundingClientRect().top); const r = rows.find((q) => Math.abs(q.y - y) < 4); if (r) r.k.push(c); else rows.push({ y, k: [c] }); });
+    rows.forEach((r) => { const ln = mkEl('div', 'ps-bl'); r.k.forEach((c) => ln.append(c)); bc.append(ln); });
+    bc.classList.remove('is-wrap'); bc.style.width = '';
+    // the size it will rest at is measured at that size (glyph advances are not exactly proportional to the font size)
+    el.style.fontSize = BFS + 'px';
+    const bcr = bc.getBoundingClientRect(), cw = bcr.width / s, chh = bcr.height / s;
+    el.style.fontSize = '';
+    const tb = rel(thread, panel, s);
+    const ex = Math.round(panel.offsetWidth - 20 - 0.82 * BFS - cw), ey = Math.round(tb.y + tb.h - 0.5 * BFS - chh);
+    bub = { el, text };
+    snap(BUB.x, origin.x); snap(BUB.y, origin.y); snap(BUB.f, FS);
+    if (reduced) { snap(BUB.x, ex); snap(BUB.y, ey); snap(BUB.f, BFS); } else { BUB.x.T = ex; BUB.y.T = ey; BUB.f.T = BFS; BUB.x.on = BUB.y.on = BUB.f.on = true; }
+    S.act = -1;
+    if (document.activeElement && (sent.contains(document.activeElement) || document.activeElement === free)) document.activeElement.blur();
+    const t = S.t;
+    if (tpl) { sent.classList.remove('is-on'); S.landed = false; }
+    free.value = '';
+    if (tpl) {
+      S.t = null;
+      const c = chips[t];
+      endTemplate();
+      c.classList.add('is-away');
+      setTimeout(() => reveal(c), reduced ? 0 : 260);
+    } else syncSend();
+    layBub();
+    say('Sent: ' + text);
+    kick();
+  }
+  // the chip that was used is uncovered again, left to right
+  function reveal(c) {
+    if (reduced) { c.classList.remove('is-away'); return; }
+    c.style.clipPath = 'inset(-4px 100% -4px -4px)';
+    c.classList.remove('is-away'); c.classList.add('is-back');
+    void c.offsetWidth;
+    c.style.clipPath = 'inset(-4px -4px -4px -4px)';
+    setTimeout(() => { c.classList.remove('is-back'); c.style.clipPath = ''; }, 520);
+  }
+  function layBub() {
+    if (!bub) return;
+    const f = BUB.f.x, p = clamp((FS - f) / (FS - BFS), 0, 1);
+    bub.el.style.transform = `translate(${BUB.x.x.toFixed(2)}px, ${BUB.y.x.toFixed(2)}px)`;
+    bub.el.style.fontSize = f.toFixed(3) + 'px';
+    bub.el.style.setProperty('--bgo', sm(p, 0, 0.7).toFixed(3));
+  }
+
+  /* one frame: step every spring, hand over between phases, then write the styles */
+  function frame(now) {
+    raf = 0;
+    const dt = Math.min(0.034, Math.max(0.001, (now - last) / 1000 || 0.016));
+    last = now;
+    let any = false;
+    const all = [FL.x, FL.y, FL.w, FL.p, OPEN, BUB.x, BUB.y, BUB.f];
+    slots.forEach((sl) => all.push(sl.W));
+    if (RING.docked === false) all.push(RING.x, RING.y, RING.w, RING.h);
+    all.forEach((sp) => { any = step(sp, dt) || any; });
+    if (S.flyOn && !FL.x.on && !FL.y.on && !FL.w.on && !FL.p.on) { if (S.flyDir === 'in') land(); else arrive(); }
+    if (S.closing && S.landed && OPEN.x < 0.03) startOut();
+    const busy = layout(dt);
+    if (any || busy) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+  function layout(dt = 0.016) {
+    const s = sc();
+    applyOpen(); layFly(); layBub(); layCaret();
+    return layRing(dt, s);
+  }
+
+  /* back to the start, instantly: the pose the piece loads in (the thumbnail) is Write a launch post, Kova in the first slot, the ring on the second */
+  function reset() {
+    if (bub) { bub.el.remove(); bub = null; }
+    panel.querySelectorAll('.ps-bub').forEach((b) => b.remove());
+    greet.classList.remove('is-gone');
+    S.flyOn = false; flyEl.classList.remove('is-on'); S.sending = false;
+    [FL.x, FL.y, FL.w, FL.p, OPEN, BUB.x, BUB.y].forEach((sp) => snap(sp, 0));
+    endTemplate();
+    free.value = ''; syncSend(); setHint();
+    chips.forEach((c) => { c.style.clipPath = ''; c.classList.remove('is-back', 'is-press'); });
+    unpress();
+  }
+  function pose() {
+    reset();
+    S.t = 0; S.driver = 'ghost';
+    build(0);
+    chips[0].classList.add('is-away');
+    chips.forEach((c, i) => { if (i !== 0) { c.classList.add('is-dim'); c.disabled = true; } });
+    free.classList.add('is-off'); free.disabled = true;
+    snap(OPEN, 1);
+    slots[0].inp.value = 'Kova'; slots.forEach((sl) => { sl.W = mk(needW(sl), RESP.slot, 0.02); });
+    S.landed = true; sent.inert = false; sent.classList.add('is-on');
+    S.act = 1; S.soft = true; RING.docked = true; RING.a = 1;
+    slots[1].inp.setSelectionRange(0, 0);
+    applyOpen(); syncSend(); setHint();
+    layout(); restartBlink(); kick();
+  }
+  function remeasure() {
+    wcache.clear();
+    meas.style.fontWeight = 400; meas.textContent = '…'; dotsW = meas.getBoundingClientRect().width;
+  }
+  remeasure();
+  const ro = new ResizeObserver(() => { layout(); });
+  ro.observe(panel);
+  pose();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (S.t === 0 && S.act === 1 && slots[0].inp.value === 'Kova' && !S.flyOn) { remeasure(); pose(); } else { remeasure(); } });
+
+  return {
+    S, chips, sendBtn, panel, slots: () => slots, field, thread,
+    openT, fold, doSend, canSend, pose, reset, layout, kick,
+    get fresh() { return S.t === 0 && S.landed && slots[0] && slots[0].inp.value === 'Kova' && !slots[1].inp.value; },
+    // the ghost types the way a hand does: a keydown, the text going into the active input, an input event
+    typeChar(ch) {
+      const sl = slots[S.act]; if (!sl) return;
+      S.driver = 'ghost';
+      const inp = sl.inp;
+      inp.dispatchEvent(new KeyboardEvent('keydown', { key: ch, bubbles: true, cancelable: true }));
+      inp.setRangeText(ch, inp.selectionStart, inp.selectionEnd, 'end');
+      inp.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ch }));
+      inp.dispatchEvent(new KeyboardEvent('keyup', { key: ch, bubbles: true }));
+    },
+    key(k, shift = false) {
+      S.driver = 'ghost';
+      const sl = slots[S.act];
+      const tgt = sl ? sl.inp : document;
+      tgt.dispatchEvent(new KeyboardEvent('keydown', { key: k, shiftKey: shift, bubbles: true, cancelable: true }));
+    },
+    snapshot() { return { t: S.t, act: S.act, landed: S.landed, vals: slots.map((s) => s.inp.value), ring: [RING.x.x, RING.y.x, RING.w.x, RING.h.x, RING.a, RING.docked], open: OPEN.x, fly: [FL.x.x, FL.y.x, FL.w.x, FL.p.x], send: !sendBtn.disabled, W: slots.map((s) => s.W.x), bub: bub && bub.text }; }
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('ps-fit'), panel = PS.panel;
+  // the panel is drawn at 520 px wide and scaled to the room it is given (about 78% of the width, 1.3x at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    const pw = panel.offsetWidth, ph = panel.offsetHeight;
+    const s = Math.max(0.5, Math.min(0.8 * W / pw, (H - 2 * pad - ui - 36) / ph, 1.3));
+    fit.style.setProperty('--s', s.toFixed(4));
+    panel.style.setProperty('--s', s.toFixed(4));
+    fit.style.width = (pw * s).toFixed(2) + 'px'; fit.style.height = (ph * s).toFixed(2) + 'px';
+    PS.layout();
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(size);
+
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  // the ghost's events: the same ones a hand makes, untrusted so the page can tell them apart
+  const fire = (type, x, y, Ctor = PointerEvent) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 73, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  const centre = (el) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width * 0.5, y: r.top + r.height * 0.5 }; };
+  async function glide(my, to, ms = 760) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y);
+      if (p >= 1) break;
+    }
+  }
+  async function until(my, ok, max = 6000) { let t = 0; while (!ok() && t < max) { await gap(my, 100); t += 100; } }
+  async function tap(my) {
+    const { x, y } = pos;
+    const el = fire('pointerdown', x, y); await gap(my, 100); fire('pointerup', x, y);
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  async function click(my, el, dx = 0.5) { const r = el.getBoundingClientRect(); await glide(my, { x: r.left + r.width * dx, y: r.top + r.height * 0.55 }, 640); await gap(my, 170); await tap(my); }
+  // the ghost types with the same input path as a hand; a little uneven, never random
+  async function type(my, str) {
+    for (let i = 0; i < str.length; i++) { PS.typeChar(str[i]); await gap(my, 72 + ((i * 37) % 5) * 13); }
+  }
+  async function key(my, k, shift = false, after = 500) { PS.key(k, shift); await gap(my, after); }
+  const chip = (i) => PS.chips[i];
+  async function ensureIdle(my) {
+    if (PS.S.t !== null) { PS.key('Escape'); await gap(my, 300); await until(my, () => PS.S.t === null && !PS.S.flyOn); await gap(my, 700); }
+  }
+  async function pick(my, i) {
+    await ensureIdle(my);
+    await click(my, chip(i), 0.35);
+    await until(my, () => PS.S.landed); await gap(my, 900);
+  }
+  async function send(my) {
+    await until(my, () => PS.canSend(), 2000);
+    await click(my, PS.sendBtn);
+    await gap(my, 2600);
+  }
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 5000 : 3600) : 700);
+      QM.ghostShow();
+      if (first && PS.fresh) {                                  // from the pose: finish the sentence, send it
+        const sl = PS.slots()[1];
+        await click(my, sl.pill, 0.5); await gap(my, 350);
+        await type(my, 'the card refresh'); await gap(my, 650);
+        await send(my);
+      }
+      for (;;) {
+        await pick(my, 2);                                      // Turn … into a brief: type, then Escape folds it home
+        await type(my, 'Willow intake'); await gap(my, 800);
+        await key(my, 'Escape', false, 400);
+        await until(my, () => PS.S.t === null && !PS.S.flyOn); await gap(my, 1100);
+        await pick(my, 1);                                      // Compare … and …: two slots, back and forth, Return sends
+        await type(my, 'the old grid'); await gap(my, 500);
+        await key(my, 'Tab', false, 700);
+        await type(my, 'the new grid'); await gap(my, 600);
+        await key(my, 'Tab', true, 800);                        // Shift+Tab, the ring travels back
+        await key(my, 'Tab', false, 800);
+        await key(my, 'Enter', false, 400);
+        await until(my, () => !PS.canSend() && PS.S.t === null, 2000); await gap(my, 2600);
+        await pick(my, 0);                                      // Write a launch post for … about …
+        await type(my, 'Kova'); await gap(my, 500);
+        await key(my, 'Tab', false, 700);
+        await type(my, 'the card refresh'); await gap(my, 700);
+        await send(my);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() {
+    epoch++; QM.ghostHide();
+    if (pos) { pos = null; fire('pointermove', -10, -10); }
+  }
+  if (!QM.tile && !reduced) {
+    const idle = () => PS.panel.matches(':hover') || !!PS.panel.querySelector(':focus-visible') || PS.panel.contains(document.activeElement) && document.activeElement !== document.body;
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                    // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); PS.pose(); if (!reduced) script(true); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => script(true), 300));
+})();
+</script>
+</body>
+</html>
