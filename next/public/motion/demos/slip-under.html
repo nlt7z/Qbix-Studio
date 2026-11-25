@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slip under · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "slip-under", "title": "Slip under", "group": "studio", "added": "2026-11-25", "cat": "cards", "order": 130,
+  "kind": "loop", "tone": "paper", "shot": 1000, "preview": { "secs": 9, "skip": 4900 },
+  "line": "sink 0.96 in 0.22 s · covers 0.42 s, 40 ms apart · drawer lifts on a spring · one lime dot",
+  "summary": "Willow Counseling's day as five reminder cards on #f5f5f7. Tap Done, or the card: the control fills and its tick is drawn in one stroke, and the card does not fade or fly off. It sinks: it presses to 0.96, its shadow eases to nothing and its ground goes a hair darker, as if it dropped below the list. Then the cards under it slide up over it on their own springs, nearest first, each opaque white with its own shadow, so the sunk card goes under a real edge. The last card is covered by the Done drawer at the foot of the column. Undo runs the same path backwards. The drawer lifts to a compact struck list, and tapping an item sends it back to its place. The one lime is a small Next dot that travels to the new first reminder.",
+  "spec": [
+    ["Press", "pointerdown on the Done control or on the card's body: the control goes to 0.9 (response 0.10 s). A press that moves more than 8 px, or is cancelled by a scroll, springs back and does nothing; a card that is already sinking ignores presses. On release the control fills #1d1d1f (0.14 s) and the tick is drawn in one stroke (0.16 s spring, about 0.2 s), and the sink starts as the tick ends"],
+    ["Sink", "scale 0.96 about the card's centre, the shadow eases to nothing, the ground goes from #ffffff to #ebebef, one critically damped spring (response 0.15 s, about 0.22 s). The card keeps full opacity from the first frame to the last; nothing about it fades"],
+    ["Cover", "0.22 s after the sink starts the cards below move to their new places on critically damped springs (response 0.42 s), nearest first 40 ms apart, the drawer last. Each is opaque white with its own shadow (a wider one while it moves), and z-order is sunk card under everything, so the sunk card is hidden edge by edge. When a cover reaches the card's slot to within 1.3 px (or passes it between two frames) the sunk card is removed from the layout in that frame: nothing visible changes. The cards above never move"],
+    ["Layout", "one pass from the list of open cards gives every open card and the drawer its y (72 px cards, 78 px pitch); several cards done 120 ms apart each sink at once and the survivors travel straight to their final places, covering all of them. A mover carries on from the value and velocity on screen, so nothing jumps"],
+    ["Undo", "the same path backwards. The card is put back at its slot under the card that took its place (nothing visible changes), the covers travel down, lowest first 40 ms apart, uncovering it, and it rises to the plane (scale 1, shadow back, response 0.20 s) before its tick is undrawn. The pill in the drawer is on offer for 5 s after the last change; Cmd or Ctrl and Z does the same"],
+    ["Drawer", "a 72 px bar at the foot of the column that travels with the cards: Done · n with its count rolling, the latest finished title, a chevron. A tap lifts it on a spring (response 0.36 s) into a sheet of struck titles and times (40 px rows), with its own opaque ground and a deeper shadow; the open cards do not move under it, it overlays them. A tap outside it, or Escape, lowers it. Tapping a row sends that reminder back to its own place in the column by the Undo path, and the row is covered by the rows above sliding down over it"],
+    ["Next", "the one lime: a 8 px dot in the first open card's gutter with Next uncovered after the time. When that card is done the dot travels to the new first card (x and y springs, response 0.30 s, following the card's live y) as it arrives, and Next is uncovered there. With nothing left the dot travels under the drawer and grows into a lime disc whose ink tick is drawn, and All done for today is uncovered under it, so every frame has one lime"],
+    ["Keys", "a real list of real buttons: Space or Enter on a card's Done marks it done and focus moves to the next open card; Cmd or Ctrl and Z undoes; the drawer is a button (aria-expanded) and its rows are buttons; Escape lowers it; a polite status line says what changed"],
+    ["Loop", "the page loads on a pose that is played, not drawn: the second card ticked and sunk, three quarters covered by the third sliding up over it, the world held there; about 5 s in the ghost lets it finish, marks the first card done (the Next dot travels), opens the drawer, sends one back, takes Undo, then clears the day and the day starts again. It yields to a mouse, a touch or a key"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A practice's day view in a client portal Qbix builds (Willow Counseling's Practice Website Refresh), where a reminder is dealt with and goes under the list, and one tap brings it back.",
+  "rules": [
+    "Covered, never faded. A done card keeps full opacity to the end; it sinks and is hidden by opaque cards with their own shadows moving over it. Only when the cover is complete is it removed from the layout.",
+    "The sunk card is below every card that will cover it. The cards above it never move.",
+    "One layout pass gives every open card and the drawer its y; every mover is a critically damped spring that starts from the value and velocity on screen, so presses 120 ms apart, an Undo and a return can land on top of each other.",
+    "Undo is the same path in reverse: put the card back under its cover, move the covers away, then raise it to the plane.",
+    "A cover that has its own opaque ground never lets text mix: a covered card's words are never seen through or beside the card covering it.",
+    "Exactly one lime in every frame: the Next dot, or at the end the disc of the All done tick. Never two.",
+    "Real list, real buttons, one live status line; Space or Enter marks done and moves focus on; Cmd or Ctrl and Z undoes. Under reduced motion a card is removed in place and the column closes at once.",
+    "System face, Apple neutrals (#1d1d1f, #6e6e73, #86868b, #f5f5f7, #e8e8ed), 20 px cards, 1.5 to 2.2 px round strokes."
+  ],
+  "tags": ["cards", "done", "dismiss", "cover", "slide under", "drawer", "undo", "spring", "layout", "keyboard", "Willow Counseling", "Apple"]
+}
+</script>
+<style data-code>
+/* Slip under. Five reminder cards in a column on #f5f5f7 and a Done drawer at its foot. Everything that moves is set from script (render()): the cards are
+   absolutely placed, each with its own springs for y, sink, press, tick and lift. A done card sinks (.su-face scales to 0.96, its shadow goes, its ground darkens)
+   and is then covered by opaque white cards moving over it; z-order is sunk card (2) under open cards (4) under the dot (5) under the drawer (6).
+   The one lime is the Next dot (.su-dot), which at the end grows into the disc of the All done tick. */
+.su-fit { position: relative; }
+.su-win { --su-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 800px; height: 500px; overflow: hidden; background: #f5f5f7; transform-origin: 0 0; transform: scale(var(--s, 1));
+  color: #1d1d1f; font: 400 13px/18px var(--su-f); letter-spacing: -.006em; -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.su-win :where(h2, p, ul, li) { margin: 0; padding: 0; }
+.su-win :where(ul) { list-style: none; }
+.su-win :where(svg) { display: block; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.su-win :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the quiet header beside the column */
+.su-hd { position: absolute; left: 56px; top: 27px; width: 220px; }
+.su-date { font: 500 13px/18px var(--su-f); color: #86868b; }
+.su-h { margin-top: 2px; font: 600 40px/44px var(--su-f); letter-spacing: -.022em; }
+.su-org { margin-top: 4px; font: 400 15px/22px var(--su-f); letter-spacing: -.01em; color: #6e6e73; }
+.su-left { margin-top: 14px; font: 500 15px/22px var(--su-f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; display: flex; gap: 4px; }
+/* a rolling digit: a clipped window one line high on a column of 0 to 9 that a spring moves; at rest it is a whole digit, never half-cut */
+.su-r { display: inline-block; width: 1ch; height: 22px; overflow: hidden; vertical-align: top; text-align: center; font-variant-numeric: tabular-nums; }
+.su-rc { display: block; }
+.su-rc > i { display: block; height: 22px; line-height: 22px; font-style: normal; }
+
+/* the column: cards at 78 px pitch (72 + 6), the drawer after them */
+.su-col { position: absolute; left: 304px; top: 0; width: 440px; height: 500px; }
+.su-list { position: absolute; left: 0; top: 0; }
+.su-item { position: absolute; left: 0; top: 0; z-index: 4; width: 440px; height: 72px; --s: 0; --k: 1; --lf: 0; }
+.su-item[hidden] { display: none; }
+.su-card { position: absolute; inset: 0; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.su-face { position: absolute; inset: 0; border-radius: 20px; background: color-mix(in srgb, #ebebef calc(var(--s) * 100%), #fff);
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, calc(var(--k) * .04)), 0 1px 3px rgba(0, 0, 0, calc(var(--k) * .07)),
+    0 10px 24px -10px rgba(0, 0, 0, calc(var(--k) * .14)), 0 0 20px rgba(0, 0, 0, calc(var(--k) * var(--lf) * .11)); }
+.su-tm { position: absolute; left: 34px; top: 9px; font: 500 13px/16px var(--su-f); font-variant-numeric: tabular-nums; color: #6e6e73; }
+.su-nx { position: absolute; left: 78px; top: 9px; font: 600 13px/16px var(--su-f); color: #1d1d1f; white-space: nowrap; clip-path: inset(0 100% 0 0); }
+.su-t { position: absolute; left: 34px; right: 80px; top: 25px; font: 600 16px/21px var(--su-f); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.su-d { position: absolute; left: 34px; right: 80px; top: 46px; font: 400 13px/17px var(--su-f); color: #6e6e73; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Done: a real button with a 44 px hit area, a 28 px ring, an ink fill that grows and a tick drawn in one stroke in white */
+.su-done { position: absolute; left: 386px; top: 14px; width: 44px; height: 44px; border-radius: 50%; }
+.su-done:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
+.su-ctl { position: absolute; left: 8px; top: 8px; width: 28px; height: 28px; }
+.su-ring { stroke: #86868b; stroke-width: 1.5; transition: stroke 140ms cubic-bezier(.4, 0, .2, 1); }
+@media (hover: hover) { .su-card:hover .su-ring { stroke: #1d1d1f; } }
+.su-fill { fill: #1d1d1f; stroke: none; transform-origin: 14px 14px; visibility: hidden; }
+.su-tick { stroke: #fff; stroke-width: 2.2; stroke-dasharray: 1 2; visibility: hidden; }
+
+/* the drawer: a 72 px bar that travels with the cards; lifted, a sheet with the struck list above the bar, opaque, with its own deeper shadow */
+.su-dr { position: absolute; left: 0; top: 0; z-index: 6; width: 440px; height: 72px; overflow: hidden; border-radius: 22px; background: #fff; --op: 0;
+  box-shadow: 0 0 0 .5px rgba(0, 0, 0, .05), 0 1px 3px rgba(0, 0, 0, .08), 0 10px 24px -10px rgba(0, 0, 0, calc(.14 + var(--op) * .08)), 0 18px 44px -14px rgba(0, 0, 0, calc(var(--op) * .26)); }
+.su-dl { position: absolute; left: 0; right: 0; top: 0; bottom: 72px; overflow: hidden; }
+.su-rows { position: absolute; left: 0; right: 0; bottom: 0; height: 0; }
+.su-row { position: absolute; left: 0; right: 0; top: 0; z-index: 1; height: 40px; background: #fff; }
+.su-row[hidden], .su-none[hidden] { display: none; }
+.su-row::after { content: ''; position: absolute; left: 20px; right: 20px; bottom: 0; height: 1px; background: rgba(0, 0, 0, .08); }
+.su-rb { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; height: 40px; padding: 0 20px !important; text-align: left; font: 400 14px/20px var(--su-f); letter-spacing: -.006em; transition: background-color 140ms cubic-bezier(.4, 0, .2, 1); }
+@media (hover: hover) { .su-rb:hover { background: #f5f5f7; } }
+.su-rb:active { background: #ebebef; }
+.su-rb:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
+.su-rb svg { flex: none; width: 14px; height: 14px; stroke: #86868b; stroke-width: 1.8; }
+.su-rt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #6e6e73; text-decoration: line-through; text-decoration-color: #86868b; text-decoration-thickness: 1.5px; }
+.su-rb time { flex: none; font: 400 13px/20px var(--su-f); font-variant-numeric: tabular-nums; color: #86868b; }
+.su-none { position: absolute; left: 0; right: 0; bottom: 0; z-index: 0; height: 40px; padding: 0 20px; background: #fff; font: 400 14px/40px var(--su-f); color: #86868b; }
+.su-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 72px; background: #fff; }
+.su-tg { position: absolute; inset: 0; width: 100%; height: 100%; text-align: left; transition: background-color 140ms cubic-bezier(.4, 0, .2, 1); }
+.su-tg:active { background: #f5f5f7; }
+.su-tg:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; border-radius: 22px; }
+.su-gl { position: absolute; left: 16px; top: 16px; width: 40px; height: 40px; border-radius: 12px; background: #f5f5f7; display: grid; place-items: center; }
+.su-gl svg { width: 24px; height: 24px; stroke-width: 1.7; }
+.su-bt { position: absolute; left: 68px; top: 15px; display: flex; font: 600 17px/22px var(--su-f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: pre; }
+.su-bd { position: absolute; left: 68px; top: 38px; width: 220px; height: 18px; overflow: hidden; font: 400 13px/18px var(--su-f); color: #6e6e73; }
+.su-dts { display: block; }
+.su-dts > span { display: block; height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.su-chev { position: absolute; right: 18px; top: 26px; width: 20px; height: 20px; stroke: #86868b; stroke-width: 1.8; }
+.su-un { position: absolute; right: 52px; top: 20px; z-index: 2; display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px 0 11px !important; border-radius: 16px !important; background: #e8e8ed !important;
+  font: 600 14px/32px var(--su-f); letter-spacing: -.006em; clip-path: inset(0 100% 0 0 round 16px); visibility: hidden; transition: background-color 140ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.su-un svg { width: 16px; height: 16px; stroke-width: 1.8; }
+@media (hover: hover) { .su-un:hover { background: #e0e0e6 !important; } }
+.su-un:active { transform: scale(.96); }
+.su-un:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+
+/* the Next dot: the one lime. A 40 px box scaled to 0.2 (an 8 px dot); at the end it grows to 1 and the ink tick is drawn on it */
+.su-dot { position: absolute; left: 0; top: 0; z-index: 5; width: 40px; height: 40px; pointer-events: none; will-change: transform; }
+.su-dot circle { fill: #B8FF00; stroke: none; }
+.su-dtk { stroke: #1d1d1f; stroke-width: 3; stroke-dasharray: 1 2; visibility: hidden; }
+.su-empty { position: absolute; left: 0; top: 0; z-index: 1; width: 440px; height: 500px; pointer-events: none; }
+.su-e1 { position: absolute; left: 0; right: 0; top: 289px; text-align: center; font: 600 20px/26px var(--su-f); letter-spacing: -.014em; clip-path: inset(0 0 100% 0); }
+.su-e2 { position: absolute; left: 0; right: 0; top: 317px; text-align: center; font: 400 14px/20px var(--su-f); letter-spacing: -.006em; color: #6e6e73; clip-path: inset(0 0 100% 0); }
+@media (prefers-reduced-motion: reduce) { .su-win *, .su-win *::before { transition: none !important; } }
+</style>
+<style>
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { padding: 0 !important; overflow: hidden; }
+  html:not(.qm-tile) .qm-stage { padding-bottom: 46px !important; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="su-fit" id="su-fit">
+<!-- code -->
+<section class="su-win" id="su-win" aria-label="Today's reminders">
+  <header class="su-hd">
+    <p class="su-date">Wed 25 Nov</p>
+    <h2 class="su-h">Today</h2>
+    <p class="su-org">Willow Counseling</p>
+    <p class="su-left" aria-hidden="true"><span class="su-r" id="su-ln"></span><span>left</span></p>
+  </header>
+  <div class="su-col" id="su-col">
+    <div class="su-empty" id="su-empty" aria-hidden="true">
+      <p class="su-e1" id="su-e1">All done for today</p>
+      <p class="su-e2" id="su-e2">Five reminders cleared.</p>
+    </div>
+    <ul class="su-list" id="su-list" aria-label="Reminders for today">
+      <li class="su-item"><div class="su-card"><div class="su-face">
+        <time class="su-tm" datetime="09:00">09:00</time><span class="su-nx" aria-hidden="true">Next</span>
+        <span class="su-t">Session with M. Okafor</span><span class="su-d">Weekly, 50 min · Room 2</span>
+        <button type="button" class="su-done" aria-label="Done: Session with M. Okafor"><svg class="su-ctl" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><circle class="su-ring" cx="14" cy="14" r="13.25"/><circle class="su-fill" cx="14" cy="14" r="14"/><path class="su-tick" d="M8.6 14.6l3.9 3.9 7-8" pathLength="1"/></svg></button>
+      </div></div></li>
+      <li class="su-item"><div class="su-card"><div class="su-face">
+        <time class="su-tm" datetime="10:30">10:30</time><span class="su-nx" aria-hidden="true">Next</span>
+        <span class="su-t">Supervision call</span><span class="su-d">With Amara Lin, 45 min on video</span>
+        <button type="button" class="su-done" aria-label="Done: Supervision call"><svg class="su-ctl" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><circle class="su-ring" cx="14" cy="14" r="13.25"/><circle class="su-fill" cx="14" cy="14" r="14"/><path class="su-tick" d="M8.6 14.6l3.9 3.9 7-8" pathLength="1"/></svg></button>
+      </div></div></li>
+      <li class="su-item"><div class="su-card"><div class="su-face">
+        <time class="su-tm" datetime="12:00">12:00</time><span class="su-nx" aria-hidden="true">Next</span>
+        <span class="su-t">Notes for T. Brennan</span><span class="su-d">Close and file Tuesday's session note</span>
+        <button type="button" class="su-done" aria-label="Done: Notes for T. Brennan"><svg class="su-ctl" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><circle class="su-ring" cx="14" cy="14" r="13.25"/><circle class="su-fill" cx="14" cy="14" r="14"/><path class="su-tick" d="M8.6 14.6l3.9 3.9 7-8" pathLength="1"/></svg></button>
+      </div></div></li>
+      <li class="su-item"><div class="su-card"><div class="su-face">
+        <time class="su-tm" datetime="14:00">14:00</time><span class="su-nx" aria-hidden="true">Next</span>
+        <span class="su-t">Session with J. Alvarez</span><span class="su-d">First visit, 60 min · intake signed</span>
+        <button type="button" class="su-done" aria-label="Done: Session with J. Alvarez"><svg class="su-ctl" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><circle class="su-ring" cx="14" cy="14" r="13.25"/><circle class="su-fill" cx="14" cy="14" r="14"/><path class="su-tick" d="M8.6 14.6l3.9 3.9 7-8" pathLength="1"/></svg></button>
+      </div></div></li>
+      <li class="su-item"><div class="su-card"><div class="su-face">
+        <time class="su-tm" datetime="16:30">16:30</time><span class="su-nx" aria-hidden="true">Next</span>
+        <span class="su-t">Send the November invoice</span><span class="su-d">To the billing service, 14 sessions</span>
+        <button type="button" class="su-done" aria-label="Done: Send the November invoice"><svg class="su-ctl" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><circle class="su-ring" cx="14" cy="14" r="13.25"/><circle class="su-fill" cx="14" cy="14" r="14"/><path class="su-tick" d="M8.6 14.6l3.9 3.9 7-8" pathLength="1"/></svg></button>
+      </div></div></li>
+    </ul>
+    <svg class="su-dot" id="su-dot" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><circle cx="20" cy="20" r="20"/><path class="su-dtk" id="su-dtk" d="M12.4 20.8l5.4 5.4 9.8-11.6" pathLength="1"/></svg>
+    <div class="su-dr" id="su-dr">
+      <div class="su-dl" id="su-dl">
+        <ul class="su-rows" id="su-rows" aria-label="Done today">
+          <li class="su-row" hidden><button type="button" class="su-rb" aria-label="Back to the list: Session with M. Okafor"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2.6 7.4l2.8 2.8 5.2-6"/></svg><span class="su-rt">Session with M. Okafor</span><time datetime="09:00">09:00</time></button></li>
+          <li class="su-row" hidden><button type="button" class="su-rb" aria-label="Back to the list: Supervision call"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2.6 7.4l2.8 2.8 5.2-6"/></svg><span class="su-rt">Supervision call</span><time datetime="10:30">10:30</time></button></li>
+          <li class="su-row" hidden><button type="button" class="su-rb" aria-label="Back to the list: Notes for T. Brennan"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2.6 7.4l2.8 2.8 5.2-6"/></svg><span class="su-rt">Notes for T. Brennan</span><time datetime="12:00">12:00</time></button></li>
+          <li class="su-row" hidden><button type="button" class="su-rb" aria-label="Back to the list: Session with J. Alvarez"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2.6 7.4l2.8 2.8 5.2-6"/></svg><span class="su-rt">Session with J. Alvarez</span><time datetime="14:00">14:00</time></button></li>
+          <li class="su-row" hidden><button type="button" class="su-rb" aria-label="Back to the list: Send the November invoice"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2.6 7.4l2.8 2.8 5.2-6"/></svg><span class="su-rt">Send the November invoice</span><time datetime="16:30">16:30</time></button></li>
+        </ul>
+        <p class="su-none" id="su-none">Nothing done yet</p>
+      </div>
+      <div class="su-bar">
+        <button type="button" class="su-tg" id="su-tg" aria-expanded="false" aria-controls="su-rows">
+          <span class="su-gl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.4 13.4l1.9-6.2A1.8 1.8 0 0 1 8 6h8a1.8 1.8 0 0 1 1.7 1.2l1.9 6.2"/><path d="M4.4 13.4v3.6A1.9 1.9 0 0 0 6.3 19h11.4a1.9 1.9 0 0 0 1.9-2v-3.6h-4.1l-1 1.8H9.5l-1-1.8z"/></svg></span>
+          <span class="su-bt" aria-hidden="true"><span>Done · </span><span class="su-r" id="su-dn"></span></span>
+          <span class="su-bd" id="su-bd" aria-hidden="true"></span>
+          <svg class="su-chev" id="su-chev" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4.8 12.4L10 7.2l5.2 5.2"/></svg>
+          <span class="sr-only" id="su-tgs">Done, 0 reminders</span>
+        </button>
+        <button type="button" class="su-un" id="su-un" tabindex="-1"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6.4 3.4L2.8 7l3.6 3.6M3.2 7h6.2a3.6 3.6 0 0 1 0 7.2H7"/></svg>Undo</button>
+      </div>
+    </div>
+  </div>
+  <p class="sr-only" id="su-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+</div>
+<div class="qm-ui"><span>Tap Done, or the card, and it sinks under the next one. Undo, or Cmd or Ctrl and Z. Open the drawer and tap a row to send a reminder back. Space or Enter marks done, Escape lowers the drawer</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Slip under. The model is the list of five cards, each open, sunk (done, being covered) or done (removed from the layout). One layout pass (relayout) gives every
+   open card and the drawer its target y. Everything that moves is a critically damped spring that starts from the value and velocity on screen, so it can be
+   retargeted at any moment: each card's y, sink, press, tick, fill, lift and Next label; the drawer's y, lift, list height and rows; the dot's x, y and size; the
+   count and the pill. A done card sinks, then the cards below travel up over it, and when a cover has reached its slot the sunk card is removed in that frame. */
+const SU = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const CH = 72, PITCH = 78, TOP = 19, ROWH = 40, TOL = 1.3, SLOP = 8;
+  const TICK_MS = 200, SINK_MS = 220, STAG = 40, UNDO_MS = 5000, DOT_X = 20, DOT_DY = 17, EMPTY_Y = 255, EMPTY_X = 220;
+  const RESP = { move: 0.42, sink: 0.15, tick: 0.16, fill: 0.14, press: 0.1, lift: 0.2, open: 0.36, list: 0.34, num: 0.3, cover: 0.3, dot: 0.3, label: 0.26, row: 0.34, pill: 0.3, disc: 0.34, rise: 0.2 };
+  const slotY = (r) => TOP + r * PITCH;
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const mk = (x = 0, resp = 0.3, eps = 0.002) => ({ x, v: 0, T: x, w: TAU / resp, on: false, eps });
+  function step(s, dt) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  function aim(s, T, resp) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+    kick();
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+  const follow = (s, T) => { if (T !== s.T) { s.T = T; if (reduced) { s.x = T; s.v = 0; } else s.on = true; } };
+
+  const $ = (id) => document.getElementById('su-' + id);
+  const win = $('win'), list = $('list'), dr = $('dr'), rowsEl = $('rows'), none = $('none'), tg = $('tg'), chev = $('chev'), un = $('un'), dotEl = $('dot'), dtk = $('dtk'), live = $('live'), e1 = $('e1'), e2 = $('e2');
+  const S = { t: 0, vis: true, hold: false, say: 0 };
+  const mkEl = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+  const say = (m) => { live.textContent = ''; clearTimeout(S.say); S.say = setTimeout(() => { live.textContent = m; }, 40); };
+  const px = (v) => v.toFixed(2);
+
+  /* the cards */
+  const cards = Array.from(list.children).map((el, i) => ({
+    i, el, st: 'open', title: el.querySelector('.su-t').textContent, time: el.querySelector('.su-tm').textContent,
+    card: el.querySelector('.su-card'), face: el.querySelector('.su-face'), ctl: el.querySelector('.su-ctl'), btn: el.querySelector('.su-done'),
+    fill: el.querySelector('.su-fill'), tick: el.querySelector('.su-tick'), nx: el.querySelector('.su-nx'),
+    y: mk(slotY(i), RESP.move, 0.02), ty: slotY(i), pend: 0, py: slotY(i), lfT: 0,
+    s: mk(0, RESP.sink, 0.001), lf: mk(0, RESP.lift, 0.002), pz: mk(1, RESP.press, 0.0005), tk: mk(0, RESP.tick, 0.002), fl: mk(0, RESP.fill, 0.002), nl: mk(0, RESP.label, 0.002),
+  }));
+  cards.forEach((c) => { c.el._c = c; c.card._c = c; });
+  /* the drawer: its closed bar travels with the cards; lifted, the sheet grows above it */
+  const D = { y: mk(slotY(5), RESP.move, 0.02), ty: slotY(5), pend: 0, py: slotY(5) };
+  const OP = mk(0, RESP.open, 0.001), LH = mk(ROWH, RESP.list, 0.02), ER = mk(1, RESP.cover, 0.002), PV = mk(0, RESP.pill, 0.002);
+  const DOT = { x: mk(DOT_X, RESP.dot, 0.02), y: mk(slotY(0) + DOT_DY, RESP.dot, 0.02), sz: mk(0.2, RESP.disc, 0.002), tk: mk(0, RESP.tick, 0.002) };
+  const EP = mk(0, RESP.cover, 0.002);
+  const DR = { want: false };
+  let dotFor = cards[0], log = [], Q = [], raf = 0, last = 0, inFrame = false, G = null, undoTok = 0, undoOn = false, swallow = null;
+
+  /* a rolling digit and a rolling line of text: a clipped window on a strip; the spring's value is the index */
+  function mkRoll(id, lh) {
+    const host = $(id), col = mkEl('span', 'su-rc');
+    for (let d = 0; d <= 9; d++) { const i = mkEl('i'); i.textContent = d; col.append(i); }
+    host.append(col);
+    return { col, lh, sp: mk(0, RESP.num, 0.002) };
+  }
+  const LN = mkRoll('ln', 22), DN = mkRoll('dn', 22);
+  const BD = { host: $('bd'), strip: mkEl('span', 'su-dts'), sp: mk(0, RESP.num, 0.002), text: '' };
+  BD.host.append(BD.strip);
+  function setDetail(t, instant) {
+    if (t === BD.text) return;
+    BD.text = t;
+    const s = mkEl('span'); s.textContent = t;
+    if (instant || reduced || BD.strip.children.length === 0) { BD.strip.textContent = ''; BD.strip.append(s); snap(BD.sp, 0); return; }
+    BD.strip.append(s);
+    aim(BD.sp, BD.strip.children.length - 1, RESP.num);
+  }
+
+  /* the drawer's rows: one per reminder, newest state wins; a row that leaves is covered by the rows above sliding down over it */
+  const rows = Array.from(rowsEl.children).map((el, i) => ({ i, el, c: cards[i], y: mk(0, RESP.row, 0.02), ty: 0, present: false, leaving: false, fresh: false, rv: mk(1, RESP.cover, 0.002) }));
+  rows.forEach((r) => { r.el._r = r; });
+
+  /* the clock of the choreography: later(ms, fn) runs on the springs' own clock, so it stops with them and never races them */
+  function later(ms, fn) { Q.push({ at: S.t + (reduced ? 0 : ms) / 1000, fn }); Q.sort((a, b) => a.at - b.at); kick(); }
+  function pump() { while (Q.length && Q[0].at <= S.t) Q.shift().fn(); }
+
+  const openCards = () => cards.filter((c) => c.st === 'open');
+  const doneCount = () => cards.filter((c) => c.st !== 'open').length;
+  const visibleList = () => OP.x > 0.01 || DR.want;
+  /* where the drawer's bar really is: lifted above its closed place only as far as the open sheet needs room */
+  const barY = () => { const o = clamp(OP.x, 0, 1); return D.y.x + Math.max(0, 12 + LH.x - D.y.x) * o; };
+
+  /* the layout: where every open card and the drawer sit for the current list. Movers going up start nearest the hole first, going down lowest first, 40 ms apart,
+     so no card ever overlaps the one next to it. Returns how many cards move. */
+  function relayout(base, instant) {
+    const op = openCards(), ents = op.map((c, r) => [c, slotY(r)]);
+    ents.push([D, slotY(op.length)]);
+    const up = [], down = [];
+    for (const [o, y] of ents) {
+      if (instant || reduced) { o.ty = y; snap(o.y, y); o.pend = 0; continue; }
+      if (y === o.ty && !o.pend) { if (o.y.T !== y) { aim(o.y, y, RESP.move); } continue; }
+      const goingUp = y < o.y.x;
+      o.ty = y;
+      (goingUp ? up : down).push(o);
+    }
+    up.sort((a, b) => a.y.x - b.y.x); down.sort((a, b) => b.y.x - a.y.x);
+    for (const list of [up, down]) list.forEach((o, k) => {
+      o.pend++; const g = o.gen = (o.gen || 0) + 1;                     // a newer pass replaces an older, still waiting one, so the order of starts is always the newest pass's
+      later(base * 1000 + STAG * k, () => { o.pend--; if (o.gen === g) aim(o.y, o.ty, RESP.move); });
+    });
+    return up.length + down.length;
+  }
+
+  /* the Next dot belongs to the first open card; with none left it grows into the disc of the All done tick */
+  function applyNext() {
+    const n = openCards()[0] || null;
+    if (n === dotFor) return;
+    const old = dotFor; dotFor = n;
+    if (old) aim(old.nl, 0, 0.16);
+    if (n) {
+      DOT.sz.w = TAU / RESP.disc; aim(DOT.tk, 0, 0.16); aim(EP, 0, 0.2);
+      later(260, () => { if (dotFor === n) aim(n.nl, 1, RESP.label); });
+    } else {
+      DOT.sz.w = TAU / RESP.disc;
+    }
+  }
+  const syncNext = (ms) => later(ms, applyNext);
+  function syncCount(ms) {
+    later(ms, () => {
+      const d = doneCount(), n = cards.length - d;
+      aim(DN.sp, d, RESP.num); aim(LN.sp, n, RESP.num);
+      const last = log[log.length - 1];
+      setDetail(d === 0 ? 'Nothing yet' : 'Latest: ' + (last ? last.title : ''));
+      $('tgs').textContent = 'Done, ' + d + (d === 1 ? ' reminder' : ' reminders');
+      e2.textContent = cards.length + ' reminders cleared.';
+    });
+  }
+
+  /* the Undo pill in the drawer's bar: uncovered from its left edge for five seconds after the last change */
+  function showUndo() {
+    undoOn = true; const tok = ++undoTok;
+    un.style.visibility = 'visible'; un.tabIndex = 0;
+    aim(PV, 1, RESP.pill);
+    later(UNDO_MS, () => { if (undoTok === tok) hideUndo(); });
+  }
+  function hideUndo() { undoOn = false; undoTok++; un.tabIndex = -1; aim(PV, 0, 0.18); }
+  un.addEventListener('click', () => { const had = document.activeElement === un; if (undo() && had) tg.focus({ preventScroll: true }); });
+
+  /* a card is done: its box fills and the tick is drawn; as the tick ends it sinks; the cards under it then move over it */
+  function markDone(c, key) {
+    if (c.st !== 'open' || c.s.x > 0.02) return false;
+    if (DR.want) setDrawer(false);
+    c.st = 'sunk'; c.el.inert = true; log.push(c);
+    const r = rows[c.i]; r.present = true; r.leaving = false; r.fresh = visibleList(); r.el.hidden = false; r.el.inert = !DR.want;
+    const left = openCards().length;
+    say(c.title + ' done. ' + (left === 0 ? 'All done for today.' : left + ' left.'));
+    if (key) focusAfter(c);
+    if (reduced) {
+      hideCard(c); relayout(0, true); layoutRows(); syncCount(0); syncNext(0); showUndo(); return true;
+    }
+    aim(c.tk, 1, RESP.tick); aim(c.fl, 1, RESP.fill);
+    later(TICK_MS, () => { if (c.st === 'sunk') aim(c.s, 1, RESP.sink); });
+    relayout((TICK_MS + SINK_MS) / 1000);
+    layoutRows(); syncCount(TICK_MS); syncNext(TICK_MS); showUndo();
+    return true;
+  }
+  function hideCard(c) { c.st = 'done'; c.el.hidden = true; snap(c.s, 1); }
+  function focusAfter(c) {
+    const op = openCards(), next = op.find((x) => x.i > c.i) || op[op.length - 1];
+    (next ? next.btn : tg).focus({ preventScroll: true });
+  }
+
+  /* a card comes back: it is put at its slot under the card that took its place (nothing visible changes), the covers travel down, lowest first, and it rises to the plane */
+  function elementBelow(c) {
+    const nx = cards.find((x) => x.i > c.i && x.st === 'open');
+    return nx ? nx.y.x : barY();
+  }
+  function returnCards(list, how) {
+    const back = list.filter((c) => c.st !== 'open');
+    if (!back.length) return false;
+    back.sort((a, b) => b.i - a.i);
+    for (const c of back) {
+      const wasDone = c.st === 'done';
+      log = log.filter((x) => x !== c);
+      const r = rows[c.i];
+      if (visibleList() && !reduced) { r.present = false; r.leaving = true; r.el.style.zIndex = 0; } else { r.present = false; r.leaving = false; r.el.hidden = true; }
+      if (wasDone) {
+        c.el.hidden = false; snap(c.y, elementBelow(c)); c.ty = c.y.x; c.pend = 0;
+        snap(c.s, 1); snap(c.tk, 1); snap(c.fl, 1); snap(c.lf, 0); snap(c.pz, 1);
+      }
+      c.st = 'open'; c.el.inert = false;
+    }
+    const names = back.length === 1 ? back[0].title : back.length + ' reminders';
+    say(names + (back.length === 1 ? ' is back in the list.' : ' are back in the list.'));
+    if (reduced) { back.forEach((c) => { snap(c.s, 0); snap(c.tk, 0); snap(c.fl, 0); }); relayout(0, true); layoutRows(); syncCount(0); syncNext(0); applyNext(); if (log.length) showUndo(); else hideUndo(); return true; }
+    const moved = relayout(0);
+    const rise = (0.04 * Math.max(0, moved - 1) + 0.24) * 1000;
+    layoutRows();
+    back.forEach((c, k) => {
+      later(rise + STAG * (back.length - 1 - k), () => { if (c.st === 'open') { aim(c.s, 0, RESP.rise); later(80, () => { if (c.st === 'open' && c.s.T === 0) { aim(c.tk, 0, RESP.tick); aim(c.fl, 0, RESP.fill); } }); } });
+    });
+    syncCount(rise); syncNext(80);
+    if (log.length) showUndo(); else hideUndo();
+    return true;
+  }
+  const returnCard = (c) => returnCards([c]);
+  function undo() { const c = log[log.length - 1]; if (!c) return false; return returnCards([c], 'undo'); }
+  function resetAll() { return returnCards(cards.filter((c) => c.st !== 'open'), 'reset'); }
+
+  /* the drawer's list: rows by reminder order, anchored to the bar, so the list grows upwards; the row that leaves is covered by the rows above (or the sheet's edge) */
+  function layoutRows() {
+    const pr = rows.filter((r) => r.present), d = pr.length, show = visibleList();
+    const hT = Math.max(1, d) * ROWH;
+    if (!show) snap(LH, hT); else if (LH.T !== hT) aim(LH, hT, RESP.list);
+    const moves = [];
+    pr.forEach((r, k) => {
+      const y = -(d - k) * ROWH;
+      if (!show) { r.ty = y; snap(r.y, y); snap(r.rv, 1); r.fresh = false; return; }
+      if (r.fresh) { r.fresh = false; r.ty = y; snap(r.y, y); snap(r.rv, 0); aim(r.rv, 1, RESP.cover); return; }
+      if (r.ty !== y) { moves.push([r, y]); }
+    });
+    // rows moving down (a row left above them) start nearest the hole first; rows moving up (a row joined) start from the top
+    const dn = moves.filter(([r, y]) => y > r.ty).sort((a, b) => b[0].ty - a[0].ty), upm = moves.filter(([r, y]) => y < r.ty).sort((a, b) => a[0].ty - b[0].ty);
+    [dn, upm].forEach((l) => l.forEach(([r, y], k) => { r.ty = y; later(STAG * k, () => aim(r.y, r.ty, RESP.row)); }));
+    if (d === 0) { none.hidden = false; if (show && rows.some((r) => r.leaving)) { snap(ER, 0); aim(ER, 1, RESP.cover); } else snap(ER, 1); }
+  }
+
+  /* the drawer lifts on a spring; a tap outside it, or Escape, lowers it */
+  function setDrawer(on) {
+    if (DR.want === on) return;
+    DR.want = on;
+    tg.setAttribute('aria-expanded', on ? 'true' : 'false');
+    rows.forEach((r) => { r.el.inert = !on || !r.present; });
+    if (on) { layoutRows(); }
+    aim(OP, on ? 1 : 0, RESP.open);
+    say(on ? 'Done list open.' : 'Done list closed.');
+  }
+  tg.addEventListener('click', () => setDrawer(!DR.want));
+  rowsEl.addEventListener('click', (e) => {
+    const b = e.target.closest('.su-rb'); if (!b) return;
+    const r = b.parentNode._r; if (r && r.present) returnCard(r.c);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && DR.want) { setDrawer(false); tg.focus({ preventScroll: true }); return; }
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && (e.key === 'z' || e.key === 'Z') && log.length) { e.preventDefault(); undo(); }
+  });
+  document.addEventListener('pointerdown', (e) => { if (DR.want && !dr.contains(e.target)) { swallow = e.pointerId; setDrawer(false); } }, true);
+
+  /* the press: the control answers on pointerdown (0.9); a tap (no more than 8 px of travel) marks done on release */
+  function onDown(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (swallow === e.pointerId) { swallow = null; return; }
+    const card = e.target.closest && e.target.closest('.su-card');
+    if (!card) return;
+    const c = card._c;
+    if (c.st !== 'open' || c.s.x > 0.02) return;
+    if (G) endPress(true);
+    G = { c, id: e.pointerId, x0: e.clientX, y0: e.clientY, cancelled: false };
+    aim(c.pz, 0.9, RESP.press);
+  }
+  function onMove(e) {
+    if (!G || e.pointerId !== G.id || G.cancelled) return;
+    if (Math.hypot(e.clientX - G.x0, e.clientY - G.y0) > SLOP * (S.scale || 1)) { G.cancelled = true; aim(G.c.pz, 1, RESP.press); }
+  }
+  function endPress(cancel, e) {
+    const g = G; if (!g) return;
+    G = null;
+    aim(g.c.pz, 1, RESP.press);
+    if (!cancel && !g.cancelled) markDone(g.c, false);
+  }
+  list.addEventListener('pointerdown', onDown);
+  addEventListener('pointermove', onMove, { passive: true });
+  addEventListener('pointerup', (e) => { if (G && e.pointerId === G.id) endPress(false, e); });
+  addEventListener('pointercancel', (e) => { if (G && e.pointerId === G.id) endPress(true, e); });
+  addEventListener('pointerup', () => { swallow = null; });
+  addEventListener('pointercancel', () => { swallow = null; });
+  // a key: Space or Enter on the Done button is a click without a pointer (detail 0); a pointer's own click was handled on release
+  list.addEventListener('click', (e) => {
+    const b = e.target.closest('.su-done'); if (!b || e.detail !== 0) return;
+    const c = b.closest('.su-item')._c;
+    if (c.st !== 'open') return;
+    aim(c.pz, 0.9, RESP.press); later(90, () => aim(c.pz, 1, RESP.press));
+    markDone(c, true);
+  });
+
+  /* one step of the world: springs, the dot's targets, and the covers (a sunk card is removed the frame it is hidden) */
+  function simStep(dt) {
+    S.t += dt; pump();
+    for (const c of cards) c.py = c.y.x;
+    const pb = barY();
+    const springs = [D.y, OP, LH, ER, PV, DOT.x, DOT.y, DOT.sz, DOT.tk, EP, LN.sp, DN.sp, BD.sp];
+    // the dot follows the first open card's live y; at the end it goes to the middle of the empty column
+    // the dot keeps to the gutter beside the cards and only crosses the open ground below them: going out it drops down the gutter first, coming back it goes along the ground first
+    if (dotFor) { follow(DOT.x, DOT_X); follow(DOT.y, DOT.x.x < 40 && DOT.sz.x < 0.5 ? dotFor.y.x + DOT_DY : EMPTY_Y); follow(DOT.sz, 0.2); }
+    else {
+      follow(DOT.y, EMPTY_Y); follow(DOT.x, DOT.y.x > 180 ? EMPTY_X : DOT_X); follow(DOT.sz, DOT.y.x > 180 ? 1 : 0.2);
+      if (DOT.sz.x > 0.97 && DOT.tk.T === 0) { aim(DOT.tk, 1, 0.22); aim(EP, 1, RESP.cover); }       // the disc has arrived: its tick is drawn and the words are uncovered
+    }
+    let any = false;
+    for (const s of springs) any = step(s, dt) || any;
+    for (const c of cards) {
+      for (const k of ['y', 's', 'lf', 'pz', 'tk', 'fl', 'nl']) any = step(c[k], dt) || any;
+      if (c.st === 'open') {
+        const mov = c.y.on && Math.abs(c.y.x - c.ty) > 0.5 ? 1 : 0;
+        if (mov !== c.lfT) { c.lfT = mov; aim(c.lf, mov, RESP.lift); }
+      }
+    }
+    // two cards on the plane never overlap: a card that would catch the one above it (a pass that retargeted it first) is held just below it, with its speed
+    const chain = cards.filter((c) => c.st === 'open' && c.s.x < 0.02);
+    for (let k = 1; k < chain.length; k++) { const a = chain[k - 1], b = chain[k], lim = a.y.x + CH + 1; if (b.y.x < lim) { b.y.x = lim; if (b.y.v < a.y.v) b.y.v = a.y.v; } }
+    if (chain.length) { const a = chain[chain.length - 1], lim = a.y.x + CH + 1; if (D.y.x < lim) { D.y.x = lim; if (D.y.v < a.y.v) D.y.v = a.y.v; } }
+    for (const r of rows) { any = step(r.y, dt) || any; any = step(r.rv, dt) || any; }
+    const nb = barY();
+    // covers: an opaque open card or the bar that has reached a sunk card's slot (or passed it between two frames) hides it, and it leaves the layout
+    for (const c of cards) {
+      if (c.st !== 'sunk' || c.s.x < 0.97) continue;
+      const yc = c.y.x;
+      let hit = false;
+      for (const e of cards) {
+        if (e.st !== 'open' || e.s.x > 0.05) continue;
+        if (Math.abs(e.y.x - yc) <= TOL) hit = true;
+        else if (e.py - yc > TOL && e.y.x - yc < -TOL) { c.y.x = c.y.T = e.y.x; hit = true; }
+      }
+      if (!hit) {
+        if (Math.abs(nb - yc) <= TOL) hit = true;
+        else if (pb - yc > TOL && nb - yc < -TOL) { c.y.x = c.y.T = nb; hit = true; }
+      }
+      if (hit) hideCard(c);
+    }
+    // the drawer's rows: a row that left is removed once it is covered
+    const top = -LH.x * clamp(OP.x, 0, 1);
+    for (const r of rows) {
+      if (!r.leaving) continue;
+      let cov = !visibleList() || r.y.x + ROWH <= top + 0.5;
+      for (const o of rows) if (o.present && !cov && Math.abs(o.y.x - r.y.x) <= 1.2 && o.rv.x > 0.98) cov = true;
+      if (!rows.some((o) => o.present) && ER.x > 0.98) cov = true;
+      if (cov) { r.leaving = false; r.el.hidden = true; r.el.style.zIndex = 1; }
+    }
+    if (ER.x > 0 && rows.some((r) => r.present) && rows.every((r) => !r.present || r.rv.x > 0.98)) { snap(ER, 0); none.hidden = true; }
+    // a roll that has come to rest keeps only its last line
+    if (!BD.sp.on && BD.strip.children.length > 1) { while (BD.strip.children.length > 1) BD.strip.firstElementChild.remove(); snap(BD.sp, 0); }
+    return any || Q.length > 0;
+  }
+  function advance(sec) { for (let i = 0, n = Math.round(sec * 60); i < n; i++) simStep(1 / 60); }
+
+  function render() {
+    for (const c of cards) {
+      if (c.el.hidden) continue;
+      const s = clamp(c.s.x, 0, 1), st = c.el.style;
+      st.transform = 'translate(0,' + px(c.y.x) + 'px)';
+      st.zIndex = c.st === 'sunk' || s > 0.02 ? 2 : 4;
+      st.setProperty('--s', s.toFixed(3)); st.setProperty('--k', (1 - s).toFixed(3)); st.setProperty('--lf', clamp(c.lf.x, 0, 1).toFixed(3));
+      c.face.style.transform = s < 0.001 ? 'none' : 'scale(' + (1 - 0.04 * s).toFixed(4) + ')';
+      c.ctl.style.transform = c.pz.x === 1 ? 'none' : 'scale(' + c.pz.x.toFixed(4) + ')';
+      const f = clamp(c.fl.x, 0, 1), t = clamp(c.tk.x, 0, 1), n = clamp(c.nl.x, 0, 1);
+      c.fill.style.transform = 'scale(' + f.toFixed(4) + ')'; c.fill.style.visibility = f > 0.004 ? 'visible' : 'hidden';
+      c.tick.style.strokeDashoffset = (1 - t).toFixed(4); c.tick.style.visibility = t > 0.005 ? 'visible' : 'hidden';
+      c.nx.style.clipPath = n >= 0.999 ? 'none' : 'inset(0 ' + ((1 - n) * 100).toFixed(2) + '% 0 0)';
+    }
+    // the drawer: the bar, with the sheet's list above it
+    const op = clamp(OP.x, 0, 1), lh = LH.x * op, by = barY(), topY = by - lh;
+    dr.style.transform = 'translate(0,' + px(topY) + 'px)'; dr.style.height = px(CH + lh) + 'px';
+    dr.style.setProperty('--op', op.toFixed(3));
+    chev.style.transform = 'rotate(' + (op * 180).toFixed(2) + 'deg)';
+    for (const r of rows) {
+      if (r.el.hidden) continue;
+      r.el.style.transform = 'translate(0,' + px(r.y.x) + 'px)';
+      const v = clamp(r.rv.x, 0, 1);
+      r.el.style.clipPath = v >= 0.999 ? 'none' : 'inset(0 0 ' + ((1 - v) * 100).toFixed(2) + '% 0)';
+    }
+    const er = clamp(ER.x, 0, 1);
+    none.style.clipPath = er >= 0.999 ? 'none' : 'inset(0 0 ' + ((1 - er) * 100).toFixed(2) + '% 0)';
+    for (const R of [LN, DN]) R.col.style.transform = 'translate3d(0,' + px(-clamp(R.sp.x, 0, 9) * R.lh) + 'px,0)';
+    BD.strip.style.transform = 'translate3d(0,' + px(-BD.sp.x * 18) + 'px,0)';
+    const pv = clamp(PV.x, 0, 1);
+    un.style.visibility = pv < 0.002 && !undoOn ? 'hidden' : 'visible';
+    un.style.clipPath = pv >= 0.999 ? 'none' : 'inset(0 ' + ((1 - pv) * 100).toFixed(2) + '% 0 0 round 16px)';
+    // the dot, and the tick it becomes
+    const ds = clamp(DOT.sz.x, 0.2, 1), dt = clamp(DOT.tk.x, 0, 1);
+    dotEl.style.transform = 'translate3d(' + px(DOT.x.x - 20) + 'px,' + px(DOT.y.x - 20) + 'px,0) scale(' + ds.toFixed(4) + ')';
+    dtk.style.strokeDashoffset = (1 - dt).toFixed(4); dtk.style.visibility = dt > 0.005 ? 'visible' : 'hidden';
+    const ep = clamp(EP.x, 0, 1), clip = ep >= 0.999 ? 'none' : 'inset(0 0 ' + ((1 - ep) * 100).toFixed(2) + '% 0)';
+    e1.style.clipPath = clip; e2.style.clipPath = ep >= 0.999 ? 'none' : 'inset(0 0 ' + ((1 - clamp((ep - 0.2) / 0.8, 0, 1)) * 100).toFixed(2) + '% 0)';
+  }
+  function frame(now) {
+    raf = 0;
+    if (S.hold || !S.vis || document.hidden) return;
+    const dt = clamp((now - last) / 1000 || 0.016, 0.001, 0.034);
+    last = now;
+    inFrame = true;
+    const more = simStep(dt);
+    render();
+    inFrame = false;
+    if (more) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (raf || inFrame || S.hold || !S.vis || document.hidden) return; last = performance.now(); raf = requestAnimationFrame(frame); }
+  if ('IntersectionObserver' in window) new IntersectionObserver((es) => { S.vis = es[es.length - 1].isIntersecting; if (S.vis) kick(); }).observe(win);
+  document.addEventListener('visibilitychange', kick);
+
+  /* setup: five open cards, everything at rest, instantly */
+  function setup() {
+    Q.length = 0; G = null; log = []; swallow = null; undoTok++; undoOn = false; S.t = 0;
+    DR.want = false; tg.setAttribute('aria-expanded', 'false');
+    cards.forEach((c, i) => {
+      c.st = 'open'; c.el.hidden = false; c.el.inert = false; c.pend = 0; c.lfT = 0; c.ty = slotY(i);
+      snap(c.y, slotY(i)); snap(c.s, 0); snap(c.lf, 0); snap(c.pz, 1); snap(c.tk, 0); snap(c.fl, 0); snap(c.nl, i === 0 ? 1 : 0);
+    });
+    D.ty = slotY(5); D.pend = 0; snap(D.y, slotY(5)); snap(OP, 0); snap(LH, ROWH); snap(ER, 1); snap(PV, 0); snap(EP, 0);
+    rows.forEach((r) => { r.present = false; r.leaving = false; r.fresh = false; r.el.hidden = true; r.el.inert = true; r.el.style.zIndex = 1; snap(r.y, 0); snap(r.rv, 1); r.ty = 0; });
+    none.hidden = false; un.tabIndex = -1;
+    dotFor = cards[0]; snap(DOT.x, DOT_X); snap(DOT.y, slotY(0) + DOT_DY); snap(DOT.sz, 0.2); snap(DOT.tk, 0);
+    snap(LN.sp, 5); snap(DN.sp, 0); BD.text = ''; setDetail('Nothing yet', true); $('tgs').textContent = 'Done, 0 reminders'; e2.textContent = '5 reminders cleared.';
+    render();
+  }
+  setup();
+  return {
+    S, win, cards, D, rows, setup, render, advance, kick, markDone, returnCard, undo, resetAll, setDrawer, barY,
+    toggle: tg, undoBtn: un, rowsEl, isOpen: () => DR.want, hasUndo: () => log.length > 0,
+    endPress() { if (G) endPress(true); },
+    setScale(s) { S.scale = s; },
+    snapshot() { return { st: cards.map((c) => c.st), ys: cards.map((c) => +c.y.x.toFixed(1)), ss: cards.map((c) => +c.s.x.toFixed(3)), d: D.y.x, bar: barY(), lh: LH.x, op: OP.x, dot: [+DOT.x.x.toFixed(1), +DOT.y.x.toFixed(1), +DOT.sz.x.toFixed(3)], dotFor: dotFor ? dotFor.i : -1, log: log.map((c) => c.i) }; },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('su-fit'), win = document.getElementById('su-win');
+  // the window is drawn 800 × 500 and scaled to the room it is given, in sixths so a card's 72 px and the 78 px pitch are whole pixels
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile'), ui = tile ? 0 : 46;
+    let s = Math.min(W / 800, (H - ui) / 500, 1.6);
+    s = Math.max(0.5, Math.floor(s * 6 + 1e-6) / 6);
+    fit.style.width = (800 * s).toFixed(2) + 'px'; fit.style.height = (500 * s).toFixed(2) + 'px';
+    win.style.setProperty('--s', s.toFixed(4));
+    SU.setScale(s);
+  }
+  size();
+  addEventListener('resize', size);
+  if ('ResizeObserver' in window) new ResizeObserver(size).observe(document.documentElement);
+
+  /* the ghost: it fires the same pointer events a hand does (untrusted events on the same handlers) and clicks the same buttons */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const PID = 91, POSE_T = 0.57;
+  const fire = (type, x, y, target) => {
+    const t = target || document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: PID, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  const at = (x, y) => { pos = { x, y }; QM.ghostAt(x, y); };
+  async function glide(my, to, ms = 640) {
+    const from = pos || { x: innerWidth * 0.86, y: innerHeight * 0.9 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      at(from.x + (to.x - from.x) * k, from.y + (to.y - from.y) * k);
+      if (p >= 1) break;
+    }
+  }
+  const ctlOf = (c) => { const b = c.btn.getBoundingClientRect(); return { x: b.left + b.width * 0.5, y: b.top + b.height * 0.5, el: c.btn }; };
+  const mid = (el, fx = 0.5) => { const b = el.getBoundingClientRect(); return { x: b.left + b.width * fx, y: b.top + b.height * 0.52 }; };
+  async function tap(my, el) { const { x, y } = pos; fire('pointerdown', x, y, el); await gap(my, 110); fire('pointerup', x, y, el); }
+  async function click(my, el) { const { x, y } = pos; await gap(my, 90); el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, detail: 1, view: window })); }
+  async function until(my, ok, max = 12000) { let t = 0; while (!ok() && t < max) { await gap(my, 80); t += 80; } }
+  const open0 = () => SU.cards.filter((c) => c.st === 'open');
+  const settled = () => SU.cards.every((c) => c.st !== 'sunk') && !SU.cards.some((c) => c.y.on);
+
+  /* the pose the piece loads in, played, not drawn: the second card is pressed and released through the real input path and the world is stepped to the moment the
+     third card has covered three quarters of it, then held there (no timer decides it, so a slow machine cannot move it) until the ghost goes on */
+  function pose() {
+    SU.setup();
+    SU.S.hold = false;
+    if (reduced) return;
+    SU.S.hold = true;
+    const c = SU.cards[1], b = ctlOf(c);
+    pos = { x: b.x, y: b.y };
+    fire('pointerdown', b.x, b.y, b.el); SU.advance(0.12);
+    fire('pointerup', b.x, b.y, b.el);
+    SU.advance(POSE_T);
+    SU.render();
+  }
+  function release() { if (SU.S.hold) { SU.S.hold = false; SU.kick(); } }
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 4850 : 3400) : 600);
+      QM.ghostShow();
+      if (first) { release(); }
+      for (let cycle = first ? 0 : 1; ; cycle++) {
+        await until(my, settled, 4000); await gap(my, 500);
+        if (cycle % 2 === 0) {
+          // the first card done (the Next dot travels), the drawer opened, one sent back, Undo
+          const f = open0()[0];
+          await glide(my, ctlOf(f), 600); await gap(my, 180); await tap(my, f.btn); await gap(my, 1700);
+          await glide(my, mid(SU.toggle, 0.45), 560); await gap(my, 160); await click(my, SU.toggle); await gap(my, 1150);
+          const row = SU.rows.find((r) => r.present && r.c.i === 1) || SU.rows.find((r) => r.present);
+          if (row) { await glide(my, mid(row.el, 0.4), 480); await gap(my, 160); await click(my, row.el.querySelector('button')); await gap(my, 1500); }
+          if (SU.isOpen()) { await glide(my, mid(SU.toggle, 0.3), 480); await gap(my, 120); await click(my, SU.toggle); await gap(my, 900); }
+          if (SU.hasUndo()) {
+            const bb = SU.undoBtn.getBoundingClientRect();
+            if (SU.undoBtn.style.visibility !== 'hidden' && bb.width > 20) { await glide(my, mid(SU.undoBtn, 0.55), 520); await gap(my, 160); await click(my, SU.undoBtn); await gap(my, 1500); }
+          }
+          // the last card: the drawer rises over it
+          const l = open0()[open0().length - 1];
+          if (l) { await glide(my, ctlOf(l), 600); await gap(my, 160); await tap(my, l.btn); await gap(my, 1500); SU.undo(); await gap(my, 1600); }
+        } else {
+          // the whole day: the last three fast, bottom up (the cards above do not move), then the rest from the top, until nothing is left
+          const op = open0();
+          for (const [k, c] of [op[op.length - 1], op[op.length - 2], op[op.length - 3]].filter(Boolean).entries()) { await glide(my, ctlOf(c), k === 0 ? 560 : 150); await gap(my, 30); await tap(my, c.btn); await gap(my, k < 2 ? 10 : 0); }
+          await until(my, settled, 5000); await gap(my, 500);
+          while (open0().length) { const c = open0()[0]; await glide(my, ctlOf(c), 420); await gap(my, 120); await tap(my, c.btn); await until(my, settled, 5000); await gap(my, 250); }
+          await until(my, () => open0().length === 0 && settled(), 8000); await gap(my, 3000);
+          SU.resetAll(); await gap(my, 1800);
+        }
+        await glide(my, { x: Math.min(innerWidth - 24, SU.win.getBoundingClientRect().right - 30), y: innerHeight * 0.6 }, 700);
+        QM.ghostHide(); pos = null;
+        await gap(my, 900);
+        QM.ghostShow();
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() { epoch++; SU.endPress(); QM.ghostHide(); pos = null; }
+  if (!QM.tile && !reduced) {
+    const busyHand = () => SU.win.matches(':hover') || (SU.win.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                    // the ghost's own events do not count
+      release();
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!busyHand()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true, capture: true });
+    addEventListener('keydown', touch, true);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); pose(); if (!reduced) script(true); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { size(); pose(); if (!reduced) script(true); }, 60));
+})();
+</script>
+</body>
+</html>

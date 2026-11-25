@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Row expand · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "row-expand", "title": "Row expand", "group": "studio", "added": "2026-11-25", "cat": "data", "order": 100,
+  "kind": "loop", "tone": "paper", "shot": 1400, "preview": { "secs": 9, "skip": 4900 },
+  "line": "row height 0.45 s, critically damped · its own cells travel · contents 40 ms apart under clips · one lime",
+  "summary": "Qbix's studio projects as a table. Press a row and the row itself becomes the panel: its box grows on a spring, its ground steps to light grey with a 14 px radius, and its own cells are the shared elements, the name growing into the title, the stage chip, owner and due date travelling to a meta line. Then a stage strip, the next milestone, three lines of activity and two buttons are uncovered under clips 40 ms apart. With a panel open, Up and Down carry it to the neighbouring project.",
+  "spec": [["Table", "a real table (roles table, rowgroup, row, columnheader, rowheader, cell) of six projects; each row's trigger is a button with aria-expanded and aria-controls (the panel is a labelled region, inert while closed); the model is one id, and one pass gives every row a target height (44 px closed, 220 px open, 4 px of which is a gap round the ground); a row's y is the sum of the heights above it, so rows cannot overlap or leave a gap and the table's height is the sum of springs"], ["Height", "every row's height is a critically damped spring (response 0.45 s, settled in about 0.47 s) that starts from the value and velocity on screen; the ground steps from white to #f5f5f7 and the hairlines round the row are drawn back, both from the same height (14 px radius, 4 px inset when open); the plus turns 45 degrees into a close glyph on its own spring (0.3 s)"], ["Cells", "the row's own cells are the shared elements, placed between two layouts measured from the DOM at scale 1 (a closed row and an open one, in 1/64 px): the name on one spring (0.4 s) grows 15 px to 20 px and 500 to 600 as it moves to the title, nowrap so it never re-wraps; the stage chip, the owner and the date each have a y spring (0.3 s) and an x spring (0.32 s): opening they go down first and left once under the title, closing they go right first and up once clear of it, the leftmost leading on the way in (30 ms apart) and the rightmost on the way out, so none catches up with the one ahead; a cell is never lower than its row's own bottom edge; Due is the front of the date's element, folded away before the date sets off and opened to its width when it has arrived"], ["Contents", "seven slots (stage strip; next milestone; three activity lines, the first with its caption; Open; Message) uncovered under clips 40 ms apart (clip-path inset on a spring, 0.28 s), each only once the row is tall enough to hold it; on close they are covered first, last slot first 18 ms apart (0.1 s), and the row shrinks only when all are covered, so nothing is ever seen squashed or cut by its row or a neighbour"], ["Cross-over", "opening a row while another is open (a press, Up or Down) covers the open one's contents, then both heights start on the same frame; the two springs are alike, so their heights sum to a constant (440 px in the six-row table, checked over 120 frames) and the rows between and below do not move; the new row's contents are uncovered as soon as it is tall enough; a press or a key during any of it starts from the values and velocities on screen (reversals at 100, 200 and 350 ms checked)"], ["Lime", "exactly one: with nothing open the Live dot on Oak & Rye; with a row open the current-stage marker in its strip; the dot goes out (0.14 s) before the marker comes in, and the marker goes out before the dot returns or the next marker comes in, so there are never two (checked on every frame of every move: at most one, one at rest)"], ["Input", "a press answers on pointerdown (0.99, 0.1 s); a release opens or closes; Enter or Space on the focused row button toggles, Escape closes and puts focus back on the row, with a panel open Up and Down carry it to the neighbouring project (focus follows), Home and End move between the row buttons; the Open and Message buttons press to 0.97 in 100 ms; Tab goes row button, Open, Message, next row button"], ["Scroll", "the table scrolls inside the card if it outgrows it (the card's height is the table's, up to 478 px): the open row is brought into view by a spring on the scroll position (0.4 s), started on the same frame as its height; the column heads stay; a hand's own scroll takes the spring with it"], ["Loop", "the page loads on a pose that is played, not drawn: Willow Counseling is opened by a real pointer press and click and the world is stepped to rest (Build, strip, milestone, activity, buttons, the other rows parted round it); after about 5 s a ghost closes it by its glyph, opens Forma, opens Kova as a cross-over, presses Down twice (Willow, Strata), closes with Escape and goes back to the pose; it uses the same pointer and key events as a hand, yields to any real pointer, touch or key and resumes after 4.5 s"]],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A client's project list in their Qbix portal, or a case study's process table: one glance for stage, owner and date, one press for what is next.",
+  "rules": ["The row is the panel. There is no drawer under it: the row's own box grows, its own ground changes, its own cells travel.", "Cells travel between two measured layouts, never hard-coded positions, on separate x and y springs so they go round the title instead of through it; at rest they sit on the cell they were measured from.", "Heights are springs and a row's y is the sum of the heights above it, so a change can land in the middle of another and nothing overlaps or jumps.", "Contents are uncovered and covered under clips, never faded; they are covered before the row shrinks and uncovered only once the row can hold them.", "A close and an open that meet start on the same frame and their heights sum to a constant.", "Exactly one lime: the Live dot with nothing open, the stage marker with a row open; they are handed over, never both.", "A real table; each row's trigger is a button with aria-expanded and aria-controls; Enter or Space toggles, Escape closes, Up and Down travel, focus stays on the row; a polite status line says what opened.", "System face, Apple neutrals (#1d1d1f, #6e6e73, #86868b, #f5f5f7, #e8e8ed), a white card, 14 px rows' radius, 1.6 px round strokes.", "Under reduced motion the card rests with Willow Counseling open and every change happens in place."],
+  "tags": ["table", "row", "expand", "accordion", "shared element", "spring", "FLIP", "stage strip", "keyboard", "Qbix", "projects"]
+}
+</script>
+<style data-code>
+/* Row expand. A project table in the system face with Apple's neutrals, on a white card. Every row is absolutely positioned and set from script
+   (render()): its y is the sum of the heights above it, its height is a spring, and its cells (name, chip, owner, due) are positioned between
+   two measured layouts. The one lime is the open panel's current-stage marker (.rx-lm) or, with nothing open, the Live dot (.rx-dot). */
+.rx-card { --rx-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --rx-ui: cubic-bezier(.4, 0, .2, 1); --rx-out: cubic-bezier(.16, 1, .3, 1); --ld: 1;
+  position: absolute; left: 0; top: 0; width: 760px; height: 478px; overflow: hidden; border-radius: 24px; background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04);
+  color: #1d1d1f; font: 400 15px/20px var(--rx-f); letter-spacing: -.011em; -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.rx-card :where(svg) { display: block; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.rx-card :where(h2, p, ol, ul, li, table, thead, tbody, tr, th, td) { margin: 0; padding: 0; border: 0; font: inherit; text-align: left; list-style: none; }
+.rx-card :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the card scrolls inside itself only when the open table outgrows it; the column heads stay */
+.rx-view { position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.rx-view::-webkit-scrollbar { display: none; }
+.rx-tbl { display: block; position: relative; width: 760px; }
+.rx-tbl :where(thead, tbody, tr, th, td) { display: block; }
+.rx-head { position: sticky; top: 0; z-index: 30; height: 32px; background: #fff; }
+.rx-head tr { position: relative; height: 32px; }
+.rx-head tr::after { content: ''; position: absolute; left: 26px; right: 26px; bottom: 0; height: 1px; background: rgba(0, 0, 0, .08); }
+.rx-head th { position: absolute; top: 0; height: 31px; font: 500 12px/31px var(--rx-f); letter-spacing: 0; color: #6e6e73; }
+.rx-body { position: relative; width: 760px; height: 270px; }
+
+/* a row: ground, hover wash, hairline, the header button, the cells, the glyph, the panel. Its --o (0 closed, 1 open) comes from its height. */
+.rx-row { position: absolute; left: 10px; top: 0; width: 740px; height: 44px; overflow: hidden; will-change: transform; --o: 0; transform-origin: 50% 22px; }
+.rx-row > * { display: block; margin: 0; padding: 0; }
+.rx-gr { position: absolute; left: 0; right: 0; top: calc(4px * var(--o)); bottom: calc(4px * var(--o)); border-radius: 14px;
+  background: color-mix(in srgb, #f5f5f7 calc(var(--o) * 100%), #fff); }
+.rx-wash { position: absolute; left: 0; right: 0; top: 0; bottom: 0; border-radius: 14px; background: rgba(0, 0, 0, .04); opacity: 0; pointer-events: none; transition: opacity 140ms var(--rx-ui); }
+@media (hover: hover) { .rx-row.is-flat:not(.is-on):hover .rx-wash { opacity: 1; } }
+.rx-sep { position: absolute; left: 16px; right: 16px; bottom: 0; height: 1px; background: rgba(0, 0, 0, .08); transform-origin: 50% 50%; pointer-events: none; }
+.rx-btn { position: relative; display: block; width: 100%; height: 44px; border-radius: 14px; text-align: left; touch-action: manipulation; }
+.rx-btn:focus-visible { outline: none; }
+.rx-btn::after { content: ''; position: absolute; left: 0; right: 0; top: calc(4px * var(--o)); height: 44px; border-radius: 14px; pointer-events: none; }
+.rx-btn:focus-visible::after { box-shadow: inset 0 0 0 2px #1d1d1f; }
+.rx-nm, .rx-chip, .rx-own, .rx-due, .rx-gl { position: absolute; left: 0; top: 0; pointer-events: none; white-space: nowrap; }
+.rx-nm { font: 500 15px/20px var(--rx-f); letter-spacing: -.012em; color: #1d1d1f; }
+.rx-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; font: 500 12px/22px var(--rx-f); letter-spacing: -.003em; color: #1d1d1f;
+  background: color-mix(in srgb, #e8e8ed calc(var(--o, 0) * 100%), #f5f5f7); }
+.rx-own { display: inline-flex; align-items: center; gap: 8px; height: 22px; font: 400 15px/22px var(--rx-f); color: #1d1d1f; }
+.rx-av { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 600 11px/1 var(--rx-f); letter-spacing: 0; color: #6e6e73;
+  background: color-mix(in srgb, #e8e8ed calc(var(--o, 0) * 100%), #f5f5f7); }
+.rx-due { height: 20px; font: 400 15px/20px var(--rx-f); font-variant-numeric: tabular-nums; color: color-mix(in srgb, #1d1d1f calc(var(--o, 0) * 100%), #6e6e73); }
+/* "Due" is the front of the date's own element: collapsed in the table, opened to its width as the date reaches the meta line (uncovered left to right) */
+.rx-duep { display: inline-block; overflow: hidden; vertical-align: top; height: 20px; color: #6e6e73; white-space: pre; }
+.rx-duep i { display: inline-block; width: 6px; }
+/* the Live dot: the one lime with nothing open; a point left of the chip, so nothing in the chip shifts when it goes */
+.rx-dot { position: absolute; left: -16px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .14);
+  transform: scale(var(--ld, 1)); }
+.rx-gl { left: 696px; width: 24px; height: 24px; border-radius: 50%; background: color-mix(in srgb, #e8e8ed calc(var(--o, 0) * 100%), #f5f5f7); color: #1d1d1f; }
+.rx-gl svg { width: 24px; height: 24px; stroke-width: 1.7; }
+
+/* the panel: seven slots, each a clip the script moves; nothing here is faded */
+.rx-panel { position: absolute; left: 0; top: 0; width: 740px; height: 220px; pointer-events: none; }
+.rx-ci { position: absolute; visibility: hidden; }
+.rx-strip { left: 20px; top: 84px; width: 700px; height: 20px; display: flex; align-items: center; }
+.rx-st { display: flex; align-items: center; gap: 8px; flex: none; font: 500 13px/20px var(--rx-f); letter-spacing: -.006em; color: #86868b; }
+.rx-st.is-done { color: #6e6e73; }
+.rx-st.is-now { color: #1d1d1f; font-weight: 600; }
+.rx-nd { width: 20px; height: 20px; flex: none; overflow: visible; }
+.rx-ln { flex: 1; height: 2px; margin: 0 10px; border-radius: 1px; background: #d2d2d7; }
+.rx-ln.is-done { background: #86868b; }
+.rx-lm { fill: #B8FF00; stroke: none; transform-box: fill-box; transform-origin: center; transform: scale(var(--lm, 0)); }
+.rx-cap { display: block; height: 16px; font: 500 12px/16px var(--rx-f); letter-spacing: 0; color: #6e6e73; }
+.rx-ms { left: 20px; top: 120px; width: 340px; height: 40px; }
+.rx-mv { margin-top: 2px; font: 500 15px/22px var(--rx-f); letter-spacing: -.011em; color: #1d1d1f; }
+.rx-a0 { left: 380px; top: 120px; width: 340px; height: 40px; }
+.rx-a0 .rx-al { margin-top: 4px; }
+.rx-a1, .rx-a2 { left: 380px; width: 340px; height: 20px; }
+.rx-a1 { top: 160px; } .rx-a2 { top: 180px; }
+.rx-al { display: flex; justify-content: space-between; gap: 12px; height: 20px; font: 400 14px/20px var(--rx-f); letter-spacing: -.008em; color: #1d1d1f; }
+.rx-al time { flex: none; color: #86868b; }
+.rx-b { top: 168px; height: 32px; border-radius: 16px; text-align: center; font: 600 14px/32px var(--rx-f); letter-spacing: -.006em; pointer-events: auto; touch-action: manipulation;
+  transition: transform 100ms var(--rx-ui), background-color 140ms var(--rx-ui); }
+.rx-b:active { transform: scale(.97); }
+.rx-b:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.rx-open { left: 20px; width: 72px; background: #1d1d1f; color: #fff; }
+.rx-msg { left: 100px; width: 92px; background: #e8e8ed; color: #1d1d1f; }
+@media (hover: hover) { .rx-open:hover { background: #3a3a3c; } .rx-msg:hover { background: #dedee3; } }
+
+/* the two layouts the cells travel between, measured from the DOM (never shown) */
+.rx-pr { position: absolute; left: 0; top: 0; width: 740px; height: 220px; visibility: hidden; pointer-events: none; }
+.rx-pr .pc, .rx-pr .po { position: absolute; display: flex; }
+.rx-pr .rx-nm, .rx-pr .rx-chip, .rx-pr .rx-own, .rx-pr .rx-due { position: static; }
+.rx-pr .pc .rx-duep { width: 0; }
+.rx-pr .pc .rx-nm { font: 500 15px/20px var(--rx-f); }
+.rx-pr .po .rx-nm { font: 600 20px/26px var(--rx-f); }
+.rx-pr .pn { left: 16px; top: 12px; } .rx-pr .pk { left: 420px; top: 11px; } .rx-pr .pw { left: 516px; top: 11px; } .rx-pr .pd { right: 84px; top: 12px; }
+.rx-pr .on { left: 20px; top: 20px; }
+.rx-pr .om { left: 20px; top: 50px; height: 22px; display: flex; align-items: center; gap: 16px; }
+@media (prefers-reduced-motion: reduce) { .rx-card *, .rx-card *::before { transition: none !important; } }
+</style>
+<style>
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  html.qm-tile .qm-stage { padding: 0; }
+  .rx-fit { position: relative; }
+  .rx-world { position: absolute; left: 0; top: 0; width: 760px; height: 478px; transform-origin: 0 0; transform: scale(var(--s, 1)); }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="rx-fit" id="rx-fit"><div class="rx-world" id="rx-world">
+<!-- code -->
+<section class="rx-card" id="rx-card" aria-labelledby="rx-ttl">
+  <h2 class="sr-only" id="rx-ttl">Studio projects</h2>
+  <div class="rx-view" id="rx-view">
+    <table class="rx-tbl" id="rx-tbl" role="table" aria-labelledby="rx-ttl">
+      <thead class="rx-head" role="rowgroup"><tr role="row">
+        <th role="columnheader" scope="col" style="left:26px">Project</th>
+        <th role="columnheader" scope="col" style="left:430px">Stage</th>
+        <th role="columnheader" scope="col" style="left:526px">Owner</th>
+        <th role="columnheader" scope="col" style="right:94px">Due</th>
+        <th role="columnheader" scope="col" style="left:706px"><span class="sr-only">Details</span></th>
+      </tr></thead>
+      <tbody class="rx-body" id="rx-body" role="rowgroup"></tbody>
+    </table>
+  </div>
+  <p class="sr-only" id="rx-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  </div></div>
+  <div class="qm-ui"><span>Press a row to open it. With one open, Up and Down carry it to the next project; Escape closes</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Row expand. The model is one id (the open row). A request edits it and one pass gives every row its target: height 44 or 220 (a critically damped
+   spring that starts from the value and velocity on screen), and each row's y is the sum of the heights above it, so rows can never overlap or leave
+   a gap and the table's height is the sum of springs. The row's own cells are the shared elements: they are placed between two layouts measured
+   from the DOM (a closed row and an open one), the name on one spring, the chip, owner and due date on a y spring and an x spring each, so they
+   go down first and then left under the title, and back right first and then up. Contents are seven slots uncovered under clips 40 ms apart, only
+   once the row is tall enough to hold them, and covered first on close, before the row shrinks. A close and an open that meet start together, so the
+   two heights are springs that sum to a constant. The one lime is handed over: the Live dot goes out before the stage marker comes in, and back. */
+const RX = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const ROW = 44, OPEN = 220, HEAD = 32, BOT = 6, NS = 7, VMAX = 478;
+  const NEED = [110, 174, 166, 186, 206, 206, 206];       // the row height at which each slot's bottom is inside the row (slot bottom + 6)
+  const STAG = reduced ? 0 : 0.04;                         // slots start 40 ms apart
+  const RESP = { h: 0.45, nm: 0.4, y: 0.3, x: 0.32, gl: 0.3, up: 0.28, cov: 0.1, press: 0.1, lm: 0.14, sc: 0.4 };
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const SP = [];
+  const mk = (x = 0, resp = 0.3, eps = 0.002) => { const s = { x, v: 0, T: x, w: TAU / resp, on: false, eps }; SP.push(s); return s; };
+  function step(s, dt) {
+    if (!s.on) return;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+  }
+  function aim(s, T, resp) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+    kick();
+  }
+  const setT = (s, T, resp) => { if (s.T !== T) aim(s, T, resp); };
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+
+  const STAGES = ['Brief', 'Design', 'Build', 'Review', 'Live'];
+  /* the projects: name, stage (0 to 4), owner, due, next milestone, three lines of activity */
+  const DATA = [
+    { id: 'forma', name: 'Forma · Product page refresh', st: 1, own: 'Sera', due: '2026-12-04', dueTxt: '4 Dec', next: 'Design review · Tue 1 Dec',
+      act: [['Product grid v3 shared', '2 h ago'], ['New photos approved', 'Yesterday'], ['Type pairing locked', 'Mon']] },
+    { id: 'kova', name: 'Kova · Brand upgrade', st: 3, own: 'Dana', due: '2026-12-18', dueTxt: '18 Dec', next: 'Review call · Fri 27 Nov',
+      act: [['Logo round 2 sent', '1 h ago'], ['A deeper green requested', 'Yesterday'], ['Palette contrast checked', 'Mon']] },
+    { id: 'willow', name: 'Willow Counseling · Practice website', st: 2, own: 'Ana', due: '2026-12-02', dueTxt: '2 Dec', next: 'Staging preview · Mon 30 Nov',
+      act: [['Booking form connected', '40 min ago'], ['Home page copy approved', 'Yesterday'], ['Session photos exported at 2x', 'Mon']] },
+    { id: 'strata', name: 'Strata · Design system', st: 2, own: 'Theo', due: '2026-12-11', dueTxt: '11 Dec', next: 'Token export · Wed 2 Dec',
+      act: [['Colour tokens merged', '3 h ago'], ['Button states reviewed', 'Yesterday'], ['Docs page drafted', 'Mon']] },
+    { id: 'linden', name: 'Linden Dental · Landing page', st: 0, own: 'Mika', due: '2026-12-16', dueTxt: '16 Dec', next: 'Kickoff call · Tue 1 Dec',
+      act: [['Brief questions sent', 'Today'], ['Kickoff call booked', 'Yesterday'], ['Logo files received', 'Mon']] },
+    { id: 'oak', name: 'Oak & Rye · Menu site', st: 4, own: 'Ana', due: '2026-11-27', dueTxt: '27 Nov', next: 'Handover call · Fri 27 Nov',
+      act: [['Site live on oakandrye.com', 'Today'], ['Winter menu uploaded', 'Yesterday'], ['Redirects checked', 'Mon']] }
+  ];
+  const N = DATA.length;
+
+  const $ = (id) => document.getElementById(id);
+  const card = $('rx-card'), view = $('rx-view'), body = $('rx-body'), live = $('rx-live');
+  const S = { lastSet: 0, t: 0, open: null, vis: true, scale: 1, say: 0, vmax: VMAX, autoReset: false };
+  const SC = mk(0, RESP.sc, 0.05), DOT = mk(1, RESP.lm, 0.002);
+  let rows = [], byId = {}, Q = [], raf = 0, last = 0, inFrame = false, P = null;
+  const px = (v) => v.toFixed(6);
+
+  const say = (m) => { live.textContent = ''; clearTimeout(S.say); S.say = setTimeout(() => { live.textContent = m; }, 40); };
+
+  /* the clock of the choreography: later(ms, fn) runs on the springs' own clock, so it stops with them and never races them */
+  function later(ms, fn) { if (reduced || ms <= 0) { fn(); return; } Q.push({ at: S.t + ms / 1000, fn }); Q.sort((a, b) => a.at - b.at); kick(); }
+  function pump() { while (Q.length && Q[0].at <= S.t) Q.shift().fn(); }
+
+  /* a row: the ground, a hover wash, a hairline, the header button with the name, the other cells, the glyph, the panel and the two measured layouts */
+  function mkRow(d, i) {
+    const id = d.id, el = document.createElement('tr');
+    el.className = 'rx-row is-flat'; el.setAttribute('role', 'row'); el.dataset.id = id;
+    const ini = d.own[0];
+    const chip = '<span class="rx-chip">' + STAGES[d.st] + (d.st === 4 ? '<i class="rx-dot"></i>' : '') + '</span>';
+    const own = '<span class="rx-own"><i class="rx-av" aria-hidden="true">' + ini + '</i>' + d.own + '</span>';
+    const due = '<time class="rx-due" datetime="' + d.due + '"><span class="rx-duep" aria-hidden="true">Due<i></i></span>' + d.dueTxt + '</time>';
+    const node = (k) => {
+      const ring = '<circle cx="10" cy="10" r="9.2" ';
+      if (k < d.st) return '<svg class="rx-nd" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' + ring + 'fill="#fff" stroke="none"/><path d="M6.2 10.4l2.7 2.7 5-5.8" stroke="#1d1d1f" stroke-width="1.7"/></svg>';
+      if (k === d.st) return '<svg class="rx-nd" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' + ring + 'fill="#fff" stroke="none"/><circle class="rx-lm" cx="10" cy="10" r="7.4"/>' + ring + 'stroke="#1d1d1f" stroke-width="1.6"/><circle cx="10" cy="10" r="2.4" fill="#1d1d1f" stroke="none"/></svg>';
+      return '<svg class="rx-nd" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' + ring + 'stroke="#c7c7cc" stroke-width="1.6"/></svg>';
+    };
+    const strip = STAGES.map((s, k) => '<li class="rx-st ' + (k < d.st ? 'is-done' : k === d.st ? 'is-now' : '') + '"' + (k === d.st ? ' aria-current="step"' : '') + '>' + node(k) + '<span>' + s
+      + (k < d.st ? '<span class="sr-only">, done</span>' : k === d.st ? '<span class="sr-only">, current</span>' : '') + '</span></li>' + (k < 4 ? '<li class="rx-ln' + (k < d.st ? ' is-done' : '') + '" aria-hidden="true"></li>' : '')).join('');
+    const al = (a) => '<span>' + a[0] + '</span><time>' + a[1] + '</time>';
+    el.innerHTML =
+      '<th class="rx-th" role="rowheader" scope="row"><span class="rx-gr"></span><span class="rx-wash"></span><span class="rx-sep"></span>'
+      + '<button class="rx-btn" type="button" id="rx-b-' + id + '" aria-expanded="false" aria-controls="rx-p-' + id + '"><span class="rx-nm">' + d.name + '</span></button></th>'
+      + '<td role="cell">' + chip + '</td><td role="cell">' + own + '</td><td role="cell">' + due + '</td>'
+      + '<td role="cell"><span class="rx-gl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 7.2v9.6M7.2 12h9.6"/></svg></span></td>'
+      + '<td role="cell"><div class="rx-panel" id="rx-p-' + id + '" role="region" aria-labelledby="rx-b-' + id + '" inert>'
+      + '<ol class="rx-strip rx-ci" data-s="0" aria-label="Stages">' + strip + '</ol>'
+      + '<div class="rx-ms rx-ci" data-s="1"><span class="rx-cap">Next milestone</span><p class="rx-mv">' + d.next + '</p></div>'
+      + '<div class="rx-a0 rx-ci" data-s="2"><span class="rx-cap">Recent</span><p class="rx-al">' + al(d.act[0]) + '</p></div>'
+      + '<p class="rx-al rx-a1 rx-ci" data-s="3">' + al(d.act[1]) + '</p><p class="rx-al rx-a2 rx-ci" data-s="4">' + al(d.act[2]) + '</p>'
+      + '<button class="rx-b rx-open rx-ci" data-s="5" type="button" aria-label="Open ' + d.name + '">Open</button><button class="rx-b rx-msg rx-ci" data-s="6" type="button" aria-label="Message about ' + d.name + '">Message</button>'
+      + '</div></td>'
+      + '<td role="cell" aria-hidden="true"><div class="rx-pr">'
+      + '<div class="pc pn"><span class="rx-nm">' + d.name + '</span></div><div class="pc pk">' + chip.replace(/<i class="rx-dot"><\/i>/, '') + '</div><div class="pc pw">' + own + '</div><div class="pc pd">' + due + '</div>'
+      + '<div class="po on"><span class="rx-nm">' + d.name + '</span></div><div class="po om">' + chip.replace(/<i class="rx-dot"><\/i>/, '') + own + due + '</div>'
+      + '</div></td>';
+    const q = (c) => el.querySelector(c), qa = (c) => Array.from(el.querySelectorAll(c));
+    const pr = q('.rx-pr');
+    const E = () => ({ x: mk(0, RESP.x), y: mk(0, RESP.y), t0: 0 });
+    const r = { id, i, d, el, want: false, cm: 0, ck: 0, nextAt: 0, cvPend: 0, M: null,
+      h: mk(ROW, RESP.h, 0.05), dp: mk(0, 0.2), pz: mk(1, RESP.press, 0.0005), nm: mk(0, RESP.nm), gl: mk(0, RESP.gl), lm: mk(0, RESP.lm),
+      E: { chip: E(), own: E(), due: E() }, u: Array.from({ length: NS }, () => mk(0, RESP.up)),
+      btn: q('.rx-btn'), panel: q('.rx-panel'), sep: q('.rx-sep'), glEl: q('.rx-gl'),
+      nmEl: q('.rx-btn .rx-nm'), el2: { chip: q(':scope > td > .rx-chip'), own: q(':scope > td > .rx-own'), due: q(':scope > td > .rx-due') }, duep: q(':scope > td > .rx-due .rx-duep'),
+      slots: Array.from({ length: NS }, (_, k) => qa('.rx-panel [data-s="' + k + '"]')),
+      pc: { nm: pr.querySelector('.pn .rx-nm'), chip: pr.querySelector('.pk .rx-chip'), own: pr.querySelector('.pw .rx-own'), due: pr.querySelector('.pd .rx-due') },
+      po: { nm: pr.querySelector('.on .rx-nm'), chip: pr.querySelector('.om .rx-chip'), own: pr.querySelector('.om .rx-own'), due: pr.querySelector('.om .rx-due'), dp: pr.querySelector('.om .rx-duep') } };
+    r.btn._r = r; el._r = r;
+    body.append(el);
+    return r;
+  }
+
+  /* the two layouts, measured from the DOM in the row's own pixels (the world's scale divided out) */
+  function measure() {
+    const s = S.scale || 1, q = (v) => Math.round(v * 64) / 64;        // the 1/64 px the layout itself keeps
+    for (const r of rows) {
+      const st = r.el.style; st.transform = 'none'; st.scale = 'none';
+      const b = r.el.getBoundingClientRect();
+      const rc = (e) => { const x = e.getBoundingClientRect(); return { x: q((x.left - b.left) / s), y: q((x.top - b.top) / s), w: q(x.width / s), h: q(x.height / s) }; };
+      const c = {}, o = {};
+      for (const k of ['nm', 'chip', 'own', 'due']) { c[k] = rc(r.pc[k]); o[k] = rc(r.po[k]); }
+      r.M = { c, o, dp: q(r.po.dp.getBoundingClientRect().width / s) };
+    }
+  }
+
+  /* where a travelling cell is, from its springs and the two layouts */
+  const dpw = (r) => r.M.dp * clamp(r.dp.x, 0, 1);       // the width of "Due" in front of the date
+const cellX = (r, k) => lerp(r.M.c[k].x, r.M.o[k].x, r.E[k].x.x) + (k === 'due' ? (r.M.dp - dpw(r)) * r.E.due.x.x : 0);   // the date itself stays put while "Due" opens or closes
+  const cellY = (r, k) => Math.min(lerp(r.M.c[k].y, r.M.o[k].y, r.E[k].y.x), r.h.x - r.M.c[k].h - 2);   // never lower than the row's own bottom edge, so a reversal cannot cut it
+  const nameBottom = (r) => lerp(r.M.c.nm.y + 20, r.M.o.nm.y + 26, r.nm.x);
+  const nameRight = (r) => lerp(r.M.c.nm.x + r.M.c.nm.w, r.M.o.nm.x + r.M.o.nm.w, r.nm.x);
+
+  /* -- the pass: who opens, who closes, and when ------------------------------------------------------------------------------------------ */
+  const slotAim = (r, k, v) => setT(r.u[k], v, v ? RESP.up : RESP.cov);
+  const coversDone = (r) => r.cvPend === 0 && r.dp.x < 0.02 && r.u.every((s) => s.x < 0.03);      // contents covered and "Due" folded away: only then may the row shrink
+  function startCover(r) {
+    r.ck = 0; setT(r.dp, 0, 0.12);
+    for (let k = NS - 1; k >= 0; k--) {
+      if (r.u[k].x < 0.002 && r.u[k].T === 0) continue;
+      r.cvPend++;
+      later((NS - 1 - k) * 18, () => { r.cvPend--; if (!r.want) slotAim(r, k, 0); });
+    }
+  }
+  function openNow(r) {
+    r.cm = 1; r.nextAt = S.t;
+    aim(r.h, OPEN, RESP.h); aim(r.nm, 1, RESP.nm); aim(r.gl, 1, RESP.gl);
+    ['chip', 'own', 'due'].forEach((k, j) => { r.E[k].t0 = S.t + (reduced ? 0 : 0.03 * j); });        // the leftmost goes first, so no cell catches up with the one ahead
+  }
+  function closeNow(r) {
+    r.cm = 0;
+    aim(r.h, ROW, RESP.h); aim(r.nm, 0, RESP.nm); aim(r.gl, 0, RESP.gl);
+    ['due', 'own', 'chip'].forEach((k, j) => { r.E[k].t0 = S.t + (reduced ? 0 : 0.03 * j); });         // the rightmost goes first
+  }
+  /* a row that must close waits until its contents are covered; a row that must open waits for it, so both heights start on the same frame
+     (their springs are alike, so they sum to a constant and the rows around them stay still) */
+  function commitPass() {
+    const shr = rows.filter((r) => !r.want && r.cm === 1), gro = rows.filter((r) => r.want && r.cm === 0);
+    if (!shr.length && !gro.length) return;
+    if (shr.some((r) => !coversDone(r))) return;
+    shr.forEach(closeNow); gro.forEach(openNow);
+    aimScroll();
+  }
+  /* the cells: opening, y first (down), then x (left) once the cell is under the title; closing, x first (right) until it is clear of the title, then y */
+  function shared(r) {
+    if (r.cm === 1) {
+      const nB = nameBottom(r);
+      for (const k of ['chip', 'own', 'due']) {
+        const e = r.E[k]; if (S.t < e.t0) continue;
+        setT(e.y, 1, RESP.y);
+        if (e.x.T === 1 || cellY(r, k) >= nB) setT(e.x, 1, RESP.x);
+      }
+      if (r.want) setT(r.dp, r.E.due.x.x >= 0.985 ? 1 : 0, 0.2);
+    } else {
+      const nR = nameRight(r);
+      for (const k of ['due', 'own', 'chip']) {
+        const e = r.E[k]; if (S.t < e.t0) continue;
+        setT(e.x, 0, RESP.x);
+        if (e.y.T === 0 || cellX(r, k) >= nR + 6) setT(e.y, 0, RESP.y);
+      }
+    }
+  }
+  /* the contents of an open row: slot by slot, 40 ms apart, each once the row is tall enough to hold it */
+  function contents(r) {
+    if (!(r.want && r.cm === 1)) return;
+    while (r.ck < NS && S.t >= r.nextAt && r.h.x >= NEED[r.ck]) { slotAim(r, r.ck, 1); r.ck++; r.nextAt = S.t + STAG; }
+  }
+  /* exactly one lime: the Live dot goes out before a marker comes in, and a marker goes out before the dot returns (or the next marker comes) */
+  function lime() {
+    const marks = rows.some((r) => r.lm.x > 0.03);
+    for (const r of rows) {
+      const ok = r.want && r.cm === 1 && r.ck >= 1 && DOT.x < 0.03 && rows.every((o) => o === r || o.lm.x < 0.03);
+      if (ok) setT(r.lm, 1, RESP.lm); else if (!r.want) setT(r.lm, 0, RESP.lm);
+    }
+    setT(DOT, S.open === null && !marks ? 1 : 0, RESP.lm);
+  }
+  function drive() { for (const r of rows) { shared(r); contents(r); } lime(); }
+  const transitional = () => rows.some((r) => (r.want && (r.cm === 0 || r.ck < NS)) || (!r.want && r.cm === 1));
+
+  /* a request: open this row (or none). The model changes now; the rows follow through the pass */
+  function request(id) {
+    if (S.open === id) return;
+    S.open = id;
+    for (const r of rows) {
+      const w = r.id === id; if (r.want === w) continue;
+      r.want = w;
+      r.btn.setAttribute('aria-expanded', w ? 'true' : 'false');
+      r.el.classList.toggle('is-on', w);
+      if (w) { r.panel.inert = false; r.nextAt = S.t; r.ck = 0; } else { r.panel.inert = true; startCover(r); }
+    }
+    const o = id && byId[id];
+    say(o ? o.d.name + ' open. ' + STAGES[o.d.st] + ', ' + o.d.own + ', due ' + o.d.dueTxt + '.' : 'Closed.');
+    commitPass(); drive();
+    kick();
+  }
+  const toggle = (r) => request(S.open === r.id ? null : r.id);
+
+  /* the card scrolls only when the open table outgrows it; the open row is brought into view on the same clock as its height */
+  function aimScroll() {
+    const Ht = rows.map((r) => (r.want ? OPEN : ROW)), content = HEAD + Ht.reduce((a, b) => a + b, 0) + BOT, Hc = Math.min(content, S.vmax), max = Math.max(0, content - Hc);
+    snap(SC, view.scrollTop);                       // wherever the hand left it (wheel, touch, keys, a bar)
+    let s = SC.x;
+    if (S.open !== null) {
+      const i = rows.findIndex((r) => r.want), yT = HEAD + Ht.slice(0, i).reduce((a, b) => a + b, 0);
+      if (yT - HEAD - 6 < s) s = yT - HEAD - 6;
+      if (yT + OPEN + 6 > s + Hc) s = yT + OPEN + 6 - Hc;
+    }
+    setT(SC, clamp(s, 0, max), RESP.sc);
+  }
+  view.addEventListener('scroll', () => { if (Math.abs(view.scrollTop - S.lastSet) > 1.5) { snap(SC, view.scrollTop); S.lastSet = view.scrollTop; kick(); } }, { passive: true });
+
+  /* -- one step of the world, and one frame that writes it ---------------------------------------------------------------------------------- */
+  function simStep(dt) {
+    S.t += dt; pump(); commitPass(); drive();
+    for (const s of SP) step(s, dt);
+    commitPass(); drive();
+    return SP.some((s) => s.on) || Q.length > 0 || transitional();
+  }
+  function advance(sec) { for (let i = 0, n = Math.round(sec * 60); i < n; i++) simStep(1 / 60); render(); }
+
+  function render() {
+    let sum = 0;
+    const ys = [], os = [];
+    for (const r of rows) { ys.push(sum); sum += r.h.x; os.push(clamp((r.h.x - ROW) / (OPEN - ROW), 0, 1)); }
+    const contentH = sum + BOT, Hc = Math.min(HEAD + contentH, S.vmax);
+    card.style.height = px(Hc) + 'px';
+    body.style.height = px(contentH) + 'px';
+    if (Math.abs(view.scrollTop - S.lastSet) > 1.5) { snap(SC, view.scrollTop); S.lastSet = view.scrollTop; }        // a scroll that is not ours (wheel, touch, keys, the browser clamping it) takes the spring with it
+    if (Math.abs(view.scrollTop - SC.x) > 0.01) { view.scrollTop = SC.x; S.lastSet = view.scrollTop; }
+    rows.forEach((r, i) => {
+      const o = os[i], st = r.el.style, M = r.M;
+      st.transform = 'translate3d(0,' + px(ys[i]) + 'px,0)';
+      st.height = px(r.h.x) + 'px';
+      st.scale = Math.abs(r.pz.x - 1) < 0.0002 ? 'none' : r.pz.x.toFixed(4);
+      st.zIndex = r.want || o > 0.02 ? 3 : 2;
+      st.setProperty('--o', o.toFixed(4));
+      r.el.classList.toggle('is-flat', o < 0.02);
+      const nxt = i + 1 < rows.length ? os[i + 1] : 1;
+      r.sep.style.transform = 'scaleX(' + (1 - Math.max(o, nxt)).toFixed(4) + ')';
+      if (M) {
+        const n = r.nm.x, ne = r.nmEl.style;
+        ne.left = px(lerp(M.c.nm.x, M.o.nm.x, n)) + 'px'; ne.top = px(lerp(M.c.nm.y, M.o.nm.y, n)) + 'px';
+        ne.fontSize = (15 + 5 * n).toFixed(3) + 'px'; ne.lineHeight = (20 + 6 * n).toFixed(3) + 'px'; ne.fontWeight = Math.round(500 + 100 * n);
+        for (const k of ['chip', 'own', 'due']) { const e = r.el2[k].style; e.left = px(cellX(r, k)) + 'px'; e.top = px(cellY(r, k)) + 'px'; }
+        r.duep.style.width = px(dpw(r)) + 'px';
+      }
+      const gl = r.glEl.style; gl.top = px(10 + 4 * o) + 'px'; r.glEl.firstChild.style.transform = 'rotate(' + (45 * clamp(r.gl.x, 0, 1)).toFixed(2) + 'deg)';
+      for (let k = 0; k < NS; k++) {
+        const u = clamp(r.u[k].x, 0, 1), cp = u >= 0.999 ? 'none' : 'inset(0 0 ' + ((1 - u) * 100).toFixed(2) + '% 0)', vis = u < 0.002 ? 'hidden' : 'visible';
+        for (const e of r.slots[k]) { e.style.clipPath = cp; e.style.visibility = vis; }
+      }
+      r.panel.style.setProperty('--lm', clamp(r.lm.x, 0, 1).toFixed(3));
+    });
+    card.style.setProperty('--ld', clamp(DOT.x, 0, 1).toFixed(3));
+  }
+  function frame(now) {
+    raf = 0;
+    if (!S.vis || document.hidden) return;
+    const dt = clamp((now - last) / 1000 || 0.016, 0.001, 0.034);
+    last = now;
+    inFrame = true;
+    const more = simStep(dt);
+    render();
+    inFrame = false;
+    if (more) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (raf || inFrame || !S.vis || document.hidden) return; last = performance.now(); raf = requestAnimationFrame(frame); }
+  if ('IntersectionObserver' in window) new IntersectionObserver((es) => { S.vis = es[es.length - 1].isIntersecting; if (S.vis) kick(); }).observe(card);
+  document.addEventListener('visibilitychange', kick);
+
+  /* -- input: a press answers at once (0.99), a release opens or closes; keys travel and close -------------------------------------------- */
+  const tbl = $('rx-tbl');
+  tbl.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest && e.target.closest('.rx-btn');
+    if (!b || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    P = b._r; aim(P.pz, 0.99, RESP.press);
+  });
+  const release = () => { if (P) { aim(P.pz, 1, RESP.press); P = null; } };
+  addEventListener('pointerup', release); addEventListener('pointercancel', release);
+  tbl.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('.rx-btn'); if (b) toggle(b._r); });
+  const toggles = () => rows.map((r) => r.btn);
+  tbl.addEventListener('keydown', (e) => {
+    const k = e.key; if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const hand = e.isTrusted !== false, inPanel = !!(e.target.closest && e.target.closest('.rx-panel')), cur = S.open !== null ? byId[S.open] : null;
+    if (k === 'Escape' && cur) { e.preventDefault(); request(null); if (hand && inPanel) cur.btn.focus({ preventScroll: true }); }
+    else if ((k === 'ArrowDown' || k === 'ArrowUp') && cur) {                       // a panel is open: it travels to the neighbour
+      e.preventDefault();
+      const j = clamp(cur.i + (k === 'ArrowDown' ? 1 : -1), 0, N - 1);
+      if (j !== cur.i) { request(rows[j].id); if (hand) rows[j].btn.focus({ preventScroll: true }); }
+    } else if ((k === 'ArrowDown' || k === 'ArrowUp' || k === 'Home' || k === 'End') && e.target.classList.contains('rx-btn')) {
+      e.preventDefault();
+      const l = toggles(), i = l.indexOf(e.target), j = k === 'Home' ? 0 : k === 'End' ? N - 1 : clamp(i + (k === 'ArrowDown' ? 1 : -1), 0, N - 1);
+      if (hand) l[j].focus({ preventScroll: true });
+    }
+  });
+
+  /* setup: everything closed and at rest, instantly */
+  function setup() {
+    Q.length = 0; S.open = null;
+    rows.forEach((r) => {
+      r.want = false; r.cm = 0; r.ck = 0; r.cvPend = 0; r.nextAt = 0;
+      [r.h, r.pz, r.nm, r.gl, r.lm, r.dp].forEach((s) => snap(s, s === r.h ? ROW : s === r.pz ? 1 : 0));
+      for (const k of ['chip', 'own', 'due']) { snap(r.E[k].x, 0); snap(r.E[k].y, 0); r.E[k].t0 = 0; }
+      r.u.forEach((s) => snap(s, 0));
+      r.panel.inert = true; r.btn.setAttribute('aria-expanded', 'false'); r.el.classList.remove('is-on');
+    });
+    snap(DOT, 1); snap(SC, 0); view.scrollTop = 0; P = null;
+    render();
+  }
+  DATA.forEach((d, i) => { const r = mkRow(d, i); rows.push(r); byId[d.id] = r; });
+  setup();
+  return {
+    S, card, view, rows, byId, setup, render, advance, kick, request, toggle, measure,
+    tick(dt) { simStep(dt); render(); },
+    setVmax(v) { S.vmax = v; aimScroll(); kick(); render(); },
+    openId: () => S.open,
+    snapshot() {
+      return { open: S.open, ys: rows.map((r) => +r.h.x.toFixed(2)), lime: DOT.x, marks: rows.map((r) => +r.lm.x.toFixed(2)), h: card.style.height };
+    }
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('rx-fit'), world = document.getElementById('rx-world');
+  // the card is drawn 760 px wide in a 478 px frame (its tallest state) and scaled to the room it is given; a row is a whole number of pixels
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 8 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    let s = Math.max(0.5, Math.min(0.975 * W / 760, (H - 2 * pad - ui) / 478, 1.5));
+    s = Math.floor(44 * s) / 44;
+    fit.style.width = (760 * s).toFixed(2) + 'px'; fit.style.height = (478 * s).toFixed(2) + 'px';
+    world.style.setProperty('--s', '1'); RX.S.scale = 1; RX.measure(); RX.render();      // the two layouts are measured at scale 1, so they are exact
+    world.style.setProperty('--s', s.toFixed(4)); RX.S.scale = s;
+  }
+  size();
+  addEventListener('resize', size);
+
+  /* the ghost: it moves the same pointer and key events a hand does (untrusted events on the same handlers) and clicks the same buttons */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const PID = 95;
+  const fire = (type, x, y, target) => {
+    const t = target || document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: PID, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  const at = (x, y) => { pos = { x, y }; QM.ghostAt(x, y); };
+  async function glide(my, to, ms = 700) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      at(from.x + (to.x - from.x) * k, from.y + (to.y - from.y) * k);
+      if (p >= 1) break;
+    }
+  }
+  const s = () => RX.S.scale;
+  const head = (r, fx = 0.6) => { const b = r.el.getBoundingClientRect(); return { x: b.left + b.width * fx, y: b.top + 22 * s() }; };
+  const glyph = (r) => { const g = r.glEl.getBoundingClientRect(); return { x: g.left + g.width / 2, y: g.top + g.height / 2 }; };
+  async function press(my, el) { const { x, y } = pos; fire('pointerdown', x, y, el); await gap(my, 110); fire('pointerup', x, y, el); el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window })); }
+  const key = (el, k) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+  const openRow = () => (RX.openId() ? RX.byId[RX.openId()] : null);
+
+  /* the pose the piece loads in, made through the real click path and played: Willow Counseling opens and settles */
+  function pose() {
+    RX.setup();
+    const r = RX.byId.willow;
+    if (reduced) { RX.request('willow'); RX.advance(1); return; }
+    const b = r.el.getBoundingClientRect(), x = b.left + b.width * 0.5, y = b.top + 22 * s();
+    fire('pointerdown', x, y, r.btn); RX.advance(0.1);
+    fire('pointerup', x, y, r.btn); r.btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+    RX.advance(2);
+  }
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 4850 : 3400) : 600);
+      QM.ghostShow();
+      for (;;) {
+        // Willow is open: close it by its glyph, open Forma, open Kova (a cross-over), arrows down twice, close with Escape
+        let o = openRow();
+        if (o) { await glide(my, glyph(o), 600); await gap(my, 160); await press(my, o.btn); await gap(my, 850); }
+        for (const id of ['forma', 'kova']) {
+          const r = RX.byId[id];
+          await glide(my, head(r, 0.58), 520); await gap(my, 150); await press(my, r.btn); await gap(my, id === 'forma' ? 950 : 1050);
+        }
+        for (let n = 0; n < 2; n++) { await gap(my, 220); key(openRow().btn, 'ArrowDown'); await gap(my, 900); }
+        await gap(my, 150); key(openRow().btn, 'Escape'); await gap(my, 900);
+        // rest, then back to the pose by a click that nobody sees
+        await glide(my, { x: Math.min(innerWidth - 24, RX.card.getBoundingClientRect().right + 28), y: innerHeight * 0.55 }, 700);
+        QM.ghostHide(); pos = null;
+        await gap(my, 500);
+        { const r = RX.byId.willow; r.btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })); }
+        await gap(my, 2300);
+        QM.ghostShow();
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); pos = null; }
+  if (!QM.tile && !reduced) {
+    const busyHand = () => RX.card.matches(':hover') || (RX.card.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                    // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!busyHand()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); pose(); if (!reduced) script(true); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { size(); pose(); if (!reduced) script(true); }, 60));
+})();
+</script>
+</body>
+</html>

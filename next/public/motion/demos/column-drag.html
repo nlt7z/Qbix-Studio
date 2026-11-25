@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Column drag · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "column-drag",
+  "title": "Column drag",
+  "group": "studio",
+  "added": "2026-11-25",
+  "cat": "data",
+  "order": 110,
+  "kind": "loop",
+  "tone": "paper",
+  "shot": 3800,
+  "preview": {
+    "secs": 9,
+    "skip": 5000
+  },
+  "line": "column 1:1 from the slop · lift 1.02 · neighbours part on 0.3 s springs · edge handle 1:1, 64 to 320 px · rows sort 30 ms apart · one lime",
+  "summary": "Forma's recent orders as a table you can arrange. Press a header and the cell darkens at once; after 6 px the whole column lifts as one white slab with a soft shadow and follows the hand 1:1, the others part on their own springs as its centre passes theirs, and a 2 px lime mark shows the slot. Past the table's edges it rubber-bands; on release the velocity is projected to choose the slot and the slab settles with its shadow easing off. Drag a header's edge to resize with live ellipsis, double-click it to fit. A plain click sorts: the rows travel on white bands, the arrow is drawn in one stroke and turns over on a second click.",
+  "spec": [
+    [
+      "Table",
+      "one white card, 780 × 480 drawn and scaled to the tile (10 px around); header 40 px, seven rows of 44 px, text 15 px, five columns 104 + 156 + 188 + 124 + 152 = 724 px. A column is one x spring and one width: its header, seven cells, resize handle and lift slab are placed from those two numbers on every frame, so a column cannot shear (checked frame by frame: cells share their header's x and width to 0.000 px). Drawn x = the slot (sum of the widths before it) + the column's own spring, so columns to the right of a resize move with the hand exactly. A visually hidden real table follows in the order shown; the drawn cells are aria-hidden, the headers are real buttons"
+    ],
+    [
+      "Press",
+      "pointerdown darkens the header one step (#f5f5f7 to #e8e8ed, 70 ms); 6 px of travel on screen commits the drag, anchored on the path where the 6 px were crossed (so a late first event never jumps the column); a press and release without 6 px is a click and sorts; a press on the edge handle never lifts or sorts; pointer captured, touch-action none on headers and handles"
+    ],
+    [
+      "Lift",
+      "the column lifts as one white slab (its own ground, radius 14) on a critically damped spring (response 0.26 s): scale 1.02 about its own centre, shadow deepening with the same value, its header and cells above everything; it follows the hand 1:1 from the grab offset"
+    ],
+    [
+      "Part",
+      "the slot changes when the carried centre passes a neighbour's displayed centre (a column's width of hysteresis, so nothing flutters); each neighbour's x is its own critically damped spring (response 0.3 s) retargeted from where it is, so a reversal never jumps"
+    ],
+    [
+      "Mark",
+      "a 2 px lime line at the slot's left edge, uncovered from the top (300 ms, expo out) when the drag commits, travelling on a 0.18 s spring between slots, covered upwards (140 ms) on release; the sort chip steps to grey in the commit frame and returns in the frame the mark is gone, so every frame has exactly one lime"
+    ],
+    [
+      "Edges",
+      "past either end of the table the slab follows (x·D·0.55) / (D + 0.55·|x|), D = 44 px, never a hard stop; near the scroller's edge a held column or handle scrolls the table (up to 520 px/s, after 48 px of travel)"
+    ],
+    [
+      "Release",
+      "velocity over the last 80 ms; above 140 px/s the slot is chosen from x + v × 0.099 s (d = 0.99); the slab settles from where it is, at the velocity it has, with its shadow easing off; above 420 px/s it is a throw: damping 0.8, ω = max(2π / 0.3, 1.5 v / distance)"
+    ],
+    [
+      "Resize",
+      "the handle is 16 px wide (30 px for a coarse pointer) with a 1 px rule that thickens to 3 px on hover and to ink while held; the width follows the hand 1:1 from the grab, minimum 64 px, maximum 320 px, rubber band past either (D 48 px); text truncates with a live ellipsis. Total keeps a larger minimum, 106 px, the widest figure ($1,056.00) plus its padding, and its band is D 14 px with the left padding dropped, so a figure is never cut. The table scrolls sideways inside the card under 28 px soft edges when it outgrows it. Double-click fits the column to its widest text on a spring (response 0.34 s); the band lets go on a spring too"
+    ],
+    [
+      "Sort",
+      "a click sorts, first ascending (text A to Z, Total by number), a second click reverses; rows travel to their new places on their own critically damped springs (response 0.36 s), 30 ms apart (the leading row of each direction first), each a white band with a soft shadow, the one that goes furthest on top, so a row covers what it passes; the chip is covered (140 ms) before the new one is uncovered (320 ms, expo out), the arrow is drawn in one stroke (300 ms) and turns over on reversal (360 ms). The table rests sorted by Order, newest first"
+    ],
+    [
+      "Keys",
+      "arrows move between headers (one tab stop), Enter or Space sorts, Alt+Left and Alt+Right move the column one slot (it rides above the one it passes), Shift+Left and Shift+Right resize by 8 px, Home and End; Escape returns a carried column; a polite line says it (Channel moved to 2 of 5)"
+    ],
+    [
+      "Loop",
+      "the page loads on a pose made through the same down, move and up calls as a hand: the ghost presses Channel and carries it between Order and Customer, held there (the thumbnail is taken at 3.8 s); at about 5 s it lets go, clicks Total, drags Customer's edge narrower, double-clicks it to fit, carries Order past the right edge and back, and the columns go home one at a time; it yields to a real mouse, touch or key and resumes after 4.5 s"
+    ]
+  ],
+  "source": [
+    "Qbix Motion · Studio · 2026-11-25"
+  ],
+  "where": "A client's admin on a Qbix site: Forma's orders, Kova's transactions, a Strata token table, any table whose reader wants the columns in their own order and width.",
+  "rules": [
+    "A column is one thing: one x spring and one width, and its header, cells, handle and slab are placed from them on every frame. Never position a column's parts by separate animations.",
+    "The lifted column carries its own white ground and goes above everything, so it covers what it passes and text never mixes with text; rows that travel carry their own white band for the same reason (and their own ground inside a lifted column).",
+    "Drag, click and resize are told apart at pointerdown: the edge handle only resizes, a header press is a click until 6 px of travel, and a drag never sorts.",
+    "Dragged things follow 1:1 from where the slop ended; a release projects the velocity (d = 0.99) before the slot is chosen; every other motion is a critically damped spring from the value on screen. Damping 0.8 appears only after a throw.",
+    "Past the table's edges, and past a column's minimum and maximum, the hand is rubber-banded and never stopped hard.",
+    "Exactly one lime in every frame: the insertion mark while a column is carried, otherwise the chip behind the sort arrow. They hand over in one frame.",
+    "A figure is never cut: the right-aligned Total column keeps a minimum that holds its widest figure.",
+    "A real table for screen readers in the order shown, real buttons for headers with a roving tab stop, a polite status line, keys for every gesture.",
+    "System face, Apple neutrals (#1d1d1f, #6e6e73, #86868b, #e8e8ed, #f5f5f7), a white card, hairlines at 8 to 10% black.",
+    "Under reduced motion the table is a complete still: columns, widths and rows change in place (rows with a 160 ms cross-fade), a drag still follows the pointer inside the table, with no springs, lift or rubber band."
+  ],
+  "tags": [
+    "table",
+    "columns",
+    "reorder",
+    "resize",
+    "sort",
+    "drag",
+    "spring",
+    "rubber band",
+    "momentum",
+    "keyboard",
+    "Forma",
+    "orders"
+  ]
+}
+</script>
+<style data-code>
+/* Column drag. A table in the system face with Apple's neutrals on a white card. Every column is one thing: an x spring and a width, and its header, seven cells, resize handle
+   and lift slab are all placed from those two numbers on every frame (render()), so a column can never shear. The one lime is the 2 px insertion mark while a column is carried;
+   otherwise the small chip behind the sort arrow in the sorted header. The card is drawn at 780 × 480 and scaled by --s. */
+@property --cd-fl { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --cd-fr { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.cd-fit { position: relative; width: calc(780px * var(--s, 1)); height: calc(480px * var(--s, 1)); }
+.cd-card { --cd-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --cd-ui: cubic-bezier(.4, 0, .2, 1); --cd-out: cubic-bezier(.16, 1, .3, 1); --cd-in: cubic-bezier(.5, 0, .75, 0); --cd-move: cubic-bezier(.65, 0, .35, 1);
+  position: absolute; left: 0; top: 0; width: 780px; height: 480px; overflow: hidden; border-radius: 24px; background: #fff; color: #1d1d1f;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04); transform: scale(var(--s, 1)); transform-origin: 0 0;
+  font: 400 15px/20px var(--cd-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cd-card :where(h2, p, table) { margin: 0; padding: 0; }
+.cd-card.is-drag, .cd-card.is-drag .cd-h { cursor: grabbing; }
+.cd-card.is-rz, .cd-card.is-rz .cd-h, .cd-card.is-rz .cd-rz { cursor: col-resize; }
+
+.cd-kick { position: absolute; left: 28px; top: 20px; font: 400 13px/18px var(--cd-f); letter-spacing: -.006em; color: #6e6e73; }
+.cd-title { position: absolute; left: 28px; top: 38px; font: 600 26px/30px var(--cd-f); letter-spacing: -.022em; }
+.cd-ft { position: absolute; left: 28px; top: 444px; z-index: 2; font: 400 13px/18px var(--cd-f); letter-spacing: -.006em; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.cd-hint { position: absolute; right: 28px; top: 444px; z-index: 2; font: 400 12px/18px var(--cd-f); letter-spacing: -.004em; color: #86868b; }
+
+/* the scroller: the table is 724 px at rest and fills the card; if a column grows it scrolls sideways under a soft edge. It is taller than the table so a lifted slab's shadow is not cut. */
+.cd-sc { position: absolute; left: 0; top: 58px; width: 780px; height: 380px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain;
+  transition: --cd-fl 260ms var(--cd-ui), --cd-fr 260ms var(--cd-ui); }
+.cd-sc.has-edge { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--cd-fl), #000 calc(100% - var(--cd-fr)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--cd-fl), #000 calc(100% - var(--cd-fr)), transparent 100%); }
+.cd-sc::-webkit-scrollbar { display: none; }
+.cd-in { position: relative; width: 780px; height: 380px; overflow: clip; }   /* what a column does past the table's edge (the rubber band) never makes the scroller scroll */
+.cd-tb { position: absolute; left: 28px; top: 26px; width: 724px; height: 348px; isolation: isolate; }
+.cd-tb > * { position: absolute; left: 0; top: 0; }
+
+/* rows: a white band each (so a row that travels covers what it passes), a hairline inside it; the cells are separate and placed from the row's y and their column's x */
+.cd-b { height: 44px; border-radius: 10px; background: #fff; pointer-events: none; will-change: transform; --lf: 0;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, calc(var(--lf) * .2)), 0 0 0 1px rgba(0, 0, 0, calc(var(--lf) * .05)); }
+.cd-b::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 0; height: 1px; background: rgba(0, 0, 0, .08); }
+.cd-hln { top: 39px; height: 1px; background: rgba(0, 0, 0, .1); z-index: 1; pointer-events: none; }
+.cd-c { height: 44px; padding: 0 16px; font: 400 15px/44px var(--cd-f); letter-spacing: -.011em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; will-change: transform; }
+.cd-c.is-id, .cd-c.is-n { font-weight: 500; }
+.cd-c.is-s { color: #6e6e73; }
+.cd-c.is-g { background: #fff; }
+.cd-c.is-r { padding-left: 0; text-align: right; font-variant-numeric: tabular-nums; }   /* the figures keep their room when the band squeezes the column below its minimum */
+
+/* headers: real buttons. A press darkens the cell one step at once (70 ms), a drag lifts it into the slab. */
+.cd-h { height: 40px; margin: 0; padding: 0 16px; display: flex; align-items: center; border: 0; background: none; outline: none; cursor: grab; touch-action: none; text-align: left; z-index: 20; will-change: transform;
+  font: 500 13px/18px var(--cd-f); letter-spacing: -.006em; color: #6e6e73; -webkit-tap-highlight-color: transparent; }
+.cd-h.is-r { flex-direction: row-reverse; }
+.cd-hbg { position: absolute; inset: 4px 2px; border-radius: 10px; background: transparent; transition: background-color 70ms var(--cd-ui); }
+@media (hover: hover) { .cd-h:hover .cd-hbg { background: #f5f5f7; } }
+.cd-h.is-press .cd-hbg { background: #e8e8ed; }
+.cd-h:focus-visible .cd-hbg { box-shadow: inset 0 0 0 2px #1d1d1f; }
+.cd-hl { position: relative; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 160ms var(--cd-ui); }
+.cd-h.is-on .cd-hl, .cd-h:hover .cd-hl { color: #1d1d1f; }
+/* the sort chip: lime behind the arrow, uncovered from the left after the old one has been covered; grey while a column is carried (the lime is the insertion mark then) */
+.cd-chip { position: relative; flex: none; width: 0; height: 20px; border-radius: 10px; background: #B8FF00; clip-path: inset(0 88% 0 0);
+  transition: clip-path 140ms var(--cd-in), width 0s linear 140ms, margin 0s linear 140ms; }
+.cd-h.is-on .cd-chip { width: 20px; margin-left: 6px; clip-path: inset(0); transition: clip-path 320ms var(--cd-out) 140ms, width 0s linear 140ms, margin 0s linear 140ms; }
+.cd-h.is-r.is-on .cd-chip { margin-left: 0; margin-right: 6px; }
+.cd-card.is-carry .cd-chip { background: #e8e8ed; }
+.cd-ar { display: block; width: 20px; height: 20px; fill: none; stroke: #1d1d1f; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform 360ms var(--cd-move); }
+.cd-ar path { stroke-dasharray: 1 1; stroke-dashoffset: 1; transition: stroke-dashoffset 140ms var(--cd-in); }
+.cd-h.is-on .cd-ar path { stroke-dashoffset: 0; transition: stroke-dashoffset 300ms var(--cd-out) 240ms; }
+.cd-h.is-desc .cd-ar { transform: rotate(180deg); }
+.cd-h.is-nt .cd-ar { transition: none; }
+
+/* the resize handle: 16 px to grab, a 1 px rule that thickens on hover */
+.cd-rz { width: 16px; height: 40px; cursor: col-resize; touch-action: none; z-index: 30; -webkit-tap-highlight-color: transparent; }
+.cd-rz i { position: absolute; left: 7px; top: 12px; width: 1px; height: 16px; border-radius: 2px; background: #c7c7cc; transition: left 140ms var(--cd-ui), width 140ms var(--cd-ui), background-color 140ms var(--cd-ui); }
+@media (hover: hover) { .cd-rz:hover i { left: 6px; width: 3px; background: #86868b; } }
+.cd-rz.is-act i { left: 6px; width: 3px; background: #1d1d1f; }
+@media (pointer: coarse) { .cd-rz { width: 30px; margin-left: -7px; } .cd-rz i { left: 14px; } .cd-rz.is-act i { left: 13px; } }
+
+/* the lifted column: its own white ground, a deeper shadow with the lift, 1.02 from its own centre */
+.cd-slab { height: 348px; border-radius: 14px; background: #fff; z-index: 100; visibility: hidden; pointer-events: none; will-change: transform; --l: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, calc(var(--l) * .06)), 0 24px 48px -14px rgba(0, 0, 0, calc(var(--l) * .3)), 0 6px 16px -6px rgba(0, 0, 0, calc(var(--l) * .14)); }
+.cd-mark { top: -3px; width: 2px; height: 354px; border-radius: 1px; background: #B8FF00; z-index: 110; visibility: hidden; pointer-events: none; will-change: transform;
+  clip-path: inset(0 0 94% 0); transition: clip-path 140ms var(--cd-in); }
+.cd-mark.is-on { clip-path: inset(0); transition: clip-path 300ms var(--cd-out); }
+.cd-ms { position: absolute; left: 0; top: 0; visibility: hidden; white-space: nowrap; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .cd-card *, .cd-card *::before { transition-duration: 1ms !important; transition-delay: 0s !important; } }
+</style>
+<style>
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  html.qm-tile .qm-stage { padding: 10px; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; background: #f5f5f7; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="cd-fit" id="cd-fit">
+ <section class="cd-card" id="cd-card" aria-labelledby="cd-title" aria-describedby="cd-help">
+  <p class="cd-kick">Forma · 25 November</p>
+  <h2 class="cd-title" id="cd-title">Recent orders</h2>
+  <div class="cd-sc" id="cd-sc"><div class="cd-in" id="cd-in"><div class="cd-tb" id="cd-tb" role="group" aria-label="Column headers"></div></div></div>
+  <p class="cd-ft" id="cd-ft">7 orders · $1,839.00</p>
+  <p class="cd-hint" aria-hidden="true">Drag a header to move it. Drag its edge to resize.</p>
+  <p class="sr-only" id="cd-help">Each header is a button. Enter sorts by it. Alt and the arrow keys move the column. Shift and the arrow keys resize it by 8 pixels. The table follows in the order shown.</p>
+  <table class="sr-only" id="cd-sr"></table>
+  <p class="sr-only" id="cd-msg" role="status" aria-live="polite"></p>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag a header to move the column, drag its edge to resize, double-click the edge to fit, click a header to sort. Keys: arrows between headers, Enter sorts, Alt and arrows move, Shift and arrows resize</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Column drag. Springs are critically damped (response in seconds); a throw gets damping 0.8. A column's drawn x is its slot (the sum of the widths before it) plus its own x spring,
+   so a column to the right of a resize moves with the hand exactly, and a reorder only changes the slots and lets the springs carry the difference. */
+const CD = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = 2 * Math.PI;
+  const OMX = TAU / 0.3, OMK = TAU / 0.18, OMW = TAU / 0.34, OMR = TAU / 0.36, OML = TAU / 0.26;   // response: a column's x, a width, a row, the lift
+  const LOOK = 0.99 / (1 - 0.99) / 1000;                                        // 0.099 s: where a release coasts to (d = 0.99)
+  const HH = 40, RH = 44, N = 7, TH = HH + N * RH;                                // header, row, rows, the table's height (348)
+  const RZ = matchMedia('(pointer: coarse)').matches ? 15 : 8;                    // half the handle's hit area
+  const PADX = 16, WMIN = 64, WMAX = 320, SLOP = 6, FLICK = 140, THROW = 420, DB = 44, DBW = 48, DBN = 14, LIFT = 0.02, STAG = 30, EDGE = 44;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const $ = (id) => document.getElementById('cd-' + id);
+  const card = $('card'), sc = $('sc'), inn = $('in'), tb = $('tb'), msg = $('msg'), sr = $('sr'), ftEl = $('ft');
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) when critically damped, the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0, w = OMX) => ({ x, v: 0, T: x, w, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+  const to = (s, T, v, w, z) => { if (reduced) { s.x = s.T = T; s.v = 0; s.on = false; } else aim(s, T, v, w, z); };   // no springs under reduced motion
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                         // rubber band, Apple's, constant 0.55
+  const band = (v, lo, hi, D) => (v < lo ? lo - rb(lo - v, D) : v > hi ? hi + rb(v - hi, D) : v);
+
+  /* the data: seven orders. Totals are numbers, drawn in tabular figures, right-aligned. */
+  const DEFS = [
+    { id: 'order', label: 'Order', w0: 104 },
+    { id: 'customer', label: 'Customer', w0: 156 },
+    { id: 'product', label: 'Product', w0: 188 },
+    { id: 'channel', label: 'Channel', w0: 124, soft: true },
+    { id: 'total', label: 'Total', w0: 152, num: true },
+  ];
+  const DATA = [
+    { order: '#4827', customer: 'Maya R.', product: 'Ash vase', channel: 'Shop', total: 128 },
+    { order: '#4826', customer: 'Daniel K.', product: 'Loop tray', channel: 'Instagram', total: 64.5 },
+    { order: '#4825', customer: 'Priya S.', product: 'Pressed tumbler × 4', channel: 'Shop', total: 96 },
+    { order: '#4824', customer: 'Tom H.', product: 'Morning mug × 12', channel: 'Wholesale', total: 336 },
+    { order: '#4823', customer: 'Lucia M.', product: 'Calla bowl', channel: 'Instagram', total: 86 },
+    { order: '#4822', customer: 'Ben A.', product: 'Linen runner', channel: 'Shop', total: 72.5 },
+    { order: '#4821', customer: 'Noor F.', product: 'Stone dish × 24', channel: 'Wholesale', total: 1056 },
+  ];
+  const money = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+
+  const ROWS = DATA.map((d, i) => ({ d, i, y: mk(HH + i * RH, OMR), l: mk(0, OML), T: HH + i * RH, lev: 0, timer: 0, pend: false, cells: {}, lf: NaN }));
+  const COLS = DEFS.map((d, i) => Object.assign({}, d, { i, e: mk(0, OMX), w: mk(d.w0, OMW), l: mk(0, OML), nx: i, hx: 0, wv: NaN, lv: NaN, pt: 0, cells: [], min: 0 }));
+  const byId = Object.fromEntries(COLS.map((c) => [c.id, c]));
+  const MK = mk(0, OMX);
+
+  /* the markup, built once: bands, then per column a header button, seven cells, a handle and a slab; then the mark */
+  const ARROW = '<svg class="cd-ar" viewBox="0 0 20 20" aria-hidden="true"><path pathLength="1" d="M10 15.2V5M6.2 8.8 10 5l3.8 3.8"/></svg>';
+  const hln = el('i', 'cd-hln'); hln.setAttribute('aria-hidden', 'true'); tb.append(hln);
+  for (const r of ROWS) { r.el = el('i', 'cd-b'); r.el.setAttribute('aria-hidden', 'true'); tb.append(r.el); }
+  for (const c of COLS) {
+    c.hd = el('button', 'cd-h' + (c.num ? ' is-r' : ''));
+    c.hd.type = 'button'; c.hd.dataset.col = c.id; c.hd.setAttribute('aria-describedby', 'cd-help');
+    c.hd.innerHTML = '<span class="cd-hbg"></span><span class="cd-hl"></span><span class="cd-chip">' + ARROW + '</span>';
+    c.hd.querySelector('.cd-hl').textContent = c.label;
+    tb.append(c.hd);
+    for (const r of ROWS) {
+      const s = el('span', 'cd-c' + (c.num ? ' is-r is-n' : '') + (c.id === 'order' ? ' is-id' : '') + (c.soft ? ' is-s' : ''), c.num ? money(r.d.total) : r.d[c.id]);
+      s.setAttribute('aria-hidden', 'true'); tb.append(s); r.cells[c.id] = s; c.cells.push(s);
+    }
+    c.rz = el('span', 'cd-rz'); c.rz.dataset.col = c.id; c.rz.setAttribute('aria-hidden', 'true'); c.rz.innerHTML = '<i></i>'; tb.append(c.rz);
+    c.slab = el('i', 'cd-slab'); c.slab.setAttribute('aria-hidden', 'true'); tb.append(c.slab);
+  }
+  const mark = el('i', 'cd-mark'); mark.setAttribute('aria-hidden', 'true'); tb.append(mark);
+  const ms = el('span', 'cd-ms'); ms.setAttribute('aria-hidden', 'true'); card.append(ms);
+
+  /* the order of things */
+  let colOrder = COLS.slice(), LO = COLS.slice(), carry = null, ins = 0, origIns = 0, totW = 0, lastTot = -1;
+  const BASE = { col: 'order', dir: -1 };                                          // newest first: the table rests sorted by Order, so one chip is always lime
+  let rowOrder = ROWS.slice(), sort = Object.assign({}, BASE), held = null, ptr = null, raf = 0, last = 0, S = 1, mt = 0, cur = COLS[0], lastRz = { id: '', t: -1e9, x: 0 };
+  const live = () => { const o = colOrder.filter((q) => q !== carry); if (carry) o.splice(ins, 0, carry); return o; };
+  const say = (t) => { msg.textContent = t; };
+
+  function natural() { let x = 0; for (const q of LO) { q.nx = x; x += q.w.x; } totW = x; }
+  const posX = (c) => (c === carry ? c.hx : c.nx + c.e.x);
+  /* a new order of columns: slots change at once, every column's drawn x is kept and its own spring carries the difference to its new slot */
+  function setLive(next) {
+    natural();
+    const prev = LO.slice(), old = prev.map((q) => q.nx);
+    LO = next; natural();
+    prev.forEach((q, i) => {
+      if (q === carry) return;
+      const d = old[i] - q.nx;
+      if (!d) return;
+      if (reduced) { q.e.x = q.e.T = 0; q.e.v = 0; q.e.on = false; } else { q.e.x += d; aim(q.e, 0, q.e.v, OMX, 1); }
+    });
+    if (carry) to(MK, carry.nx, MK.v, OMK, 1);                                   // the mark travels quicker than the columns, so it is not among a neighbour's words for long
+    syncSR();
+  }
+
+  /* text measure: the widest thing in a column, for the double-click fit and for Total's minimum (its figures are never cut) */
+  function textW(sample, texts) {
+    const cs = getComputedStyle(sample);
+    for (const k of ['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'fontVariantNumeric']) ms.style[k] = cs[k];
+    let m = 0;
+    for (const t of texts) { ms.textContent = t; m = Math.max(m, ms.getBoundingClientRect().width / S); }
+    return m;
+  }
+  function measureCol(c) {
+    const cells = textW(c.cells[0], c.cells.map((q) => q.textContent));
+    const head = textW(c.hd.querySelector('.cd-hl'), [c.label]) + 26;                                   // the label and the sort chip
+    return Math.ceil(Math.max(cells, head)) + 2 * PADX;
+  }
+  function minW(c) {
+    if (!c.min) c.min = c.num ? Math.max(WMIN, Math.min(WMAX, measureCol(c))) : WMIN;   // Total keeps its widest figure whole; the others go down to 64
+    return c.min;
+  }
+  const fitW = (c) => clamp(measureCol(c), minW(c), WMAX);
+
+  /* one frame of drawing, from the springs */
+  const put = (e, tf) => { if (e._t !== tf) { e._t = tf; e.style.transform = tf; } };
+  const putz = (e, z) => { if (e._z !== z) { e._z = z; e.style.zIndex = z; } };
+  function tf(x, y, w, s) {
+    if (s === 1) return `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
+    const cx = x + w / 2, cy = TH / 2;                                           // scale about the column's own centre
+    return `translate3d(${(cx * (1 - s) + s * x).toFixed(2)}px, ${(cy * (1 - s) + s * y).toFixed(2)}px, 0) scale(${s.toFixed(4)})`;
+  }
+  function render() {
+    natural();
+    if (totW !== lastTot) {
+      lastTot = totW;
+      tb.style.width = totW + 'px'; hln.style.width = totW + 'px';
+      inn.style.width = Math.max(780, 56 + totW) + 'px';
+      for (const r of ROWS) r.el.style.width = totW + 24 + 'px';
+      edges();
+    }
+    for (const r of ROWS) {
+      put(r.el, `translate3d(-12px, ${r.y.x.toFixed(2)}px, 0)`); putz(r.el, 2 + 2 * r.lev);
+      const lf = +clamp(r.l.x, 0, 1.2).toFixed(3);
+      if (lf !== r.lf) { r.lf = lf; r.el.style.setProperty('--lf', lf); }
+    }
+    for (const c of COLS) {
+      const x = posX(c), w = c.w.x, s = 1 + LIFT * c.l.x, up = c.l.x > 0.003 || c === carry;
+      if (w !== c.wv) {
+        c.wv = w;
+        const ws = w + 'px';
+        c.hd.style.width = ws; c.slab.style.width = ws;
+        for (const q of c.cells) q.style.width = ws;
+      }
+      put(c.hd, tf(x, 0, w, s)); putz(c.hd, up ? 102 : 20);
+      c.cells.forEach((q, i) => {
+        const r = ROWS[i], g = up && r.lev > 0;                                 // in a lifted column the bands are under the slab: a row that travels there carries its own ground
+        put(q, tf(x, r.y.x, w, s)); putz(q, up ? 101 + r.lev : 3 + 2 * r.lev);
+        if (q._g !== g) { q._g = g; q.classList.toggle('is-g', g); }
+      });
+      put(c.rz, `translate3d(${(x + w - RZ).toFixed(2)}px, 0, 0)`);
+      c.rz.style.visibility = up ? 'hidden' : '';
+      if (up) {
+        put(c.slab, `translate3d(${x.toFixed(2)}px, 0, 0) scale(${s.toFixed(4)})`);
+        const l = +clamp(c.l.x, 0, 1.2).toFixed(3);
+        if (l !== c.lv) { c.lv = l; c.slab.style.setProperty('--l', l); }
+        if (!c._vis) { c._vis = 1; c.slab.style.visibility = 'visible'; }
+      } else if (c._vis) { c._vis = 0; c.slab.style.visibility = 'hidden'; c.lv = NaN; }
+    }
+    put(mark, `translate3d(${(MK.x - 1).toFixed(2)}px, 0, 0)`);
+  }
+  function edges() {                                                             // the soft edges show where there is more to scroll to
+    const max = sc.scrollWidth - sc.clientWidth;
+    sc.classList.toggle('has-edge', max > 1);
+    sc.style.setProperty('--cd-fl', sc.scrollLeft > 1 ? '28px' : '0px');
+    sc.style.setProperty('--cd-fr', sc.scrollLeft < max - 1 ? '28px' : '0px');
+  }
+  sc.addEventListener('scroll', edges, { passive: true });
+
+  /* motion */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let on = false;
+    if (held && (held.mode === 'drag' || held.mode === 'resize')) { on = true; autoscroll(dt, now); }
+    for (const c of COLS) { on = step(c.e, dt, 0.05, 3) || on; on = step(c.w, dt, 0.05, 3) || on; on = step(c.l, dt, 0.002, 0.05) || on; }
+    on = step(MK, dt, 0.05, 3) || on;
+    let pend = false;
+    for (const r of ROWS) {
+      on = step(r.y, dt, 0.05, 3) || on;
+      pend = pend || r.pend;
+      const T = !reduced && (Math.abs(r.y.x - r.y.T) > 1.5 || r.pend) ? 1 : 0;
+      if (r.l.T !== T) aim(r.l, T, r.l.v, OML, 1);
+      on = step(r.l, dt, 0.002, 0.05) || on;
+    }
+    if (!on && !pend) for (const r of ROWS) r.lev = 0;
+    render();
+    if (on || pend) kick();
+  }
+  // near the scroller's edge a held column or handle scrolls the table (the hand stays 1:1 in table coordinates)
+  function autoscroll(dt, now) {
+    const max = sc.scrollWidth - sc.clientWidth;
+    if (max < 1) return;
+    if (!held.armed) { if (Math.hypot(held.cx - held.sx0, held.cy - held.sy0) < 48) return; held.armed = true; }   // a press that starts at the edge does not run away: the hand has to travel first
+    const r = sc.getBoundingClientRect(), dl = (held.cx - r.left) / S, dr = (r.right - held.cx) / S;
+    let v = 0;
+    if (dl < EDGE) v = -(1 - clamp(dl, 0, EDGE) / EDGE) * 520; else if (dr < EDGE) v = (1 - clamp(dr, 0, EDGE) / EDGE) * 520;
+    if (!v) return;
+    const b = sc.scrollLeft; sc.scrollLeft = clamp(b + v * dt, 0, max);
+    if (sc.scrollLeft !== b) move(held.cx, held.cy, now);
+  }
+
+  /* the insertion slot: the carried column's centre against the displayed centres of its neighbours, with a column's width of hysteresis */
+  function slotAt(cx, k) {
+    const o = colOrder.filter((q) => q !== carry), n = o.length, wc = carry.w.x;
+    const cen = (i, g) => { let x = 0; for (let j = 0; j < i; j++) x += o[j].w.x; if (i >= g) x += wc; return x + o[i].w.x / 2; };
+    for (let g = 0; g < 12; g++) {
+      if (k > 0 && cx < cen(k - 1, k)) k--;
+      else if (k < n && cx > cen(k, k)) k++;
+      else break;
+    }
+    return k;
+  }
+
+  /* the sort chip is lime unless the insertion mark is: the mark uncovers and the chip goes grey in the same frame; the chip returns when the mark is covered */
+  const markDone = () => { clearTimeout(mt); if (!mark.classList.contains('is-on')) { mark.style.visibility = 'hidden'; card.classList.remove('is-carry'); } };
+  mark.addEventListener('transitionend', (e) => { if (e.propertyName === 'clip-path') markDone(); });
+  function markOn(on) {
+    clearTimeout(mt);
+    if (on) { mark.style.visibility = 'visible'; mark.classList.add('is-on'); card.classList.add('is-carry'); }
+    else { mark.classList.remove('is-on'); if (reduced) markDone(); else mt = setTimeout(markDone, 220); }   // covered, then the chip is lime again in the same frame
+  }
+
+  /* sorting: rows get new slots, each travels on its own spring 30 ms after the one before it (the leading row of each direction first), the one that goes furthest rides on top */
+  function sorted(sp) {
+    const o = ROWS.slice();
+    if (!sp) return o;
+    const c = byId[sp.col];
+    return o.sort((a, b) => { const x = a.d[c.id], y = b.d[c.id]; return (c.num ? x - y : String(x).localeCompare(String(y), 'en')) * sp.dir || a.i - b.i; });
+  }
+  function setRows(next, now) {
+    rowOrder = next;
+    const mv = next.map((r, i) => ({ r, T: HH + i * RH, d: Math.abs(HH + i * RH - r.y.x) }));
+    mv.forEach((m) => { m.r.lev = 0; });
+    mv.filter((m) => m.d > 0.5).sort((a, b) => a.d - b.d || a.T - b.T).forEach((m, k) => { m.r.lev = k + 1; });
+    const go = (m, k) => {
+      const r = m.r; clearTimeout(r.timer); r.pend = false; r.T = m.T;
+      if (now || reduced) { r.y.x = r.y.T = m.T; r.y.v = 0; r.y.on = false; if (reduced && m.d > 0.5 && !now) fade(r); }
+      else if (!k) aim(r.y, m.T, r.y.v, OMR, 1);
+      else { r.pend = true; r.timer = setTimeout(() => { r.pend = false; aim(r.y, m.T, r.y.v, OMR, 1); kick(); }, k * STAG); }
+    };
+    mv.filter((m) => m.T < m.r.y.x - 0.5).sort((a, b) => a.T - b.T).forEach(go);
+    mv.filter((m) => m.T > m.r.y.x + 0.5).sort((a, b) => b.T - a.T).forEach(go);
+    mv.filter((m) => m.d <= 0.5).forEach((m) => { clearTimeout(m.r.timer); m.r.pend = false; m.r.T = m.T; aim(m.r.y, m.T, m.r.y.v, OMR, 1); });
+    syncSR(); kick();
+  }
+  function fade(r) { for (const k in r.cells) if (r.cells[k].animate) r.cells[k].animate([{ opacity: 0.3 }, { opacity: 1 }], { duration: 160, easing: 'cubic-bezier(.4, 0, .2, 1)' }); }
+
+  function paintSort(prevOn) {
+    for (const c of COLS) {
+      const on = !!sort && sort.col === c.id;
+      if (on && !c.hd.classList.contains('is-on')) {                           // newly sorted: it starts pointing up, without turning over first
+        c.hd.classList.add('is-nt'); c.hd.classList.toggle('is-desc', sort.dir < 0); void c.hd.offsetWidth; c.hd.classList.remove('is-nt');
+      } else if (on) c.hd.classList.toggle('is-desc', sort.dir < 0);
+      c.hd.classList.toggle('is-on', on);
+      c.hd.setAttribute('aria-label', c.label + (on ? (sort.dir > 0 ? ', sorted ascending' : ', sorted descending') : ''));
+    }
+  }
+  function sortBy(c, dir) {
+    const d = dir || (sort && sort.col === c.id ? -sort.dir : 1);
+    sort = { col: c.id, dir: d };
+    paintSort();
+    setRows(sorted(sort));
+    say(`Sorted by ${c.label}, ${c.num ? (d > 0 ? 'low to high' : 'high to low') : (d > 0 ? 'A to Z' : 'Z to A')}`);
+  }
+
+  /* a real table for screen readers, in the order shown */
+  function syncSR() {
+    const o = colOrder.slice();
+    sr.innerHTML = '<caption>Forma recent orders' + (sort ? `, sorted by ${byId[sort.col].label} ${sort.dir > 0 ? 'ascending' : 'descending'}` : '') + '</caption><thead><tr>' +
+      (carry ? LO : o).map((c) => `<th scope="col"${sort && sort.col === c.id ? ` aria-sort="${sort.dir > 0 ? 'ascending' : 'descending'}"` : ''}>${c.label}</th>`).join('') + '</tr></thead><tbody>' +
+      rowOrder.map((r) => '<tr>' + (carry ? LO : o).map((c) => `<td>${c.num ? money(r.d.total) : r.d[c.id]}</td>`).join('') + '</tr>').join('') + '</tbody>';
+  }
+
+  /* velocity over the last 80 ms of moves: samples are [t, drawn, raw]; 0 if the hand rested */
+  function vel(rows, t, j) {
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return 0;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? 0 : ((b[j] - a[j]) / dt) * 1000;
+  }
+  const pickW = (s, T, v, thr) => { let w = OMX; if (thr) { const D = T - s.x; if (v * D > 0) w = Math.min(40, Math.max(OMX, (1.5 * v) / D)); } return w; };
+
+  /* one hand: a pointer or the ghost, both through down / move / up. cx and cy are client px, t is ms. */
+  const measure = () => { S = card.getBoundingClientRect().width / 780 || 1; };
+  const lp = (cx, cy) => { const r = tb.getBoundingClientRect(); return { x: (cx - r.left) / S, y: (cy - r.top) / S }; };
+  function commit(h) {                                                           // the press becomes a drag, anchored where the 6 px were crossed (on the path, however late the event came), so the column does not jump by the slop
+    const c = h.c, d = Math.hypot(h.cx - h.sx, h.cy - h.sy), k = SLOP / d;
+    h.mode = 'drag'; h.ax = lp(h.sx + (h.cx - h.sx) * k, h.sy + (h.cy - h.sy) * k).x;
+    const x0 = posX(c);
+    c.hx = x0; h.hx0 = x0; h.raw = x0;
+    c.e.x = c.e.T = 0; c.e.v = 0; c.e.on = false;
+    carry = c; ins = origIns = colOrder.indexOf(c); LO = live(); natural();
+    MK.x = MK.T = c.nx; MK.v = 0; MK.on = false;
+    c.hd.classList.remove('is-press');
+    to(c.l, 1, c.l.v, OML, 1);
+    card.classList.add('is-drag');
+    markOn(true);
+    kick();
+  }
+  function down(cx, cy, t, o) {
+    if (held) up(t, true);
+    measure();
+    const c = byId[o.target];
+    if (!c) return;
+    const p = lp(cx, cy);
+    cur = c; syncTab();
+    if (o.kind === 'r') {
+      if (lastRz.id === c.id && t - lastRz.t < 380 && Math.abs(p.x - lastRz.x) < 8) { lastRz = { id: '', t: -1e9, x: 0 }; fitCol(c); return; }   // a second press on the same edge: fit
+      lastRz = { id: c.id, t, x: p.x };
+      c.w.on = false; c.w.v = 0; c.w.T = c.w.x;
+      held = { kind: 'r', mode: 'resize', c, x0: p.x, w0: c.w.x, raw: c.w.x, ghost: !!o.ghost, type: o.type, cx, cy, sx0: cx, sy0: cy, samples: [[t, c.w.x, c.w.x]] };
+      c.rz.classList.add('is-act'); card.classList.add('is-rz');
+      return;
+    }
+    held = { kind: 'h', mode: 'wait', c, sx: cx, sy: cy, sx0: cx, sy0: cy, ghost: !!o.ghost, type: o.type, cx, cy, samples: [] };
+    c.hd.classList.add('is-press');
+    if (c.e.on) { c.e.on = false; c.e.v = 0; c.e.x = c.e.T = c.e.x; }          // a column in flight is caught where it is
+  }
+  function move(cx, cy, t) {
+    const h = held;
+    if (!h || h.mode === 'off') return;
+    h.cx = cx; h.cy = cy;
+    const c = h.c, p = lp(cx, cy);
+    if (h.mode === 'wait') {
+      if (Math.hypot(cx - h.sx, cy - h.sy) < SLOP) return;
+      commit(h);
+    }
+    if (h.mode === 'drag') {
+      const raw = h.hx0 + (p.x - h.ax), hi = totW - c.w.x;
+      h.raw = raw;
+      const d = reduced ? clamp(raw, 0, hi) : band(raw, 0, hi, DB);
+      c.hx = d;
+      h.samples.push([t, d, raw]);
+      while (h.samples.length > 2 && t - h.samples[0][0] > 100) h.samples.shift();
+      const k = slotAt(d + c.w.x / 2, ins);
+      if (k !== ins) { ins = k; setLive(live()); }
+    } else if (h.mode === 'resize') {
+      const raw = h.w0 + (p.x - h.x0), lo = minW(c);
+      h.raw = raw;
+      const w = reduced ? clamp(raw, lo, WMAX) : band(raw, lo, WMAX, c.num ? DBN : DBW);
+      c.w.x = c.w.T = w; c.w.v = 0; c.w.on = false;                              // 1:1 with the hand; the columns to the right follow through their slots, exactly
+      h.samples.push([t, w, raw]);
+      while (h.samples.length > 2 && t - h.samples[0][0] > 100) h.samples.shift();
+    }
+    render(); kick();
+  }
+  function up(t, cancel = false) {
+    const h = held;
+    if (!h) return;
+    held = null;
+    const c = h.c;
+    if (h.mode === 'wait') {                                                     // no drag: a click sorts
+      c.hd.classList.remove('is-press');
+      if (c.e.x) aim(c.e, 0, 0, OMX, 1);                                         // a column that was caught goes on to its slot
+      if (!cancel) sortBy(c);
+    } else if (h.mode === 'resize') {
+      c.rz.classList.remove('is-act'); card.classList.remove('is-rz');
+      const lo = minW(c);
+      if (h.raw < lo || h.raw > WMAX) to(c.w, clamp(h.raw, lo, WMAX), cancel ? 0 : vel(h.samples, t, 1), OMW, 1);   // the band lets go
+      else say(`${c.label} is ${Math.round(c.w.x)} pixels wide`);
+    } else if (h.mode === 'drag') {
+      const vd = cancel ? 0 : vel(h.samples, t, 1), vr = cancel ? 0 : vel(h.samples, t, 2);
+      card.classList.remove('is-drag');
+      if (cancel === 'esc') { ins = origIns; setLive(live()); }
+      else if (Math.abs(vr) > FLICK) {                                           // a flick is projected before the slot is chosen
+        const px = clamp(h.raw + vr * LOOK, 0, totW - c.w.x) + c.w.x / 2;
+        const k = slotAt(px, ins);
+        if (k !== ins) { ins = k; setLive(live()); }
+      }
+      const thr = Math.abs(vr) > THROW;
+      colOrder = LO.slice();
+      carry = null; natural();
+      c.e.x = c.hx - c.nx; c.e.v = vd;
+      if (reduced) { c.e.x = c.e.T = 0; c.e.v = 0; c.e.on = false; } else aim(c.e, 0, vd, pickW(c.e, 0, vd, thr), thr ? 0.8 : 1);
+      to(c.l, 0, c.l.v, OML, 1);
+      to(MK, c.nx, 0, OMX, 1);
+      markOn(false);
+      syncSR();
+      say(`${c.label} moved to ${colOrder.indexOf(c) + 1} of ${colOrder.length}`);
+    }
+    kick(); render();
+  }
+  const release = () => { if (held && held.ghost) up(performance.now()); };
+
+  /* fit: the width of the widest thing in the column, on a spring */
+  function fitCol(c) { const w = fitW(c); to(c.w, w, c.w.v, OMW, 1); say(`${c.label} fitted to ${w} pixels`); kick(); }
+
+  /* the real pointer */
+  tb.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null) return;
+    const t = e.target.closest ? e.target.closest('.cd-h, .cd-rz') : null;
+    if (!t) return;
+    ptr = e.pointerId;
+    try { tb.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    down(e.clientX, e.clientY, e.timeStamp, { target: t.dataset.col, kind: t.classList.contains('cd-rz') ? 'r' : 'h', type: e.pointerType });
+  });
+  tb.addEventListener('pointermove', (e) => { if (e.pointerId === ptr) move(e.clientX, e.clientY, e.timeStamp); });
+  const pend = (cancel) => (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.timeStamp, cancel); };
+  tb.addEventListener('pointerup', pend(false));
+  tb.addEventListener('pointercancel', pend(true));
+  tb.addEventListener('touchmove', (e) => { if (held && e.cancelable) e.preventDefault(); }, { passive: false });
+  tb.addEventListener('dragstart', (e) => e.preventDefault());
+  tb.addEventListener('contextmenu', (e) => { if (held && held.type === 'touch') e.preventDefault(); });
+  /* a click that came from a key (detail 0) sorts; a pointer's click was already told apart from a drag at pointerup */
+  tb.addEventListener('click', (e) => { const h = e.target.closest ? e.target.closest('.cd-h') : null; if (h && e.detail === 0) sortBy(byId[h.dataset.col]); });
+
+  /* keys: arrows move between headers, Enter and Space sort, Alt+arrows move the column, Shift+arrows resize by 8 px */
+  function syncTab() { for (const c of COLS) c.hd.tabIndex = c === cur ? 0 : -1; }
+  function moveCol(c, d, quiet) {
+    const i = colOrder.indexOf(c), j = clamp(i + d, 0, colOrder.length - 1);
+    if (j === i) { if (!quiet) say(`${c.label} is already ${i ? 'last' : 'first'}`); return; }
+    const o = colOrder.filter((q) => q !== c); o.splice(j, 0, c);
+    colOrder = o; setLive(o);
+    to(c.l, 1, c.l.v, OML, 1);
+    clearTimeout(c.pt); c.pt = setTimeout(() => { to(c.l, 0, c.l.v, OML, 1); kick(); }, 280);   // it rides above the one it passes while it travels
+    if (!quiet) say(`${c.label} moved to ${j + 1} of ${o.length}`);
+    kick();
+  }
+  function keyResize(c, dx) {
+    const was = c.w.on ? c.w.T : c.w.x, T = clamp(was + dx, minW(c), WMAX);
+    if (T === was) { say(`${c.label} is as ${dx < 0 ? 'narrow' : 'wide'} as it goes`); return; }
+    to(c.w, T, c.w.v, OMW, 1); say(`${c.label} is ${T} pixels wide`); kick();
+  }
+  tb.addEventListener('keydown', (e) => {
+    const h = e.target.closest ? e.target.closest('.cd-h') : null;
+    if (!h) return;
+    const c = byId[h.dataset.col], k = e.key;
+    if (held) { if (k === 'Escape' && held.mode === 'drag') { e.preventDefault(); ptr = null; up(performance.now(), 'esc'); } return; }
+    if (k === 'ArrowLeft' || k === 'ArrowRight') {
+      const d = k === 'ArrowLeft' ? -1 : 1;
+      e.preventDefault();
+      if (e.altKey) moveCol(c, d);
+      else if (e.shiftKey) keyResize(c, d * 8);
+      else { const n = colOrder[colOrder.indexOf(c) + d]; if (n) { cur = n; syncTab(); n.hd.focus(); } }
+    } else if (k === 'Home' || k === 'End') { e.preventDefault(); cur = k === 'Home' ? colOrder[0] : colOrder[colOrder.length - 1]; syncTab(); cur.hd.focus(); }
+  });
+  tb.addEventListener('focusin', (e) => { const h = e.target.closest ? e.target.closest('.cd-h') : null; if (h) { cur = byId[h.dataset.col]; syncTab(); } });
+
+  /* start from the base state, or go back to it */
+  function atBase() {
+    return !held && !carry && colOrder.every((c, i) => c === COLS[i]) && COLS.every((c) => Math.abs(c.w.x - c.w0) < 0.5 && !c.w.on && !c.e.on && !c.l.on) && sort && sort.col === BASE.col && sort.dir === BASE.dir &&
+      ROWS.every((r) => !r.y.on && !r.pend && r.T === HH + r.i * RH);
+  }
+  function relax() {                                                             // back to the base by springs
+    release();
+    if (held) return false;
+    // the columns go back one at a time, each riding above the others, so no two columns ever cross with their words showing
+    if (!COLS.some((c) => c.e.on || c.l.on || c.l.x > 0.003)) {
+      const i = colOrder.findIndex((c, k) => c !== COLS[k]);
+      if (i >= 0) moveCol(COLS[i], i - colOrder.indexOf(COLS[i]), true);
+    }
+    for (const c of COLS) if (Math.abs((c.w.on ? c.w.T : c.w.x) - c.w0) > 0.5) to(c.w, c.w0, c.w.v, OMW, 1);
+    if (!sort || sort.col !== BASE.col || sort.dir !== BASE.dir) { sort = Object.assign({}, BASE); paintSort(); setRows(sorted(sort)); }
+    else if (ROWS.some((r) => r.T !== HH + r.i * RH)) setRows(sorted(sort));
+    kick();
+    return atBase();
+  }
+  function reset() {                                                             // back to the base at once
+    release(); held = null; ptr = null; carry = null;
+    clearTimeout(mt); mark.classList.remove('is-on'); mark.style.visibility = 'hidden'; card.classList.remove('is-carry', 'is-drag', 'is-rz');
+    colOrder = COLS.slice(); LO = COLS.slice();
+    for (const c of COLS) { c.w.x = c.w.T = c.w0; c.w.v = 0; c.w.on = false; c.e.x = c.e.T = 0; c.e.v = 0; c.e.on = false; c.l.x = c.l.T = 0; c.l.on = false; c.hd.classList.remove('is-press'); c.rz.classList.remove('is-act'); }
+    sort = Object.assign({}, BASE); paintSort();
+    setRows(sorted(sort), true);
+    for (const r of ROWS) { r.l.x = r.l.T = 0; r.l.on = false; }
+    sc.scrollLeft = 0; render(); say('');
+  }
+
+  new ResizeObserver(() => measure()).observe($('card'));
+  addEventListener('scroll', measure, { passive: true });
+  ftEl.textContent = `${DATA.length} orders · ${money(DATA.reduce((a, r) => a + r.total, 0))}`;
+  syncTab(); paintSort(); measure(); syncSR(); render();
+  const api = {
+    down, move, up, release, measure, relax, reset, atBase, kick, render, sortBy, moveCol, keyResize, fitCol, minW, fitW,
+    get held() { return held; }, get scale() { return S; }, get scroller() { return sc; }, get tb() { return tb; }, get cols() { return COLS; }, get rows() { return ROWS; },
+    get order() { return colOrder.map((c) => c.id); }, get liveOrder() { return LO.map((c) => c.id); }, get rowIds() { return rowOrder.map((r) => r.d.order); }, get sort() { return sort; }, get carrying() { return !!carry; },
+    cell(r, c) { return r.cells[c.id]; },
+    pt(kind, id) {                                                               // client px of a header's centre or a handle's rule, where it is now
+      measure(); const c = byId[id], r = tb.getBoundingClientRect(), x = posX(c);
+      return { x: r.left + (kind === 'handle' ? x + c.w.x - 0.5 : x + c.w.x / 2) * S, y: r.top + (HH / 2) * S };
+    },
+  };
+  return api;
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('cd-fit');
+  // the card is drawn at 780 × 480 and scaled to the room it is given; in a tile it fills it with 10 px around
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 10 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min((W - 2 * pad) / 780, (H - 2 * pad - ui) / 480, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+    CD.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  /* the ghost sends the same calls a hand does (down, move, up on a header or an edge), so the tile shows the real physics */
+  let epoch = 0, resumeT = 0;
+  const T0 = performance.now();
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+
+  // takes hold of a header (or an edge) and moves through segments [dx in card px, ms] with a hand's easing; keep leaves it held
+  async function hand(my, kind, id, segs, o = {}) {
+    const c = CD.pt(kind, id), s = CD.scale;
+    if (!(await QM.ghostTo(c.x, c.y, o.glide ?? 700))) throw 0;
+    await gap(my, 130);
+    CD.down(c.x, c.y, performance.now(), { ghost: true, kind: kind === 'handle' ? 'r' : 'h', target: id });
+    let x0 = c.x;
+    for (const [dx, ms] of segs) {
+      const t0 = performance.now();
+      for (;;) {
+        await raf();
+        if (my !== epoch) throw 0;
+        const now = performance.now(), p = Math.min(1, (now - t0) / ms), x = x0 + dx * s * mv(p);
+        QM.ghostAt(x, c.y); CD.move(x, c.y, now);
+        if (p >= 1) break;
+      }
+      x0 += dx * s;
+      if (o.pause) await gap(my, o.pause);
+    }
+    if (o.keep) return;
+    await gap(my, o.rest ?? 200);
+    CD.up(performance.now());
+  }
+  async function click(my, id, glide = 700) {
+    const c = CD.pt('header', id);
+    if (!(await QM.ghostTo(c.x, c.y, glide))) throw 0;
+    await gap(my, 130);
+    CD.down(c.x, c.y, performance.now(), { ghost: true, kind: 'h', target: id });
+    await gap(my, 90);
+    CD.up(performance.now());
+  }
+  async function dbl(my, id, glide = 600) {
+    const c = CD.pt('handle', id);
+    if (!(await QM.ghostTo(c.x, c.y, glide))) throw 0;
+    await gap(my, 130);
+    for (let i = 0; i < 2; i++) { CD.down(c.x, c.y, performance.now(), { ghost: true, kind: 'r', target: id }); await gap(my, 70); CD.up(performance.now()); await gap(my, 90); }
+  }
+  async function toBase(my) { for (let i = 0; i < 60 && !CD.relax(); i++) await gap(my, 150); }
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 300 : 1200) : 300);
+      QM.ghostShow();
+      for (let round = 0; ; round++) {
+        await toBase(my);
+        const g = CD.pt('header', 'channel');
+        QM.ghostAt(g.x + 60, g.y + 70);
+        await hand(my, 'header', 'channel', [[-342, 900]], { keep: true, glide: 450 });         // held between Order and Customer: the thumbnail's frame
+        const wake = first && round === 0 ? T0 + 5000 - performance.now() : 1500;
+        await gap(my, Math.max(900, QM.tile && first && round === 0 ? wake : Math.min(wake, 1800)));
+        CD.up(performance.now());                                                    // let go: it settles into its slot
+        await gap(my, 800);
+        await click(my, 'total', 550);                                               // sort by Total
+        await gap(my, 900);
+        await hand(my, 'handle', 'customer', [[-44, 650]], { glide: 500 });          // Customer narrower
+        await gap(my, 500);
+        await dbl(my, 'customer', 450);                                              // and fit to content
+        await gap(my, 900);
+        await hand(my, 'header', 'order', [[440, 800], [-230, 700]], { pause: 250, glide: 500 });   // carried past the right edge and back
+        await gap(my, 1300);
+        await toBase(my);
+        await gap(my, 700);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) CD.release(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); CD.release(); }
+  if (!QM.tile && !reduced) {
+    const idle = () => CD.held || CD.tb.matches(':hover');
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || e.buttons) touch(e); }, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); CD.reset(); if (!reduced) script(true); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => script(true), 100));
+  window.CD = CD;
+})();
+</script>
+</body>
+</html>

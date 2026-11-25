@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bar race · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "bar-race", "title": "Bar race", "group": "studio", "added": "2026-11-25", "cat": "data", "order": 80,
+  "kind": "loop", "tone": "paper", "shot": 2300, "preview": { "secs": 9, "skip": 5500 },
+  "line": "one time value t · rows are springs to their rank · axis maximum a spring · scrubber d = 0.99 · one lime",
+  "summary": "Forma's orders by product, cumulative, week by week over twelve weeks: the top six of eight products as horizontal bars in a white card. One number, t, drives everything: the values are interpolated between the weeks, the axis maximum is a spring to a round number, and each row is a critically damped spring towards its rank, so an overtake is two rows sliding past each other with the riser drawn above on its own white ground, never two texts mixed. Morning mug launches in week 5 and climbs to second; Loop tray passes Ash vase in week 9 and is passed back; Stone dish drops out of the top six. Drag the playhead and the race runs both ways at any speed; throw it and it coasts to a week; press Space to play. Hover or tap a bar to follow that product through the race.",
+  "spec": [
+    ["Card", "780 × 480 px, white, radius 24, drawn at its own size on #f5f5f7 and scaled to the room (1.0× in the 800 × 500 tile, up to 1.6×). Bars 28 px thick, rows 44 px apart, labels 15 px, figures 17 px (500, tabular), the week label 46 px, the timeline 624 px wide with a 44 px hit area; the system face and Apple's neutrals"],
+    ["Data", "twelve weeks of cumulative orders for eight Forma products, a fixed table in the file (integers, never decreasing, 2,149 orders in week 12 as in Brush zoom). Values are interpolated linearly between weeks. Checked in code on load, the page throws if not: Ash vase leads until t = 7.29, Loop tray leads from 7.29 to 8.42 (week 9), Ash vase again after; Morning mug is 0 until week 5, passes Ring dish at 5.70, Stone dish at 6.31 (it enters the top six, Stone dish drops out and never returns), Calla bowl at 6.83, Linen runner at 7.77, Pressed tumbler at 8.81 and Loop tray at 10.77, to finish second"],
+    ["One clock", "t runs 0 to 11 (Week 1 to Week 12). Values, ranks, the leader, the maximum, the total and the week label are all functions of t; the only state besides t is the springs that follow it, so scrubbing back runs the race backwards through the same overtakes"],
+    ["Rows", "each row's y is a critically damped spring (response 0.34 s, exact step, about 0.3 s to rest) towards rank × 44 px. Rows ranked 7 and 8 wait below the plot's foot under a clip, so a bar entering or leaving the top six travels through the card's foot. z-order is the target rank: the riser is above. While two rows overlap the riser carries a white ground under its label and under its figure and a soft lift (shadow, 6% taller), so the row it passes is covered by a real edge and no text ever mixes with another row's text"],
+    ["Axis", "the maximum is a spring (response 0.5 s) towards the smallest of 60, 100, 150, 200, 250, 300, 400, 500, 600 that holds the leader plus 4%, never below the leader plus 2% on screen. Gridlines and their labels sit at multiples of 20, 50 or 100 (thirteen slots, each with a cover spring of 0.22 s: a line is drawn down from the top and its number is uncovered the same way, never faded); bars start at zero"],
+    ["Figures", "integers, 500 weight, tabular figures in a fixed 44 px box that starts 8 px past the bar's end, so they count with t and never jitter; the total in the header counts too. The week label is two odometer strips under a clip (tens, ones) on a spring of 0.3 s to the nearest week, so the digit only rolls when the week changes and always rests aligned; the tens place opens in width as 9 becomes 10, so \"Week\" never moves"],
+    ["Colour", "one lime, the bar that is on top by on-screen y in that frame (it goes to the riser the frame its row passes), the rest #86868b; label and figure #1d1d1f. Following a product (hover, keyboard focus or a tap that pins it) brings its bar to #1d1d1f and steps every other bar to #c7c7cc, labels to #86868b and figures to #aeaeb2, at 16 per second; if the followed bar is the leader it keeps the lime and takes a 2 px ink edge"],
+    ["Scrubber", "the playhead follows the pointer 1:1 from the grab offset (pointer capture; a press on the rail outside the thumb eases the thumb to the pointer in 0.15 s and then follows 1:1), the thumb is 28 px in a 44 px tall hit area. Past either end it rubber-bands (x · 150 · 0.55) / (150 + 0.55 x) while t stays at the end. On release the velocity of the last 80 ms is projected (d = 0.99, v × 0.099 s), the nearest week is the target and a critically damped spring (response 0.42 s) carries the playhead there from the release velocity; a new press mid-coast catches it with no jump"],
+    ["Play", "about 0.9 s a week (1.11 weeks a second), eased in and out on a spring of 0.26 s; the button, Space, and any touch of the scrubber or a key pause it; at Week 12 it stops, and Play again winds back to Week 1 in 0.8 s and plays. Left and Right step a week, Home and End go to the ends, Escape lets go of a followed product"],
+    ["Pose", "the page loads on a key frame that is played, not drawn: a pointerdown on the playhead at Week 1 and a drag to Week 9 through the scrubber's own events, a release at rest, then the world stepped 1.8 s at 60 Hz. Loop tray is on top in lime just after the overtake, Ash vase second, Week 9 out. The ghost presses Play on the pose about 5.5 s in and the race runs to Week 12 (Ash vase retakes the lead at 8.42, Morning mug passes Pressed tumbler and Loop tray), drags the playhead back to Week 6 in one move, plays 6 to 9 (Morning mug enters the top six and passes Calla bowl and Linen runner, Loop tray takes the lead again) while it taps Morning mug to follow it, pauses, lets the playhead settle on Week 9 and taps Morning mug off"],
+    ["Reduced motion", "a complete still at Week 9; the springs, the roll, the coast and the rubber band are off, and Left and Right, the scrubber and Play (one week every 1.4 s) change the chart in place"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A Forma case study's results page, or a Qbix client's launch recap: a product's orders over its first twelve weeks, where the reader can scrub through the race and follow the one product they care about.",
+  "rules": [
+    "One time value. Values, ranks, the maximum and the clock are functions of t, and a row is a spring towards its rank, so scrubbing backwards runs the race backwards with the same overtakes.",
+    "An overtake reads clean. The riser is above and carries its own white ground under its label and figure, so what it passes is covered by an edge and no text mixes with another row's text. Labels sit in their own gutter and figures past their own bar's end, so a label never meets a figure.",
+    "Figures count with t in tabular digits and a fixed box; the week digit rolls under a clip and rests aligned, never half-cut.",
+    "The scrubber follows the pointer 1:1 from the grab offset, projects the throw at d = 0.99 to the nearest week, rubber-bands at both ends and can be caught mid-coast; play pauses on any touch of it or any key.",
+    "One lime per frame, decided by on-screen y: the bar on top. A followed bar is ink and the others step down; bars start at zero and the axis ends on a round number.",
+    "The data is a fixed table in the file (integers, cumulative, never decreasing) with the overtakes asserted on load, and is also a real table for screen readers.",
+    "The ghost uses the same pointer and key events as a hand and yields to a real mouse, touch or key; it returns after 4.5 s."
+  ],
+  "tags": ["bar race", "horizontal bars", "ranking", "overtake", "scrubber", "playhead", "time series", "spring", "rubber band", "projection", "tabular figures", "keyboard", "Forma", "data"]
+}
+</script>
+<style data-code>
+/* Bar race. One white card in the system face with Apple's neutrals. Everything on it is a function of one number, t (weeks along the race, 0 to 11): render() places every row,
+   bar, figure, gridline and the clock from it and from the springs that follow it. The one lime is the bar that is on top. A travelling row carries its own white ground
+   (under its label and under its figure), so it covers the row it passes instead of mixing with it. The card is drawn at 780 x 480 and scaled by --s. */
+.rr-fit { position: relative; width: calc(780px * var(--s, 1)); height: calc(480px * var(--s, 1)); }
+.rr-card { --f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; --ui: cubic-bezier(.4, 0, .2, 1);
+  position: absolute; left: 0; top: 0; width: 780px; height: 480px; overflow: hidden; border-radius: 24px; background: #fff; color: #1d1d1f;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04); transform: scale(var(--s, 1)); transform-origin: 0 0;
+  font: 400 15px/18px var(--f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.rr-card :where(h2, p, table) { margin: 0; padding: 0; }
+.rr-card :where(svg) { display: block; }
+.rr-cap { position: absolute; left: 28px; top: 24px; font: 500 14px/20px var(--f); letter-spacing: -.008em; color: #6e6e73; white-space: nowrap; }
+.rr-sum { position: absolute; right: 28px; top: 24px; width: 200px; text-align: right; font: 500 14px/20px var(--f); letter-spacing: -.008em; color: #6e6e73; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* the axis: round numbers over the plot, a line for each */
+.rr-axis { position: absolute; left: 0; top: 56px; width: 780px; height: 16px; pointer-events: none; }
+.rr-al { position: absolute; left: 0; top: 0; width: 44px; margin-left: -22px; text-align: center; font: 400 12px/16px var(--f); letter-spacing: -.006em; color: #86868b; font-variant-numeric: tabular-nums; white-space: nowrap; will-change: transform; visibility: hidden; }
+.rr-plot { position: absolute; left: 0; top: 80px; width: 780px; height: 264px; overflow: hidden; }
+.rr-gl { position: absolute; left: 0; top: 0; width: 1px; height: 264px; background: #ececf0; will-change: transform; visibility: hidden; }
+.rr-gl.is-zero { background: #d2d2d7; visibility: visible; }
+
+/* the clock: "Week" and two odometer strips; a digit is never half-cut at rest */
+.rr-clock { position: absolute; left: 0; top: 206px; height: 54px; display: flex; font: 600 46px/54px var(--f); letter-spacing: -.022em; font-variant-numeric: tabular-nums; color: #1d1d1f; white-space: pre; pointer-events: none; }
+.rr-cw { display: block; flex: none; height: 54px; overflow: hidden; }
+.rr-cs { display: block; will-change: transform; }
+.rr-cs > i { display: block; height: 54px; font-style: normal; line-height: 54px; }
+
+/* a row: label in its own gutter, the bar, its figure; the grounds are only drawn while the row is above another */
+.rr-row { all: unset; box-sizing: border-box; position: absolute; left: 0; top: 0; width: 780px; height: 44px; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; will-change: transform; }
+.rr-row:focus-visible { outline: none; }
+.rr-row:focus-visible .rr-bar { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+.rr-gnd { position: absolute; top: 8px; height: 28px; background: #fff; border-radius: 10px; display: none; pointer-events: none; }
+.rr-lab { position: absolute; left: 20px; top: 11px; width: 132px; text-align: right; font: 500 15px/22px var(--f); letter-spacing: -.01em; white-space: nowrap; pointer-events: none; }
+.rr-bar { position: absolute; left: 164px; top: 8px; height: 28px; width: 0; border-radius: 8px; transform-origin: 0 50%; transition: scale 100ms var(--ui); pointer-events: none; }
+.rr-fig { position: absolute; left: 0; top: 12px; width: 44px; font: 500 17px/20px var(--f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }
+.rr-row:active .rr-bar, .rr-row.is-press .rr-bar { scale: .98 1; }
+
+/* the timeline: play, a rail with twelve ticks, a playhead you drag */
+.rr-play { all: unset; box-sizing: border-box; position: absolute; left: 28px; top: 388px; width: 40px; height: 40px; border-radius: 50%; background: #e8e8ed; color: #1d1d1f; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: transform 100ms var(--ui), background-color 160ms var(--ui); }
+.rr-play:hover { background: #dedee3; }
+.rr-play:active, .rr-play.is-press { transform: scale(.97); }
+.rr-play:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.rr-play svg { position: absolute; left: 10px; top: 10px; width: 20px; height: 20px; fill: currentColor; transition: clip-path 180ms var(--ui); }
+.rr-play .rr-ia { clip-path: inset(0 100% 0 0); }
+.rr-play.is-on .rr-ia { clip-path: inset(0); }
+.rr-play.is-on .rr-ip { clip-path: inset(0 0 0 100%); }
+.rr-tl { position: absolute; left: 86px; top: 386px; width: 668px; height: 44px; cursor: pointer; touch-action: none; outline: none; }
+.rr-tl.is-drag { cursor: grabbing; }
+.rr-rail { position: absolute; left: 22px; top: 20px; width: 624px; height: 4px; border-radius: 2px; background: #e8e8ed; }
+.rr-tk { position: absolute; top: 15px; width: 2px; height: 14px; margin-left: -1px; border-radius: 1px; background: #d2d2d7; }
+.rr-fw { position: absolute; left: 22px; top: 0; width: 0; height: 44px; overflow: hidden; }
+.rr-fw .rr-tk { background: #1d1d1f; }
+.rr-fb { position: absolute; left: 0; top: 20px; width: 100%; height: 4px; background: #1d1d1f; }
+.rr-thumb { position: absolute; left: 0; top: 8px; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .1), 0 2px 8px rgba(0, 0, 0, .22); cursor: grab; will-change: transform; transition: scale 100ms var(--ui); }
+.rr-tl.is-drag .rr-thumb { cursor: grabbing; }
+.rr-thumb.is-down { scale: .94; }
+.rr-tl:focus-visible .rr-thumb { box-shadow: 0 0 0 2px #1d1d1f, 0 2px 8px rgba(0, 0, 0, .22); }
+.rr-tn { position: absolute; top: 424px; width: 28px; margin-left: -14px; text-align: center; font: 400 12px/16px var(--f); letter-spacing: -.006em; color: #86868b; font-variant-numeric: tabular-nums; pointer-events: none; transition: color 160ms var(--ui); }
+.rr-tn.is-now { color: #1d1d1f; }
+.rr-card.is-still *, .rr-card.is-still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .rr-card *, .rr-card *::before { transition-duration: 1ms !important; } }
+</style>
+<style>
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  html.qm-tile .qm-stage { padding: 10px; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; background: #f5f5f7; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="rr-fit" id="rr-fit">
+ <section class="rr-card is-still" id="rr-card" aria-labelledby="rr-cap">
+  <h2 class="rr-cap" id="rr-cap">Forma · Orders by product, cumulative</h2>
+  <p class="rr-sum" id="rr-sum" aria-hidden="true"></p>
+  <div class="rr-axis" id="rr-axis" aria-hidden="true"></div>
+  <div class="rr-plot" id="rr-plot" role="group" aria-label="Top six products by orders. Press a bar to follow it.">
+   <div class="rr-clock" id="rr-clock" aria-hidden="true">
+    <span>Week </span>
+    <span class="rr-cw" id="rr-ct"><span class="rr-cs" id="rr-cst"></span></span>
+    <span class="rr-cw" id="rr-co"><span class="rr-cs" id="rr-cso"></span></span>
+   </div>
+  </div>
+  <button class="rr-play" id="rr-play" type="button" aria-label="Play">
+   <svg class="rr-ip" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.2 4.6v10.8c0 .7.8 1.1 1.4.7l8.2-5.4c.5-.3.5-1.1 0-1.4L7.6 3.9c-.6-.4-1.4 0-1.4.7z"/></svg>
+   <svg class="rr-ia" viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="4" width="3.6" height="12" rx="1.2"/><rect x="11.4" y="4" width="3.6" height="12" rx="1.2"/></svg>
+  </button>
+  <div class="rr-tl" id="rr-tl" role="slider" tabindex="0" aria-label="Week" aria-valuemin="1" aria-valuemax="12" aria-valuenow="1" aria-valuetext="Week 1">
+   <i class="rr-rail"></i><div class="rr-fw" id="rr-fw"><i class="rr-fb"></i></div><i class="rr-thumb" id="rr-thumb"></i>
+  </div>
+  <p class="sr-only" id="rr-msg" role="status" aria-live="polite"></p>
+  <table class="sr-only" id="rr-table"><caption>Forma orders by product, cumulative, by week</caption><thead></thead><tbody></tbody></table>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag the playhead, or press Space to play. Hover or tap a bar to follow it. Left and Right step a week</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Bar race. The playhead p is the only clock (weeks, 0 to 11; it can sit past an end while the thumb rubber-bands); t = clamp(p). Values are interpolated between the
+   weeks, ranks come from the values, and every other number on the card follows from them: each row is a critically damped spring to its rank, the axis maximum is a
+   spring to a round number, the week label rolls on a spring to the nearest week. A spring steps with its exact solution, so any frame length is stable and any new target
+   starts from the value and velocity on screen. */
+const BR = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+  const card = $('rr-card'), plot = $('rr-plot'), axis = $('rr-axis'), tl = $('rr-tl'), thumb = $('rr-thumb'), fw = $('rr-fw'), playBtn = $('rr-play'),
+    sum = $('rr-sum'), msg = $('rr-msg'), clock = $('rr-clock'), ct = $('rr-ct'), co = $('rr-co'), cst = $('rr-cst'), cso = $('rr-cso');
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x)), sm = (u) => { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); };
+
+  /* --- the data: cumulative orders by week, a fixed table (week 12 sums to 2,149, as the orders in Brush zoom) --------------------------------------------------- */
+  const NAMES = ['Ash vase', 'Loop tray', 'Pressed tumbler', 'Linen runner', 'Stone dish', 'Morning mug', 'Calla bowl', 'Ring dish'];
+  const CUM = [
+    [48, 92, 132, 170, 206, 238, 270, 300, 310, 395, 440, 480],   // Ash vase: out of stock in week 9
+    [36, 70, 104, 138, 172, 206, 248, 290, 335, 360, 380, 400],   // Loop tray: featured in week 9
+    [34, 66, 96, 124, 150, 176, 202, 228, 248, 266, 280, 290],    // Pressed tumbler
+    [28, 54, 80, 104, 126, 146, 164, 180, 194, 205, 213, 220],    // Linen runner
+    [20, 38, 54, 70, 82, 92, 100, 104, 107, 109, 110, 110],       // Stone dish
+    [0, 0, 0, 0, 14, 40, 84, 140, 206, 276, 346, 410],            // Morning mug: launches in week 5
+    [22, 42, 62, 80, 96, 110, 122, 132, 140, 144, 147, 150],      // Calla bowl
+    [14, 27, 38, 49, 58, 66, 73, 78, 82, 85, 87, 89],             // Ring dish
+  ];
+  const N = NAMES.length, LAST = 11, ID = {};
+  NAMES.forEach((n, i) => { ID[n] = i; });
+  const valsAt = (t) => { const i = Math.min(Math.floor(t), LAST - 1), f = t - i; return CUM.map((c) => c[i] + (c[i + 1] - c[i]) * f); };
+  const orderOf = (v) => v.map((x, i) => i).sort((a, b) => v[b] - v[a] || a - b);
+  (function check() {
+    const bad = (m) => { throw new Error('Bar race data: ' + m); };
+    CUM.forEach((c, i) => { if (c.length !== 12) bad(NAMES[i] + ' has ' + c.length + ' weeks'); c.forEach((v, k) => { if (!Number.isInteger(v) || v < 0 || (k && v < c[k - 1])) bad(NAMES[i] + ' week ' + (k + 1)); }); });
+    const A = ID['Ash vase'], L = ID['Loop tray'], M = ID['Morning mug'], S = ID['Stone dish'];
+    if (CUM[M].slice(0, 4).some((v) => v !== 0) || CUM[M][4] <= 0) bad('Morning mug must launch in week 5');
+    const lead = [], mRank = [];
+    let prev = -1, sLast = -1, mIn = -1;
+    for (let k = 0; k <= 11000; k++) {
+      const t = k / 1000, o = orderOf(valsAt(t));
+      if (o[0] !== prev) { lead.push([o[0], t]); prev = o[0]; }
+      const rS = o.indexOf(S), rM = o.indexOf(M);
+      if (rS < 6) sLast = t;
+      if (rM < 6 && mIn < 0) mIn = t;
+      mRank.push(rM);
+    }
+    if (lead.length !== 3 || lead[0][0] !== A || lead[1][0] !== L || lead[2][0] !== A) bad('the lead must go Ash vase, Loop tray, Ash vase');
+    if (!(lead[1][1] > 7 && lead[1][1] < 8 && lead[2][1] > 8 && lead[2][1] < 9)) bad('Loop tray must lead in week 9 only');
+    if (!(mIn > 6 && mIn < 7) || Math.abs(sLast - mIn) > 0.002) bad('Morning mug must enter the top six as Stone dish leaves it, for good');
+    for (let k = 5800; k < mRank.length; k++) if (mRank[k] > mRank[k - 1]) bad('Morning mug must only climb');
+    if (mRank[11000] !== 1) bad('Morning mug must finish second');
+    if (orderOf(valsAt(8))[0] !== L || orderOf(valsAt(8))[1] !== A) bad('Week 9 must read Loop tray, Ash vase');
+  })();
+
+  /* --- geometry (card px) ---------------------------------------------------------------------------------------------------------------------------------------- */
+  const X0 = 164, PW = 540, PITCH = 44, SLOTS = 6, PLOT_Y = 80, TL0 = 108, TL1 = 732, PPW = (TL1 - TL0) / LAST, TY = 408, CW = 780, BAND_D = 150;
+  const SPEED = 1 / 0.9;                                           // weeks a second while playing
+  const LADDER = [60, 100, 150, 200, 250, 300, 400, 500, 600];
+  const ladder = (v) => LADDER.find((m) => m >= v * 1.04) || LADDER[LADDER.length - 1];
+  const stepOf = (m) => (m <= 100 ? 20 : m <= 250 ? 50 : 100);
+  const POOL = [20, 40, 50, 60, 80, 100, 150, 200, 250, 300, 400, 500, 600];
+
+  /* --- springs: critically damped, exact step ------------------------------------------------------------------------------------------------------------------- */
+  const S = (x, resp) => ({ x, v: 0, t: x, w: (2 * Math.PI) / resp });
+  function adv(s, dt, eps = 0.01) {
+    const d = s.x - s.t, b = s.v + s.w * d, e = Math.exp(-s.w * dt);
+    s.x = s.t + (d + b * dt) * e;
+    s.v = (s.v - s.w * b * dt) * e;
+    if (Math.abs(s.x - s.t) < eps && Math.abs(s.v) < eps * 6) { s.x = s.t; s.v = 0; }
+  }
+  const unsettled = (s) => s.x !== s.t || s.v !== 0;
+
+  /* --- the cast ------------------------------------------------------------------------------------------------------------------------------------------------- */
+  const el = (cls, tag = 'div') => { const e = document.createElement(tag); e.className = cls; return e; };
+  const put = (e, k, v) => { const c = e._c || (e._c = {}); if (c[k] !== v) { c[k] = v; e.style[k] = v; } };
+  const txt = (e, v) => { if (e._t !== v) { e._t = v; e.textContent = v; } };
+  const rows = NAMES.map((name, i) => {
+    const row = el('rr-row', 'button'); row.type = 'button'; row.setAttribute('aria-pressed', 'false');
+    const gl = el('rr-gnd'), gf = el('rr-gnd'), lab = el('rr-lab'), bar = el('rr-bar'), fig = el('rr-fig');
+    gl.style.left = '12px'; gl.style.width = '148px'; gf.style.width = '56px';
+    lab.textContent = name;
+    row.append(gl, gf, bar, lab, fig); plot.appendChild(row);
+    return { i, name, row, gl, gf, lab, bar, fig, y: S(i * PITCH, 0.34), f: 0, rt: i, val: 0, lift: 0 };
+  });
+  const slots = POOL.map((v) => {
+    const g = el('rr-gl'), l = el('rr-al'); l.textContent = v;
+    plot.insertBefore(g, plot.firstChild); axis.appendChild(l);
+    return { v, g, l, c: S(0, 0.22) };
+  });
+  const zeroG = el('rr-gl is-zero'); zeroG.style.transform = `translateX(${X0 - 1}px)`; plot.insertBefore(zeroG, plot.firstChild);
+  const zeroL = el('rr-al'); zeroL.textContent = '0'; zeroL.style.left = X0 + 'px'; zeroL.style.visibility = 'visible'; axis.appendChild(zeroL);
+  const tn = [];
+  for (let k = 0; k <= LAST; k++) {
+    const n = el('rr-tn'); n.textContent = k + 1; n.style.left = (TL0 + k * PPW) + 'px'; card.appendChild(n); tn.push(n);
+    const a = el('rr-tk'), b = el('rr-tk'); a.style.left = (22 + k * PPW) + 'px'; b.style.left = (k * PPW) + 'px';
+    tl.insertBefore(a, tl.querySelector('.rr-fw')); fw.insertBefore(b, fw.firstChild);
+  }
+  // the clock's strips: ones 0..9,0,1,2 and tens blank..1, both moved by the same spring
+  for (let w = 0; w <= 12; w++) { const o = document.createElement('i'), t = document.createElement('i'); o.textContent = w % 10; t.textContent = w >= 10 ? '1' : ''; cso.appendChild(o); cst.appendChild(t); }
+  // a real table of the data for screen readers
+  const tb = $('rr-table');
+  tb.tHead.innerHTML = '<tr><th scope="col">Product</th>' + CUM[0].map((_, k) => `<th scope="col">Week ${k + 1}</th>`).join('') + '</tr>';
+  tb.tBodies[0].innerHTML = NAMES.map((n, i) => `<tr><th scope="row">${n}</th>${CUM[i].map((v) => `<td>${v}</td>`).join('')}</tr>`).join('');
+
+  /* --- state ---------------------------------------------------------------------------------------------------------------------------------------------------- */
+  let p = 0, mode = 'idle', playing = false, playAfter = false, drag = null, fake = null, tRest = 0, acc = 0;
+  const coast = { v: 0, t: 0, w: (2 * Math.PI) / 0.42 };
+  const speed = S(0, 0.26), maxS = S(60, 0.5), wkS = S(1, 0.3);
+  let anyF = 0, pin = -1, hov = -1, foc = -1, ptr = null, leaderVal = 0, maxEff = 60, said = '', dpr = 1, thumbX = TL0;
+  const now = () => (fake !== null ? fake : performance.now());
+
+  /* --- one step of the world: the playhead, then everything that follows it ----------------------------------------------------------------- */
+  function hitRow(px, py) {
+    const ly = py - PLOT_Y;
+    if (ly < 0 || ly >= SLOTS * PITCH || px < 12 || px > CW - 12) return -1;
+    let best = -1, bz = -1e9;
+    for (const r of rows) if (ly >= r.y.x && ly < r.y.x + PITCH && -r.rt > bz) { bz = -r.rt; best = r.i; }
+    return best;
+  }
+  const followId = () => (hov >= 0 ? hov : foc >= 0 ? foc : pin);
+  function step(dt) {
+    // the playhead
+    if (mode === 'drag') {
+      drag.slack *= Math.exp(-dt * 16);
+      p = drag.pw + drag.grab + drag.slack;
+    } else if (mode === 'coast') {
+      const d = p - coast.t, b = coast.v + coast.w * d, e = Math.exp(-coast.w * dt);
+      p = coast.t + (d + b * dt) * e;
+      coast.v = (coast.v - coast.w * b * dt) * e;
+      if (Math.abs(p - coast.t) < 5e-4 && Math.abs(coast.v) < 0.02) { p = coast.t; coast.v = 0; mode = 'idle'; if (playAfter) { playAfter = false; playing = true; } }
+    } else if (reduced) {
+      if (playing) { acc += dt; if (acc >= 1.4) { acc = 0; p = Math.round(p) + 1; if (p >= LAST) { p = LAST; playing = false; } } }
+    } else {
+      speed.t = playing ? SPEED : 0;
+      adv(speed, dt, 1e-3);
+      if (speed.x > 0) { p += speed.x * dt; if (p >= LAST) { p = LAST; speed.x = speed.v = 0; playing = false; } }
+    }
+    if (reduced && mode !== 'drag') p = Math.round(clamp(p, 0, LAST));
+    const t = clamp(p, 0, LAST);
+    // values, ranks, the maximum
+    const vals = valsAt(t), ord = orderOf(vals);
+    ord.forEach((i, r) => { rows[i].rt = r; });
+    leaderVal = vals[ord[0]];
+    maxS.t = ladder(leaderVal);
+    wkS.t = Math.round(t) + 1;
+    if (reduced) { maxS.x = maxS.t; wkS.x = wkS.t; rows.forEach((r) => { r.y.t = r.y.x = r.rt * PITCH; r.y.v = 0; }); }
+    else {
+      adv(maxS, dt, 0.02); adv(wkS, dt, 0.002);
+      rows.forEach((r) => { r.y.t = r.rt * PITCH; adv(r.y, dt, 0.02); });
+    }
+    maxEff = Math.max(maxS.x, leaderVal * 1.02);
+    slots.forEach((s) => { s.c.t = s.v <= maxS.t && s.v % stepOf(maxS.t) === 0 ? 1 : 0; if (reduced) { s.c.x = s.c.t; s.c.v = 0; } else adv(s.c, dt, 0.004); });
+    rows.forEach((r) => { r.val = vals[r.i]; });
+    // follow: hover, then keyboard focus, then a pinned product; the others step down
+    if (ptr) hov = hitRow(ptr.x, ptr.y); else hov = -1;
+    const fid = followId(), k = reduced ? 1 : 1 - Math.exp(-16 * dt);
+    anyF += ((fid >= 0 ? 1 : 0) - anyF) * k; if (Math.abs(anyF - (fid >= 0 ? 1 : 0)) < 0.002) anyF = fid >= 0 ? 1 : 0;
+    rows.forEach((r) => { const g = r.i === fid ? 1 : 0; r.f += (g - r.f) * k; if (Math.abs(r.f - g) < 0.002) r.f = g; });
+    tRest = t;
+  }
+  const mixA = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+  const mixRGB = (a, b, k) => { const m = mixA(a, b, k); return `rgb(${Math.round(m[0])},${Math.round(m[1])},${Math.round(m[2])})`; };
+  const rgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const C = { ink: rgb('#1d1d1f'), base: rgb('#86868b'), dim: rgb('#c7c7cc'), t2: rgb('#86868b'), f2: rgb('#aeaeb2') };
+  const thumbAt = (pp) => {
+    const bandF = (x) => (x * BAND_D * 0.55) / (BAND_D + 0.55 * x);
+    return pp < 0 ? TL0 - bandF(-pp * PPW) : pp > LAST ? TL1 + bandF((pp - LAST) * PPW) : TL0 + pp * PPW;
+  };
+
+  /* --- drawing ------------------------------------------------------------------------------------------------------------------------------------------------ */
+  function render() {
+    const t = clamp(p, 0, LAST), fid = followId();
+    const dev = (v) => Math.round(v * dpr) / dpr;
+    // the leader is whoever is on top on screen in this frame: the highest row by y, where the riser (it is drawn above, so it covers the row it passes) counts from
+    // the moment it overlaps that row by half its thickness, so the lime is never hidden behind a grey bar
+    let lead = rows[0], lk = 1e9;
+    for (const r of rows) { const k = r.y.x - (r.rt === 0 ? 14 : 0); if (k < lk) { lk = k; lead = r; } }
+    for (const r of rows) {
+      // lift: how far this row is above one it overlaps
+      let lift = 0;
+      for (const o of rows) if (o !== r && o.rt > r.rt) lift = Math.max(lift, sm((40 - Math.abs(r.y.x - o.y.x)) / 28));
+      const w = dev(clamp(r.val / maxEff, 0, 1) * PW), parked = r.y.x >= SLOTS * PITCH - 0.5;
+      const yy = reduced ? r.y.x : Math.round(r.y.x * 100) / 100;
+      put(r.row, 'transform', `translate3d(0,${yy}px,0)`);
+      put(r.row, 'zIndex', String(30 - r.rt));
+      put(r.row, 'visibility', parked ? 'hidden' : 'visible');
+      put(r.bar, 'width', w + 'px');
+      const isLead = r === lead, dimK = anyF * (1 - r.f);
+      put(r.bar, 'backgroundColor', isLead ? '#B8FF00' : mixRGB(mixA(C.base, C.dim, dimK), C.ink, r.f));
+      const ring = isLead && r.f > 0.02 ? `inset 0 0 0 2px rgba(29,29,31,${r.f.toFixed(3)})` : '';
+      const sh = lift > 0.001 ? `0 ${(6 * lift).toFixed(2)}px ${(16 * lift).toFixed(2)}px rgba(0,0,0,${(0.16 * lift).toFixed(3)})` : '';
+      put(r.bar, 'boxShadow', [sh, ring].filter(Boolean).join(',') || 'none');
+      put(r.bar, 'transform', lift > 0.001 ? `translateY(${(-1.5 * lift).toFixed(2)}px) scaleY(${(1 + 0.06 * lift).toFixed(3)})` : 'none');
+      put(r.lab, 'color', mixRGB(C.ink, C.t2, dimK));
+      put(r.fig, 'color', mixRGB(C.ink, C.f2, dimK));
+      const fx = X0 + w + 8;
+      put(r.fig, 'left', fx + 'px');
+      put(r.gf, 'left', (fx - 10) + 'px');
+      // the figure also takes its ground where it would meet the clock (a fast scrub can carry a long bar through the clock's corner)
+      const yy0 = r.y.x + 8, hitsClock = !parked && fx - 10 < CW - 24 && fx + 46 > clockL - 4 && yy0 + 28 > 206 && yy0 < 260;
+      put(r.gl, 'display', lift > 0.001 ? 'block' : 'none'); put(r.gf, 'display', lift > 0.001 || hitsClock ? 'block' : 'none');
+      txt(r.fig, String(Math.round(r.val)));
+      r.lift = lift;
+      const tab = r.rt < SLOTS ? '0' : '-1';
+      if (r.row.tabIndex !== +tab) r.row.tabIndex = +tab;
+      const pr = r.i === pin ? 'true' : 'false';
+      if (r.row._pr !== pr) { r.row._pr = pr; r.row.setAttribute('aria-pressed', pr); }
+    }
+    // axis: lines and numbers at round values, each with its own cover
+    slots.forEach((s) => {
+      const x = X0 + (s.v / maxEff) * PW, show = s.c.x > 0.01 && x <= X0 + PW + 0.5;
+      const cl = `inset(0 0 ${((1 - s.c.x) * 100).toFixed(1)}% 0)`;
+      put(s.g, 'visibility', show ? 'visible' : 'hidden'); put(s.l, 'visibility', show ? 'visible' : 'hidden');
+      if (show) { put(s.g, 'transform', `translateX(${dev(x)}px)`); put(s.g, 'clipPath', cl); put(s.l, 'transform', `translateX(${(x).toFixed(2)}px)`); put(s.l, 'clipPath', cl); }
+    });
+    // the header total and the clock
+    let total = 0; rows.forEach((r) => { total += r.val; });
+    txt(sum, Math.round(total).toLocaleString('en-US') + ' orders');
+    const W = wkS.x;
+    put(cso, 'transform', `translateY(${(-W * 54).toFixed(2)}px)`); put(cst, 'transform', `translateY(${(-W * 54).toFixed(2)}px)`);
+    put(ct, 'width', (dw * clamp(W - 9, 0, 1)).toFixed(2) + 'px');
+    // the timeline
+    thumbX = thumbAt(p);
+    put(thumb, 'transform', `translate3d(${(thumbX - TL0 + 22 - 14).toFixed(2)}px,0,0)`);
+    put(fw, 'width', Math.max(0, thumbX - TL0).toFixed(2) + 'px');
+    const cur = Math.round(t);
+    tn.forEach((n, k) => { const on = k === cur; if (n._on !== on) { n._on = on; n.classList.toggle('is-now', on); } });
+    playBtn.classList.toggle('is-on', playing || playAfter);
+    const lbl = playing || playAfter ? 'Pause' : 'Play'; if (playBtn.getAttribute('aria-label') !== lbl) playBtn.setAttribute('aria-label', lbl);
+  }
+  let dw = 28, clockL = 580;                                                      // one digit of the clock, measured once the font is in
+  function measure() {
+    const probe = el('rr-cw'); probe.style.height = 'auto'; probe.style.overflow = 'visible'; probe.style.position = 'absolute'; probe.style.visibility = 'hidden'; probe.textContent = '0';
+    clock.appendChild(probe); dw = probe.getBoundingClientRect().width / (card.getBoundingClientRect().width / CW); probe.remove();
+    const word = clock.firstElementChild;
+    dw = Math.round(dw * 100) / 100;
+    co.style.width = dw + 'px';
+    clockL = CW - 28 - (word.offsetWidth + 2 * dw); clock.style.left = clockL + 'px';
+  }
+
+  /* --- the loop: step and draw while anything moves ---------------------------------------------------------------------------------------------- */
+  let raf = 0, last = 0;
+  const busy = () => playing || playAfter || mode !== 'idle' || speed.x !== 0 || unsettled(maxS) || unsettled(wkS) || rows.some((r) => unsettled(r.y) || r.f !== (r.i === followId() ? 1 : 0)) || slots.some((s) => unsettled(s.c)) || anyF !== (followId() >= 0 ? 1 : 0) || !!ptr;
+  function loop(ts) {
+    raf = 0;
+    const dt = clamp((ts - last) / 1000, 0.001, 0.05); last = ts;
+    step(dt); render();
+    if (busy()) raf = requestAnimationFrame(loop); else onRest();
+  }
+  function kick() { if (!raf && !document.hidden) { last = performance.now(); raf = requestAnimationFrame(loop); } }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(); });
+  function ff(sec) { for (let k = 0; k < Math.round(sec * 60); k++) step(1 / 60); render(); }
+  function onRest() {                                               // at rest: tab order and reading order follow the ranking, and say where we are, once
+    const t = Math.round(clamp(p, 0, LAST)), o = orderOf(valsAt(t));
+    if (!rows.some((r) => r.row === document.activeElement)) { const want = rows.slice().sort((a, b) => a.rt - b.rt); if (want.some((r, k) => plot.querySelectorAll('.rr-row')[k] !== r.row)) want.forEach((r) => plot.appendChild(r.row)); }
+    const key = 'w' + t + ':' + o.slice(0, 3).join();
+    tl.setAttribute('aria-valuenow', t + 1); tl.setAttribute('aria-valuetext', 'Week ' + (t + 1));
+    if (key !== said) { said = key; msg.textContent = `Week ${t + 1}. ${NAMES[o[0]]} leads with ${CUM[o[0]][t]} orders, then ${NAMES[o[1]]} with ${CUM[o[1]][t]} and ${NAMES[o[2]]} with ${CUM[o[2]][t]}.`; }
+  }
+
+  /* --- the playhead: drag, throw, steps, play ---------------------------------------------------------------------------------------------------- */
+  function cardPt(e) { const r = card.getBoundingClientRect(), k = r.width / CW; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+  const touchScrub = () => { playing = false; playAfter = false; speed.x = 0; speed.v = 0; };
+  tl.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    const q = cardPt(e), pw = (q.x - TL0) / PPW, onThumb = Math.abs(q.x - thumbX) <= 22;
+    touchScrub();
+    mode = 'drag'; coast.v = 0;
+    drag = { id: e.pointerId, pw, grab: onThumb ? p - pw : 0, slack: onThumb ? 0 : p - pw, hist: [{ t: now(), p }] };
+    if (reduced) drag.slack = 0;
+    try { tl.setPointerCapture(e.pointerId); } catch (err) { /* a synthesised pointer has no capture */ }
+    thumb.classList.add('is-down'); tl.classList.add('is-drag');
+    kick();
+  });
+  tl.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag.pw = (cardPt(e).x - TL0) / PPW;
+    p = drag.pw + drag.grab + drag.slack;
+    const h = drag.hist; h.push({ t: now(), p }); while (h.length > 2 && h[h.length - 1].t - h[0].t > 140) h.shift();
+    kick();
+  });
+  function velocity(h) {
+    if (h.length < 2) return 0;
+    const last = h[h.length - 1];
+    if (now() - last.t > 120) return 0;
+    let f = h[0]; for (const q of h) if (last.t - q.t <= 80) { f = q; break; }
+    return last.t > f.t ? ((last.p - f.p) / (last.t - f.t)) * 1000 : 0;
+  }
+  function release(cancel) {
+    if (!drag) return;
+    let v = cancel ? 0 : velocity(drag.hist); drag = null;
+    thumb.classList.remove('is-down'); tl.classList.remove('is-drag');
+    if (p < 0) v = Math.max(v, 0); else if (p > LAST) v = Math.min(v, 0);
+    const tgt = p < 0 ? 0 : p > LAST ? LAST : clamp(Math.round(p + v * 0.099), 0, LAST);   // d = 0.99: v / 1000 · d / (1 − d)
+    if (reduced) { p = tgt; mode = 'idle'; } else { coast.t = tgt; coast.v = v; coast.w = (2 * Math.PI) / 0.42; mode = 'coast'; }
+    kick();
+  }
+  tl.addEventListener('pointerup', (e) => { if (drag && e.pointerId === drag.id) release(false); });
+  tl.addEventListener('pointercancel', (e) => { if (drag && e.pointerId === drag.id) release(true); });
+  function goTo(w, resp = 0.42) {
+    mode = 'coast'; coast.t = clamp(w, 0, LAST); coast.v = 0; coast.w = (2 * Math.PI) / resp;
+    if (reduced) { p = coast.t; mode = 'idle'; }
+    kick();
+  }
+  function stepBy(d) { touchScrub(); goTo((mode === 'coast' ? coast.t : Math.round(p)) + d); }
+  function toggle() {
+    if (playing || playAfter) { playing = false; playAfter = false; }
+    else if (mode === 'drag') return;
+    else {
+      if (mode === 'coast') { mode = 'idle'; coast.v = 0; }
+      if (p >= LAST - 0.001) { if (reduced) { p = 0; playing = true; } else { playAfter = true; goTo(0, 0.8); } }
+      else { speed.x = reduced ? 0 : speed.x; playing = true; }
+    }
+    kick();
+  }
+  playBtn.addEventListener('click', toggle);
+  addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); toggle(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); stepBy(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); stepBy(-1); }
+    else if (e.key === 'Home') { e.preventDefault(); touchScrub(); goTo(0); }
+    else if (e.key === 'End') { e.preventDefault(); touchScrub(); goTo(LAST); }
+    else if (e.key === 'Escape') { pin = -1; kick(); }
+  });
+  addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Spacebar') e.preventDefault(); });
+
+  /* --- following a product ---------------------------------------------------------------------------------------------------------------------------- */
+  plot.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') { ptr = cardPt(e); kick(); } });
+  plot.addEventListener('pointerleave', () => { ptr = null; kick(); });
+  rows.forEach((r) => {
+    r.row.addEventListener('click', () => { pin = pin === r.i ? -1 : r.i; kick(); });
+    r.row.addEventListener('focus', () => { if (r.row.matches(':focus-visible')) { foc = r.i; kick(); } });
+    r.row.addEventListener('blur', () => { if (foc === r.i) { foc = -1; kick(); } });
+  });
+
+  /* --- the page: the pose, loaded through the same events a hand makes -------------------------------------------------------------------------- */
+  function emit(type, target, x, y, down) {
+    const r = card.getBoundingClientRect(), k = r.width / CW;
+    target.dispatchEvent(new PointerEvent(type, { bubbles: type !== 'pointerleave', cancelable: true, pointerId: 77, pointerType: 'mouse', isPrimary: true, clientX: r.left + x * k, clientY: r.top + y * k, button: type === 'pointermove' || type === 'pointerleave' ? -1 : 0, buttons: down ? 1 : 0 }));
+  }
+  function hardReset() {
+    drag = null; mode = 'idle'; playing = false; playAfter = false; ptr = null; pin = -1; hov = -1; foc = -1; p = 0; coast.v = 0; said = '';
+    thumb.classList.remove('is-down'); tl.classList.remove('is-drag');
+    speed.x = speed.v = 0; anyF = 0; rows.forEach((r) => { r.f = 0; });
+    step(1e-6);
+    rows.forEach((r) => { r.y.x = r.y.t = r.rt * PITCH; r.y.v = 0; }); maxS.x = maxS.t; maxS.v = 0; wkS.x = wkS.t; wkS.v = 0; slots.forEach((s) => { s.c.x = s.c.t; s.c.v = 0; });
+    render();
+  }
+  const POSE = 8;                                                    // Week 9, just after Loop tray passes Ash vase
+  function pose() {
+    hardReset();
+    if (reduced) { p = POSE; step(1e-6); render(); return; }
+    const a = TL0, b = TL0 + POSE * PPW, ease = (u) => 1 - Math.pow(1 - u, 3);
+    fake = 1000;
+    emit('pointerdown', tl, a, TY, true); step(1 / 60); render();
+    for (let k = 1; k <= 30; k++) { fake += 16.7; emit('pointermove', tl, a + (b - a) * ease(k / 30), TY, true); step(1 / 60); }
+    for (let k = 0; k < 8; k++) { fake += 16.7; emit('pointermove', tl, b, TY, true); step(1 / 60); }
+    emit('pointerup', tl, b, TY, false);
+    fake = null;
+    ff(1.8); render();
+  }
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 10 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min((W - 2 * pad) / 780, (H - 2 * pad - ui) / 480, 1.6));
+    $('rr-fit').style.setProperty('--s', s.toFixed(4));
+    dpr = (window.devicePixelRatio || 1) * s;
+  }
+  size(); addEventListener('resize', () => { size(); render(); });
+  const fontsIn = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  measure(); render(); fontsIn.then(() => { measure(); render(); });
+
+  return {
+    card, plot, tl, playBtn, pose, emit, hardReset, kick, ff, toggle, goTo, render, step,
+    NAMES, CUM, ID, TL0, TL1, PPW, TY, X0, PITCH, PLOT_Y, SLOTS, LAST,
+    get t() { return clamp(p, 0, LAST); }, get p() { return p; }, get playing() { return playing || playAfter; }, get mode() { return mode; }, get held() { return !!drag; }, get pinned() { return pin; },
+    get idle() { return mode === 'idle' && !playing && !busy(); },
+    thumbPos() { return { x: thumbAt(p), y: TY }; },
+    weekX(w) { return TL0 + w * PPW; },
+    rowEl(i) { return rows[i].row; },
+    playPos() { return { x: 48, y: 408 }; },
+    rowPos(i) { const r = rows[i]; return { x: X0 + 70, y: PLOT_Y + r.y.x + PITCH / 2 }; },
+    client(x, y) { const r = card.getBoundingClientRect(), k = r.width / CW; return { x: r.left + x * k, y: r.top + y * k }; },
+    state() { return { p, t: clamp(p, 0, LAST), mode, playing, drag: !!drag, anyF, pin, hov, foc, maxS: maxS.x, maxT: maxS.t, maxEff, wk: wkS.x, leader: rows.slice().sort((a, b) => a.y.x - b.y.x)[0].name, ranks: rows.map((r) => r.rt), ys: rows.map((r) => r.y.x), vals: rows.map((r) => r.val), lifts: rows.map((r) => r.lift), thumbX, dw }; },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* the ghost: it sends the same pointer events a hand does (down, move, up on the playhead; moves, a press on a bar; a click on Play), so the tile shows the real race, scrub and throw */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const until = async (my, f, max = 14000) => { const t0 = performance.now(); while (!f()) { await w(30); if (my !== epoch) throw 0; if (performance.now() - t0 > max) return false; } return true; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1), inE = (p) => p * p * p, outE = (p) => 1 - Math.pow(1 - p, 3);
+  const put = (x, y) => { pos = { x, y }; const c = BR.client(x, y); QM.ghostAt(c.x, c.y); };
+  async function glide(my, x, y, ms, el, down = false, ease = mv) {
+    const f = pos || { x, y }, t0 = performance.now();
+    for (;;) {
+      await raf(); if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+      put(f.x + (x - f.x) * k, f.y + (y - f.y) * k);
+      if (el) BR.emit('pointermove', el, pos.x, pos.y, down);
+      if (p >= 1) break;
+    }
+  }
+  const away = () => { BR.emit('pointerleave', BR.plot, pos.x, pos.y, false); };
+  async function press(my, btn) { btn.classList.add('is-press'); await gap(my, 120); btn.classList.remove('is-press'); btn.click(); }
+  async function toPlay(my) { away(); const q = BR.playPos(); await glide(my, q.x, q.y, 700, null); }
+  async function grabThumb(my) {
+    away(); const q = BR.thumbPos();
+    await glide(my, q.x, q.y, 650, BR.tl);
+    await gap(my, 140);
+    BR.emit('pointerdown', BR.tl, pos.x, pos.y, true);
+    await gap(my, 110);
+  }
+  const park = () => { if (reduced) return; const q = BR.thumbPos(); put(q.x + 17, q.y + 10); QM.ghostShow(); };
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      if (first) await gap(my, QM.tile ? 4300 : 3000);
+      QM.ghostShow();
+      const M = BR.ID['Morning mug'];
+      for (;;) {
+        if (BR.playing) { await toPlay(my); await press(my, BR.playBtn); await gap(my, 500); }
+        // 1. from the pose (Week 9, paused): Play at once. Ash vase retakes the lead (8.42), Morning mug passes Pressed tumbler (8.81) and Loop tray (10.77)
+        await toPlay(my);
+        await press(my, BR.playBtn);
+        await until(my, () => BR.t >= 10.99, 9000);
+        await gap(my, 800);
+        // 2. drag the playhead back to Week 6 in one smooth move: the race runs backwards through the same overtakes
+        await grabThumb(my);
+        await glide(my, BR.weekX(6), pos.y, 1700, BR.tl, true);
+        BR.emit('pointerup', BR.tl, pos.x, pos.y, false);
+        await until(my, () => BR.idle, 3000);
+        await gap(my, 250);
+        // 3. play 6 to 9: Morning mug enters the top six, passes Calla bowl and Linen runner, Loop tray takes the lead. Follow Morning mug on the way, with a tap
+        await toPlay(my);
+        await press(my, BR.playBtn);
+        const q0 = BR.rowPos(M);
+        await glide(my, q0.x + 120, BR.PLOT_Y + BR.PITCH * 6.6, 600, null);   // waits under the bars, so the wait does not follow a bar by hover
+        await until(my, () => BR.t >= 7.0, 6000);
+        let q = BR.rowPos(M);
+        await glide(my, q.x, q.y, 160, BR.plot);
+        await press(my, BR.rowEl(M));
+        away(); const pq = BR.playPos();
+        await glide(my, pq.x, pq.y, 520, null);
+        await until(my, () => BR.t >= 7.8, 4000);
+        await press(my, BR.playBtn);                                  // pause just after the overtake
+        await until(my, () => !BR.playing && BR.mode === 'idle', 3000);
+        await grabThumb(my);                                          // let go of the playhead where it is: it settles on Week 9, the pose
+        BR.emit('pointerup', BR.tl, pos.x, pos.y, false);
+        await until(my, () => BR.idle, 3000);
+        await gap(my, 1300);
+        // let go of Morning mug: tap it again
+        away();
+        q = BR.rowPos(M);
+        await glide(my, q.x + 140, q.y, 700, null);
+        BR.emit('pointermove', BR.plot, pos.x, pos.y, false);
+        await glide(my, q.x, q.y, 300, BR.plot);
+        await gap(my, 200);
+        await press(my, BR.rowEl(M));
+        await gap(my, 300);
+        away();
+        park();
+        await gap(my, QM.tile ? 2600 : 3000);
+      }
+    } catch (e) { if (e) console.error(e); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); pos = null; }
+  if (!QM.tile && !reduced) {
+    const idle = () => BR.card.matches(':hover') || BR.held || BR.card.contains(document.activeElement);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) { BR.hardReset(); BR.pose(); park(); script(false); } else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); BR.pose(); if (!reduced) { park(); script(true); } } });
+  BR.pose(); park();
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { BR.pose(); park(); script(true); }, 300));
+})();
+</script>
+</body>
+</html>

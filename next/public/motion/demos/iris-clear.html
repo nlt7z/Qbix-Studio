@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iris clear · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "iris-clear", "title": "Iris clear", "group": "studio", "added": "2026-11-25", "cat": "cards", "order": 120,
+  "kind": "loop", "preview": {"secs": 9, "skip": 4800}, "tone": "paper", "shot": 900,
+  "line": "press 0.97 about the touch · iris r to 0 on the touch, response 0.28 s · reflow 0.4 s from half-way, 30 ms apart",
+  "summary": "Qbix's Today board on #f5f5f7: six white cards, each a small thing to deal with. Tap a card anywhere and it goes from where you touched it: it answers on pointerdown (0.97 about the touch point) and on release an iris closes on that point. The card and its shadow sit in one wrapper clipped by the same circle, so nothing of the shadow is left behind, and a 1 px ink ring at 30% runs just outside the edge for the last stretch. No fade, no blur, no scale to a point. As the iris passes half-way the other cards glide to their new cells on springs and the lime count rolls. Undo opens the iris again from the same point once the others have made room. The last card leaves a lime tick drawn in one stroke.",
+  "spec": [
+    ["Press", "pointerdown: the card scales to 0.97 about the touch point (critically damped, response 0.1 s). A press that moves more than 8 px, leaves the card or is cancelled by a scroll springs back to 1 and clears nothing; a press on a card that is already closing does nothing"],
+    ["Iris", "a clip-path circle centred on the touch point in the card's own coordinates; its radius is a critically damped spring (response 0.28 s, no overshoot, about 0.34 s to the last pixel) from the farthest corner of the card plus its shadow's reach down to 0; the edge is crisp, nothing fades, blurs or scales to a point"],
+    ["Shadow", "the face and its shadow live in one wrapper, 40 px larger than the card on every side, and the circle clips the wrapper, so the shadow closes with the card and leaves no ghost for a frame; the clip is removed at rest"],
+    ["Ring", "a 1 px #1d1d1f line at 30% just outside the edge, cut to the card's own shape, drawn while the radius is under a third of its start (the last stretch, from about 0.13 s) and gone with the iris"],
+    ["Reflow", "one layout pass (three columns, reading order); every card has its own critically damped x and y springs (response 0.4 s) from the value on screen; it starts as the iris passes half-way, nearest card first 30 ms apart (an Undo makes room farthest first); a card that changes rows moves along the row it is in until it clears the cards that stay (a little quicker, response 0.3 s), so no moving card covers one that stays; movers cross each other, each on its own white ground"],
+    ["Fast taps", "cards cleared 120 ms apart each close from their own point; a card that has not reached half-way keeps its slot, so one layout pass keeps every target right and the springs retarget from the value on screen with their velocity"],
+    ["Undo", "a translucent pill in its own lane under the grid for 5 s after the last clear; it restores the last cleared card, pressed again the one before: the others make room first, then the iris opens from the same point. Cmd or Ctrl and Z does the same"],
+    ["End", "the last card leaves, a lime disc is uncovered with an ink tick drawn in one stroke and All clear. Nothing left today.; the count's lime gives way first, so there is one lime in every frame. In a tile the board refills after 2.5 s, six irises opening from the cards' centres 60 ms apart; Start over does it by hand"],
+    ["Keys", "the cards are buttons in a list: Enter, Space or Delete clears the focused one from its centre, focus moves to the card that takes its place, arrows move between cards, Cmd or Ctrl and Z undoes; a polite status line says Cleared: Send Kova's invoice. 5 left."],
+    ["Loop", "the thumbnail rests on the Renew card two thirds closed on a point near its lower right (the world held there); about 5 s in a ghost lets it finish, taps a corner, a centre and an edge, presses Undo once, clears the rest, waits, and the board refills; it yields to a mouse, a touch or a key"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A Qbix client's review inbox or a launch checklist, where a card is dealt with and gone, and where a miss-tap has to be one press away from undone.",
+  "rules": [
+    "The iris belongs to the touch: its centre is where the finger was, in the card's own coordinates, so a press at a corner closes towards that corner. A keyboard clear uses the card's centre.",
+    "The shadow is part of the card. It sits in the clipped wrapper and is cut by the same circle; never draw a card's shadow outside what the iris clips.",
+    "Nothing fades and nothing blurs. The card is covered by a circle, the ring is a stroke at a fixed 30%, and the tick, the pill and the end text are uncovered under clips.",
+    "Every position, press and radius is a critically damped spring started from the value on screen, so a card can be pressed, cleared, undone or reflowed again at any moment with no jump and no bounce.",
+    "The grid is computed in one pass from the cards that are still present, in reading order. A card still closing keeps its slot until its iris passes half-way.",
+    "A moving card may cover another only with its own white ground; it must never cross a card that stays. Cards that change rows travel along their row first.",
+    "One lime in every frame: the count's badge, or at the end the tick's disc. Cards carry no lime.",
+    "A tap clears, a press that moves more than 8 px does not. The cards are real buttons in a list with a polite status line, Undo is a real button, and under reduced motion a clear removes the card and reflows in place."
+  ],
+  "tags": ["iris", "clip-path", "dismiss", "cards", "undo", "grid reflow", "spring", "touch point", "tick", "keyboard", "Apple"]
+}
+</script>
+<style data-code>
+/* Iris clear. A Today board on #f5f5f7: six white cards. The count badge is the one lime (at the end, the tick's disc).
+   Each card is an absolutely placed item. Its face and shadow sit in .ic-clip, a wrapper 40 px larger on every side: while a card closes or opens,
+   script clips that wrapper with a circle centred on the touch, so the shadow is cut by the same circle. Position, press, radius, count and pill are springs set from script.
+   The tick, the end text and the badge's lime are uncovered with clips and transitions. Easings: ui (.4,0,.2,1), expo out (.16,1,.3,1), in (.5,0,.75,0). */
+.ic-fit { position: relative; width: calc(760px * var(--s, 1)); height: calc(464px * var(--s, 1)); }
+.ic-board { --ic-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 760px; height: 464px; transform: scale(var(--s, 1)); transform-origin: 0 0; overflow: hidden; border-radius: 26px; background: #f5f5f7;
+  font: 400 13px/18px var(--ic-f); letter-spacing: -.01em; color: #1d1d1f; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-font-smoothing: antialiased; }
+.ic-board p, .ic-board h2 { margin: 0; }
+:where(.ic-board button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; }
+
+/* the header: a title, the count (the one lime) and the date */
+.ic-head { position: absolute; left: 28px; right: 28px; top: 18px; height: 36px; display: flex; align-items: center; gap: 12px; }
+.ic-h { font: 600 24px/32px var(--ic-f); letter-spacing: -.022em; }
+.ic-count { display: flex; align-items: center; gap: 8px; }
+.ic-num { position: relative; width: 28px; height: 24px; overflow: hidden; border-radius: 12px; transform: translateZ(0); font: 600 14px/24px var(--ic-f); font-variant-numeric: tabular-nums; text-align: center; }
+.ic-num::before { content: ''; position: absolute; inset: 0; background: #B8FF00; clip-path: circle(0 at 50% 50%); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.ic-num.is-lime::before { clip-path: circle(24px at 50% 50%); transition: clip-path 300ms cubic-bezier(.16, 1, .3, 1) 220ms; }
+.ic-strip { position: relative; display: block; will-change: transform; }
+.ic-strip i { display: block; height: 24px; font-style: normal; }
+.ic-left { font-size: 15px; font-weight: 500; color: #6e6e73; }
+.ic-date { margin-left: auto; font-size: 13px; font-weight: 500; color: #86868b; }
+
+/* the cards */
+.ic-list { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
+.ic-item { position: absolute; left: 0; top: 0; z-index: 3; width: 224px; height: 156px; will-change: transform; }
+.ic-card { position: absolute; inset: 0; display: block; width: 100%; height: 100%; border-radius: 22px; text-align: left; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; outline: none; pointer-events: none; }
+.ic-card:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+.ic-clip { position: absolute; left: -40px; top: -40px; width: 304px; height: 236px; pointer-events: none; }
+.ic-face { position: absolute; left: 40px; top: 40px; width: 224px; height: 156px; border-radius: 22px; background: #fff; pointer-events: auto;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 8px 22px -8px rgba(0, 0, 0, .12); transition: box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.ic-card:hover .ic-face { box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 12px 28px -8px rgba(0, 0, 0, .17); }
+.ic-gl { position: absolute; left: 18px; top: 18px; width: 40px; height: 40px; border-radius: 12px; background: #f5f5f7; display: grid; place-items: center; }
+.ic-gl svg { width: 24px; height: 24px; fill: none; stroke: #1d1d1f; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.ic-gl .f { fill: #1d1d1f; stroke: none; }
+.ic-tm { position: absolute; right: 18px; top: 20px; font: 500 12px/16px var(--ic-f); font-variant-numeric: tabular-nums; color: #86868b; }
+.ic-tx { position: absolute; left: 18px; right: 18px; bottom: 18px; }
+.ic-t { display: block; font: 600 16px/21px var(--ic-f); letter-spacing: -.01em; text-wrap: balance; }
+.ic-d { display: block; margin-top: 2px; font-size: 13px; line-height: 18px; color: #6e6e73; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* the ring: cut to the card's own shape, one circle just outside the iris edge, only while the radius is small */
+.ic-rb { position: absolute; inset: 0; display: none; border-radius: 22px; overflow: hidden; pointer-events: none; }
+.ic-rb svg { display: block; }
+
+/* the end: a lime disc uncovered from its centre, an ink tick drawn in one stroke, the words under masks */
+.ic-empty { position: absolute; left: 0; right: 0; top: 140px; z-index: 2; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.ic-empty.is-on { pointer-events: auto; }
+.ic-ok { display: block; width: 64px; height: 64px; clip-path: circle(0 at 50% 50%); transition: clip-path 200ms cubic-bezier(.5, 0, .75, 0); }
+.ic-ok svg { display: block; width: 64px; height: 64px; }
+.ic-disc { fill: #B8FF00; }
+.ic-tk { fill: none; stroke: #1d1d1f; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 120ms cubic-bezier(.5, 0, .75, 0); }
+.ic-m { overflow: hidden; }
+.ic-m > * { transform: translateY(110%); transition: transform 160ms cubic-bezier(.5, 0, .75, 0); }
+.ic-e1 { margin-top: 14px; font: 600 24px/30px var(--ic-f); letter-spacing: -.022em; }
+.ic-e2 { font-size: 15px; line-height: 22px; color: #6e6e73; }
+.ic-again { display: block; margin-top: 14px; height: 36px; padding: 0 18px; border-radius: 18px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); font-weight: 500; font-size: 14px; cursor: pointer; pointer-events: auto;
+  clip-path: inset(100% -4px 100% -4px); transition: clip-path 160ms cubic-bezier(.5, 0, .75, 0), transform 100ms cubic-bezier(.4, 0, .2, 1), background 160ms cubic-bezier(.4, 0, .2, 1); }
+.ic-again:hover { background: #fafafc; }
+.ic-again:active { transform: scale(.96); }
+.ic-again:focus-visible, .ic-undo:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.ic-empty.is-on .ic-ok { clip-path: circle(34px at 50% 50%); transition: clip-path 340ms cubic-bezier(.16, 1, .3, 1) 60ms; }
+.ic-empty.is-on .ic-tk { stroke-dashoffset: 0; transition: stroke-dashoffset 300ms cubic-bezier(.16, 1, .3, 1) 300ms; }
+.ic-empty.is-on .ic-m > * { transform: none; transition: transform 520ms cubic-bezier(.16, 1, .3, 1) 340ms; }
+.ic-empty.is-on .ic-m:nth-of-type(2) > * { transition-delay: 400ms; }
+.ic-empty.is-on .ic-again { clip-path: inset(-4px); transition: clip-path 520ms cubic-bezier(.16, 1, .3, 1) 460ms, transform 100ms cubic-bezier(.4, 0, .2, 1), background 160ms cubic-bezier(.4, 0, .2, 1); }
+
+/* the Undo pill: in its own lane under the grid, translucent; the shadow is its own layer so the cover can clip the pane */
+.ic-pill { position: absolute; left: 332px; top: 414px; z-index: 9; width: 96px; height: 36px; visibility: hidden; will-change: transform; --v: 0; }
+.ic-sh { position: absolute; inset: 0; border-radius: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); opacity: var(--v); }
+.ic-undo { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 100%; border-radius: 18px; cursor: pointer; font-weight: 600; font-size: 14px;
+  background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08);
+  clip-path: inset(calc((1 - var(--v)) * 100%) 0 0 0 round 18px); transition: background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.ic-undo svg { width: 18px; height: 18px; fill: none; stroke: #1d1d1f; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.ic-undo:hover, .ic-undo.is-hot { background: rgba(255, 255, 255, .9); }
+.ic-undo:active, .ic-undo.is-press { transform: scale(.96); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ic-num::before, .ic-ok, .ic-tk, .ic-m > *, .ic-face, .ic-again, .ic-undo { transition-duration: 1ms !important; transition-delay: 0s !important; }
+}
+</style>
+<style>
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+  /* the board takes the whole tile: the stage keeps no padding of its own (the script keeps the margins), only the detail view's bar */
+  .qm-stage { padding: 0 !important; }
+  html:not(.qm-tile) .qm-stage { padding-bottom: 46px !important; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="ic-fit" id="ic-fit">
+ <section class="ic-board" id="ic-board" aria-label="Today board">
+  <header class="ic-head">
+   <h2 class="ic-h">Today</h2>
+   <p class="ic-count" aria-hidden="true"><span class="ic-num is-lime" id="ic-num"><span class="ic-strip" id="ic-strip"><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i></span></span><span class="ic-left">left</span></p>
+   <p class="ic-date" aria-hidden="true">Wed 25 Nov</p>
+  </header>
+
+  <ul class="ic-list" id="ic-list" aria-label="Things to clear. Press one to clear it.">
+   <li class="ic-item"><button type="button" class="ic-card"><span class="ic-clip"><span class="ic-face">
+     <span class="ic-gl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4.5h9A3.5 3.5 0 0 1 20 8v5a3.5 3.5 0 0 1-3.5 3.5H12l-3.6 3a.7.7 0 0 1-1.15-.55V16.5A3.5 3.5 0 0 1 4 13V8a3.5 3.5 0 0 1 3.5-3.5z"/></svg></span>
+     <span class="ic-tm">9:30 am</span>
+     <span class="ic-tx"><span class="ic-t">Reply to Dana</span><span class="ic-d">Willow's intake wording</span></span></span></span></button></li>
+   <li class="ic-item"><button type="button" class="ic-card"><span class="ic-clip"><span class="ic-face">
+     <span class="ic-gl"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.6-4.4a1.4 1.4 0 0 1 2 0L15 16.2l1.6-1.5a1.4 1.4 0 0 1 1.9 0l2 1.9"/></svg></span>
+     <span class="ic-tm">10:15 am</span>
+     <span class="ic-tx"><span class="ic-t">Approve Forma's hero image</span><span class="ic-d">Option B, the warm crop</span></span></span></span></button></li>
+   <li class="ic-item"><button type="button" class="ic-card"><span class="ic-clip"><span class="ic-face">
+     <span class="ic-gl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.3 3.7L10.2 13.8M20.3 3.7l-6.1 16.6-4-6.5-6.5-4z"/></svg></span>
+     <span class="ic-tm">11:00 am</span>
+     <span class="ic-tx"><span class="ic-t">Send Kova's invoice</span><span class="ic-d">No. 0412 · $4,800</span></span></span></span></button></li>
+   <li class="ic-item"><button type="button" class="ic-card"><span class="ic-clip"><span class="ic-face">
+     <span class="ic-gl"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path class="f" d="M12 4a8 8 0 0 1 0 16z"/></svg></span>
+     <span class="ic-tm">1:30 pm</span>
+     <span class="ic-tx"><span class="ic-t">Read the contrast report</span><span class="ic-d">Strata flagged 3 pairs</span></span></span></span></button></li>
+   <li class="ic-item"><button type="button" class="ic-card"><span class="ic-clip"><span class="ic-face">
+     <span class="ic-gl"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="3.2"/><path d="M4 10.2h16M8.4 3.6v3.4M15.6 3.6v3.4"/></svg></span>
+     <span class="ic-tm">2:00 pm</span>
+     <span class="ic-tx"><span class="ic-t">Book the Linden Dental kickoff</span><span class="ic-d">Thursday · 30 minutes</span></span></span></span></button></li>
+   <li class="ic-item"><button type="button" class="ic-card"><span class="ic-clip"><span class="ic-face">
+     <span class="ic-gl"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M3.8 12h16.4M12 3.8c2.3 2.4 3.4 5.1 3.4 8.2s-1.1 5.8-3.4 8.2c-2.3-2.4-3.4-5.1-3.4-8.2S9.7 6.2 12 3.8z"/></svg></span>
+     <span class="ic-tm">4:45 pm</span>
+     <span class="ic-tx"><span class="ic-t">Renew forma.studio</span><span class="ic-d">Expires 2 Dec · $18</span></span></span></span></button></li>
+  </ul>
+
+  <div class="ic-empty" id="ic-empty" aria-hidden="true">
+   <span class="ic-ok"><svg viewBox="0 0 64 64"><circle class="ic-disc" cx="32" cy="32" r="32"/><path class="ic-tk" pathLength="1" d="M19.5 33.5l9 9 17-20.5"/></svg></span>
+   <div class="ic-m"><p class="ic-e1">All clear.</p></div>
+   <div class="ic-m"><p class="ic-e2">Nothing left today.</p></div>
+   <button type="button" class="ic-again" id="ic-again" tabindex="-1">Start over</button>
+  </div>
+
+  <div class="ic-pill" id="ic-pill">
+   <i class="ic-sh"></i>
+   <button type="button" class="ic-undo" id="ic-undo" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.2L4.4 9.8 9 14.4M4.8 9.8h9.6a5 5 0 0 1 0 10H11"/></svg>Undo</button>
+  </div>
+ </section>
+ <p class="sr-only" id="ic-msg" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Tap a card to clear it from where you touched, Undo or Cmd/Ctrl+Z brings it back, Enter, Space or Delete clears the focused card, arrows move between cards</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Iris clear. Every card has springs for x, y, press and iris radius; all are critically damped and start from the value on screen, so nothing jumps and nothing bounces.
+   Coordinates are board pixels (the board may be drawn scaled: the pointer is divided by the scale). One layout pass sets every target, in reading order, from the cards still present.
+   A card that has been cleared holds its slot until its iris passes half-way; then the others reflow. */
+const IC = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = 2 * Math.PI, R = (s) => TAU / s;                                 // a response in seconds as an angular frequency
+  const OMI = R(0.28), OMM = R(0.4), OML = R(0.3), OMP = R(0.1), OMR = R(0.2), OMK = R(0.26), OMV = R(0.34), OMW = R(0.22);
+  const W = 224, H = 156, GX = 16, GY = 16, X0 = 28, Y0 = 72, COLS = 3, BW = 760, BH = 464;   // card, gaps, where the grid starts, the board
+  const PADX = 40, REACH = 30;                                                 // the clip wrapper's margin; how far a card's shadow is seen
+  const STAG = 30, TOL = 8, UNDO_MS = 5000, RING = 1 / 3, BELOW = 6, LEAD = 10, ROOM = 12;  // ms between movers; px before a press is a drag; how long Undo is on offer; ring while r < a third of its start; px a mover may sit over a card that stays; px before it clears one that the rise may start; px of overlap that still counts as room
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const $ = (id) => document.getElementById('ic-' + id);
+  const fit = $('fit'), board = $('board'), list = $('list'), num = $('num'), strip = $('strip'), empty = $('empty'), again = $('again'), pill = $('pill'), undoBtn = $('undo'), msg = $('msg');
+
+  /* a spring, critically damped: x(t) = T + (A + B·t)·e^(−ωt). It always starts from the x and v on screen, and never overshoots. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OMM, on: false, hold: null });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    if (s.hold) return true;                                                  // a held spring waits at rest until its condition is met
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < eps && Math.abs(s.v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w) => { s.T = T; s.v = v; s.w = w; s.on = true; };
+  const to = (s, T, v, w) => { if (reduced) { s.x = s.T = T; s.v = 0; s.on = false; } else aim(s, T, v, w); };   // no springs under reduced motion
+  const cell = (n) => ({ x: X0 + (n % COLS) * (W + GX), y: Y0 + Math.floor(n / COLS) * (H + GY) });
+  // how far the iris must reach to cover the card and its shadow from a touch point: the farthest corner
+  const reachR = (ox, oy) => Math.hypot(Math.max(ox + REACH, W + REACH - ox), Math.max(oy + REACH, H + REACH - oy));
+
+  /* the cards: state is on (shown), closing (iris shrinking), gone, or opening (iris growing) */
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const C = Array.from(list.children).map((el, i) => {
+    const btn = el.querySelector('.ic-card'), rb = document.createElement('span');
+    rb.className = 'ic-rb'; rb.setAttribute('aria-hidden', 'true');
+    const svg = document.createElementNS(svgNS, 'svg'), ring = document.createElementNS(svgNS, 'circle');
+    svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    ring.setAttribute('fill', 'none'); ring.setAttribute('stroke', 'rgba(29,29,31,.3)'); ring.setAttribute('stroke-width', '1');
+    svg.appendChild(ring); rb.appendChild(svg); btn.appendChild(rb);
+    const p = cell(i), name = el.querySelector('.ic-t').textContent, tm = el.querySelector('.ic-tm').textContent, dt = el.querySelector('.ic-d').textContent;
+    btn.setAttribute('aria-label', `${name}. ${dt}. ${tm}. Press to clear.`);
+    const c = { el, btn, clip: el.querySelector('.ic-clip'), rb, ring, i, name, state: 'on', half: false, slot: i, slotAt: i, ox: W / 2, oy: H / 2, R0: reachR(W / 2, H / 2),
+      x: mk(p.x), y: mk(p.y), pr: mk(0), ir: mk(0), pend: null, wait: null, fresh: false, fo: false, rowchg: false, tf: '', cp: '', zv: 0, rg: -1, vis: '' };
+    c.ir.x = c.ir.T = c.R0;
+    return c;
+  });
+  const byEl = new Map(C.map((c) => [c.el, c]));
+  const inLayout = (c) => c.state === 'on' || c.state === 'opening' || (c.state === 'closing' && !c.half);   // a closing card keeps its slot until half-way
+  const present = () => C.filter((c) => c.state === 'on' || c.state === 'opening');
+
+  /* world state */
+  let T = 0, raf = 0, last = 0, paused = false, count = C.length, posed = false, stack = [], pillT = 0, endOn = false;
+  let OX = 0, OY = 0, sc = 1, held = null, ptr = null, nextId = 1;
+  const rk = mk(C.length), pv = mk(0);                                        // the count's roll; the pill's cover
+  rk.w = OMK; pv.w = OMV;
+  const timers = [];
+  const later = (ms, fn) => { const t = { at: T + ms, fn, id: nextId++ }; timers.push(t); kick(); return t.id; };
+  const cancel = (id) => { const i = timers.findIndex((t) => t.id === id); if (i >= 0) timers.splice(i, 1); };
+  const say = (t) => { msg.textContent = t; };
+
+  /* the one layout pass: three columns, reading order, from the cards still present. Movers start apart by their distance from the hole. */
+  function layout(src, mode) {
+    const old = new Map(), L = C.filter(inLayout);
+    L.forEach((c) => old.set(c, c.slot));
+    let n = 0;
+    C.forEach((c) => { if (inLayout(c)) c.slot = n++; });
+    const hole = mode === 'insert' ? src.slot : src ? src.slotAt : 0;
+    let maxOld = 0;
+    if (mode === 'insert') L.forEach((c) => { if (c !== src && !c.fresh && c.slot !== old.get(c)) maxOld = Math.max(maxOld, old.get(c)); });
+    for (const c of L) {
+      const p = cell(c.slot);
+      if (c.fresh) { c.fresh = false; c.pend = null; c.x.x = c.x.T = p.x; c.y.x = c.y.T = p.y; c.x.v = c.y.v = 0; c.x.on = c.y.on = false; c.x.hold = c.y.hold = null; continue; }
+      if (Math.abs(p.x - c.x.T) < 0.5 && Math.abs(p.y - c.y.T) < 0.5 && !c.pend) continue;
+      const o = old.get(c);
+      const d = mode === 'insert' ? STAG * (maxOld - o) : STAG * Math.max(0, o - hole - 1);   // a removal: nearest the hole first; an insert: farthest first, so each card finds its place empty
+      c.pend = { tx: p.x, ty: p.y, d: reduced ? 0 : d };
+    }
+    setCount(L.length);
+    kick();
+  }
+  function setCount(n) {
+    count = n; to(rk, n, rk.v, OMK);
+    num.classList.toggle('is-lime', n > 0);                                   // the badge gives its lime up at 0, before the tick's disc takes it
+  }
+  /* a mover starts: from the value on screen. A card that changes rows moves along its row until it clears the cards that stay (no moving card covers a card that stays). */
+  function startMove(c) {
+    const p = c.pend; c.pend = null;
+    const dy = p.ty - c.y.x;
+    let holdY = null, holdX = null;
+    c.rowchg = Math.abs(dy) > 40;
+    const rowY = Y0 + Math.round((c.y.x - Y0) / (H + GY)) * (H + GY);                // the row it sits in (it may still be settling into it)
+    if (c.rowchg && !c.x.hold && !c.y.hold && !reduced && c.state !== 'closing' && Math.abs(c.y.x - rowY) < 8) {
+      const stay = C.filter((s) => s !== c && inLayout(s) && !s.pend && !s.x.on && !s.y.on && s.state === 'on');
+      if (dy < 0) {                                                           // up (always to the right): wait until the mover is past every card that stays in the row above
+        let thr = -1;
+        for (const s of stay) if (Math.abs(s.y.T - p.ty) < 2 && s.x.T + W > c.x.x + 0.5 && s.x.T < p.tx) thr = Math.max(thr, s.x.T + W);
+        if (thr > 0) holdY = () => c.x.x >= thr - LEAD;
+      } else {                                                                // down (always to the left): go down first, past the bottom of every card that stays above
+        let thr = -1;
+        const lo = Math.min(c.x.x, p.tx), hi = Math.max(c.x.x, p.tx) + W;
+        for (const s of stay) if (Math.abs(s.y.T - rowY) < 2 && s.x.T + W > lo && s.x.T < hi) thr = Math.max(thr, s.y.T + H - BELOW);
+        if (thr > 0) holdX = () => c.y.x >= thr;
+      }
+    }
+    if (reduced) { c.x.x = c.x.T = p.tx; c.y.x = c.y.T = p.ty; c.x.on = c.y.on = false; c.x.v = c.y.v = 0; return; }
+    const w = holdX || holdY ? OML : OMM;                                     // a gated mover is a little quicker, so the L it draws is over in about the same time
+    aim(c.x, p.tx, c.x.v, w);
+    aim(c.y, p.ty, c.y.v, w);
+    if (holdY) { c.y.v = 0; c.y.hold = { ok: holdY, t0: T }; }
+    if (holdX) { c.x.v = 0; c.x.hold = { ok: holdX, t0: T }; }
+  }
+  const roomClear = (c) => { const p = cell(c.slot); return !C.some((o) => o !== c && (o.state === 'on' || o.state === 'opening') && Math.abs(o.x.x - p.x) < W - ROOM && Math.abs(o.y.x - p.y) < H - ROOM); };
+
+  /* clear: the iris closes on the touch point (card coordinates) */
+  function clear(c, ox, oy) {
+    if (c.state !== 'on') return false;
+    c.ox = clamp(ox, 0, W); c.oy = clamp(oy, 0, H); c.R0 = reachR(c.ox, c.oy);
+    c.state = 'closing'; c.half = false; c.slotAt = c.slot; c.wait = null;
+    stack.push(c);
+    if (document.activeElement === c.btn) focusNear(c);
+    c.el.inert = true;
+    to(c.pr, 1, c.pr.v, OMP);
+    c.ir.x = c.R0; c.ir.v = 0;
+    say(`Cleared: ${c.name}. ${present().length} left.`);
+    pillOn();
+    if (reduced) { c.ir.x = c.ir.T = 0; c.ir.on = false; c.half = true; layout(c, 'remove'); finishClose(c); render(c); }
+    else aim(c.ir, 0, 0, OMI);
+    kick();
+    return true;
+  }
+  function onHalf(c) { c.half = true; layout(c, 'remove'); }
+  function finishClose(c) {
+    c.state = 'gone'; c.ir.x = c.ir.T = 0; c.ir.on = false; c.pend = null;
+    if (C.every((o) => o.state === 'gone')) setEnd(true);
+  }
+  function restore(c) {
+    const wasGone = c.state === 'gone';
+    if (c.state !== 'gone' && c.state !== 'closing') return;
+    c.el.inert = false; c.pend = null;
+    to(c.pr, 0, c.pr.v, OMR);
+    c.R0 = reachR(c.ox, c.oy);
+    if (wasGone) { c.fresh = true; c.state = 'opening'; c.ir.x = c.ir.T = 0; c.ir.v = 0; c.ir.on = false; c.wait = { at: T + (endOn ? 260 : 0), room: true }; }
+    else { c.state = 'opening'; c.wait = null; aim(c.ir, c.R0, c.ir.v, OMI); }
+    const was = endOn;
+    if (was) setEnd(false);
+    layout(c, 'insert');
+    if (reduced) { c.ir.x = c.ir.T = c.R0; c.ir.on = false; c.wait = null; c.state = 'on'; }
+    kick();
+  }
+  function undo() {
+    const c = stack.pop();
+    if (!c) return false;
+    restore(c);
+    say(`Restored: ${c.name}. ${present().length} left.`);
+    if (stack.length) pillOn(); else pillOff(false);
+    return c;
+  }
+
+  /* the pill: on for UNDO_MS after the last clear or undo */
+  function pillOn() {
+    cancel(pillT);
+    to(pv, 1, pv.v, OMV); pill.style.visibility = 'visible';
+    undoBtn.tabIndex = 0; pill.removeAttribute('aria-hidden');
+    pillT = later(UNDO_MS, () => pillOff(true));
+  }
+  function pillOff(drop) {
+    cancel(pillT);
+    if (drop) stack.length = 0;                                               // after that the cleared cards are gone for good
+    to(pv, 0, pv.v, OMW);
+    undoBtn.tabIndex = -1; pill.setAttribute('aria-hidden', 'true');
+    kick();
+  }
+  function setEnd(on) {
+    endOn = on;
+    empty.classList.toggle('is-on', on); empty.setAttribute('aria-hidden', on ? 'false' : 'true'); again.tabIndex = on ? 0 : -1;
+    if (on) say('All clear. Nothing left today.');
+  }
+  /* the board fills again: six irises opening from the cards' centres, 60 ms apart */
+  function refill() {
+    const gone = C.filter((c) => c.state === 'gone');
+    if (!gone.length) return;
+    pillOff(true);
+    const was = endOn;
+    if (was) setEnd(false);
+    gone.forEach((c, k) => {
+      c.el.inert = false; c.pend = null; c.ox = W / 2; c.oy = H / 2; c.R0 = reachR(c.ox, c.oy);
+      c.fresh = true; c.state = 'opening'; c.ir.x = c.ir.T = 0; c.ir.v = 0; c.ir.on = false; c.pr.x = c.pr.T = 0; c.pr.on = false;
+      c.wait = { at: T + (was ? 300 : 0) + (reduced ? 0 : k * 60), room: false };
+    });
+    layout(gone[0], 'insert');
+    say(`Board refilled. ${C.length} left.`);
+    if (reduced) gone.forEach((c) => { c.ir.x = c.ir.T = c.R0; c.wait = null; c.state = 'on'; });
+    kick();
+  }
+  function focusNear(c) {
+    const cand = (k) => C.find((o) => o.i === k && o.state === 'on');
+    let f = null;
+    for (let k = c.i + 1; k < C.length && !f; k++) f = cand(k);
+    for (let k = c.i - 1; k >= 0 && !f; k--) f = cand(k);
+    if (f) f.btn.focus({ preventScroll: true }); else if (pill.style.visibility === 'visible') undoBtn.focus({ preventScroll: true });
+  }
+
+  /* draw everything from the springs */
+  function render(c) {
+    const s = 1 - 0.03 * c.pr.x;
+    const tf = `translate3d(${(c.x.x + c.ox * (1 - s)).toFixed(2)}px, ${(c.y.x + c.oy * (1 - s)).toFixed(2)}px, 0) scale(${s.toFixed(4)})`;
+    if (tf !== c.tf) { c.el.style.transform = tf; c.tf = tf; }
+    const moving = c.x.on || c.y.on || !!c.pend;
+    const z = c.state === 'closing' || c.state === 'opening' ? 1 : moving ? (c.rowchg ? 5 : 4) : 3;
+    if (z !== c.zv) { c.zv = z; c.el.style.zIndex = z; }
+    let cp = '', vis = '', r = c.ir.x;
+    if (c.state === 'gone') vis = 'hidden';
+    else if (c.state === 'closing' || c.state === 'opening') {
+      if (r >= c.R0 - 0.01) cp = '';
+      else if (r < 1.2) { cp = ''; vis = 'hidden'; }                          // nothing of the card is left: draw nothing
+      else cp = `circle(${r.toFixed(1)}px at ${(c.ox + PADX).toFixed(1)}px ${(c.oy + PADX).toFixed(1)}px)`;
+    }
+    if (cp !== c.cp) { c.cp = cp; c.clip.style.clipPath = cp; }
+    if (vis !== c.vis) { c.vis = vis; c.el.style.visibility = vis; }
+    const ringOn = (c.state === 'closing' || c.state === 'opening') && r > 1.2 && r < c.R0 * RING;
+    if (ringOn) {
+      c.ring.setAttribute('cx', c.ox.toFixed(1)); c.ring.setAttribute('cy', c.oy.toFixed(1)); c.ring.setAttribute('r', (r + 0.5).toFixed(2));   // the stroke's inner edge is the iris edge
+      if (c.rg !== 1) { c.rg = 1; c.rb.style.display = 'block'; }
+    } else if (c.rg !== 0) { c.rg = 0; c.rb.style.display = 'none'; }
+  }
+  const sv = { k: NaN, v: NaN };
+  function renderUI() {
+    const k = (-rk.x * 24).toFixed(2);
+    if (k !== sv.k) { sv.k = k; strip.style.transform = `translate3d(0, ${k}px, 0)`; }
+    const v = +clamp(pv.x, 0, 1).toFixed(3);
+    if (v !== sv.v) { sv.v = v; pill.style.setProperty('--v', v); pill.style.transform = `translate3d(0, ${((1 - v) * 14).toFixed(2)}px, 0)`; if (v <= 0.003 && pv.T === 0) pill.style.visibility = 'hidden'; }
+  }
+  const renderAll = () => { C.forEach(render); renderUI(); };
+
+  /* the world: the clock T runs in ms and only while something moves; held, it stands still */
+  const kick = () => { if (!raf && !paused) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) { raf = 0; if (paused) return; const dt = clamp((now - last) / 1000, 0.001, 0.04); last = now; if (world(dt)) kick(); }
+  function world(dt) {
+    T += dt * 1000;
+    let live = false;
+    for (const t of timers.slice().sort((a, b) => a.at - b.at)) if (T >= t.at) { const i = timers.indexOf(t); if (i >= 0) { timers.splice(i, 1); t.fn(); } }
+    for (const c of C) {
+      if (c.pend) { c.pend.d -= dt * 1000; if (c.pend.d <= 0) startMove(c); live = true; }
+      if (c.wait && T >= c.wait.at && (!c.wait.room || roomClear(c) || T - c.wait.at > 320)) { c.wait = null; aim(c.ir, c.R0, 0, OMI); }
+      if (c.wait) live = true;
+      for (const s of [c.x, c.y]) if (s.hold && (s.hold.ok() || T - s.hold.t0 > 600)) s.hold = null;
+      live = step(c.pr, dt, 0.002, 0.05) || live;
+      live = step(c.x, dt, 0.05, 3) || live;
+      live = step(c.y, dt, 0.05, 3) || live;
+      if (c.state === 'closing' || c.state === 'opening') {
+        live = step(c.ir, dt, 1.2, 14) || live;
+        if (c.state === 'closing' && !c.half && c.ir.x <= c.R0 / 2) onHalf(c);
+        if (c.state === 'closing' && !c.ir.on && c.ir.x <= 0) finishClose(c);
+        else if (c.state === 'opening' && !c.wait && !c.ir.on && c.ir.x >= c.R0 - 1.2) { c.state = 'on'; c.ir.x = c.ir.T = c.R0; if (c.fo) { c.fo = false; c.btn.focus({ preventScroll: true }); } }
+      }
+    }
+    live = step(rk, dt, 0.002, 0.05) || live;
+    live = step(pv, dt, 0.002, 0.05) || live;
+    renderAll();
+    return live || timers.length > 0;
+  }
+  function advance(ms) { for (let t = 0; t < ms; t += 16) world(0.016); }
+  const settleUI = () => { for (const s of [rk, pv]) { s.x = s.T; s.v = 0; s.on = false; } renderAll(); };
+
+  /* the hand. A press answers at once; a tap on release clears, from the point that was touched; more than 8 px of travel (a scroll, a slip) cancels */
+  function boardPt(cx, cy) { return { x: (cx - OX) / sc, y: (cy - OY) / sc }; }
+  function down(c, cx, cy, ghost) {
+    if (!c || c.state !== 'on' || held) return false;
+    resume();
+    const b = boardPt(cx, cy);
+    held = { c, ox: clamp(b.x - c.x.x, 0, W), oy: clamp(b.y - c.y.x, 0, H), cx, cy, dead: false, ghost: !!ghost };
+    c.ox = held.ox; c.oy = held.oy;                                           // the press scales the card about the touch
+    to(c.pr, 1, c.pr.v, OMP);
+    kick();
+    return true;
+  }
+  function slip() { if (!held || held.dead) return; held.dead = true; to(held.c.pr, 0, held.c.pr.v, OMR); kick(); }
+  function move(cx, cy) { if (held && !held.dead && Math.hypot(cx - held.cx, cy - held.cy) > TOL) slip(); }
+  function up(cx, cy, cancelled) {
+    if (!held) return;
+    const h = held; held = null;
+    if (h.dead || cancelled) { if (!h.dead) { to(h.c.pr, 0, h.c.pr.v, OMR); kick(); } return; }
+    const b = boardPt(cx, cy), c = h.c;
+    if (b.x < c.x.x || b.x > c.x.x + W || b.y < c.y.x || b.y > c.y.x + H) { to(c.pr, 0, c.pr.v, OMR); kick(); return; }   // let go outside the card
+    clear(c, h.ox, h.oy);
+  }
+  list.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null) return;
+    const c = byEl.get(e.target.closest('.ic-item'));
+    if (!c || c.state !== 'on') return;                                       // a press on a card that is closing does nothing
+    ptr = e.pointerId;
+    try { c.el.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    down(c, e.clientX, e.clientY);
+  });
+  list.addEventListener('pointermove', (e) => { if (e.pointerId === ptr) move(e.clientX, e.clientY); });
+  list.addEventListener('pointerup', (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.clientX, e.clientY); });
+  list.addEventListener('pointercancel', (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.clientX, e.clientY, true); });
+  list.addEventListener('dragstart', (e) => e.preventDefault());
+  list.addEventListener('contextmenu', (e) => e.preventDefault());
+  list.addEventListener('click', (e) => {                                     // assistive technology presses the button with no pointer: clear from the centre
+    const c = byEl.get(e.target.closest('.ic-item'));
+    if (c && e.detail === 0) { resume(); clear(c, W / 2, H / 2); }
+  });
+  undoBtn.addEventListener('click', () => { resume(); undo(); });
+  again.addEventListener('click', () => { resume(); refill(); });
+
+  /* keys: Enter, Space or Delete clears the focused card from its centre; arrows move between cards; Cmd/Ctrl+Z undoes */
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented) return;
+    const mod = e.metaKey || e.ctrlKey, k = e.key;
+    if (mod && (k === 'z' || k === 'Z')) { if (stack.length) { e.preventDefault(); resume(); const c = undo(); if (c) c.fo = true; } return; }
+    if (mod || e.altKey) return;
+    const c = byEl.get(e.target.closest ? e.target.closest('.ic-item') : null);
+    if (!c) return;
+    if (k === 'Enter' || k === ' ' || k === 'Delete' || k === 'Backspace') { e.preventDefault(); resume(); clear(c, W / 2, H / 2); return; }
+    const d = k === 'ArrowRight' ? 1 : k === 'ArrowLeft' ? -1 : k === 'ArrowDown' ? COLS : k === 'ArrowUp' ? -COLS : 0;
+    if (!d) return;
+    e.preventDefault();
+    const P = present().filter((o) => o.state === 'on').sort((a, b) => a.slot - b.slot), j = P.indexOf(c) + d;
+    if (P[j]) P[j].btn.focus({ preventScroll: true });
+  });
+  document.addEventListener('keyup', (e) => { if (e.key === ' ' && e.target.closest && e.target.closest('.ic-item')) e.preventDefault(); });
+
+  function measure() { const r = fit.getBoundingClientRect(); OX = r.left; OY = r.top; sc = r.width / BW || 1; }
+  const letgo = () => { if (held && held.ghost) up(0, 0, true); };           // a ghost's hand lets go; a real one is never touched
+  const resume = () => { posed = false; if (paused) { paused = false; kick(); } };
+
+  /* back to six whole cards at once */
+  function home() {
+    if (held) held = null; ptr = null;
+    timers.length = 0; stack = []; endOn = false;
+    empty.classList.remove('is-on'); empty.setAttribute('aria-hidden', 'true'); again.tabIndex = -1;
+    paused = false; posed = false;
+    C.forEach((c, i) => {
+      const p = cell(i);
+      Object.assign(c, { state: 'on', half: false, slot: i, slotAt: i, ox: W / 2, oy: H / 2, pend: null, wait: null, fresh: false, rowchg: false });
+      c.R0 = reachR(c.ox, c.oy);
+      for (const s of [c.x, c.y, c.pr, c.ir]) { s.v = 0; s.on = false; s.hold = null; }
+      c.x.x = c.x.T = p.x; c.y.x = c.y.T = p.y; c.pr.x = c.pr.T = 0; c.ir.x = c.ir.T = c.R0;
+      c.el.inert = false; c.el.removeAttribute('aria-hidden'); c.rowchg = false;
+    });
+    rk.x = rk.T = C.length; pv.x = pv.T = 0; pill.style.visibility = 'hidden'; pill.setAttribute('aria-hidden', 'true'); undoBtn.tabIndex = -1;
+    num.classList.add('is-lime');
+    renderAll();
+  }
+  /* the thumbnail's frame, made through the real path: a press near the lower right of the last card and a release; the world runs until the iris is two thirds closed, then stands still */
+  function pose(ox = 136, oy = 114, frac = 0.31) {
+    home();
+    const c = C[C.length - 1], b = { x: c.x.x + ox, y: c.y.x + oy }, k = { x: OX + b.x * sc, y: OY + b.y * sc };
+    down(c, k.x, k.y, true);
+    advance(160);
+    up(k.x, k.y);
+    for (let i = 0; i < 80 && !(c.state === 'closing' && c.ir.x <= c.R0 * frac); i++) world(0.016);
+    settleUI();
+    posed = true; paused = true;
+  }
+
+  measure(); home();
+  return {
+    measure, home, pose, resume, letgo, freeze(on) { paused = !!on; if (!on) kick(); }, down, move, up, clear, undo, refill, advance, settleUI, layout,
+    get posed() { return posed; }, get held() { return held; }, get scale() { return sc; }, get now() { return T; },
+    client(bx, by) { return { x: OX + bx * sc, y: OY + by * sc }; },
+    hit(cx, cy) { const e = document.elementFromPoint(cx, cy); return e && e.closest ? byEl.get(e.closest('.ic-item')) || null : null; },
+    pt(slot, fx, fy) { const p = cell(slot); return { x: p.x + fx * W, y: p.y + fy * H }; },
+    pillPt() { const r = pill.getBoundingClientRect(); return { x: (r.left + r.width / 2 - OX) / sc, y: (r.top + r.height / 2 - OY) / sc }; },
+    againPt() { const r = again.getBoundingClientRect(); return { x: (r.left + r.width / 2 - OX) / sc, y: (r.top + r.height / 2 - OY) / sc }; },
+    get count() { return present().length; }, get stack() { return stack.length; }, get ending() { return endOn; },
+    settled() { return C.every((c) => !c.x.on && !c.y.on && !c.pend && !c.wait && (c.state === 'on' || c.state === 'gone')) && !pv.on; },
+    snap() { return C.map((c) => ({ i: c.i, name: c.name, state: c.state, slot: c.slot, x: c.x.x, y: c.y.x, tx: c.x.T, ty: c.y.T, xon: c.x.on, yon: c.y.on, pend: !!c.pend, r: c.ir.x, R0: c.R0, half: c.half, held: !!(c.x.hold || c.y.hold), pr: c.pr.x })); },
+    el: { list, board, pill, undoBtn, again, num, empty },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('ic-fit');
+  // the board is drawn at 760 × 464 and scaled to the room it is given (1 in the 800 × 500 tile, 1.6 at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 18 : Math.min(48, Math.max(24, 0.04 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.97 * W / 760, (H - 2 * pad - ui) / 464, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+    IC.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  /* the ghost: a hand that drives the same press, move and release the pointer does */
+  let epoch = 0, resumeT = 0, gp = { x: 380, y: 232 };
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const put = () => { const c = IC.client(gp.x, gp.y); QM.ghostAt(c.x, c.y); return c; };
+  async function glide(my, bx, by, ms) {
+    const x0 = gp.x, y0 = gp.y, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), e = mv(p);
+      gp = { x: x0 + (bx - x0) * e, y: y0 + (by - y0) * e };
+      put();
+      if (p >= 1) break;
+    }
+  }
+  const calm = async (my, ms = 2500) => { const t0 = performance.now(); await gap(my, 120); while (!IC.settled() && performance.now() - t0 < ms) await gap(my, 60); };
+  // a tap: glide to a point, press, hold a beat so the 0.97 shows, release. If the card there is already closing, try again a moment later
+  async function tap(my, bx, by, travel = 560, hold = 120) {
+    await glide(my, bx, by, travel);
+    for (let k = 0; k < 6; k++) {
+      await gap(my, k ? 140 : 100);
+      const c = IC.client(bx, by);
+      if (IC.down(IC.hit(c.x, c.y), c.x, c.y, true)) { await gap(my, hold); IC.up(c.x, c.y); return true; }
+    }
+    return false;
+  }
+  async function pressPill(my, which) {
+    const p = which === 'again' ? IC.againPt() : IC.pillPt();
+    await glide(my, p.x, p.y, 520);
+    const b = which === 'again' ? IC.el.again : IC.el.undoBtn;
+    b.classList.add('is-hot'); await gap(my, 150);
+    b.classList.add('is-press'); await gap(my, 110);
+    b.classList.remove('is-press', 'is-hot');
+    if (which === 'again') IC.refill(); else IC.undo();
+  }
+
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5000 : 1800);
+      QM.ghostShow();
+      for (let round = 0; ; round++) {
+        if (IC.posed) {                                                      // the world was held two thirds through the first clear: let it finish
+          gp = { x: 136 + 508, y: 114 + 244 }; put();
+          IC.resume(); await gap(my, 200);
+        } else {                                                             // from six whole cards: the Renew card, near its lower right
+          IC.home(); await gap(my, 300);
+          const e = IC.pt(5, 0.78, 0.76);
+          await tap(my, e.x, e.y, 800);
+        }
+        await calm(my);
+        let q = IC.pt(0, 0.1, 0.13);                                         // a corner of the first card
+        await tap(my, q.x, q.y, 520);
+        await gap(my, 380);
+        q = IC.pt(1, 0.5, 0.5);                                              // the centre of the second
+        await tap(my, q.x, q.y, 480);
+        await gap(my, 380);
+        q = IC.pt(2, 0.97, 0.52);                                            // an edge of the third
+        await tap(my, q.x, q.y, 480);
+        await calm(my); await gap(my, 250);
+        await pressPill(my, 'undo');                                         // Undo once: the others make room, the iris opens from the edge
+        await calm(my); await gap(my, 400);
+        q = IC.pt(0, 0.5, 0.5);                                              // the rest, one after another
+        for (let n = 0; n < 3; n++) {
+          await tap(my, q.x, q.y, n ? 240 : 520, 90);
+          await gap(my, 220);
+        }
+        await gap(my, 2500);                                                 // All clear
+        await pressPill(my, 'again');                                        // Start over: six irises from the cards' centres
+        await gap(my, 1900);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) IC.letgo(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); }
+  if (!QM.tile && !reduced) {
+    const idle = () => IC.held || IC.el.board.matches(':hover');
+    const touch = () => {
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) { IC.home(); script(); } else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') touch(); }, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  const park = () => { if (reduced || !IC.posed) return; gp = { x: 136 + 508, y: 114 + 244 }; put(); QM.ghostShow(); };
+  QM.demo({ kind: 'loop', restart() { stopScript(); IC.home(); if (!reduced && (QM.tile || QM.live)) { IC.pose(); park(); } if (!reduced) script(); } });
+  if (!reduced && (QM.tile || QM.live)) IC.pose();
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { park(); script(); }, 300));
+})();
+</script>
+</body>
+</html>
