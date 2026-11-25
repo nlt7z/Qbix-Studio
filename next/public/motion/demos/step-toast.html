@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step toast · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "step-toast", "title": "Step toast", "group": "studio", "added": "2026-11-25", "cat": "loading", "order": 30,
+  "kind": "loop", "preview": {"secs": 9, "skip": 1500}, "tone": "paper", "shot": 600,
+  "line": "452 × 64 toast · edges 8 px up, 0.95 scale · rows 52 px, 40 ms apart · 4 steps, 10.1 s · one lime arc",
+  "summary": "Willow Counseling's site is being published from Strata, and the toast keeps its own history. A translucent toast (72% white, 20 px blur) sits at the bottom of a quiet editor: a 22 px ring with a lime arc (a third of the ring turning, or the share of a count), the step's text rolling under a clip with the count in digit columns (Optimising images · 38 of 96), and a quiet Cancel. When a step ends its ring closes and a tick is drawn, the toast rolls to the next step and a card carrying the finished state is left behind it as a stacked edge, 8 px higher and 0.95 scale per level, at most three showing, so the depth of the stack is the progress. Bring the pointer to it (or focus, or tap) and the edges spring up into full 52 px rows with a grey tick, the past-tense name and the time, 40 ms apart, while the toast keeps working; a step that ends while it is open adds its row above the toast and the older rows glide up. Cancel stops the ring, Undo resumes the same step, and the whole stack can be flicked down and brought back from a small Publishing pill.",
+  "spec": [
+    ["Toast", "452 × 64 px at the bottom centre of a 720 × 460 editor, 20 px radius, rgba(255,255,255,.72) with saturate(180%) blur(20px), a 1 px rgba(0,0,0,.08) edge and a 0 10px 30px rgba(0,0,0,.12) shadow; a 22 px ring at 20 px, the step's text 16 px / 500 at 54 px, a 76 × 32 text button 14 px from the right"],
+    ["Steps", "Uploading files 1.8 s (12 files), Optimising images 3.2 s (96 images, 15 batches), Updating DNS 4.0 s (no count: after 2.5 s the text rolls to Still updating DNS… in #6e6e73), Going live 1.1 s: 10.1 s. A count is shown only where it is known, as a share on the arc and in digit columns of its own; elsewhere the arc is a third of the ring, turning once a second"],
+    ["Hand-off", "in a step's last 0.46 s the arc closes to a full ring (response 0.18 s), 0.2 s later the ring turns #86868b and a tick is drawn (0.26 s); when the slot ends the mark and the text roll one line on a 0.34 s spring and a card with the finished state is left behind the toast. The last step closes into a lime disc with an ink tick instead, and only the text rolls: Live at willowcounseling.com, with Cancel rolling to View"],
+    ["Stack", "card k (k = 1 for the newest) sits 8 k px above the toast at 0.95^k scale, opacity .80, .86, .92 white; a card shows only the strip above the card in front of it (clip to that card's top plus 2 px), so no text of a card behind ever shows through a translucent one, and a fourth card is covered. Place and look are springs: the card's depth p (response 0.42 s) and its openness o (0.38 s)"],
+    ["Open", "pointer, keyboard focus or a tap on the toast or the stack opens it (a bridge keeps the 8 px gaps inside); each card goes from its edge to a 452 × 52 row, 8 px apart, 16 px radius, the nearest first and 40 ms apart; the toast does not move. The oldest row is at the top. A new row starts from the toast's own rect and rises to the nearest place while the older rows glide up on their depth spring"],
+    ["Close", "leaving, or Escape, closes by the same springs after a 300 ms grace; a hand coming back inside the grace keeps it open, and any call retargets from the value on screen, so it can be reversed mid-way with no jump"],
+    ["Cancel", "the arc stops where it is and turns #aeaeb2 (a static grey ring), the text rolls to Cancelled. Nothing was published., Cancel rolls to Undo; Undo rolls both back and the same step carries on from the same count and the same second. Left alone for 5 s the stack leaves"],
+    ["Flick", "6 px of travel, then the whole stack follows the pointer 1:1 with capture; upward it rubber-bands (x·D·0.55)/(D + 0.55·|x|), D = 120 px; release projects 0.099 s of velocity (d 0.99) and the stack leaves past 40% of its height or faster than 500 px/s downward, the spring starting at the release velocity; otherwise it springs home. The run goes on unseen and a Publishing… pill with a small ring is uncovered at the bottom edge; pressing it brings the stack back"],
+    ["End", "Live at willowcounseling.com rests 4 s (longer while a hand is on it), then the whole stack leaves downward on one spring (response 0.45 s); in a tile a fresh toast rises from the bottom edge 1.5 s later (3 s in the detail view). View leaves at once"],
+    ["Loop", "the page loads on a pose that is played, not drawn: step 2 at 38 of 96 with the stack open on one finished row and the pointer on the toast, held 1.3 s; then the ghost pointer leaves (the stack closes), comes back for step 3 and the stack opens, a row is added while it is open; every second run it presses Cancel and Undo, every fourth it flicks the stack away and brings it back from the pill; it yields to mouse, touch and keys"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A Qbix publish: the toast in Strata when a client's site goes from draft to a live domain, where the wait has named steps and the history of what is already done should be one touch away.",
+  "rules": [
+    "The depth of the stack is the progress: one card is left behind per finished step, and the toast itself only ever says what is happening now.",
+    "A card behind another shows only its edge. Cards are clipped to the strip above the card in front of them, so a translucent toast never lets two texts mix; the text of a row is uncovered as the row rises.",
+    "Opening never moves the toast and never stops the run. Every place is a spring that starts from the value on screen, so open, close, a new row and a flick can all land on top of each other.",
+    "Exactly one lime in a frame: the working arc (the disc behind the tick at the end, the small ring in the pill while the stack is away). Finished ticks, finished rings and a cancelled ring are grey.",
+    "Progress is shown only where it is known: a count fills the arc and rolls in digit columns, everything else is a turning third.",
+    "The toast's text is role status (polite, one message per step), the finished steps are a real list that opens on keyboard focus, Cancel, Undo, View and the pill are real buttons, Escape closes the stack.",
+    "Under reduced motion the toast rests with the stack open on Updating DNS and two finished rows, springs are instant, the steps change in place after 8 s and it stays on Live."
+  ],
+  "tags": ["loading", "toast", "steps", "stack", "history", "progress", "ring", "tick", "spring", "flick", "rubber band", "translucent", "keyboard", "publish", "Willow Counseling"]
+}
+</script>
+<style data-code>
+/* Step toast. A multi-step loader in the system face with Apple's neutrals: a translucent toast over a quiet editor.
+   Every place is a spring set from script (render()): the stack's offset, each card's depth (p) and openness (o), the rolls, the ring.
+   A card behind another shows only the strip above the card in front of it, so two translucent texts never mix.
+   The one lime is the arc of the step in work (the disc at the end). */
+.st-win { --st-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --st-out: cubic-bezier(.16, 1, .3, 1); --st-ui: cubic-bezier(.4, 0, .2, 1);
+  position: absolute; left: 0; top: 0; width: 720px; height: 460px; overflow: hidden; border-radius: 14px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 30px 60px -28px rgba(0, 0, 0, .3);
+  color: #1d1d1f; font: 400 16px/24px var(--st-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.st-win :where(h2, p, ol, li) { margin: 0; padding: 0; }
+.st-win :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+/* the editor behind: a title bar and a page of quiet blocks, so the glass has something to sit over */
+.st-bar { position: absolute; left: 0; right: 0; top: 0; height: 40px; border-bottom: 1px solid rgba(0, 0, 0, .08); }
+.st-dots { position: absolute; left: 16px; top: 15px; display: flex; gap: 7px; }
+.st-dots i { width: 10px; height: 10px; border-radius: 50%; background: #e8e8ed; }
+.st-ttl { position: absolute; left: 0; right: 0; top: 0; text-align: center; font: 500 13px/40px var(--st-f); letter-spacing: -.006em; color: #6e6e73; }
+.st-pg { position: absolute; left: 0; top: 41px; right: 0; bottom: 0; }
+.st-pg i { position: absolute; display: block; background: #e8e8ed; border-radius: 6px; }
+.st-pg .is-s { background: #f5f5f7; }
+.st-pg .is-c { background: #f5f5f7; border-radius: 14px; }
+
+/* the stack: the toast and the cards behind it, one body for a drag; its origin is the toast's top left corner */
+.st-stack { position: absolute; left: 134px; top: 368px; width: 452px; height: 64px; touch-action: none; will-change: transform; }
+.st-stack.is-drag, .st-stack.is-drag * { cursor: grabbing !important; }
+.st-bridge { position: absolute; left: 0; width: 452px; top: 0; height: 0; pointer-events: none; }
+.st-bridge.is-on { pointer-events: auto; }
+.st-toast, .st-card { position: absolute; left: 0; top: 0; background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+.st-toast { z-index: 100; width: 452px; height: 64px; border-radius: 20px; cursor: grab;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12); }
+.st-list { position: absolute; left: 0; top: 0; width: 452px; height: 64px; list-style: none; }
+.st-card { width: 452px; height: 64px; background: rgba(255, 255, 255, var(--a, .8)); border-radius: var(--r, 20px); cursor: grab; outline: none; will-change: transform;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .07), 0 6px 18px rgba(0, 0, 0, .08); }
+.st-card.is-off { pointer-events: none; }
+.st-card:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+/* a finished row: a small grey tick, the past-tense name, the time */
+.st-ct { position: absolute; left: 0; right: 0; top: calc(50% - 12px); height: 24px; font: 500 15px/24px var(--st-f); letter-spacing: -.01em; white-space: nowrap; }
+.st-ck { position: absolute; left: 20px; top: 5px; width: 14px; height: 14px; fill: none; stroke: #86868b; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.st-cn { position: absolute; left: 46px; top: 0; color: #1d1d1f; }
+.st-cm { position: absolute; right: 20px; top: 0; font-weight: 400; color: #6e6e73; font-variant-numeric: tabular-nums; }
+
+/* the live toast: a mark, the step's text and one quiet button; each is a clipped window whose column rolls one line */
+.st-w { position: absolute; overflow: hidden; white-space: nowrap; pointer-events: none; }
+.st-col { display: block; will-change: transform; }
+.st-it { display: block; height: 24px; }
+.st-mw { left: 19px; top: 20px; width: 24px; height: 24px; }
+.st-nw { left: 54px; top: 20px; width: 300px; height: 24px; font: 500 16px/24px var(--st-f); letter-spacing: -.01em; }
+.st-pr { color: #1d1d1f; }
+.st-sec { font-weight: 400; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.st-sl { font-weight: 500; color: #6e6e73; }
+.st-mk { display: block; width: 22px; height: 22px; margin: 1px; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.st-tr { stroke: #e8e8ed; }
+.st-ds { fill: #B8FF00; stroke: none; transform-box: fill-box; transform-origin: 50% 50%; }
+.st-tk { stroke-width: 2.3; }
+/* digit columns: each digit rolls by itself inside a one character clip */
+.st-dg { display: inline-block; width: 1ch; height: 24px; overflow: hidden; vertical-align: top; text-align: center; }
+.st-dc { display: block; will-change: transform; }
+.st-dc > i { display: block; height: 24px; font-style: normal; }
+/* Cancel, Undo, View */
+.st-act { position: absolute; right: 14px; top: 16px; width: 76px; height: 32px; border-radius: 16px; z-index: 2; color: #6e6e73;
+  transition: background-color 150ms var(--st-ui), color 150ms var(--st-ui), box-shadow 100ms var(--st-ui); }
+.st-act:hover, .st-act.is-hot { background: rgba(0, 0, 0, .05); color: #1d1d1f; }
+.st-act:active { box-shadow: inset 0 0 0 40px rgba(0, 0, 0, .04); }
+.st-act:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.st-aw { position: absolute; inset: 0; overflow: hidden; text-align: center; white-space: nowrap; pointer-events: none; font: 500 15px/32px var(--st-f); letter-spacing: -.01em; }
+.st-aw .st-it { height: 32px; }
+
+/* the pill that is uncovered at the bottom edge while the stack is away */
+.st-pill { position: absolute; left: 50%; bottom: 14px; z-index: 5; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px 0 10px; margin-left: -69px; width: 138px; box-sizing: border-box; border-radius: 18px;
+  background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12); font: 500 14px/20px var(--st-f); letter-spacing: -.01em; color: #1d1d1f; visibility: hidden;
+  transition: box-shadow 100ms var(--st-ui), scale 100ms var(--st-ui); }
+.st-pill:active { scale: .97; }
+.st-pill:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.st-pm { flex: none; width: 16px; height: 16px; }
+.st-pm svg { display: block; width: 16px; height: 16px; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.st-pt { position: relative; flex: 1; height: 20px; overflow: hidden; white-space: nowrap; pointer-events: none; }
+.st-pt .st-it { height: 20px; }
+@media (prefers-reduced-motion: reduce) {
+  .st-win *, .st-win *::before, .st-win *::after { transition: none !important; }
+}
+</style>
+<style>
+  /* the stage: a quiet #f5f5f7 ground; the editor is drawn 720 × 460 and scaled to the room it has */
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  html.qm-tile .qm-stage { padding: 14px; }
+  .qm-stage { overflow: hidden; }
+  .st-fit { position: relative; width: calc(720px * var(--s, 1)); height: calc(460px * var(--s, 1)); }
+  .st-world { position: absolute; left: 0; top: 0; width: 720px; height: 460px; transform-origin: 0 0; transform: scale(var(--s, 1)); }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; background: #f5f5f7; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<div class="st-fit" id="st-fit"><div class="st-world" id="st-world">
+<!-- code -->
+<section class="st-win" id="st-win" aria-label="Strata editor, Willow Counseling">
+  <div class="st-bar" aria-hidden="true"><span class="st-dots"><i></i><i></i><i></i></span><p class="st-ttl">Willow Counseling · Home</p></div>
+  <div class="st-pg" aria-hidden="true">
+    <i style="left:40px;top:18px;width:72px;height:12px"></i>
+    <i style="left:520px;top:20px;width:36px;height:8px"></i><i style="left:572px;top:20px;width:36px;height:8px"></i><i style="left:624px;top:20px;width:36px;height:8px"></i>
+    <i class="is-s" style="left:408px;top:52px;width:272px;height:196px;border-radius:18px"></i><i style="left:512px;top:96px;width:72px;height:72px;border-radius:50%"></i>
+    <i style="left:40px;top:80px;width:300px;height:26px;border-radius:13px"></i><i style="left:40px;top:116px;width:228px;height:26px;border-radius:13px"></i>
+    <i style="left:40px;top:162px;width:290px;height:8px"></i><i style="left:40px;top:180px;width:230px;height:8px"></i>
+    <i style="left:40px;top:208px;width:108px;height:34px;border-radius:17px"></i>
+    <i class="is-c" style="left:40px;top:262px;width:200px;height:190px"></i><i class="is-c" style="left:260px;top:262px;width:200px;height:190px"></i><i class="is-c" style="left:480px;top:262px;width:200px;height:190px"></i>
+    <i style="left:56px;top:278px;width:168px;height:58px;border-radius:8px"></i><i style="left:276px;top:278px;width:168px;height:58px;border-radius:8px"></i><i style="left:496px;top:278px;width:168px;height:58px;border-radius:8px"></i>
+    <i style="left:56px;top:352px;width:120px;height:8px"></i><i style="left:276px;top:352px;width:120px;height:8px"></i><i style="left:496px;top:352px;width:120px;height:8px"></i>
+    <i style="left:56px;top:372px;width:84px;height:8px"></i><i style="left:276px;top:372px;width:84px;height:8px"></i><i style="left:496px;top:372px;width:84px;height:8px"></i>
+  </div>
+  <div class="st-stack" id="st-stack">
+    <div class="st-bridge" id="st-bridge"></div>
+    <ol class="st-list" id="st-list" aria-label="Finished steps"></ol>
+    <div class="st-toast" id="st-toast">
+      <div class="st-w st-mw" id="st-mw" aria-hidden="true"></div>
+      <div class="st-w st-nw" id="st-nw" aria-hidden="true"></div>
+      <button class="st-act" id="st-act" type="button" aria-label="Cancel publishing"><span class="st-aw" id="st-aw" aria-hidden="true"></span></button>
+    </div>
+  </div>
+  <button class="st-pill" id="st-pill" type="button" inert aria-label="Publishing. Show progress">
+    <span class="st-pm" id="st-pm" aria-hidden="true"></span><span class="st-pt" id="st-pt" aria-hidden="true"></span>
+  </button>
+  <p class="sr-only" id="st-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+</div></div>
+  <div class="qm-ui"><span>Hold the pointer on the toast to open the stack. Flick it down to hide it, Cancel and Undo work, Escape closes</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Step toast. The run is a clock (S.rt); the picture is springs, all critically damped, all starting from the value and velocity on screen.
+   A card (one per finished step) has its depth p (0 is the newest, -1 is the toast itself) and its openness o. Its rect is the mix of two rects by o:
+   the stacked edge for depth p (8 px up and 0.95 scale per level, at most three levels) and the row for depth p (52 px rows, 8 px apart, up the page).
+   A card is clipped to the strip above the card in front of it, so a card behind shows its edge only and its text never mixes with another's.
+   The page loads on a pose that is played, not drawn: the run is stepped, with the same code, to step 2 at 38 of 96 with the stack open. */
+const ST = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TILE = new URLSearchParams(location.search).has('tile');
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smooth = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+  const NS = 'http://www.w3.org/2000/svg';
+  const TW = 452, TH = 64, RH = 52, RG = 8, LV = 8, SC = 0.95, MAXL = 3, FIN = 0.46, TKS = 0.26, GONE = 150, GRACE = 0.3, SLOP = 6, LOOK = 0.099, FLICKV = 500, BAND = 120;
+  const LIME = [184, 255, 0], GRN = [174, 174, 178], DNC = [134, 134, 139], INK = [29, 29, 31];
+  const RESP = { roll: 0.34, fill: 0.2, close: 0.18, disc: 0.26, tick: 0.2, grey: 0.2, count: 0.2, open: 0.38, shift: 0.42, leave: 0.45, rise: 0.5, home: 0.4, pill: 0.4, pillIn: 0.22 };
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const mk = (x = 0, resp = 0.3, eps = 0.002) => ({ x, v: 0, T: x, w: TAU / resp, on: false, eps });
+  function step(s, dt) {
+    if (!s.on) return;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+  }
+  function aim(s, T, resp, v) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (v !== undefined) s.v = v;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                      // rubber band, Apple's constant 0.55
+
+  /* the steps: slot is what this run took, m is the batches of a count as [share of the working time, count] */
+  const STEPS = [
+    { live: 'Uploading files', done: 'Uploaded 12 files', slot: 1.8, n: 12, m: [[0, 0], [0.08, 2], [0.2, 4], [0.34, 5], [0.5, 7], [0.64, 9], [0.8, 11], [0.94, 12]] },
+    { live: 'Optimising images', done: 'Optimised 96 images', slot: 3.2, n: 96, m: [[0, 0], [0.05, 6], [0.11, 13], [0.18, 19], [0.27, 27], [0.34, 33], [0.4, 38], [0.48, 46], [0.56, 55], [0.64, 63], [0.72, 72], [0.8, 80], [0.87, 87], [0.93, 92], [0.98, 96]] },
+    { live: 'Updating DNS', done: 'Updated DNS', slot: 4.0, slow: 2.5 },
+    { live: 'Going live', done: 'Went live', slot: 1.1, last: true }
+  ];
+  const N = STEPS.length, LAST = N - 1;
+  let acc = 0;
+  STEPS.forEach((s) => { s.T = acc; acc += s.slot; });
+  const TOTAL = acc, END_TEXT = 'Live at willowcounseling.com', CANCEL_TEXT = 'Cancelled. Nothing was published.';
+  const POSE_RT = STEPS[1].T + 1.18, POSE_RT_R = STEPS[2].T + 0.9;
+  const countAt = (s, p) => { let c = 0; for (const [q, v] of s.m) if (p >= q) c = v; return c; };
+  const sec = (x) => x.toFixed(1) + ' s';
+
+  const $ = (id) => document.getElementById(id);
+  const win = $('st-win'), stack = $('st-stack'), bridge = $('st-bridge'), list = $('st-list'), toast = $('st-toast'), act = $('st-act'), pill = $('st-pill'), live = $('st-live');
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const sv = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  const hex = ([r, g, b]) => `rgb(${r},${g},${b})`;
+  const mix = (a, b, k) => a.map((v, j) => Math.round(v + (b[j] - v) * k));
+  const put = (e, k, v) => { if (e['_' + k] !== v) { e.setAttribute(k, v); e['_' + k] = v; } };
+  const sty = (e, k, v) => { if (e['_' + k] !== v) { e.style[k] = v; e['_' + k] = v; } };
+
+  /* rolling windows: a new line is added beside the old one and the column rolls a line on a spring; it can be aimed again mid-roll */
+  function roller(host, H) {
+    const col = el('div', 'st-col'); host.append(col);
+    const o = { key: null, items: [], P: mk(0, RESP.roll, 0.0006) };
+    const wrap = (node) => { const w = el('div', 'st-it'); w.append(node); return w; };
+    o.set = (key, make, dir) => {
+      if (key === o.key) return;
+      o.key = key;
+      const w = wrap(make());
+      if (reduced) { col.replaceChildren(w); o.items = [w]; snap(o.P, 0); col.style.transform = ''; return; }
+      if (dir >= 0) { col.append(w); o.items.push(w); aim(o.P, o.items.length - 1); }
+      else { col.prepend(w); o.items.unshift(w); o.P.x += 1; aim(o.P, 0); }
+    };
+    o.tick = (dt) => {
+      step(o.P, dt);
+      if (!o.P.on && o.items.length > 1) { const keep = o.items[Math.round(o.P.T)]; col.replaceChildren(keep); o.items = [keep]; o.P.x = o.P.T = 0; }
+    };
+    o.render = () => { const t = o.P.x === 0 ? '' : `translateY(${(-o.P.x * H).toFixed(2)}px)`; if (t !== o.t) { col.style.transform = t; o.t = t; } };
+    o.reset = (key, make) => { o.key = key; const w = wrap(make()); col.replaceChildren(w); o.items = [w]; snap(o.P, 0); col.style.transform = ''; o.t = ''; };
+    return o;
+  }
+  const MARK = roller($('st-mw'), 24), NAME = roller($('st-nw'), 24), ACT = roller($('st-aw'), 32), PTX = roller($('st-pt'), 20);
+  const txt = (s, cls) => el('span', cls || 'st-pr', s);
+  const seq = (n) => Array.from({ length: n }, (_, k) => k);
+  const dg = (cells) => { const d = el('span', 'st-dg'), c = el('span', 'st-dc', cells.map((x) => `<i>${x}</i>`).join('')); d.append(c); return [d, c]; };
+
+  /* the ring: a track, an arc (a third turning, or the share of a count), a lime disc and a tick drawn in one stroke */
+  function makeMark(last, size, r, sw, tick) {
+    const c = size / 2, svg = sv('svg', { class: 'st-mk', viewBox: `0 0 ${size} ${size}`, 'aria-hidden': 'true', focusable: 'false' });
+    const tr = sv('circle', { class: 'st-tr', cx: c, cy: c, r, 'stroke-width': sw }), g = sv('g'), ar = sv('circle', { class: 'st-ar', cx: c, cy: c, r, pathLength: 1, 'stroke-width': sw });
+    const ds = sv('circle', { class: 'st-ds', cx: c, cy: c, r: size / 2 }), tk = sv('path', { class: 'st-tk', d: tick, pathLength: 1 });
+    ds.style.visibility = 'hidden'; tk.style.visibility = 'hidden';
+    g.append(ar); svg.append(tr, g, ds, tk);
+    return { svg, tr, g, ar, ds, tk, c, last, f: mk(0.33, RESP.fill, 0.001), cg: mk(0, RESP.grey), dn: mk(0, RESP.grey), tkp: mk(0, RESP.tick), dsp: mk(0, RESP.disc), ind: true };
+  }
+  const TICK22 = 'M6.6 11.4l3.2 3.2 5.8-7.2';
+  function drawMark(m, rot) {
+    const f = clamp(m.f.x, 0, 1), full = f >= 0.999 && m.f.T >= 1;
+    put(m.ar, 'stroke-dasharray', f.toFixed(4) + ' 2');
+    m.g.setAttribute('transform', `rotate(${(-90 + (m.ind ? rot : 0)).toFixed(2)} ${m.c} ${m.c})`);
+    sty(m.ar, 'stroke', hex(mix(mix(LIME, GRN, clamp(m.cg.x, 0, 1)), DNC, clamp(m.dn.x, 0, 1))));
+    sty(m.tr, 'visibility', full && m.dn.x > 0.5 ? 'hidden' : 'visible');
+    const d = m.dsp.x, t = m.tkp.x;
+    if (d < 0.01) sty(m.ds, 'visibility', 'hidden'); else { sty(m.ds, 'visibility', 'visible'); sty(m.ds, 'transform', `scale(${d.toFixed(4)})`); }
+    if (t < 0.01) sty(m.tk, 'visibility', 'hidden'); else { sty(m.tk, 'visibility', 'visible'); sty(m.tk, 'strokeDasharray', t.toFixed(4) + ' 3'); sty(m.tk, 'stroke', m.last ? '#1d1d1f' : '#86868b'); }
+  }
+  const PM = makeMark(true, 16, 6.4, 2.4, 'M4.7 8.2l2.2 2.2 4.4-5'); PM.svg.removeAttribute('class'); $('st-pm').append(PM.svg);
+
+  /* the world */
+  const S = { t: 0, rt: 0, state: 'run', L: 0, hold: 0, endT: 0, cxT: 0, gt: 0, epoch: 0, posing: false, say: 0, rot: 0, runs: 0, og: 0, closeAt: 0, away: false, leaving: false, said: '', pillOn: false };
+  const H = { ptr: false, foc: false, tap: false, esc: false, hold: false };
+  const DY = mk(GONE, RESP.rise, 0.01), PL = mk(0, RESP.pill);
+  let Q = [], CARDS = [], OPEN = false, DR = null, last = 0, raf = 0;
+
+  /* the clock of the choreography: later(s, fn) runs on the same clock as the springs, so it stops with them and never races them */
+  function later(s, fn) { Q.push({ at: S.t + s, fn, ep: S.epoch }); Q.sort((a, b) => a.at - b.at); }
+  function pump() { while (Q.length && Q[0].at <= S.t) { const e = Q.shift(); if (e.ep === S.epoch) e.fn(); } }
+  const say = (m) => { S.said = m; if (S.posing) return; live.textContent = ''; clearTimeout(S.say); S.say = setTimeout(() => { live.textContent = m; }, 40); };
+
+  /* the text of a step, with its count in digit columns that follow the step's own spring */
+  function nameNode(i, variant) {
+    const st = STEPS[i];
+    if (variant === 'slow') return txt('Still updating DNS…', 'st-sl');
+    const n = el('span'); n.append(txt(st.live));
+    if (st.n) {
+      const sc = el('span', 'st-sec'), [d1, c1] = dg(['', ...seq(10).slice(1)]), [d2, c2] = dg([...seq(10), 0]);
+      sc.append(' · ', d1, d2, ` of ${st.n}`); n.append(sc);
+      st.cn = st.cn.filter((x) => x.o.isConnected); st.cn.push({ t: c1, o: c2 });
+    }
+    return n;
+  }
+  const liveKey = (i) => (STEPS[i].slowed ? 'n' + i + 's' : 'n' + i);
+  const liveNode = (i) => nameNode(i, STEPS[i].slowed ? 'slow' : '');
+  const actNode = (t) => el('span', '', t);
+
+  /* a finished step is a card: a row in the list, left behind the toast as an edge */
+  function makeCard(i) {
+    const st = STEPS[i], li = el('li', 'st-card is-off');
+    li.tabIndex = -1; li.setAttribute('aria-label', `${st.done}, ${st.slot.toFixed(1)} seconds`);
+    li.innerHTML = `<span class="st-ct"><svg class="st-ck" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2.6 7.4l2.8 2.8 5.6-6.2"/></svg><span class="st-cn">${st.done}</span><span class="st-cm">${sec(st.slot)}</span></span>`;
+    list.append(li);
+    return { i, el: li, p: mk(-1, RESP.shift, 0.002), o: mk(0, RESP.open, 0.002), vis: true };
+  }
+  function pushCard(i) {
+    const c = makeCard(i);
+    CARDS.forEach((o) => aim(o.p, o.p.T + 1, RESP.shift));
+    c.p.x = c.p.T = -1; aim(c.p, 0, RESP.shift);
+    if (OPEN) { snap(c.o, 0); aim(c.o, 1, RESP.open); }
+    CARDS.push(c);
+    for (const k of CARDS) k.el.tabIndex = OPEN ? 0 : -1;
+  }
+  /* the stack opens upward, the nearest card first, 40 ms apart; closing is the same path; both can be reversed mid-way */
+  function setOpen(on) {
+    if (OPEN === on) return;
+    OPEN = on; const g = ++S.og;
+    const cs = CARDS.slice().sort((a, b) => a.p.T - b.p.T);
+    cs.forEach((c, k) => {
+      const f = () => { if (g === S.og) aim(c.o, on ? 1 : 0, RESP.open); };
+      if (k === 0 || reduced) f(); else later(0.04 * k, f);
+      c.el.tabIndex = on ? 0 : -1;
+    });
+  }
+  const interacting = () => H.ptr || H.foc || H.tap || !!DR;
+  const wantOpen = () => reduced || S.away || S.leaving || ((H.ptr || H.foc || H.tap) && !H.esc && !H.hold);
+  function resolve() {
+    if (reduced) { setOpen(true); return; }
+    if (S.away || S.leaving) return;
+    if (wantOpen()) { S.closeAt = 0; setOpen(true); }
+    else if (OPEN && !S.closeAt) S.closeAt = S.t + GRACE;
+  }
+
+  /* the run */
+  function activate(i, first) {
+    const st = STEPS[i];
+    S.L = i; st.fin = false; st.tick = false; st.cnt = 0; st.slowed = false; st.cn = [];
+    snap(st.CN = mk(0, RESP.count, 0.002), 0);
+    st.mk = makeMark(!!st.last, 22, 9.4, 3.2, TICK22);
+    if (st.n) { st.mk.ind = false; snap(st.mk.f, 0.03); }
+    if (first) { MARK.reset('m' + i, () => st.mk.svg); NAME.reset('n' + i, () => nameNode(i)); }
+    else { MARK.set('m' + i, () => st.mk.svg, 1); NAME.set('n' + i, () => nameNode(i), 1); }
+    setAria(`Step ${i + 1} of ${N}, ${st.live}`);
+    say(`Step ${i + 1} of ${N}, ${st.live}`);
+  }
+  function setAria() { act.setAttribute('aria-label', S.state === 'cancel' ? 'Undo cancel' : S.state === 'end' ? 'View the live site' : 'Cancel publishing'); }
+  function work(i, local) {
+    const st = STEPS[i], m = st.mk;
+    if (st.n) {
+      const c = countAt(st, local / (st.slot - FIN));
+      if (c !== st.cnt) { st.cnt = c; aim(st.CN, c, RESP.count); aim(m.f, Math.max(0.03, c / st.n), RESP.fill); }
+    } else if (st.slow && local >= st.slow && !st.slowed) {
+      st.slowed = true;
+      NAME.set('n' + i + 's', () => nameNode(i, 'slow'), 1);
+      say('Still updating DNS');
+    }
+  }
+  function finishing(i, local) {
+    const st = STEPS[i], m = st.mk;
+    if (!st.fin && local >= st.slot - FIN) { st.fin = true; aim(m.f, 1, RESP.close); if (st.n) aim(st.CN, st.n, RESP.close); }
+    if (st.fin && !st.tick && local >= st.slot - TKS) {
+      st.tick = true; aim(m.tkp, 1, RESP.tick);
+      if (st.last) aim(m.dsp, 1, RESP.disc); else aim(m.dn, 1, RESP.grey);
+    }
+  }
+  function next() {
+    pushCard(S.L);
+    if (S.L < LAST) { activate(S.L + 1); }
+    else conclude();
+  }
+  function conclude() {
+    S.state = 'end'; S.endT = 0;
+    NAME.set('end', () => txt(END_TEXT), 1);
+    ACT.set('view', () => actNode('View'), 1);
+    setAria(END_TEXT);
+    say(`${END_TEXT}. Published in ${TOTAL.toFixed(1)} seconds.`);
+    if (S.away) { PTX.set('done', () => txt('Published'), 1); aim(PM.f, 1, RESP.close); aim(PM.dsp, 1, RESP.disc); aim(PM.tkp, 1, RESP.tick); }
+  }
+  function cancel() {
+    if (S.state !== 'run' || S.away) return;
+    S.state = 'cancel'; S.cxT = 0;
+    const m = STEPS[S.L].mk; aim(m.cg, 1, RESP.grey);
+    NAME.set('cx', () => txt(CANCEL_TEXT), 1);
+    ACT.set('undo', () => actNode('Undo'), 1);
+    setAria(CANCEL_TEXT); say(CANCEL_TEXT);
+  }
+  function undo() {
+    if (S.state !== 'cancel') return;
+    S.state = 'run'; S.cxT = 0;
+    const st = STEPS[S.L]; aim(st.mk.cg, 0, RESP.grey);
+    NAME.set(liveKey(S.L), () => liveNode(S.L), -1);
+    ACT.set('cancel', () => actNode('Cancel'), -1);
+    setAria(st.live); say(`Resumed. Step ${S.L + 1} of ${N}, ${st.live}`);
+  }
+  function resetRun() {
+    S.epoch++; Q.length = 0; S.og++; OPEN = false; S.closeAt = 0;
+    CARDS = []; list.textContent = '';
+    STEPS.forEach((s) => { s.cn = []; s.mk = null; });
+    S.state = 'run'; S.rt = 0; S.L = 0; S.endT = 0; S.cxT = 0; S.away = false; S.leaving = false; S.rot = 0; S.runs++;
+    snap(PL, 0); snap(PM.f, 0.33); snap(PM.dsp, 0); snap(PM.tkp, 0); snap(PM.cg, 0);
+    PTX.reset('work', () => txt('Publishing…'));
+    ACT.reset('cancel', () => actNode('Cancel'));
+  }
+  function begin(rise) {
+    resetRun();
+    if (rise && !reduced) { snap(DY, GONE); aim(DY, 0, RESP.rise); } else snap(DY, 0);
+    activate(0, true);
+    resolve();
+  }
+
+  /* leaving: the whole stack goes down on one spring; a tile starts again with a fresh toast */
+  const goneY = () => GONE + Math.max(0, extent() - TH);                       // far enough that the top of an open stack is below the bottom edge too
+  function leave(v) {
+    if (S.leaving || S.state === 'gone') return;
+    S.leaving = true; S.closeAt = 0; S.goneY = goneY();
+    aim(DY, S.goneY, RESP.leave, v);
+  }
+  function flick(v) {
+    S.closeAt = 0;
+    if (S.state === 'run') { S.away = true; S.goneY = goneY(); aim(DY, S.goneY, RESP.leave, v); } else leave(v);
+  }
+  function gone() {
+    S.leaving = false; S.away = false; S.state = 'gone'; S.gt = TILE ? 1.5 : 3;
+    aim(PL, 0, RESP.pillIn); pill.inert = true;
+  }
+  function bringBack() {
+    if (!S.away) return;
+    S.away = false; S.endT = 0; H.hold = true;
+    aim(PL, 0, RESP.pillIn);
+    later(0.12, () => aim(DY, 0, RESP.home));
+    resolve();
+  }
+
+  /* one tick of the world */
+  function tick(dt) {
+    S.t += dt; pump();
+    if (S.hold > 0) S.hold -= dt;
+    else if (S.state === 'run') {
+      S.rt += dt; if (!reduced) S.rot = (S.rot + dt * 360) % 360;
+      const st = STEPS[S.L], local = S.rt - st.T;
+      if (local >= st.slot) next();
+      else { work(S.L, local); finishing(S.L, local); }
+    } else if (S.state === 'end') {
+      S.endT += dt;
+      if (S.away) { if (S.endT >= 3.2 && !reduced) { aim(PL, 0, RESP.pill); S.endT = -99; later(0.6, () => { if (S.away) gone(); }); } }
+      else if (S.endT >= 4 && !reduced && !interacting() && !S.leaving) leave();
+    } else if (S.state === 'cancel') {
+      if (interacting() || S.leaving) S.cxT = 0; else S.cxT += dt;
+      if (S.cxT >= 5 && !reduced && !S.leaving) leave();
+    } else if (S.state === 'gone') {
+      S.gt -= dt;
+      if (S.gt <= 0) begin(true);
+    }
+    if (S.closeAt && S.t >= S.closeAt) { S.closeAt = 0; if (!wantOpen()) setOpen(false); }
+    if (S.leaving && !DR && DY.x >= S.goneY - 4) gone();
+    if (S.away && DY.x > S.goneY - 60 && PL.T !== 1 && !DR && (S.state === 'run' || (S.state === 'end' && S.endT >= 0))) { aim(PL, 1, RESP.pill); pill.inert = false; }   // uncovered once the stack has left the bottom edge
+    for (const c of CARDS) { step(c.p, dt); step(c.o, dt); }
+    for (const s of STEPS) if (s.mk) { for (const k of ['f', 'cg', 'dn', 'tkp', 'dsp']) step(s.mk[k], dt); if (s.CN) step(s.CN, dt); }
+    for (const k of ['f', 'cg', 'dn', 'tkp', 'dsp']) step(PM[k], dt);
+    step(DY, dt); step(PL, dt);
+    MARK.tick(dt); NAME.tick(dt); ACT.tick(dt); PTX.tick(dt);
+  }
+
+  /* the picture, from the springs */
+  function layout(c) {
+    const o = clamp(c.o.x, 0, 1), p = c.p.x, L = clamp(p + 1, 0, MAXL), sc = Math.pow(SC, L);
+    const cw = TW * sc, ch = TH * sc, cy = TH / 2 - LV * L - ch / 2, oy = -(p + 1) * (RH + RG);
+    return { x: lerp((TW - cw) / 2, 0, o), y: lerp(cy, oy, o), w: lerp(cw, TW, o), h: lerp(ch, RH, o), a: lerp(0.74 + 0.06 * L, 0.72, o), r: lerp(20, 16, o) };
+  }
+  function render() {
+    const rest = !DY.on;
+    sty(stack, 'transform', DY.x === 0 ? '' : `translate3d(0, ${(rest ? Math.round(DY.x) : DY.x).toFixed(2)}px, 0)`);
+    MARK.render(); NAME.render(); ACT.render(); PTX.render();
+    // the ring of each step, and the counts: every digit column follows its step's own spring
+    for (const st of STEPS) {
+      if (!st.mk) continue;
+      if (st.mk.svg.isConnected) drawMark(st.mk, S.rot);
+      if (st.n && st.CN) {
+        const o = ((st.CN.x % 10) + 10) % 10, ct = Math.floor(st.CN.x / 10) + clamp(o - 9, 0, 1);
+        for (const d of st.cn) { sty(d.t, 'transform', `translateY(${(-ct * 24).toFixed(2)}px)`); sty(d.o, 'transform', `translateY(${(-o * 24).toFixed(2)}px)`); }
+      }
+    }
+    drawMark(PM, S.rot);
+    // the cards: nearest first; each shows only the strip above the card in front of it
+    const cs = CARDS.slice().sort((a, b) => a.p.x - b.p.x);
+    let front = 0, top = 0;
+    cs.forEach((c, rank) => {
+      const g = layout(c), q = c.p.on || c.o.on ? (v) => v : Math.round;
+      const x = q(g.x), y = q(g.y), w = q(g.w), h = q(g.h), s = c.el.style;
+      const show = front - y >= 1, cut = Math.max(0, y + h - (front + 2));
+      sty(c.el, 'transform', `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`); sty(c.el, 'width', w.toFixed(2) + 'px'); sty(c.el, 'height', h.toFixed(2) + 'px');
+      sty(c.el, 'clipPath', show ? (cut > 0.01 ? `inset(-30px -30px ${cut.toFixed(2)}px -30px)` : 'none') : 'inset(0 0 100% 0)');
+      sty(c.el, 'zIndex', String(90 - rank));
+      s.setProperty('--a', g.a.toFixed(3)); s.setProperty('--r', g.r.toFixed(2) + 'px');
+      c.el.classList.toggle('is-off', !show);
+      if (c.o.x > 0.02) top = Math.min(top, y);
+      front = y;
+    });
+    sty(bridge, 'top', (top - 4).toFixed(2) + 'px'); sty(bridge, 'height', (TH + 4 - top).toFixed(2) + 'px');
+    bridge.classList.toggle('is-on', OPEN && top < -4);
+    // the pill, uncovered at the bottom edge
+    const pl = clamp(PL.x, 0, 1);
+    sty(pill, 'visibility', pl > 0.002 ? 'visible' : 'hidden');
+    sty(pill, 'transform', `translateY(${((1 - pl) * 60).toFixed(2)}px)`);
+  }
+  const extent = () => { let top = 0; for (const c of CARDS) top = Math.min(top, layout(c).y); return TH - top; };
+
+  /* by hand: pointer, focus and a tap open the stack; a drag down flicks it away; the run never notices */
+  const inside = (t) => !!(t && t.closest && t.closest('.st-stack'));
+  addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
+    const on = inside(e.target) || (DR && DR.id === e.pointerId);
+    if (on && !H.ptr) H.esc = false;
+    if (!on) H.hold = false;
+    if (on !== H.ptr) { H.ptr = on; resolve(); }
+  }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', () => { H.ptr = false; H.hold = false; resolve(); });
+  stack.addEventListener('focusin', (e) => { if (e.target.matches && e.target.matches(':focus-visible')) { H.foc = true; H.esc = false; resolve(); } });
+  stack.addEventListener('focusout', (e) => { if (!stack.contains(e.relatedTarget)) { H.foc = false; resolve(); } });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && (OPEN || H.ptr || H.foc || H.tap)) { H.esc = true; H.tap = false; resolve(); } });
+  const scaleK = () => win.getBoundingClientRect().width / 720 || 1;
+  function vel(rows, t) {                                                     // px/s over the last 80 ms of moves; 0 if the hand rested
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return 0;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? 0 : ((b[1] - a[1]) / dt) * 1000;
+  }
+  stack.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || DR || S.away || S.leaving || (e.target.closest && e.target.closest('button'))) return;
+    DR = { id: e.pointerId, x0: e.clientX, y0: e.clientY, mode: 'wait', base: 0, ref: 0, raw: 0, rows: [[e.timeStamp, 0]], touch: e.pointerType === 'touch', ghost: e.isTrusted === false };
+    try { stack.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic pointer has nothing to capture */ }
+  });
+  addEventListener('pointermove', (e) => {
+    const d = DR; if (!d || e.pointerId !== d.id) return;
+    const k = scaleK();
+    if (d.mode === 'wait') {
+      if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) / k < SLOP) return;
+      d.mode = 'drag'; d.base = DY.x; d.ref = e.clientY; DY.on = false; DY.v = 0; stack.classList.add('is-drag'); S.closeAt = 0;
+    }
+    d.raw = d.base + (e.clientY - d.ref) / k;                                   // 1:1 from where the drag committed
+    DY.x = DY.T = d.raw < 0 ? -rb(-d.raw, BAND) : d.raw;                         // a rubber band upward
+    d.rows.push([e.timeStamp, d.raw]);
+    while (d.rows.length > 2 && e.timeStamp - d.rows[0][0] > 100) d.rows.shift();
+  }, { passive: true });
+  function release(e, cancel) {
+    const d = DR; if (!d || e.pointerId !== d.id) return;
+    DR = null; stack.classList.remove('is-drag');
+    if (d.mode !== 'drag') { if (d.touch && !cancel) { H.tap = !H.tap; resolve(); } return; }
+    const v = cancel ? 0 : vel(d.rows, e.timeStamp), proj = d.raw + (v > 0 ? v * LOOK : 0);
+    if (!cancel && (proj > 0.4 * extent() || v > FLICKV)) flick(v); else { aim(DY, 0, RESP.home, v); resolve(); }
+  }
+  addEventListener('pointerup', (e) => release(e, false));
+  addEventListener('pointercancel', (e) => release(e, true));
+  const letgo = () => { if (DR && DR.ghost) release({ pointerId: DR.id, timeStamp: performance.now() }, true); };
+  stack.addEventListener('dragstart', (e) => e.preventDefault());
+  document.addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch' && H.tap && !inside(e.target)) { H.tap = false; resolve(); } }, true);
+  act.addEventListener('click', () => {
+    if (S.hold > 0) S.hold = 0;
+    if (S.state === 'run') cancel(); else if (S.state === 'cancel') undo(); else if (S.state === 'end') leave();
+  });
+  pill.addEventListener('click', () => bringBack());
+
+  /* the pose: step the world, with the same code as the run, to step 2 at 38 of 96, the stack open on one finished row; let the springs rest, hold, then the run goes on */
+  function pose() {
+    S.epoch++; Q.length = 0; S.posing = true; S.hold = 0; S.t = 0; S.runs = 0; S.state = 'run';
+    H.ptr = H.foc = H.tap = H.esc = H.hold = false; DR = null; stack.classList.remove('is-drag');
+    begin(false);
+    if (reduced) { while (S.rt < POSE_RT_R) tick(1 / 60); resolve(); }
+    else { while (S.rt < 1.95) tick(1 / 60); H.ptr = true; resolve(); while (S.rt < POSE_RT) tick(1 / 60); }
+    const was = S.rt; S.hold = 99; for (let k = 0; k < 90; k++) tick(1 / 60); S.rt = was;
+    S.hold = reduced ? 8 : TILE ? 1.3 : 0.6;
+    S.posing = false;
+    if (S.said) { live.textContent = S.said; }
+    render();
+  }
+
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+    last = now;
+    if (S.manual) return;
+    tick(dt); render();
+  }
+  document.addEventListener('visibilitychange', () => { last = performance.now(); });
+  pose();
+  last = performance.now();
+  raf = requestAnimationFrame(frame);
+  return { S, H, STEPS, TOTAL, CARDS: () => CARDS, DY, PL, tick, render, pose, cancel, undo, leave, letgo, resolve, win, stack, toast, act, pill, list, bridge, NAME, MARK, ACT, setOpen, isOpen: () => OPEN, drag: () => DR, layout, extent };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('st-fit');
+  // the editor is drawn 720 × 460 and scaled to the room it is given
+  function size() {
+    const W = innerWidth, Hh = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 14 : Math.min(72, Math.max(24, 0.06 * Math.min(W, Hh))), ui = tile ? 0 : 46;
+    let s = Math.max(0.4, Math.min((W - 2 * pad) / 720, (Hh - 2 * pad - ui) / 460, 1.6));
+    s = Math.floor(s * 16) / 16;
+    fit.style.setProperty('--s', s.toFixed(4));
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(size);
+
+  /* the ghost: it moves the same pointer a hand does (untrusted events on the same handlers) and presses the real buttons */
+  let epoch = 0, resumeT = 0, pos = null, touched = false;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const fire = (type, x, y, down = false) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 73, isPrimary: true, button: type === 'pointermove' ? -1 : 0, buttons: down ? 1 : 0, view: window }));
+    return t;
+  };
+  async function glide(my, to, ms = 760, down = false) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y, down);
+      if (p >= 1) break;
+    }
+  }
+  const until = async (my, ok, max = 14000) => { let t = 0; while (!ok() && t < max) { await gap(my, 60); t += 60; } };
+  const pt = (el, fx = 0.5, fy = 0.5) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width * fx, y: r.top + r.height * fy }; };
+  const park = () => pt(ST.win, 0.93, 0.5);
+  async function press(my, el) {                                             // hover, press, release, click: the real pointer path
+    const { x, y } = pos;
+    el.classList.add('is-hot'); await gap(my, 180);
+    fire('pointerdown', x, y, true); await gap(my, 100); fire('pointerup', x, y);
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+    await gap(my, 140); el.classList.remove('is-hot');
+  }
+  async function dragDown(my, dist, ms) {                                    // a quick pull down on the toast, then let go
+    const a = pos; fire('pointerdown', a.x, a.y, true); await gap(my, 90);
+    await glide(my, { x: a.x + 6, y: a.y + dist }, ms, true);
+    fire('pointerup', pos.x, pos.y);
+  }
+  const S = ST.S;
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      const toast = () => pt(ST.toast, 0.66, 0.5);
+      if (first) { pos = toast(); QM.ghostAt(pos.x, pos.y); QM.ghostShow(); await until(my, () => S.hold <= 0, 4000); await gap(my, 120); }
+      else { pos = park(); QM.ghostAt(pos.x, pos.y); QM.ghostShow(); await gap(my, 500); }
+      for (let round = 0; ; round++) {
+        if (round > 0 || !first) { await until(my, () => S.state === 'run' && S.rt < 0.4 && S.hold <= 0, 30000); }
+        else { await glide(my, park(), 760); }                                // the pose's pointer leaves, the stack closes, the run goes on
+        const r = S.runs - 1, mode = r % 2 === 1 ? 'cancel' : r % 4 === 2 ? 'flick' : 'hover';   // a cancel every second run, a flick every fourth
+        if (mode === 'hover') {
+          await until(my, () => S.state === 'run' && S.rt >= STEPS_T(2) + 0.5, 12000);
+          await glide(my, toast(), 800); await gap(my, 700);                  // back on the toast: the stack opens
+          await until(my, () => ST.CARDS().length >= 3 || S.state !== 'run', 9000);   // step 3 ends while it is open: a row joins by the same move
+          await gap(my, 1100);
+        } else if (mode === 'cancel') {
+          await until(my, () => S.state === 'run' && S.rt >= STEPS_T(1) + 0.1, 12000);
+          await glide(my, toast(), 640); await gap(my, 500);
+          await glide(my, pt(ST.act), 380); await gap(my, 120); await press(my, ST.act);   // Cancel
+          await gap(my, 1700);
+          await press(my, ST.act);                                            // Undo
+          await gap(my, 900);
+        } else {
+          await until(my, () => S.state === 'run' && S.rt >= STEPS_T(1) + 0.7, 12000);
+          await glide(my, toast(), 800); await gap(my, 600);
+          await glide(my, pt(ST.toast, 0.5, 0.5), 300);
+          await dragDown(my, 150 * ST.win.getBoundingClientRect().width / 720, 230);        // flicked away: the run goes on unseen
+          await glide(my, park(), 600);
+          await until(my, () => ST.PL.T === 1 && ST.PL.x > 0.98, 6000); await gap(my, 2200);
+          await glide(my, pt(ST.pill), 800); await gap(my, 200);
+          if (ST.S.away) await press(my, ST.pill);                            // the pill brings the stack back
+          await gap(my, 1200);
+        }
+        await glide(my, park(), 800);                                         // the pointer leaves; the stack closes
+        await until(my, () => S.state === 'gone', 30000);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  const STEPS_T = (i) => ST.STEPS[i].T;
+  function stopScript() {
+    epoch++; QM.ghostHide(); ST.letgo();
+    document.querySelectorAll('.is-hot').forEach((el) => el.classList.remove('is-hot'));
+    if (pos) { pos = null; fire('pointermove', -10, -10); }
+  }
+  if (!QM.tile && !reduced) {
+    const idle = () => ST.win.matches(':hover') || ST.H.ptr || ST.H.foc || ST.H.tap;
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                                // the ghost's own events do not count
+      touched = true; stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true, capture: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); touched = false; ST.pose(); if (!reduced) script(true); } });
+  // the harness hides the ghost as it starts; the pose's pointer is shown on the toast a moment after
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(() => requestAnimationFrame(() => { if (!touched) script(true); })));
+})();
+</script>
+</body>
+</html>

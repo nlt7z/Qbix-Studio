@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step wheel · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "step-wheel", "title": "Step wheel", "group": "studio", "added": "2026-11-25", "cat": "loading", "order": 10,
+  "kind": "loop", "preview": {"secs": 9, "skip": 1500}, "tone": "paper", "shot": 500,
+  "line": "one wheel value, spring 0.45 s · scale 1, .72, .6, .54 · 7 steps, 1.2 to 3.4 s · one lime arc · Exported 12.4 s",
+  "summary": "Strata is exporting Forma's design system and the wait is seven named steps. They sit on one wheel: a single spring value says which step is on the centre line, and every row's height, size, grey and gap to its neighbour is a continuous function of its distance from it, as on a drum. The step in work has a 22 px ring at its left, a lime arc a third of the ring turning, or, where a count is known (Building components, Rendering previews), an arc that fills while the count rolls at the right in tabular figures. When a step ends the arc closes, a tick is drawn in one stroke, the ring is wiped away and the wheel turns one notch: the tick rides up with its step and its time, a fresh ring is uncovered on the line. The wheel can be turned by hand (drag, scroll, arrow keys, rubber band at both ends) and springs back to the live step 1.2 s after the hand leaves; the run never stops underneath. The end is a real line, Exported with its true total, a lime tick and a quiet Run again pill.",
+  "spec": [
+    ["Wheel", "one critically damped spring p, response 0.45 s: the step on the centre line, fractional while turning; every row is placed from p alone (row i has distance d = i − p), the live index only moves the marks, so nothing jumps when the run advances during a hand turn"],
+    ["Scale", "a smooth curve of |d| through 1, 0.72, 0.6, 0.54, 0.5 at 0 to 4 (monotone cubic Hermite, flat at 0 so a row passing the line has no corner); text and mark scale from their left side, so the text edge stays one line at 58 px; times and counts use 16 px at the line down to 11.5 px"],
+    ["Colour", "#1d1d1f, #86868b, #aeaeb2, #c7c7cc at 0 to 3, eased between; counts and times #6e6e73 down the same ladder; no opacity, no blur on a row"],
+    ["Gap", "centre to centre 56, 40, 30, 24, 20, 18, 16 px at 0 to 6 and then 14: rows close up with distance, and no two rows ever touch (checked on consecutive frames)"],
+    ["Mark", "a 22 px ring, track #e8e8ed and arc both 3.4 px; the lime arc is a third of it turning once in 1.1 s, or the count's share where a count is known (a spring, 0.25 s); at the end the arc grows to a full ring (0.2 s), a tick is drawn in one stroke 80 ms later (0.2 s), the ring is wiped away clockwise at 0.3 s (0.18 s) and the wheel turns at 0.46 s; the next ring is drawn on 0.1 s after that, so the lime is never in two places and the gap between them is a frame or two"],
+    ["Steps", "Reading tokens 1.2 s, Building components 2.3 s (18 of 42 components), Checking contrast 1.7 s, Rendering previews 3.4 s (24 of 60 previews), Writing docs 1.3 s, Packaging 1.2 s, Publishing 1.3 s: 12.4 s. A step's time is its slot, from its start to the next step's start, and the end line reads the sum"],
+    ["Counts", "arrive in batches of 3 to 6 (as real work does) and roll on a 0.2 s spring in two clipped digit columns, tabular, so a figure rests aligned between batches; the right-hand slot is a column of four lines (blank, count, time, blank) on a 0.3 s spring"],
+    ["Hand", "drag 1:1 from the row under the finger (the wheel is inverted through the same curve), 6 px of travel before it is a drag, pointer capture; past the first or last step a rubber band (x·D·0.55)/(D + 0.55·|x|), D 2.4 steps; release projects v × 0.099 s (d 0.99) to the nearest step and the spring starts at the release velocity; a wheel notch or an arrow key is one step, a trackpad stream moves the wheel and settles 90 ms after the last event; Home and End jump; 1.2 s after the hand leaves it springs back to the live step, and Escape sends it at once"],
+    ["Edge", "the card clips the wheel under a soft edge, four stacked backdrop blurs of 1, 2, 4 and 8 px, each behind its own gradient, plus a white veil; the rows themselves carry no filter"],
+    ["End", "the end line is uncovered from its top as the wheel makes its last turn, its lime disc 0.1 s later and its tick 0.26 s; Run again is uncovered under it 0.75 s after; in a tile the wheel turns back and the run restarts by itself after 3 s (6 s in the detail view)"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A Strata export, a Qbix deploy or any long job on a Qbix page with named stages: the wait that tells you where it is and how long each part took, and that can be turned back to read the earlier steps.",
+  "rules": [
+    "One lime in any frame: the arc on the step in work (or, at the end, the disc behind the last tick). Ticks, times, counts and the Run again pill are ink and neutrals.",
+    "Everything on the wheel is placed from one spring value: scale, colour and gap are functions of a row's distance from the centre line; never swap rows or fade them, and never let the live index move the wheel while the hand holds it.",
+    "A step's length is data: steps are not a metronome, progress inside a step is shown only where it is counted (the arc fills with the count), and the last state is a real end with one next action.",
+    "Text scales from its left edge so the margin stays one line; times and counts are tabular and roll inside a clip, aligned at rest.",
+    "The visual rows are aria-hidden; a real ordered list marks the live step with aria-current and a polite status line says Step 3 of 7 and its name.",
+    "Under reduced motion the card rests on step 4, the arc is a static two thirds, and steps change in place (no spring, no turning); the run waits 8 s on step 4 before it goes on."
+  ],
+  "tags": ["loading", "steps", "wheel", "drum", "progress arc", "tick", "spring", "rubber band", "agent", "export", "Strata", "Forma", "list"]
+}
+</script>
+<style data-code>
+/* Step wheel. A multi-step loader in the system face with Apple's neutrals, on a white card.
+   The wheel is one value (p, a spring); every row is placed from it in script (render()): y, scale, grey and the gap to its neighbour.
+   Rows are absolutely positioned, text scales from its left edge. The one lime is the ring's arc on the step in work (the disc at the end). */
+.sw-card { --sw-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --sw-out: cubic-bezier(.16, 1, .3, 1); --sw-ui: cubic-bezier(.4, 0, .2, 1);
+  position: absolute; left: 0; top: 0; width: 520px; height: 440px; overflow: hidden; border-radius: 24px; background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .08), 0 1px 3px rgba(0, 0, 0, .04);
+  color: #1d1d1f; font: 400 16px/20px var(--sw-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.sw-card :where(h2, p, ol) { margin: 0; padding: 0; }
+.sw-card :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the header: the goal, and the step line whose digit rolls under a clip */
+.sw-hd { position: relative; height: 72px; }
+.sw-ttl { position: absolute; left: 24px; top: 17px; font: 600 17px/22px var(--sw-f); letter-spacing: -.01em; }
+.sw-sub { position: absolute; left: 24px; top: 41px; width: 260px; height: 18px; overflow: hidden; font: 400 13px/18px var(--sw-f); letter-spacing: -.006em; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.sw-subs { display: block; transition: transform 420ms var(--sw-out); }
+.sw-sl { display: block; height: 18px; white-space: pre; }
+.sw-card.is-done .sw-subs { transform: translateY(-18px); }
+.sw-r { display: inline-block; width: 1ch; height: 18px; overflow: hidden; vertical-align: top; }
+.sw-rc { display: block; will-change: transform; }
+.sw-rc > i { display: block; height: 18px; font-style: normal; }
+
+/* the wheel: a clipped window, a centre band, the rows, two soft edges */
+.sw-wheel { position: absolute; left: 0; right: 0; top: 72px; height: 368px; overflow: hidden; cursor: grab; touch-action: none; outline: none; }
+.sw-wheel.is-drag { cursor: grabbing; }
+.sw-wheel:focus-visible::after { content: ''; position: absolute; inset: 3px 6px; border-radius: 14px; box-shadow: inset 0 0 0 2px #1d1d1f; pointer-events: none; z-index: 5; }
+.sw-band { position: absolute; left: 8px; right: 8px; top: 160px; height: 52px; border-radius: 14px; background: #f5f5f7; transition: background-color 100ms var(--sw-ui); }
+.sw-wheel.is-down .sw-band { background: #ececf0; }
+.sw-rows { position: absolute; inset: 0; }
+.sw-row { position: absolute; left: 0; top: 0; width: 520px; height: 28px; will-change: transform; }
+.sw-tx { position: absolute; left: 58px; top: 0; height: 28px; font: 600 24px/28px var(--sw-f); letter-spacing: -.02em; white-space: nowrap; transform-origin: 0 50%; }
+/* the mark: a ring (track, arc), a tick drawn in one stroke, and at the end a lime disc */
+.sw-mk { position: absolute; left: 24px; top: 3px; width: 22px; height: 22px; transform-origin: 50% 50%; }
+.sw-mk svg { display: block; width: 22px; height: 22px; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sw-tr { stroke: #e8e8ed; stroke-width: 3.4; }
+.sw-ar { stroke: #B8FF00; stroke-width: 3.4; }
+.sw-tk { stroke: currentColor; stroke-width: 2.2; }
+.sw-disc { fill: #B8FF00; stroke: none; transform-box: fill-box; transform-origin: 50% 50%; }
+.sw-row.is-end .sw-tk { stroke: #1d1d1f; stroke-width: 2.4; }
+/* the right-hand slot: a column of four lines (blank, count, time, blank) that rolls under a clip; digits are columns of their own */
+.sw-rt { position: absolute; right: 24px; top: 4px; width: 210px; height: 20px; overflow: hidden; text-align: right; white-space: pre; font-variant-numeric: tabular-nums; transform-origin: 100% 50%; }
+.sw-rb { display: block; will-change: transform; }
+.sw-rl { display: block; height: 20px; }
+.sw-dg { display: inline-block; width: 1ch; height: 20px; overflow: hidden; vertical-align: top; text-align: center; }
+.sw-dc { display: block; will-change: transform; }
+.sw-dc > i { display: block; height: 20px; font-style: normal; }
+/* the soft edge: weakest blur first, each a backdrop blur seen through its own gradient, then a veil; the rows carry no filter */
+.sw-edge { position: absolute; left: 0; right: 0; height: 54px; pointer-events: none; z-index: 2; }
+.sw-edge--t { top: 0; --d: to bottom; }
+.sw-edge--b { bottom: 0; --d: to top; }
+.sw-edge i { position: absolute; left: 0; right: 0; height: var(--h); -webkit-backdrop-filter: blur(var(--b)); backdrop-filter: blur(var(--b));
+  -webkit-mask-image: linear-gradient(var(--d), #000 var(--a), transparent); mask-image: linear-gradient(var(--d), #000 var(--a), transparent); }
+.sw-edge--t i { top: 0; } .sw-edge--b i { bottom: 0; }
+.sw-edge i:nth-child(1) { --b: 1px; --h: 54px; --a: 22px; }
+.sw-edge i:nth-child(2) { --b: 2px; --h: 46px; --a: 14px; }
+.sw-edge i:nth-child(3) { --b: 4px; --h: 36px; --a: 7px; }
+.sw-edge i:nth-child(4) { --b: 8px; --h: 24px; --a: 0px; }
+.sw-edge::after { content: ''; position: absolute; inset: 0;
+  background: linear-gradient(var(--d), rgba(255, 255, 255, .82), rgba(255, 255, 255, .62) 18%, rgba(255, 255, 255, .38) 40%, rgba(255, 255, 255, .16) 62%, rgba(255, 255, 255, .04) 82%, rgba(255, 255, 255, 0)); }
+/* Run again: a quiet pill, uncovered under the end line, moving and scaling with it */
+.sw-again { position: absolute; left: 0; top: 0; z-index: 3; display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px 0 13px; border-radius: 999px; background: #e8e8ed; color: #1d1d1f;
+  font: 500 15px/36px var(--sw-f); letter-spacing: -.01em; white-space: nowrap; transform-origin: 0 0; clip-path: inset(0 0 100% 0 round 18px);
+  transition: background-color 200ms var(--sw-ui), box-shadow 100ms var(--sw-ui); }
+.sw-again:hover { background: #dfdfe5; }
+.sw-again:active { box-shadow: inset 0 0 0 40px rgba(0, 0, 0, .04); }
+.sw-again:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.sw-again svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) {
+  .sw-card *, .sw-card *::before, .sw-card *::after { transition: none !important; }
+}
+</style>
+<style>
+  /* the stage: a quiet #f5f5f7 ground; the card is drawn 520 px wide and scaled to the room it has */
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  .sw-fit { position: relative; }
+  .sw-world { position: absolute; left: 0; top: 0; width: 520px; height: 440px; transform-origin: 0 0; transform: scale(var(--s, 1)); }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sw-fit" id="sw-fit"><div class="sw-world" id="sw-world">
+<!-- code -->
+<section class="sw-card" id="sw-card" aria-labelledby="sw-ttl">
+  <header class="sw-hd">
+    <h2 class="sw-ttl" id="sw-ttl">Exporting Forma</h2>
+    <p class="sw-sub" aria-hidden="true"><span class="sw-subs"><span class="sw-sl">Step <span class="sw-r"><span class="sw-rc" id="sw-rn"></span></span> of 7</span><span class="sw-sl">Done</span></span></p>
+  </header>
+  <div class="sw-wheel" id="sw-wheel" tabindex="0" role="group" aria-label="Export steps. The arrow keys turn the wheel, Escape returns to the live step">
+    <ol class="sr-only" id="sw-ol"></ol>
+    <div class="sw-band" aria-hidden="true"></div>
+    <div class="sw-rows" id="sw-rows" aria-hidden="true"></div>
+    <button class="sw-again" id="sw-again" type="button" inert><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M13 6.6A5.2 5.2 0 1 0 13.4 9.6M13.2 2.8v3.8H9.4"/></svg>Run again</button>
+    <div class="sw-edge sw-edge--t" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="sw-edge sw-edge--b" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  </div>
+  <p class="sr-only" id="sw-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  </div></div>
+  <div class="qm-ui"><span>Drag the wheel, scroll it or press the arrow keys. It returns to the live step, or press Escape</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Step wheel. The whole piece is one number, p: the step on the centre line, a critically damped spring (response 0.45 s).
+   render() places every row from p alone (y, scale, grey are continuous functions of the distance d = i - p); the live step only decides
+   where the marks are, so the run can advance while a hand holds the wheel and nothing jumps. The run is a clock; the pose is played, not drawn. */
+const SW = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const CY = 186, ROW = 28, U = 20, HR = 18, FIN = 0.46, PITCH = 56;
+  const RESP = { turn: 0.45, back: 0.6, ring: 0.3, arc: 0.25, count: 0.2, close: 0.2, tick: 0.2, wipe: 0.18, roll: 0.3, cover: 0.3, disc: 0.3, head: 0.35, pill: 0.4 };
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const mk = (x = 0, resp = 0.3, eps = 0.002) => ({ x, v: 0, T: x, w: TAU / resp, on: false, eps });
+  function step(s, dt) {
+    if (!s.on) return;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+  }
+  function aim(s, T, resp) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+
+  /* the wheel's curves of the distance |d|: monotone cubic Hermite through nodes at 0, 1, 2 ...; flat at 0 where asked (a row crossing the line has no corner) */
+  function curve(vals, m0, tail) {
+    const n = vals.length, m = vals.map((_, k) => (k === 0 ? m0 : k === n - 1 ? tail : (vals[k + 1] - vals[k - 1]) / 2));
+    return (x) => {
+      x = Math.abs(x);
+      if (x >= n - 1) return vals[n - 1] + tail * (x - (n - 1));
+      const k = Math.floor(x), t = x - k, t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * vals[k] + (t3 - 2 * t2 + t) * m[k] + (-2 * t3 + 3 * t2) * vals[k + 1] + (t3 - t2) * m[k + 1];
+    };
+  }
+  const SCALE = curve([1, 0.72, 0.6, 0.54, 0.5, 0.48, 0.47, 0.46], 0, 0);
+  const YC = curve([0, 56, 96, 126, 150, 170, 188, 204, 220, 234], PITCH, 14);
+  const Y = (d) => (d < 0 ? -YC(d) : YC(d));
+  const Yinv = (y) => { let a = 0, b = 60; const t = Math.abs(y); for (let i = 0; i < 40; i++) { const m = (a + b) / 2; if (YC(m) < t) a = m; else b = m; } return (y < 0 ? -1 : 1) * (a + b) / 2; };
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const ladder = (stops) => { const c = stops.map(hex); return (x) => { x = Math.abs(x); if (x >= 3) return `rgb(${c[3].join(',')})`; const k = Math.floor(x), t = x - k, e = t * t * (3 - 2 * t); return `rgb(${c[k].map((v, j) => Math.round(v + (c[k + 1][j] - v) * e)).join(',')})`; }; };
+  const COL = ladder(['#1d1d1f', '#86868b', '#aeaeb2', '#c7c7cc']);
+  const RCOL = ladder(['#6e6e73', '#86868b', '#aeaeb2', '#c7c7cc']);
+  const RS = (s) => Math.max(0.72, (11.5 + 9.78 * (s - 0.54)) / 16);   // times and counts: 16 px on the line, never under 11.5 px
+
+  /* the run: seven steps of different lengths; a slot runs from its start to the next one's, and its last 0.46 s is the ending (arc closes, tick, ring wiped) */
+  const STEPS = [
+    { t: 'Reading tokens', slot: 1.2 },
+    { t: 'Building components', slot: 2.3, n: 42, unit: 'components', m: [[0, 0], [0.09, 4], [0.2, 9], [0.32, 14], [0.44, 18], [0.55, 23], [0.65, 28], [0.75, 33], [0.85, 38], [0.94, 41]] },
+    { t: 'Checking contrast', slot: 1.7 },
+    { t: 'Rendering previews', slot: 3.4, n: 60, unit: 'previews', m: [[0, 0], [0.06, 3], [0.13, 8], [0.2, 12], [0.26, 16], [0.33, 20], [0.4, 24], [0.52, 29], [0.6, 34], [0.68, 39], [0.76, 45], [0.84, 50], [0.92, 56]] },
+    { t: 'Writing docs', slot: 1.3 },
+    { t: 'Packaging', slot: 1.2 },
+    { t: 'Publishing', slot: 1.3 }
+  ];
+  let acc = 0;
+  STEPS.forEach((s) => { s.T = acc; s.work = s.slot - FIN; acc += s.slot; s.fin = false; });
+  const TOTAL = acc, TOTS = TOTAL.toFixed(1) + ' s', LAST = STEPS.length;   // the end line is row 7
+  const POSE_RT = STEPS[3].T + 0.485 * STEPS[3].work;                       // step 4, 24 of 60 previews
+  const countAt = (s, p) => { let c = 0; for (const [q, v] of s.m) if (p >= q) c = v; return c; };
+
+  const $ = (id) => document.getElementById(id);
+  const card = $('sw-card'), wheel = $('sw-wheel'), rowsEl = $('sw-rows'), again = $('sw-again'), live = $('sw-live'), ol = $('sw-ol'), rn = $('sw-rn');
+  const mkEl = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+  for (let d = 1; d <= 7; d++) { const e = mkEl('i'); e.textContent = d; rn.append(e); }
+
+  const S = { t: 0, rt: 0, state: 'run', L: 0, follow: true, holdUntil: 0, hold: 0, endT: 0, rwT: 0, epoch: 0, posing: false, say: 0, manual: false };
+  const P = mk(0, RESP.turn, 0.0005), HN = mk(1, RESP.head), PL = mk(0, RESP.pill);
+  let rows = [], Q = [], hand = null, down = null, last = 0, raf = 0;
+  const hi = () => (S.state === 'end' ? LAST : LAST - 1);
+
+  /* a row: the mark (ring, tick, disc), the words, the right-hand column */
+  function mkRow(i) {
+    const st = STEPS[i], end = i === LAST, el = mkEl('div', 'sw-row' + (end ? ' is-end' : ''));
+    el.innerHTML = '<span class="sw-mk"><svg viewBox="0 0 22 22" focusable="false">' + (end ? '<circle class="sw-disc" cx="11" cy="11" r="11"/>' : '')
+      + '<g transform="rotate(-90 11 11)"><circle class="sw-tr" cx="11" cy="11" r="9.3" pathLength="1"/></g><g class="sw-ag"><circle class="sw-ar" cx="11" cy="11" r="9.3" pathLength="1"/></g>'
+      + '<path class="sw-tk" d="M6.6 11.6l3.1 3.1 5.7-6.6" pathLength="1"/></svg></span>'
+      + '<span class="sw-tx"></span>';
+    el.style.display = 'none';
+    el.querySelector('.sw-tx').textContent = end ? 'Exported · ' + TOTS : st.t;
+    const r = { i, el, st, end, state: 'pending', th: 0, cnT: 0, hid: true,
+      rin: mk(0, RESP.ring), al: mk(1 / 3, RESP.arc), w: mk(0, RESP.wipe), tk: mk(0, RESP.tick), cs: mk(0, RESP.roll), cn: mk(0, RESP.count), cv: mk(end ? 0 : 1, RESP.cover), fd: mk(0, RESP.disc) };
+    const q = (c) => el.querySelector(c);
+    Object.assign(r, { mk: q('.sw-mk'), tx: q('.sw-tx'), trc: q('.sw-tr'), arc: q('.sw-ar'), ag: q('.sw-ag'), tkp: q('.sw-tk'), disc: end ? q('.sw-disc') : null });
+    if (!end) {
+      const rt = mkEl('span', 'sw-rt');
+      rt.innerHTML = '<span class="sw-rb"><span class="sw-rl"></span><span class="sw-rl sw-cl"></span><span class="sw-rl sw-tm"></span><span class="sw-rl"></span></span>';
+      el.append(rt);
+      r.rt = rt; r.rb = rt.firstChild;
+      r.tm = rt.querySelector('.sw-tm'); r.tm.textContent = st.slot.toFixed(1) + ' s';
+      if (st.n) {
+        const cl = rt.querySelector('.sw-cl'), col = (cells) => '<span class="sw-dg"><span class="sw-dc">' + cells.map((c) => '<i>' + c + '</i>').join('') + '</span></span>';
+        cl.innerHTML = col(['', 1, 2, 3, 4, 5, 6, 7, 8, 9]) + col([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0]) + ' of ' + st.n + ' ' + st.unit;
+        const dcs = cl.querySelectorAll('.sw-dc'); r.dct = dcs[0]; r.dco = dcs[1];
+      }
+    }
+    const li = mkEl('li'); li.hidden = end; ol.append(li); r.li = li;
+    rowsEl.append(el); rows.push(r);
+    return r;
+  }
+  for (let i = 0; i <= LAST; i++) mkRow(i);
+
+  const say = (m) => { if (S.posing) return; live.textContent = ''; clearTimeout(S.say); S.say = setTimeout(() => { live.textContent = m; }, 40); };
+  function setLi(r) {
+    const name = r.end ? 'Exported in ' + TOTAL.toFixed(1) + ' seconds' : r.st.t + ', ' + (r.state === 'done' ? 'done in ' + r.st.slot.toFixed(1) + ' seconds' : r.state === 'live' ? 'in progress' : 'pending');
+    r.li.textContent = name;
+    if (r.state === 'live') r.li.setAttribute('aria-current', 'step'); else r.li.removeAttribute('aria-current');
+    if (r.end) r.li.hidden = r.state === 'pending';
+  }
+
+  /* the clock of the choreography: later(s, fn) runs on the same clock as the springs, so it stops with them and never races them */
+  function later(s, fn) { Q.push({ at: S.t + s, fn, ep: S.epoch }); Q.sort((a, b) => a.at - b.at); }
+  function pump() { while (Q.length && Q[0].at <= S.t) { const e = Q.shift(); if (e.ep === S.epoch) e.fn(); } }
+
+  /* the agent */
+  function activate(i) {
+    const r = rows[i], n = r.st.n;
+    r.state = 'live'; setLi(r);
+    snap(r.w, 0); snap(r.rin, 0); snap(r.tk, 0); snap(r.cn, 0); r.cnT = 0; r.th = 0;
+    snap(r.al, n ? 0.05 : reduced ? 2 / 3 : 1 / 3);
+    if (n) aim(r.cs, 1, RESP.roll);
+    later(0.1, () => { if (r.state === 'live') aim(r.rin, 1, RESP.ring); });
+    say(`Step ${i + 1} of ${LAST}, ${r.st.t}`);
+    syncHeader();
+  }
+  function work(i, local, dt) {
+    const r = rows[i], st = r.st;
+    if (st.n) {
+      const c = countAt(st, local / st.work);
+      if (c !== r.cnT) { r.cnT = c; aim(r.cn, c, RESP.count); aim(r.al, Math.max(0.05, c / st.n), RESP.arc); }
+    } else if (!reduced) r.th += dt * TAU / 1.1;
+  }
+  function finish(i) {
+    const r = rows[i], st = r.st;
+    st.fin = true;
+    aim(r.al, 1, RESP.close);
+    if (st.n) aim(r.cn, st.n, RESP.count);
+    later(0.08, () => aim(r.tk, 1, RESP.tick));
+    later(0.3, () => aim(r.w, 1, RESP.wipe));
+  }
+  function next() {
+    const r = rows[S.L];
+    r.state = 'done'; setLi(r);
+    aim(r.cs, 2, RESP.roll);
+    if (S.L < LAST - 1) { S.L++; if (S.follow) aim(P, S.L, RESP.turn); activate(S.L); }
+    else conclude();
+  }
+  function conclude() {
+    const r = rows[LAST];
+    S.L = LAST; S.state = 'end'; S.endT = 0;
+    r.state = 'live'; setLi(r);
+    aim(r.cv, 1, RESP.cover);
+    later(0.1, () => aim(r.fd, 1, RESP.disc));
+    later(0.26, () => aim(r.tk, 1, RESP.tick));
+    later(0.75, () => aim(PL, 1, RESP.pill));
+    if (S.follow) aim(P, LAST, RESP.turn);
+    syncHeader();
+    say(`Exported in ${TOTAL.toFixed(1)} seconds. Run again is available.`);
+  }
+  function syncHeader() {
+    aim(HN, Math.min(S.L + 1, LAST), RESP.head);
+    card.classList.toggle('is-done', S.state === 'end');
+  }
+  function begin() {
+    S.state = 'run'; S.rt = 0; S.L = 0;
+    STEPS.forEach((s) => { s.fin = false; });
+    activate(0);
+  }
+  function restart() {
+    S.epoch++; Q.length = 0;
+    S.state = 'rewind'; S.rwT = 0; S.follow = true; S.holdUntil = 0; S.L = 0;
+    for (const r of rows) {
+      r.state = 'pending'; setLi(r);
+      aim(r.tk, 0, RESP.tick);
+      if (!r.end) aim(r.cs, 3, RESP.roll);
+      snap(r.rin, 0); snap(r.w, 0);
+    }
+    const e = rows[LAST]; aim(e.cv, 0, 0.22); later(0.4, () => snap(e.fd, 0)); aim(PL, 0, RESP.pill);
+    aim(P, 0, RESP.back);
+    syncHeader();
+  }
+  /* the pose: step the world, with the same code as the run, to step 4 and 24 of 60 previews, let the springs rest, hold, then the run goes on */
+  function pose() {
+    S.epoch++; Q.length = 0; S.posing = true; S.hold = 0; S.t = 0;
+    for (const r of rows) { r.state = 'pending'; snap(r.rin, 0); snap(r.w, 0); snap(r.tk, 0); snap(r.cs, 0); snap(r.cn, 0); snap(r.fd, 0); snap(r.cv, r.end ? 0 : 1); r.th = 0; setLi(r); }
+    snap(P, 0); snap(HN, 1); snap(PL, 0);
+    S.follow = true; S.holdUntil = 0; hand = null; down = null;
+    begin();
+    while (S.rt < POSE_RT) tick(1 / 60);
+    S.hold = 99; for (let k = 0; k < 40; k++) tick(1 / 60);
+    S.hold = reduced ? 8 : 1.3;
+    S.posing = false;
+    say(`Step 4 of ${LAST}, ${STEPS[3].t}`);
+    render();
+  }
+
+  /* one tick of the world */
+  function tick(dt) {
+    S.t += dt; pump();
+    if (S.hold > 0) S.hold -= dt;
+    else if (S.state === 'run') {
+      S.rt += dt;
+      const st = STEPS[S.L], local = S.rt - st.T;
+      if (local >= st.slot) next();
+      else if (!st.fin && local >= st.work) finish(S.L);
+      else if (!st.fin) work(S.L, local, dt);
+    } else if (S.state === 'end') {
+      S.endT += dt;
+      if (S.endT >= (QM.tile ? 3 : 6) && !reduced && !hand && !down && !S.holdUntil && !again.matches(':hover, :focus-visible')) restart();
+    } else if (S.state === 'rewind') {
+      S.rwT += dt;
+      if (S.rwT >= 0.45) begin();
+    }
+    if (S.holdUntil && !hand && S.t >= S.holdUntil) { S.holdUntil = 0; S.follow = true; aim(P, S.L, RESP.turn); }
+    if (hand && hand.kind === 'wheel' && performance.now() - hand.last > 90) release();
+    step(P, dt); step(HN, dt); step(PL, dt);
+    for (const r of rows) {
+      step(r.rin, dt); step(r.al, dt); step(r.w, dt); step(r.tk, dt); step(r.cs, dt); step(r.cn, dt); step(r.cv, dt); step(r.fd, dt);
+      if (r.cs.T === 3 && !r.cs.on) snap(r.cs, 0);
+    }
+  }
+
+  /* the picture, from the springs */
+  const dash = (el, len, off) => {
+    if (len < 0.004) { if (el._h !== 1) { el.style.visibility = 'hidden'; el._h = 1; } return; }
+    if (el._h !== 0) { el.style.visibility = 'visible'; el._h = 0; }
+    el.style.strokeDasharray = len.toFixed(4) + ' 3'; el.style.strokeDashoffset = (-off).toFixed(4);
+  };
+  function render() {
+    const p = P.x;
+    for (const r of rows) {
+      const d = r.i - p, ad = Math.abs(d);
+      if (ad > 8.5 || (r.end && r.cv.x < 0.002)) { if (!r.hid) { r.el.style.display = 'none'; r.hid = true; } continue; }
+      if (r.hid) { r.el.style.display = ''; r.hid = false; }
+      const s = SCALE(ad), y = CY + Y(d) - ROW / 2, sc = s.toFixed(4);
+      r.el.style.transform = `translateY(${y.toFixed(2)}px)`;
+      r.el.style.color = COL(ad);
+      r.tx.style.transform = `scale(${sc})`;
+      r.mk.style.transform = `scale(${sc})`;
+      if (r.end) r.el.style.clipPath = r.cv.x >= 0.999 ? 'none' : `inset(0 0 ${((1 - r.cv.x) * 100).toFixed(2)}% 0)`;
+      else {
+        r.rt.style.transform = `scale(${RS(s).toFixed(4)})`; r.rt.style.color = RCOL(ad);
+        r.rb.style.transform = `translateY(${(-r.cs.x * U).toFixed(2)}px)`;
+        if (r.dco) {
+          const v = r.cn.x, o = ((v % 10) + 10) % 10;
+          r.dco.style.transform = `translateY(${(-o * U).toFixed(2)}px)`;
+          r.dct.style.transform = `translateY(${(-(Math.floor(v / 10) + clamp(o - 9, 0, 1)) * U).toFixed(2)}px)`;
+        }
+      }
+      // the ring: the track is drawn on, the arc is a third turning or the count's share, both are wiped away clockwise at the end
+      const w = r.w.x, rin = Math.min(1, r.rin.x);
+      dash(r.trc, rin - w, w);
+      dash(r.arc, Math.min(r.al.x, rin) - w, w);
+      r.ag.setAttribute('transform', `rotate(${(r.th * 57.2958 - 90).toFixed(2)} 11 11)`);
+      const tk = r.tk.x;
+      if (tk < 0.01) { if (r.tkp._h !== 1) { r.tkp.style.visibility = 'hidden'; r.tkp._h = 1; } }
+      else { if (r.tkp._h !== 0) { r.tkp.style.visibility = 'visible'; r.tkp._h = 0; } r.tkp.style.strokeDasharray = tk.toFixed(4) + ' 3'; }
+      if (r.end) {
+        const f = r.fd.x;
+        if (f < 0.01) r.disc.style.visibility = 'hidden'; else { r.disc.style.visibility = 'visible'; r.disc.style.transform = `scale(${f.toFixed(4)})`; }
+      }
+    }
+    rn.style.transform = `translateY(${(-(HN.x - 1) * HR).toFixed(2)}px)`;
+    // Run again travels with the end line, at its size
+    const e = rows[LAST], ed = Math.abs(LAST - p), es = SCALE(ed), py = CY + Y(LAST - p) + 62 * es;
+    const shown = PL.x > 0.002 && e.cv.x > 0.002;
+    again.style.visibility = shown ? 'visible' : 'hidden';
+    if (shown) {
+      again.style.transform = `translate(${58}px, ${(py - 18 * es).toFixed(2)}px) scale(${es.toFixed(4)})`;
+      again.style.clipPath = PL.x >= 0.999 ? 'none' : `inset(0 0 ${((1 - clamp(PL.x, 0, 1)) * 100).toFixed(2)}% 0 round 18px)`;
+    }
+    const can = PL.T === 1 && S.state === 'end';
+    if (can === again.inert) again.inert = !can;
+  }
+
+  /* by hand: drag 1:1, wheel, keys; the run never stops, p is the only thing the hand touches */
+  const RD = 2.4;
+  const rub = (x) => (x * RD * 0.55) / (RD + 0.55 * Math.abs(x));
+  const band = (q) => { const hv = hi(); return q < 0 ? -rub(-q) : q > hv ? hv + rub(q - hv) : q; };
+  const k = () => wheel.getBoundingClientRect().height / 368;
+  function grab() { S.follow = false; S.holdUntil = 0; P.on = false; P.v = 0; }
+  function sample(x) { const n = performance.now(); hand.s.push([n, x]); while (hand.s.length > 2 && n - hand.s[0][0] > 90) hand.s.shift(); hand.last = n; }
+  function velocity() {
+    const s = hand.s; if (s.length < 2) return 0;
+    const a = s[0], b = s[s.length - 1], dt = (b[0] - a[0]) / 1000;
+    return dt > 0.012 ? (b[1] - a[1]) / dt : 0;
+  }
+  function release(cancel) {
+    if (!hand) return;
+    const v = cancel ? 0 : clamp(velocity(), -40, 40), hv = hi();
+    const t = clamp(Math.round(P.x + v * 0.099), 0, hv);        // d = 0.99: v · d / (1 - d) / 1000
+    wheel.classList.remove('is-drag');
+    hand = null;
+    P.v = reduced ? 0 : v; aim(P, t, RESP.turn);
+    S.holdUntil = S.t + 1.2;
+  }
+  function turn(dir) {
+    grab();
+    const hv = hi(), cur = clamp(Math.round(P.T), 0, hv), t = cur + dir;
+    if (t < 0 || t > hv) { P.v += reduced ? 0 : dir * 6; aim(P, cur, RESP.turn); }       // a nudge at an end
+    else aim(P, t, RESP.turn);
+    S.holdUntil = S.t + 1.2;
+  }
+  function goLive() { S.follow = true; S.holdUntil = 0; aim(P, S.L, RESP.turn); }
+  wheel.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || e.target.closest('.sw-again')) return;
+    const rect = wheel.getBoundingClientRect(), kk = k(), yy = (e.clientY - rect.top) / kk - CY;
+    let q = 0, bd = 1e9;
+    for (let i = 0; i <= hi(); i++) { const dd = Math.abs(Y(i - P.x) - yy); if (dd < bd) { bd = dd; q = i; } }
+    down = { id: e.pointerId, y: e.clientY, q, drag: false };
+    wheel.classList.add('is-down');
+  });
+  wheel.addEventListener('pointermove', (e) => {
+    if (!down || e.pointerId !== down.id) return;
+    if (!down.drag) {
+      if (Math.abs(e.clientY - down.y) < 6) return;
+      down.drag = true; down.p0 = P.x;
+      try { wheel.setPointerCapture(e.pointerId); } catch (x) { /* detached */ }
+      grab(); hand = { kind: 'drag', s: [], last: 0 };
+      wheel.classList.add('is-drag');
+    }
+    const dy = (e.clientY - down.y) / k();
+    P.x = band(down.q - Yinv(Y(down.q - down.p0) + dy)); P.v = 0; P.on = false;
+    sample(P.x);
+  });
+  const up = (e) => {
+    if (!down || e.pointerId !== down.id) return;
+    const was = down.drag; down = null; wheel.classList.remove('is-down');
+    if (was) release(e.type === 'pointercancel');
+  };
+  wheel.addEventListener('pointerup', up); wheel.addEventListener('pointercancel', up);
+  wheel.addEventListener('pointerleave', () => { if (down && !down.drag) { down = null; wheel.classList.remove('is-down'); } });
+  wheel.addEventListener('wheel', (e) => {
+    if (e.ctrlKey) return;
+    e.preventDefault();
+    const px = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * 300 : e.deltaY;
+    if (e.deltaMode !== 0 || Math.abs(px) >= 50) { if (!hand) turn(px > 0 ? 1 : -1); return; }          // a notch: one step
+    if (!hand) { grab(); hand = { kind: 'wheel', s: [], last: 0, raw: P.x }; }                          // a trackpad stream: the wheel follows it
+    hand.raw += px / (PITCH * k());
+    P.x = band(hand.raw); P.v = 0; P.on = false; sample(P.x);
+  }, { passive: false });
+  document.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const kk = e.key;
+    if (kk === 'ArrowDown' || kk === 'ArrowRight') turn(1);
+    else if (kk === 'ArrowUp' || kk === 'ArrowLeft') turn(-1);
+    else if (kk === 'Home' || kk === 'End') { grab(); aim(P, kk === 'Home' ? 0 : hi(), RESP.turn); S.holdUntil = S.t + 1.2; }
+    else if (kk === 'Escape') goLive();
+    else return;
+    e.preventDefault();
+  });
+  again.addEventListener('click', () => { if (S.state === 'end') restart(); });
+
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+    last = now;
+    if (S.manual) return;
+    tick(dt); render();
+  }
+  document.addEventListener('visibilitychange', () => { last = performance.now(); });
+  pose();
+  last = performance.now();
+  raf = requestAnimationFrame(frame);
+  return { S, P, rows, STEPS, TOTAL, tick, render, pose, restart, release, hand: () => hand, Y, SCALE, curve, again, wheel, card, hi };
+})();
+</script>
+<script>
+(() => {
+  const fit = document.getElementById('sw-fit'), world = document.getElementById('sw-world');
+  // the card is drawn 520 px wide and 440 px tall and scaled to the room it is given
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    let s = Math.max(0.5, Math.min(0.9 * W / 520, (H - 2 * pad - ui) / 440, 1.5));
+    s = Math.floor(s * 16) / 16;
+    fit.style.width = (520 * s).toFixed(2) + 'px'; fit.style.height = (440 * s).toFixed(2) + 'px';
+    world.style.setProperty('--s', s.toFixed(4));
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(size);
+  QM.demo({ kind: 'loop', restart() { SW.pose(); } });
+})();
+</script>
+</body>
+</html>

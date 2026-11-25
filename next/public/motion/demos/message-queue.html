@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Message queue · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "message-queue",
+  "title": "Message queue",
+  "group": "studio",
+  "added": "2026-11-24",
+  "cat": "agent",
+  "order": 40,
+  "kind": "loop", "preview": {"secs": 9, "skip": 4500},
+  "tone": "paper",
+  "shot": 450,
+  "line": "chip rect to its slot on 4 springs 0.42 s · tray height 0.4 s · rows 40 px · count rolls · first row flies up into a bubble",
+  "summary": "A Qbix agent is refreshing Forma's product page: one user bubble and a working line, a short acknowledgement, a small progress arc with the current step rolling (Reading the brief, Rewriting the headline, Rebuilding the grid) and the finished steps kept under it as a quiet ticked list that closes when the run ends. The composer sits below. Type a follow-up and press Return while the agent works and the text does not post: it lifts out of the field as a chip, flies from its exact on-screen rect to its slot and seats in a queue tray that is uncovered above the field, the one body of the composer divided by a hairline. The tray's height is a spring and its Queued count rolls 1, 2, 3. A row can be dragged to reorder, with the neighbours parting on springs; Edit sends it back into the field by the same path (with text already in the field the two chips pass in separate channels and never cross); Send now jumps the queue; Remove covers it and the rest close up. When the agent finishes a run the first row flies up into the thread and grows into a full bubble while the thread scrolls and the tray closes by one row. Everything is retargeted from where it is on screen, so two messages 100 ms apart, a removal mid-flight or a dequeue during a drag never jump.",
+  "spec": [
+    [
+      "Chip",
+      "a chip's rect is its destination's rect (a slot in the tray, the text in the field, a bubble in the thread, or a fixed rect) plus one offset spring each on x, y, width and height (response 0.42 s, critically damped) that decays to 0; a new destination starts the offsets at the difference from the rect on screen and keeps their velocity, and because the destination is recomputed every frame it moves under the chip (the tray grows, the thread scrolls) without the chip lagging"
+    ],
+    [
+      "Look",
+      "two springs, row-ness and bubble-ness, drive the chip's padding (text stays put: left 0, 12 or 15 px), its #f5f5f7 body (a bump while it is in the air, solid as a bubble, none as a row), its radius 12 to 20 px and its line clamp; long text is cut to one line with an ellipsis as the chip shrinks into a row, and wraps at 432 px in the field, the row and the bubble alike, so nothing re-wraps in flight"
+    ],
+    [
+      "Tray",
+      "one spring on the tray's height (response 0.4 s): 30 px header, 40 px rows, 4 px under them, 0 when empty; the composer's card is the field (52 px, one line, up to 96 px for three on a 0.3 s spring) plus the tray, anchored at its bottom edge, the hairline uncovered with the height; the count is a strip of digits that rolls on a 0.2 s spring; at most 4 rows"
+    ],
+    [
+      "Parting",
+      "a row's slot index is changed by a neighbour leaving, arriving or being dragged past, and only the difference is added to its offset; when the tray moves too the offset takes the tray's response so a row that stays put stays put (the first row leaving moves nobody, a middle one removed lets the ones above settle 40 px)"
+    ],
+    [
+      "Drag",
+      "press 0.97 in 100 ms, 6 px of travel, then 1:1 from the grab with the row lifted (1.012 and a shadow, white); a rubber band (x·D·0.55)/(D + 0.55·|x|), D = 50 px past the first and last slot; release projects v × 0.099 s (d = 0.99) when over 140 px/s and takes the nearest slot, the offset spring starting at the release velocity; the Alt and Up or Down keys move a focused row one slot"
+    ],
+    [
+      "Dequeue",
+      "the agent's run (3 steps, 6.8 to 7.2 s; 8.2 s after a send now, the first 1.4 s reading Interrupted. Picking this up.) ends, the line draws a tick and rolls to Worked for 7 s, 0.4 s later the first row that is not under a hand flies to its bubble rect (width 544 to the text's width + 30, height 40 or more, radius 12 to 20); the thread's jump spring (0.42 s) keeps what is on screen where it is while the new bubble and line take their place; the working line is uncovered 0.26 s in and starts on the new request; a row under a hand is never taken, the next one goes"
+    ],
+    [
+      "Send now",
+      "the up arrow on a row (or Cmd or Ctrl and Return in the field) flies it at once; the working line's arc unwinds into a dash and rolls to Interrupted at 4 s, and the new line opens on Interrupted. Picking this up."
+    ],
+    [
+      "Field",
+      "a real textarea (one line, up to three), Return queues, Shift and Return is a newline, Cmd or Ctrl and Return sends now, Up in an empty field takes the last row back for editing (if the field has text, that text is queued in the row's place), Escape clears it; with the agent idle Return posts straight into the thread"
+    ],
+    [
+      "Lime",
+      "exactly one: the send button while the field has text (a pill with a stack glyph reading Queue while the agent works, an arrow and Send when it is free), and with an empty field the working arc; while the button is lime the arc is #1d1d1f, and an arc that has ended is #86868b"
+    ],
+    [
+      "Loop",
+      "the tile loads on the settled pose and rests still (two rows seated, Make the headline shorter typed in the field with the lime Queue pill, the agent on step 3 of 4 with two finished steps listed under it); about 5 s later a ghost presses Return on that text through the real key path and the chip lifts into the tray, then it types follow-ups into the textarea with real input events, drags the last row to the top, lets the agent take the first, sends the last one now, edits one back into the field and removes another, and yields to mouse, touch and keys"
+    ]
+  ],
+  "source": [
+    "Qbix Motion · Studio · 2026-11-24"
+  ],
+  "where": "The composer of a Qbix agent session, where a client keeps adding notes (keep the prices, use the grey photos) to a page refresh while the agent is still working, and nothing they send is lost or reordered behind their back.",
+  "rules": [
+    "A chip is its destination plus a decaying offset. Retarget it and it stays where it is on screen with its velocity; move the destination and it follows rigidly. That is what lets a tray grow, a thread scroll and a row be removed all at once without a jump.",
+    "The same chip is the field's text, the tray's row and the thread's bubble. Text is 15 px / 22 px in all three, wraps at 432 px in all three and keeps its x, so only the box around it moves.",
+    "The tray is the composer's upper part: one card, one hairline, new rows seated at the bottom next to the field, the first row leaving from the top without moving the rest.",
+    "A row under a hand is never taken by the agent or moved by anything but the hand; the next row goes, and the held row lands where the hand releases it.",
+    "Exactly one lime in a frame: the send button when the field has text, otherwise the working arc. A finished run's arc is grey.",
+    "Rows are a real list with buttons (Edit, Send now, Remove keep their room and open on hover or focus), the field is a real textarea, a polite status line says Queued, 2 waiting, and the keyboard reaches everything.",
+    "Under reduced motion the piece rests on two queued rows, the agent starts on the first interaction, and every change happens in place."
+  ],
+  "tags": [
+    "queue",
+    "composer",
+    "agent",
+    "chat",
+    "shared element",
+    "drag",
+    "reorder",
+    "spring",
+    "rubber band",
+    "keyboard",
+    "follow-up",
+    "interrupt"
+  ]
+}
+</script>
+<style data-code>
+/* Message queue. A Qbix agent thread in a white window: the agent's working line (a progress arc and the step rolling), and a composer whose
+   upper part is a queue tray. The tray, the field, the thread's scroll and every chip are springs set from script (render): a chip is a rect
+   (x, y, width, height) that is the destination's rect plus an offset spring, so it can start from any rect on screen and end on any other.
+   Colours: Apple neutrals #1d1d1f #6e6e73 #86868b, grounds #fff #f5f5f7, fills #e8e8ed; lime #B8FF00 is the send button while the field has text,
+   and otherwise the working arc: never both. */
+.mq-fit { position: relative; width: calc(720px * var(--s, 1)); height: calc(450px * var(--s, 1)); }
+.mq-win { --mq-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --mq-out: cubic-bezier(.16, 1, .3, 1); --mq-ui: cubic-bezier(.4, 0, .2, 1); --mq-in: cubic-bezier(.5, 0, .75, 0);
+  position: absolute; left: 0; top: 0; width: 720px; height: 450px; transform: scale(var(--s, 1)); transform-origin: 0 0; overflow: hidden; border-radius: 22px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 30px 60px -28px rgba(0, 0, 0, .3);
+  font: 400 15px/22px var(--mq-f); letter-spacing: -.01em; color: #1d1d1f; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.mq-win :where(h2, p, ul) { margin: 0; padding: 0; }
+.mq-win :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.mq-win :where(svg) { display: block; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.mq-t { font: 400 15px/22px var(--mq-f); letter-spacing: -.01em; }
+
+.mq-head { position: absolute; left: 80px; right: 80px; top: 0; height: 48px; display: flex; align-items: center; font: 600 15px/20px var(--mq-f); letter-spacing: -.01em; }
+
+/* the thread: items are placed from script; its top edge is a soft cover */
+.mq-thread { position: absolute; left: 0; right: 0; top: 48px; bottom: 0; z-index: 1; overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px); mask-image: linear-gradient(to bottom, transparent 0, #000 10px); }
+.mq-bub { position: absolute; left: 0; top: 0; padding: 9px 15px; border-radius: 20px; background: #f5f5f7; will-change: transform; }
+.mq-bub.is-nw { white-space: nowrap; }
+.mq-bub.is-pw { white-space: pre-wrap; overflow-wrap: break-word; }
+.mq-line { position: absolute; left: 0; top: 0; width: 420px; will-change: transform, clip-path; }
+.mq-ack { height: 22px; margin-bottom: 12px; white-space: nowrap; color: #1d1d1f; }
+.mq-wl { display: flex; align-items: center; height: 24px; }
+.mq-steps { height: 0; overflow: hidden; }
+.mq-stl { padding-top: 6px; }
+.mq-sr { display: flex; align-items: center; height: 24px; font: 400 14px/24px var(--mq-f); letter-spacing: -.006em; color: #6e6e73; white-space: nowrap; }
+.mq-sr svg { flex: none; width: 14px; height: 14px; margin: 0 13px 0 3px; stroke: #86868b; stroke-width: 1.7; }
+.mq-sr path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: mq-tk 340ms var(--mq-out) 160ms forwards; }
+.mq-sr.is-seed path { animation: none; stroke-dashoffset: 0; }
+@keyframes mq-tk { to { stroke-dashoffset: 0; } }
+.mq-ring { flex: none; width: 20px; height: 20px; margin-right: 10px; }
+.mq-ring circle { stroke-width: 2.6; stroke-dasharray: 1 2; visibility: hidden; transform: rotate(-90deg); transform-origin: 10px 10px; }
+.mq-ring .mq-tr { stroke: #e8e8ed; }
+.mq-ring .mq-ar { stroke: #B8FF00; transition: stroke 160ms var(--mq-ui); }
+.mq-win.is-ink .mq-ring .mq-ar { stroke: #1d1d1f; }
+.mq-line.is-end .mq-ring .mq-ar { stroke: #86868b; transition: none; }   /* a run that has ended never carries the lime: one lime in a frame */
+.mq-ring path { stroke: #86868b; stroke-width: 1.8; stroke-dasharray: 1 2; visibility: hidden; }
+.mq-lt { display: block; height: 22px; width: 400px; overflow: hidden; }
+.mq-lc { display: block; will-change: transform; }
+.mq-lc i { display: block; height: 22px; white-space: nowrap; font-style: normal; font-weight: 500; color: #1d1d1f; }
+.mq-lc i.is-end { font-weight: 400; color: #6e6e73; }
+
+/* the composer: one body. The tray is its upper part, divided from the field by a hairline. */
+.mq-card { position: absolute; left: 80px; top: 0; width: 560px; z-index: 3; overflow: hidden; border-radius: 22px; background: #fff; --th: 0px; --hv: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .09), 0 8px 24px -10px rgba(0, 0, 0, .16); transition: box-shadow 200ms var(--mq-ui); }
+.mq-card:focus-within { box-shadow: 0 0 0 1px rgba(0, 0, 0, .2), 0 8px 24px -10px rgba(0, 0, 0, .16); }
+.mq-tray { position: absolute; left: 0; right: 0; top: 0; height: var(--th); overflow: hidden; }
+.mq-th { position: absolute; left: 20px; top: 8px; display: flex; align-items: center; gap: 6px; font: 500 13px/18px var(--mq-f); letter-spacing: -.006em; color: #6e6e73; white-space: nowrap; }
+.mq-cn { display: block; width: 9px; height: 18px; overflow: hidden; font-variant-numeric: tabular-nums; color: #1d1d1f; }
+.mq-cc { display: block; will-change: transform; }
+.mq-cc i { display: block; height: 18px; line-height: 18px; font-style: normal; }
+.mq-hl { position: absolute; left: 0; right: 0; top: var(--th); height: 1px; background: rgba(0, 0, 0, .08); transform: scaleX(var(--hv)); transform-origin: 0 50%; }
+.mq-ta { position: absolute; left: 20px; top: calc(var(--th) + 15px); width: 432px; height: 22px; margin: 0; padding: 0; border: 0; outline: 0; resize: none; background: transparent; color: #1d1d1f;
+  white-space: pre-wrap; overflow-wrap: break-word; overflow: hidden; scrollbar-width: none; caret-color: #1d1d1f; -webkit-user-select: text; user-select: text; -webkit-appearance: none; appearance: none; }
+.mq-ta::-webkit-scrollbar { display: none; }
+.mq-ta::placeholder { color: #86868b; opacity: 1; transition: color 200ms var(--mq-ui); }
+.mq-card.is-away .mq-ta::placeholder { color: transparent; transition: none; }
+/* the send button: grey and round while the field is empty; lime with a label while it has text (Queue while the agent works, Send when it is free) */
+.mq-send { position: absolute; right: 10px; bottom: 10px; width: 32px; height: 32px; border-radius: 16px; overflow: hidden; background: #e8e8ed; color: #86868b;
+  transition: width 320ms var(--mq-out), background-color 160ms var(--mq-ui), color 160ms var(--mq-ui), scale 100ms var(--mq-ui); }
+.mq-send:not(:disabled):active { scale: .97; }
+.mq-send:disabled { cursor: default; }
+.mq-send.is-lime { width: 86px; background: #B8FF00; color: #1d1d1f; }
+.mq-send.is-lime:hover { background: #c4ff2e; }
+.mq-send.is-lime.is-send { width: 74px; }
+.mq-sgw { position: absolute; left: 7px; top: 7px; width: 18px; height: 18px; overflow: hidden; transition: left 320ms var(--mq-out); }
+.mq-send.is-lime .mq-sgw { left: 11px; }
+.mq-sgi { display: block; will-change: transform; transition: transform 260ms var(--mq-out); transform: translateY(var(--sy, 0)); }
+.mq-sgi svg { width: 18px; height: 18px; stroke-width: 1.7; }
+.mq-send.is-queue { --sy: -18px; }
+.mq-sl { position: absolute; left: 35px; top: 0; font: 600 14px/32px var(--mq-f); letter-spacing: -.01em; white-space: nowrap; }
+
+/* the rows: chips that sit in the tray, drawn above the composer so they can leave it. Geometry is set from script. */
+.mq-list { position: absolute; inset: 0; z-index: 5; list-style: none; pointer-events: none; }
+.mq-row { position: absolute; left: 0; top: 0; overflow: hidden; border-radius: var(--rad, 12px); will-change: transform; touch-action: none; cursor: grab; --pl: 0px; --pt: 0px; --pr: 0px; --bg: 0; --lf: 0; --cv: 0;
+  background: rgba(255, 255, 255, var(--lf)); box-shadow: 0 12px 28px -8px rgba(0, 0, 0, calc(var(--lf) * .24)), 0 0 0 1px rgba(0, 0, 0, calc(var(--lf) * .06)); }
+.mq-row::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: #f5f5f7; opacity: var(--bg); }
+.mq-row::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: #f5f5f7; opacity: 0; transition: opacity 140ms var(--mq-ui); }
+.mq-row.is-act { pointer-events: auto; }
+.mq-row.is-act:hover::after, .mq-row.is-act.is-hot::after { opacity: 1; }
+.mq-row.is-drag { cursor: grabbing; }
+.mq-row.is-drag::after { opacity: 0 !important; }
+.mq-row.is-gone { pointer-events: none; }
+.mq-tx { position: absolute; left: var(--pl); top: var(--pt); width: var(--tw); overflow: hidden; }
+.mq-tx.is-one { white-space: nowrap; text-overflow: ellipsis; }
+.mq-tx.is-multi { white-space: pre-wrap; overflow-wrap: break-word; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--n, 1); }
+.mq-tx.is-multi.is-full { display: block; -webkit-line-clamp: none; }
+/* edit, send now, remove: they appear when the row is hovered or focused, and keep their room */
+.mq-gl { position: absolute; right: 8px; top: 6px; display: flex; gap: 2px; clip-path: inset(0 0 0 100%); transition: clip-path 140ms var(--mq-in); }
+.mq-row.is-act:hover .mq-gl, .mq-row.is-act:focus-within .mq-gl, .mq-row.is-act.is-hot .mq-gl { clip-path: inset(0 0 0 0); transition: clip-path 240ms var(--mq-out); }
+.mq-row.is-drag .mq-gl { clip-path: inset(0 0 0 100%); transition: clip-path 100ms var(--mq-in); }
+@media (hover: none) { .mq-row.is-act .mq-gl { clip-path: inset(0 0 0 0); } }
+.mq-b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 14px; color: #6e6e73; transition: background-color 140ms var(--mq-ui), color 140ms var(--mq-ui), scale 100ms var(--mq-ui); }
+.mq-b svg { width: 18px; height: 18px; }
+.mq-b:hover, .mq-b.is-hot { background: #e8e8ed; color: #1d1d1f; }
+.mq-b:active { scale: .94; }
+.mq-b:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
+.mq-win.no-tr, .mq-win.no-tr * { transition: none !important; }
+.mq-mir { position: absolute; left: 0; top: 0; display: inline-block; max-width: 432px; visibility: hidden; pointer-events: none; white-space: pre-wrap; overflow-wrap: break-word; }
+@media (prefers-reduced-motion: reduce) {
+  .mq-win *, .mq-win *::before, .mq-win *::after { transition-duration: 1ms !important; }
+  .mq-sr path { animation: none; stroke-dashoffset: 0; }
+}
+</style>
+<style>
+  html, body { background: #f5f5f7; }
+  html.qm-tile .qm-stage { padding: 14px; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; background: #f5f5f7; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="mq-fit" id="mq-fit">
+ <section class="mq-win" id="mq-win" aria-label="Agent thread">
+  <h2 class="mq-head">Forma product page</h2>
+  <div class="mq-thread" id="mq-thread" role="log" aria-label="Thread"></div>
+  <ul class="mq-list" id="mq-list" aria-label="Queued messages"></ul>
+  <div class="mq-card" id="mq-card">
+   <div class="mq-tray" aria-hidden="true"><p class="mq-th">Queued <span class="mq-cn"><span class="mq-cc" id="mq-cc"><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></span></span></p></div>
+   <i class="mq-hl" aria-hidden="true"></i>
+   <textarea class="mq-t mq-ta" id="mq-ta" rows="1" placeholder="Queue a follow-up" aria-label="Follow-up message" spellcheck="false" autocomplete="off"></textarea>
+   <button class="mq-send" id="mq-send" type="button" disabled aria-label="Send">
+    <span class="mq-sgw" aria-hidden="true"><span class="mq-sgi">
+     <svg viewBox="0 0 20 20"><path d="M10 16V4.6M5.2 9.2L10 4.4l4.8 4.8"/></svg>
+     <svg viewBox="0 0 20 20"><path d="M10 3.6L3.6 7 10 10.4 16.4 7zM3.6 10.4L10 13.8l6.4-3.4M3.6 13.8L10 17.2l6.4-3.4"/></svg>
+    </span></span>
+    <span class="mq-sl" id="mq-sl" aria-hidden="true">Queue</span>
+   </button>
+  </div>
+  <span class="mq-t mq-mir" id="mq-mir" aria-hidden="true"></span>
+ </section>
+ <p class="sr-only" id="mq-msg" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Press Return to queue a follow-up, drag a row to reorder. Cmd or Ctrl and Return sends now, Up edits the last row</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Message queue. One world, stepped by one clock (simStep): the agent's run, the springs, the later() timers. render() writes it.
+   Every moving thing is a critically damped spring that starts from the value and velocity on screen:
+   · the tray height TH, the field height FH, the count roll CN and the thread's jump offset OJ;
+   · every chip: its rect is its destination's rect (a slot in the tray, the text in the field, a bubble in the thread, or a fixed rect) plus an offset
+     spring on x, y, width and height that decays to 0, so a chip can leave from any rect on screen and a destination can move under it (the tray grows, the thread scrolls)
+     without the chip lagging; its look (padding, background, radius) is two more springs, lr (row-ness) and lb (bubble-ness);
+   · a row's slot index changing (a neighbour left, a drag passed it) only adds the difference to its offset, so it parts and closes up on its own spring. */
+const MQ = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2, R = (s) => TAU / s;                               // a response in seconds as an angular frequency
+  const W = 720, HEAD = 48, CX = 80, CR = 640, BC = 432, LINE = 22, FH0 = 52, THD = 30, ROWH = 40, TPAD = 4, ROWX = 88, ROWW = 544, MAXQ = 4;
+  const TP = 12, GAPB = 14, GAPL = 22, GAPC = 14, ACKH = 22, ACKG = 12, WLH = 24, SRH = 24, SRP = 6;                             // thread: top pad, bubble to line, line to next bubble, last item to composer
+  const LOOK = 0.099, FLICK = 140, SLOP = 6, DB = 50;                        // projection (d = 0.99), px/s that is projected, px before a drag, rubber-band dimension
+  const OMT = R(0.4), OMF = R(0.3), OMI = R(0.42), OMP = R(0.3), OML = R(0.22), OMK = R(0.1), OMC = R(0.2), OMJ = R(0.42), OMV = R(0.3), OMR = R(0.34);
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const $ = (id) => document.getElementById('mq-' + id);
+  const win = $('win'), thread = $('thread'), list = $('list'), card = $('card'), ta = $('ta'), send = $('send'), sl = $('sl'), mir = $('mir'), msg = $('msg'), cc = $('cc');
+  const hl = card.querySelector('.mq-hl');
+
+  /* a spring: the closed form, critically damped by default; it always starts from the x and v on screen */
+  const mk = (x = 0, e = 0.05, ve = 3) => ({ x, v: 0, T: x, w: OMI, z: 1, on: false, e, ve });
+  function step(s, dt) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < s.e && Math.abs(v) < s.ve) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  function aim(s, T, w, z = 1, v) {
+    s.T = T; if (w) s.w = w; s.z = z; if (v !== undefined) s.v = v;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+    kick();
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                      // rubber band, Apple's constant 0.55
+  const band = (v, lo, hi, D) => (v < lo ? lo - rb(lo - v, D) : v > hi ? hi + rb(v - hi, D) : v);
+
+  /* the world */
+  const S = { t: 0, vis: true, hold: false, frozen: false };
+  const FH = mk(FH0), TH = mk(0), CN = mk(0, 0.002, 0.05), OJ = mk(0);
+  const agent = { state: 'idle', cur: null, tok: 0 };                         // idle | work | between | wait
+  let Q = [], ITEMS = [], T = [], Ch = 0, ins = 0, hand = null, raf = 0, last = 0, inFrame = false, sc = 1, TL = [], uid = 0, awayK = 0;
+  const byEl = new Map();
+  const say = (t) => { msg.textContent = ''; setTimeout(() => { msg.textContent = t; }, 20); };
+  const later = (sec, fn) => { TL.push({ at: S.t + sec, fn }); TL.sort((a, b) => a.at - b.at); kick(); };
+  const pump = () => { while (TL.length && TL[0].at <= S.t) TL.shift().fn(); };
+
+  /* the copy: each run has its steps, as [now, seconds, done]; a finished step is kept under the working line as a quiet list */
+  const P = (a) => a.map((x) => x.split('|'));
+  const RUNS = [
+    [/prices/i, P(['Reading the request|Read the request', 'Locking the prices|Locked the prices', 'Checking the page|Checked the page'])],
+    [/grey|photo/i, P(['Finding the photos|Found the photos', 'Swapping the images|Swapped the images', 'Checking the crops|Checked the crops'])],
+    [/headline/i, P(['Reading the headline|Read the headline', 'Shortening it|Shortened it', 'Checking the fit|Checked the fit'])],
+    [/care/i, P(['Reading the products|Read the products', 'Writing care notes|Wrote care notes', 'Placing them|Placed them'])],
+    [/sentence|titles/i, P(['Finding the titles|Found the titles', 'Setting sentence case|Set sentence case', 'Checking the grid|Checked the grid'])],
+    [/price/i, P(['Finding the price|Found the price', 'Moving it up|Moved it up', 'Checking the page|Checked the page'])]
+  ];
+  const DEF = P(['Reading the request|Read the request', 'Making the change|Made the change', 'Checking the page|Checked the page']);
+  const BRIEF = P(['Reading the brief|Read the brief', 'Auditing the current page|Audited the current page', 'Rewriting the headline|Rewrote the headline', 'Rebuilding the grid|Rebuilt the grid']);
+  const DUR = [2.2, 2.4, 2.2], DUR0 = [1.6, 1.8, 2.0, 1.8];
+  const ACKS = ['Got it.', 'On it.', 'Noted.', 'Sure, picking that up.'];
+  let ackN = 0;
+  const stepsFor = (text, first) => {
+    if (first) return BRIEF.map((x, i) => [x[0], DUR0[i], x[1]]);
+    const hit = RUNS.find((r) => r[0].test(text));
+    return (hit ? hit[1] : DEF).map((x, i) => [x[0], DUR[i], x[1]]);
+  };
+
+  /* measuring text the way the field and the rows lay it out: 432 px wide, wrapped, 22 px lines */
+  function measure(text) {
+    mir.textContent = text.endsWith('\n') ? text + '​' : text || ' ';
+    const r = mir.getBoundingClientRect();
+    return { tw: Math.ceil((r.width / sc) * 100) / 100 + 0.5, lines: Math.max(1, Math.round(r.height / sc / LINE)) };
+  }
+  const measureScale = () => { sc = win.getBoundingClientRect().width / W || 1; };
+
+  /* the thread: bubbles and working lines stacked from the top; once they overflow the composer's top edge the bottom stays anchored */
+  const Ct = () => BC - FH.x - TH.x;
+  const anchored = () => Math.min(0, Ct() - GAPC - HEAD - Ch);
+  const threadOff = () => anchored() + OJ.x;
+  function layoutThread() {
+    let y = TP;
+    for (const t of T) { if (t.kind === 'l') t.h = ACKH + ACKG + WLH + t.hs.x; t.y = y; y += t.h + (t.kind === 'b' ? GAPB : GAPL); }
+    Ch = T.length ? y - (T[T.length - 1].kind === 'b' ? GAPB : GAPL) : 0;
+  }
+  function changeThread(fn) {                                                 // the layout changes; what is on screen does not jump
+    const before = threadOff();
+    fn(); layoutThread();
+    OJ.x += before - anchored(); aim(OJ, 0, OMJ);
+  }
+  const ringSvg = '<svg class="mq-ring" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle class="mq-tr" cx="10" cy="10" r="8" pathLength="1"/><circle class="mq-ar" cx="10" cy="10" r="8" pathLength="1" stroke-linecap="round"/><path class="mq-tk" d="M5.8 10.6l2.9 2.9 5.5-6.3" pathLength="1"/><path class="mq-ds" d="M6.2 10h7.6" pathLength="1"/></svg>';
+  function makeTurn(text, m, first) {
+    const bel = document.createElement('p'); bel.className = 'mq-bub mq-t ' + (m.lines === 1 ? 'is-nw' : 'is-pw'); bel.textContent = text; bel.style.visibility = 'hidden';
+    const b = { kind: 'b', el: bel, w: m.tw + 30, h: m.lines * LINE + 18, y: 0 };
+    bel.style.width = b.w + 'px'; bel.style.height = b.h + 'px';
+    const lel = document.createElement('div'); lel.className = 'mq-line mq-t';
+    lel.innerHTML = '<p class="mq-ack"></p><div class="mq-wl">' + ringSvg + '<span class="mq-lt"><span class="mq-lc"></span></span></div><div class="mq-steps"><div class="mq-stl"></div></div>';
+    const q = (c) => lel.querySelector(c);
+    const l = { kind: 'l', el: lel, h: ACKH + ACKG + WLH, hs: mk(0, 0.05, 3), nd: 0, ack: q('.mq-ack'), stEl: q('.mq-steps'), stl: q('.mq-stl'), y: 0, v: mk(0, 0.002, 0.05), tr: mk(0, 0.002, 0.05), d: mk(0, 0.002, 0.05), cv: mk(1, 0.002, 0.05), rl: mk(0, 0.002, 0.05), n: 0, ar: q('.mq-ar'), trc: q('.mq-tr'), tk: q('.mq-tk'), ds: q('.mq-ds'), lc: q('.mq-lc'), glyph: 'tk', tf: '' };
+    lel.style.visibility = 'hidden';
+    l.ack.textContent = first ? 'On it. I’ll start with the brief.' : ACKS[ackN++ % ACKS.length];
+    const steps = stepsFor(text, first);
+    return { text, b, l, status: 'work', t: 0, steps, total: steps.reduce((a, s) => a + s[1], 0), idx: -1, prog: 0, lead: false };
+  }
+  function pushLabel(tu, text, end) {
+    const i = document.createElement('i'); i.textContent = text; if (end) i.className = 'is-end';
+    tu.l.lc.append(i); tu.l.n++;
+    aim(tu.l.rl, tu.l.n - 1, OMV);
+  }
+  function pushDone(tu, text, seed) {                                         // a finished step is uncovered under the working line
+    const p = document.createElement('p'); p.className = 'mq-sr' + (seed ? ' is-seed' : '');
+    p.innerHTML = '<svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2.6 7.4l2.8 2.8 5.6-6.2" pathLength="1"/></svg>';
+    const sp = document.createElement('span'); sp.textContent = text; p.append(sp);
+    tu.l.stl.append(p); tu.l.nd++;
+    if (seed) snap(tu.l.hs, SRP + SRH * tu.l.nd); else aim(tu.l.hs, SRP + SRH * tu.l.nd, OMV);
+  }
+  const collapse = (tu) => aim(tu.l.hs, 0, R(0.3));                           // the run is over: the list closes, the line stays as one quiet row
+  function startTurn(tu, interrupt) {
+    tu.status = 'work'; tu.t = 0; tu.idx = 0;
+    if (interrupt) { tu.steps.unshift(['Interrupted. Picking this up.', 1.4]); tu.total += 1.4; tu.lead = true; tu.l.ack.textContent = 'Sure, switching to that.'; }
+    pushLabel(tu, tu.steps[0][0]);
+    snap(tu.l.tr, 1); tu.l.v.x = tu.l.v.T = 0.06;
+    agent.cur = tu; agent.state = 'work'; agent.tok++;
+    refreshUi();
+  }
+  function stopTurn(tu) {                                                     // send now: the run in hand is cut short
+    if (tu.status !== 'work') return;
+    tu.status = 'stop'; tu.l.glyph = 'ds'; tu.l.el.classList.add('is-end'); collapse(tu);
+    const n = Math.max(1, Math.round(tu.t));
+    pushLabel(tu, `Interrupted at ${n} s`, true);
+    aim(tu.l.v, 2, OMV); aim(tu.l.tr, 2, OMV);
+    later(0.12, () => aim(tu.l.d, 1, OMV));
+  }
+  function finishTurn(tu) {
+    tu.status = 'done'; tu.l.glyph = 'tk'; tu.l.el.classList.add('is-end'); collapse(tu);
+    pushLabel(tu, `Worked for ${Math.round(tu.total)} s`, true);
+    aim(tu.l.v, 2, OMV); aim(tu.l.tr, 2, OMV);
+    later(0.14, () => aim(tu.l.d, 1, OMV));
+    agent.state = 'between'; const tok = agent.tok;
+    later(0.4, () => { if (agent.tok === tok) takeNext(); });
+    refreshUi();
+  }
+  function agentStep(dt) {
+    if (agent.state === 'wait') { if (!hand && Q.length) takeNext(); else if (!Q.length) { agent.state = 'idle'; refreshUi(); } return; }
+    const tu = agent.cur;
+    if (agent.state !== 'work' || !tu || S.frozen) return;
+    tu.t += dt; tu.prog = clamp(tu.t / tu.total, 0, 1);
+    let acc = 0, idx = 0;
+    for (let i = 0; i < tu.steps.length; i++) { acc += tu.steps[i][1]; idx = i; if (tu.t < acc) break; }
+    if (idx !== tu.idx) { for (let i = tu.idx; i < idx; i++) if (tu.steps[i][2]) pushDone(tu, tu.steps[i][2]); tu.idx = idx; pushLabel(tu, tu.steps[idx][0]); }
+    tu.l.v.x = tu.l.v.T = 0.06 + 0.94 * tu.prog; tu.l.v.on = false;
+    if (tu.t >= tu.total) finishTurn(tu);
+  }
+  function takeNext() {                                                       // the agent is free: the first row that is not under a hand goes
+    const it = Q.find((i) => !i.held);
+    if (it) { toThread(it, false); return; }
+    if (Q.length) { agent.state = 'wait'; return; }
+    agent.state = 'idle'; refreshUi();
+  }
+
+  /* the chips: rows of the tray, the text lifting out of the field, a message flying up into the thread */
+  const ROW_HTML = '<i class="mq-bg"></i><span class="mq-tx"></span><span class="mq-gl">'
+    + '<button type="button" class="mq-b" data-a="edit"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.2 3.9l2.9 2.9-8.6 8.6-3.9 1 1-3.9zM11.7 5.4l2.9 2.9"/></svg></button>'
+    + '<button type="button" class="mq-b" data-a="now"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16.4V6.8M5.8 10.9L10 6.7l4.2 4.2M5.4 3.6h9.2"/></svg></button>'
+    + '<button type="button" class="mq-b" data-a="rm"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.8 5.8l8.4 8.4M14.2 5.8l-8.4 8.4"/></svg></button></span>';
+  function mkItem(text, m) {
+    const el = document.createElement('li'); el.className = 'mq-row'; el.innerHTML = ROW_HTML;
+    const q = (c) => el.querySelector(c), bs = el.querySelectorAll('.mq-b');
+    const it = { id: ++uid, text, el, tx: q('.mq-tx'), lines: m.lines, tw: m.tw, fl: Math.min(3, m.lines), dest: 'field', fixed: null, slot: -1, held: false, drag: false, dragY: 0, away: false, cb: null, turn: null, act: false, lz: NaN,
+      ox: mk(0), oy: mk(0), ow: mk(0), oh: mk(0), sx: mk(0), sk: mk(0, 0.002, 0.05), wc: mk(700, 0.5, 5), lr: mk(0, 0.002, 0.05), lb: mk(0, 0.002, 0.05), lf: mk(0, 0.002, 0.05), pr: mk(0, 0.002, 0.05), cv: mk(0, 0.002, 0.05) };
+    it.tx.textContent = text; it.tx.classList.add(m.lines === 1 ? 'is-one' : 'is-multi');
+    const short = text.length > 40 ? text.slice(0, 40) + '…' : text;
+    bs[0].setAttribute('aria-label', 'Edit: ' + short); bs[1].setAttribute('aria-label', 'Send now: ' + short); bs[2].setAttribute('aria-label', 'Remove: ' + short);
+    list.append(el); byEl.set(el, it); ITEMS.push(it);
+    return it;
+  }
+  function dropItem(it) { it.el.remove(); byEl.delete(it.el); ITEMS = ITEMS.filter((i) => i !== it); }
+  const slotY = (i) => Ct() + THD + ROWH * i;
+  function destRect(it) {
+    switch (it.dest) {
+      case 'slot': return { x: ROWX, y: slotY(it.slot), w: ROWW, h: ROWH };
+      case 'field': return { x: CX + 20, y: BC - FH.x + 15, w: it.tw, h: it.fl * LINE };
+      case 'bubble': { const b = it.turn.b; return { x: CR - b.w, y: HEAD + b.y + threadOff(), w: b.w, h: b.h }; }
+      default: return it.fixed;
+    }
+  }
+  function rectOf(it) {
+    const d = destRect(it);
+    return { x: d.x + it.ox.x, y: it.drag ? it.dragY : d.y + it.oy.x, w: d.w + it.ow.x, h: d.h + it.oh.x };
+  }
+  const LOOKS = { slot: [1, 0], field: [0, 0], bubble: [0, 1] };
+  function setDest(it, kind, rect) {                                          // a new destination: the chip stays where it is on screen and its offset takes the difference
+    const c = rectOf(it);
+    it.dest = kind; if (kind === 'fixed') it.fixed = rect || { x: c.x, y: c.y, w: c.w, h: c.h };
+    const d = destRect(it);
+    it.ox.x = c.x - d.x; it.oy.x = c.y - d.y; it.ow.x = c.w - d.w; it.oh.x = c.h - d.h;
+    if (it.drag) { it.drag = false; }
+    for (const k of ['ox', 'oy', 'ow', 'oh']) aim(it[k], 0, OMI);
+    if (LOOKS[kind]) { aim(it.lr, LOOKS[kind][0], OMI); aim(it.lb, LOOKS[kind][1], OMI); }
+  }
+  const flying = (it) => it.ox.on || it.oy.on || it.ow.on || it.oh.on || it.sx.on || it.wc.on || it.sk.on || it.lr.on || it.lb.on;
+
+  /* the order on screen: the queue, with the row under a hand put at the slot it hovers over */
+  const order = () => { const o = Q.filter((i) => !i.held); const h = Q.find((i) => i.held); if (h) o.splice(clamp(ins, 0, o.length), 0, h); return o; };
+  function reslot(dropped) {                                                  // slots changed: rows keep their place on screen and settle on springs; tray and count follow
+    const o = order(), nT = o.length ? THD + ROWH * o.length + TPAD : 0, trayMoves = Math.abs(nT - TH.T) > 0.5;
+    o.forEach((it, i) => {
+      if (it === dropped) { it.slot = i; return; }
+      if (it.slot !== i) {
+        if (it.slot >= 0 && !it.drag) { it.oy.x += ROWH * (it.slot - i); aim(it.oy, 0, trayMoves ? OMT : OMP); }   // when the tray moves too, rows follow its own response so a row that stays put stays put
+        it.slot = i;
+      }
+    });
+    aim(TH, nT, OMT);
+    if (o.length) aim(CN, o.length, OMC);
+    for (const it of o) it.el.setAttribute('aria-posinset', o.indexOf(it) + 1);
+  }
+  const sortDom = () => { for (const it of Q) list.append(it.el); };
+  function placeInQueue(it) {                                                 // a chip arrives in the tray, at the end
+    it.slot = Q.length; Q.push(it); it.away = false;
+    reslot();
+    setDest(it, 'slot');
+    say(`Queued, ${Q.length} waiting`);
+  }
+  function removeItem(it) {                                                   // covered where it is; the rest close up
+    const k = Q.indexOf(it); if (k < 0) return;
+    Q.splice(k, 1); it.away = true; it.held = false;
+    if (hand && hand.it === it) { hand = null; }
+    it.el.setAttribute('aria-hidden', 'true'); it.el.classList.add('is-gone');
+    setDest(it, 'fixed');
+    aim(it.cv, 1, R(0.2));
+    it.cb = () => { if (it.cv.x >= 0.995) dropItem(it); };
+    reslot();
+    say(`Removed, ${Q.length} waiting`);
+  }
+
+  /* the field: a real textarea, one line growing to three */
+  function updateField() {
+    const v = ta.value, has = v.trim().length > 0, m = measure(v), n = Math.min(3, m.lines);
+    ta.style.height = n * LINE + 'px'; ta.style.overflowY = m.lines > 3 ? 'auto' : 'hidden';
+    aim(FH, 30 + LINE * n, OMF);
+    refreshUi();
+    return m;
+  }
+  function refreshUi() {
+    const has = ta.value.trim().length > 0, busy = agent.state !== 'idle';
+    win.classList.toggle('is-ink', has);
+    send.disabled = !has;
+    send.classList.toggle('is-lime', has); send.classList.toggle('is-queue', has && busy); send.classList.toggle('is-send', has && !busy);
+    sl.textContent = busy ? 'Queue' : 'Send';
+    send.setAttribute('aria-label', has ? (busy ? 'Queue message' : 'Send message') : 'Send');
+    ta.placeholder = busy ? 'Queue a follow-up' : 'Message the agent';
+  }
+  function awayFor(sec) { card.classList.add('is-away'); const k = ++awayK; later(sec, () => { if (k === awayK) card.classList.remove('is-away'); }); }   // the placeholder stays covered while a chip is leaving the field (world clock, so a held pose keeps it)
+  function lift() {                                                           // the typed text becomes a chip exactly on its own rect
+    const text = ta.value.replace(/\s+$/, ''), m = measure(text);
+    const it = mkItem(text, m);
+    awayFor(0.4);
+    ta.value = ''; updateField();
+    return it;
+  }
+  function submit(now) {
+    if (ta.readOnly || !ta.value.trim()) return false;
+    const working = agent.state === 'work';
+    if (!now && agent.state !== 'idle') {
+      if (Q.length >= MAXQ) { say(`Queue is full, ${Q.length} waiting`); return false; }
+      placeInQueue(lift()); return true;
+    }
+    toThread(lift(), now && working);                                         // the agent is free, or the viewer said now
+    return true;
+  }
+  function toThread(it, interrupt) {                                          // a chip flies up into the thread and becomes a bubble
+    if (interrupt && agent.cur && agent.cur.status === 'work') stopTurn(agent.cur);
+    const k = Q.indexOf(it); if (k >= 0) Q.splice(k, 1);
+    it.away = true; it.held = false; if (hand && hand.it === it) hand = null;
+    it.el.setAttribute('aria-hidden', 'true'); it.el.classList.add('is-gone');
+    const tu = makeTurn(it.text, { tw: it.tw, lines: it.lines }, false);
+    it.turn = tu;
+    thread.append(tu.b.el, tu.l.el);
+    changeThread(() => { T.push(tu.b, tu.l); });
+    reslot();
+    setDest(it, 'bubble');
+    it.tx.classList.add('is-full');
+    it.cb = () => {                                                           // landed: the real bubble takes the chip's place in the same frame
+      tu.b.el.style.visibility = 'visible'; dropItem(it);
+    };
+    startTurn(tu, interrupt);
+    later(0.26, () => { tu.l.el.style.visibility = 'visible'; aim(tu.l.cv, 0, R(0.34)); });
+    say(interrupt ? `Sent now: ${it.text}. Interrupted. Picking this up.` : `Sent: ${it.text}. ${Q.length} waiting`);
+  }
+  function editItem(it) {
+    const k = Q.indexOf(it); if (k < 0 || ta.readOnly) return;
+    const had = ta.value.replace(/\s+$/, '');
+    let nw = null;
+    if (had.trim()) { nw = mkItem(had, measure(had)); awayFor(0.4); }
+    ta.value = '';
+    it.away = true; it.held = false; it.el.setAttribute('aria-hidden', 'true'); it.el.classList.add('is-gone');
+    ta.readOnly = true; awayFor(60);
+    ta.style.height = it.fl * LINE + 'px'; aim(FH, 30 + LINE * it.fl, OMF);
+    const land = () => {
+      it.cb = () => {
+        ta.readOnly = false; ta.value = it.text; dropItem(it); updateField(); awayFor(0.06);
+        if (document.activeElement !== ta) ta.focus({ preventScroll: true });
+        ta.setSelectionRange(ta.value.length, ta.value.length);
+      };
+    };
+    if (nw) {
+      /* a swap: the edited row narrows and slides to the right at once and comes down in its own channel; the field's text waits 0.1 s,
+         then goes up the tray's left edge as a narrow chip, widening only once the row has passed; the row turns left into the field when it is low enough */
+      const w0 = it.tw + 26, dx = clamp(CR - 108 - (CX + 20) - w0, 0, 300);   // stays clear of the send button
+      setDest(it, 'field'); land();
+      aim(it.wc, w0, R(0.16)); aim(it.lr, 0, R(0.16)); aim(it.sx, dx, R(0.16));
+      later(0.2, () => aim(it.sx, 0, R(0.3)));
+      Q[k] = nw; nw.slot = it.slot; nw.wc.x = nw.wc.T = nw.tw + 26;
+      later(0.1, () => { setDest(nw, 'slot'); snap(nw.sk, 1); later(0.22, () => aim(nw.wc, 700, R(0.25))); later(0.3, () => aim(nw.sk, 0, R(0.22))); });
+    } else { Q.splice(k, 1); setDest(it, 'field'); land(); }
+    reslot();
+    say(`Editing: ${it.text}. ${Q.length} waiting`);
+  }
+  function move(it, d) {                                                      // keys: one slot up or down, every row flowing on its spring
+    const k = Q.indexOf(it), j = k + d;
+    if (k < 0 || j < 0 || j >= Q.length) return;
+    Q.splice(k, 1); Q.splice(j, 0, it);
+    reslot(); sortDom();
+    say(`Moved to ${j + 1} of ${Q.length}`);
+  }
+
+  /* drawing everything from the springs */
+  function renderItem(it) {
+    const d = destRect(it), st = it.el.style;
+    const x = d.x + it.ox.x + it.sx.x, y = it.drag ? it.dragY : d.y + it.oy.x, w = Math.min(d.w + it.ow.x, it.wc.x), h = d.h + it.oh.x;
+    const lr = clamp(it.lr.x, 0, 1), lb = clamp(it.lb.x, 0, 1), lf = clamp(it.lf.x, 0, 1.2), cv = clamp(it.cv.x, 0, 1);
+    const pl = 12 * lr + 15 * lb, pt = 9 * (lr + lb), pr = 100 * lr + 15 * lb;
+    const bg = Math.min(1, Math.max(lb + (1 - lb) * Math.sin(Math.PI * lr), clamp(it.sk.x, 0, 1)));
+    const s = (1 + 0.012 * lf) * (1 - 0.03 * clamp(it.pr.x, 0, 1));
+    st.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${s.toFixed(4)})`;
+    st.width = w.toFixed(2) + 'px'; st.height = h.toFixed(2) + 'px';
+    st.setProperty('--pl', pl.toFixed(2) + 'px'); st.setProperty('--pt', pt.toFixed(2) + 'px'); st.setProperty('--tw', Math.max(w - pl - pr, Math.min(it.tw, w - pl), 0).toFixed(2) + 'px');
+    st.setProperty('--bg', bg.toFixed(3)); st.setProperty('--lf', lf.toFixed(3)); st.setProperty('--rad', lerp(12, 20, lb).toFixed(2) + 'px');
+    if (it.lines > 1 && it.dest !== 'bubble') { const n = clamp(Math.round((h - 2 * pt) / LINE), 1, it.fl); if (n !== it.lz) { it.lz = n; st.setProperty('--n', n); } }
+    st.clipPath = cv < 0.002 ? '' : `inset(0 0 ${(cv * 100).toFixed(2)}% 0)`;
+    st.zIndex = lf > 0.01 || it.drag ? 7 : it.away ? 6 : '';
+    const act = !it.away && !it.held && lr > 0.95 && lb < 0.05 && cv < 0.01;
+    if (act !== it.act) { it.act = act; it.el.classList.toggle('is-act', act); }
+  }
+  function renderLine(l) {
+    const v = l.v.x, t = l.tr.x, d = clamp(l.d.x, 0, 1), cv = clamp(l.cv.x, 0, 1);
+    l.ar.style.strokeDashoffset = (1 - v).toFixed(4); l.ar.style.visibility = v > 0.004 && v < 1.94 ? 'visible' : 'hidden';
+    l.trc.style.strokeDashoffset = (1 - t).toFixed(4); l.trc.style.visibility = t > 0.004 && t < 1.996 ? 'visible' : 'hidden';
+    const g = l.glyph === 'tk' ? l.tk : l.ds, o = l.glyph === 'tk' ? l.ds : l.tk;
+    g.style.strokeDashoffset = (1 - d).toFixed(4); g.style.visibility = d > 0.005 ? 'visible' : 'hidden'; o.style.visibility = 'hidden';
+    l.lc.style.transform = `translate3d(0, ${(-l.rl.x * LINE).toFixed(2)}px, 0)`;
+    l.stEl.style.height = Math.max(0, l.hs.x).toFixed(2) + 'px';
+    l.el.style.clipPath = cv < 0.002 ? '' : `inset(0 0 ${(cv * 100).toFixed(2)}% 0)`;
+  }
+  function render() {
+    const th = TH.x, fh = FH.x, ct = BC - fh - th;
+    card.style.height = (fh + th).toFixed(2) + 'px';
+    card.style.transform = `translate3d(0, ${ct.toFixed(2)}px, 0)`;
+    card.style.setProperty('--th', th.toFixed(2) + 'px'); card.style.setProperty('--hv', clamp(th / 24, 0, 1).toFixed(3));
+    cc.style.transform = `translate3d(0, ${(-CN.x * 18).toFixed(2)}px, 0)`;
+    layoutThread();
+    const off = threadOff();
+    for (const t of T) {
+      t.el.style.transform = `translate3d(${t.kind === 'b' ? CR - t.w : CX}px, ${(t.y + off).toFixed(2)}px, 0)`;
+      if (t.kind === 'l') renderLine(t);
+    }
+    for (const it of ITEMS) renderItem(it);
+  }
+
+  /* one step of the world, and one frame that writes it */
+  function simStep(dt) {
+    S.t += dt; pump(); agentStep(dt);
+    let any = false;
+    any = step(FH, dt) || any; any = step(TH, dt) || any; any = step(CN, dt) || any; any = step(OJ, dt) || any;
+    for (const it of ITEMS.slice()) {
+      for (const k of ['ox', 'oy', 'ow', 'oh', 'sx', 'wc', 'sk', 'lr', 'lb', 'lf', 'pr', 'cv']) any = step(it[k], dt) || any;
+      if (it.cb && !hand_has(it) && !flying(it) && !it.cv.on) { const cb = it.cb; it.cb = null; cb(); }
+    }
+    for (const t of T) if (t.kind === 'l') for (const k of ['v', 'tr', 'd', 'cv', 'rl', 'hs']) any = step(t[k], dt) || any;
+    layoutThread(); prune();
+    return any || TL.length > 0 || (agent.state !== 'idle' && !S.frozen);
+  }
+  const hand_has = (it) => hand && hand.it === it && hand.mode === 'drag';
+  function prune() {                                                          // turns that have scrolled out of sight are let go
+    if (T.length < 6) return;
+    const off = threadOff(), a = T[0], b = T[1];
+    if (a.y + a.h + off < -30 && b.y + b.h + off < -30 && a.el.style.visibility !== 'hidden') {
+      changeThread(() => { T.splice(0, 2); }); a.el.remove(); b.el.remove();
+    }
+  }
+  function advance(sec) { for (let i = 0, n = Math.round(sec * 60); i < n; i++) simStep(1 / 60); }
+  function frame(now) {
+    raf = 0;
+    if (!S.vis || document.hidden) return;
+    const dt = clamp((now - last) / 1000 || 0.016, 0.001, 0.034);
+    last = now;
+    if (S.hold) { render(); return; }
+    inFrame = true;
+    const more = simStep(dt);
+    render();
+    inFrame = false;
+    if (more) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (raf || inFrame || !S.vis || document.hidden) return; last = performance.now(); raf = requestAnimationFrame(frame); }
+  if ('IntersectionObserver' in window) new IntersectionObserver((es) => { S.vis = es[es.length - 1].isIntersecting; if (S.vis) kick(); }).observe(win);
+  document.addEventListener('visibilitychange', kick);
+  function wake() { if (S.hold || S.frozen) { S.hold = false; S.frozen = false; kick(); } }
+
+  /* the hand: press a row, 6 px of travel before it is a drag, then 1:1 from the grab; neighbours part; release projects the hand */
+  const toDesign = (cx, cy) => { const r = win.getBoundingClientRect(), k = r.width / W || 1; return { x: (cx - r.left) / k, y: (cy - r.top) / k }; };
+  function vel(rows, t) {                                                     // px/s over the last 80 ms of moves; 0 if the hand rested
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return 0;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? 0 : ((b[2] - a[2]) / dt) * 1000;
+  }
+  const slotFromY = (y, n) => clamp(Math.round((y - slotY(0)) / ROWH), 0, Math.max(0, n - 1));
+  function down(e) {
+    if (e.button > 0 || hand) return;
+    const li = e.target.closest ? e.target.closest('.mq-row') : null, it = li && byEl.get(li);
+    if (!it || it.away || (e.target.closest && e.target.closest('button'))) return;
+    wake();
+    const p = toDesign(e.clientX, e.clientY);
+    hand = { it, id: e.pointerId, x0: p.x, y0: p.y, mode: 'wait', rows: [[e.timeStamp, 0, p.y]], grab: 0, raw: 0, ghost: e.isTrusted === false };
+    aim(it.pr, 1, OMK);
+    try { li.setPointerCapture(e.pointerId); } catch (err) { /* a synthetic pointer has nothing to capture */ }
+  }
+  function drag(e) {
+    const h = hand; if (!h || e.pointerId !== h.id) return;
+    const p = toDesign(e.clientX, e.clientY), it = h.it;
+    if (h.mode === 'wait') {
+      if (Math.hypot(p.x - h.x0, p.y - h.y0) < SLOP) return;
+      h.mode = 'drag'; h.grab = p.y - rectOf(it).y;
+      it.held = true; it.drag = true; it.dragY = p.y - h.grab; ins = Math.max(0, Q.indexOf(it)); h.ins = ins;
+      it.oy.on = false; it.oy.v = 0; it.el.classList.add('is-drag');
+      aim(it.lf, 1, OML); aim(it.pr, 0, OMK);
+      reslot();
+    }
+    const n = Q.length, lo = slotY(0), hi = slotY(n - 1), raw = p.y - h.grab;
+    h.raw = raw;
+    it.dragY = reduced ? clamp(raw, lo, hi) : band(raw, lo, hi, DB);
+    h.rows.push([e.timeStamp, it.dragY, raw]);
+    while (h.rows.length > 2 && e.timeStamp - h.rows[0][0] > 100) h.rows.shift();
+    const k = slotFromY(it.dragY, n);
+    if (k !== ins) { ins = k; h.ins = k; reslot(); }
+    kick();
+  }
+  function up(e, cancel) {
+    const h = hand; if (!h || e.pointerId !== h.id) return;
+    hand = null;
+    const it = h.it;
+    aim(it.pr, 0, OMK);
+    if (h.mode !== 'drag') return;
+    const v = cancel ? 0 : vel(h.rows, e.timeStamp), n = Q.length;
+    const proj = h.raw + (Math.abs(v) > FLICK ? v * LOOK : 0);
+    const k = it.away ? 0 : slotFromY(proj, n);
+    it.held = false; it.el.classList.remove('is-drag');
+    if (it.away) { it.drag = false; return; }
+    ins = k;
+    const cur = it.dragY;
+    Q.splice(Q.indexOf(it), 1); Q.splice(k, 0, it);
+    it.slot = k;
+    it.drag = false;
+    it.oy.x = cur - slotY(k); it.oy.v = v;
+    aim(it.oy, 0, OMI, 1, v);
+    aim(it.lf, 0, OML);
+    reslot(it); sortDom();
+    say(`Moved to ${k + 1} of ${Q.length}`);
+  }
+  list.addEventListener('pointerdown', down);
+  addEventListener('pointermove', drag);
+  addEventListener('pointerup', (e) => up(e, false));
+  addEventListener('pointercancel', (e) => up(e, true));
+  list.addEventListener('dragstart', (e) => e.preventDefault());
+  const letgo = () => { if (hand && hand.ghost) up({ pointerId: hand.id, timeStamp: performance.now() }, true); };   // the ghost's hand only
+
+  /* buttons, keys */
+  list.addEventListener('click', (e) => {
+    const b = e.target.closest ? e.target.closest('.mq-b') : null; if (!b) return;
+    const it = byEl.get(b.closest('.mq-row')); if (!it || it.away) return;
+    wake();
+    const a = b.dataset.a;
+    if (a === 'edit') editItem(it);
+    else if (a === 'now') toThread(it, agent.state === 'work');
+    else { const k = Q.indexOf(it); removeItem(it); const nx = Q[Math.min(k, Q.length - 1)]; if (document.activeElement === b || !document.activeElement || document.activeElement === document.body) { if (nx) nx.el.querySelector('.mq-b[data-a="rm"]').focus({ preventScroll: true }); else ta.focus({ preventScroll: true }); } }
+  });
+  list.addEventListener('keydown', (e) => {
+    if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+    const li = e.target.closest ? e.target.closest('.mq-row') : null, it = li && byEl.get(li); if (!it) return;
+    e.preventDefault(); wake();
+    const f = document.activeElement;
+    move(it, e.key === 'ArrowUp' ? -1 : 1);
+    if (f && f.focus) f.focus({ preventScroll: true });
+  });
+  ta.addEventListener('input', () => { wake(); updateField(); });
+  ta.addEventListener('keydown', (e) => {
+    if (e.isComposing) return;
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); wake(); submit(e.metaKey || e.ctrlKey); }
+    else if (e.key === 'ArrowUp' && !ta.value && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
+      const it = Q[Q.length - 1]; if (it && !it.away) { e.preventDefault(); wake(); editItem(it); }
+    } else if (e.key === 'Escape' && ta.value) { e.preventDefault(); ta.value = ''; updateField(); say('Cleared'); }
+  });
+  send.addEventListener('click', () => { wake(); submit(false); if (!ta.readOnly) ta.focus({ preventScroll: true }); });
+
+  /* a clean world, and the pose the piece loads in */
+  function hardReset() {
+    hand = null; awayK++; card.classList.remove('is-away'); ta.readOnly = false;
+    ITEMS.slice().forEach(dropItem); ITEMS = []; Q = [];
+    T.forEach((t) => t.el.remove()); T = []; Ch = 0; thread.textContent = '';
+    ta.value = ''; ta.style.height = LINE + 'px'; snap(FH, FH0); snap(TH, 0); snap(CN, 1); snap(OJ, 0);
+    TL = []; agent.state = 'idle'; agent.cur = null; agent.tok++; ins = 0; S.t = 0;
+    refreshUi();
+  }
+  function settleAll() {
+    for (const s of [FH, TH, CN, OJ]) { s.x = s.T; s.v = 0; s.on = false; }
+    for (const it of ITEMS) for (const k of ['ox', 'oy', 'ow', 'oh', 'sx', 'wc', 'sk', 'lr', 'lb', 'lf', 'pr', 'cv']) { const s = it[k]; s.x = s.T; s.v = 0; s.on = false; }
+    for (const t of T) if (t.kind === 'l') for (const k of ['v', 'tr', 'd', 'cv', 'rl', 'hs']) { const s = t[k]; if (k !== 'v') { s.x = s.T; s.v = 0; s.on = false; } }
+  }
+  function seedTurn(text, first, tSec) {                                      // a turn that is already under way
+    const m = measure(text), tu = makeTurn(text, m, first);
+    thread.append(tu.b.el, tu.l.el);
+    T.push(tu.b, tu.l); layoutThread();
+    tu.b.el.style.visibility = 'visible'; tu.l.el.style.visibility = 'visible'; snap(tu.l.cv, 0);
+    startTurn(tu, false);
+    tu.t = tSec; let acc = 0, idx = 0;
+    for (let i = 0; i < tu.steps.length; i++) { acc += tu.steps[i][1]; idx = i; if (tu.t < acc) break; }
+    tu.idx = idx; if (idx > 0) { tu.l.lc.textContent = ''; tu.l.n = 0; snap(tu.l.rl, 0); pushLabel(tu, tu.steps[idx][0]); for (let i = 0; i < idx; i++) pushDone(tu, tu.steps[i][2], true); }
+    tu.prog = tu.t / tu.total; tu.l.v.x = tu.l.v.T = 0.06 + 0.94 * tu.prog; snap(tu.l.rl, 0);
+    return tu;
+  }
+  function seedRow(text) {
+    const it = mkItem(text, measure(text));
+    it.slot = Q.length; Q.push(it); it.dest = 'slot'; snap(it.lr, 1);
+    reslot();
+    return it;
+  }
+  function pose() {                                                           // the settled frame: two rows seated, a follow-up typed in the field (the lime Queue pill), the agent on step 3
+    hardReset(); measureScale();
+    win.classList.add('no-tr');
+    seedTurn('Refresh Forma’s product page', true, 3.9);
+    seedRow('Keep the prices as they are'); seedRow('Use the grey photos');
+    ta.value = 'Make the headline shorter'; updateField();
+    settleAll(); S.hold = false;
+    if (reduced) S.frozen = true; else { try { ta.focus({ preventScroll: true }); ta.setSelectionRange(ta.value.length, ta.value.length); } catch (e) { /* no focus */ } }
+    render(); void win.offsetWidth;
+    requestAnimationFrame(() => requestAnimationFrame(() => win.classList.remove('no-tr')));
+    kick();
+  }
+  /* a still with two rows queued, for reduced motion and the first frame of a tile that cannot step */
+  function poseText(tt) { ta.value = tt; updateField(); }
+
+  measureScale();
+  pose();
+  const api = {
+    win, card, ta, send, list, thread, S, agent, pose, render, advance, kick, wake, letgo, measureScale, submit, toThread, editItem, removeItem, move, toDesign, poseText,
+    Q: () => Q, items: () => ITEMS, turns: () => T, inQueue: (i) => Q[i],
+    get hand() { return hand; }, get reduced() { return reduced; },
+    snapshot() { return { q: Q.map((i) => i.text), th: TH.x, fh: FH.x, ct: Ct(), off: threadOff(), ch: Ch, agent: agent.state, items: ITEMS.map((i) => [i.text.slice(0, 12), i.dest, +rectOf(i).x.toFixed(1), +rectOf(i).y.toFixed(1), +rectOf(i).w.toFixed(1), +rectOf(i).h.toFixed(1), +i.lr.x.toFixed(2), +i.lb.x.toFixed(2)]) }; }
+  };
+  return api;
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('mq-fit');
+  // the window is drawn at 720 × 450 and scaled to the room it is given (about 94% of the width, 1.6× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 14 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min(0.94 * W / 720, (H - 2 * pad - ui) / 450, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+    MQ.measureScale(); MQ.render();
+  }
+  size();
+  addEventListener('resize', size);
+  let touched = false;
+  if (document.fonts) document.fonts.ready.then(() => { size(); if (!touched) MQ.pose(); holdPose(); });
+
+  // the tile loads on its pose and holds it still for a moment, so the thumbnail is the same on a slow machine and a fast one
+  let holdT = 0;
+  function holdPose() {
+    clearTimeout(holdT);
+    if (reduced || touched) return;
+    MQ.S.hold = true; MQ.render();
+    holdT = setTimeout(() => { if (MQ.S.hold) { MQ.S.hold = false; MQ.kick(); } }, QM.tile || QM.live ? 9000 : 450);   // in a tile the pose rests until the ghost presses Return
+  }
+  holdPose();
+
+  /* the ghost: it types into the real textarea, presses the real keys and moves the same pointer a hand does (untrusted events on the same handlers) */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const fire = (type, x, y, down = false) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 73, isPrimary: true, button: type === 'pointermove' ? -1 : 0, buttons: down ? 1 : 0, view: window }));
+    return t;
+  };
+  async function glide(my, to, ms = 760, down = false) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y, down);
+      if (p >= 1) break;
+    }
+  }
+  const until = async (my, ok, max = 12000) => { let t = 0; while (!ok() && t < max) { await gap(my, 80); t += 80; } };
+  const rowEl = (it) => it.el;
+  const pt = (el, fx = 0.5, fy = 0.5) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width * fx, y: r.top + r.height * fy }; };
+  async function tapEl(my, el) {
+    const { x, y } = pos;
+    el.classList.add('is-hot'); await gap(my, 160);
+    fire('pointerdown', x, y, true); await gap(my, 100); fire('pointerup', x, y);
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+    await gap(my, 120); el.classList.remove('is-hot');
+  }
+  async function glyph(my, it, a) {                                          // hover the row (its glyphs open), then press one
+    const li = rowEl(it); li.classList.add('is-hot');
+    await glide(my, pt(li, 0.55), 700); await gap(my, 330);
+    const b = li.querySelector(`.mq-b[data-a="${a}"]`);
+    await glide(my, pt(b), 420); await gap(my, 140);
+    await tapEl(my, b); li.classList.remove('is-hot');
+  }
+  async function typeText(my, text) {
+    MQ.ta.focus({ preventScroll: true });
+    for (const ch of text) {
+      MQ.ta.dispatchEvent(new KeyboardEvent('keydown', { key: ch, bubbles: true, cancelable: true }));
+      MQ.ta.setRangeText(ch, MQ.ta.selectionStart, MQ.ta.selectionEnd, 'end');
+      MQ.ta.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ch }));
+      MQ.ta.dispatchEvent(new KeyboardEvent('keyup', { key: ch, bubbles: true }));
+      await gap(my, 34 + (ch === ' ' ? 40 : 0));
+    }
+  }
+  async function press(my, key, mods = {}) { MQ.ta.dispatchEvent(new KeyboardEvent('keydown', Object.assign({ key, bubbles: true, cancelable: true }, mods))); await gap(my, 120); }
+  const POOL = ['Keep the prices as they are', 'Use the grey photos', 'Make the headline shorter', 'Add care notes under each product', 'Move the price above the button', 'Use sentence case for titles'];
+  let pi = 2;
+  const nextText = () => POOL[pi++ % POOL.length];
+  async function queueOne(my) { await typeText(my, nextText()); await gap(my, 260); await press(my, 'Enter'); await gap(my, 520); }
+  async function dragRow(my, it, toIndex) {                                  // press the row's text, move it to another slot, let go
+    const li = rowEl(it), a = pt(li, 0.3, 0.5), n = MQ.Q().length, k = MQ.Q().indexOf(it);
+    li.classList.add('is-hot');
+    await glide(my, a, 720); await gap(my, 160);
+    fire('pointerdown', a.x, a.y, true); await gap(my, 90);
+    const dy = (toIndex - k) * 40 * MQ.win.getBoundingClientRect().width / 720;
+    await glide(my, { x: a.x + 4, y: a.y + dy + (toIndex < k ? -3 : 3) }, 640, true);
+    await gap(my, 160);
+    fire('pointerup', pos.x, pos.y); li.classList.remove('is-hot');
+    await gap(my, 900);
+  }
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 5000 : 3200) : 700);
+      if (MQ.ta.value.trim() && !MQ.ta.readOnly) { MQ.ta.focus({ preventScroll: true }); await press(my, 'Enter'); await gap(my, 900); }   // the pose's text goes into the tray first
+      QM.ghostShow();
+      for (let round = 0; ; round++) {
+        // two follow-ups in the tray, typed through the real keys
+        while (MQ.Q().length < 2) { await queueOne(my); }
+        // reorder: the last row to the top
+        { const q = MQ.Q(); if (q.length >= 2) await dragRow(my, q[q.length - 1], 0); }
+        // one more follow-up while the agent works
+        if (MQ.Q().length < 3) await queueOne(my);
+        // the agent finishes its run and takes the first row
+        const first0 = MQ.Q()[0];
+        await glide(my, { x: pt(MQ.win, 0.5, 0.2).x + 40, y: pt(MQ.win, 0.5, 0.25).y }, 800);
+        await until(my, () => !MQ.Q().includes(first0), 12000);
+        await gap(my, 1300);
+        // jump the queue with the last row
+        { const q = MQ.Q(); if (q.length) await glyph(my, q[q.length - 1], 'now'); }
+        await gap(my, 1800);
+        // every other round: edit a row back into the field, or remove one
+        if (round % 2 === 0) {
+          if (MQ.Q().length < 2) await queueOne(my);
+          const q = MQ.Q(); await glyph(my, q[q.length - 1], 'edit');
+          await until(my, () => !MQ.ta.readOnly && MQ.ta.value, 3000); await gap(my, 500);
+          await typeText(my, ' please'); await gap(my, 300); await press(my, 'Enter'); await gap(my, 900);
+        } else if (MQ.Q().length) {
+          const q = MQ.Q(); await glyph(my, q[0], 'rm'); await gap(my, 1100);
+        }
+        await glide(my, { x: pt(MQ.win, 0.9, 0.5).x, y: pt(MQ.win, 0.9, 0.5).y }, 700);
+        await gap(my, 1200);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() {
+    epoch++; QM.ghostHide(); MQ.letgo();
+    document.querySelectorAll('.mq-row.is-hot, .mq-b.is-hot').forEach((el) => el.classList.remove('is-hot'));
+    if (pos) { pos = null; fire('pointermove', -10, -10); }
+  }
+  if (!QM.tile && !reduced) {
+    const idle = () => MQ.win.matches(':hover') || (MQ.win.contains(document.activeElement) && document.activeElement !== document.body && MQ.ta.value);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                                // the ghost's own events do not count
+      touched = true; clearTimeout(holdT); MQ.wake();
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true, capture: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); touched = false; MQ.pose(); holdPose(); if (!reduced) script(true); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (!touched) script(true); }, 300));
+})();
+</script>
+</body>
+</html>

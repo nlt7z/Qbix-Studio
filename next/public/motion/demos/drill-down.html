@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drill down · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "drill-down",
+  "title": "Drill down",
+  "group": "studio",
+  "added": "2026-11-25",
+  "cat": "data",
+  "order": 50,
+  "kind": "loop",
+  "preview": {
+    "secs": 9,
+    "skip": 4500
+  },
+  "tone": "paper",
+  "shot": 400,
+  "line": "the bar you press opens into its parts · one playhead on a spring · 0.92 s open, 0.78 s back · one lime",
+  "summary": "Kova's spending in March as five bars in a white card. Press one and it answers at once, then it opens: the other bars, labels and figures are covered, the bar travels up to the first row and lights its largest part in lime, splits along its own length into its parts (thin 2 px gaps, widths the parts' values on the old scale), the parts drop into rows 40 ms apart, the scale springs to the new maximum so they all grow together, and the labels, figures, title, total and a breadcrumb are uncovered at the bars once they are in place. Restaurants opens once more into four merchants. Closing is the same path backwards: the rows rise into one segmented bar, the gaps close and the bar travels home among its siblings as they are uncovered. A back swipe follows the finger 1:1 with the parent level peeking from the left and finishes with the same merge; the crumbs, Escape, Backspace and Left go up too, and a reversal at any moment retraces the path. Every level sums to its parent (checked in code) and the same data is a real table behind the picture.",
+  "spec": [
+    [
+      "Playhead",
+      "one number, the seconds along the open (0 to 0.94), on a critically damped spring (response 0.14 s, about 45 ms of lag) that follows a ramp toward 0 or 0.94 at 1.2 s per s for an open, 1.45 for a close and 2.2 for a pop through a crumb past one level (opening takes 0.92 s to rest, closing 0.78 s); every part of the picture is a function of it, so a reversal at any moment, by key, crumb or swipe, retraces the path with no jump and keeps the playhead's velocity"
+    ],
+    [
+      "Windows",
+      "each part has its own window on the playhead and moves with the step response of a critically damped spring over it (ω = 6.5 over the window, normalised to land on 1): bars covered 0.015 + 0.01 i for 0.15 s, labels 0.012 i for 0.10, figures 0.008 i for 0.08; travel to the first row 0.14 to 0.36; gaps 0 to 2 px over 0.32 to 0.42; ink to grey 0.32 to 0.46; drops 0.44 + 0.04 j for 0.17 s (40 ms apart); slides to the axis 0.54 + 0.04 j for 0.13 s; the axis maximum 0.70 to 0.92; labels and figures 0.78 + 0.012 j for 0.10; title and total 0.58 to 0.82; crumbs 0.54 to 0.82; share 0.82 to 0.92. Covers are cut at 96% so no sliver of a bar or a word stays"
+    ],
+    [
+      "Bars",
+      "26 px thick, 8 px radius, 456 px to the axis maximum; the label is 15 px above its bar, the figure 17 px tabular figures 8 px past its end, a chevron at the right edge only on bars that can open. Rows are 54, 62 or 70 px apart for 5, 4 or 3 bars. The axis maximum is a round number (a step of 1, 2 or 5 times a power of ten, at most 6 steps): Kova 1,500, Housing 1,500, Food 400, Transport 150, Restaurants 80"
+    ],
+    [
+      "Split",
+      "the chosen bar is its own parts from the first frame, laid end to end on the parent's scale with no gap (a 0.7 px overlap hides the seam); the gaps open at the parts' boundaries, then each part drops straight down, then slides left to the axis, keeping its width, and the inner corners round from 0 to 8 px as it leaves; only then do all the widths grow with the scale"
+    ],
+    [
+      "Lime",
+      "one: the largest bar of the level, checked on pixels in every frame of every open and close (one cluster; Housing, the lime bar itself, has two for one frame as its last parts give the lime up). A lime sibling is covered with the others; the frame it is gone the chosen bar's largest part is uncovered in lime from its left (0.122 to 0.32 s), so the lime is never absent and never doubled. If Housing is chosen its lime stays and its parts give it up from the right, last part first, before the gaps open"
+    ],
+    [
+      "Press",
+      "pointerdown scales the bar to 0.98 from its left edge in about 100 ms (exponential, 40 per s); a bar with no deeper level does not press and shows no chevron"
+    ],
+    [
+      "Focus",
+      "hover or the arrow keys bring a bar to #1d1d1f and step the others to #c7c7cc, their labels to #86868b and figures to #aeaeb2; 18 per s exponential approach; a finger focuses on press and a second tap lets go"
+    ],
+    [
+      "Swipe",
+      "drag the chart right: 8 px slop, horizontal only, pointer captured, the level follows 1:1 from where the drag began with a soft edge shadow, and the parent level peeks from the left at 0.3 of the travel. Release past a third of the width or faster than 500 px/s completes the close with the merge (the offset springs home in 0.3 s while the rows rise into the bar); otherwise it springs back. Left of the start and at the top level it follows a rubber band (x · D · 0.55) / (D + 0.55 · x), D = 600"
+    ],
+    [
+      "Keys",
+      "bars are buttons in a list: Up and Down move, Enter or Right opens, Left, Backspace and Escape go up (also mid-open), Home and End jump; a polite status line gives the level and its total, and a real table of the level sits behind the picture for screen readers"
+    ],
+    [
+      "Thumbnail",
+      "the page loads on a played key frame: Food pressed and the open stepped at 60 Hz until it has settled, Restaurants in focus. A frozen mid-open frame (the bar split into four, the lower parts most of the way down, the crumb out) read as scattered blocks on an empty card at 800 × 500, so the tile holds the settled Food level instead. The ghost starts about 5 s in: opens Restaurants, pops by the crumb, pops by a swipe, opens Housing, goes back with Escape, opens Food. In the detail view the page plays the open from 0.60 s on load"
+    ],
+    [
+      "Reduced motion",
+      "a complete still on Food's level; every change is made in place and a swipe is only judged on release"
+    ]
+  ],
+  "source": [
+    "Qbix Motion · Studio · 2026-11-25"
+  ],
+  "where": "A Kova case study or client reporting page where a figure such as March spending is a bar that can be opened: the viewer sees that the parts are the bar they pressed, and the same path takes them back.",
+  "rules": [
+    "The parts are the bar. The chosen bar splits along its own length into its parts, the parts keep their widths while they drop into rows, and only then does the scale change. Nothing is rebuilt or cross-faded.",
+    "Closing is the same path backwards from wherever the playhead is. A reversal at any moment, a pop by crumb, key or swipe, all run the same function of one number.",
+    "Every level sums to the bar it came from (checked once in code; the page throws if not). Axes start at zero and end on a round tick. The same data is a real table at all times.",
+    "In no frame does a label or figure overlap a bar or another text, and no rolling figure rests half cut: text is covered by a clip, parked, then uncovered where it belongs. Checked on every frame of every open, close, reversal and swipe: 0 overlaps over 1 px.",
+    "One lime in any frame: the largest bar of the level. A lime bar that is not chosen is covered before the chosen bar takes the lime over on its largest part. The peek of the parent is drawn in light greys.",
+    "A swipe is horizontal only (8 px slop), 1:1 with the pointer, judged by distance (a third of the width) or speed (500 px/s), and finishes with the merge, not a slide.",
+    "The ghost and a hand use the same pointer and key events; the script yields to a real mouse, touch or key and returns after 4.5 s."
+  ],
+  "tags": [
+    "drill down",
+    "bar chart",
+    "hierarchy",
+    "breadcrumb",
+    "back swipe",
+    "spring",
+    "shared element",
+    "split",
+    "tabular figures",
+    "keyboard",
+    "Kova",
+    "data"
+  ]
+}
+</script>
+<style data-code>
+/* Drill down. One answer card in the system face with Apple's neutrals. Everything on it is a function of one number, the playhead (seconds along the open):
+   render() places every bar, label, figure, chevron, tick and header line from it, each part in its own window. Text is covered by a clip, parked and
+   uncovered, never faded. The one lime is the largest bar of the level. The card is drawn 600 px wide and scaled by --s. */
+.dd-fit { position: relative; width: calc(600px * var(--s, 1)); height: calc(440px * var(--s, 1)); }
+.dd-card { --f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 600px; height: 440px; overflow: hidden; border-radius: 24px; background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04); transform: scale(var(--s, 1)); transform-origin: 0 0;
+  font: 400 15px/18px var(--f); letter-spacing: -.01em; color: #1d1d1f; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.dd-card :where(h2, p, ol, table) { margin: 0; padding: 0; }
+.dd-card :where(svg) { display: block; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the header: crumbs, the level's title, its total, its share */
+.dd-crumbs { position: absolute; left: 22px; top: 16px; height: 26px; display: flex; align-items: center; font: 400 14px/18px var(--f); letter-spacing: -.008em; white-space: nowrap; }
+.dd-ctx { position: absolute; left: 6px; top: 4px; color: #6e6e73; }
+.dd-slots { display: flex; align-items: center; list-style: none; }
+.dd-slot { display: flex; align-items: center; }
+.dd-sep { width: 7px; height: 11px; margin: 0 1px; color: #aeaeb2; stroke-width: 1.5; }
+.dd-crumb { all: unset; box-sizing: border-box; display: block; height: 26px; padding: 0 6px; border-radius: 8px; line-height: 26px; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: background-color 150ms cubic-bezier(.4, 0, .2, 1); }
+.dd-crumb:hover { background: rgba(0, 0, 0, .05); }
+.dd-crumb.is-here { cursor: default; font-weight: 500; }
+.dd-crumb.is-here:hover { background: none; }
+.dd-crumb:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -1px; }
+.dd-win { position: absolute; overflow: hidden; white-space: nowrap; pointer-events: none; }
+.dd-col { display: block; }
+.dd-col > i { display: block; font-style: normal; }
+.dd-title { left: 28px; top: 43px; width: 300px; height: 22px; }
+.dd-title i { height: 22px; font: 600 17px/22px var(--f); letter-spacing: -.014em; }
+.dd-total { left: 28px; top: 65px; height: 38px; }
+.dd-total i { height: 38px; font: 600 32px/38px var(--f); letter-spacing: -.022em; font-variant-numeric: tabular-nums; }
+.dd-share { position: absolute; top: 82px; height: 18px; color: #6e6e73; font: 400 15px/18px var(--f); letter-spacing: -.01em; white-space: nowrap; font-variant-numeric: tabular-nums; pointer-events: none; }
+.dd-share span { position: absolute; left: 0; top: 0; }
+
+/* the chart area: the level is a sheet that can be dragged; the parent waits underneath */
+.dd-view { position: absolute; left: 0; top: 104px; width: 600px; height: 336px; overflow: hidden; touch-action: pan-y; }
+.dd-peek { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
+.dd-peekin { position: absolute; inset: 0; }
+.dd-sheet { position: absolute; inset: 0; background: #fff; box-shadow: -8px 0 24px rgba(0, 0, 0, calc(var(--sh, 0) * .1)); }
+.dd-list { position: absolute; inset: 0; list-style: none; }
+.dd-li { display: contents; }
+.dd-row { all: unset; box-sizing: border-box; position: absolute; left: 12px; width: 576px; height: 54px; border-radius: 14px; pointer-events: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.dd-row.is-leaf { cursor: default; }
+.dd-row.is-off { display: none; }
+.dd-row:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -1px; }
+.dd-card:not(.is-moving) .dd-list.is-front .dd-row { pointer-events: auto; }
+.dd-bar { position: absolute; left: 0; top: 0; z-index: 1; height: 26px; background: #86868b; pointer-events: none; }
+.dd-lime { position: absolute; inset: 0; border-radius: inherit; background: #B8FF00; }
+.dd-lab { position: absolute; left: 0; top: 0; z-index: 2; font: 500 15px/18px var(--f); white-space: nowrap; pointer-events: none; }
+.dd-fig { position: absolute; left: 0; top: 0; z-index: 2; font: 500 17px/20px var(--f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none; }
+.dd-chev { position: absolute; left: 0; top: 0; z-index: 2; width: 8px; height: 13px; stroke-width: 1.7; pointer-events: none; }
+.dd-ax { position: absolute; left: 0; top: 0; width: 530px; height: 32px; pointer-events: none; }
+.dd-axl { position: absolute; left: 28px; top: 0; width: 456px; height: 1px; background: #d2d2d7; }
+.dd-tk { position: absolute; left: 0; top: 0; width: 1px; height: 5px; background: #d2d2d7; }
+.dd-tl { position: absolute; left: 0; top: 10px; font: 400 13px/16px var(--f); letter-spacing: -.006em; color: #86868b; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* the parent's peek: light greys, no lime */
+.dd-pk { position: absolute; left: 0; top: 0; white-space: nowrap; }
+.dd-pk.b { height: 26px; background: #e4e4e9; border-radius: 8px; }
+.dd-pk.l { font: 500 15px/18px var(--f); letter-spacing: -.01em; color: #aeaeb2; }
+.dd-pk.f { font: 500 17px/20px var(--f); letter-spacing: -.01em; color: #c7c7cc; font-variant-numeric: tabular-nums; }
+.dd-pk.t { font: 400 13px/16px var(--f); color: #c7c7cc; font-variant-numeric: tabular-nums; }
+.dd-pk.a { height: 1px; width: 456px; background: #ececf0; }
+</style>
+<style>
+  /* the stage: a quiet #f5f5f7 ground; the card is drawn 600 px wide and scaled to the room it has */
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="dd-fit" id="dd-fit">
+ <section class="dd-card" id="dd-card" aria-labelledby="dd-h">
+  <h2 class="sr-only" id="dd-h">Kova spending in March</h2>
+  <nav class="dd-crumbs" id="dd-crumbs" aria-label="Breadcrumb">
+   <span class="dd-ctx" id="dd-ctx">Kova · March</span>
+   <ol class="dd-slots" id="dd-slots"></ol>
+  </nav>
+  <div class="dd-win dd-title" id="dd-title" aria-hidden="true"><div class="dd-col"><i></i><i></i></div></div>
+  <div class="dd-win dd-total" id="dd-total" aria-hidden="true"><div class="dd-col"><i></i><i></i></div></div>
+  <p class="dd-share" id="dd-share" aria-hidden="true"><span></span><span></span></p>
+  <div class="dd-view" id="dd-view">
+   <div class="dd-peek" id="dd-peek" aria-hidden="true"><div class="dd-peekin" id="dd-peekin"></div></div>
+   <div class="dd-sheet" id="dd-sheet"></div>
+  </div>
+  <table class="sr-only" id="dd-table"><caption id="dd-cap"></caption><thead><tr><th scope="col">Item</th><th scope="col">Amount</th><th scope="col">Share</th></tr></thead><tbody id="dd-tbody"></tbody></table>
+  <p class="sr-only" id="dd-msg" role="status" aria-live="polite"></p>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Press a bar to open it. Back by the crumb, a swipe right, Escape or Left. Arrow keys move, Enter opens</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Drill down. The playhead PH.x (seconds, 0 to T) is the only clock of the open: it follows a ramp toward 0 or T on a critically damped spring, and render() draws
+   everything from it, each part in its own window with the step response of a critically damped spring (sr). A reversal is just a new goal. */
+const DD = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2, EPS = 1e-4;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x)), lerp = (a, b, t) => a + (b - a) * t;
+  const $ = (id) => document.getElementById('dd-' + id);
+  const fmt = (n) => '$' + n.toLocaleString('en-US'), num = (n) => n.toLocaleString('en-US');
+  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
+  const INK = [29, 29, 31], REST = [134, 134, 139], DIM = [199, 199, 204], G6E = [110, 110, 115], GAE = [174, 174, 178];
+
+  /* the data: Kova's March, dollars. Every level must sum to the bar it came from. */
+  const RAW = { name: 'Spending', v: 2880, kids: [
+    { name: 'Housing', v: 1480, kids: [{ name: 'Rent', v: 1250 }, { name: 'Utilities', v: 150 }, { name: 'Internet', v: 80 }] },
+    { name: 'Food', v: 640, kids: [{ name: 'Groceries', v: 310 },
+      { name: 'Restaurants', v: 190, kids: [{ name: "Luca's", v: 72 }, { name: 'Noodle Bar', v: 54 }, { name: 'Brasa', v: 38 }, { name: 'Sunday Diner', v: 26 }] },
+      { name: 'Coffee', v: 80 }, { name: 'Delivery', v: 60 }] },
+    { name: 'Transport', v: 310, kids: [{ name: 'Transit', v: 140 }, { name: 'Rideshare', v: 110 }, { name: 'Bike share', v: 60 }] },
+    { name: 'Shopping', v: 270, kids: [{ name: 'Clothes', v: 150 }, { name: 'Home', v: 80 }, { name: 'Books', v: 40 }] },
+    { name: 'Other', v: 180, kids: [{ name: 'Gifts', v: 100 }, { name: 'Fees', v: 50 }, { name: 'Misc', v: 30 }] },
+  ] };
+  (function check(n) {
+    if (!n.kids) return;
+    n.kids.sort((a, b) => b.v - a.v);
+    const sum = n.kids.reduce((a, k) => a + k.v, 0);
+    if (sum !== n.v) throw new Error(`Drill down: ${n.name} is ${n.v} but its parts add up to ${sum}`);
+    n.kids.forEach(check);
+  })(RAW);
+  if (RAW.v !== 2880) throw new Error('Drill down: the total must be 2,880, not ' + RAW.v);
+
+  const pitchOf = (n) => (n >= 5 ? 54 : n === 4 ? 62 : 70);                 // fewer bars sit a little further apart, so no level looks empty at the bottom
+  /* a level: its bars sorted by value, a round axis maximum (a step of 1, 2 or 5 times a power of ten, at most 6 steps) */
+  const niceMax = (m) => { for (const e of [1, 10, 100, 1000, 10000]) for (const f of [1, 2, 5]) { const st = f * e, n = Math.ceil(m / st - 1e-9); if (n <= 6) return { step: st, M: n * st }; } };
+  const cache = new Map();
+  function levelOf(node, parent, idx) {
+    if (cache.has(node)) return cache.get(node);
+    const items = node.kids || [], nm = niceMax(Math.max(...items.map((i) => i.v)));
+    let acc = 0;
+    const lv = { node, parent, idx, depth: parent ? parent.depth + 1 : 0, title: node.name, total: node.v, items, n: items.length, M: nm.M, step: nm.step,
+      cum: items.map((i) => { const c = acc; acc += i.v; return c; }),
+      P: pitchOf(items.length),
+      share: parent ? `of ${fmt(parent.total)} · ${Math.round((node.v * 100) / parent.total)}%` : '' };
+    cache.set(node, lv);
+    return lv;
+  }
+  const TOP = levelOf(RAW, null, 0);
+
+  /* geometry, in the chart area's px (the card is drawn 600 wide) */
+  const W = 600, X0 = 28, LEN = 456, P = 54, ROW0 = 12, BH = 26, BX = 12, CHX = 554;
+  const top = (i, p = P) => ROW0 + i * p, barY = (i, p = P) => top(i, p) + 22, axisY = (n, p = P) => top(n, p) + 2;
+  /* the timeline: one playhead, each part in its own window */
+  const T = 0.94, OM = 6.5, NORM = 1 - (1 + OM) * Math.exp(-OM);
+  const sr = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : (1 - (1 + OM * u) * Math.exp(-OM * u)) / NORM);
+  const win = (t, s, d) => sr((t - s) / d);
+  const eo = (t, s, d) => { const u = (t - s) / d; return u <= 0 ? 0 : u >= 1 ? 1 : (1 - Math.exp(-7 * u)) / (1 - Math.exp(-7)); };   // starts at speed: the lime takes over the frame the Housing bar is gone
+  const cv = (t, s, d) => Math.min(1, win(t, s, d) * 1.04);                  // a cover or uncover: the long tail of the step response is cut so no sliver of a bar or a word is left
+  const POSE = 0.6;
+
+  const card = $('card'), view = $('view'), sheetEl = $('sheet'), peek = $('peek'), peekIn = $('peekin'), msg = $('msg'), slotsEl = $('slots'), ctx = $('ctx');
+  const pu = (el, k, v) => { const c = el._c || (el._c = {}); if (c[k] === v) return; c[k] = v; if (k.charCodeAt(0) === 45) el.style.setProperty(k, v); else el.style[k] = v; };
+  const setText = (el, s) => { if (el._t !== s) { el._t = s; el.textContent = s; } };
+  const inset = (u) => (u >= 0.998 ? 'none' : `inset(0 ${((1 - u) * 100).toFixed(2)}% 0 0)`);
+  function cov(el, u) { if (u < 0.03) { pu(el, 'visibility', 'hidden'); return; } pu(el, 'visibility', 'visible'); pu(el, 'clipPath', inset(u)); }
+
+  /* the two sheets: the one that holds the parent (role A) and the one that holds the child (role B). They swap roles when a deeper level opens. */
+  const NS = 'http://www.w3.org/2000/svg';
+  const sh = [0, 1].map((si) => {
+    const list = document.createElement('ol'); list.className = 'dd-list'; list.setAttribute('role', 'list');
+    const rows = [];
+    for (let i = 0; i < 5; i++) {
+      const li = document.createElement('li'); li.className = 'dd-li'; li.setAttribute('role', 'listitem');
+      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'dd-row'; btn.dataset.s = si; btn.dataset.i = i; btn.tabIndex = -1;
+      btn.innerHTML = '<span class="dd-bar"><i class="dd-lime"></i></span><span class="dd-lab"></span><span class="dd-fig"></span><svg class="dd-chev" viewBox="0 0 8 13" aria-hidden="true" focusable="false"><path d="M1.5 1.5L6 6.5l-4.5 5"/></svg>';
+      li.append(btn); list.append(li);
+      rows.push({ top: top(i), btn, bar: btn.children[0], lime: btn.children[0].firstChild, lab: btn.children[1], fig: btn.children[2], chev: btn.children[3], f: 0, d: 0, pr: 0, it: null, open: false });
+    }
+    const ax = document.createElement('div'); ax.className = 'dd-ax'; ax.setAttribute('aria-hidden', 'true');
+    const line = document.createElement('i'); line.className = 'dd-axl'; ax.append(line);
+    const ticks = [];
+    for (let i = 0; i < 8; i++) { const tk = document.createElement('i'), lb = document.createElement('b'); tk.className = 'dd-tk'; lb.className = 'dd-tl'; lb.style.fontWeight = 400; ax.append(tk, lb); ticks.push({ tk, lb, v: 0, on: false }); }
+    sheetEl.append(list, ax);
+    return { list, rows, ax, ticks, level: null, sigma: 1 };
+  });
+  function fillSheet(s, lv) {
+    s.level = lv; s.sigma = LEN / lv.M; s.P = lv.P;
+    s.rows.forEach((r, i) => {
+      r.f = r.d = r.pr = 0; r.top = top(i, lv.P); r.btn.style.top = r.top + 'px';
+      const it = lv.items[i] || null;
+      r.it = it; r.open = !!(it && it.kids);
+      r.btn.classList.toggle('is-off', !it); r.btn.classList.toggle('is-leaf', !r.open);
+      if (!it) return;
+      setText(r.lab, it.name); setText(r.fig, fmt(it.v));
+      r.btn.setAttribute('aria-label', `${it.name}, ${fmt(it.v)}, ${Math.round((it.v * 100) / lv.total)}% of ${lv.title}${r.open ? '. Opens' : ''}`);
+    });
+    const count = lv.M / lv.step + 1;
+    s.ticks.forEach((t, i) => { t.on = i < count; t.v = i * lv.step; if (t.on) { setText(t.lb, num(t.v)); } });
+  }
+
+  /* where we are: path[e] is the parent (A), path[e + 1] the child (B), K the bar that opens. ia says which sheet is A. */
+  let path = [TOP], e = 0, ia = 0, K = 0;
+  const PH = { x: 0, v: 0, rt: 0, goal: 0, rate: 1 };
+  const S = { x: 0, v: 0, on: false, drag: false };                       // the sheet's offset in px (a drag, and its spring home)
+  let held = false, pops = 0, kbdPending = false, swallow = 0, fi = -1, fsrc = '', pressIdx = -1, sc = 1, lastPtr = null;
+  const isRest = () => PH.x === PH.goal && (PH.goal === 0 || PH.goal === T);
+  const front = () => (PH.x === T ? sh[ia ^ 1] : sh[ia]);
+  const depth = () => (PH.x === T ? e + 1 : e);
+  const level = () => path[depth()];
+
+  /* the header's parts: three lines windows and the crumbs */
+  const titleCol = $('title').firstElementChild, totalCol = $('total').firstElementChild, shareEl = $('share');
+  const slots = [0, 1, 2].map((s) => {
+    const li = document.createElement('li'); li.className = 'dd-slot';
+    if (s > 0) li.insertAdjacentHTML('beforeend', '<svg class="dd-sep" viewBox="0 0 7 11" aria-hidden="true" focusable="false"><path d="M1.5 1.5L5.500 5.500l-4 4"/></svg>');
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'dd-crumb'; b.dataset.s = s; li.append(b); slotsEl.append(li);
+    return { li, b };
+  });
+  const probe = document.createElement('span'); probe.className = 'dd-pk'; probe.style.cssText = 'visibility:hidden;font:600 32px/38px var(--f);letter-spacing:-.022em;font-variant-numeric:tabular-nums'; probe.setAttribute('aria-hidden', 'true'); card.append(probe);
+  function measure() {
+    sc = card.getBoundingClientRect().width / W || 1;
+    probe.textContent = '$1,480';
+    const w = Math.ceil(probe.getBoundingClientRect().width / sc) + 2;
+    $('total').style.width = w + 'px'; shareEl.style.left = 28 + w + 12 + 'px';
+  }
+
+  /* ---- drawing: everything from PH.x, S.x and the focus values ---- */
+  const labOf = (r) => rgb(mix(INK, [134, 134, 139], r.d)), figOf = (r) => rgb(mix(mix(G6E, INK, r.f), GAE, r.d)), chOf = (r) => rgb(mix(mix(GAE, INK, r.f), DIM, r.d));
+  const baseOf = (r) => mix(mix(REST, DIM, r.d), INK, r.f);
+  function drawRow(r, i, g) {
+    if (!r.it) return;
+    const dy = r.top;
+    const bw = Math.max(0, g.bw), bvis = g.cBar * bw >= 3 && g.bh > 0.4;
+    pu(r.bar, 'visibility', bvis ? 'visible' : 'hidden');
+    if (bvis) {
+      pu(r.bar, 'transform', `translate3d(${(g.bx - BX).toFixed(2)}px,${(g.by - dy).toFixed(2)}px,0)`);
+      pu(r.bar, 'width', bw.toFixed(2) + 'px'); pu(r.bar, 'height', g.bh.toFixed(2) + 'px');
+      const rl = Math.min(g.rl, bw / 2, g.bh / 2), rr = Math.min(g.rr, bw / 2, g.bh / 2);
+      pu(r.bar, 'borderRadius', `${rl.toFixed(2)}px ${rr.toFixed(2)}px ${rr.toFixed(2)}px ${rl.toFixed(2)}px`);
+      pu(r.bar, 'clipPath', inset(g.cBar));
+      const full = g.lime >= 0.999;
+      pu(r.bar, 'backgroundColor', full ? '#B8FF00' : rgb(g.base));
+      const lv = !full && g.lime > 0.002;
+      pu(r.lime, 'visibility', lv ? 'visible' : 'hidden');
+      if (lv) pu(r.lime, 'clipPath', `inset(0 ${((1 - g.lime) * 100).toFixed(2)}% 0 0)`);
+    }
+    pu(r.lab, 'transform', `translate3d(${(X0 - BX).toFixed(2)}px,${(0).toFixed(2)}px,0)`); pu(r.lab, 'color', labOf(r)); cov(r.lab, g.cLab);
+    pu(r.fig, 'transform', `translate3d(${(g.bx + (g.fw != null ? g.fw : bw) + 8 - BX).toFixed(2)}px,${(g.by + 3 - dy).toFixed(2)}px,0)`); pu(r.fig, 'color', figOf(r)); cov(r.fig, g.cFig);
+    if (r.open) { pu(r.chev, 'transform', `translate3d(${CHX - BX}px,${(g.by + 7 - dy).toFixed(2)}px,0)`); pu(r.chev, 'color', chOf(r)); cov(r.chev, g.cLab); } else pu(r.chev, 'visibility', 'hidden');
+  }
+  const offRow = (r) => { pu(r.bar, 'visibility', 'hidden'); pu(r.lab, 'visibility', 'hidden'); pu(r.fig, 'visibility', 'hidden'); pu(r.chev, 'visibility', 'hidden'); };
+  function drawAxis(s, y, sigma, u) {
+    const lv = s.level;
+    if (u < 0.03 || !lv) { pu(s.ax, 'visibility', 'hidden'); return; }
+    pu(s.ax, 'visibility', 'visible'); pu(s.ax, 'transform', `translate3d(0,${y}px,0)`); pu(s.ax, 'clipPath', inset(u));
+    s.ticks.forEach((t) => {
+      pu(t.tk, 'visibility', t.on ? 'inherit' : 'hidden'); pu(t.lb, 'visibility', t.on ? 'inherit' : 'hidden');
+      if (!t.on) return;
+      const x = X0 + t.v * sigma;
+      pu(t.tk, 'transform', `translate3d(${x.toFixed(2)}px,0,0)`);
+      pu(t.lb, 'transform', `translate3d(${x.toFixed(2)}px,0,0) translateX(-50%)`);
+    });
+  }
+  function render() {
+    const t = PH.x, rest = t === 0 || t === T, mv = t > EPS;
+    const A = sh[ia], B = sh[ia ^ 1], LA = A.level, LB = B.level, k = K;
+    const q = rest ? Math.round : (v) => Math.round(v * 100) / 100;
+    if (card._mv !== !rest) { card._mv = !rest; card.classList.toggle('is-moving', !rest); }
+    for (let i = 0; i < 5; i++) {
+      const r = A.rows[i];
+      if (!r.it) continue;
+      if (!mv) {
+        const S0 = 1 - 0.02 * r.pr, w = q(r.it.v * A.sigma * S0), by = barY(i, A.P) + (BH * (1 - S0)) / 2;
+        drawRow(r, i, { bx: X0, by, bw: w, bh: BH * S0, rl: 8, rr: 8, cBar: 1, lime: i === 0 ? 1 : 0, base: baseOf(r), cLab: 1, cFig: 1 });
+        continue;
+      }
+      const cB = 1 - cv(t, 0.015 + 0.01 * i, 0.15), cL = 1 - cv(t, 0.012 * i, 0.10), cF = 1 - cv(t, 0.008 * i, 0.08);
+      drawRow(r, i, { bx: X0, by: barY(i, A.P), bw: i === k ? 0 : r.it.v * A.sigma, fw: r.it.v * A.sigma, bh: BH, rl: 8, rr: 8, cBar: i === k ? 0 : cB, lime: i === 0 ? 1 : 0, base: baseOf(r), cLab: cL, cFig: cF });
+    }
+    let ay = axisY(LA.n, A.P), au = 1;
+    if (mv) au = 1 - cv(t, 0, 0.12);
+    drawAxis(A, ay, A.sigma, au);
+    if (mv && LB) {
+      const nB = LB.n, tr = win(t, 0.14, 0.22), g = 2 * win(t, 0.32, 0.10), gr = win(t, 0.70, 0.22), M = lerp(LA.M, LB.M, gr), sig = LEN / M, sigA = A.sigma;
+      const s0 = k === 0 ? 1 : 0, ym = lerp(barY(k, A.P), barY(0), tr), cW = win(t, 0.32, 0.14), cLm = eo(t, 0.122, 0.2);   // the lime: Housing keeps its own and its parts give it up from the right, last part first, before the gaps open (below); any other bar takes it over from the Housing bar the moment that bar is covered, on its largest part
+      for (let j = 0; j < 5; j++) {
+        const r = B.rows[j];
+        if (!r.it) continue;
+        const dj = win(t, 0.44 + 0.04 * j, 0.17), sl = j > 0 ? win(t, 0.54 + 0.04 * j, 0.13) : 0, shr = ((j > 0) + (j < nB - 1)) / 2;
+        const pad = j < nB - 1 ? 0.7 * clamp(1 - g / 0.5, 0, 1) : 0;
+        const S0 = 1 - 0.02 * r.pr;
+        let x = X0 + (LB.cum[j] * sigA + (j > 0 ? g / 2 : 0)) * (1 - sl), w = r.it.v * sig - shr * g * (1 - gr) + pad, y = ym + j * B.P * dj;
+        const ri = 8 * dj, bh = BH * S0;
+        x = X0 + (x - X0) * S0; w *= S0; y += (BH * (1 - S0)) / 2;
+        const lab = cv(t, 0.78 + 0.012 * j, 0.10);
+        drawRow(r, j, { bx: q(x), by: q(y), bw: q(w), bh, rl: j === 0 ? 8 : ri, rr: j === nB - 1 ? 8 : ri, cBar: 1, lime: s0 ? (j === 0 ? 1 : 1 - cv(t, 0.20 + 0.06 * (nB - 1 - j), 0.06)) : (j === 0 ? cLm : 0),
+          base: mix(INK, baseOf(r), cW), cLab: lab, cFig: lab });
+      }
+      drawAxis(B, axisY(nB, B.P), sig, cv(t, 0.82, 0.10));
+    } else { B.rows.forEach(offRow); drawAxis(B, 0, 1, 0); }
+
+    /* the header */
+    const titleRoll = win(t, 0.58, 0.22), totalRoll = win(t, 0.60, 0.22);
+    setText(titleCol.children[0], LA.title); setText(titleCol.children[1], mv && LB ? LB.title : '');
+    pu(titleCol, 'transform', titleRoll < 0.001 ? 'none' : `translate3d(0,${(-titleRoll * 22).toFixed(2)}px,0)`);
+    setText(totalCol.children[0], fmt(LA.total)); setText(totalCol.children[1], mv && LB ? fmt(LB.total) : '');
+    pu(totalCol, 'transform', totalRoll < 0.001 ? 'none' : `translate3d(0,${(-totalRoll * 38).toFixed(2)}px,0)`);
+    setText(shareEl.children[0], e >= 1 ? LA.share : ''); setText(shareEl.children[1], mv && LB ? LB.share : '');
+    cov(shareEl.children[0], e >= 1 ? 1 - cv(t, 0.50, 0.12) : 0); cov(shareEl.children[1], mv ? cv(t, 0.82, 0.10) : 0);
+    cov(ctx, e === 0 ? 1 - cv(t, 0.54, 0.10) : 0);
+    const here = win(t, 0.72, 0.10);
+    slots.forEach((sl, s) => {
+      const lv = path[s];
+      setText(sl.b, lv && s <= e + 1 ? lv.title : '');
+      const u = s < e ? 1 : s === e ? (e >= 1 ? 1 : cv(t, 0.64, 0.08)) : s === e + 1 ? cv(t, 0.72, 0.10) : 0;
+      cov(sl.li, u);
+      pu(sl.b, 'color', rgb(s === e + 1 ? INK : s === e ? mix(INK, G6E, here) : G6E));
+      const h = rest ? s === depth() : s === e + 1;
+      if (sl.b._h !== h) { sl.b._h = h; sl.b.classList.toggle('is-here', h); if (h) sl.b.setAttribute('aria-current', 'page'); else sl.b.removeAttribute('aria-current'); }
+    });
+    /* the sheet and the parent's peek */
+    const px = S.x;
+    pu(sheetEl, 'transform', Math.abs(px) < 0.005 ? 'none' : `translate3d(${px.toFixed(2)}px,0,0)`);
+    pu(sheetEl, '--sh', String(clamp(px / 24, 0, 1).toFixed(3)));
+    if (px > 0.5 && peekOn) {
+      pu(peek, 'visibility', 'visible'); pu(peek, 'clipPath', `inset(0 ${(W - px).toFixed(2)}px 0 0)`);
+      pu(peekIn, 'transform', `translate3d(${(-0.3 * W * (1 - px / W)).toFixed(2)}px,0,0)`);
+    } else pu(peek, 'visibility', 'hidden');
+  }
+  let peekOn = false;
+  function buildPeek() {
+    const lv = path[depth() - 1];
+    if (!lv) { peekOn = false; return; }
+    peekOn = true;
+    const sg = LEN / lv.M, h = [];
+    lv.items.forEach((it, i) => {
+      const w = Math.round(it.v * sg), y = top(i, lv.P);
+      h.push(`<span class="dd-pk b" style="transform:translate(${X0}px,${y + 22}px);width:${w}px"></span><span class="dd-pk l" style="transform:translate(${X0}px,${y}px)">${it.name}</span><span class="dd-pk f" style="transform:translate(${X0 + w + 8}px,${y + 25}px)">${fmt(it.v)}</span>`);
+    });
+    const ay = axisY(lv.n, lv.P);
+    h.push(`<span class="dd-pk a" style="transform:translate(${X0}px,${ay}px)"></span>`);
+    for (let v = 0; v <= lv.M; v += lv.step) h.push(`<span class="dd-pk t" style="transform:translate(${X0 + Math.round(v * sg)}px,${ay + 10}px) translateX(-50%)">${num(v)}</span>`);
+    peekIn.innerHTML = h.join('');
+  }
+
+  /* ---- motion: the playhead, the sheet's spring home, and the soft values (focus, press) ---- */
+  function setGoal(g, rate = 1.2) {
+    PH.goal = g; PH.rate = rate; PH.rt = PH.x;
+    kick();
+  }
+  function stepPH(dt) {
+    if (PH.x === PH.goal && PH.v === 0) return false;
+    if (reduced) { PH.x = PH.goal; PH.v = 0; PH.rt = PH.goal; ended(); return false; }
+    const d = PH.goal - PH.rt, mx = PH.rate * dt;
+    PH.rt = Math.abs(d) <= mx ? PH.goal : PH.rt + Math.sign(d) * mx;
+    const w = TAU / 0.14, A = PH.x - PH.rt, B = PH.v + w * A, ex = Math.exp(-w * dt);
+    PH.x = clamp(PH.rt + (A + B * dt) * ex, 0, T); PH.v = (B - w * (A + B * dt)) * ex;
+    if (PH.rt === PH.goal && Math.abs(PH.x - PH.goal) < 0.0006 && Math.abs(PH.v) < 0.02) { PH.x = PH.goal; PH.v = 0; if (PH.goal === 0 || PH.goal === T) ended(); return false; }
+    return true;
+  }
+  function stepS(dt) {
+    const w = TAU / 0.3, A = S.x, B = S.v + w * A, ex = Math.exp(-w * dt);
+    S.x = (A + B * dt) * ex; S.v = (B - w * (A + B * dt)) * ex;
+    if (Math.abs(S.x) < 0.02 && Math.abs(S.v) < 1) { S.x = 0; S.v = 0; S.on = false; peekOn = false; }
+  }
+  const approach = (o, k, target, rate, dt) => { const d = target - o[k]; if (d === 0) return false; o[k] += d * (1 - Math.exp(-rate * dt)); if (Math.abs(target - o[k]) < 0.004) o[k] = target; return o[k] !== target; };
+  function soft(dt) {
+    let on = false;
+    const t = PH.x, rest = isRest(), fr = rest ? front() : null;
+    sh.forEach((s, si) => {
+      const A = s === sh[ia], isFront = fr === s;
+      s.rows.forEach((r, i) => {
+        let tf = 0, td = 0, tp = 0;
+        if (isFront) { tf = i === fi ? 1 : 0; td = fi >= 0 && i !== fi ? 1 : 0; tp = i === pressIdx ? 1 : 0; }
+        else if (!rest && A && t < 0.2) { tf = r.f > 0.5 ? 1 : 0; td = r.d > 0.5 ? 1 : 0; tp = r.pr > 0.5 ? 1 : 0; }
+        on = approach(r, 'f', tf, 18, dt) || on;
+        on = approach(r, 'd', td, 18, dt) || on;
+        on = approach(r, 'pr', tp, tp ? 40 : 22, dt) || on;
+      });
+    });
+    return on;
+  }
+  let raf = 0, last = 0;
+  function advance(dt) {
+    let on = stepPH(dt);
+    if (S.on && !S.drag) { stepS(dt); on = true; }
+    return soft(dt) || on || S.drag;
+  }
+  function frame(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    const on = advance(dt);
+    render();
+    if (on) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (reduced) { advance(1 / 60); render(); return; } if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+  const ff = (secs) => { for (let t = 0; t < secs; t += 1 / 60) advance(1 / 60); render(); };
+
+  /* ---- going down and up ---- */
+  const say = (s) => { msg.textContent = s; };
+  function describe(lv) {
+    const n = lv.n;
+    return lv.depth === 0 ? `${lv.title}, ${fmt(lv.total)} in March. ${n} categories.` : `${lv.title}, ${fmt(lv.total)}, ${Math.round((lv.total * 100) / lv.parent.total)}% of ${lv.parent.title}. ${n} items.`;
+  }
+  function fillTable(lv) {
+    $('cap').textContent = `${lv.title}, ${fmt(lv.total)}`;
+    $('tbody').innerHTML = lv.items.map((it) => `<tr><th scope="row">${it.name}</th><td>${fmt(it.v)}</td><td>${Math.round((it.v * 100) / lv.total)}%</td></tr>`).join('');
+  }
+  function rove(i) { const f = front(); sh.forEach((s) => s.rows.forEach((r, k) => { r.btn.tabIndex = s === f && k === i ? 0 : -1; })); }
+  function ended() {
+    const lv = level();
+    if (PH.goal === 0) path.length = e + 1;
+    sh.forEach((s) => { s.list.inert = s !== front(); s.list.classList.toggle('is-front', s === front()); });
+    card.classList.remove('is-moving'); card._mv = false;
+    rove(fi >= 0 ? fi : 0);
+    say(describe(lv)); fillTable(lv);
+    if (kbdPending) { kbdPending = false; front().rows[PH.goal === T ? 0 : K].btn.focus({ preventScroll: true }); }
+    if (pops > 0) { pops--; back(false); return; }
+    rehover();
+  }
+  function open(i, kb) {
+    if (held) { release(); return false; }
+    if (!isRest()) {
+      if (PH.goal === 0 && e + 1 < path.length && i === K && PH.x > 0) { setGoal(T); return true; }
+      return false;
+    }
+    if (PH.x === T) { e++; ia ^= 1; PH.x = 0; PH.rt = 0; PH.goal = 0; }
+    const LA = path[e], it = LA.items[i];
+    if (!it || !it.kids) return false;
+    path.length = e + 1; path[e + 1] = levelOf(it, LA, i);
+    fillSheet(sh[ia ^ 1], path[e + 1]);
+    K = i; kbdPending = !!kb;
+    const from = sh[ia].rows[i];
+    sh[ia ^ 1].rows.forEach((r) => { r.pr = from.pr; });
+    fsrcClear();
+    pressIdx = -1;
+    setGoal(T);
+    say(`Opening ${it.name}`);
+    return true;
+  }
+  function back(kb, rate = 1.45) {
+    if (held) { release(); return false; }
+    if (!isRest()) {
+      if (PH.goal === T && PH.x > 0) { PH.goal = 0; PH.rate = rate; PH.rt = PH.x; kick(); kbdPending = !!kb; return true; }
+      return false;
+    }
+    if (PH.x === 0) {
+      if (e === 0) return false;
+      e--; ia ^= 1; PH.x = T; PH.rt = T; PH.goal = T;
+      fillSheet(sh[ia], path[e]);
+      sh[ia].rows[path[e + 1].idx].f = 1;                                  // the bar comes home as it left: ink, then it settles
+    }
+    K = path[e + 1].idx; kbdPending = !!kb;
+    fsrcClear();
+    setGoal(0, rate);
+    say(`Back to ${path[e].title}`);
+    return true;
+  }
+  function popTo(s) {
+    const d = isRest() ? depth() : e + 1;
+    if (s >= d) return false;
+    if (!isRest()) return back(false);
+    pops = Math.max(0, d - s - 1);
+    return back(false, pops > 0 ? 2.2 : 1.45);
+  }
+  function release() { if (!held) return; held = false; setGoal(T); }
+  function fsrcClear() { fi = -1; fsrc = ''; }
+
+  /* ---- focus: hover, a tap or the arrow keys bring one bar to ink and step the others down ---- */
+  function setFocus(i, src = '') {
+    if (!isRest()) return;
+    if (i === fi) { if (i >= 0) fsrc = src; return; }
+    fi = i; fsrc = i >= 0 ? src : '';
+    kick();
+  }
+  const rowOf = (t) => { const b = t && t.closest ? t.closest('.dd-row') : null; return b ? { s: +b.dataset.s, i: +b.dataset.i } : null; };
+  function rehover() {
+    if (!lastPtr || reduced && false) return;
+    const t = document.elementFromPoint(lastPtr.x, lastPtr.y), r = rowOf(t);
+    if (r && sh[r.s] === front() && front().rows[r.i].it) setFocus(r.i, 'ptr');
+  }
+  view.addEventListener('pointermove', (ev) => {
+    if (ev.pointerType === 'touch' || H) return;
+    if (ev.isTrusted) lastPtr = { x: ev.clientX, y: ev.clientY };
+    const r = rowOf(ev.target), src = ev.isTrusted ? 'ptr' : 'ghost';
+    if (!isRest()) return;
+    if (r && sh[r.s] === front()) setFocus(r.i, src); else if (fsrc === src || fsrc === 'pose') setFocus(-1);
+  }, { passive: true });
+  view.addEventListener('pointerleave', (ev) => { if (ev.pointerType === 'touch' || H) return; const src = ev.isTrusted ? 'ptr' : 'ghost'; if (fsrc === src) setFocus(-1); if (ev.isTrusted) lastPtr = null; });
+  addEventListener('pointermove', (ev) => { if (ev.isTrusted && ev.pointerType === 'mouse') lastPtr = { x: ev.clientX, y: ev.clientY }; }, { passive: true });
+
+  /* ---- the hand: a press answers at once; a horizontal drag (8 px) takes the sheet 1:1; a release is judged on distance and speed ---- */
+  let H = null;
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);
+  function vel(rows, t) {
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return 0;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? 0 : ((b[1] - a[1]) / dt) * 1000;
+  }
+  view.addEventListener('pointerdown', (ev) => {
+    if (ev.button > 0 || H) return;
+    if (held) { release(); return; }
+    if (!isRest()) return;
+    if (S.on) { S.on = false; S.v = 0; }
+    const r = rowOf(ev.target), f = front();
+    H = { id: ev.pointerId, type: ev.pointerType, x0: ev.clientX, y0: ev.clientY, mode: 'wait', ax: 0, rows: [], raw: 0, ghost: !ev.isTrusted };
+    swallow = 0;
+    if (r && sh[r.s] === f && f.rows[r.i].it) {
+      if (ev.pointerType === 'touch') setFocus(r.i === fi ? -1 : r.i, 'tap');
+      else setFocus(r.i, ev.isTrusted ? 'ptr' : 'ghost');
+      if (f.rows[r.i].open) { pressIdx = r.i; kick(); }
+    }
+  });
+  addEventListener('pointermove', (ev) => {
+    if (!H || ev.pointerId !== H.id) return;
+    const dx = (ev.clientX - H.x0) / sc, dy = (ev.clientY - H.y0) / sc;
+    if (H.mode === 'wait') {
+      if (Math.hypot(dx, dy) < 8) return;
+      pressIdx = -1;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        H.mode = 'drag'; H.ax = ev.clientX; S.drag = true; S.on = false; S.v = 0; swallow = 1; setFocus(-1);
+        try { if (ev.isTrusted) view.setPointerCapture(ev.pointerId); } catch (err) { /* pointer already gone */ }
+        buildPeek();
+      } else { H.mode = 'off'; kick(); return; }
+    }
+    if (H.mode !== 'drag') return;
+    const raw = (ev.clientX - H.ax) / sc, d = depth();
+    H.raw = raw;
+    H.rows.push([ev.timeStamp, raw]);
+    while (H.rows.length > 2 && ev.timeStamp - H.rows[0][0] > 100) H.rows.shift();
+    S.x = reduced ? 0 : raw >= 0 ? (d >= 1 ? Math.min(raw, W) : rb(raw, W)) : -rb(-raw, W);
+    kick();
+  }, { passive: true });
+  function up(ev, cancel) {
+    if (!H || ev.pointerId !== H.id) return;
+    const h = H; H = null; pressIdx = -1;
+    if (h.mode === 'drag') {
+      const v = cancel ? 0 : vel(h.rows, ev.timeStamp), commit = !cancel && depth() >= 1 && (h.raw > W / 3 || (v > 500 && h.raw > 0));
+      S.drag = false; S.v = reduced ? 0 : v; S.on = true; peekOn = peekOn && !reduced;
+      if (commit) back(false); else kick();
+      setTimeout(() => { swallow = 0; }, 60);
+    }
+    kick();
+  }
+  addEventListener('pointerup', (ev) => up(ev, false));
+  addEventListener('pointercancel', (ev) => up(ev, true));
+  view.addEventListener('touchmove', (ev) => { if (H && H.mode === 'drag' && ev.cancelable) ev.preventDefault(); }, { passive: false });
+  view.addEventListener('dragstart', (ev) => ev.preventDefault());
+  view.addEventListener('click', (ev) => {
+    if (swallow) { ev.stopPropagation(); ev.preventDefault(); swallow = 0; return; }
+    const r = rowOf(ev.target);
+    if (!r || sh[r.s] !== front() || !isRest()) return;
+    const row = front().rows[r.i];
+    if (row.open) open(r.i, ev.isTrusted && ev.detail === 0);
+  }, true);
+  slotsEl.addEventListener('click', (ev) => { const b = ev.target.closest('.dd-crumb'); if (b) popTo(+b.dataset.s); });
+
+  /* ---- keys: Up and Down move, Enter or Right opens, Left, Backspace and Escape go up ---- */
+  addEventListener('keydown', (ev) => {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    const k = ev.key, ae = document.activeElement, inCard = card.contains(ae) || ae === document.body || ae === document.documentElement;
+    if (!inCard) return;
+    if (k === 'Escape' || k === 'Backspace' || k === 'ArrowLeft') { if (back(true)) ev.preventDefault(); return; }
+    if (!isRest() && !held) { if ((k === 'ArrowRight' || k === 'Enter') && PH.goal === 0 && e + 1 < path.length) { ev.preventDefault(); open(K, true); } return; }
+    const f = front(), i = f.rows.findIndex((r) => r.btn === ae), n = level().n;
+    let to = -1;
+    if (k === 'ArrowDown') to = i < 0 ? 0 : Math.min(n - 1, i + 1);
+    else if (k === 'ArrowUp') to = i < 0 ? n - 1 : Math.max(0, i - 1);
+    else if (k === 'Home') to = 0; else if (k === 'End') to = n - 1;
+    else if (k === 'ArrowRight') { if (i >= 0 && f.rows[i].open) { ev.preventDefault(); open(i, true); } return; }
+    else return;
+    ev.preventDefault();
+    if (held) release();
+    rove(to); f.rows[to].btn.focus({ preventScroll: true });
+  });
+  card.addEventListener('focusin', (ev) => {
+    const r = rowOf(ev.target);
+    if (!r || sh[r.s] !== front()) return;
+    rove(r.i);
+    if (ev.target.matches(':focus-visible')) { setFocus(r.i, 'key'); const it = front().rows[r.i].it; if (it) say(`${it.name}, ${fmt(it.v)}, ${Math.round((it.v * 100) / level().total)}% of ${level().title}${front().rows[r.i].open ? '. Press Enter to open' : ''}`); }
+  });
+  card.addEventListener('focusout', (ev) => { if (fsrc === 'key' && !(ev.relatedTarget && rowOf(ev.relatedTarget))) setFocus(-1); });
+
+  /* ---- the key frame: played, not drawn. Food is pressed and the open stepped through at 60 Hz until it has settled (the tile), or to 0.60 s and then left to run (the detail view) ---- */
+  function pose(hold) {
+    cancelAnimationFrame(raf); raf = 0;
+    held = false; pops = 0; kbdPending = false; H = null; peekOn = false;
+    path = [TOP]; e = 0; ia = 0; K = 1;
+    PH.x = PH.v = PH.rt = PH.goal = 0; S.x = S.v = 0; S.on = S.drag = false; pressIdx = -1; fsrcClear();
+    fillSheet(sh[0], TOP);
+    sh.forEach((s) => { s.list.classList.remove('is-front'); });
+    const food = TOP.items[1];
+    path[1] = levelOf(food, TOP, 1);
+    if (reduced) {
+      fillSheet(sh[1], path[1]); PH.x = PH.goal = T; PH.rt = T;
+      render(); ended(); return;
+    }
+    fillSheet(sh[1], path[1]);
+    PH.goal = hold ? T : POSE;
+    ff(hold ? 2.4 : 1.6);
+    if (hold) { fi = 1; fsrc = 'pose'; ff(0.5); } else { setGoal(T); fillTable(TOP); }
+    render();
+  }
+  measure();
+  fillSheet(sh[0], TOP);
+  render();
+  const api = {
+    pose, open, back, popTo, release, setFocus, measure, render, advance, ff, kick, PH, S, sh, TOP, T, W, X0, LEN, P, ROW0, BH,
+    get held() { return held; }, get e() { return e; }, get K() { return K; }, get path() { return path; }, get depth() { return depth(); }, get rest() { return isRest(); }, get front() { return front(); },
+    get focus() { return fi; }, slot: (s) => slots[s].b, level, win, T0: 0, crumbs: slots, titleCol, totalCol, shareEl, ctx, peek, peekIn, view,
+    scale: () => sc, letGo() { if (fsrc === 'ghost' || fsrc === 'pose') setFocus(-1); },
+  };
+  return api;
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('dd-fit');
+  // the card is drawn 600 px wide and 440 tall and scaled to the room it is given
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    let s = Math.max(0.5, Math.min((0.82 * W) / 600, (H - 2 * pad - ui) / 440, 1.5));
+    s = Math.round(s * 100) / 100;
+    fit.style.setProperty('--s', s.toFixed(2));
+    DD.measure(); DD.render();
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(size);
+
+  /* the ghost: it moves a pointer and presses what a hand presses (the same events on the same handlers) */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const fire = (type, x, y, Ctor = PointerEvent) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 75, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  async function glide(my, to, ms = 760) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.88 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y);
+      if (p >= 1) break;
+    }
+  }
+  const mid = (el, fx = 0.5, fy = 0.5) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width * fx, y: r.top + r.height * fy }; };
+  async function tap(my) {
+    const { x, y } = pos, el = fire('pointerdown', x, y);
+    await gap(my, 120);
+    fire('pointerup', x, y);
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  const sheetRow = (i) => DD.front.rows[i].btn;
+  const until = async (my, f, max = 4000) => { const t0 = performance.now(); while (!f()) { await raf(); if (my !== epoch) throw 0; if (performance.now() - t0 > max) break; } };
+  async function openRow(my, i, ms = 760) { const b = sheetRow(i).querySelector('.dd-bar'), p = mid(b, 0.3); await glide(my, { x: p.x, y: p.y }, ms); await gap(my, 220); await tap(my); await until(my, () => DD.rest); }
+  async function swipe(my, dx = 270, ms = 420) {
+    const v = DD.view.getBoundingClientRect(), s = DD.scale(), x0 = v.left + 70 * s, y0 = v.top + 150 * s;
+    await glide(my, { x: x0, y: y0 }, 620); await gap(my, 140);
+    fire('pointerdown', x0, y0);
+    const t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), x = x0 + dx * s * (1 - Math.pow(1 - p, 2.2));
+      QM.ghostAt(x, y0); pos = { x, y: y0 }; fire('pointermove', x, y0);
+      if (p >= 1) break;
+    }
+    fire('pointerup', pos.x, pos.y);
+    await until(my, () => DD.rest);
+  }
+  async function toTop(my) { while (DD.depth > 0) { const b = DD.slot(0); await glide(my, mid(b), 700); await gap(my, 160); await tap(my); await gap(my, 100); await until(my, () => DD.rest); await gap(my, 500); } }
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile || QM.live ? 5000 : 3000) : 700);
+      QM.ghostShow();
+      if (DD.held) { DD.release(); await until(my, () => DD.rest); await gap(my, 1100); }
+      for (;;) {
+        if (DD.depth > 0 && DD.level().title !== 'Food') await toTop(my);
+        if (DD.depth === 0) { await openRow(my, 1); await gap(my, 1200); }                   // Food
+        if (DD.depth === 2) { await glide(my, mid(DD.slot(1)), 700); await gap(my, 160); await tap(my); await until(my, () => DD.rest); await gap(my, 700); }
+        await openRow(my, 1); await gap(my, 1100);                                          // Restaurants
+        await glide(my, mid(DD.slot(1)), 700); await gap(my, 200); await tap(my); await until(my, () => DD.rest); await gap(my, 800);   // pop by the crumb
+        await swipe(my); await gap(my, 900);                                                // pop by a swipe
+        await openRow(my, 0); await gap(my, 1200);                                          // Housing
+        await glide(my, { x: mid(DD.view).x, y: mid(DD.view).y }, 500);
+        card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); await until(my, () => DD.rest); await gap(my, 1300);   // back, by key
+        DD.setFocus(-1, 'ghost');
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  const card = document.getElementById('dd-card');
+  function stopScript() { epoch++; QM.ghostHide(); pos = null; DD.letGo(); }
+  if (!QM.tile && !reduced) {
+    const busyHand = () => card.matches(':hover') || (card.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                                // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!busyHand()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  const hold = () => QM.tile || QM.live;
+  QM.demo({ kind: 'loop', restart() { stopScript(); DD.pose(hold()); if (!reduced) script(true); } });
+  DD.pose(hold());
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => script(true), 300));
+})();
+</script>
+</body>
+</html>

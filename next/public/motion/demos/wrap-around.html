@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wrap around · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "wrap-around", "title": "Wrap around", "group": "studio", "added": "2026-11-24", "cat": "text", "order": 10,
+  "kind": "loop", "preview": {"secs": 9, "skip": 4500}, "tone": "paper", "shot": 700,
+  "line": "paragraph laid out in script on every frame · chord + 14 px gutter · no span under 96 px · disc 1:1, throw d 0.99 · 120 to 220 px",
+  "summary": "A Forma journal page in a white window: a headline and one paragraph about how an Ash vase is made, and a round photograph of the vase, shown in grey, sitting in the text. Drag the disc and the text flows round it. Each word was measured once; on every frame the script lays the headline and paragraph out again from the disc's centre and radius, line by line, taking from each line the chord the disc cuts at that height plus a 14 px gutter, filling words left of the disc and then right of it, and skipping a side narrower than 96 px. Every word is then set at its layout position by transform alone, so no frame can hold an overlap, a hole or a word on the disc. The fluidity is the disc's: it follows the hand 1:1 from the grab offset, rubber-bands at the window's edges, a throw is projected and settles, and a lime handle on its edge, the wheel, a pinch or the plus and minus keys grow it from 120 to 220 px on a spring while the text gives way.",
+  "spec": [
+    ["Layout", "on every frame the script sets the headline (34 / 40 px) and the paragraph (16 / 24 px) in a 624 px column: for each line the free spans are the column minus the chord of a circle of radius r + 14 px, taken at the line's nearest height to the centre; words fill the span left of the disc, then right of it, greedily; a span narrower than 96 px takes no words on that line (so a word never sits alone in a sliver); the left span stays ragged at the curve"],
+    ["Words", "measured once with getBoundingClientRect after the fonts are ready (and again when they land); each is an absolutely placed span moved by a 2D translate only, so there is no reflow per frame; a 137-word paragraph and a 4-word headline, the loop sleeps when the disc is at rest"],
+    ["Flow", "there is no per-word animation: each frame every word is put where the layout says, so the text is always a valid layout (no overlap, no hole, no word on the disc) and the motion you see is the disc's own: its 1:1 drag, its throw and settle, its size spring; at 60 fps that reads as text flowing round it"],
+    ["Gaps", "a word is placed with a 2D translate and no layer of its own, at its exact layout position (no pixel rounding), so every gap is one measured space (4.02 to 4.04 px for the 16 px text, 6.45 for the headline); an earlier attempt to open the gaps of the span left of the disc so it met the curve made up to 51 gaps change by up to 1.4 px in a single frame as the disc moved, so it was dropped"],
+    ["Drag", "pointer capture; the disc answers a press with 0.97 in 100 ms, commits after 3 px and then follows the pointer 1:1 from that point (the grab offset is kept), lifting to 1.03 with a deeper shadow; velocity over the last 80 ms; release projects the rest point by v × 0.099 s (d = 0.99) and clamps it to the window; a release over 420 px/s is a throw (damping 0.8, deceleration from the first frame), anything slower is critically damped, response 0.4 s"],
+    ["Edges", "the disc must stay inside the 720 × 386 page; past an edge it follows (x·D·0.55) / (D + 0.55·|x|) with D = 160 px and the spring brings it back; a press on a disc in flight catches it where it is"],
+    ["Size", "diameter 120 to 220 px (r 60 to 110) on its own spring, response 0.3 s: the lime handle on the edge (36 px hit area) tracks the pointer 1:1 along the radius and rubber-bands (D = 50 px) past the limits; the wheel (0.12 px of radius per pixel, 0.3 for a pinch gesture), two fingers, and + and − (20 px of diameter, Shift 40) retarget the spring from the value on screen; a disc that grows into an edge is nudged back inside"],
+    ["Keys", "the disc is focusable: arrows move it 8 px, Shift 32, as a retargeted spring; + and − size it; changes are announced in a polite status line"],
+    ["Loop", "the tile loads on a still pose (disc 172 px at 310, 200 in the page) and 5 s later a ghost takes the disc along an arc through the paragraph, throws it at the left edge, grows and shrinks it by the handle, and lets it settle back; it uses the same begin, move and end calls as a pointer and yields to a mouse, a touch or a key"],
+    ["Reduced motion", "the same still page; moving the disc, sizing it or nudging it by key re-lays the text in place with no spring, no projection and no rubber band"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-24"],
+  "where": "A Qbix client's journal or case-study page, where a product photograph, a pull quote or a portrait sits in the copy and the text should give way to it, or to a visitor's hand, instead of jumping.",
+  "rules": [
+    "The layout is computed, not reflowed: words are measured once, placed by script on every frame and moved by transform only. The DOM never lays the paragraph out while the disc moves.",
+    "Every line's free space is the column minus the disc's chord at that line's height plus a 14 px gutter. A side of the disc narrower than 96 px takes no words on that line, so nothing sits alone in a sliver and nothing is squeezed.",
+    "Every frame is an exact layout: each word is at its layout position and nowhere else, so none touches the disc, none overlaps another and no line is blank. Every gap is one space; the span left of the disc stays ragged.",
+    "Nothing in the text is animated, faded, glided or covered. The flow is the disc's: it follows the hand 1:1, projects the release, rubber-bands at the edges and sizes on a spring.",
+    "The disc follows the hand exactly from the grab offset, projects the release with d = 0.99, rubber-bands at the window's edges and can be caught mid-flight. Damping 0.8 appears only after a throw.",
+    "One lime a frame: the handle on the disc's edge. The picture is the green photograph shown in grey, so nothing competes with it.",
+    "The paragraph stays real text: the headline and copy are in the page for screen readers and the placed words are hidden from them; the disc is a focusable group with arrow and plus and minus keys.",
+    "Under reduced motion the text re-lays in place, without springs, projection or a rubber band."
+  ],
+  "tags": ["text wrap", "text flow", "exclusion", "layout", "drag", "disc", "rubber band", "throw", "resize", "journal", "reflow", "spring"]
+}
+</script>
+<style data-code>
+/* Wrap around. A journal page in a white window. The words are not laid out by the browser: each is an absolutely placed span, and the script
+   puts it (translate) at its place in the paragraph's layout around the disc, every frame. Nothing in the text animates; the disc does.
+   System face and Apple neutrals (#1d1d1f, #6e6e73, grounds #fff, #f5f5f7); lime #B8FF00 is the size handle on the disc's edge, the only accent.
+   Easing for small UI feedback: ui (.4, 0, .2, 1); arrivals: expo out (.16, 1, .3, 1). */
+.wa-fit { position: relative; width: calc(720px * var(--s, 1)); height: calc(430px * var(--s, 1)); }
+.wa-win { --wa-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 720px; height: 430px; transform: scale(var(--s, 1)); transform-origin: 0 0; overflow: hidden; border-radius: 22px; background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 30px 60px -28px rgba(0, 0, 0, .3);
+  font: 400 16px/24px var(--wa-f); letter-spacing: -.01em; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+.wa-win h2, .wa-win p { margin: 0; }
+
+/* the bar: a name and four links, drawn as a picture of a site */
+.wa-nav { position: absolute; left: 0; right: 0; top: 0; height: 44px; padding: 0 48px; display: flex; align-items: center; gap: 22px; font-size: 13px; line-height: 18px; color: #6e6e73;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .08); }
+.wa-nav .wa-logo { margin-right: 8px; font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -.022em; color: #1d1d1f; }
+.wa-nav .wa-on { color: #1d1d1f; }
+.wa-nav .wa-sp { flex: 1; }
+
+/* the page: 720 × 386. Words and disc are placed in these pixels */
+.wa-field { position: absolute; left: 0; top: 44px; width: 720px; height: 386px; overflow: hidden; }
+.wa-w { position: absolute; left: 0; top: 0; white-space: nowrap; font: 400 16px/24px var(--wa-f); letter-spacing: -.01em; color: #1d1d1f; visibility: hidden; }
+.wa-w.is-h { font: 600 34px/40px var(--wa-f); letter-spacing: -.022em; }
+.wa-ready .wa-w { visibility: visible; }
+
+/* the disc: a photograph in grey (the photograph is green, and the handle is the one lime). Size comes from script; --press and --lift are the body's scale */
+.wa-disc { position: absolute; left: 0; top: 0; width: 160px; height: 160px; z-index: 2; border-radius: 50%; touch-action: none; cursor: grab; outline: none; will-change: transform;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.wa-disc.is-drag, .wa-disc.is-drag * { cursor: grabbing; }
+.wa-disc:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 3px; }
+.wa-body { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; background: #f5f5f7;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 8px 22px -6px rgba(0, 0, 0, .22);
+  transition: transform 260ms cubic-bezier(.16, 1, .3, 1), box-shadow 260ms cubic-bezier(.16, 1, .3, 1); }
+.wa-disc.is-press .wa-body { transform: scale(.97); transition-duration: 100ms; transition-timing-function: cubic-bezier(.4, 0, .2, 1); }
+.wa-disc.is-drag .wa-body { transform: scale(1.03); box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 18px 38px -8px rgba(0, 0, 0, .3); transition-duration: 220ms; }
+.wa-body img { position: absolute; left: -6.45%; top: -48.4%; width: 112.9%; max-width: none; height: auto; pointer-events: none; -webkit-user-drag: none; filter: grayscale(1) contrast(.92) brightness(1.22); }
+.wa-body::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .07); }
+
+/* the size handle: the one lime, a dot on the edge at 45°, with a 36 px hit area */
+.wa-grip { position: absolute; left: 0; top: 0; width: 36px; height: 36px; z-index: 3; display: grid; place-items: center; cursor: nwse-resize; touch-action: none; will-change: transform;
+  -webkit-user-select: none; user-select: none; }
+.wa-grip i { display: block; width: 14px; height: 14px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .14), 0 1px 3px rgba(0, 0, 0, .22);
+  transition: scale 160ms cubic-bezier(.4, 0, .2, 1); }
+.wa-grip:hover i { scale: 1.3; }
+.wa-grip.is-hold i { scale: 1.15; transition-duration: 100ms; }
+.wa-grip.is-hold, .wa-grip.is-hold * { cursor: nwse-resize; }
+
+@media (prefers-reduced-motion: reduce) { .wa-body, .wa-grip i { transition-duration: 1ms !important; } }
+</style>
+<style>
+  /* the window fills the tile; in the detail view it keeps clear of the bar */
+  html, body, .qm-ui { background: #f5f5f7; }
+  .qm-stage { padding: 0; }
+  html:not(.qm-tile) body:has(.qm-ui) .qm-stage { padding: 0 0 46px; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="wa-fit" id="wa-fit">
+ <section class="wa-win" id="wa-win" aria-label="Forma journal: A vase, by hand">
+  <div class="wa-nav" aria-hidden="true"><span class="wa-logo">Forma</span><span>Shop</span><span>Studio</span><span class="wa-on">Journal</span><i class="wa-sp"></i><span>Bag 2</span></div>
+  <div class="wa-field" id="wa-field">
+   <h2 class="sr-only" id="wa-rh">A vase, by hand.</h2>
+   <p class="sr-only" id="wa-rp">Every Ash vase starts as a lump of grey clay and a slow wheel. Mara pulls the walls up by hand, twice, until the rim sits thin and level. It dries for six days. Then it is fired, glazed and fired again, so the surface keeps a little of the kiln in it. No two come out the same. That is the point. Some run a shade warmer. Some carry a faint ripple where a thumb rested. We photograph each one on a plain table, in daylight, and show it exactly as it is. It ships wrapped in paper, in a box that folds flat afterwards. If one arrives with a chip, tell us. A new one leaves within five days. Each is numbered underneath, in pencil. Pick it up. Put it where the light is good.</p>
+   <div class="wa-words" id="wa-words" aria-hidden="true"></div>
+   <div class="wa-disc" id="wa-disc" role="group" tabindex="0" aria-label="Photograph of the Ash vase. Drag it through the text. Arrow keys move it 8 pixels, Shift 32. Plus and minus change its size."><div class="wa-body"><img src="../assets/art/vase.webp" width="700" height="1050" alt="" draggable="false"></div></div>
+   <span class="wa-grip" id="wa-grip" aria-hidden="true"><i></i></span>
+   <p class="sr-only" id="wa-msg" role="status" aria-live="polite"></p>
+  </div>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag the vase through the text and throw it. The lime dot, the wheel, a pinch or + and − change its size. Arrow keys move it 8 px, Shift 32</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Wrap around. Words are measured once and set by script on every frame: for each line the free spans are the column minus the chord of the disc
+   (radius + 14 px) at that line's height, filled left of the disc, then right of it; a side under 96 px takes no words. Every word is set at its place on every frame.
+   Everything is in page pixels (720 × 386); the window may be drawn scaled, so the pointer is divided by the scale. */
+const WA = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById('wa-' + id);
+  const field = $('field'), wordsEl = $('words'), disc = $('disc'), grip = $('grip'), msg = $('msg');
+  const W = 720, H = 386, ML = 48, MR = 48, GUT = 14, LH = 24, HLH = 40, TOP = 32, GAPB = 12;   // page, side margins, gutter, line heights, top, gap under the headline
+  const MINSPAN = 96;                                                                        // a side of the disc narrower than this takes no words
+  const RMIN = 60, RMAX = 110, KEY = { x: 310, y: 200, r: 86 };                                // radius limits (diameter 120 to 220), the pose the loop rests on
+  const OM = (2 * Math.PI) / 0.4, OMR = (2 * Math.PI) / 0.3;       // responses: disc 0.4 s, size 0.3 s (a word's is in stepWords: 0.18 s down to 0.06 s)
+  const LOOK = 0.99 / (1 - 0.99) / 1000;                                                       // 0.099 s: where a release coasts to (d = 0.99)
+  const SLOP = 3, THROW = 420, DB = 160, DR = 50;                                              // px before a drag, px/s of a throw, rubber-band sizes
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+  /* a spring: critically damped x(t) = T + (A + B·t)·e^(−ωt), the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OM, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+  const S = { x: mk(KEY.x), y: mk(KEY.y), r: mk(KEY.r) };
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                                        // rubber band, Apple's constant 0.55
+  const rbInv = (r, D) => { r = Math.min(r, D * 0.9); return (r * D) / (0.55 * (D - r)); };
+  const band = (v, lo, hi, D) => (v < lo ? lo - rb(lo - v, D) : v > hi ? hi + rb(v - hi, D) : v);
+  const unband = (d, lo, hi, D) => (d < lo ? lo - rbInv(lo - d, D) : d > hi ? hi + rbInv(d - hi, D) : d);
+
+  /* the words: a headline and a paragraph, split once, one span each */
+  const toks = [];
+  [[0, $('rh')], [1, $('rp')]].forEach(([b, el]) => el.textContent.trim().split(/\s+/).forEach((t) => toks.push([b, t])));
+  const N = toks.length, NH = toks.filter((t) => t[0] === 0).length;
+  const els = toks.map(([b, t]) => {
+    const s = document.createElement('span');
+    s.className = 'wa-w' + (b ? '' : ' is-h');
+    s.textContent = t;
+    wordsEl.append(s, ' ');                                                                    // the space keeps a copied selection readable
+    return s;
+  });
+  const f = (n) => new Float64Array(n);
+  const ww = f(N), px = f(N), py = f(N), nx = f(N), ny = f(N), kd = new Uint8Array(N);   // widths; where each word is, and where the layout puts it; kd: 0 a full line, 1 left of the disc, 2 right of it
+  const SP = [4, 4];                                                                           // the width of a space, per block
+  const SEG = { s: [0, 0], e: [0, 0], j: [0, 0] };
+
+  /* measure every word once the fonts are in (and again if they land late) */
+  let OX = 0, OY = 0, sc = 1;
+  function measure() {
+    const r = field.getBoundingClientRect();
+    OX = r.left; OY = r.top; sc = r.width / W || 1;
+  }
+  function probe(txt, head) {
+    const s = document.createElement('span'); s.className = 'wa-w' + (head ? ' is-h' : ''); s.style.visibility = 'hidden'; s.style.whiteSpace = 'pre'; s.textContent = txt;
+    wordsEl.appendChild(s); const w = s.getBoundingClientRect().width / sc; s.remove(); return w;
+  }
+  function metrics() {
+    measure();
+    for (let j = 0; j < N; j++) ww[j] = els[j].getBoundingClientRect().width / sc;
+    SP[0] = probe('n n', 1) - probe('nn', 1); SP[1] = probe('n n', 0) - probe('nn', 0);
+  }
+
+  /* the layout: write every word's place into nx, ny for a disc at (cx, cy) with radius r */
+  function place(cx, cy, r) {
+    const R = r + GUT;
+    let i = 0, y = TOP;
+    for (let b = 0; b < 2; b++) {
+      const end = b ? N : NH, lh = b ? LH : HLH, pad = b ? 3 : 6, sp = SP[b];
+      for (let line = 0; i < end && line < 40; line++, y += lh) {
+        const y0 = y + pad, y1 = y + lh - pad;
+        const dy = cy < y0 ? y0 - cy : cy > y1 ? cy - y1 : 0;                                // how far the line is from the disc's centre
+        let n = 0;
+        if (dy >= R) { SEG.s[0] = ML; SEG.e[0] = W - MR; SEG.j[0] = 0; n = 1; }
+        else {
+          const hw = Math.sqrt(R * R - dy * dy), a = cx - hw, c = cx + hw;                    // the chord, with the gutter
+          if (Math.min(a, W - MR) - ML >= MINSPAN) { SEG.s[n] = ML; SEG.e[n] = Math.min(a, W - MR); SEG.j[n] = 1; n++; }   // 1: left of the disc
+          if (W - MR - Math.max(c, ML) >= MINSPAN) { SEG.s[n] = Math.max(c, ML); SEG.e[n] = W - MR; SEG.j[n] = 2; n++; }   // 2: right of it
+        }
+        for (let k = 0; k < n && i < end; k++) {
+          const e = SEG.e[k];
+          let x = SEG.s[k];
+          while (i < end && x + ww[i] <= e + 0.01) { nx[i] = x; ny[i] = y; kd[i] = SEG.j[k]; x += ww[i] + sp; i++; }   // a sliver too short for the next word stays empty
+        }
+      }
+      y += b ? 0 : GAPB;
+    }
+    for (; i < N; i++) { nx[i] = ML; ny[i] = H + 60; }                                         // no room: below the page
+  }
+  // a word is placed with a 2D translate and no layer of its own, so the browser sets its glyphs at the exact (sub-pixel) place: every gap is the measured space
+  const put = (j) => { els[j].style.transform = `translate(${px[j].toFixed(2)}px, ${py[j].toFixed(2)}px)`; };
+  // every frame every word is where the layout puts it: nothing glides, so no frame can hold an overlap or a hole
+  function apply() { for (let j = 0; j < N; j++) if (nx[j] !== px[j] || ny[j] !== py[j]) { px[j] = nx[j]; py[j] = ny[j]; put(j); } }
+
+  /* the disc and its handle, drawn from the springs */
+  let lcx = NaN, lcy = NaN, lr = NaN, dx0 = NaN, dy0 = NaN, dr0 = NaN;
+  function drawDisc() {
+    const cx = S.x.x, cy = S.y.x, r = S.r.x;
+    if (r !== dr0) { disc.style.width = disc.style.height = (2 * r).toFixed(2) + 'px'; dr0 = r; }
+    if (cx !== dx0 || cy !== dy0 || r !== lr) {
+      disc.style.transform = `translate3d(${(cx - r).toFixed(2)}px, ${(cy - r).toFixed(2)}px, 0)`;
+      const k = Math.SQRT1_2 * r;
+      grip.style.transform = `translate3d(${(cx + k - 18).toFixed(2)}px, ${(cy + k - 18).toFixed(2)}px, 0)`;
+      dx0 = cx; dy0 = cy; lr = r;
+    }
+  }
+
+  /* motion */
+  let raf = 0, last = 0, held = null;
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let live = step(S.x, dt, 0.02, 1);
+    live = step(S.y, dt, 0.02, 1) || live;
+    live = step(S.r, dt, 0.02, 1) || live;
+    const cx = S.x.x, cy = S.y.x, r = S.r.x;
+    if (Math.abs(cx - lcx) > 0.004 || Math.abs(cy - lcy) > 0.004 || Math.abs(r - lr2) > 0.004) {
+      lcx = cx; lcy = cy; lr2 = r;
+      place(cx, cy, r);
+      apply();
+    }
+    drawDisc();
+    if (live) kick();
+  }
+  let lr2 = NaN;
+
+  let sayT = 0;
+  const say = (t) => { clearTimeout(sayT); sayT = setTimeout(() => { msg.textContent = t; }, 350); };
+  const radius = () => clamp(S.r.on ? S.r.T : S.r.x, RMIN, RMAX);
+  // keep the disc inside the page after a size change or a key: retarget the springs, keeping their velocity
+  function fit() {
+    if (held && held.mode === 'drag') return;
+    const rr = radius(), bx = S.x.on ? S.x.T : S.x.x, by = S.y.on ? S.y.T : S.y.x;
+    const Tx = clamp(bx, rr, W - rr), Ty = clamp(by, rr, H - rr);
+    if (reduced) { S.x.x = S.x.T = Tx; S.y.x = S.y.T = Ty; S.x.on = S.y.on = false; }
+    else {
+      if (Tx !== bx) aim(S.x, Tx, S.x.v, OM, 1);
+      if (Ty !== by) aim(S.y, Ty, S.y.v, OM, 1);
+    }
+    kick();
+  }
+  function sizeTo(r, quiet) {
+    const T = clamp(r, RMIN, RMAX);
+    if (reduced) { S.r.x = S.r.T = T; S.r.on = false; } else aim(S.r, T, S.r.v, OMR, 1);
+    fit();
+    if (!quiet) say(`Size ${Math.round(2 * T)}`);
+  }
+  function nudge(dx, dy) {
+    const rr = radius(), bx = S.x.on ? S.x.T : S.x.x, by = S.y.on ? S.y.T : S.y.x;
+    const Tx = clamp(bx + dx, rr, W - rr), Ty = clamp(by + dy, rr, H - rr);
+    if (reduced) { S.x.x = S.x.T = Tx; S.y.x = S.y.T = Ty; S.x.on = S.y.on = false; }
+    else { aim(S.x, Tx, S.x.v, OM, 1); aim(S.y, Ty, S.y.v, OM, 1); }
+    kick();
+    say(`Moved ${Math.abs(dx || dy)} ${dx ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up')}`);
+  }
+
+  /* one hand: a pointer or the ghost, through begin / moveTo / end. x and y are client px, t is ms. */
+  const local = (x, y) => ({ x: (x - OX) / sc, y: (y - OY) / sc });
+  function vel(rows, t, idx) {                                                                 // px/s over the last 80 ms of moves, 0 if the hand rested
+    const zero = idx.map(() => 0), b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return zero;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? zero : idx.map((j) => ((b[j] - a[j]) / dt) * 1000);
+  }
+  function begin(kind, x, y, t, ghost = false) {
+    if (held) end(t, true);
+    measure();
+    const p = local(x, y);
+    held = { kind, ghost, x0: p.x, y0: p.y, mode: 'wait', rows: [], caught: false };
+    if (kind === 'disc') {
+      if (S.x.on || S.y.on) { held.caught = true; S.x.on = S.y.on = false; S.x.v = S.y.v = 0; }   // a disc in flight is caught where it is
+      disc.classList.add('is-press');
+    } else {
+      S.r.on = false; S.r.v = 0;
+      held.mode = 'size'; held.g0 = Math.hypot(p.x - S.x.x, p.y - S.y.x) - S.r.x;               // 1:1 from where the handle was grabbed
+      held.rows.push([t, S.r.x]);
+      grip.classList.add('is-hold');
+    }
+  }
+  function moveTo(x, y, t) {
+    const h = held;
+    if (!h) return;
+    const p = local(x, y);
+    if (h.kind === 'grip') {
+      const rr = Math.hypot(p.x - S.x.x, p.y - S.y.x) - h.g0;
+      S.r.x = reduced ? clamp(rr, RMIN, RMAX) : rr < RMIN ? RMIN - rb(RMIN - rr, DR) : rr > RMAX ? RMAX + rb(rr - RMAX, DR) : rr;
+      h.rows.push([t, S.r.x]);
+      while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+      fit();
+      return;
+    }
+    if (h.mode === 'wait') {
+      if (Math.hypot(p.x - h.x0, p.y - h.y0) < SLOP) return;
+      h.mode = 'drag'; h.ax = p.x; h.ay = p.y;                                                 // 1:1 from the commit point, so the disc does not jump by the slop
+      const r = S.r.x;
+      h.rx0 = unband(S.x.x, r, W - r, DB); h.ry0 = unband(S.y.x, r, H - r, DB);
+      S.x.on = S.y.on = false; S.x.v = S.y.v = 0;
+      disc.classList.remove('is-press'); disc.classList.add('is-drag');
+    }
+    const r = S.r.x;
+    h.rx = h.rx0 + (p.x - h.ax); h.ry = h.ry0 + (p.y - h.ay);
+    S.x.x = reduced ? clamp(h.rx, r, W - r) : band(h.rx, r, W - r, DB);
+    S.y.x = reduced ? clamp(h.ry, r, H - r) : band(h.ry, r, H - r, DB);
+    h.rows.push([t, S.x.x, S.y.x, h.rx, h.ry]);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    kick();
+  }
+  function end(t, cancel = false) {
+    const h = held;
+    if (!h) return;
+    held = null;
+    disc.classList.remove('is-press', 'is-drag'); grip.classList.remove('is-hold');
+    if (h.kind === 'grip') {
+      const v = cancel ? [0] : vel(h.rows, t, [1]);
+      const T = clamp(S.r.x, RMIN, RMAX);
+      if (reduced) { S.r.x = S.r.T = T; S.r.on = false; } else aim(S.r, T, v[0], OMR, 1);
+      fit();
+      say(`Size ${Math.round(2 * T)}`);
+      return;
+    }
+    if (h.mode === 'wait') { fit(); return; }                                                  // a tap (or a catch): it stays where it is
+    if (reduced) { kick(); return; }
+    const vd = cancel ? [0, 0] : vel(h.rows, t, [1, 2]), vr = cancel ? [0, 0] : vel(h.rows, t, [3, 4]);   // as drawn (the spring starts here), and the hand's (what is projected)
+    const r = S.r.x;
+    const Tx = clamp(h.rx + vr[0] * LOOK, r, W - r), Ty = clamp(h.ry + vr[1] * LOOK, r, H - r);           // where this throw is heading
+    const thr = Math.hypot(vr[0], vr[1]) > THROW, z = thr ? 0.8 : 1;
+    const pick = (s, T, v) => {                                                                // a throw heading for its target decelerates from the first frame
+      let w = OM;
+      if (thr) { const D = T - s.x; if (v * D > 0) w = Math.min(40, Math.max(OM, (1.5 * v) / D)); }
+      return w;
+    };
+    aim(S.x, Tx, vd[0], pick(S.x, Tx, vd[0]), z);
+    aim(S.y, Ty, vd[1], pick(S.y, Ty, vd[1]), z);
+    kick();
+  }
+  const release = () => { if (held && held.ghost) end(performance.now()); };
+
+  /* a real pointer on the disc (two touches pinch it), and on the handle */
+  const ptrs = new Map();
+  let pinch = null, gp = null;
+  const dist = () => { const a = [...ptrs.values()]; return Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]); };
+  disc.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    try { disc.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptrs.size === 2 && e.pointerType !== 'mouse') {
+      if (held) end(e.timeStamp, true);
+      pinch = { d0: Math.max(20, dist()), r0: S.r.x }; S.r.on = false; S.r.v = 0;
+      return;
+    }
+    if (ptrs.size > 1) return;
+    begin('disc', e.clientX, e.clientY, e.timeStamp);
+  });
+  disc.addEventListener('pointermove', (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pinch) {
+      const rr = pinch.r0 * (dist() / pinch.d0);
+      S.r.x = reduced ? clamp(rr, RMIN, RMAX) : rr < RMIN ? RMIN - rb(RMIN - rr, DR) : rr > RMAX ? RMAX + rb(rr - RMAX, DR) : rr;
+      fit();
+    } else if (ptrs.size === 1) moveTo(e.clientX, e.clientY, e.timeStamp);
+  });
+  const upDisc = (cancel) => (e) => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.delete(e.pointerId);
+    if (pinch) { if (ptrs.size < 2) { pinch = null; sizeTo(S.r.x); } return; }
+    end(e.timeStamp, cancel);
+  };
+  disc.addEventListener('pointerup', upDisc(false));
+  disc.addEventListener('pointercancel', upDisc(true));
+  grip.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || gp !== null) return;
+    gp = e.pointerId;
+    try { grip.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    begin('grip', e.clientX, e.clientY, e.timeStamp);
+  });
+  grip.addEventListener('pointermove', (e) => { if (e.pointerId === gp) moveTo(e.clientX, e.clientY, e.timeStamp); });
+  const upGrip = (cancel) => (e) => { if (e.pointerId !== gp) return; gp = null; end(e.timeStamp, cancel); };
+  grip.addEventListener('pointerup', upGrip(false));
+  grip.addEventListener('pointercancel', upGrip(true));
+  // the wheel over the disc or its handle sizes it; a trackpad's pinch arrives as a wheel with ctrlKey
+  const wheel = (e) => {
+    e.preventDefault();
+    const d = e.deltaY * (e.deltaMode === 1 ? 16 : 1);
+    sizeTo((S.r.on ? S.r.T : S.r.x) - d * (e.ctrlKey ? 0.3 : 0.12), true);
+    say(`Size ${Math.round(2 * radius())}`);
+  };
+  disc.addEventListener('wheel', wheel, { passive: false });
+  grip.addEventListener('wheel', wheel, { passive: false });
+  disc.addEventListener('dragstart', (e) => e.preventDefault());
+  disc.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const st = e.shiftKey ? 32 : 8;
+    const dx = e.key === 'ArrowRight' ? st : e.key === 'ArrowLeft' ? -st : 0, dy = e.key === 'ArrowDown' ? st : e.key === 'ArrowUp' ? -st : 0;
+    if (!dx && !dy) return;
+    e.preventDefault();
+    nudge(dx, dy);
+  });
+  addEventListener('keydown', (e) => {                                                         // plus and minus size it from anywhere on the page
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const up = e.key === '+' || e.key === '=' || e.code === 'NumpadAdd', down = e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract';
+    if (!up && !down) return;
+    e.preventDefault();
+    sizeTo(radius() + (up ? 1 : -1) * (e.shiftKey ? 20 : 10));
+  });
+
+  /* start: measure, lay out, show. No glide for the first pose. */
+  function snap() {
+    measure();
+    S.x.x = S.x.T = KEY.x; S.y.x = S.y.T = KEY.y; S.r.x = S.r.T = KEY.r;
+    S.x.on = S.y.on = S.r.on = false; S.x.v = S.y.v = S.r.v = 0;
+    lcx = S.x.x; lcy = S.y.x; lr2 = S.r.x;
+    place(lcx, lcy, lr2);
+    apply();
+    drawDisc();
+    document.querySelector('.wa-win').classList.add('wa-ready');
+  }
+  const refit = () => { metrics(); lr2 = 1e9; kick(); };
+  const ready = Promise.race([document.fonts ? Promise.all([document.fonts.load('400 16px Geist'), document.fonts.load('600 28px Geist'), document.fonts.ready]) : Promise.resolve(), new Promise((r) => setTimeout(r, 1500))]);
+  ready.then(() => { metrics(); snap(); if (document.fonts) document.fonts.addEventListener('loadingdone', () => { const before = ww[0] + ww[N - 1]; metrics(); if (ww[0] + ww[N - 1] !== before) { lr2 = 1e9; kick(); } }); });
+  new ResizeObserver(() => measure()).observe($('fit'));
+  addEventListener('scroll', measure, { passive: true });
+
+  return {
+    KEY, begin, moveTo, end, release, snap, measure, sizeTo, nudge, refit,
+    get held() { return held; }, get scale() { return sc; },
+    pos() { return { x: S.x.x, y: S.y.x, r: S.r.x, moving: !!(S.x.on || S.y.on || S.r.on) }; },
+    toClient(lx, ly) { measure(); return { x: OX + lx * sc, y: OY + ly * sc }; },              // page px to client px
+    center() { return { x: S.x.x, y: S.y.x }; },
+    gripAt() { return { x: S.x.x + Math.SQRT1_2 * S.r.x, y: S.y.x + Math.SQRT1_2 * S.r.x }; },
+    // the least distance from the disc's edge to any placed word's box (px; below 0 is overlap). Words not on the page are left out.
+    audit() {
+      let m = 1e9;
+      for (let j = 0; j < N; j++) {
+        if (ny[j] > H) continue;
+        const lh = j < NH ? HLH : LH, pad = j < NH ? 6 : 3;
+        const x0 = px[j], x1 = px[j] + ww[j], y0 = py[j] + pad, y1 = py[j] + lh - pad;
+        const dx = Math.max(x0 - S.x.x, 0, S.x.x - x1), dy = Math.max(y0 - S.y.x, 0, S.y.x - y1);
+        m = Math.min(m, Math.hypot(dx, dy) - S.r.x);
+      }
+      return m;
+    },
+    kinds() { return Array.from(kd); },
+    peek(j) { return { t: toks[j][1], px: px[j], py: py[j], w: ww[j] }; },
+    words() { return { N, NH, busy: 0 }; },
+    toKey() {                                                                                  // one step towards the key pose, by springs; true when there
+      release();
+      if (held) return false;
+      if (S.x.on || S.y.on || S.r.on) return false;
+      if (S.x.x !== KEY.x || S.y.x !== KEY.y || S.r.x !== KEY.r) {
+        aim(S.x, KEY.x, 0, OM, 1); aim(S.y, KEY.y, 0, OM, 1); aim(S.r, KEY.r, 0, OMR, 1);
+        if (reduced) snap(); else kick();
+        return false;
+      }
+      return true;
+    },
+    reset() { held = null; disc.classList.remove('is-press', 'is-drag'); grip.classList.remove('is-hold'); snap(); },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('wa-fit');
+  // the window is drawn at 720 × 430 and scaled to the room it is given: nearly the whole tile, up to 1.6× in the detail view
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 20 : Math.min(56, Math.max(24, 0.05 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min((W - 2 * pad) / 720, (H - 2 * pad - ui) / 430, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+    WA.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  let epoch = 0, resumeT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+  // the ghost takes hold at a page point, then the pointer follows fn(k), k from 0 to 1 by curve, through begin / moveTo / end as a hand does.
+  // slow: let it come to rest before letting go; otherwise it lets go at speed (a throw)
+  async function drag(my, kind, from, fn, ms, curve, slow) {
+    const c = WA.toClient(from.x, from.y), s = WA.scale;
+    if (!(await QM.ghostTo(c.x, c.y, 760))) throw 0;
+    await gap(my, 170);
+    WA.begin(kind, c.x, c.y, performance.now(), true);
+    const t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const now = performance.now(), p = Math.min(1, (now - t0) / ms), k = curve(p), q = fn(k);
+      const X = c.x + q[0] * s, Y = c.y + q[1] * s;
+      QM.ghostAt(X, Y); WA.moveTo(X, Y, now);
+      if (p >= 1) break;
+    }
+    if (slow) await gap(my, 200);
+    WA.end(performance.now());
+  }
+  const easeOut = (p) => 1 - Math.pow(1 - p, 3);
+  const grab = (c) => ({ x: c.x + 26, y: c.y - 8 });                                           // the ghost holds the disc off its centre: the offset stays
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5000 : 1800);
+      for (let i = 0; i < 40 && !WA.toKey(); i++) await gap(my, 200);
+      QM.ghostShow();
+      for (;;) {
+        await drag(my, 'disc', grab(WA.center()), (k) => [210 * k, 78 * Math.sin(k * Math.PI * 1.8)], 3000, mv, true);   // a slow arc through the paragraph
+        await gap(my, 1000);
+        await drag(my, 'disc', grab(WA.center()), (k) => [-330 * k, 50 * k], 300, (p) => Math.pow(p, 1.6), false);       // one throw at the left edge
+        await gap(my, 2000);
+        await drag(my, 'grip', WA.gripAt(), (k) => [24 * k, 24 * k], 800, mv, true);                                      // bigger by the handle
+        await gap(my, 1300);
+        await drag(my, 'grip', WA.gripAt(), (k) => [-34 * k, -34 * k], 900, mv, true);                                    // and smaller
+        await gap(my, 1300);
+        QM.ghostHide();
+        for (let i = 0; i < 40 && !WA.toKey(); i++) await gap(my, 200);                        // back to the key pose, by springs
+        await gap(my, 1600);
+        QM.ghostShow();
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) WA.release(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); WA.release(); }
+  if (!QM.tile && !reduced) {
+    const idle = () => WA.held || WA.pos().moving;
+    const touch = () => {
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+    addEventListener('wheel', touch, { passive: true });
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); WA.reset(); if (!reduced) script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(script, 300));
+})();
+</script>
+</body>
+</html>

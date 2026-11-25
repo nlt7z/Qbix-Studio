@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dot regroup · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "dot-regroup", "title": "Dot regroup", "group": "studio", "added": "2026-11-25", "cat": "data", "order": 60,
+  "kind": "loop", "tone": "paper", "shot": 1200, "preview": { "secs": 9, "skip": 5000 },
+  "line": "120 dots · a spring pair each, 0.5 s + up to 0.25 s stagger · bowed paths · columns of 5 and 3 · one lime",
+  "summary": "Forma's last 120 orders as 120 dots, one dot an order, and the same dots answer three questions. A segmented control groups them: All is one tidy 15 by 8 block, Product, Channel and Day are columns of stacked dots growing up from one baseline. Every dot has its own critically damped spring pair for x and y, started from where it is and how fast it is going; the farther it has to travel the longer it waits (up to 0.25 s), so the near ones land first, and its path bows a little sideways, so the flock does not cross in straight lines. Labels and counts are covered and uncovered under a clip at their places, and each count rolls up as its own dots land. Hover or arrow a column and its dots come to ink while the rest step down; tap it and the column is pinned, so switching the grouping keeps those dots ink and every column reads n of m. Hover a dot to read its order. The one lime is the latest order, which stays lime through every grouping.",
+  "spec": [
+    ["Card", "780 × 480 px, white, radius 24, drawn at its own size on #f5f5f7 and scaled to the room (1.0× in the 800 × 500 tile, up to 1.6×). Caption 15 px #6e6e73; the control 4 × 70 px and 32 px tall; labels 14 px, counts 20 px weight 600 (700 in focus) in tabular digits; the system face and Apple's neutrals. The dot field is 518 to 686 px wide and 285 px tall at its tallest (Channel, 12 rows)"],
+    ["Data", "Forma's last 120 orders, three weeks Monday 2 to Sunday 22 November, generated once from a mulberry32 seed (20261125) with Fisher-Yates shuffles, so every load, in every engine, is the same. Each order has a product, a channel and a weekday. Product: Ash vase 44, Loop tray 30, Pressed tumbler 23, Linen runner 14, Stone dish 9. Channel: Shop 58, Instagram 41, Wholesale 21. Day: Mon 13, Tue 15, Wed 16, Thu 18, Fri 21, Sat 22, Sun 15. Channel follows the weekday (Shop leans to the weekend, Wholesale to Monday to Thursday), the product follows the channel (Wholesale to Loop tray and Pressed tumbler, Instagram to Ash vase). The script asserts all three marginals and throws if any is off. Orders are in time order, so index 119, a Sunday, is the latest"],
+    ["Dots", "120 circles of 10 px (#1d1d1f, #c7c7cc when stepped down) on one canvas. x and y are separate critically damped springs, response 0.5 s, started from the position and the velocity the dot has on screen. A dot waits 0.25 s × distance / 460 px (at most 0.25 s) before it sets off, so near ones land first; meanwhile it keeps going to its old target. The path is the spring's straight line plus a perpendicular offset of 0.09 × the leg length × sin(π × the fraction left), which peaks mid-flight and is zero at both ends; the side is the upper one, so no dot bows into the labels (vertical legs split left and right by dot), and a leg retargeted mid-flight starts from the on-screen position"],
+    ["Layouts", "All: 15 × 8 at a 32 px pitch, centred. Product (5 columns, 34 px apart), Channel (3 columns, 100 px apart) and Day (7 columns, 44 px apart): stacks 5, 5 and 3 dots wide at a 25 px pitch from one baseline, sorted as listed. A dot's row in its column is its rank by order time (the oldest at the bottom, so the ragged row is at the top); within a row the dots take the slots from left to right in the order they are on screen, so paths stay short and do not cross. With a pin on, the pinned dots take the lowest slots of every column (rows filled from the bottom, in time order among themselves) and the others sit above them, so each column is a solid ink base with grey on top, like a stacked bar made of dots; a pin made in the grouping on screen moves nothing (its own column is all pinned), and unpinning sends every dot back to its time slot on its springs"],
+    ["Labels and counts", "seven label slots, each a clip: an old label is covered (a 0.16 s spring, a wipe from the left) as soon as the grouping changes, and the new one is placed while covered and uncovered when its first dot has landed and every old label is covered, so two labels are never on screen at one place. A count is the number of its dots within 4 px of their slot, rolled by digit strips on 0.14 s springs, ending exactly on the marginal. Digit places are fixed-width, so the weight step in focus (600 to 700, 150 ms) never changes a width"],
+    ["Control", "All, Product, Channel and Day as a real radio group (arrow keys), one white thumb on a spring (response 0.34 s) that stretches with its speed, a 0.97 press in 100 ms. Any change can be made mid-flight; every dot keeps its velocity"],
+    ["Focus and pin", "hovering or arrowing a column (the columns are buttons, left and right arrows, Home and End) brings its dots to ink and steps the others to #c7c7cc over 150 ms, the other labels to #86868b. Tapping a column pins it: a chip \"Pinned: Ash vase ×\" is uncovered beside the control and the pinned dots stay ink through every grouping while each column reads \"n of m\" (m its total, n the pinned ones in it, both rolling). With a pin on, hovering a column inks the pinned dots in it (its dots if it has none). The chip, a second tap on the column and Escape unpin"],
+    ["One dot", "the nearest dot within 10 px of the pointer grows 30% on a 45 ms ease and a translucent tag (\"Ash vase · Instagram · Tue\", 13 px) follows it on a 0.09 s spring, above it, below it for the top row, and always inside the card"],
+    ["Pose", "the page loads on a key frame that is played, not drawn: Product settled, then a tap on the Ash vase column through the same code a hand uses, the world stepped 2.1 s at 60 Hz, and the pointer resting on that column between four dots (the column in focus, a pinned base of 44 ink dots, the rest #c7c7cc, the chip out, the lime dot in the Pressed tumbler column). It is held for about 5 s (shot at 1.2 s), then the ghost, from where the pointer rests, goes to Channel (the pinned 16, 26 and 2 dots land as solid bases), reads one Instagram order, goes to Day, presses the chip to unpin, goes to All, back to Product and pins Ash vase again. It sends the same pointer and click events as a hand and yields to a real mouse, touch or key for 4.5 s"],
+    ["Access", "a real table of the current grouping (and the pinned counts) and a polite status line (\"By product. Ash vase 44, Loop tray 30, …\"); the control is a real radio group and the columns and the chip are real buttons (aria-pressed on the pinned one)"],
+    ["Reduced motion", "a complete still on Product with Ash vase pinned; the grouping, the pin and the focus change in place, with no springs, no stagger and no ghost"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A Forma case study's results section, or any Qbix client's analytics page: the same orders, visits or sign-ups asked by product, by channel and by weekday, where a reader should be able to follow one order, or one group, from one answer to the next.",
+  "rules": [
+    "One dot is one order, with a fixed product, channel and weekday. The same 120 dots are in every grouping and the counts are the sums of the dots that landed, never typed; the marginals are asserted and the page fails loudly when they are off.",
+    "Every dot has its own critically damped x and y springs, started from the value and velocity on screen, so any change can be reversed halfway with no jump. Nothing overshoots; near dots land first; the path bows to the upper side so the flock never crosses the labels.",
+    "A label or count is never faded and never meets a dot or another text: it is covered under a clip when the grouping changes, placed while covered and uncovered when its dots arrive. A count is never seen half-cut at rest.",
+    "Focus is ink against #c7c7cc, and a pin is the same state held: switching the grouping keeps the pinned dots ink so one group can be followed. A focused count changes weight but not width (fixed digit places).",
+    "Exactly one lime per frame: the latest order, one dot, in every grouping and every focus state (it is never stepped down). Nothing else is lime.",
+    "The control is a real radio group, the columns and the chip are real buttons, the data is a real table and the status line is polite. Under reduced motion draw a complete still on Product and change in place."
+  ],
+  "tags": ["unit chart", "dots", "regroup", "dimension", "segmented control", "pin", "focus", "spring", "stagger", "count", "rolling figures", "radio", "keyboard", "orders", "Forma", "data"]
+}
+</script>
+<style data-code>
+/* Dot regroup. One white card in the system face with Apple's neutrals: 120 dots on one canvas (#1d1d1f, #c7c7cc when stepped down, one lime), and under the dots
+   the labels and counts as DOM boxes that are covered and uncovered by a clip (never faded). The controls are a radio group with one thumb on a spring and
+   a column button over each stack. Small UI feedback easing (.4, 0, .2, 1); the card is drawn at 780 x 480 and scaled by --s. */
+.dr-fit { position: relative; width: calc(780px * var(--s, 1)); height: calc(480px * var(--s, 1)); }
+.dr-card { --dr-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; --dr-ui: cubic-bezier(.4, 0, .2, 1);
+  position: absolute; left: 0; top: 0; width: 780px; height: 480px; overflow: hidden; border-radius: 24px; background: #fff; color: #1d1d1f;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04); transform: scale(var(--s, 1)); transform-origin: 0 0;
+  font: 400 14px/18px var(--dr-f); letter-spacing: -.006em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.dr-card :where(h2, p) { margin: 0; }
+.dr-card :where(svg) { display: block; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+.dr-cap { position: absolute; left: 28px; top: 27px; font: 500 15px/20px var(--dr-f); letter-spacing: -.01em; color: #6e6e73; white-space: nowrap; }
+.dr-foot { position: absolute; top: 443px; font: 400 13px/18px var(--dr-f); color: #86868b; white-space: nowrap; }
+
+/* a segmented control: radios underneath (the arrow keys are the browser's), one thumb on a spring that stretches a little as it travels */
+.dr-seg { position: absolute; right: 28px; top: 20px; display: flex; padding: 3px; height: 32px; border-radius: 10px; background: #e8e8ed; }
+.dr-th { position: absolute; left: 0; top: 3px; height: calc(100% - 6px); border-radius: 8px; background: #fff; will-change: transform, width;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .14), 0 0 0 .5px rgba(0, 0, 0, .04); }
+.dr-so { position: relative; z-index: 1; display: block; width: 70px; border-radius: 8px; cursor: pointer; font: 500 14px/26px var(--dr-f); text-align: center; color: #6e6e73; transition: color 160ms var(--dr-ui); }
+.dr-so:has(input:checked), .dr-so:hover { color: #1d1d1f; }
+.dr-so input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.dr-so span { display: block; transition: transform 100ms var(--dr-ui); }
+.dr-so:active span, .dr-so.is-press span { transform: scale(.97); }
+.dr-so:has(input:focus-visible) { outline: 2px solid #1d1d1f; outline-offset: 1px; }
+
+/* the pin chip, uncovered from its left beside the control */
+.dr-chip { all: unset; box-sizing: border-box; position: absolute; right: 328px; top: 22px; height: 28px; padding: 0 10px 0 12px; border-radius: 999px; background: #f5f5f7; color: #1d1d1f;
+  display: flex; align-items: center; gap: 6px; font: 500 13px/28px var(--dr-f); letter-spacing: -.006em; white-space: nowrap; cursor: pointer; visibility: hidden; clip-path: inset(0 100% 0 0);
+  transition: transform 100ms var(--dr-ui), background-color 160ms var(--dr-ui); }
+.dr-chip:hover { background: #e8e8ed; }
+.dr-chip:active, .dr-chip.is-press { transform: scale(.97); }
+.dr-chip:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.dr-chip svg { width: 12px; height: 12px; color: #6e6e73; }
+
+/* the dots' canvas, the column buttons over the stacks, and the labels under them */
+.dr-cv { position: absolute; display: block; pointer-events: none; }
+.dr-col { all: unset; box-sizing: border-box; position: absolute; border-radius: 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; z-index: 2; }
+.dr-col:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 0; }
+.dr-lab { position: absolute; left: 0; top: 0; pointer-events: none; visibility: hidden; clip-path: inset(0 100% 0 0); will-change: clip-path; }
+.dr-cnt { display: flex; align-items: flex-start; height: 26px; font: 600 20px/26px var(--dr-f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: #1d1d1f; white-space: pre;
+  transition: font-weight 150ms var(--dr-ui), color 150ms var(--dr-ui); }
+.dr-nm { margin-top: 2px; height: 18px; font: 400 14px/18px var(--dr-f); letter-spacing: -.006em; color: #6e6e73; white-space: nowrap; transition: color 150ms var(--dr-ui); }
+.dr-lab.is-focus .dr-cnt { font-weight: 700; }
+.dr-lab.is-focus .dr-nm { color: #1d1d1f; }
+.dr-lab.is-dim .dr-cnt, .dr-lab.is-dim .dr-nm { color: #86868b; }
+.dr-ra, .dr-rb { display: flex; }
+.dr-s { display: block; flex: none; height: 26px; width: var(--dw, 13px); overflow: hidden; transition: width 220ms cubic-bezier(.16, 1, .3, 1); }
+.dr-s.is-off { width: 0; }
+.dr-snap .dr-s { transition: none; }
+.dr-st { display: block; will-change: transform; }
+.dr-st > i { display: block; height: 26px; font-style: normal; line-height: 26px; text-align: center; }
+.dr-of { overflow: hidden; max-width: 0; transition: max-width 260ms cubic-bezier(.16, 1, .3, 1); }
+.dr-of.is-on { max-width: 130px; }
+.dr-ofi { display: flex; height: 26px; padding-top: 2px; font: 400 14px/26px var(--dr-f); letter-spacing: -.006em; color: #86868b; font-variant-numeric: tabular-nums; white-space: pre; }
+.dr-ofi .dr-s { --dw: 8.5px; }
+
+/* the tag on one dot: translucent, never outside the card */
+.dr-tag { position: absolute; left: 0; top: 0; height: 28px; padding: 0 12px; border-radius: 14px; font: 500 13px/28px var(--dr-f); letter-spacing: -.006em; white-space: nowrap; pointer-events: none; z-index: 3;
+  background: rgba(255, 255, 255, .78); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12);
+  visibility: hidden; opacity: 0; will-change: transform, opacity; }
+.dr-probe { position: absolute; left: -999px; top: 0; visibility: hidden; white-space: pre; font: 600 20px/26px var(--dr-f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.dr-card.is-still *, .dr-card.is-still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .dr-s, .dr-of { transition-duration: 1ms; } }
+</style>
+<style>
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  html.qm-tile .qm-stage { padding: 10px; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; background: #f5f5f7; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="dr-fit" id="dr-fit">
+ <section class="dr-card is-still" id="dr-card" aria-labelledby="dr-cap">
+  <h2 class="dr-cap" id="dr-cap">Forma · Last 120 orders</h2>
+  <div class="dr-seg" id="dr-seg" role="radiogroup" aria-label="Group by">
+   <span class="dr-th" aria-hidden="true"></span>
+   <label class="dr-so"><input type="radio" name="dr-group" value="all"><span>All</span></label>
+   <label class="dr-so"><input type="radio" name="dr-group" value="product" checked><span>Product</span></label>
+   <label class="dr-so"><input type="radio" name="dr-group" value="channel"><span>Channel</span></label>
+   <label class="dr-so"><input type="radio" name="dr-group" value="day"><span>Day</span></label>
+  </div>
+  <button class="dr-chip" id="dr-chip" type="button" tabindex="-1" aria-hidden="true"><span id="dr-chip-t">Pinned</span><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
+  <canvas class="dr-cv" id="dr-cv" aria-hidden="true"></canvas>
+  <div id="dr-cols" role="group" aria-label="Columns. Left and Right arrows move between them, Enter pins one, Escape unpins."></div>
+  <div id="dr-labs" aria-hidden="true"></div>
+  <div class="dr-tag" id="dr-tag" aria-hidden="true"></div>
+  <p class="dr-foot" style="left:28px">One dot is one order. The oldest sit at the bottom.</p>
+  <p class="dr-foot" style="right:28px">Mon 2 – Sun 22 Nov</p>
+  <p class="sr-only" id="dr-msg" role="status" aria-live="polite"></p>
+  <table class="sr-only" id="dr-table"><caption></caption><thead></thead><tbody></tbody></table>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Group the 120 orders by product, channel or day. Hover or arrow a column, tap to pin it, hover a dot to read its order. Esc unpins</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Dot regroup. 120 dots, one per order. Each has its own critically damped x and y springs (response 0.5 s) that start from the position and velocity on screen;
+   a dot waits up to 0.25 s by how far it has to go, so the near ones land first, and its path bows to the upper side by a fraction of the leg, so the flock does not
+   cross in straight lines. A layout is a list of columns; a dot's row in its column is its rank by order time. Counts are the dots that have landed (within 4 px of their slot). */
+const DR = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+  const card = $('dr-card'), cv = $('dr-cv'), cx = cv.getContext('2d'), tagEl = $('dr-tag'), chip = $('dr-chip'), chipT = $('dr-chip-t'), msg = $('dr-msg'), segEl = $('dr-seg'),
+    colsEl = $('dr-cols'), labsEl = $('dr-labs'), tbl = $('dr-table');
+  const CWD = 780, XC = 390, BY = 346, D = 10, R = 5, YMIN = 62, LABY = 372, N = 120;            // card px: the bottom row's centre line, the dot and its radius, the labels' top
+  const CX0 = 14, CY0 = 56, CVW = 752, CVH = 312;                                                 // the dots' canvas, with room for a hovered dot
+  const TAU = 2 * Math.PI, wr = (s) => TAU / s;
+  const W_DOT = wr(0.5), W_LAB = wr(0.16), W_DIG = wr(0.14), W_CHIP = wr(0.2), W_TAG = wr(0.09), W_TAGA = wr(0.12), W_SEG = wr(0.34);
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+
+  /* a critically damped spring: the closed form, always from the x and v on screen */
+  const mk = (x = 0) => ({ x, v: 0, t: x });
+  const rest = (s) => s.x === s.t && s.v === 0;
+  function spring(s, dt, w, eps = 1e-3) {
+    if (reduced) { s.x = s.t; s.v = 0; return; }
+    const A = s.x - s.t, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.t + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.t) < eps && Math.abs(s.v) < eps * 10) { s.x = s.t; s.v = 0; }
+  }
+
+  /* the data: 120 orders, generated once from a seed (shuffles are Fisher-Yates, so every engine agrees). Orders are in time order, three weeks Monday to Sunday */
+  const PRODUCTS = [['Ash vase', 44], ['Loop tray', 30], ['Pressed tumbler', 23], ['Linen runner', 14], ['Stone dish', 9]];
+  const CHANNELS = [['Shop', 58], ['Instagram', 41], ['Wholesale', 21]];
+  const DAYS = [['Mon', 13], ['Tue', 15], ['Wed', 16], ['Thu', 18], ['Fri', 21], ['Sat', 22], ['Sun', 15]];
+  const CH_DAY = [[0.8, 0.8, 0.9, 1, 1.2, 2.1, 2.1], [0.9, 0.9, 1, 1, 1.4, 1.3, 1.1], [2.2, 2.2, 2.2, 2, 1.1, 0.08, 0.04]];   // a channel's weight for each weekday: Shop leans to the weekend, Wholesale to Mon to Thu
+  const P_CH = [[1, 1, 1, 1.15, 1.25], [2.4, 0.8, 0.9, 0.8, 0.7], [0.45, 1.6, 1.7, 0.9, 0.5]];                              // a product's weight in each channel: Wholesale to Loop tray and Tumbler, Instagram to Ash vase
+  function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const ORDERS = (() => {
+    const r = rng(20261125), shuf = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+    const day = [], split = DAYS.map(([, n]) => { const a = Math.floor(n / 3), w = [a, a, a]; shuf([0, 1, 2]).slice(0, n - 3 * a).forEach((k) => w[k]++); return w; });
+    for (let wk = 0; wk < 3; wk++) for (let d = 0; d < 7; d++) for (let k = 0; k < split[d][wk]; k++) day.push(d);
+    const pick = (w) => { let s = 0; for (const x of w) s += x; let u = r() * s; for (let i = 0; i < w.length; i++) { u -= w[i]; if (u < 0) return i; } return w.length - 1; };
+    const remC = CHANNELS.map((c) => c[1]), remP = PRODUCTS.map((p) => p[1]), chan = [], prod = [];
+    for (const i of shuf(Array.from({ length: N }, (_, k) => k))) { const c = pick(remC.map((n, c) => (n > 0 ? CH_DAY[c][day[i]] * n : 0))); chan[i] = c; remC[c]--; }
+    for (const i of shuf(Array.from({ length: N }, (_, k) => k))) { const p = pick(remP.map((n, p) => (n > 0 ? P_CH[chan[i]][p] * n : 0))); prod[i] = p; remP[p]--; }
+    return day.map((d, i) => ({ i, prod: prod[i], chan: chan[i], day: d }));
+  })();
+  (function assertMarginals() {                                      // fail loudly: the counts on the page are these sums
+    const bad = [];
+    for (const [key, list] of [['prod', PRODUCTS], ['chan', CHANNELS], ['day', DAYS]]) list.forEach(([name, n], k) => { const got = ORDERS.filter((o) => o[key] === k).length; if (got !== n) bad.push(`${name} ${got} not ${n}`); });
+    if (ORDERS.length !== N || bad.length) throw new Error('Dot regroup: the marginals are off: ' + bad.join(', '));
+  })();
+
+  /* the layouts: columns of dots w wide at pitch p from one baseline, g apart (the visible width of a column is (w - 1) p + D) */
+  const GROUPS = {
+    all: { name: 'all orders', list: [['orders', N]], key: () => 0, w: 15, p: 32, g: 0 },
+    product: { name: 'product', list: PRODUCTS, key: (o) => o.prod, w: 5, p: 25, g: 34 },
+    channel: { name: 'channel', list: CHANNELS, key: (o) => o.chan, w: 5, p: 25, g: 100 },
+    day: { name: 'day', list: DAYS, key: (o) => o.day, w: 3, p: 25, g: 44 },
+  };
+  const dots = ORDERS.map((o) => ({ ...o, bx: 0, by: 0, vx: 0, vy: 0, tx: 0, ty: 0, gx: 0, gy: 0, rx: 0, ry: 0, rvx: 0, rvy: 0, col: 0, L: 0, amp: 0, ux: 0, uy: 0, pend: null, inCol: false, lit: 1, tl: 1, hv: 0, ht: 0, pr: 0 }));
+  const LATEST = N - 1, h1 = (i) => ((Math.sin(i * 12.9898 + 4.1) * 43758.5453) % 1 + 1) % 1, h2 = (i) => ((Math.sin(i * 78.233 + 1.7) * 24634.6345) % 1 + 1) % 1;
+  const dotText = (d) => `${PRODUCTS[d.prod][0]} · ${CHANNELS[d.chan][0]} · ${DAYS[d.day][0]}`;
+  let grp = 'product', cols = [], ver = 0, T = 0, pin = null, hoverCol = -1, kbCol = -1, hdot = -1, pressCol = -1, frozen = false, started = false;
+  const focusCol = () => (hoverCol >= 0 ? hoverCol : kbCol);
+
+  /* a layout of the dots for a grouping: where each dot goes (a goal), its column and its row by rank in time */
+  function layout(g, snapshot) {
+    const G = GROUPS[g], vw = (G.w - 1) * G.p + D, total = G.list.length * vw + (G.list.length - 1) * G.g, left0 = Math.round(XC - total / 2);
+    cols = G.list.map(([name, n], k) => ({ k, name, n, w: G.w, p: G.p, rows: Math.ceil(n / G.w), left: left0 + k * (vw + G.g), vw, cx0: left0 + k * (vw + G.g) + R, pn: 0, dots: [] }));
+    for (const d of dots) cols[G.key(d)].dots.push(d);
+    for (const c of cols) {
+      c.dots.sort((a, b) => a.i - b.i);                              // rank by time: the oldest at the bottom
+      if (pin) c.dots = c.dots.filter((d) => pin.set.has(d.i)).concat(c.dots.filter((d) => !pin.set.has(d.i)));   // with a pin on, the pinned dots take the lowest slots: a solid base, the rest above
+      const pk = (d) => (pin && pin.set.has(d.i) ? 0 : 1);
+      for (let r = 0; r < c.rows; r++) {
+        const row = c.dots.slice(r * c.w, r * c.w + c.w);
+        if (snapshot) row.sort((a, b) => pk(a) - pk(b) || a.rx - b.rx || a.i - b.i);  // within a row (pinned ones first), the slots go left to right in the order the dots are on screen
+        row.forEach((d, s) => { d.col = c.k; d.gx = c.cx0 + s * c.p; d.gy = BY - r * c.p; });
+      }
+      c.pn = pin ? c.dots.filter((d) => pin.set.has(d.i)).length : 0;
+    }
+  }
+  function retarget(d, tx, ty) {                                     // a new leg from where the dot is, at the speed it has
+    d.bx = d.rx; d.by = d.ry; d.vx = d.rvx; d.vy = d.rvy; d.tx = tx; d.ty = ty;
+    const dx = tx - d.bx, dy = ty - d.by, L = Math.hypot(dx, dy);
+    d.L = L;
+    if (L < 1) { d.amp = 0; return; }
+    let ux = dy / L, uy = -dx / L;                                   // the side: the upper one, so a bow never goes down into the labels
+    if (uy > 0) { ux = -ux; uy = -uy; }
+    if (Math.abs(uy) < 0.4) { const s = h1(d.i) > 0.5 ? 1 : -1; ux = Math.abs(ux) * s; uy = uy < 0 ? uy : -uy; }   // a mostly vertical leg splits left and right by dot
+    d.ux = ux; d.uy = uy; d.amp = L * 0.09 * (0.55 + 0.45 * h2(d.i));
+  }
+  function regroup(g, instant) {
+    grp = g; ver++;
+    layout(g, !instant);
+    for (const d of dots) {
+      const L = Math.hypot(d.gx - d.rx, d.gy - d.ry);
+      if (instant || reduced) { d.bx = d.tx = d.rx = d.gx; d.by = d.ty = d.ry = d.gy; d.vx = d.vy = d.rvx = d.rvy = 0; d.L = d.amp = 0; d.pend = null; d.inCol = true; continue; }
+      d.inCol = false;
+      d.pend = { tx: d.gx, ty: d.gy, at: T + 0.25 * Math.min(1, L / 460) };   // the farther it goes, the longer it waits: the near ones land first
+    }
+    hoverCol = -1; kbCol = -1; placeButtons(); recolor(); paintLabels(); rebuildTable(); hdot = -1;
+  }
+
+  /* a pin changing inside the grouping on screen: only the dots whose slot changes set off again, on their springs; the counts stay (the dots are still in their columns) */
+  function relayout() {
+    const og = dots.map((d) => [d.gx, d.gy]);
+    layout(grp, true);
+    dots.forEach((d, k) => {
+      if (Math.abs(d.gx - og[k][0]) < 0.5 && Math.abs(d.gy - og[k][1]) < 0.5) return;
+      d.pend = { tx: d.gx, ty: d.gy, at: T + 0.25 * Math.min(1, Math.hypot(d.gx - d.rx, d.gy - d.ry) / 460) };
+    });
+  }
+
+  /* the colour of each dot: ink when it is in focus or in the pin, #c7c7cc when stepped down; the latest order is lime and never stepped down */
+  function recolor() {
+    const f = focusCol(), c = f >= 0 ? cols[f] : null;
+    for (const d of dots) {
+      const inPin = !pin || pin.set.has(d.i);
+      d.tl = c ? (d.col === f && (pin && c.pn > 0 ? inPin : true) ? 1 : 0) : (inPin ? 1 : 0);
+      if (d.i === LATEST) d.tl = 1;
+    }
+  }
+
+  /* digits: a strip of 0 to 9 on a spring, the shortest way round; leading places close by width, so a count never jumps */
+  function roller(el) {
+    const strip = Array.from({ length: 30 }, (_, i) => `<i>${i % 10}</i>`).join('');
+    el.innerHTML = [100, 10, 1].map(() => `<span class="dr-s"><span class="dr-st">${strip}</span></span>`).join('');
+    const os = [100, 10, 1].map((p, i) => ({ p, el: el.children[i], st: el.children[i].firstChild, dg: 0, pos: 10, tgt: 10, vel: 0, off: p > 1 }));
+    os.forEach((o) => o.off && o.el.classList.add('is-off'));
+    const draw = (o) => { o.st.style.transform = `translateY(${(-o.pos * 26).toFixed(2)}px)`; };
+    os.forEach(draw);
+    return {
+      n: -1,
+      set(n, instant) {
+        if (n === this.n && !instant) return;
+        this.n = n;
+        if (instant) { el.classList.add('dr-snap'); }
+        for (const o of os) {
+          const dg = Math.floor(n / o.p) % 10, off = o.p > 1 && n < o.p;
+          if (instant || reduced) { o.dg = dg; o.pos = o.tgt = 10 + dg; o.vel = 0; draw(o); } else if (dg !== o.dg) { o.tgt += ((dg - o.dg + 15) % 10) - 5; o.dg = dg; }
+          if (off !== o.off) { o.off = off; o.el.classList.toggle('is-off', off); }
+        }
+        if (instant) { void el.offsetWidth; el.classList.remove('dr-snap'); }
+      },
+      step(dt) {
+        let busy = false;
+        for (const o of os) {
+          if (o.tgt >= 20) { o.tgt -= 10; o.pos -= 10; } else if (o.tgt < 10) { o.tgt += 10; o.pos += 10; }
+          if (o.pos === o.tgt && !o.vel) continue;
+          const A = o.pos - o.tgt, B = o.vel + W_DIG * A, e = Math.exp(-W_DIG * dt);
+          let x = o.tgt + (A + B * dt) * e, v = (B - W_DIG * (A + B * dt)) * e;
+          if (Math.abs(x - o.tgt) < 0.003 && Math.abs(v) < 0.03) { x = o.tgt; v = 0; }
+          o.pos = x; o.vel = v; draw(o); if (x !== o.tgt) busy = true;
+        }
+        return busy;
+      },
+      busy() { return os.some((o) => o.pos !== o.tgt || o.vel); },
+      land() { for (const o of os) { o.pos = o.tgt; o.vel = 0; draw(o); } },       // the key frame holds whole digits
+    };
+  }
+
+  /* the label slots: a clip each, covered when the grouping changes, placed while covered, uncovered when the first of their dots has landed */
+  const slots = [];
+  for (let k = 0; k < 7; k++) {
+    const el = document.createElement('div'); el.className = 'dr-lab';
+    el.innerHTML = '<div class="dr-cnt"><span class="dr-ra"></span><span class="dr-of"><span class="dr-ofi"> of <span class="dr-rb"></span></span></span></div><div class="dr-nm"></div>';
+    labsEl.appendChild(el);
+    slots.push({ k, el, nm: el.lastChild, of: el.querySelector('.dr-of'), ra: roller(el.querySelector('.dr-ra')), rb: roller(el.querySelector('.dr-rb')), c: mk(0), ver: -1, col: -1, vis: false, key: '' });
+  }
+  const cnt = Array.from({ length: 7 }, () => ({ m: 0, n: 0 }));
+  function assignSlot(s) {
+    const c = cols[s.k];
+    s.ver = ver; s.col = c ? s.k : -1; s.c.t = 0;
+    if (!c) return;
+    s.el.style.transform = `translate(${c.left}px, ${LABY}px)`;
+    s.nm.textContent = c.name;
+    s.ra.set(pin ? cnt[s.k].n : cnt[s.k].m, true); s.rb.set(cnt[s.k].m, true);
+    s.of.classList.toggle('is-on', !!pin);
+    paintLabels();
+  }
+  function paintLabels() {
+    const f = focusCol();
+    for (const s of slots) { s.el.classList.toggle('is-focus', s.col >= 0 && s.col === f); s.el.classList.toggle('is-dim', f >= 0 && s.col !== f && s.col >= 0); }
+  }
+
+  /* the columns as buttons, over the stacks and their labels; one tab stop, the arrow keys move between them */
+  const btns = [];
+  for (let k = 0; k < 7; k++) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'dr-col'; b.tabIndex = -1; b.style.display = 'none';
+    b.addEventListener('click', () => pinCol(k));
+    b.addEventListener('pointerdown', () => { pressCol = k; thaw(); kick(); });
+    b.addEventListener('focus', () => { if (b.matches(':focus-visible')) { kbCol = k; recolor(); paintLabels(); say(colSay(k)); kick(); } });
+    b.addEventListener('blur', () => { if (kbCol === k) { kbCol = -1; recolor(); paintLabels(); kick(); } });
+    b.addEventListener('keydown', (e) => {
+      const n = cols.length; let to = -1;
+      if (e.key === 'ArrowRight') to = (k + 1) % n; else if (e.key === 'ArrowLeft') to = (k + n - 1) % n; else if (e.key === 'Home') to = 0; else if (e.key === 'End') to = n - 1;
+      if (to >= 0) { e.preventDefault(); btns.forEach((x, i) => { x.tabIndex = i === to ? 0 : -1; }); btns[to].focus(); }
+    });
+    colsEl.appendChild(b); btns.push(b);
+  }
+  function placeButtons() {
+    const multi = grp !== 'all';
+    btns.forEach((b, k) => {
+      const c = cols[k];
+      if (!c || !multi) { b.style.display = 'none'; b.tabIndex = -1; return; }
+      const top = BY - (c.rows - 1) * c.p - R - 12, bot = LABY + 50;
+      b.style.cssText = `display:block;left:${c.left - 8}px;top:${top}px;width:${c.vw + 16}px;height:${bot - top}px`;
+      b.tabIndex = k === 0 ? 0 : -1;
+      b.setAttribute('aria-pressed', pin && pin.dim === grp && pin.key === k ? 'true' : 'false');
+      b.setAttribute('aria-label', `${c.name}, ${c.n} orders${pin ? ', ' + c.pn + ' of them pinned' : ''}. Press to pin`);
+    });
+  }
+
+  /* the pin: a set of dots, kept through every grouping; its chip is uncovered beside the control */
+  const chipS = mk(0); let chipText = '';
+  function pinCol(k) {
+    thaw();
+    if (grp === 'all' || !cols[k]) return;
+    if (pin && pin.dim === grp && pin.key === k) { unpin(); return; }
+    const c = cols[k];
+    pin = { dim: grp, key: k, name: c.name, set: new Set(c.dots.map((d) => d.i)) };
+    relayout();
+    chipText = 'Pinned: ' + c.name;
+    afterPin(`Pinned ${c.name}, ${c.n} orders.`);
+  }
+  function unpin() {
+    thaw();
+    if (!pin) return;
+    const was = pin.name; pin = null; relayout(); chipText = '';
+    afterPin(`Unpinned ${was}.`);
+  }
+  function afterPin(sentence) {
+    recolor(); placeButtons(); paintLabels(); rebuildTable(); say(sentence + ' ' + groupSay());
+    chip.setAttribute('aria-label', pin ? `Unpin ${pin.name}` : 'Unpin');
+    kick();
+  }
+  function paintChip() {
+    if (chipText && chipText !== chip.dataset.t) { chipS.t = 0; if (chipS.x < 0.01) { chip.dataset.t = chipText; chipT.textContent = chipText; chipS.t = 1; } }
+    else if (!chipText) chipS.t = 0; else chipS.t = 1;
+    const c = clamp(chipS.x, 0, 1), on = c > 0.01;
+    chip.style.visibility = on ? 'visible' : 'hidden';
+    chip.style.clipPath = c >= 0.999 ? 'none' : `inset(0 ${((1 - c) * 100).toFixed(1)}% 0 0)`;
+    chip.tabIndex = c > 0.5 ? 0 : -1; chip.setAttribute('aria-hidden', c > 0.5 ? 'false' : 'true');
+  }
+  chip.addEventListener('click', () => { chip.classList.remove('is-press'); unpin(); });
+  chip.addEventListener('pointerdown', () => { chip.classList.add('is-press'); thaw(); });
+  addEventListener('pointerup', () => chip.classList.remove('is-press'));
+
+  /* the segmented control: radios underneath, one thumb on a spring that stretches with its speed */
+  const labs = Array.from(segEl.querySelectorAll('label')), ins = labs.map((l) => l.firstElementChild), thumb = segEl.querySelector('.dr-th'), segX = mk(0);
+  let w0 = 70;
+  const idx = () => ins.findIndex((i) => i.checked);
+  function measureDigits() {                                          // fixed digit places: the widest digit at the focus weight, so a weight step never moves anything
+    const pr = document.createElement('span'); pr.className = 'dr-probe'; pr.style.fontWeight = '700'; pr.textContent = '0123456789'; card.appendChild(pr);
+    const wd = pr.offsetWidth / 10; pr.remove();
+    if (wd > 4) card.style.setProperty('--dw', (Math.ceil(wd * 2) / 2 + 0.5) + 'px');
+  }
+  function segMeasure() {
+    measureDigits(); w0 = labs[0].offsetWidth; const x = labs[idx()].offsetLeft; segX.x = segX.t = x; segX.v = 0; paintSeg(); }
+  function paintSeg() { const st = clamp(Math.abs(segX.v) * 0.018, 0, 12), left = segX.x - (segX.v < 0 ? st : 0); thumb.style.width = (w0 + st).toFixed(2) + 'px'; thumb.style.transform = `translate3d(${left.toFixed(2)}px,0,0)`; }
+  ins.forEach((i) => i.addEventListener('change', () => { thaw(); segX.t = labs[idx()].offsetLeft; setGroup(i.value); kick(); }));
+  labs.forEach((l) => { l.addEventListener('pointerdown', () => { l.classList.add('is-press'); thaw(); }); });
+  addEventListener('pointerup', () => labs.forEach((l) => l.classList.remove('is-press')));
+  function selectGroup(g) { const i = ['all', 'product', 'channel', 'day'].indexOf(g); if (ins[i].checked) return; ins[i].checked = true; segX.t = labs[i].offsetLeft; setGroup(g); kick(); }
+  function setGroup(g) { if (g === grp) return; regroup(g); say(groupSay()); }
+
+  /* the words: a status line for a polite reader and a real table of the grouping on screen */
+  const groupSay = () => {
+    const G = GROUPS[grp];
+    if (grp === 'all') return pin ? `All orders, ${pin.name} pinned. ${cols[0].pn} of 120 orders.` : 'All orders. 120 orders.';
+    return `By ${G.name}${pin ? ', ' + pin.name + ' pinned' : ''}. ` + cols.map((c) => `${c.name} ${pin ? c.pn + ' of ' : ''}${c.n}`).join(', ') + '.';
+  };
+  const colSay = (k) => { const c = cols[k]; return `${c.name}, ${pin ? c.pn + ' of ' : ''}${c.n} orders.`; };
+  let msgT = 0;
+  function say(t) { clearTimeout(msgT); msgT = setTimeout(() => { msg.textContent = t; }, 260); }
+  function rebuildTable() {
+    const G = GROUPS[grp];
+    tbl.caption.textContent = `Forma, last 120 orders, ${grp === 'all' ? 'all' : 'by ' + G.name}${pin ? ', ' + pin.name + ' pinned' : ''}`;
+    tbl.tHead.innerHTML = `<tr><th scope="col">${grp === 'all' ? 'Group' : G.name[0].toUpperCase() + G.name.slice(1)}</th><th scope="col">Orders</th>${pin ? `<th scope="col">Pinned: ${pin.name}</th>` : ''}</tr>`;
+    tbl.tBodies[0].innerHTML = cols.map((c) => `<tr><th scope="row">${c.name}</th><td>${c.n}</td>${pin ? `<td>${c.pn}</td>` : ''}</tr>`).join('');
+  }
+
+  /* the dot under the pointer: grown a little, with a translucent tag that stays inside the card */
+  const tagS = { a: mk(0), x: mk(0), y: mk(0) }; let tagW = 120, tagDot = -1;
+  function paintTag() {
+    const d = hdot >= 0 ? dots[hdot] : null;
+    if (d && tagDot !== hdot) { tagDot = hdot; tagEl.textContent = dotText(d); tagW = tagEl.offsetWidth || tagEl.getBoundingClientRect().width || 120; }
+    tagS.a.t = d ? 1 : 0;
+    if (d) {
+      let tx = d.rx - tagW / 2, ty = d.ry - 14 - 28;
+      if (ty < 58) ty = d.ry + 14;                                   // the top row: below the dot
+      tx = clamp(tx, 8, CWD - 8 - tagW);
+      if (tagS.a.x < 0.02 || reduced) { tagS.x.x = tagS.x.t = tx; tagS.y.x = tagS.y.t = ty; tagS.x.v = tagS.y.v = 0; } else { tagS.x.t = tx; tagS.y.t = ty; }
+    }
+    const a = clamp(tagS.a.x, 0, 1);
+    if (a > 0.01) { tagEl.style.visibility = 'visible'; tagEl.style.opacity = a.toFixed(3); tagEl.style.transform = `translate3d(${tagS.x.x.toFixed(1)}px, ${tagS.y.x.toFixed(1)}px, 0)`; }
+    else if (tagEl.style.visibility !== 'hidden') { tagEl.style.visibility = 'hidden'; tagEl.style.opacity = '0'; }
+  }
+
+  /* ----- the frame ----- */
+  function update(dt) {
+    T += dt;
+    for (const d of dots) {
+      if (d.pend && T >= d.pend.at) { retarget(d, d.pend.tx, d.pend.ty); d.pend = null; }
+      if (reduced) { d.bx = d.tx; d.by = d.ty; d.vx = d.vy = 0; }
+      else if (d.bx !== d.tx || d.by !== d.ty || d.vx || d.vy) {
+        let A = d.bx - d.tx, B = d.vx + W_DOT * A, e = Math.exp(-W_DOT * dt);
+        d.bx = d.tx + (A + B * dt) * e; d.vx = (B - W_DOT * (A + B * dt)) * e;
+        A = d.by - d.ty; B = d.vy + W_DOT * A;
+        d.by = d.ty + (A + B * dt) * e; d.vy = (B - W_DOT * (A + B * dt)) * e;
+        if (Math.abs(d.bx - d.tx) < 0.01 && Math.abs(d.by - d.ty) < 0.01 && Math.abs(d.vx) < 0.1 && Math.abs(d.vy) < 0.1) { d.bx = d.tx; d.by = d.ty; d.vx = d.vy = 0; }
+      }
+      let ox = 0, oy = 0;
+      if (d.amp && (d.bx !== d.tx || d.by !== d.ty)) { const rem = Math.hypot(d.tx - d.bx, d.ty - d.by), f = Math.sin(Math.PI * Math.min(1, rem / d.L)) * d.amp; ox = d.ux * f; oy = d.uy * f; }
+      const nx = d.bx + ox, ny = clamp(d.by + oy, YMIN, BY);
+      d.rvx = (nx - d.rx) / dt; d.rvy = (ny - d.ry) / dt; d.rx = nx; d.ry = ny;
+      const k = reduced ? 1 : 1 - Math.exp(-dt / 0.05);              // the colour step: about 150 ms
+      d.lit += (d.tl - d.lit) * k; if (Math.abs(d.tl - d.lit) < 0.004) d.lit = d.tl;
+      d.ht = d.i === hdot ? 1 : 0; const pt = d.col === pressCol && pressCol >= 0 ? 0 : 1;
+      d.hv += (d.ht - d.hv) * (reduced ? 1 : 1 - Math.exp(-dt / 0.045)); if (Math.abs(d.ht - d.hv) < 0.004) d.hv = d.ht;
+      d.pr += ((1 - pt) - d.pr) * (reduced ? 1 : 1 - Math.exp(-dt / 0.035)); if (Math.abs((1 - pt) - d.pr) < 0.004) d.pr = 1 - pt;
+    }
+    // the counts: the dots of a column within 4 px of their slot, and of those the pinned ones
+    for (const c of cnt) { c.m = 0; c.n = 0; }
+    for (const d of dots) { if (!d.inCol && Math.hypot(d.rx - d.gx, d.ry - d.gy) < 4) d.inCol = true; if (d.inCol) { cnt[d.col].m++; if (pin && pin.set.has(d.i)) cnt[d.col].n++; } }   // landed: within 4 px of its slot (kept while only its slot in the column changes)
+    const stale = slots.some((s) => s.ver !== ver && s.c.x >= 0.003);
+    for (const s of slots) {
+      if (s.ver !== ver) { s.c.t = 0; if (s.c.x < 0.003) { s.c.x = 0; s.c.v = 0; assignSlot(s); } }
+      else if (s.col >= 0 && !stale && cnt[s.col].m >= 1) s.c.t = 1;      // a new label waits until every old one is covered
+      spring(s.c, dt, W_LAB, 4e-3);
+      if (s.col >= 0) { s.ra.set(pin ? cnt[s.col].n : cnt[s.col].m); s.rb.set(cnt[s.col].m); if (s.of.classList.contains('is-on') !== !!pin) s.of.classList.toggle('is-on', !!pin); }
+      s.ra.step(dt); s.rb.step(dt);
+    }
+    spring(chipS, dt, W_CHIP, 4e-3);
+    spring(segX, dt, W_SEG, 0.02);
+    paintTag(); spring(tagS.a, dt, W_TAGA, 4e-3); spring(tagS.x, dt, W_TAG, 0.05); spring(tagS.y, dt, W_TAG, 0.05);
+  }
+  function busy() {
+    return dots.some((d) => d.pend || d.bx !== d.tx || d.by !== d.ty || d.vx || d.vy || d.lit !== d.tl || d.hv !== d.ht || d.pr !== (d.col === pressCol && pressCol >= 0 ? 1 : 0))
+      || slots.some((s) => s.ver !== ver || !rest(s.c) || (s.col >= 0 && s.ver === ver && cnt[s.col].m >= 1 && s.c.t !== 1) || s.ra.busy() || s.rb.busy()) || !rest(chipS) || !rest(segX) || !rest(tagS.a) || !rest(tagS.x) || !rest(tagS.y);
+  }
+
+  /* ----- drawing ----- */
+  let K = 1, dpr = 1;
+  function resize() {
+    const w = card.getBoundingClientRect().width;
+    dpr = window.devicePixelRatio || 1; K = dpr * ((w / CWD) || 1);
+    cv.style.cssText = `left:${CX0}px;top:${CY0}px;width:${CVW}px;height:${CVH}px`;
+    cv.width = Math.max(1, Math.round(CVW * K)); cv.height = Math.max(1, Math.round(CVH * K));
+  }
+  const INK = [29, 29, 31], GREY = [199, 199, 204];
+  function draw() {
+    cx.setTransform(cv.width / CVW, 0, 0, cv.height / CVH, -CX0 * cv.width / CVW, -CY0 * cv.height / CVH); cx.clearRect(CX0, CY0, CVW, CVH);
+    cx.fillStyle = '#e8e8ed'; cx.fillRect(28, BY + 12, 724, 1);                // the baseline the stacks stand on
+    const order = dots.slice().sort((a, b) => (a.i === LATEST) - (b.i === LATEST) || a.lit - b.lit || a.hv - b.hv);      // stepped-down dots first, the lime one on top
+    for (const d of order) {
+      const r = R * (1 + 0.3 * d.hv) * (1 - 0.12 * d.pr);
+      cx.beginPath(); cx.arc(d.rx, d.ry, d.i === LATEST ? r + 0.5 : r, 0, TAU);
+      if (d.i === LATEST) { cx.fillStyle = '#B8FF00'; cx.fill(); cx.lineWidth = 1.25; cx.strokeStyle = '#1d1d1f'; cx.stroke(); continue; }
+      const l = d.lit, c = [0, 1, 2].map((k) => Math.round(GREY[k] + (INK[k] - GREY[k]) * l));
+      cx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`; cx.fill();
+    }
+    for (const s of slots) {
+      const c = clamp(s.c.x, 0, 1), on = c > 0.004 && s.col >= 0;
+      if (!on) { if (s.vis) { s.vis = false; s.el.style.visibility = 'hidden'; s.el.style.clipPath = 'inset(0 100% 0 0)'; } continue; }
+      if (!s.vis) { s.vis = true; s.el.style.visibility = 'visible'; }
+      s.el.style.clipPath = c >= 0.999 ? 'none' : `inset(-2px ${((1 - c) * 100).toFixed(1)}% -2px 0)`;
+    }
+    paintChip(); paintSeg();
+  }
+
+  /* the loop: pauses off screen, in a hidden tab, and while the key frame is held */
+  let raf = 0, last = 0, vis = true;
+  const live = () => started && vis && !document.hidden && !frozen;
+  function loop(now) { raf = 0; if (!live()) return; const dt = clamp((now - last) / 1000, 0.001, 0.05); last = now; update(dt); draw(); if (busy()) raf = requestAnimationFrame(loop); }
+  function kick() { if (!raf && live()) { last = performance.now(); raf = requestAnimationFrame(loop); } }
+  new IntersectionObserver((es) => { vis = es[es.length - 1].isIntersecting; kick(); }).observe(card);
+  document.addEventListener('visibilitychange', kick);
+  const ff = (sec) => { for (let k = 0; k < Math.round(sec * 60); k++) update(1 / 60); draw(); };
+  function thaw() { if (frozen) { frozen = false; kick(); } }
+
+  /* ----- input: a hand or the ghost, both through the same pointer events ----- */
+  const local = (e) => { const r = card.getBoundingClientRect(), k = r.width / CWD || 1; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; };
+  const client = (x, y) => { const r = card.getBoundingClientRect(), k = r.width / CWD || 1; return { x: r.left + x * k, y: r.top + y * k }; };
+  const colAt = (p) => {
+    if (grp === 'all') return -1;
+    for (const c of cols) if (p.x >= c.left - 8 && p.x <= c.left + c.vw + 8 && p.y >= BY - (c.rows - 1) * c.p - R - 12 && p.y <= LABY + 50) return c.k;
+    return -1;
+  };
+  const dotAt = (p) => { let best = -1, bd = 10 * 10; for (const d of dots) { const q = (d.rx - p.x) ** 2 + (d.ry - p.y) ** 2; if (q <= bd) { bd = q; best = d.i; } } return best; };
+  let ptr = null, touchT = 0;
+  function hoverAt(p, touch) {
+    const c = colAt(p), h = dotAt(p);
+    if (c !== hoverCol || h !== hdot) { hoverCol = c; hdot = h; recolor(); paintLabels(); kick(); }
+    ptr = touch ? null : p;
+  }
+  card.addEventListener('pointermove', (e) => { thaw(); if (e.pointerType === 'touch') return; hoverAt(local(e), false); });
+  card.addEventListener('pointerleave', (e) => { if (e.pointerType === 'touch') return; ptr = null; if (hoverCol >= 0 || hdot >= 0) { hoverCol = -1; hdot = -1; recolor(); paintLabels(); kick(); } });
+  card.addEventListener('pointerdown', (e) => { thaw(); if (e.pointerType === 'touch') { clearTimeout(touchT); hoverAt(local(e), true); } });
+  addEventListener('pointerup', (e) => {
+    if (pressCol >= 0) { pressCol = -1; kick(); }
+    if (e.pointerType === 'touch') { clearTimeout(touchT); touchT = setTimeout(() => { if (hdot >= 0 || hoverCol >= 0) { hoverCol = -1; hdot = -1; recolor(); paintLabels(); kick(); } }, 1400); }
+  });
+  addEventListener('pointercancel', () => { if (pressCol >= 0) { pressCol = -1; kick(); } });
+  document.addEventListener('keydown', (e) => {
+    thaw();
+    if (e.key === 'Escape' && pin) { e.preventDefault(); unpin(); }
+  });
+
+  /* the page: the key frame, played through the same change a hand makes */
+  function hardReset(g = 'all') {
+    pin = null; chipText = ''; chip.dataset.t = ''; put0(chipS); hoverCol = kbCol = hdot = pressCol = -1; T = 0; tagDot = -1; put0(tagS.a);
+    regroup(g, true);
+    ins[['all', 'product', 'channel', 'day'].indexOf(g)].checked = true;
+    for (const s of slots) { s.ver = -1; s.c.x = s.c.t = 0; s.c.v = 0; }
+    ff(1 / 60);
+  }
+  const put0 = (s) => { s.x = s.t = 0; s.v = 0; };
+  function pose() {                                                  // the key frame, played: Product, Ash vase pinned (a tap), the pointer resting on its column
+    frozen = false;
+    hardReset('product'); ff(1); segMeasure();
+    card.classList.add('is-still');
+    pinCol(0); ff(1.6);
+    const c = cols[0], q = { x: c.cx0 + c.p * 1.5, y: BY - 3.5 * c.p };
+    if (!reduced) { hoverAt(q, false); ff(0.5); }
+    segX.x = segX.t; segX.v = 0; paintSeg(); draw();
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('is-still')));
+  }
+  new ResizeObserver(() => { resize(); draw(); }).observe(card.parentElement);
+  resize(); card.classList.add('is-still'); hardReset('product'); ff(1); segMeasure(); draw();
+  if (document.fonts) document.fonts.ready.then(() => { segMeasure(); draw(); });
+
+  return {
+    freeze(on) { frozen = on; if (!on) kick(); },
+    card, segEl, labs, ins, chip, btns, pose, client, selectGroup, pinCol, unpin, kick, ff, draw, update, hardReset, thaw, hoverAt, relayout,
+    begin() { started = true; kick(); },
+    get frozen() { return frozen; }, get grp() { return grp; }, get pin() { return pin; }, get cols() { return cols; },
+    colCenter(k) { const c = cols[k]; return { x: c.cx0 + c.p * (c.w > 3 ? 1.5 : 0.5), y: BY - Math.min(c.rows - 1, 3) * c.p - c.p / 2 }; },     // a point between four dots: over the column, more than 10 px from any dot
+    dotsOf: (pred) => dots.filter(pred), dots,
+    get state() { return { grp, ver, pin: pin && pin.name, busy: busy(), counts: slots.filter((s) => s.col >= 0 && cols[s.col]).map((s) => ({ name: cols[s.col].name, m: cnt[s.col].m, n: cnt[s.col].n, shown: s.ra.n, c: +s.c.x.toFixed(2) })), focus: focusCol(), hdot }; },
+    slotBoxes() { return slots.filter((s) => s.vis).map((s) => { const c = s.el.querySelector('.dr-cnt').getBoundingClientRect(), n = s.nm.getBoundingClientRect(), k = card.getBoundingClientRect().width / CWD; return { k: s.col, c: +s.c.x.toFixed(2), cnt: [c.left, c.top, c.right, c.bottom].map((v) => v / k), nm: [n.left, n.top, n.left + n.width, n.bottom].map((v) => v / k), box: s.el.getBoundingClientRect(), s: k, left: parseFloat(s.el.style.transform.slice(10)) }; }); },
+    MARGINALS: { PRODUCTS, CHANNELS, DAYS }, ORDERS, BY, R,
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('dr-fit');
+  // the card is drawn at 780 x 480 and scaled to the room it is given (1.0x in the 800 x 500 tile, 1.6x at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 10 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min((W - 2 * pad) / 780, (H - 2 * pad - ui) / 480, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+  }
+  size();
+  addEventListener('resize', size);
+
+  /* the ghost: it moves a pointer and clicks what a hand clicks (the same events on the same handlers) */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const fire = (type, x, y, Ctor = PointerEvent) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 77, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  async function glide(my, to, ms = 760) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.88 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y);
+      if (p >= 1) break;
+    }
+  }
+  const mid = (el, fx = 0.5, fy = 0.5) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width * fx, y: r.top + r.height * fy }; };
+  async function tap(my) {
+    const { x, y } = pos, el = fire('pointerdown', x, y), press = el.closest && el.closest('.dr-so, .dr-chip');
+    if (press) press.classList.add('is-press');
+    await gap(my, 110);
+    fire('pointerup', x, y);
+    if (press) press.classList.remove('is-press');
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  const names = ['all', 'product', 'channel', 'day'];
+  const pick = async (my, g, ms = 760) => { const i = names.indexOf(g); if (DR.ins[i].checked) return false; await glide(my, mid(DR.labs[i]), ms); await gap(my, 200); await tap(my); return true; };
+  const toCol = async (my, k, ms = 760) => { const c = DR.colCenter(k), p = DR.client(c.x, c.y); await glide(my, p, ms); };
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 5000 : 3000) : 700);
+      QM.ghostShow();
+      for (;;) {
+        await pick(my, 'product');
+        if (!DR.pin) { await toCol(my, 0); await gap(my, 900); await tap(my); await gap(my, 1300); }   // Ash vase comes to ink and is pinned
+        else await gap(my, first ? 500 : 900);
+        first = false;
+        await pick(my, 'channel'); await gap(my, 2400);                            // the pinned dots land as a solid base in each column
+        const d = DR.dots.find((o) => DR.pin && DR.pin.set.has(o.i) && o.col === 1 && o.gy <= DR.BY - 2 * 25 && o.gy >= DR.BY - 4 * 25);
+        if (d) { await glide(my, DR.client(d.gx, d.gy), 800); await gap(my, 1700); }   // one order, read
+        await pick(my, 'day'); await gap(my, 2300);
+        await glide(my, mid(DR.chip), 800); await gap(my, 200); await tap(my); await gap(my, 1300);   // unpin: every dot goes back to its time slot
+        await pick(my, 'all'); await gap(my, 1800);
+        await pick(my, 'product'); await gap(my, 1300);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); pos = null; }
+  if (!QM.tile && !reduced) {
+    const busyHand = () => DR.card.matches(':hover') || (DR.card.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                                  // the ghost's own events do not count
+      stopScript();
+      if (e && e.target && e.target.nodeType === 1 && !DR.card.contains(e.target)) DR.card.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!busyHand()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  // the ghost waits where the pose leaves the pointer: resting on the Ash vase column
+  const park = () => { if (still) return; const c = DR.colCenter(0), p = DR.client(c.x, c.y); QM.ghostAt(p.x, p.y); pos = p; QM.ghostShow(); };
+  const still = reduced || /[?&]noghost/.test(location.search);        // ?noghost: a page for checks, the pose is held by hand
+  QM.demo({ kind: 'loop', restart() { stopScript(); DR.pose(); DR.begin(); if (!still) { park(); script(true); } } });
+  DR.begin();
+  DR.pose();
+  if (!still) { park(); (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { park(); script(true); }, 300)); }
+})();
+</script>
+</body>
+</html>

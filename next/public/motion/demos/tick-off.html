@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tick off · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "tick-off", "title": "Tick off", "group": "studio", "added": "2026-11-25", "cat": "feedback", "order": 70,
+  "kind": "loop", "tone": "paper", "shot": 2000, "preview": { "secs": 9, "skip": 5000 },
+  "line": "tick 210 ms · strike 290 ms · 600 ms beat · rows on 0.36 s springs, 60 ms apart · sweep 1:1 · one lime",
+  "summary": "Willow Counseling's launch list as a task table. Press a round box: it answers at once (0.9), fills ink on release, the tick is drawn in one stroke, a strike is drawn through the words left to right and the text steps down to grey. After a beat the row lifts and travels down into Done while the rows between glide up. Press on a box and drag down the column to sweep: every box the pointer passes takes the first one's new state as it arrives, a count rides beside the pointer, and on release the rows leave together. Done folds to one line, Undo returns the last gesture by the same path, and the last task closes the ring into a lime tick.",
+  "spec": [
+    ["Table", "a real table (role table, rows, cells) of eight tasks and a real checkbox in every row, visually replaced; the model is two lists (open, in order; done, newest on top) and one layout pass gives every row, the Done header and the clip line a target y (40 px rows, 32 px header); every row has its own critically damped springs from the value on screen (y 0.36 s, lift 0.22 s, fill 0.16 s, tick 0.21 s, strike 0.29 s, colour 0.24 s, press 0.10 s) so any change can land in the middle of any other"],
+    ["Tick", "pointerdown: the box goes to 0.9 in 0.10 s; on release it fills #1d1d1f, the tick is drawn in one stroke (0.21 s, 50 ms later), a strike is drawn left to right over the measured width of the words (0.29 s) and the text, owner and date step to #86868b (0.24 s); an untick is the same springs aimed back, so the strike is withdrawn right to left"],
+    ["Beat", "the row does not move for 600 ms; every new tick restarts the beat, so several can be ticked in a row without the table moving under the hand; a sweep waits 380 ms after release"],
+    ["Travel", "the row lifts (scale 1.01, shadow, a white ground that covers what it passes) and travels to the top of Done on its own y spring; rows that leave in one gesture start 60 ms apart, the leading one first; rows between glide on their own springs 40 ms apart, upper first when going up; the Done header and the card follow last; the header count, the Done count and the ring advance on springs"],
+    ["Sweep", "press on a box and drag 5 px vertically: the first row takes the new state, then every row whose on-screen box lies between the last and the current pointer y takes it (a fast drag misses none); rows wait for release; from two rows on a small chip (+3, a minus sign when the sweep unticks; #e8e8ed, 22 px) is uncovered in the header right after the count, its digit rolling as the sweep grows or shrinks, and nothing rides with the pointer; dragging back gives rows up; on release the chip is covered and the header count rolls to its new value at the same moment; pointer capture, touch-action none on the box only, so a drag that starts elsewhere does nothing"],
+    ["Fold", "the Done header is a button: the clip line is one spring (0.36 s) that covers the done rows from the bottom, the chevron turns 90 degrees on its own spring, the card's height follows; open tasks keep their places"],
+    ["Undo", "a translucent bar (72% white, 20 px blur) is uncovered at the foot for 5 s with its words rolling (2 tasks done, 1 task reopened); Undo or Cmd/Ctrl+Z puts the rows of the last gesture back by the same path (before the beat: in place; after: they travel back, in their old order)"],
+    ["All done", "when the last open task has left the ring closes, a lime disc is uncovered from its centre with an ink tick drawn in 0.22 s, All done rolls in under the title and one quiet line, Nothing left. Ready to launch., is uncovered in the open part; in a tile the list resets after 3 s by the same path"],
+    ["Keys", "Tab visits the table once, Up and Down, Home and End move between rows and the Done header, Space ticks, Shift+Down and Shift+Up sweep, Cmd/Ctrl+Z undoes, a polite status line says what changed (Set up online booking done. 4 of 8.); focus follows a row that changes group"],
+    ["Loop", "the page loads on a pose that is played, not drawn: the real pointer events press on the first open box and drag down three rows, held there (two struck, the third's tick and strike finishing, +3 in the header, the count still 3 of 8; the thumbnail is taken 1.05 s in, once the +3 has rolled); after about 5 s a ghost lets go, ticks one, unticks one from Done, folds and opens Done, takes Undo and resets; its second round sweeps every open row to the end (ring closed, lime tick, quiet line) and the list starts again 3 s later; it yields to a real pointer, touch or key and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A client's launch checklist in their project view on a Qbix site, the Practice Website Refresh's last week: what is still open, what is done, and one gesture to clear a run of tasks.",
+  "rules": [
+    "Tick, strike and the row leaving for Done are one gesture; the beat lets several be ticked in a row without the table moving under the hand.",
+    "Every row has its own springs that start from the value and velocity on screen, and one layout pass gives them their targets: nothing is keyframed per change, so a tick, a sweep, an undo and a fold can overlap.",
+    "A row that travels has its own white ground and a lift, so it covers what it passes; text never mixes with other text.",
+    "A sweep is 1:1 with the hand and hit-tests the rows' on-screen boxes by the pointer's y, so a fast drag misses none; rows wait for release.",
+    "Exactly one lime: the header ring's arc while tasks remain, the header tick at the end. Boxes, ticks and strikes are ink or grey.",
+    "A real table with real checkboxes and labels, one roving tab stop, Space ticks, Shift+arrows sweep, Cmd/Ctrl+Z undoes, a polite status line.",
+    "System face, Apple neutrals (#1d1d1f, #6e6e73, #86868b, #e8e8ed, #f5f5f7), a white card, 1.6 px round strokes.",
+    "Under reduced motion the card rests on three done, rows change groups in place and the strike appears whole."
+  ],
+  "tags": ["table", "tasks", "checkbox", "tick", "strike", "sweep", "undo", "fold", "spring", "FLIP", "Willow Counseling", "launch"]
+}
+</script>
+<style data-code>
+/* Tick off. A task table in the system face with Apple's neutrals, on a white card. Everything that moves is set from script (render()): rows are
+   absolutely positioned and each has its own springs. The one lime is the header ring's arc (.tk-arc), or at the end the header tick (.tk-disc). */
+.tk-card { --tk-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --tk-ui: cubic-bezier(.4, 0, .2, 1); --tk-out: cubic-bezier(.16, 1, .3, 1);
+  position: absolute; left: 0; top: 0; width: 660px; height: 476px; overflow: hidden; border-radius: 24px; background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04);
+  color: #1d1d1f; font: 400 16px/20px var(--tk-f); letter-spacing: -.011em; -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.tk-card :where(svg) { display: block; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.tk-card :where(h2, p, table, thead, tbody, tr, th, td) { margin: 0; padding: 0; border: 0; font: inherit; text-align: left; }
+.tk-card :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* header: a ring, the title, a rolling count */
+.tk-hd { position: absolute; left: 0; top: 0; width: 100%; height: 56px; }
+.tk-hr { position: absolute; left: 20px; top: 14px; width: 28px; height: 28px; overflow: visible; }
+.tk-trk { stroke: #e8e8ed; stroke-width: 3; }
+.tk-arc { stroke: #B8FF00; stroke-width: 3.4; stroke-dasharray: 1 2; transform: rotate(-90deg); transform-origin: 14px 14px; visibility: hidden; }
+.tk-disc { fill: #B8FF00; stroke: none; transform-origin: 14px 14px; visibility: hidden; }
+.tk-ht { stroke: #1d1d1f; stroke-width: 2.4; stroke-dasharray: 1 2; visibility: hidden; }
+.tk-ttl { position: absolute; left: 64px; top: 9px; font: 600 17px/22px var(--tk-f); letter-spacing: -.014em; }
+.tk-sub { position: absolute; left: 64px; top: 31px; width: 200px; height: 18px; overflow: hidden; font: 400 13px/18px var(--tk-f); letter-spacing: -.006em; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.tk-subs { display: block; }
+.tk-sl { display: block; height: 18px; white-space: pre; }
+.tk-org { position: absolute; right: 20px; top: 19px; font: 400 13px/18px var(--tk-f); letter-spacing: -.006em; color: #86868b; }
+/* a rolling digit: a clipped window on a column of 0 to 9 that a spring moves; at rest it is a whole line, never half-cut */
+.tk-r { display: inline-block; width: 1ch; height: 18px; overflow: hidden; vertical-align: top; text-align: center; font-variant-numeric: tabular-nums; }
+.tk-rc { display: block; }
+.tk-rc > i { display: block; height: 18px; line-height: 18px; font-style: normal; }
+
+/* the table: head, open rows, the Done header, done rows */
+.tk-tbl { display: block; position: absolute; left: 0; top: 56px; right: 0; bottom: 0; }
+.tk-tbl :where(thead, tbody, tr, th, td) { display: block; }
+.tk-head { position: absolute; left: 0; top: 0; width: 100%; height: 24px; }
+.tk-head tr { position: relative; height: 24px; }
+.tk-head tr::after { content: ''; position: absolute; left: 20px; right: 20px; bottom: 0; height: 1px; background: rgba(0, 0, 0, .08); }
+.tk-head th { position: absolute; top: 0; height: 23px; font: 500 12px/23px var(--tk-f); letter-spacing: 0; color: #6e6e73; }
+.tk-body { position: absolute; left: 0; top: 24px; width: 100%; height: 0; }
+.tk-row { position: absolute; left: 8px; top: 0; width: 644px; height: 40px; border-radius: 10px; background: #fff; will-change: transform; --c: 0; --lf: 0; --f: 0;
+  box-shadow: 0 10px 26px -8px rgba(0, 0, 0, calc(var(--lf) * .22)), 0 0 0 1px rgba(0, 0, 0, calc(var(--lf) * .05)); }
+.tk-row::before { content: ''; position: absolute; inset: 0; border-radius: 10px; background: rgba(0, 0, 0, .04); opacity: 0; transition: opacity 140ms var(--tk-ui); pointer-events: none; }
+@media (hover: hover) { .tk-row.is-rest:hover::before { opacity: 1; } }
+.tk-card.is-kbd .tk-row:has(.tk-in:focus)::before { opacity: 1; }
+.tk-row > td { position: absolute; top: 0; height: 40px; }
+/* the box: a 48 px hit area in the row (a real checkbox beside it, invisible), a 22 px ring, an ink fill that grows, a tick drawn in white */
+.tk-c0 { left: 0; width: 48px; }
+.tk-in { position: absolute; left: 13px; top: 9px; width: 22px; height: 22px; margin: 0; opacity: 0; pointer-events: none; }
+.tk-hit { position: absolute; left: 0; top: 0; width: 48px; height: 40px; cursor: pointer; touch-action: none; border-radius: 10px; }
+.tk-box { position: absolute; left: 13px; top: 9px; width: 22px; height: 22px; border-radius: 50%; pointer-events: none; will-change: transform; }
+.tk-ring { stroke: #86868b; stroke-width: 1.5; transition: stroke 140ms var(--tk-ui); }
+.tk-hit:hover ~ .tk-box .tk-ring { stroke: #1d1d1f; }
+.tk-fill { fill: #1d1d1f; stroke: none; transform: scale(var(--f)); transform-origin: 11px 11px; visibility: hidden; }
+.tk-tick { stroke: #fff; stroke-width: 2; stroke-dasharray: 1 2; visibility: hidden; }
+.tk-card.is-kbd .tk-row:has(.tk-in:focus) .tk-box { outline: 2px solid #1d1d1f; outline-offset: 2px; }   /* the ring shows after a key, never after a press */
+/* the words, and the strike drawn over them left to right (its width is set from the measured text) */
+.tk-c1 { left: 56px; }
+.tk-lb { display: flex; align-items: center; height: 40px; cursor: default; }
+.tk-lbi { position: relative; display: inline-block; white-space: nowrap; color: color-mix(in srgb, #86868b calc(var(--c) * 100%), #1d1d1f); }
+.tk-st { position: absolute; left: -2px; top: 50%; width: 100%; height: 1.6px; margin-top: .4px; border-radius: 1px; background: #6e6e73; transform: scaleX(0); transform-origin: 0 50%; visibility: hidden; }
+.tk-c2 { left: 392px; display: flex; align-items: center; gap: 8px; font: 400 14px/40px var(--tk-f); letter-spacing: -.006em; color: color-mix(in srgb, #86868b calc(var(--c) * 100%), #6e6e73); }
+.tk-dc { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #f5f5f7; font: 600 11px/1 var(--tk-f); letter-spacing: 0; color: #6e6e73; }
+.tk-c3 { right: 12px; font: 400 14px/40px var(--tk-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; color: color-mix(in srgb, #86868b calc(var(--c) * 100%), #6e6e73); }
+/* the Done header: a button over the whole line */
+.tk-grp { position: absolute; left: 8px; top: 0; width: 644px; height: 32px; }
+.tk-grp::before { content: ''; position: absolute; left: 12px; right: 12px; top: 0; height: 1px; background: rgba(0, 0, 0, .08); }
+.tk-grp > td { position: absolute; inset: 0; }
+.tk-gb { position: absolute; left: 0; top: 1px; width: 644px; height: 31px; border-radius: 10px !important; text-align: left; font: 600 13px/18px var(--tk-f); letter-spacing: -.006em; color: #6e6e73; font-variant-numeric: tabular-nums; transition: background-color 140ms var(--tk-ui); }
+@media (hover: hover) { .tk-gb:hover { background: rgba(0, 0, 0, .04); } }
+.tk-gb:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
+.tk-chev { position: absolute; left: 16px; top: 9px; width: 14px; height: 14px; stroke-width: 1.8; transform: rotate(calc(var(--cv, 0) * -90deg)); }
+.tk-gt { position: absolute; left: 56px; top: 0; height: 31px; display: flex; align-items: center; white-space: pre; }
+/* the quiet line when nothing is left, uncovered from its top edge */
+.tk-empty { position: absolute; left: 64px; top: 80px; height: 40px; font: 400 15px/40px var(--tk-f); letter-spacing: -.01em; color: #6e6e73; will-change: clip-path; }
+.tk-empty[hidden] { display: none; }
+/* the count chip of a sweep sits in the header right after the count, never over a row: +3 while ticking, a minus sign while unticking */
+.tk-chip { position: absolute; left: 144px; top: 29px; height: 22px; padding: 0 8px; border-radius: 999px; background: #e8e8ed; color: #1d1d1f; pointer-events: none; display: flex; align-items: center;
+  font: 600 13px/22px var(--tk-f); letter-spacing: 0; font-variant-numeric: tabular-nums; visibility: hidden; will-change: clip-path; }
+.tk-chip .tk-r { width: 1ch; height: 22px; }
+.tk-chip .tk-rc > i { height: 22px; line-height: 22px; }
+/* the Undo bar: translucent, uncovered at the card's foot, in space of its own below the last row */
+.tk-un { position: absolute; left: 50%; bottom: 5px; z-index: 11; width: 244px; height: 34px; margin-left: -122px; display: flex; align-items: center; border-radius: 999px; will-change: clip-path;
+  background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12); }
+.tk-un[hidden] { display: none; }
+.tk-unt { flex: 1; height: 20px; margin-left: 16px; overflow: hidden; font: 400 14px/20px var(--tk-f); letter-spacing: -.006em; color: #1d1d1f; }
+.tk-unc { display: block; will-change: transform; }
+.tk-unc > span { display: block; height: 20px; white-space: nowrap; }
+.tk-unl { width: 1px; height: 16px; background: rgba(0, 0, 0, .1); }
+.tk-unb { height: 34px; padding: 0 16px 0 14px !important; border-radius: 0 999px 999px 0 !important; font: 600 14px/34px var(--tk-f); letter-spacing: -.006em; color: #1d1d1f; transition: background-color 140ms var(--tk-ui); }
+@media (hover: hover) { .tk-unb:hover { background: rgba(0, 0, 0, .05); } }
+.tk-unb:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) { .tk-card *, .tk-card *::before { transition: none !important; } }
+</style>
+<style>
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  html.qm-tile .qm-stage { padding: 0; }
+  .tk-fit { position: relative; }
+  .tk-world { position: absolute; left: 0; top: 0; width: 660px; height: 516px; transform-origin: 0 0; transform: scale(var(--s, 1)); }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="tk-fit" id="tk-fit"><div class="tk-world" id="tk-world">
+<!-- code -->
+<section class="tk-card" id="tk-card" aria-labelledby="tk-ttl">
+  <header class="tk-hd">
+    <svg class="tk-hr" viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+      <circle class="tk-trk" cx="14" cy="14" r="11.5"/>
+      <circle class="tk-arc" id="tk-arc" cx="14" cy="14" r="11.5" pathLength="1"/>
+      <circle class="tk-disc" id="tk-disc" cx="14" cy="14" r="13.4"/>
+      <path class="tk-ht" id="tk-ht" d="M8.8 14.6l3.6 3.6 7-8" pathLength="1"/>
+    </svg>
+    <h2 class="tk-ttl" id="tk-ttl">Launch tasks</h2>
+    <p class="tk-sub" aria-hidden="true"><span class="tk-subs" id="tk-subs"><span class="tk-sl"><span id="tk-c0"><span class="tk-r" id="tk-hn"></span> of 8 done</span></span><span class="tk-sl"><span id="tk-c1">All done</span></span></span></p>
+    <p class="tk-org">Willow Counseling</p>
+    <div class="tk-chip" id="tk-chip" aria-hidden="true"><span id="tk-cs">+</span><span class="tk-r" id="tk-cn"></span></div>
+  </header>
+  <table class="tk-tbl" id="tk-tbl" role="table" aria-labelledby="tk-ttl">
+    <thead class="tk-head" role="rowgroup"><tr role="row">
+      <th role="columnheader" scope="col" style="left:20px;width:36px"><span class="sr-only">Done</span></th>
+      <th role="columnheader" scope="col" style="left:64px">Task</th>
+      <th role="columnheader" scope="col" style="left:400px">Owner</th>
+      <th role="columnheader" scope="col" style="right:20px">Due</th>
+    </tr></thead>
+    <tbody class="tk-body" id="tk-body" role="rowgroup">
+      <tr class="tk-grp" id="tk-grp" role="row"><td role="cell"><button class="tk-gb" id="tk-gb" type="button" aria-expanded="true" tabindex="-1">
+        <svg class="tk-chev" id="tk-chev" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M3.2 5.2l3.8 3.8 3.8-3.8"/></svg>
+        <span class="tk-gt" aria-hidden="true">Done · <span class="tk-r" id="tk-dn"></span></span><span class="sr-only" id="tk-gs">Done, 3 tasks</span></button></td></tr>
+    </tbody>
+  </table>
+  <p class="tk-empty" id="tk-empty" hidden>Nothing left. Ready to launch.</p>
+  <div class="tk-un" id="tk-un" hidden><span class="tk-unt"><span class="tk-unc" id="tk-unc"></span></span><i class="tk-unl"></i><button class="tk-unb" id="tk-unb" type="button">Undo</button></div>
+  <p class="sr-only" id="tk-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  </div></div>
+  <div class="qm-ui"><span>Tick a task, or press on a box and drag down the column to sweep. Undo, or Cmd or Ctrl and Z. Arrows, Space and Shift with an arrow work too</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Tick off. The model is two lists: the open tasks (in their own order) and Done (newest on top). Every change edits them and one layout pass (relayout)
+   gives every row, the Done header and the clip line their target y. Everything that moves is a critically damped spring that starts from the value and
+   velocity on screen (so it can be retargeted at any moment): each row's y, lift, press, fill, tick, strike and colour, the header's ring, count and tick,
+   the clip line the Done group folds on, the card's height, the chip and the Undo bar. A tick is shown at once; the row leaves after a beat. */
+const TK = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const ROW = 40, GH = 32, TOP = 80, FOOT = 44, FRAME = 516, SLOP = 5;
+  const RESP = { row: 0.36, lift: 0.22, fill: 0.16, tick: 0.21, strike: 0.29, col: 0.24, press: 0.1, num: 0.3, arc: 0.45, fold: 0.36, card: 0.36, cover: 0.3, disc: 0.3, turn: 0.3 };
+  const BEAT = reduced ? 250 : 600, SWEEP_BEAT = reduced ? 250 : 380, GAP = 60, GLIDE = 40;
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const mk = (x = 0, resp = 0.3, eps = 0.002) => ({ x, v: 0, T: x, w: TAU / resp, on: false, eps });
+  function step(s, dt) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  function aim(s, T, resp) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+    kick();
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+
+  /* the list: id, words, owner, due (datetime and shown) and whether it starts done */
+  const TASKS = [
+    ['copy', 'Write the home page copy', 'Dana', '2026-11-23', '23 Nov', 1],
+    ['photos', 'Choose session photos', 'Sera', '2026-11-24', '24 Nov', 1],
+    ['booking', 'Set up online booking', 'Ana', '2026-11-26', '26 Nov', 0],
+    ['domain', 'Connect the domain', 'Theo', '2026-11-27', '27 Nov', 0],
+    ['contrast', 'Check contrast and type sizes', 'Sera', '2026-11-30', '30 Nov', 0],
+    ['privacy', 'Add the privacy page', 'Dana', '2026-11-30', '30 Nov', 1],
+    ['form', 'Test the contact form', 'Ana', '2026-12-01', '1 Dec', 0],
+    ['announce', 'Announce to the mailing list', 'Dana', '2026-12-02', '2 Dec', 0]
+  ];
+  const INIT_DONE = ['privacy', 'photos', 'copy'];          // newest on top
+  const N = TASKS.length;
+
+  const $ = (id) => document.getElementById(id);
+  const card = $('tk-card'), tbl = $('tk-tbl'), body = $('tk-body'), grp = $('tk-grp'), gbtn = $('tk-gb'), chev = $('tk-chev');
+  const arc = $('tk-arc'), disc = $('tk-disc'), htk = $('tk-ht'), subs = $('tk-subs'), emptyEl = $('tk-empty'), chip = $('tk-chip'), csEl = $('tk-cs'), live = $('tk-live'), gsr = $('tk-gs');
+  const S = { autoReset: false, t: 0, commitAt: 0, commitDone: null, folded: false, all: false, vis: true, say: 0, rtok: 0, scale: 1, cw0: 70, cw1: 50, g: null };
+  const H = mk(476, RESP.card, 0.05), LS = mk(352, RESP.fold, 0.05), AR = mk(3 / N, RESP.arc), DS = mk(0, RESP.disc), HT = mk(0, 0.22), SH = mk(0, RESP.turn), EP = mk(0, RESP.cover), CV = mk(0, RESP.turn), CP = mk(0, RESP.cover);
+  const hdr = { y: mk(0, RESP.row, 0.02), ty: 0, pend: 0 };
+  let rows = [], open = [], done = [], byId = {}, Q = [], raf = 0, last = 0, inFrame = false, G = null, rec = null, ks = null;
+  const UN = { el: $('tk-un'), tx: $('tk-unc'), btn: $('tk-unb'), p: mk(0, RESP.cover), on: false, want: false, tok: 0, text: '' };
+
+  const say = (m) => { live.textContent = ''; clearTimeout(S.say); S.say = setTimeout(() => { live.textContent = m; }, 40); };
+  const mkEl = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+
+  /* a rolling digit: a column of 0 to 9 in a clipped window; the spring's value is the digit */
+  function mkRoll(id, lh) {
+    const host = $(id), col = mkEl('span', 'tk-rc');
+    for (let d = 0; d <= 9; d++) { const i = mkEl('i'); i.textContent = d; col.append(i); }
+    host.append(col);
+    return { col, lh, sp: mk(0, RESP.num) };
+  }
+  const HN = mkRoll('tk-hn', 18), DN = mkRoll('tk-dn', 18), CN = mkRoll('tk-cn', 22);
+
+  /* the clock of the choreography: later(ms, fn) runs on the springs' own clock, so it stops with them and never races them */
+  function later(ms, fn) { Q.push({ at: S.t + ms / 1000, fn }); Q.sort((a, b) => a.at - b.at); kick(); }
+  function pump() {
+    while (Q.length && Q[0].at <= S.t) Q.shift().fn();
+    if (S.commitAt && S.t >= S.commitAt && !G) { const d = S.commitDone; S.commitAt = 0; S.commitDone = null; commit(d); }
+  }
+  function scheduleCommit(ms, doneOrder) { S.commitAt = S.t + ms / 1000; if (doneOrder) S.commitDone = doneOrder; kick(); }
+
+  /* a row: a real checkbox, its hit area, the drawn box, the words with their strike, an owner disc and the due date */
+  function mkRow(t) {
+    const id = t[0], el = mkEl('tr', 'tk-row is-rest');
+    el.setAttribute('role', 'row'); el.dataset.id = id;
+    el.innerHTML = '<td class="tk-c0" role="cell"><input class="tk-in" type="checkbox" id="tk-c-' + id + '" tabindex="-1">'
+      + '<span class="tk-hit" aria-hidden="true"></span>'
+      + '<svg class="tk-box" viewBox="0 0 22 22" aria-hidden="true" focusable="false"><circle class="tk-ring" cx="11" cy="11" r="10.25"/><circle class="tk-fill" cx="11" cy="11" r="11"/><path class="tk-tick" d="M6.4 11.4l3.1 3.1 6-7" pathLength="1"/></svg></td>'
+      + '<td class="tk-c1" role="cell"><label class="tk-lb" for="tk-c-' + id + '"><span class="tk-lbi"><span class="tk-tx"></span><i class="tk-st"></i></span></label></td>'
+      + '<td class="tk-c2" role="cell"><span class="tk-dc" aria-hidden="true"></span><span class="tk-own"></span></td>'
+      + '<td class="tk-c3" role="cell"><time></time></td>';
+    const q = (c) => el.querySelector(c);
+    q('.tk-tx').textContent = t[1]; q('.tk-dc').textContent = t[2][0]; q('.tk-own').textContent = t[2];
+    const tm = q('time'); tm.dateTime = t[3]; tm.textContent = t[4];
+    const r = { id, idx: rows.length, text: t[1], el, checked: false, grp: 'open', ty: 0, moving: false, pend: 0, tw: 0,
+      y: mk(0, RESP.row, 0.02), lf: mk(0, RESP.lift), pz: mk(1, RESP.press, 0.0005), f: mk(0, RESP.fill), d: mk(0, RESP.tick), s: mk(0, RESP.strike), c: mk(0, RESP.col),
+      in: q('.tk-in'), hit: q('.tk-hit'), box: q('.tk-box'), fill: q('.tk-fill'), tick: q('.tk-tick'), tx: q('.tk-tx'), st: q('.tk-st') };
+    el._r = r; r.in._r = r; r.hit._r = r;
+    r.in.addEventListener('change', () => { if (changeRow(r, r.in.checked)) scheduleCommit(BEAT); });
+    body.append(el);
+    return r;
+  }
+  /* the strike is as long as the words: measured, so it is right for any face and any size */
+  function measure() {
+    S.cw0 = $('tk-c0').getBoundingClientRect().width / (S.scale || 1); S.cw1 = $('tk-c1').getBoundingClientRect().width / (S.scale || 1);   // the chip follows the count's width
+    for (const r of rows) { r.tw = r.tx.getBoundingClientRect().width / (S.scale || 1); r.st.style.width = (r.tw + 4).toFixed(2) + 'px'; } }
+
+  /* the layout: where everything sits for the current lists */
+  function geom() {
+    const n = open.length, dn = done.length, openH = n ? n * ROW : ROW;   // with nothing open the quiet line takes a row
+    const clipTop = openH + GH, L = clipTop + (S.folded ? 0 : dn * ROW);
+    return { openH, clipTop, L, H: TOP + L + FOOT };
+  }
+  /* one pass: every row gets its target y; a row that changed group (a leaver) leaves 60 ms after the one ahead of it in its direction; rows that only
+     shift glide 40 ms apart, the Done header after the rows above it; a clip line that grows is never behind the rows it must show */
+  function relayout(leavers = [], instant = false) {
+    const g = geom(), items = [], lv = new Set(leavers);
+    open.forEach((r, i) => items.push({ r, y: i * ROW }));
+    items.push({ h: true, y: g.openH });
+    done.forEach((r, j) => items.push({ r, y: g.openH + GH + j * ROW }));
+    const movers = [];
+    for (const it of items) {
+      const o = it.h ? hdr : it.r, cur = o.y.x, dy = it.y - o.ty;
+      o.ty = it.y;
+      if (instant) { snap(o.y, it.y); continue; }
+      if (dy === 0 && !lv.has(it.r)) { if (!o.y.on && !o.pend && o.y.T !== it.y) aim(o.y, it.y, RESP.row); continue; }
+      movers.push({ o, cur, up: dy < 0, lv: lv.has(it.r) });
+    }
+    S.g = g;
+    if (instant) { snap(LS, g.L); snap(H, g.H); return; }
+    let maxD = 0;
+    for (const side of [true, false]) {
+      for (const kind of [true, false]) {
+        const list = movers.filter((m) => m.up === side && m.lv === kind).sort((a, b) => (side ? a.cur - b.cur : b.cur - a.cur));
+        list.forEach((m, k) => {
+          const delay = kind ? GAP * k : GLIDE + GLIDE * k, o = m.o;
+          maxD = Math.max(maxD, delay);
+          o.pend++;
+          if (m.lv) o.moving = true;
+          later(delay, () => { o.pend--; aim(o.y, o.ty, RESP.row); if (m.lv) aim(o.lf, 1, RESP.lift); });
+        });
+      }
+    }
+    // the clip line and the card: growing, at once; closing, after the rows have moved
+    if (g.L !== LS.T || g.H !== H.T) {
+      if (g.L > LS.T || g.H > H.T) { aim(LS, g.L, RESP.fold); aim(H, g.H, RESP.card); }
+      else later(movers.length ? maxD + 20 : 0, () => { aim(LS, S.g.L, RESP.fold); aim(H, S.g.H, RESP.card); });
+    }
+  }
+  function reorderDOM() {
+    const act = document.activeElement, want = [...open.map((r) => r.el), grp, ...done.map((r) => r.el)];
+    want.forEach((el, i) => { if (body.children[i] !== el) body.insertBefore(el, body.children[i] || null); });
+    if (act && act !== document.activeElement && act.isConnected && act.matches('.tk-in, .tk-gb')) act.focus({ preventScroll: true });   // focus follows the row
+    syncInert();
+  }
+  function syncInert() { for (const r of rows) r.el.inert = r.grp === 'done' && S.folded; }
+
+  /* the header: the ring, the counts, the tick at the end */
+  function syncHeader(instant) {
+    const n = done.length, all = n === N;
+    const put = (s, T, resp) => { if (instant) snap(s, T); else aim(s, T, resp); };
+    put(HN.sp, n, RESP.num); put(DN.sp, n, RESP.num); put(AR, n / N, RESP.arc); put(CV, S.folded ? 1 : 0, RESP.turn);
+    gbtn.setAttribute('aria-expanded', S.folded ? 'false' : 'true');
+    gsr.textContent = 'Done, ' + n + (n === 1 ? ' task' : ' tasks');
+    if (all !== S.all || instant) {
+      S.all = all; const tok = ++S.rtok;
+      if (instant) { snap(DS, +all); snap(HT, +all); snap(SH, +all); snap(EP, +all); }
+      else if (all) {
+        later(300, () => { if (S.all) { aim(DS, 1, RESP.disc); later(90, () => { if (S.all) aim(HT, 1, 0.22); }); aim(SH, 1, RESP.turn); } });
+        later(380, () => { if (S.all) aim(EP, 1, RESP.cover); });
+        if (S.autoReset) later(3300, () => { if (S.all && S.rtok === tok) resetAll(); });   // a tile starts again by itself
+      } else { aim(HT, 0, 0.16); aim(DS, 0, 0.2); aim(SH, 0, RESP.turn); aim(EP, 0, 0.2); }
+    }
+  }
+
+  /* a change of one row: its box, tick, strike and words; nothing moves yet */
+  function setChecked(r, v) {
+    if (r.checked === v) return false;
+    r.checked = v; r.in.checked = v;
+    aim(r.f, v ? 1 : 0, RESP.fill); aim(r.s, v ? 1 : 0, RESP.strike); aim(r.c, v ? 1 : 0, RESP.col);
+    if (v) later(50, () => { if (r.checked) aim(r.d, 1, RESP.tick); }); else aim(r.d, 0, RESP.tick);
+    return true;
+  }
+  const checkedCount = () => rows.filter((r) => r.checked).length;
+
+  /* the Undo record: the rows of the last gesture (several ticks inside one beat are one gesture) and the order of Done before it */
+  function recText() {
+    if (!rec) return '';
+    let a = 0, b = 0; rec.map.forEach((prev, r) => { if (r.checked) a++; else b++; });
+    const n = a + b, w = n === 1 ? 'task' : 'tasks';
+    return a && b ? n + ' tasks changed' : a ? n + ' ' + w + ' done' : n + ' ' + w + ' reopened';
+  }
+  function noteChange(r, prev) {
+    if (!rec || rec.committed) rec = { map: new Map(), doneBefore: done.slice(), committed: false };
+    if (!rec.map.has(r)) rec.map.set(r, prev); else if (rec.map.get(r) === r.checked) rec.map.delete(r);
+    if (!rec.map.size) { rec = null; S.commitAt = 0; hideUndo(); return; }
+    showUndo(recText());
+    announce();
+  }
+  function announce() {
+    clearTimeout(announce.t);
+    announce.t = setTimeout(() => {
+      if (!rec) return;
+      const rs = [...rec.map.keys()], n = checkedCount();
+      say((rs.length === 1 ? rs[0].text + (rs[0].checked ? ' done' : ' reopened') : recText()) + '. ' + n + ' of ' + N + '.');
+    }, 260);
+  }
+  function changeRow(r, v) { const was = r.checked; if (!setChecked(r, v)) return false; noteChange(r, was); return true; }
+
+  /* after the beat: rows whose state differs from their group leave. Ticked rows go to the top of Done in their own order, unticked rows return to
+     their place among the open tasks (their order is kept) */
+  function commit(doneOrder) {
+    S.commitAt = 0; S.commitDone = null;
+    const toDone = rows.filter((r) => r.checked && r.grp === 'open'), toOpen = rows.filter((r) => !r.checked && r.grp === 'done');
+    if (rec) rec.committed = true;
+    if (!toDone.length && !toOpen.length && !doneOrder) return;
+    toDone.forEach((r) => { r.grp = 'done'; }); toOpen.forEach((r) => { r.grp = 'open'; });
+    if (doneOrder) { done = doneOrder.filter((r) => r.grp === 'done'); rows.forEach((r) => { if (r.grp === 'done' && !done.includes(r)) done.push(r); }); }
+    else done = toDone.concat(done.filter((r) => r.grp === 'done'));
+    open = rows.filter((r) => r.grp === 'open');
+    reorderDOM();
+    relayout(toDone.concat(toOpen));
+    syncHeader();
+  }
+  /* Undo: the rows of the last gesture return by the same path; before the beat they simply change back in place */
+  function undo() {
+    if (!rec) return false;
+    const R = rec; rec = null; hideUndo();
+    R.map.forEach((prev, r) => setChecked(r, prev));
+    if (R.committed) scheduleCommit(SWEEP_BEAT, R.doneBefore); else { S.commitAt = 0; aim(HN.sp, done.length, RESP.num); }
+    say('Undone. ' + checkedCount() + ' of ' + N + '.');
+    return true;
+  }
+  function resetAll() {
+    rec = null; hideUndo();
+    rows.forEach((r) => setChecked(r, INIT_DONE.includes(r.id)));
+    scheduleCommit(SWEEP_BEAT, INIT_DONE.map((id) => byId[id]));
+  }
+  UN.btn.addEventListener('click', () => { const had = document.activeElement === UN.btn; if (undo() && had) focusRover(); });
+  document.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && (e.key === 'z' || e.key === 'Z') && rec) { e.preventDefault(); undo(); } });
+
+  /* the Undo bar: uncovered at the foot for five seconds, its words roll when the gesture grows */
+  function rollUn(text) {
+    const col = UN.tx;
+    if (reduced || !UN.on || UN.p.x < 0.05) { col.textContent = ''; const s = mkEl('span'); s.textContent = text; col.append(s); col.style.transition = 'none'; col.style.transform = ''; return; }
+    clearTimeout(col._t);
+    while (col.children.length > 1) col.firstElementChild.remove();
+    const s = mkEl('span'); s.textContent = text; col.append(s);
+    col.style.transition = 'none'; col.style.transform = 'translateY(0)'; void col.offsetHeight;
+    col.style.transition = 'transform 420ms var(--tk-out)'; col.style.transform = 'translateY(-20px)';
+    col._t = setTimeout(() => { while (col.children.length > 1) col.firstElementChild.remove(); col.style.transition = 'none'; col.style.transform = ''; void col.offsetHeight; col.style.transition = ''; }, 460);
+  }
+  function showUndo(text) {
+    const first = !UN.want || UN.p.T === 0;
+    if (!UN.on) { UN.on = true; UN.el.hidden = false; snap(UN.p, 0); UN.tx.textContent = ''; const s = mkEl('span'); s.textContent = text; UN.tx.append(s); UN.text = text; }
+    else if (text !== UN.text) { rollUn(text); UN.text = text; }
+    UN.want = true;
+    const tok = ++UN.tok;
+    if (first) later(80, () => { if (UN.want && UN.tok === tok) aim(UN.p, 1, RESP.cover); });
+    later(5000, () => { if (UN.tok === tok) hideUndo(); });
+  }
+  function hideUndo() { if (!UN.want) return; UN.want = false; UN.tok++; aim(UN.p, 0, 0.18); }
+
+  /* the gesture: press on a box answers at once (0.9); a tap ticks on release; a vertical drag from a box sweeps every box the pointer passes */
+  /* a sweep covers the rows between where it began and where the pointer is: rows inside take the first one's new state, rows it has left (the drag came back) give it up */
+  function sweepTo(y) {
+    const lo = Math.min(G.y0, y), hi = Math.max(G.y0, y);
+    for (const r of rows) {
+      if (r.el.inert) continue;
+      const b = r.el.getBoundingClientRect(), inside = b.bottom >= lo && b.top <= hi, i = G.changed.indexOf(r);
+      if (inside && r.checked !== G.target) { if (changeRow(r, G.target)) G.changed.push(r); }
+      else if (!inside && i >= 0) { G.changed.splice(i, 1); changeRow(r, !G.target); }
+    }
+    syncChip();
+  }
+  function syncChip() {
+    const n = G ? G.changed.length : 0;
+    if (n >= 2) { csEl.textContent = G.target ? '+' : '\u2212'; aim(CP, 1, RESP.cover); aim(CN.sp, n, RESP.num); } else aim(CP, 0, 0.16);
+  }
+  function onDown(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const hit = e.target.closest && e.target.closest('.tk-hit');
+    if (!hit) return;
+    if (G) endGesture(true);
+    const r = hit._r;
+    G = { id: e.pointerId, row: r, x0: e.clientX, y0: e.clientY, target: !r.checked, sweep: false, changed: [], ghost: e.isTrusted === false };
+    aim(r.pz, 0.9, RESP.press);
+    if (!G.ghost) { try { tbl.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is gone */ } }
+    if (!G.ghost) r.in.focus({ preventScroll: true });          // a hand's press moves focus here, quietly (no ring); the ghost's does not
+    setRover(r.in);
+    if (e.cancelable) e.preventDefault();
+  }
+  function onMove(e) {
+    if (!G || e.pointerId !== G.id) return;
+    if (!G.sweep) {
+      if (Math.abs(e.clientY - G.y0) < SLOP) return;
+      G.sweep = true;
+    }
+    sweepTo(e.clientY);
+  }
+  function endGesture(cancel, e) {
+    const g = G; if (!g) return;
+    G = null;
+    aim(g.row.pz, 1, RESP.press);
+    if (!g.sweep && !cancel && e && Math.abs(e.clientX - g.x0) < 9 && Math.abs(e.clientY - g.y0) < 9) { changeRow(g.row, g.target); scheduleCommit(BEAT); }
+    else if (g.sweep) scheduleCommit(SWEEP_BEAT);
+    else if (rec && !rec.committed) scheduleCommit(BEAT);
+    if (g.changed.length) { const n = g.changed.length; say((n === 1 ? g.changed[0].text : n + ' tasks') + (g.target ? ' done' : ' reopened') + '. ' + checkedCount() + ' of ' + N + '.'); }
+    // the chip is covered and the header count rolls to its new value at the same moment: the +3 becomes the count
+    aim(CP, 0, 0.16);
+    if (g.sweep && g.changed.length) aim(HN.sp, checkedCount(), RESP.num);
+  }
+  tbl.addEventListener('pointerdown', onDown);
+  document.addEventListener('pointerdown', (e) => { if (e.isTrusted !== false) card.classList.remove('is-kbd'); }, true);
+  document.addEventListener('keydown', (e) => { if (!e.metaKey && !e.ctrlKey && e.key !== 'Shift' && card.contains(document.activeElement)) card.classList.add('is-kbd'); }, true);
+  addEventListener('pointermove', onMove, { passive: true });
+  addEventListener('pointerup', (e) => { if (G && e.pointerId === G.id) endGesture(false, e); });
+  addEventListener('pointercancel', (e) => { if (G && e.pointerId === G.id) endGesture(true, e); });
+
+  /* the Done group folds on one spring (the clip line); the rows stay where they are and are covered from below */
+  function toggleFold() {
+    S.folded = !S.folded;
+    syncInert(); syncHeader(); relayout();
+    say(S.folded ? 'Done folded.' : 'Done opened.');
+  }
+  gbtn.addEventListener('click', toggleFold);
+
+  /* keys: one tab stop in the table, arrows between rows and the Done header, Space ticks (the native box), Shift+arrows sweep */
+  const navList = () => Array.from(body.children).filter((el) => !el.inert).map((el) => (el === grp ? gbtn : el._r.in));
+  function setRover(el) { rows.forEach((r) => { r.in.tabIndex = -1; }); gbtn.tabIndex = -1; el.tabIndex = 0; }
+  function focusRover() { const l = navList(), el = l.find((x) => x.tabIndex === 0) || l[0]; if (el) el.focus({ preventScroll: true }); }
+  tbl.addEventListener('focusin', (e) => { if (e.target.matches('.tk-in, .tk-gb')) setRover(e.target); });
+  tbl.addEventListener('keydown', (e) => {
+    const k = e.key, l = navList(), cur = document.activeElement, i = l.indexOf(cur);
+    if (e.metaKey || e.ctrlKey || e.altKey || i < 0) return;
+    const go = (j) => { const el = l[clamp(j, 0, l.length - 1)]; if (el) { el.focus({ preventScroll: true }); setRover(el); } };
+    if (k === 'ArrowDown' || k === 'ArrowUp') {
+      e.preventDefault();
+      const d = k === 'ArrowDown' ? 1 : -1;
+      if (e.shiftKey && cur._r) {
+        // a sweep from the keys: the first row takes its new state, then every row the focus passes takes the same
+        if (!ks) { ks = { target: !cur._r.checked }; if (changeRow(cur._r, ks.target)) scheduleCommit(BEAT); }
+        const nx = l[i + d];
+        if (nx && nx._r) { go(i + d); if (nx._r.checked !== ks.target && changeRow(nx._r, ks.target)) scheduleCommit(BEAT); }
+      } else go(i + d);
+    } else if (k === 'Home') { e.preventDefault(); go(0); } else if (k === 'End') { e.preventDefault(); go(l.length - 1); }
+  });
+  tbl.addEventListener('keyup', (e) => { if (e.key === 'Shift') ks = null; });
+  tbl.addEventListener('focusout', (e) => { if (!e.relatedTarget || !tbl.contains(e.relatedTarget)) ks = null; });
+
+  /* setup: the lists as they begin (three done), everything at rest, instantly */
+  function setup() {
+    Q.length = 0; S.commitAt = 0; S.commitDone = null; G = null; rec = null; ks = null; S.folded = false; S.rtok++;
+    UN.want = false; UN.on = false; UN.el.hidden = true; UN.tok++; snap(UN.p, 0); snap(CP, 0); snap(CN.sp, 0);
+    rows.forEach((r) => {
+      const c = INIT_DONE.includes(r.id); r.checked = c; r.in.checked = c; r.grp = c ? 'done' : 'open'; r.moving = false; r.pend = 0;
+      snap(r.f, +c); snap(r.d, +c); snap(r.s, +c); snap(r.c, +c); snap(r.lf, 0); snap(r.pz, 1);
+    });
+    hdr.pend = 0;
+    done = INIT_DONE.map((id) => byId[id]); open = rows.filter((r) => r.grp === 'open');
+    reorderDOM(); relayout([], true); S.all = false; syncHeader(true); setRover(open[0].in);
+    render();
+  }
+
+  /* one step of the world, and one frame that writes it */
+  function simStep(dt) {
+    S.t += dt; pump();
+    let any = false;
+    [H, LS, AR, DS, HT, SH, EP, CV, CP, UN.p, hdr.y, HN.sp, DN.sp, CN.sp].forEach((s) => { any = step(s, dt) || any; });
+    for (const r of rows) {
+      ['y', 'lf', 'pz', 'f', 'd', 's', 'c'].forEach((k) => { any = step(r[k], dt) || any; });
+      if (r.moving && !r.pend && !r.y.on) { r.moving = false; aim(r.lf, 0, RESP.lift); }
+    }
+    if (UN.on && !UN.want && UN.p.x < 0.002 && !UN.p.on) { UN.on = false; UN.el.hidden = true; }
+    return any || Q.length > 0 || S.commitAt > 0;
+  }
+  function advance(sec) { for (let i = 0, n = Math.round(sec * 60); i < n; i++) simStep(1 / 60); }
+  const px = (v) => v.toFixed(2);
+  function render() {
+    // the card keeps its top while it folds; only when it grows past its resting height (the quiet line) does it grow both ways, so the frame always holds it
+    const hh = H.x, cy = hh >= 476 ? (FRAME - hh) / 2 : (FRAME - 476) / 2;
+    card.style.height = px(hh) + 'px';
+    card.style.transform = 'translate3d(0,' + px(H.on ? cy : Math.round(cy)) + 'px,0)';
+    const Lx = LS.x;
+    for (const r of rows) {
+      const y = r.y.x, lf = clamp(r.lf.x, 0, 1), st = r.el.style, below = y + ROW - Lx;
+      st.transform = 'translate3d(0,' + px(y) + 'px,0)';
+      st.scale = (1 + 0.01 * lf).toFixed(4);
+      st.zIndex = lf > 0.01 || r.moving ? 4 : 2;
+      st.clipPath = below <= 0 ? 'none' : below >= ROW - 0.5 ? 'inset(0 0 100% 0)' : 'inset(0 0 ' + px(below) + 'px 0)';
+      st.visibility = below >= ROW - 0.5 ? 'hidden' : 'visible';
+      st.setProperty('--lf', lf.toFixed(3)); st.setProperty('--c', clamp(r.c.x, 0, 1).toFixed(3)); st.setProperty('--f', clamp(r.f.x, 0, 1).toFixed(3));
+      r.el.classList.toggle('is-rest', !r.moving && lf < 0.01);
+      const d = clamp(r.d.x, 0, 1), s = clamp(r.s.x, 0, 1), f = clamp(r.f.x, 0, 1);
+      r.box.style.transform = 'scale(' + r.pz.x.toFixed(4) + ')';
+      r.fill.style.visibility = f > 0.004 ? 'visible' : 'hidden';
+      r.tick.style.strokeDashoffset = (1 - d).toFixed(4); r.tick.style.visibility = d > 0.005 ? 'visible' : 'hidden';
+      r.st.style.transform = 'scaleX(' + s.toFixed(4) + ')'; r.st.style.visibility = s > 0.003 ? 'visible' : 'hidden';
+    }
+    grp.style.transform = 'translate3d(0,' + px(hdr.y.x) + 'px,0)'; grp.style.zIndex = 1;
+    chev.style.setProperty('--cv', clamp(CV.x, 0, 1).toFixed(3));
+    // the header
+    const a = clamp(AR.x, 0, 1), ds = clamp(DS.x, 0, 1), ht = clamp(HT.x, 0, 1);
+    arc.style.strokeDashoffset = (1 - a).toFixed(4); arc.style.visibility = a > 0.004 ? 'visible' : 'hidden';
+    disc.style.transform = 'scale(' + ds.toFixed(4) + ')'; disc.style.visibility = ds > 0.004 ? 'visible' : 'hidden';
+    htk.style.strokeDashoffset = (1 - ht).toFixed(4); htk.style.visibility = ht > 0.005 ? 'visible' : 'hidden';
+    subs.style.transform = 'translate(0,' + px(-clamp(SH.x, 0, 1) * 18) + 'px)';
+    for (const R of [HN, DN, CN]) R.col.style.transform = 'translate(0,' + px(-clamp(R.sp.x, 0, 9) * R.lh) + 'px)';
+    // the quiet line, the chip, the Undo bar: covered from below, uncovered from the top
+    const ep = clamp(EP.x, 0, 1);
+    emptyEl.hidden = ep < 0.002 && !S.all;
+    emptyEl.style.clipPath = ep >= 0.999 ? 'none' : 'inset(0 0 ' + ((1 - ep) * 100).toFixed(2) + '% 0)';
+    const cp = clamp(CP.x, 0, 1), chipW = chip.offsetWidth || 28;
+    chip.style.visibility = cp < 0.002 ? 'hidden' : 'visible';
+    chip.style.left = px(64 + S.cw0 + (S.cw1 - S.cw0) * clamp(SH.x, 0, 1) + 8) + 'px';
+    chip.style.clipPath = cp >= 0.999 ? 'none' : 'inset(0 ' + (chipW * (1 - cp)).toFixed(2) + 'px 0 0 round 11px)';
+    if (UN.on) { const u = clamp(UN.p.x, 0, 1); UN.el.style.clipPath = u >= 0.999 ? 'none' : 'inset(-24px -24px ' + (34 - 58 * u).toFixed(2) + 'px -24px)'; }   // the edge and shadow stay in the clip
+  }
+  function frame(now) {
+    raf = 0;
+    if (!S.vis || document.hidden) return;
+    const dt = clamp((now - last) / 1000 || 0.016, 0.001, 0.034);
+    last = now;
+    inFrame = true;
+    const more = simStep(dt);
+    render();
+    inFrame = false;
+    if (more) raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (raf || inFrame || !S.vis || document.hidden) return; last = performance.now(); raf = requestAnimationFrame(frame); }
+  if ('IntersectionObserver' in window) new IntersectionObserver((es) => { S.vis = es[es.length - 1].isIntersecting; if (S.vis) kick(); }).observe(card);
+  document.addEventListener('visibilitychange', kick);
+
+  TASKS.forEach((t) => { const r = mkRow(t); rows.push(r); byId[r.id] = r; });
+  setup();
+  return {
+    S, card, rows, byId, setup, render, advance, kick, resetAll, undo, commit, toggleFold, measureScale(s) { S.scale = s; measure(); },
+    endGhost() { if (G && G.ghost) endGesture(false, null); },
+    holding: () => !!G, hasUndo: () => !!rec, undoBtn: UN.btn, foldBtn: gbtn,
+    open: () => open.slice(), done: () => done.slice(),
+    snapshot() { return { open: open.map((r) => r.id), done: done.map((r) => r.id), checked: rows.filter((r) => r.checked).map((r) => r.id), folded: S.folded, all: S.all, H: H.x, L: LS.x, ys: rows.map((r) => +r.y.x.toFixed(1)), hy: +hdr.y.x.toFixed(1), rec: rec ? recText() : null, count: HN.sp.x, dn: DN.sp.x, arc: AR.x }; }
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('tk-fit'), world = document.getElementById('tk-world');
+  // the card is drawn 660 px wide in a 516 px frame (its tallest state) and scaled to the room it is given; a row is a whole number of pixels
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 4 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    let s = Math.max(0.5, Math.min(0.96 * W / 660, (H - 2 * pad - ui) / 516, 1.5));
+    s = Math.round(40 * s) / 40;
+    fit.style.width = (660 * s).toFixed(2) + 'px'; fit.style.height = (516 * s).toFixed(2) + 'px';
+    world.style.setProperty('--s', s.toFixed(4));
+    TK.measureScale(s);
+  }
+  TK.S.autoReset = QM.tile || QM.live;          // in a tile the list starts again by itself, 3 s after the last task
+  size();
+  addEventListener('resize', size);
+
+  /* the ghost: it moves the same pointer events a hand does (untrusted events on the same handlers) and clicks the same buttons */
+  let epoch = 0, resumeT = 0, pos = null, poseT = 0;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const PID = 94;
+  const fire = (type, x, y, Ctor = PointerEvent, target) => {
+    const t = target || document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: PID, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  const at = (x, y) => { pos = { x, y }; QM.ghostAt(x, y); fire('pointermove', x, y); };
+  async function glide(my, to, ms = 700) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.86 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      at(from.x + (to.x - from.x) * k, from.y + (to.y - from.y) * k);
+      if (p >= 1) break;
+    }
+  }
+  const box = (r) => { const b = r.hit.getBoundingClientRect(); return { x: b.left + b.width * 0.48, y: b.top + b.height * 0.5 }; };
+  const mid = (el, fx = 0.5) => { const b = el.getBoundingClientRect(); return { x: b.left + b.width * fx, y: b.top + b.height * 0.52 }; };
+  async function tap(my) { const { x, y } = pos; fire('pointerdown', x, y); await gap(my, 110); fire('pointerup', x, y); }
+  async function click(my, el) { const { x, y } = pos; fire('pointerdown', x, y); await gap(my, 90); fire('pointerup', x, y); el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window })); }
+  async function until(my, ok, max = 20000) { let t = 0; while (!ok() && t < max) { await gap(my, 100); t += 100; } }
+  // press on a row's box and drag through the next rows, with the pointer's own path
+  async function sweep(my, from, to, ms) {
+    await glide(my, box(from), 620); await gap(my, 220);
+    fire('pointerdown', pos.x, pos.y); await gap(my, 160);
+    await glide(my, box(to), ms); await gap(my, 360);
+    fire('pointerup', pos.x, pos.y);
+  }
+
+  /* the pose the piece loads in, made through the real input path and played: the pointer presses on the first open box and drags down three rows, held */
+  function pose() {
+    stopPose();
+    TK.setup();
+    if (reduced) return;
+    const op = TK.open(), a = box(op[0]), b = box(op[1]), c = box(op[2]);
+    QM.ghostShow(); QM.ghostAt(a.x, a.y); pos = { x: a.x, y: a.y };
+    fire('pointerdown', a.x, a.y, PointerEvent, op[0].hit); TK.advance(0.14);
+    const n1 = 14;
+    for (let i = 1; i <= n1; i++) { const k = mv(i / n1); at(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k); TK.advance(1 / 60); }
+    TK.advance(0.5); TK.render();
+    // the last row is reached in real time, so the thumbnail catches its tick being drawn
+    poseT = setTimeout(async () => {
+      const my = epoch, t0 = performance.now(), from = pos;
+      for (;;) {
+        await raf();
+        if (my !== epoch || !TK.holding()) return;
+        const p = Math.min(1, (performance.now() - t0) / 150), k = mv(p);
+        at(from.x + (c.x - from.x) * k, from.y + (c.y - from.y) * k);
+        if (p >= 1) return;
+      }
+    }, 150);
+  }
+  function stopPose() { clearTimeout(poseT); }
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 4850 : 3400) : 600);
+      let cycle = first ? 0 : 1;
+      QM.ghostShow();
+      if (first && TK.holding() && pos) {              // finish the sweep: let go
+        fire('pointerup', pos.x, pos.y);
+        await gap(my, 1700);
+      }
+      for (;;) {
+        if (cycle % 2 === 0) {
+          // tick one, untick one from Done, fold and open Done, Undo, reset
+          const r = TK.byId.form.grp === 'open' ? TK.byId.form : TK.open()[0];
+          if (r) { await glide(my, box(r), 640); await gap(my, 200); await tap(my); await gap(my, 1750); }
+          const d = TK.byId.photos.grp === 'done' ? TK.byId.photos : TK.done()[0];
+          if (d) { await glide(my, box(d), 640); await gap(my, 200); await tap(my); await gap(my, 1750); }
+          await glide(my, mid(TK.foldBtn, 0.2), 640); await gap(my, 200); await click(my, TK.foldBtn);
+          await gap(my, 1100); await click(my, TK.foldBtn);
+          await gap(my, 1100);
+          if (TK.hasUndo()) { await glide(my, mid(TK.undoBtn, 0.5), 640); await gap(my, 220); await click(my, TK.undoBtn); await gap(my, 1300); }
+          TK.resetAll(); await gap(my, 1300);
+        } else {
+          // sweep every open row to the end: the ring closes, the tick is drawn
+          const op = TK.open();
+          if (op.length > 1) await sweep(my, op[0], op[op.length - 1], 520 + 120 * op.length);
+          else if (op.length) { await glide(my, box(op[0]), 600); await gap(my, 200); await tap(my); }
+          await until(my, () => TK.S.all, 6000);
+          await gap(my, 3000);
+          if (TK.S.all) TK.resetAll();
+          await gap(my, 1600);
+        }
+        cycle++;
+        await glide(my, { x: Math.min(innerWidth - 24, TK.card.getBoundingClientRect().right + 28), y: innerHeight * 0.55 }, 700);
+        QM.ghostHide(); pos = null; fire('pointermove', -10, -10);
+        await gap(my, 900);
+        QM.ghostShow();
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() {
+    epoch++; stopPose();
+    TK.endGhost();
+    QM.ghostHide();
+    if (pos) { pos = null; fire('pointermove', -10, -10); }
+  }
+  if (!QM.tile && !reduced) {
+    const busyHand = () => TK.card.matches(':hover') || (TK.card.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                    // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!busyHand()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); pose(); if (!reduced) script(true); } });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { size(); pose(); if (!reduced) script(true); }, 60));
+})();
+</script>
+</body>
+</html>

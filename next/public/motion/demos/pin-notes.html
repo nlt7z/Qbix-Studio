@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pin notes · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "pin-notes", "title": "Pin notes", "group": "studio", "added": "2026-11-24", "cat": "feedback", "order": 50,
+  "kind": "loop", "preview": {"secs": 9, "skip": 4500}, "tone": "paper", "shot": 700,
+  "line": "one outline on springs · pin drops 0.3 s · pin rect to 252 px bubble 0.38 s · pins fly to the bar 120 ms apart · release projects v × 0.099 s",
+  "summary": "A Forma product page, Ash vase, in a white window with a translucent bar at its foot. Turn on Annotate and one ink outline glides between whatever is under the pointer (the headline, the copy, the price, the Buy button, the photo, a card), taking each element's rect and radius on springs, with a small tag at its corner naming it. Press an element: it answers at once, and a numbered pin drops at the pointer on a scale spring and opens into a composer bubble, the pin's own rect growing into a 252 px bubble that keeps the number as its badge. Return folds the bubble back into the pin and the bar's count rolls. Hovering a pin peeks its note. A pin drags 1:1 and settles on the element it is let go on; dragged onto the bin that appears in the bar, it is removed and the later numbers roll down. Send to agent flies the pins into the bar one after another, the bar reads Sent with a tick drawn in one stroke, and about a second later the page applies the first note: the headline steps up in size on a spring and the layout below glides, with Undo in the bar.",
+  "spec": [
+    ["Outline", "one 1.75 px #1d1d1f path, 3 px outside the element, drawn from its rect and radius each frame; x, y, width, height and radius are critically damped springs (response 0.24 s) started from the value and speed on screen; it is drawn on from the top centre (0.3 s) when the pointer arrives and drawn back when it leaves every element"],
+    ["Tag", "a 20 px ink tag 4 px above the outline's top left naming the element; its width is a spring (0.22 s), its words roll under a clip (0.26 s); it follows the outline and is covered with it"],
+    ["Press", "pointerdown scales the element and the outline to 0.97 in 0.1 s and drops the pin at the pointer on a 0.3 s scale spring from its tip; moving 6 px before letting go turns the press into a drag of that pin"],
+    ["Composer", "the pin is a 28 px ink circle with a 3 px tail corner; its x, y, width and height are four springs (0.38 s) from its rect to a 252 × 52 bubble, the number staying as the 28 px badge, the glass (72% white, 20 px blur) and the field uncovered as it grows; the bubble is placed beside the pin, off the pointed element where it can, inside the window and above the bar"],
+    ["Save", "Return folds the bubble back along the same four springs and rolls the count (0.3 s, a strip of digits); Escape with an empty field folds it and then takes the pin away; Escape with text keeps the note; hovering or focusing a pin grows a 40 px peek with the note; clicking it reopens the composer"],
+    ["Drag", "after 6 px the pin is the hand's, 1:1 from where the slop ended, lifted 1.08; the outline follows the element under its tip; the bar swaps its count for a bin by a 0.42 s roll; a release projects v × 0.099 s (d 0.99) inside the element it is over and settles on a 0.32 s spring, or returns home by the same spring from off any element; over the bin it shrinks into it and the later numbers roll down"],
+    ["Send", "the pins leave in order 120 ms apart, each flying to the count on 0.36 s x and y springs while scaling to 0.3, the count ticking down as each arrives; the panel rolls to Sent · 2 notes and a 22 px lime disc draws its tick in one stroke (0.4 s); 1 s later the first note is applied: the headline rises 56 to 72 px on a 0.5 s spring and the copy, price and button glide down with it; Undo is offered for 5 s and reverses on the same spring"],
+    ["Keys", "in Annotate mode Tab walks the elements with the same outline, Enter drops a pin at the element's corner and opens the composer, Return saves, Escape closes and then leaves the mode; pins are buttons: Enter reopens, Delete removes, arrows nudge 8 px (Shift 32); a status line announces every step"],
+    ["Loop", "the thumbnail is made through the same pointer and key handlers: the outline on the headline with pin 1, pin 2's bubble open on the photo with its note typed, the bar reading 1 note; a ghost then saves it, glides over three elements, pins a third on the price, drags it onto the button, sends, watches the page answer, takes Undo, and rebuilds the pose; it yields to a real mouse, touch or key and resumes after 4.5 s"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-24"],
+  "where": "A client's review round on a staging page (a Forma product page, a Kova landing page), where they point at what to change, say it in a few words, and send all the notes to the agent in one go.",
+  "rules": [
+    "One outline for the whole page. It is the same object on every element: it glides on springs from where it is, takes the next element's rect and radius, and is drawn on and back, never faded or duplicated.",
+    "A press is felt on pointerdown (0.97) and the pin is already there: it grows from the pointer's own point, not from the page's corner.",
+    "The pin becomes the bubble: its rect grows on x, y, width and height springs and the number stays as the badge. Folding takes the same path back. The bubble sits beside the pin, off the pointed element where it can, inside the window and never over the bar.",
+    "Pins belong to elements: a pin keeps its offset inside the element it is on, so when the layout moves (the headline grows) the pins move with it.",
+    "A pin is dragged 1:1 from where the slop ended, lands on the element under it with a projected, critically damped settle, or goes home. The bin is uncovered in the bar only while a pin is held and never covers a page element.",
+    "The bar never covers a page element that can be pinned. It is a translucent material (72% white, 20 px blur) with an ink Annotate toggle, a rolling count and one lime action.",
+    "Lime is exactly one thing at a time: the Send to agent pill while there is a note (grey with none), then the tick after sending. Pins, outline, tag, toggle and Buy are ink.",
+    "Under reduced motion the piece rests on its pose (Annotate on, the outline on the headline with its tag, two pins, one bubble open) and everything changes in place."
+  ],
+  "tags": ["annotate", "pin", "comment", "feedback", "inspect outline", "agent", "spring", "drag", "bubble", "keyboard", "Forma", "review"]
+}
+</script>
+<style data-code>
+/* Pin notes. A Forma product page in a white window, a translucent bar at its foot. System face, Apple neutrals; the one lime is the Send pill (then the tick).
+   Everything that moves is set from script (render()): the outline, the tag, the pins, the bar's panels, the headline. Hover and press for the plain controls are CSS.
+   Easing for small UI feedback: ui (.4, 0, .2, 1). */
+.pn-fit { position: relative; width: calc(760px * var(--s, 1)); height: calc(480px * var(--s, 1)); }
+.pn-win { --pn-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 760px; height: 480px; transform: scale(var(--s, 1)); transform-origin: 0 0; overflow: hidden; isolation: isolate;
+  border-radius: 24px; background: #fff; color: #1d1d1f; font: 400 15px/20px var(--pn-f); letter-spacing: -.01em; cursor: default;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .07), 0 10px 36px -6px rgba(0, 0, 0, .2); touch-action: pan-y;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-font-smoothing: antialiased; }
+.pn-win.is-annot { cursor: crosshair; }
+.pn-win.is-drag, .pn-win.is-drag * { cursor: grabbing !important; }
+.pn-win p, .pn-win h1 { margin: 0; }
+:where(.pn-win button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+
+/* the browser frame and the page's nav (not pinnable) */
+.pn-chrome { position: absolute; left: 0; right: 0; top: 0; height: 32px; pointer-events: none; }
+.pn-chrome i { position: absolute; top: 12px; width: 9px; height: 9px; border-radius: 50%; background: #e0e0e5; }
+.pn-chrome i:nth-child(1) { left: 18px; } .pn-chrome i:nth-child(2) { left: 33px; } .pn-chrome i:nth-child(3) { left: 48px; }
+.pn-url { position: absolute; left: 50%; top: 6px; width: 212px; height: 20px; margin-left: -106px; border-radius: 10px; background: #f5f5f7; font-size: 12px; line-height: 20px; text-align: center; color: #6e6e73; }
+.pn-nav { position: absolute; left: 0; right: 0; top: 32px; height: 46px; padding: 0 28px; display: flex; align-items: center; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .08); pointer-events: none; }
+.pn-nav b { font-size: 17px; line-height: 20px; font-weight: 600; letter-spacing: -.02em; }
+.pn-links { margin-left: auto; display: flex; gap: 22px; font-size: 14px; font-weight: 500; color: #6e6e73; }
+.pn-bag { width: 20px; height: 20px; margin-left: 22px; fill: none; stroke: #1d1d1f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the page: a left column that flows (so the layout below the headline can glide) and the photo */
+.pn-left { position: absolute; left: 28px; top: 100px; width: 356px; height: 308px; display: flex; flex-direction: column; align-items: flex-start; }
+.pn-win [data-pin] { outline: none; will-change: transform; }
+.pn-h { width: fit-content; font: 600 56px/60px var(--pn-f); letter-spacing: -.022em; text-wrap: nowrap; }
+.pn-p { width: 340px; margin-top: 8px; font-size: 17px; line-height: 25px; color: #6e6e73; }
+.pn-buy { display: flex; align-items: center; gap: 22px; margin-top: 16px; }
+.pn-price { position: relative; width: 120px; height: 52px; }
+.pn-sw { position: absolute; left: 0; right: 0; overflow: hidden; white-space: nowrap; pointer-events: none; }
+.pn-sw span { position: absolute; left: 0; top: 0; will-change: transform; }
+.pn-sw-n { top: 0; height: 36px; font: 600 32px/36px var(--pn-f); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.pn-sw-c { top: 36px; height: 16px; font-size: 13px; line-height: 16px; color: #6e6e73; }
+.pn-btn { height: 44px; padding: 0 32px; border-radius: 22px; background: #1d1d1f; color: #fff; font: 600 16px/1 var(--pn-f); letter-spacing: -.01em; }
+.pn-cards { margin-top: auto; width: 100%; display: flex; gap: 12px; }
+.pn-card { flex: 1; height: 92px; padding: 12px 16px; border-radius: 18px; background: #f5f5f7; }
+.pn-card svg { display: block; width: 20px; height: 20px; fill: none; stroke: #1d1d1f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.pn-card h2 { margin: 7px 0 0; font: 600 15px/20px var(--pn-f); letter-spacing: -.01em; }
+.pn-card p { margin: 0; font-size: 13px; line-height: 18px; color: #6e6e73; }
+.pn-photo { position: absolute; left: 424px; top: 100px; width: 308px; height: 308px; margin: 0; border-radius: 22px; overflow: hidden; background: #e8e8ed; }
+.pn-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 68%; pointer-events: none;
+  filter: grayscale(1) contrast(1.04) brightness(1.12) sepia(calc(var(--wm, 0) * .5)) saturate(calc(1 + var(--wm, 0) * .5)); }
+.pn-foot { position: absolute; left: 28px; right: 28px; top: 438px; display: flex; justify-content: space-between; font-size: 12px; line-height: 16px; color: #86868b; pointer-events: none; }
+
+/* the inspect outline: one path, drawn on from the top centre; the tag rides its top left corner */
+.pn-ol { position: absolute; left: 0; top: 0; z-index: 3; width: 760px; height: 480px; overflow: visible; pointer-events: none; }
+.pn-ol path { fill: none; stroke: #1d1d1f; stroke-width: 1.75; stroke-linecap: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.pn-tag { position: absolute; left: 0; top: 0; z-index: 4; height: 20px; overflow: hidden; border-radius: 6px; background: #1d1d1f; color: #fff; pointer-events: none; white-space: nowrap; visibility: hidden;
+  font-size: 12.5px; line-height: 20px; font-weight: 500; letter-spacing: -.005em; will-change: transform; --v: 0; clip-path: inset(0 calc((1 - var(--v)) * 100%) 0 0 round 6px); }
+.pn-tag span { position: absolute; left: 9px; top: 0; will-change: transform; }
+
+/* a pin: a 28 px ink circle with a tail corner at its bottom left (the tip), which grows into the bubble. --o centres the badge, --q and --k set from script. */
+.pn { position: absolute; left: 0; top: 0; z-index: 6; width: 28px; height: 28px; overflow: hidden; transform-origin: 0 100%; will-change: transform; touch-action: none; --o: 0px; --q: 0; --sv: 0; --rt: 14px; --rl: 3px; --rb: 3px;
+  border-radius: var(--rt) var(--rt) var(--rt) var(--rl);
+  box-shadow: 0 0 0 calc(2px * (1 - var(--sv))) #fff, 0 2px 7px rgba(0, 0, 0, calc(.28 * (1 - var(--sv)))), 0 10px 30px rgba(0, 0, 0, calc(.15 * var(--sv))); }
+.pn.is-fv { outline: 2px solid #1d1d1f; outline-offset: 4px; }
+.pn-glass { position: absolute; inset: 0; visibility: hidden; border-radius: inherit; background: rgba(255, 255, 255, .84);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); }
+.pn.is-big .pn-glass { visibility: visible; }
+.pn-b { position: absolute; left: var(--o); top: var(--o); width: 28px; height: 28px; overflow: hidden; border-radius: 14px 14px 14px var(--rb); background: #1d1d1f; color: #fff; outline: none; touch-action: none; }
+.pn-no { position: absolute; inset: 0; display: block; font: 600 13px/28px var(--pn-f); font-variant-numeric: tabular-nums; text-align: center; }
+.pn-no i { position: absolute; left: 0; right: 0; top: 0; font-style: normal; will-change: transform; }
+.pn-in { position: absolute; left: calc(var(--o) + 38px); right: calc(14px + var(--q) * 32px); top: 0; height: 100%; min-width: 0; margin: 0; padding: 0; border: 0; border-radius: 0; outline: none; background: transparent; color: #1d1d1f;
+  font: 400 15px/1 var(--pn-f); letter-spacing: -.01em; text-overflow: ellipsis; -webkit-user-select: text; user-select: text; cursor: text; }
+.pn-in::placeholder { color: #86868b; opacity: 1; }
+.pn-in[readonly] { pointer-events: none; cursor: default; }
+.pn-ret { position: absolute; right: 12px; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 7px; background: #e8e8ed; color: #6e6e73; font-size: 13px; line-height: 22px; text-align: center; transform: scale(var(--q)); pointer-events: none; }
+
+/* the bar: translucent, at the foot; a panel strip on the right rolls between the bin, the count and Send, and Sent */
+.pn-bar { position: absolute; left: 182px; top: 422px; z-index: 8; width: 396px; height: 46px; --v: 1; }
+.pn-sh { position: absolute; inset: 0; border-radius: 23px; box-shadow: 0 10px 30px rgba(0, 0, 0, .12); }
+.pn-pane { position: relative; display: flex; align-items: center; height: 100%; padding: 0 0 0 6px; border-radius: 23px; overflow: hidden; white-space: nowrap;
+  background: rgba(255, 255, 255, .72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); }
+.pn-tg { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 15px 0 12px; border-radius: 17px; color: #1d1d1f; font-size: 14px; font-weight: 500; transition: background 160ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.pn-tg svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.pn-tg:hover, .pn-tg.is-hot { background: rgba(0, 0, 0, .05); }
+.pn-tg[aria-pressed="true"] { background: #1d1d1f; color: #fff; }
+.pn-tg:active, .pn-tg.is-press { transform: scale(.96); }
+.pn-sep { flex: none; width: 1px; height: 18px; margin: 0 8px; background: rgba(0, 0, 0, .1); }
+.pn-rg { position: relative; flex: 1; align-self: stretch; overflow: hidden; }
+.pn-pl { position: absolute; left: 0; right: 0; top: 0; height: 46px; display: flex; align-items: center; will-change: transform; }
+.pn-cnt { display: flex; align-items: center; padding-left: 4px; font-size: 15px; font-weight: 500; line-height: 20px; color: #1d1d1f; transition: color 200ms cubic-bezier(.4, 0, .2, 1); }
+.pn-cnt.is-zero { color: #86868b; }
+.pn-num { position: relative; display: block; width: 10px; height: 20px; margin-right: 5px; overflow: hidden; font-variant-numeric: tabular-nums; text-align: center; transform: translateZ(0); }
+.pn-strip { display: block; will-change: transform; }
+.pn-strip i { display: block; height: 20px; font-style: normal; }
+.pn-s { display: inline-block; max-width: 8px; overflow: hidden; vertical-align: top; transition: max-width 220ms cubic-bezier(.4, 0, .2, 1); }
+.pn-s.is-one { max-width: 0; }
+.pn-send { margin-left: auto; margin-right: 6px; height: 34px; padding: 0 16px; border-radius: 17px; background: #B8FF00; color: #1d1d1f; font-size: 14px; font-weight: 600;
+  transition: background 200ms cubic-bezier(.4, 0, .2, 1), color 200ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.pn-send:not([aria-disabled="true"]):hover, .pn-send.is-hot { background: #c6ff33; }
+.pn-send:not([aria-disabled="true"]):active, .pn-send.is-press { transform: scale(.96); }
+.pn-send[aria-disabled="true"] { background: #e8e8ed; color: #86868b; cursor: default; }
+.pn-bin { flex: 1; height: 34px; margin-right: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 17px; background: #f5f5f7; color: #6e6e73; font-size: 14px; font-weight: 500;
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), color 160ms cubic-bezier(.4, 0, .2, 1); }
+.pn-bin svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.pn-bin .lid { transform-box: fill-box; transform-origin: 90% 100%; transition: transform 220ms cubic-bezier(.16, 1, .3, 1); }
+.pn-bin.is-over { background: #e8e8ed; color: #1d1d1f; }
+.pn-bin.is-over .lid { transform: translate(-1px, -2px) rotate(-16deg); }
+.pn-tick { flex: none; width: 22px; height: 22px; margin-left: 6px; }
+.pn-tick circle { fill: #B8FF00; }
+.pn-tick path { fill: none; stroke: #1d1d1f; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.pn-st { margin-left: 9px; font-size: 15px; font-weight: 500; color: #1d1d1f; }
+.pn-st b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.pn-undo { margin-left: auto; margin-right: 6px; height: 30px; padding: 0 13px; border-radius: 15px; font-size: 14px; font-weight: 600; color: #1d1d1f; --uv: 0; clip-path: inset(0 0 0 calc((1 - var(--uv)) * 100%));
+  transition: background 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.pn-undo:hover, .pn-undo.is-hot { background: rgba(0, 0, 0, .06); }
+.pn-undo:active, .pn-undo.is-press { transform: scale(.96); }
+.pn-tg:focus-visible, .pn-send:focus-visible, .pn-undo:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 1px; }
+
+/* a pose or a reset must not animate the plain CSS transitions either */
+.pn-win.is-still, .pn-win.is-still * { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .pn-tg, .pn-send, .pn-undo, .pn-bin, .pn-bin .lid, .pn-s, .pn-cnt { transition-duration: 1ms !important; }
+}
+</style>
+<style>
+  html.qm-tile .qm-stage { padding: 0; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+  .pn-meas { position: absolute; left: -9999px; top: 0; visibility: hidden; white-space: nowrap; font: 400 15px/1 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.01em; }
+  .pn-meas.t { font-size: 12.5px; font-weight: 500; letter-spacing: -.005em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="pn-fit" id="pn-fit">
+ <section class="pn-win" id="pn-win" aria-label="Forma product page, with annotations">
+  <div class="pn-chrome" aria-hidden="true"><i></i><i></i><i></i><span class="pn-url">forma.studio/ash-vase</span></div>
+  <div class="pn-nav" aria-hidden="true"><b>Forma</b><span class="pn-links"><span>Shop</span><span>Journal</span><span>About</span></span>
+   <svg class="pn-bag" viewBox="0 0 20 20"><path d="M4.4 6.6h11.2l-.9 9.1a1.3 1.3 0 0 1-1.3 1.2H6.6a1.3 1.3 0 0 1-1.3-1.2z"/><path d="M7.5 8.4V6.2a2.5 2.5 0 0 1 5 0v2.2"/></svg></div>
+
+  <div class="pn-left">
+   <h1 class="pn-h" id="pn-h" data-id="headline" data-pin="Headline" data-r="8">Ash vase.</h1>
+   <p class="pn-p" data-id="copy" data-pin="Copy" data-r="8">Pulled by hand and fired twice. It ships wrapped in paper, in five days.</p>
+   <div class="pn-buy">
+    <div class="pn-price" data-id="price" data-pin="Price" data-r="10">
+     <div class="pn-sw pn-sw-n"><span>$68</span><span>$74.80</span></div>
+     <div class="pn-sw pn-sw-c"><span>Ash grey · 24 cm</span><span>Includes 10% tax</span></div>
+    </div>
+    <button type="button" class="pn-btn" data-id="button" data-pin="Button" data-r="22">Buy</button>
+   </div>
+   <div class="pn-cards">
+    <div class="pn-card" data-id="glaze" data-pin="Glaze card" data-r="18">
+     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.4c.5 2.7 3.9 4.3 3.9 7.9a3.9 3.9 0 0 1-7.8 0c0-1.4.6-2.5 1.4-3.3.1 1 .6 1.7 1.3 2C8.5 6.4 8.6 4.3 10 2.4z"/><path d="M5.5 17.2h9"/></svg>
+     <h2>Hand glazed</h2><p>Ash grey, matte</p></div>
+    <div class="pn-card" data-id="ship" data-pin="Shipping card" data-r="18">
+     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.4 6.3 10 2.9l6.6 3.4v7.4L10 17.1l-6.6-3.4z"/><path d="m3.4 6.3 6.6 3.4 6.6-3.4M10 9.7v7.4"/></svg>
+     <h2>Ships in 5 days</h2><p>Free over $60</p></div>
+   </div>
+  </div>
+  <figure class="pn-photo" data-id="photo" data-pin="Photo" data-r="22"><img src="../assets/art/vase.webp" width="700" height="1050" alt="The Ash vase, photographed on a studio table" draggable="false"></figure>
+  <p class="pn-foot" aria-hidden="true"><span>Free returns</span><span>Made to order</span></p>
+
+  <svg class="pn-ol" aria-hidden="true"><path id="pn-path" pathLength="1" d=""/></svg>
+  <div class="pn-tag" id="pn-tag" aria-hidden="true"><span id="pn-ta"></span><span id="pn-tb"></span></div>
+
+  <div class="pn-bar" id="pn-bar" role="toolbar" aria-label="Annotation">
+   <i class="pn-sh"></i>
+   <div class="pn-pane">
+    <button type="button" class="pn-tg" id="pn-tg" aria-pressed="true"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.3 2.6h9.4c.9 0 1.6.7 1.6 1.6v5.5c0 .9-.7 1.6-1.6 1.6H8.6L5.5 13.9v-3H3.3c-.9 0-1.6-.7-1.6-1.6V4.2c0-.9.7-1.6 1.6-1.6z"/><path d="M8 4.9v3.6M6.2 6.7h3.6"/></svg>Annotate</button>
+    <i class="pn-sep"></i>
+    <div class="pn-rg">
+     <div class="pn-pl" id="pn-p0"><div class="pn-bin" id="pn-bin"><svg viewBox="0 0 18 18" aria-hidden="true"><g class="lid"><path d="M3.4 5h11.2"/><path d="M7 5V3.6c0-.6.4-1 1-1h2c.6 0 1 .4 1 1V5"/></g><path d="m4.8 5 .7 9c0 .6.5 1 1.1 1h4.8c.6 0 1-.4 1.1-1l.7-9"/><path d="M7.6 8v4.2M10.4 8v4.2"/></svg>Drop here to remove</div></div>
+     <div class="pn-pl" id="pn-p1"><span class="pn-cnt is-zero" id="pn-cnt" aria-hidden="true"><span class="pn-num"><span class="pn-strip" id="pn-strip"><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i></span></span>note<span class="pn-s" id="pn-s">s</span></span>
+      <button type="button" class="pn-send" id="pn-send" aria-disabled="true">Send to agent</button></div>
+     <div class="pn-pl" id="pn-p2"><svg class="pn-tick" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11"/><path id="pn-tk" pathLength="1" d="M6.4 11.4l3.1 3.1 6.1-6.9"/></svg><span class="pn-st" aria-hidden="true">Sent · <b id="pn-sn">2</b> <span id="pn-sl">notes</span></span>
+      <button type="button" class="pn-undo" id="pn-undo">Undo</button></div>
+    </div>
+   </div>
+  </div>
+ </section>
+ <span class="pn-meas" id="pn-m0" aria-hidden="true"></span><span class="pn-meas t" id="pn-m1" aria-hidden="true"></span>
+ <p class="sr-only" id="pn-help">In Annotate mode, Tab goes through the page elements, Enter adds a note to the one in focus, Return saves it, Escape closes the note and then leaves Annotate.</p>
+ <p class="sr-only" id="pn-msg" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Press an element to pin a note · Return saves · drag a pin to move it, or onto the bin to remove it · Send to agent · Tab walks the elements, Enter pins, Escape leaves</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Pin notes. One outline, a handful of pins, one bar: all springs, all in window pixels (the window may be drawn scaled; the pointer is divided by the scale).
+   A pin belongs to an element and keeps its offset inside it, so it moves with the layout. Its box is the pin's x, y, width and height: 28 px at rest, a bubble when open.
+   Release projects with d = 0.99 (0.099 s). Under reduced motion every spring is set in place. */
+const PN = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = 2 * Math.PI, R = (s) => TAU / s;                                // a response in seconds as an angular frequency
+  const OMO = R(0.24), OMV = R(0.3), OMX = R(0.2), OMT = R(0.22), OML = R(0.26), OMP = R(0.1), OMD = R(0.3), OMB = R(0.38), OMK = R(0.3), OMR = R(0.42), OMF = R(0.36), OMH = R(0.32), OMA = R(0.5), OMU = R(0.4), OMY = R(0.2);
+  const LOOK = 0.099;                                                         // where a release coasts to (d = 0.99)
+  const W = 760, H = 480, PIN = 28, OW = 252, OH = 52, PH = 40, BARY = 422, TOP = 36, BTM = BARY - 10, SLOP = 6, FLICK = 140;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const $ = (id) => document.getElementById('pn-' + id);
+  const fit = $('fit'), win = $('win'), bar = $('bar'), path = $('path'), tag = $('tag'), ta = $('ta'), tb = $('tb'), msg = $('msg'), tg = $('tg'), send = $('send'), undoB = $('undo'), binEl = $('bin'), cnt = $('cnt'), strip = $('strip'), sS = $('s'), tk = $('tk');
+  const pl = [$('p0'), $('p1'), $('p2')], m0 = $('m0'), m1 = $('m1'), hEl = $('h'), photoImg = win.querySelector('.pn-photo img');
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) critically damped (below 1: the damped cosine). It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OMO, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const go = (s, T, w, now, v) => { if (reduced || now) { s.x = s.T = T; s.v = 0; s.on = false; } else { s.T = T; s.w = w; s.z = 1; if (v !== undefined) s.v = v; s.on = true; } kick(); };   // every change wakes the loop
+  const put = (s, x, v = 0) => { s.x = x; s.v = v; };
+
+  /* the page's elements: a rect each (layout, undone from the element's own press scale), a radius, a name */
+  const E = Array.from(win.querySelectorAll('[data-pin]')).map((el) => ({ el, id: el.dataset.id, name: el.dataset.pin, r: +el.dataset.r, pr: mk(0), bp: mk(0), k: 1, fk: 1 }));
+  const byEl = new Map(E.map((e) => [e.el, e])), byId = Object.fromEntries(E.map((e) => [e.id, e]));
+  const pins = [], dead = [];
+  const O = { x: mk(0), y: mk(0), w: mk(0), h: mk(0), r: mk(0), v: mk(0), tr: mk(1), tw: mk(60) };   // the outline and its tag
+  const rp = mk(1), rk = mk(0), tkS = mk(0), uv = mk(0);                      // the bar: panel roll, count roll, tick, Undo
+  const hs = mk(56), wm = mk(0), s1 = mk(0), s2 = mk(0);                      // the page's answers: headline size, photo warmth, price swap
+  let S = 1, OX = 0, OY = 0;                                                  // the window's scale and origin on screen
+  let annot = true, mode = 'edit', held = null, ptr = null, kb = false, focusEl = null, ptrP = null, hoverEl = null, ot = null, active = null, applied = null, sent = [], dispN = 0, uid = 0, raf = 0, last = 0, tagB = '', timers = [], stimers = [], fireHover = null, focusPin = null;
+
+  const say = (t) => { msg.textContent = t; };
+  const later = (ms, fn, keep, own) => { const id = setTimeout(fn, reduced && !keep ? Math.min(ms, 40) : ms); (own ? stimers : timers).push(id); return id; };   // own: a timer of the send sequence, which Undo or a new note may cancel
+  const noteWord = (n) => `${n} note${n === 1 ? '' : 's'}`;
+  function measure() { const b = win.getBoundingClientRect(); OX = b.left; OY = b.top; S = b.width / W || 1; }
+  const local = (cx, cy) => ({ x: (cx - OX) / S, y: (cy - OY) / S });
+  const client = (x, y) => { measure(); return { x: OX + x * S, y: OY + y * S }; };
+  function wr(el) { const r = el.getBoundingClientRect(); return { x: (r.left - OX) / S, y: (r.top - OY) / S, w: r.width / S, h: r.height / S }; }
+  function lrect(e) {                                                         // the element's own box, as if it were not pressed
+    const r = wr(e.el), k = e.k;
+    if (k === 1) return r;
+    const w = r.w / k, h = r.h / k;
+    return { x: r.x + r.w / 2 - w / 2, y: r.y + r.h / 2 - h / 2, w, h };
+  }
+  const meas = (el, text) => { el.textContent = text; return el.getBoundingClientRect().width; };   // the measuring spans sit outside the scaled window: their px are design px
+  function elAt(p, cur) {
+    for (const e of E) { const r = lrect(e); if (p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h) return e; }
+    if (cur) { const r = lrect(cur); if (p.x >= r.x - 6 && p.x <= r.x + r.w + 6 && p.y >= r.y - 6 && p.y <= r.y + r.h + 6) return cur; }   // a little hold on the element you are on, so its edge does not flicker
+    return null;
+  }
+
+  /* a rounded rect as one path that starts at the middle of the top edge and runs clockwise, so a dash offset draws it on from there */
+  const rr = (x, y, w, h, r) => {
+    r = Math.min(r, w / 2, h / 2);
+    const f = (n) => +n.toFixed(2), c = f(x + w / 2);
+    return `M${c} ${f(y)}H${f(x + w - r)}A${f(r)} ${f(r)} 0 0 1 ${f(x + w)} ${f(y + r)}V${f(y + h - r)}A${f(r)} ${f(r)} 0 0 1 ${f(x + w - r)} ${f(y + h)}H${f(x + r)}A${f(r)} ${f(r)} 0 0 1 ${f(x)} ${f(y + h - r)}V${f(y + r)}A${f(r)} ${f(r)} 0 0 1 ${f(x + r)} ${f(y)}H${c}`;
+  };
+
+  /* ---- the outline ------------------------------------------------------------------------------------------------ */
+  function oRect(e) { const r = lrect(e), g = 3.875; return { x: r.x - g, y: r.y - g, w: r.w + 2 * g, h: r.h + 2 * g, r: e.r + g }; }
+  function wantEl() {
+    if (!annot) return null;
+    if (held && held.mode === 'drag') { const t = tip(held.pin); return elAt({ x: t.x + 3, y: t.y - 3 }, ot); }   // the element under the pin being carried
+    if (held && held.kind === 'drop') return held.el;
+    if (kb && focusEl) return focusEl;
+    if (kb && active) return active.e;                                         // the note being written stays outlined
+    if (kb && focusPin) return focusPin.e;
+    return hoverEl;
+  }
+  function setLabel(text, instant) {
+    if (instant || reduced) { tagB = text; tb.textContent = text; ta.textContent = ''; put(O.tr, 1); O.tr.T = 1; O.tr.on = false; go(O.tw, meas(m1, text) + 18, OMT, true); return; }
+    if (text === tagB) return;
+    if (!O.tr.on || O.tr.x >= 0.999) { ta.textContent = tagB; put(O.tr, 0, 0); }       // what is showing now is what leaves
+    else if (O.tr.x > 0.5) { ta.textContent = tagB; put(O.tr, O.tr.x - 1, O.tr.v); }    // what was arriving is now what leaves: continuous on screen
+    tagB = text; tb.textContent = text;
+    go(O.tr, 1, OML); go(O.tw, meas(m1, text) + 18, OMT);
+  }
+  function retarget() {
+    const want = wantEl();
+    if (want !== ot) {
+      const prev = ot; ot = want;
+      if (!want) go(O.v, 0, OMX);
+      else {
+        const t = oRect(want);
+        if (!prev && O.v.x < 0.03) {                                           // it arrives where it will stay, not from where it was
+          [O.x.x, O.y.x, O.w.x, O.h.x, O.r.x] = [t.x, t.y, t.w, t.h, t.r];
+          for (const s of [O.x, O.y, O.w, O.h, O.r]) { s.v = 0; s.on = false; }
+          O.x.T = t.x; O.y.T = t.y; O.w.T = t.w; O.h.T = t.h; O.r.T = t.r;
+          setLabel(want.name, true);
+        } else setLabel(want.name, false);
+        go(O.v, 1, OMV);
+        if (!reduced) say(`${want.name}. Press to add a note`);
+      }
+    }
+    if (ot) {                                                                  // follows the element as the layout moves
+      const t = oRect(ot), up = (s, T) => { if (Math.abs(T - s.T) > 0.04) go(s, T, OMO); };
+      up(O.x, t.x); up(O.y, t.y); up(O.w, t.w); up(O.h, t.h); up(O.r, t.r);
+    }
+  }
+  const ov = { d: '', o: NaN, tf: '', w: NaN, a: '', b: '', c: NaN, vis: false };
+  function renderOutline() {
+    const v = +clamp(O.v.x, 0, 1).toFixed(3);
+    const k = ot ? ot.k : 1, cx = O.x.x + O.w.x / 2, cy = O.y.x + O.h.x / 2, w = O.w.x * k, h = O.h.x * k;
+    const d = rr(cx - w / 2, cy - h / 2, w, h, O.r.x * k);
+    if (d !== ov.d) { ov.d = d; path.setAttribute('d', d); }
+    if (v !== ov.o) { ov.o = v; if (reduced) path.style.opacity = v; path.style.strokeDashoffset = reduced ? 0 : (1 - v).toFixed(3); path.style.visibility = v > 0.003 ? 'visible' : 'hidden'; }   // a zero-length dash with a round cap is a dot
+    const vis = v > 0.003;
+    if (vis !== ov.vis) { ov.vis = vis; tag.style.visibility = vis ? 'visible' : 'hidden'; }
+    const tf = `translate3d(${(O.x.x + 2).toFixed(2)}px, ${(O.y.x - 25).toFixed(2)}px, 0)`;
+    if (tf !== ov.tf) { ov.tf = tf; tag.style.transform = tf; }
+    const tw = O.tw.x.toFixed(2);
+    if (tw !== ov.w) { ov.w = tw; tag.style.width = tw + 'px'; }
+    if (reduced) { if (v !== ov.c) { ov.c = v; tag.style.setProperty('--v', 1); tag.style.opacity = v; } }
+    else if (v !== ov.c) { ov.c = v; tag.style.setProperty('--v', v); }
+    const a = `translateY(${(-O.tr.x * 20).toFixed(2)}px)`, b = `translateY(${((1 - O.tr.x) * 20).toFixed(2)}px)`;
+    if (a !== ov.a) { ov.a = a; ta.style.transform = a; }
+    if (b !== ov.b) { ov.b = b; tb.style.transform = b; }
+  }
+
+  /* ---- pins ------------------------------------------------------------------------------------------------------- */
+  function baseTip(p) { const r = lrect(p.e); return { x: r.x + p.ox, y: r.y + p.oy }; }
+  function tip(p) {
+    if (p.hold) return p.hold;
+    if (p.fly) return { x: p.fx.x, y: p.fy.x };
+    const b = baseTip(p); return { x: b.x + p.dx.x, y: b.y + p.dy.x };
+  }
+  function addPin(e, pt) {
+    const r = lrect(e);
+    const dom = document.createElement('div');
+    dom.className = 'pn';
+    dom.innerHTML = '<i class="pn-glass"></i><button type="button" class="pn-b"><span class="pn-no"><i></i><i></i></span></button><input class="pn-in" type="text" maxlength="80" placeholder="What should change?" autocomplete="off" autocapitalize="sentences" spellcheck="false" readonly tabindex="-1"><span class="pn-ret" aria-hidden="true">↵</span>';
+    win.insertBefore(dom, bar);
+    const p = { id: ++uid, e, ox: pt.x - r.x, oy: pt.y - r.y, note: '', saved: false, state: 'pin', dom, b: dom.querySelector('.pn-b'), inp: dom.querySelector('.pn-in'), i0: dom.querySelectorAll('.pn-no i')[0], i1: dom.querySelectorAll('.pn-no i')[1],
+      n: 0, hold: null, fly: false, dx: mk(0), dy: mk(0), fx: mk(0), fy: mk(0), ofx: mk(0), ofy: mk(0), pw: mk(PIN), ph: mk(PIN), s: mk(0), lf: mk(0), pr: mk(0), sq: mk(0), rl: mk(1),
+      cache: {}, peekT: 0, leaveT: 0, quiet: false, fv: false };
+    wire(p);
+    pins.push(p);
+    go(p.s, 1, OMD);
+    renumber();
+    kick();
+    return p;
+  }
+  function wire(p) {
+    p.dom.addEventListener('pointerenter', (ev) => { if (ev.pointerType === 'touch') return; clearTimeout(p.leaveT); if (!held && p.state === 'pin' && p.saved && mode !== 'send') p.peekT = setTimeout(() => peek(p), reduced ? 0 : 90); });
+    p.dom.addEventListener('pointerleave', () => { clearTimeout(p.peekT); if (p.state === 'peek' && !p.fv) p.leaveT = setTimeout(() => unpeek(p), reduced ? 0 : 140); });
+    p.b.addEventListener('focus', () => { focusPin = p; kick(); if (p.b.matches(':focus-visible')) { p.fv = true; p.dom.classList.add('is-fv'); if (!p.quiet && p.saved && p.state === 'pin') peek(p); } p.quiet = false; });
+    p.b.addEventListener('blur', () => { if (focusPin === p) focusPin = null; p.fv = false; p.dom.classList.remove('is-fv'); if (p.state === 'peek') unpeek(p); });
+    p.b.addEventListener('click', (ev) => { if (ev.detail === 0) { if (p.state === 'open') closePin(p); else openPin(p); } });   // a click from the keyboard; a pointer's is handled on release
+    p.b.addEventListener('keydown', (ev) => {
+      if (mode === 'send') return;
+      if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); const e = p.e; removePin(p); e.el.focus({ preventScroll: true }); say(`Note removed`); }
+      else if (ev.key.startsWith('Arrow') && p.state !== 'open') {
+        ev.preventDefault();
+        const d = ev.shiftKey ? 32 : 8;
+        nudge(p, ev.key === 'ArrowLeft' ? -d : ev.key === 'ArrowRight' ? d : 0, ev.key === 'ArrowUp' ? -d : ev.key === 'ArrowDown' ? d : 0);
+      }
+    });
+    p.inp.addEventListener('input', () => { p.note = p.inp.value; });
+    p.inp.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault(); ev.stopPropagation();
+        if (!p.inp.value.trim()) { say('Write a note, or press Escape to remove the pin'); return; }
+        p.quiet = true; closePin(p); if (ev.isTrusted) p.b.focus({ preventScroll: true });
+      } else if (ev.key === 'Escape') {
+        ev.preventDefault(); ev.stopPropagation();
+        const keep = !!p.inp.value.trim(), e = p.e;
+        p.quiet = true; closePin(p);
+        if (ev.isTrusted) { if (keep) p.b.focus({ preventScroll: true }); else e.el.focus({ preventScroll: true }); }
+      }
+    });
+  }
+  function renumber() {
+    pins.forEach((p, i) => {
+      const n = i + 1;
+      p.b.setAttribute('aria-label', `Note ${n}${p.note ? ': ' + p.note : ''}, on ${p.e.name}`);
+      if (p.n === n) return;
+      if (!p.n || reduced) { p.n = n; p.i0.textContent = n; p.i1.textContent = ''; put(p.rl, 1); p.rl.on = false; return; }
+      p.i0.textContent = p.n; p.i1.textContent = n; p.n = n;
+      put(p.rl, 0); go(p.rl, 1, OMK);
+    });
+    kick();
+  }
+  function peekRect(p) {
+    const w = clamp(meas(m0, p.note) + 44 + 22, 100, OW), b = baseTip(p);
+    return { ofx: clamp(-6, 8 - b.x, W - 8 - w - b.x), ofy: -6, w, h: PH };
+  }
+  function place(p) {                                                         // a spot for the bubble beside the pin: off the pointed element where it can, inside the window, above the bar
+    const b = baseTip(p), px = b.x, py = b.y - PIN, er = lrect(p.e);
+    const C = [[px + PIN + 10, py + PIN / 2 - OH / 2], [px - 10 - OW, py + PIN / 2 - OH / 2], [px - 12, py + PIN + 10], [px - 12, py - 10 - OH]];
+    const area = (a, r) => Math.max(0, Math.min(a.x + a.w, r.x + r.w) - Math.max(a.x, r.x)) * Math.max(0, Math.min(a.y + a.h, r.y + r.h) - Math.max(a.y, r.y));
+    let best = null, bs = 1e12;
+    C.forEach((c, i) => {
+      const x = clamp(c[0], 8, W - 8 - OW), y = clamp(c[1], TOP, BTM - OH), a = { x, y, w: OW, h: OH };
+      let s = area(a, er) + Math.abs(x - c[0]) * 40 + Math.abs(y - c[1]) * 40 + i * 30;
+      for (const e of E) if (e !== p.e) s += area(a, lrect(e)) * 0.35;
+      for (const q of pins) if (q !== p) { const t = baseTip(q); s += area(a, { x: t.x, y: t.y - PIN, w: PIN, h: PIN }) * 0.8; }
+      if (s < bs) { bs = s; best = a; }
+    });
+    return best;
+  }
+  function setRect(p, now, resp = OMB) {
+    const b = baseTip(p), st = p.state;
+    let ofx = 0, ofy = 0, w = PIN, h = PIN;
+    if (st === 'peek') { const r = peekRect(p); ofx = r.ofx; ofy = r.ofy; w = r.w; h = r.h; }
+    else if (st === 'open') { const r = place(p); ofx = r.x - b.x; ofy = r.y - (b.y - PIN); w = OW; h = OH; }
+    go(p.ofx, ofx, resp, now); go(p.ofy, ofy, resp, now); go(p.pw, w, resp, now); go(p.ph, h, resp, now);
+    p.dom.style.zIndex = st === 'open' ? 12 : st === 'peek' ? 10 : 6;
+    kick();
+  }
+  function peek(p) { if (p.state !== 'pin' || !p.saved || held) return; p.state = 'peek'; p.inp.value = p.note; setRect(p); }
+  function unpeek(p) { if (p.state !== 'peek') return; p.state = 'pin'; setRect(p); }
+  function openPin(p) {
+    if (mode === 'send' || p.gone) return;
+    if (active && active !== p) closePin(active);
+    clearTimeout(p.peekT); clearTimeout(p.leaveT);
+    active = p; p.state = 'open'; p.inp.value = p.note; p.inp.readOnly = false; p.inp.tabIndex = 0;
+    setRect(p);
+    p.inp.focus({ preventScroll: true });
+    say(`Note ${p.n}. Type what should change, Return to save, Escape to cancel`);
+  }
+  function closePin(p) {
+    if (!p || p.state !== 'open') return;
+    if (active === p) active = null;
+    const txt = p.inp.value.trim();
+    p.inp.readOnly = true; p.inp.tabIndex = -1;
+    if (document.activeElement === p.inp) p.inp.blur();
+    p.state = 'pin'; setRect(p);
+    if (!txt) { say('Note removed'); later(220, () => removePin(p)); return; }
+    p.note = txt; p.inp.value = txt;
+    if (!p.saved) { p.saved = true; syncBar(); say(`Note ${p.n} saved: ${txt}. ${noteWord(nSaved())}`); }
+    else say(`Note ${p.n} updated`);
+    p.b.setAttribute('aria-label', `Note ${p.n}: ${txt}, on ${p.e.name}`);
+  }
+  function removePin(p, how) {
+    const i = pins.indexOf(p); if (i < 0) return;
+    pins.splice(i, 1); dead.push(p); p.gone = true;
+    if (active === p) active = null;
+    if (ptr !== null && held && held.pin === p) held = null;
+    clearTimeout(p.peekT); clearTimeout(p.leaveT);
+    p.inp.readOnly = true; p.inp.tabIndex = -1; p.b.tabIndex = -1; p.state = 'pin'; setRect(p);
+    if (how === 'bin') {
+      const r = wr(binEl), t = tip(p); p.hold = null; p.fly = true; p.fx.x = t.x; p.fy.x = t.y; p.fx.v = p.fy.v = 0;
+      go(p.fx, r.x + r.w / 2 - 14, OMF); go(p.fy, r.y + r.h / 2 + 14, OMF);
+      p.dom.style.zIndex = 11;
+    }
+    go(p.s, 0, OMD);
+    renumber(); syncBar();
+    later(560, () => { p.dom.remove(); const j = dead.indexOf(p); if (j >= 0) dead.splice(j, 1); });
+  }
+  function nudge(p, dx, dy) {
+    const t = baseTip(p), L = { x: t.x + dx, y: t.y + dy }, cur = lrect(p.e);
+    let e = elAt(L, null) || p.e;
+    const r = e === p.e ? cur : lrect(e);
+    const x = clamp(L.x, r.x + 4, r.x + r.w - 4), y = clamp(L.y, r.y + 4, r.y + r.h - 4);
+    if (Math.abs(x - t.x) < 0.5 && Math.abs(y - t.y) < 0.5) { say('At the edge of the element'); return; }
+    const was = tip(p);
+    p.e = e; p.ox = x - r.x; p.oy = y - r.y;
+    put(p.dx, was.x - x, p.dx.v); put(p.dy, was.y - y, p.dy.v);
+    go(p.dx, 0, OMH); go(p.dy, 0, OMH);
+    say(`Note ${p.n} moved${e !== p.e ? '' : ''} on ${e.name}`);
+    kick();
+  }
+
+  /* ---- the bar ---------------------------------------------------------------------------------------------------- */
+  const nSaved = () => pins.filter((p) => p.saved).length;
+  function panelTarget() { return held && held.mode === 'drag' && mode === 'edit' ? 0 : mode === 'sent' ? 2 : 1; }
+  function syncBar() {
+    const n = mode === 'send' ? dispN : nSaved();
+    go(rk, n, OMK);
+    cnt.classList.toggle('is-zero', n === 0);
+    sS.classList.toggle('is-one', n === 1);
+    const can = mode === 'edit' && nSaved() > 0;
+    send.setAttribute('aria-disabled', can ? 'false' : 'true');
+    go(rp, panelTarget(), OMR);
+    kick();
+  }
+  function setAnnot(on, quiet) {
+    annot = on;
+    tg.setAttribute('aria-pressed', on);
+    win.classList.toggle('is-annot', on);
+    for (const e of E) e.el.tabIndex = on ? 0 : -1;
+    if (!on) { if (active) closePin(active); kb = false; }
+    if (!quiet) say(on ? 'Annotate on. Press an element to add a note' : 'Annotate off');
+    kick();
+  }
+  function fly(p, tgt) {
+    if (p.state === 'open') closePin(p);
+    clearTimeout(p.peekT); p.state = 'pin'; setRect(p);
+    const t = tip(p); p.fly = true; p.fx.x = t.x; p.fy.x = t.y; p.fx.v = p.fy.v = 0;
+    go(p.fx, tgt.x - 14, OMF); go(p.fy, tgt.y + 14, OMF); go(p.s, 0.3, OMF);
+    p.dom.style.zIndex = 11;
+  }
+  function sendAll() {
+    if (mode !== 'edit') return;
+    if (active) closePin(active);
+    const list = pins.filter((p) => p.saved);
+    if (!list.length) return;
+    clearTimers();
+    mode = 'send'; dispN = list.length; sent = list.map((p) => ({ e: p.e, text: p.note }));
+    syncBar(); say(`Sending ${noteWord(list.length)}`);
+    const c = wr(cnt), tgt = { x: c.x + 14, y: c.y + c.h / 2 };
+    list.forEach((p, i) => { later(i * 120, () => fly(p, tgt), false, true); later(i * 120 + 300, () => { dispN--; syncBar(); }, false, true); });
+    const t1 = (list.length - 1) * 120 + 600;
+    later(t1, () => {
+      list.forEach((p) => { pins.splice(pins.indexOf(p), 1); p.gone = true; p.dom.remove(); });
+      dispN = 0; mode = 'sent';
+      $('sn').textContent = sent.length; $('sl').textContent = sent.length === 1 ? 'note' : 'notes';
+      put(tkS, 0); tkS.on = false; tk.style.strokeDashoffset = 1;
+      syncBar(); renumber();
+      later(150, () => go(tkS, 1, OMU), false, true);
+      say(`Sent ${noteWord(sent.length)}`);
+    }, false, true);
+    later(t1 + 1150, applyAnswer, true, true);
+    later(t1 + 1150 + 5200, endSent, true, true);
+  }
+  function applyAnswer() {
+    if (mode !== 'sent' || !sent.length) return;
+    const a = sent[0], id = a.e.id, t = a.text;
+    if (id === 'headline') { const small = /small|less|shrink|tiny|reduce/i.test(t); go(hs, small ? 44 : 72, OMA); applied = () => go(hs, 56, OMA); say(`The agent made the headline ${small ? 'smaller' : 'bigger'}. Undo is available`); }
+    else if (id === 'photo') { go(wm, 1, OMA); applied = () => go(wm, 0, OMA); say('The agent warmed the photo. Undo is available'); }
+    else if (id === 'price') { go(s1, 1, OMA); go(s2, 1, R(0.56)); applied = () => { go(s1, 0, OMA); go(s2, 0, R(0.56)); }; say('The agent added tax to the price. Undo is available'); }
+    else { applied = () => {}; go(a.e.bp, 1, OMP); later(150, () => go(a.e.bp, 0, OMD), true, true); say(`The agent updated the ${a.e.name.toLowerCase()}. Undo is available`); }
+    go(uv, 1, OMA);
+  }
+  function endSent() { if (mode !== 'sent') return; applied = null; mode = 'edit'; go(uv, 0, OMX); syncBar(); }
+  function undo() {
+    if (mode !== 'sent' || !applied) return;
+    clearTimers(); applied(); applied = null; mode = 'edit'; go(uv, 0, OMX); syncBar(); say('Undone');
+  }
+  function clearTimers() { stimers.forEach(clearTimeout); stimers = []; }
+
+  /* ---- drawing ---------------------------------------------------------------------------------------------------- */
+  function renderPin(p) {
+    const t = tip(p), c = p.cache;
+    const sc = clamp(p.s.x, 0, 1.2) * (1 + 0.08 * p.lf.x - 0.3 * p.sq.x - 0.05 * p.pr.x);
+    const tf = `translate3d(${(t.x + p.ofx.x).toFixed(2)}px, ${(t.y - PIN + p.ofy.x).toFixed(2)}px, 0) scale(${sc.toFixed(4)})`;
+    if (tf !== c.tf) { c.tf = tf; p.dom.style.transform = tf; }
+    const w = +p.pw.x.toFixed(2), h = +p.ph.x.toFixed(2);
+    if (w !== c.w) { c.w = w; p.dom.style.width = w + 'px'; }
+    if (h !== c.h) {
+      c.h = h; p.dom.style.height = h + 'px';
+      const k1 = clamp((h - PIN) / 12, 0, 1), k2 = clamp((h - PIN) / 24, 0, 1), rt = 14 + 4 * k2;
+      p.dom.style.setProperty('--o', ((h - PIN) / 2).toFixed(2) + 'px');
+      p.dom.style.setProperty('--sv', k1.toFixed(3));
+      p.dom.style.setProperty('--q', clamp((h - PH) / 12, 0, 1).toFixed(3));
+      p.dom.style.setProperty('--rt', rt.toFixed(2) + 'px');
+      p.dom.style.setProperty('--rl', (3 + (rt - 3) * k1).toFixed(2) + 'px');
+      p.dom.style.setProperty('--rb', (3 + 11 * k1).toFixed(2) + 'px');
+      const big = h > PIN + 0.5;
+      if (big !== c.big) { c.big = big; p.dom.classList.toggle('is-big', big); }
+    }
+    if (p.rl.on || c.rl !== 1) {
+      const r = +clamp(p.rl.x, 0, 1.2).toFixed(3);
+      if (r !== c.rl) {
+        c.rl = r;
+        if (r >= 0.999) { p.i0.textContent = p.n; p.i0.style.transform = ''; p.i1.textContent = ''; p.i1.style.transform = 'translateY(28px)'; c.rl = 1; }
+        else { p.i0.style.transform = `translateY(${(-r * 28).toFixed(2)}px)`; p.i1.style.transform = `translateY(${((1 - r) * 28).toFixed(2)}px)`; }
+      }
+    }
+  }
+  const bv = { rk: NaN, rp: '', tk: NaN, uv: NaN, h: NaN, wm: NaN, s1: NaN, s2: NaN };
+  function renderBar() {
+    const k = (-rk.x * 20).toFixed(2);
+    if (k !== bv.rk) { bv.rk = k; strip.style.transform = `translate3d(0, ${k}px, 0)`; }
+    const r = rp.x.toFixed(3);
+    if (r !== bv.rp) { bv.rp = r; pl.forEach((el, i) => { const y = (i - rp.x) * 46; el.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`; el.style.visibility = Math.abs(i - rp.x) < 0.999 ? 'visible' : 'hidden'; }); }
+    const t = +clamp(tkS.x, 0, 1).toFixed(3);
+    if (t !== bv.tk) { bv.tk = t; tk.style.strokeDashoffset = (1 - t).toFixed(3); tk.style.visibility = t > 0.003 ? 'visible' : 'hidden'; }
+    const u = +clamp(uv.x, 0, 1).toFixed(3);
+    if (u !== bv.uv) { bv.uv = u; undoB.style.setProperty('--uv', u); undoB.tabIndex = u > 0.5 ? 0 : -1; }
+  }
+  function renderPage() {
+    const h = hs.x.toFixed(2);
+    if (h !== bv.h) { bv.h = h; hEl.style.fontSize = h + 'px'; hEl.style.lineHeight = (hs.x * 1.0715).toFixed(2) + 'px'; }
+    const w = +clamp(wm.x, 0, 1).toFixed(3);
+    if (w !== bv.wm) { bv.wm = w; photoImg.style.setProperty('--wm', w); }
+    for (const [s, i, key] of [[s1, 0, 's1'], [s2, 1, 's2']]) {
+      const v = +clamp(s.x, 0, 1).toFixed(3);
+      if (v !== bv[key]) { bv[key] = v; const sp = win.querySelectorAll(i ? '.pn-sw-c span' : '.pn-sw-n span'), hh = i ? 16 : 36; sp[0].style.transform = `translateY(${(-v * hh).toFixed(2)}px)`; sp[1].style.transform = `translateY(${((1 - v) * hh).toFixed(2)}px)`; }
+    }
+  }
+  function renderEl(e) {
+    const k = +(1 - 0.03 * e.pr.x + 0.025 * e.bp.x).toFixed(4);
+    if (k !== e.fk) { e.fk = k; e.k = k; e.el.style.transform = k === 1 ? '' : `scale(${k})`; }
+  }
+
+  /* ---- motion ----------------------------------------------------------------------------------------------------- */
+  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
+  function frame(dt) {
+    measure();
+    hoverEl = ptrP && annot ? elAt(ptrP, hoverEl) : null;
+    retarget();
+    let lv = false;
+    for (const e of E) { lv = step(e.pr, dt, 0.002, 0.05) || lv; lv = step(e.bp, dt, 0.002, 0.05) || lv; }
+    for (const s of [O.x, O.y, O.w, O.h, O.r]) lv = step(s, dt, 0.05, 3) || lv;
+    for (const s of [O.v, O.tr, O.tw]) lv = step(s, dt, s === O.tw ? 0.05 : 0.002, s === O.tw ? 3 : 0.05) || lv;
+    for (const s of [rp, rk, tkS, uv, hs, wm, s1, s2]) lv = step(s, dt, s === hs ? 0.02 : 0.002, s === hs ? 0.5 : 0.05) || lv;
+    const hand = held && held.mode === 'drag' ? held.pin : null;
+    for (const p of pins.concat(dead)) {
+      for (const k of ['dx', 'dy', 'fx', 'fy', 'ofx', 'ofy', 'pw', 'ph']) lv = step(p[k], dt, 0.05, 3) || lv;
+      for (const k of ['s', 'lf', 'pr', 'sq', 'rl']) lv = step(p[k], dt, 0.002, 0.05) || lv;
+    }
+    E.forEach(renderEl); renderOutline(); renderBar(); renderPage();
+    for (const p of pins.concat(dead)) renderPin(p);
+    binEl.classList.toggle('is-over', !!(held && held.mode === 'drag' && held.bin));
+    return lv || !!hand;
+  }
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    if (frame(dt)) kick();
+  }
+  const advance = (sec) => { for (let t = 0; t < sec; t += 1 / 60) frame(1 / 60); };   // the world stepped at 60 Hz, for the first picture
+
+  /* ---- the hand: a pointer or the ghost, both through the same events --------------------------------------------- */
+  function vel(rows, t) {
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return { x: 0, y: 0 };
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? { x: 0, y: 0 } : { x: ((b[1] - a[1]) / dt) * 1000, y: ((b[2] - a[2]) / dt) * 1000 };
+  }
+  function pageDown(pt) {
+    const e = annot && mode !== 'send' ? elAt(pt, null) : null;
+    if (active) closePin(active);
+    if (!e) return false;
+    if (pins.length >= 9) { say('Nine notes is the most for one send'); return false; }
+    if (mode === 'sent') { clearTimers(); mode = 'edit'; applied = null; go(uv, 0, OMX); syncBar(); }
+    const p = addPin(e, pt);
+    held = { kind: 'drop', pin: p, el: e, mode: 'wait', x0: pt.x, y0: pt.y, rows: [] };
+    go(e.pr, 1, OMP);
+    say(`Note ${p.n} added on ${e.name}`);
+    return true;
+  }
+  function startDrag(h, pt) {
+    const p = h.pin, t = tip(p);
+    clearTimeout(p.peekT); clearTimeout(p.leaveT);
+    if (p.state !== 'pin') { p.state = 'pin'; setRect(p, false, R(0.16)); }
+    h.mode = 'drag'; h.ax = pt.x; h.ay = pt.y; h.tx = t.x; h.ty = t.y; h.rows = [[performance.now(), 0, 0]]; h.bin = false;
+    p.hold = { x: t.x, y: t.y };
+    p.dx.on = p.dy.on = false;
+    go(p.lf, 1, OML); go(p.pr, 0, OMP);
+    p.dom.style.zIndex = 11;
+    if (h.el) go(h.el.pr, 0, OMP);
+    win.classList.add('is-drag');
+    syncBar();
+    say(`Note ${p.n} lifted`);
+  }
+  function dragMove(h, pt, t) {
+    const p = h.pin;
+    p.hold = { x: clamp(h.tx + (pt.x - h.ax), 2, W - 2), y: clamp(h.ty + (pt.y - h.ay), 4, H - 2) };
+    h.rows.push([t, p.hold.x, p.hold.y]);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    const r = wr(binEl), c = { x: p.hold.x + 14, y: p.hold.y - 14 };
+    const over = rp.x < 0.5 && c.x > r.x - 8 && c.x < r.x + r.w + 8 && c.y > r.y - 10 && c.y < r.y + r.h + 10;
+    if (over !== h.bin) { h.bin = over; go(p.sq, over ? 1 : 0, OML); }
+    kick();
+  }
+  function release(h, t, cancel) {
+    const p = h.pin, T = p.hold || tip(p);
+    p.hold = null;
+    win.classList.remove('is-drag');
+    go(p.lf, 0, OML); go(p.sq, 0, OML);
+    p.dom.style.zIndex = p.state === 'open' ? 12 : 6;
+    if (h.bin && !cancel) { removePin(p, 'bin'); say('Note removed'); syncBar(); return; }
+    const v = cancel ? { x: 0, y: 0 } : vel(h.rows, t), sp = Math.hypot(v.x, v.y);
+    const L = sp > FLICK ? { x: T.x + v.x * LOOK, y: T.y + v.y * LOOK } : T;
+    const e1 = elAt({ x: T.x + 3, y: T.y - 3 }, null);
+    if (e1) {
+      const r = lrect(e1), x = clamp(L.x, r.x + 4, r.x + r.w - 4), y = clamp(L.y, r.y + 4, r.y + r.h - 4);
+      const moved = e1 !== p.e;
+      p.e = e1; p.ox = x - r.x; p.oy = y - r.y;
+      put(p.dx, T.x - x, v.x); put(p.dy, T.y - y, v.y);
+      say(moved ? `Note ${p.n} moved to ${e1.name}` : `Note ${p.n} moved`);
+    } else {
+      const b = baseTip(p);
+      put(p.dx, T.x - b.x, v.x); put(p.dy, T.y - b.y, v.y);
+      say(`Note ${p.n} back where it was`);
+    }
+    go(p.dx, 0, OMH); go(p.dy, 0, OMH);
+    syncBar();
+  }
+  function down(pt, target, type, id) {
+    if (held) up(pt, performance.now(), true);
+    measure();
+    const t = target && target.closest ? target : null;
+    const pe = t ? t.closest('.pn') : null;
+    if (pe) {
+      const p = pins.find((q) => q.dom === pe);
+      if (!p || mode === 'send') return false;
+      if (t.closest('.pn-in') && p.state === 'open') return false;           // the field keeps its caret
+      if (p.state === 'open' && !t.closest('.pn-b')) { p.inp.focus({ preventScroll: true }); return false; }
+      if (active && active !== p) closePin(active);
+      clearTimeout(p.peekT); clearTimeout(p.leaveT);
+      const tp = tip(p);
+      held = { kind: 'pin', pin: p, mode: 'wait', x0: pt.x, y0: pt.y, gx: pt.x - tp.x, gy: pt.y - tp.y, rows: [], type, onBadge: !!t.closest('.pn-b') };
+      go(p.pr, 1, OMP);
+      kick();
+      return true;
+    }
+    if (t && t.closest('.pn-bar')) return false;
+    if (!pageDown(pt)) return false;
+    kick();
+    return true;
+  }
+  function move(pt, t, buttons) {
+    ptrP = pt;
+    if (held && ptr !== null && buttons !== 0) {
+      const h = held;
+      if (h.mode === 'wait') { if (h.pin.state === 'open') return; if (Math.hypot(pt.x - h.x0, pt.y - h.y0) < SLOP) return; startDrag(h, pt); }
+      if (h.mode === 'drag') dragMove(h, pt, t);
+      return;
+    }
+    kb = false; kick();
+  }
+  function up(pt, t, cancel) {
+    const h = held; if (!h) return;
+    held = null;
+    const p = h.pin;
+    go(p.pr, 0, OMP);
+    if (h.el) go(h.el.pr, 0, OMP);
+    if (h.mode === 'drag') {
+      release(h, t, cancel);
+      if (h.kind === 'drop' && !h.bin) openPin(p);
+      return;
+    }
+    if (cancel) return;
+    if (h.kind === 'drop') openPin(p);
+    else if (p.state === 'open') { if (h.onBadge) closePin(p); }
+    else openPin(p);
+    kick();
+  }
+
+  /* real events */
+  win.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null) return;
+    const pt = local(e.clientX, e.clientY);
+    if (e.target.closest('.pn-bar')) return;
+    ptr = e.pointerId;
+    const ae = document.activeElement;
+    if (ae && ae !== document.body && !e.target.closest('.pn-in') && ae.blur && !(ae.classList && ae.classList.contains('pn-in'))) ae.blur();   // the mouse takes over from the keyboard's focus
+    if (!down(pt, e.target, e.pointerType, e.pointerId)) { ptr = null; return; }
+    try { win.setPointerCapture(e.pointerId); } catch (err) { /* a pointer that is not real: the ghost's */ }
+  });
+  win.addEventListener('mousedown', (e) => { if (!e.target.closest('.pn-in') && !e.target.closest('.pn-bar')) e.preventDefault(); });   // no focus or selection from a press: the page is the pointer's, not the caret's
+  document.addEventListener('pointermove', (e) => { measure(); move(local(e.clientX, e.clientY), e.timeStamp, e.buttons); });
+  const end = (cancel) => (e) => { if (e.pointerId !== ptr) return; ptr = null; up(local(e.clientX, e.clientY), e.timeStamp, cancel); };
+  document.addEventListener('pointerup', end(false));
+  document.addEventListener('pointercancel', end(true));
+  document.documentElement.addEventListener('pointerleave', () => { if (!held) { ptrP = null; kick(); } });
+  win.addEventListener('touchmove', (e) => { if (held && held.mode === 'drag' && e.cancelable) e.preventDefault(); }, { passive: false });
+  win.addEventListener('dragstart', (e) => e.preventDefault());
+  tg.addEventListener('click', () => setAnnot(!annot));
+  send.addEventListener('click', () => { if (send.getAttribute('aria-disabled') !== 'true') sendAll(); });
+  undoB.addEventListener('click', undo);
+
+  /* keys: Tab walks the elements in Annotate mode, Enter pins, Escape closes and then leaves the mode */
+  win.addEventListener('focusin', (e) => { const el = byEl.get(e.target.closest ? e.target.closest('[data-pin]') : null); if (el) { focusEl = el; if (!ptrP) kb = true; kick(); } });
+  win.addEventListener('focusout', (e) => { const el = byEl.get(e.target.closest ? e.target.closest('[data-pin]') : null); if (el && focusEl === el) { focusEl = null; kick(); } });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') { kb = true; kick(); }
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    const el = byEl.get(e.target.closest ? e.target.closest('[data-pin]') : null);
+    if (el && annot && mode !== 'send' && (e.key === 'Enter' || e.key === ' ') && !(el.el.tagName === 'BUTTON' && false)) {
+      e.preventDefault();
+      if (pins.length >= 9) { say('Nine notes is the most for one send'); return; }
+      if (active) closePin(active);
+      if (mode === 'sent') { clearTimers(); mode = 'edit'; applied = null; go(uv, 0, OMX); syncBar(); }
+      const r = lrect(el), p = addPin(el, { x: r.x + r.w - 22, y: r.y + 22 });   // a pin on the element's top right corner, half out of it
+      say(`Note ${p.n} added on ${el.name}`);
+      openPin(p);
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (held) { up(null, performance.now(), true); return; }
+      if (active) { const p = active, keep = !!p.inp.value.trim(), e0 = p.e; p.quiet = true; closePin(p); if (keep) p.b.focus({ preventScroll: true }); else e0.el.focus({ preventScroll: true }); return; }
+      if (annot) { setAnnot(false); tg.focus({ preventScroll: true }); }
+    }
+  });
+  new ResizeObserver(() => measure()).observe(fit);
+  addEventListener('scroll', measure, { passive: true });
+
+  /* the state at rest, instantly */
+  function reset() {
+    clearTimers(); timers.forEach(clearTimeout); timers = [];
+    if (held) held = null;
+    ptr = null; win.classList.remove('is-drag');
+    for (const p of pins.concat(dead)) p.dom.remove();
+    pins.length = 0; dead.length = 0; active = null; mode = 'edit'; applied = null; sent = []; dispN = 0; ptrP = null; hoverEl = null; kb = false; focusEl = null;
+    ot = null;
+    for (const s of [O.x, O.y, O.w, O.h, O.r, O.v]) { s.x = s.T = 0; s.v = 0; s.on = false; }
+    put(O.tr, 1); O.tr.T = 1; O.tr.on = false; tagB = ''; ta.textContent = tb.textContent = ''; fireHover = null;
+    for (const [s, x] of [[rp, 1], [rk, 0], [tkS, 0], [uv, 0], [hs, 56], [wm, 0], [s1, 0], [s2, 0]]) { s.x = s.T = x; s.v = 0; s.on = false; }
+    for (const e of E) { e.pr.x = e.pr.T = 0; e.bp.x = e.bp.T = 0; e.pr.on = e.bp.on = false; }
+    setAnnot(true, true);
+    document.activeElement && document.activeElement.blur && document.activeElement !== document.body && document.activeElement.blur();
+    syncBar();
+    for (const s of [rp, rk]) { s.x = s.T; s.on = false; }
+    measure(); frame(0.001);
+  }
+
+  /* events a hand makes, from a point in the window: through the same handlers a mouse reaches */
+  const fire = (type, pt, buttons = 0) => {
+    const c = client(pt.x, pt.y), t = document.elementFromPoint(c.x, c.y) || document.body;
+    if (type === 'pointermove') {                                              // enter and leave are separate events: a real mouse makes them, so the ghost does too
+      const pe = t.closest ? t.closest('.pn') : null;
+      if (pe !== fireHover) { if (fireHover) fireHover.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse', pointerId: 73 })); if (pe) pe.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse', pointerId: 73 })); fireHover = pe; }
+    }
+    t.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: c.x, clientY: c.y, pointerType: 'mouse', pointerId: 73, isPrimary: true, button: type === 'pointermove' ? -1 : 0, buttons, view: window }));
+    return t;
+  };
+  const typeText = (text) => { const i = active && active.inp; if (!i) return; i.value = text; i.dispatchEvent(new Event('input', { bubbles: true })); };
+  const keyOn = (el, key) => el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  const centre = (id, fx = 0.5, fy = 0.5) => { measure(); const r = lrect(byId[id]); return { x: r.x + r.w * fx, y: r.y + r.h * fy }; };
+
+  /* the first picture: made through the same events as everything else, then the world stepped until it settles */
+  const POSE = { head: { fx: 0.97, fy: 0.3 }, photo: { fx: 0.52, fy: 0.75 }, hover: { fx: 0.3, fy: 0.55 } };
+  function pose() {
+    win.classList.add('is-still');
+    reset();
+    const a = centre('headline', POSE.head.fx, POSE.head.fy), b = centre('photo', POSE.photo.fx, POSE.photo.fy), h = centre('headline', POSE.hover.fx, POSE.hover.fy);
+    fire('pointermove', a); fire('pointerdown', a, 1); fire('pointerup', a);
+    typeText('Make this bigger'); keyOn(active.inp, 'Enter');
+    fire('pointermove', b); fire('pointerdown', b, 1); fire('pointerup', b);
+    typeText('Use the warmer photo');
+    fire('pointermove', h);
+    advance(2.4);
+    void win.offsetWidth; requestAnimationFrame(() => requestAnimationFrame(() => win.classList.remove('is-still')));
+    posed = true;
+    return h;
+  }
+  let posed = false;
+
+  measure();
+  return {
+    win, pose, reset, fire, typeText, keyOn, centre, client, measure, advance, wr, lrect, send, undo, tg, sendEl: send, undoEl: undoB, binEl,
+    get active() { return active; }, get pins() { return pins; }, get mode() { return mode; }, get held() { return held; }, get annot() { return annot; }, get scale() { return S; },
+    get posed() { return posed; }, set posed(v) { posed = v; }, get raf() { return raf; },
+    setAnnot, sendAll, applyAnswer,
+    pinTip(i) { return tip(pins[i]); },
+    state() { return { pins: pins.map((p) => ({ n: p.n, e: p.e.id, note: p.note, st: p.state, saved: p.saved, w: p.pw.x, h: p.ph.x, tip: tip(p) })), mode, rp: rp.x, rk: rk.x, hs: hs.x, outline: ot ? ot.id : null, ov: O.v.x }; },
+    outline() { return { x: O.x.x, y: O.y.x, w: O.w.x, h: O.h.x, r: O.r.x, v: O.v.x, id: ot ? ot.id : null }; },
+    settled() { return !raf && !held; }
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('pn-fit');
+  // the window is drawn at 760 × 480 and scaled to the room it is given (it fills a tile; 1.6× at most in the detail view)
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile'), pad = tile ? 8 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min((W - 2 * pad) / 760, (H - 2 * pad - ui) / 480, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+    PN.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  let touched = false, epoch = 0, resumeT = 0, gp = { x: 0, y: 0 };            // gp: the ghost's hand in window px
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const show = () => { const c = PN.client(gp.x, gp.y); QM.ghostAt(c.x, c.y); };
+  async function glide(my, to, ms = 760, down = false, ease = mv) {         // the ghost's hand glides to a window point; with the button down it drags
+    const from = { x: gp.x, y: gp.y }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+      gp = { x: from.x + (to.x - from.x) * k, y: from.y + (to.y - from.y) * k };
+      show(); PN.fire('pointermove', gp, down ? 1 : 0);
+      if (p >= 1) break;
+    }
+  }
+  const settle = async (my, max = 3500) => { const t0 = performance.now(); await gap(my, 160); while (!PN.settled() && performance.now() - t0 < max) await gap(my, 80); };
+  async function pressAt(my, pt, hold = 110) { PN.fire('pointerdown', pt, 1); await gap(my, hold); PN.fire('pointerup', pt); }
+  async function typeIn(my, text, per = 52) { for (let i = 1; i <= text.length; i++) { PN.typeText(text.slice(0, i)); await gap(my, per); } }
+  async function clickBtn(my, el, ms = 820) {                                // glide to a bar button and click it, as a hand
+    await gap(my, 100);
+    const r = PN.wr(el);
+    await glide(my, { x: r.x + r.w / 2, y: r.y + r.h / 2 }, ms);
+    await gap(my, 200);
+    el.classList.add('is-hot'); await gap(my, 160);
+    el.classList.add('is-press'); await gap(my, 110);
+    el.classList.remove('is-press', 'is-hot');
+    el.click();
+  }
+  async function pinned(my, id, fx, fy, text) {                              // press an element, let go, type, Return
+    await glide(my, PN.centre(id, fx, fy), 800); await gap(my, 220);
+    await pressAt(my, PN.centre(id, fx, fy)); await gap(my, 500);
+    await typeIn(my, text); await gap(my, 450);
+    PN.keyOn(PN.active.inp, 'Enter'); await gap(my, 950);
+  }
+
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 4800 : 1800) : 500);
+      QM.ghostShow();
+      for (let round = 0; ; round++) {
+        if (!PN.posed) { const h = PN.pose(); gp = h; show(); await gap(my, 600); }
+        else if (round === 0) { gp = PN.centre('headline', 0.3, 0.55); show(); }
+        await gap(my, 700);
+        PN.keyOn(PN.active.inp, 'Enter'); await gap(my, 1100);                // save note 2: the bubble folds, the count rolls to 2
+        // glide over three elements: the one outline travels
+        await glide(my, PN.centre('copy', 0.5, 0.5), 800); await gap(my, 650);
+        await glide(my, PN.centre('price', 0.35, 0.5), 700); await gap(my, 550);
+        await glide(my, PN.centre('button', 0.5, 0.5), 650); await gap(my, 650);
+        // a third note on the price
+        await pinned(my, 'price', 0.35, 0.3, 'Show the price with tax');
+        // peek it, then carry it onto the button
+        const t3 = PN.pinTip(2), grab = { x: t3.x + 14, y: t3.y - 14 };
+        await glide(my, grab, 800); await gap(my, 650);
+        PN.fire('pointerdown', grab, 1); await gap(my, 120);
+        await glide(my, PN.centre('button', 0.9, 0.5), 1000, true); await gap(my, 600);
+        PN.fire('pointerup', gp); await gap(my, 1500);
+        await glide(my, { x: 600, y: 430 }, 800); await gap(my, 300);
+        // send: the pins fly into the bar, the bar says Sent, the page answers, Undo
+        await clickBtn(my, PN.sendEl, 800);
+        const t0 = performance.now(); await gap(my, 600); while (PN.mode !== 'sent' && performance.now() - t0 < 4000) await gap(my, 80);
+        await gap(my, 2300);
+        await clickBtn(my, PN.undoEl, 800);
+        await gap(my, 1500);
+        // rebuild the pose, as a hand would
+        await pinned(my, 'headline', 0.97, 0.3, 'Make this bigger');
+        await glide(my, PN.centre('photo', 0.52, 0.75), 900); await gap(my, 220);
+        await pressAt(my, PN.centre('photo', 0.52, 0.75)); await gap(my, 500);
+        await typeIn(my, 'Use the warmer photo', 40); await gap(my, 300);
+        await glide(my, PN.centre('headline', 0.3, 0.55), 800); await gap(my, 900);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() {
+    epoch++; QM.ghostHide();
+    if (PN.held) PN.fire('pointerup', gp);
+    document.querySelectorAll('.is-hot, .is-press').forEach((b) => b.classList.remove('is-hot', 'is-press'));
+  }
+  if (!QM.tile && !reduced) {
+    const idle = () => PN.win.matches(':hover') || PN.held || (PN.win.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                                // the ghost's own events do not count
+      if (!touched) { touched = true; PN.posed = false; }
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) { PN.posed = false; script(false); } else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true, capture: true });
+    addEventListener('keydown', touch);
+  }
+  const start = () => { size(); const h = PN.pose(); gp = h; if (!reduced) { const c = PN.client(h.x, h.y); QM.ghostAt(c.x, c.y); QM.ghostShow(); } };   // the hand rests on the headline, where the outline is
+  QM.demo({ kind: 'loop', restart() { stopScript(); touched = false; start(); if (!reduced) { QM.ghostShow(); script(true); } } });
+  start();
+  if (document.fonts) document.fonts.ready.then(() => { if (!touched && PN.posed) { start(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { if (!touched) { QM.ghostShow(); script(true); } }, 300));
+})();
+</script>
+</body>
+</html>

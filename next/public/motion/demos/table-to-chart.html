@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Table to chart · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "table-to-chart",
+  "title": "Table to chart",
+  "group": "studio",
+  "added": "2026-11-24",
+  "cat": "data",
+  "order": 30,
+  "kind": "loop",
+  "preview": {
+    "secs": 9,
+    "skip": 4500
+  },
+  "tone": "paper",
+  "shot": 400,
+  "line": "one table, three layouts · every cell its own spring (0.26 to 0.5 s) · rows staggered 40 ms · one lime",
+  "summary": "A Qbix answer card for Forma's March orders by product: Ash vase leads, with 36% of 506 orders. The five rows are one object, so Table, Bars and Share are three layouts of the same cells, never two views that cross-fade. Choosing Chart, each row's bar grows out from under its figure (width from 0, rows 40 ms apart), the figure rides the bar's head to its end, the label rises above the bar's start, the row dividers are covered, an axis of 0, 100 and 200 is uncovered and the card's height is a spring. Bars to Share sends every bar up into its segment of one 100% strip and rolls the figures to 36%, 25%, 19%, 12% and 8%, with a legend taking the rows' places. Every element has its own critically damped springs started from the value on screen, so any change can be reversed halfway without a jump. Hover, tap or arrow to a row or segment and it comes to ink while the rest step down and its figure steps up in weight at the same width; tap Orders and the rows travel to the reverse order in any view. The one lime is the top product's bar, and in Table the 6 px dot that becomes it. The data is a real table at all times.",
+  "spec": [
+    [
+      "Card",
+      "600 px wide, white, radius 24, drawn at its own size and scaled to the room (1.01x in the 800 × 500 tile, so about 606 px wide; up to 1.5x); height a spring between 404 (Table), 434 (Bars) and 428 (Share), response 0.42 s. Title 15 px #6e6e73, the answer 24 / 30 px weight 600, labels 15 px, figures 17 px, column heads and axis numbers 13 px; the system face, tabular figures"
+    ],
+    [
+      "Cells",
+      "five rows; each row has a hit box (y and height springs, 0.34 s) and, in the card's own px, a label (x 0.34 s, y 0.2 s), a figure (x and y 0.4 s, roll 0.14 s), a bar (x, width 0.4 s, y and height 0.3 s) and a divider cover (0.34 s); label and figure also have a cover (0.07 s, a clip, never a fade). Positions are targets in card px; a cell's transform is its target minus its row's current y. Table, Bars and Share are three sets of targets for these same cells"
+    ],
+    [
+      "Table to Chart",
+      "the bar starts as a 0-width sliver under the figure and its x and width springs take it to the axis (its right end ends 8 px short of the figure, which travels with it on the same response, so the figure rides the bar's head); rows start 40 ms apart from the top; the label rises 13 px to sit above the bar's start, while the bar's tail waits at the label's right edge until the label is up (and, coming back, the label comes down only once the bar's tail has left it), so a label and a bar are never in the same place; dividers are covered from the right (clip-path), the axis (a line, three ticks 0, 100, 200 at 2.4 px per order) is uncovered from the left 140 ms in, the height spring opens, Product is covered and the second control uncovered in the two halves of one spring. Bars are 22 px tall with a 6 px radius"
+    ],
+    [
+      "Bars to Share",
+      "in Share nothing crosses: the figure first rolls to its percentage where it is (its two lines are 40 px apart in a 24 px window, so only one value is ever shown), then label and figure are covered by a clip (0.07 s) and parked at their legend places while hidden; only then does the row's bar take its segment's x and width, and rise 80 ms later into a 30 px strip (544 px less four 2 px gaps, edges rounded cumulatively so the gaps are exactly 2 px; rows start 24 ms apart); the legend (labels 44 px apart, figures at the right edge, 36%, 25%, 19%, 12%, 8%, which add to 100) is uncovered left to right once every bar is up in the strip. Back by the same path backwards: legend covered, bars come down first and widen 110 ms later, label and figure are uncovered at their bar once the bars are at rest and the figure rolls back to its orders; the Orders head rolls to Share and back"
+    ],
+    [
+      "Focus",
+      "a row (or its segment) takes #1d1d1f; the other labels and figures step down to #86868b and the other bars to #d2d2d7 (the top bar stays lime); the focused figure goes from weight 500 to 700 with a letter-spacing correction measured per figure (about -0.47 px on SF), so its width does not change by a hundredth of a pixel; 160 to 200 ms, ease (.4, 0, .2, 1). Pointer hover, a tap on press (a second tap lets go) and the arrow keys (Up, Down, Left, Right, Home, End; Escape lets go) share one function; a polite status line says the row"
+    ],
+    [
+      "Sort",
+      "the Orders head is a button (aria-sort, a chevron on a rotating spring): it flips the order, every row's y, label, figure and bar retarget from where they are, in Table, Bars and Share alike; in Share the segments reorder as well"
+    ],
+    [
+      "Controls",
+      "Table / Chart and, once Chart is chosen, a smaller Bars / Share: real radio groups (the arrow keys are the browser's), one white thumb on a spring (response 0.34 s) that stretches up to 12 px with its speed (0.018 px per px/s), a 0.97 press in 100 ms; the second control is uncovered by a clip as Product is covered"
+    ],
+    [
+      "Colour",
+      "lime #B8FF00 once: the top bar (a 1 px ink edge at .16), in Table its 6 px dot. Other bars #86868b, in Share a ladder #6e6e73, #86868b, #aeaeb2, #d2d2d7, in focus #1d1d1f against #d2d2d7. Text #1d1d1f, #6e6e73, #86868b; dividers #e8e8ed; the controls' track #e8e8ed"
+    ],
+    [
+      "Pose",
+      "the page loads on a key frame that is played, not drawn: Table, then Chart, then the world stepped 1.6 s at 60 Hz so the bars have settled, then Loop tray in focus; a tile holds it 1.1 s (shot at 400 ms), nothing transitions into it. If a font arrives late the pose is played again. The ghost arrives after about 5 s (3 s in the detail view): Table, Chart, Share, a segment (Loop tray, then Linen runner), Bars, sort, Table, sort back; it uses the same pointer events and clicks as a hand, owns only its own focus, and yields to a real mouse, touch or key and returns after 4.5 s"
+    ],
+    [
+      "Reduced motion",
+      "a complete still in Bars (no focus); every change sets its values in place, the ghost does not run"
+    ]
+  ],
+  "source": [
+    "Qbix Motion · Studio · 2026-11-24"
+  ],
+  "where": "A Forma case study or a Qbix client's reporting page where an answer can be read as a table, as bars or as shares of the whole: the numbers stay the same objects, so the eye follows them from one view to the next.",
+  "rules": [
+    "Table, Bars and Share are one set of cells with three sets of targets. Nothing is rebuilt or cross-faded: things travel, grow, or are covered and uncovered by a clip.",
+    "Every moving thing has its own critically damped spring on each value (x, y, width, height, roll, cover), started from the value and velocity on screen, so any change can be reversed halfway with no jump. Nothing overshoots. A retarget may wait a few milliseconds but keeps moving to its old target meanwhile.",
+    "A label or figure never overlaps a bar in any frame of any change, reversals included (checked every frame, 0 overlaps over 1 px). Between Table and Bars the figure rides the bar's head (x and the bar's x and width share one response) and the label and the bar's tail take turns; into and out of Share the label and figure are covered, moved while hidden and uncovered once the bars are clear. Text is above the bars.",
+    "A focused figure changes weight but not width: its letter-spacing is corrected from measured widths of both weights. Figures are tabular.",
+    "Exactly one lime: the top product's bar, and in Table the 6 px dot that becomes it. Every other bar is ink or grey; focus is ink against light grey.",
+    "The data is a real table at all times (the chart is the same table restyled, with its roles restored); a polite status line announces the view, the sort and the focused row; the controls are real radio groups and a real button.",
+    "Segments are rounded cumulatively so the gaps are exactly 2 px and the percentages add to 100.",
+    "The ghost and a hand use the same events; a hand's focus is never cleared by the script, and the script yields to mouse, touch and keys.",
+    "Under reduced motion draw a complete still in Bars and change everything in place."
+  ],
+  "tags": [
+    "table",
+    "chart",
+    "bars",
+    "share",
+    "stacked strip",
+    "spring",
+    "shared element",
+    "sort",
+    "segmented control",
+    "radio",
+    "focus",
+    "tabular figures",
+    "FLIP",
+    "Forma",
+    "data"
+  ]
+}
+</script>
+<style data-code>
+/* Table to chart. One answer card in the system face with Apple's neutrals: a real <table> whose cells are the chart.
+   Every cell (row, label, figure, bar) is placed from script (render()), because each has its own critically damped springs:
+   a row never fades into a bar, it travels, grows, or is covered and uncovered by a clip. The figure and the bar's x and width share one response (0.4 s), so the figure rides the bar's head. The one lime is the top product's bar
+   (in Table, the 6 px dot that becomes it). Easing for small UI feedback: ui (.4, 0, .2, 1). The card is drawn at 600 px wide and scaled by --s. */
+.t2-fit { position: relative; width: calc(600px * var(--s, 1)); height: calc(434px * var(--s, 1)); }
+.t2-card { --f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; --ui: cubic-bezier(.4, 0, .2, 1);
+  position: absolute; left: 0; top: 0; width: 600px; height: 404px; overflow: hidden; border-radius: 24px; background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04); transform: scale(var(--s, 1)); transform-origin: 0 0;
+  font: 400 15px/18px var(--f); letter-spacing: -.01em; color: #1d1d1f; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.t2-card :where(table, thead, tbody, tr, th, td) { display: block; margin: 0; padding: 0; border: 0; font: inherit; letter-spacing: inherit; text-align: left; }
+.t2-card :where(h2, p) { margin: 0; }
+.t2-card :where(svg) { display: block; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+
+/* the header: the title, the answer, the two controls */
+.t2-cap { position: absolute; left: 28px; top: 26px; font: 500 15px/20px var(--f); color: #6e6e73; white-space: nowrap; }
+.t2-ans { position: absolute; left: 28px; top: 62px; font: 600 24px/30px var(--f); letter-spacing: -.022em; white-space: nowrap; }
+
+/* a segmented control: radios underneath (arrow keys are the browser's), one thumb on a spring that stretches a little as it travels */
+.t2-seg { position: absolute; display: flex; padding: 3px; height: 32px; border-radius: 10px; background: #e8e8ed; }
+.t2-seg.is-lg { right: 28px; top: 20px; }
+.t2-seg.is-sm { left: 28px; top: 106px; height: 28px; border-radius: 9px; }
+.t2-th { position: absolute; left: 0; top: 3px; height: calc(100% - 6px); border-radius: 8px; background: #fff; will-change: transform, width;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .14), 0 0 0 .5px rgba(0, 0, 0, .04); }
+.is-sm .t2-th { border-radius: 7px; }
+.t2-so { position: relative; z-index: 1; display: block; width: 68px; border-radius: 8px; cursor: pointer; font: 500 14px/26px var(--f); text-align: center; color: #6e6e73; transition: color 160ms var(--ui); }
+.is-sm .t2-so { width: 60px; font-size: 13px; line-height: 22px; border-radius: 7px; }
+.t2-so:has(input:checked) { color: #1d1d1f; }
+.t2-so:hover { color: #1d1d1f; }
+.t2-so input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.t2-so span { display: block; transition: transform 100ms var(--ui); }
+.t2-so:active span, .t2-so.is-press span { transform: scale(.97); }
+.t2-so:has(input:focus-visible) { outline: 2px solid #1d1d1f; outline-offset: 1px; }
+.t2-seg.is-sm { visibility: hidden; }
+
+/* the column heads: Product is covered as the second control is uncovered; Orders is the sort, and rolls to Share */
+.t2-ph { position: absolute; left: 28px; top: 111px; font: 500 13px/18px var(--f); letter-spacing: -.006em; color: #6e6e73; }
+.t2-oh { position: absolute; right: 20px; top: 106px; height: 28px; }
+.t2-sort { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 5px; height: 28px; padding: 0 8px 0 8px; border-radius: 8px; cursor: pointer; color: #6e6e73;
+  font: 500 13px/18px var(--f); letter-spacing: -.006em; transition: color 160ms var(--ui), transform 100ms var(--ui); }
+.t2-sort:hover { color: #1d1d1f; }
+.t2-sort:active, .t2-sort.is-press { transform: scale(.97); }
+.t2-sort:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 0; }
+.t2-chev { width: 10px; height: 10px; stroke-width: 1.7; will-change: transform; }
+.t2-ow { display: block; position: relative; width: 44px; height: 18px; overflow: hidden; }
+.t2-ob { display: block; will-change: transform; }
+.t2-ob > i { display: block; height: 18px; font-style: normal; text-align: right; white-space: nowrap; }
+
+/* the rows: a row is a hit area and a divider; its label, figure and bar are placed in the card's own px */
+.t2-row { position: absolute; left: 0; top: 0; width: 600px; height: 50px; outline: none; --dv: 1; }   /* placed by top, not transform: no stacking context per row, so every figure and label is above every bar */
+.t2-row::before { content: ''; position: absolute; left: 28px; width: 544px; top: 0; height: 1px; background: #e8e8ed; clip-path: inset(0 calc((1 - var(--dv)) * 100%) 0 0); }
+.t2-row::after { content: ''; display: none; position: absolute; left: 14px; right: 14px; top: 2px; bottom: 2px; border-radius: 12px; box-shadow: inset 0 0 0 2px #1d1d1f; pointer-events: none; z-index: 3; }
+.t2-row:focus-visible::after { display: block; }
+.t2-row { --bc: #86868b; }
+.t2-row.top { --bc: #B8FF00; }
+.t2-card.is-share .t2-row[data-rank='1'] { --bc: #6e6e73; }
+.t2-card.is-share .t2-row[data-rank='3'] { --bc: #aeaeb2; }
+.t2-card.is-share .t2-row[data-rank='4'] { --bc: #d2d2d7; }
+.t2-card.has-f .t2-row:not(.is-f):not(.top) { --bc: #d2d2d7; }
+.t2-card .t2-row.is-f:not(.top) { --bc: #1d1d1f; }
+
+.t2-lab { position: absolute; z-index: 2; left: 0; top: 0; font: 500 15px/18px var(--f); white-space: nowrap; will-change: transform; transition: color 180ms var(--ui); }
+.t2-fw { position: absolute; z-index: 2; left: 0; top: 0; height: 24px; overflow: hidden; will-change: transform; transition: color 180ms var(--ui); }
+.t2-st { display: block; will-change: transform; }
+.t2-fl, .t2-probe { display: block; height: 40px; font: 500 17px/40px var(--f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.t2-fl { transition: font-weight 160ms var(--ui), letter-spacing 160ms var(--ui); }
+/* focus: the figure steps up in weight; its advance is compensated (--ls, measured) so the width does not change */
+.t2-row.is-f .t2-fl { font-weight: 700; letter-spacing: calc(-.01em + var(--ls, 0px)); }
+.t2-probe { position: absolute; left: 0; top: 0; height: 24px; line-height: 24px; visibility: hidden; pointer-events: none; }
+.t2-probe.hi { font-weight: 700; }
+.t2-card.has-f .t2-row:not(.is-f) :is(.t2-lab, .t2-fw) { color: #86868b; }
+.t2-bar { position: absolute; z-index: 1; left: 0; top: 0; background: var(--bc); will-change: transform; transition: background-color 200ms var(--ui); }
+.t2-row.top .t2-bar { box-shadow: inset 0 0 0 1px rgba(29, 29, 31, .16); }
+
+/* the axis: a line, three ticks, three numbers; uncovered from the left */
+.t2-axis { position: absolute; left: 18px; top: 396px; width: 520px; height: 26px; clip-path: inset(0 100% 0 0); pointer-events: none; }
+.t2-axl { position: absolute; left: 10px; top: 0; width: 481px; height: 1px; background: #d2d2d7; }
+.t2-tk { position: absolute; top: 0; width: 1px; height: 5px; background: #d2d2d7; }
+.t2-tl { position: absolute; top: 9px; font: 400 13px/16px var(--f); letter-spacing: -.006em; color: #86868b; font-variant-numeric: tabular-nums; transform: translateX(-50%); }
+.t2-card.is-still *, .t2-card.is-still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .t2-card *, .t2-card *::before, .t2-card *::after { transition-duration: 1ms !important; } }
+</style>
+<style>
+  /* the stage: a quiet #f5f5f7 ground; the card is drawn 600 px wide and scaled to the room it has */
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="t2-fit" id="t2-fit">
+ <section class="t2-card" id="t2-card" aria-labelledby="t2-cap">
+  <h2 class="t2-cap" id="t2-cap">Forma · orders by product, March</h2>
+  <p class="t2-ans">Ash vase leads, with 36% of 506 orders.</p>
+  <div class="t2-seg is-lg" id="t2-seg" role="radiogroup" aria-label="Show as">
+   <span class="t2-th" aria-hidden="true"></span>
+   <label class="t2-so"><input type="radio" name="t2-view" value="table" checked><span>Table</span></label>
+   <label class="t2-so"><input type="radio" name="t2-view" value="chart"><span>Chart</span></label>
+  </div>
+  <div class="t2-seg is-sm" id="t2-sub" role="radiogroup" aria-label="Chart type">
+   <span class="t2-th" aria-hidden="true"></span>
+   <label class="t2-so"><input type="radio" name="t2-kind" value="bars" checked><span>Bars</span></label>
+   <label class="t2-so"><input type="radio" name="t2-kind" value="share"><span>Share</span></label>
+  </div>
+  <table class="t2-table" role="table">
+   <caption class="sr-only">Forma orders by product, March</caption>
+   <thead role="rowgroup"><tr role="row">
+    <th class="t2-ph" id="t2-ph" role="columnheader" scope="col">Product</th>
+    <th class="t2-oh" role="columnheader" scope="col" aria-sort="descending" id="t2-oh"><button class="t2-sort" id="t2-sort" type="button" aria-label="Sort by orders, fewest first">
+     <svg class="t2-chev" id="t2-chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.500 3.500L5 7l3.500-3.500"/></svg>
+     <span class="t2-ow" aria-hidden="true"><span class="t2-ob" id="t2-ob"><i>Orders</i><i>Share</i></span></span></button></th>
+   </tr></thead>
+   <tbody role="rowgroup" id="t2-body">
+    <tr class="t2-row top" role="row" tabindex="0" data-k="ash" data-v="184" data-rank="0"><th class="t2-lab" role="rowheader" scope="row">Ash vase</th><td class="t2-fig" role="cell"><span class="sr-only">184 orders, 36%</span><span class="t2-bar" aria-hidden="true"></span><span class="t2-fw" aria-hidden="true"><span class="t2-st"><span class="t2-fl">184</span><span class="t2-fl">36%</span></span></span></td></tr>
+    <tr class="t2-row" role="row" tabindex="-1" data-k="loop" data-v="126" data-rank="1"><th class="t2-lab" role="rowheader" scope="row">Loop tray</th><td class="t2-fig" role="cell"><span class="sr-only">126 orders, 25%</span><span class="t2-bar" aria-hidden="true"></span><span class="t2-fw" aria-hidden="true"><span class="t2-st"><span class="t2-fl">126</span><span class="t2-fl">25%</span></span></span></td></tr>
+    <tr class="t2-row" role="row" tabindex="-1" data-k="tumbler" data-v="97" data-rank="2"><th class="t2-lab" role="rowheader" scope="row">Pressed tumbler</th><td class="t2-fig" role="cell"><span class="sr-only">97 orders, 19%</span><span class="t2-bar" aria-hidden="true"></span><span class="t2-fw" aria-hidden="true"><span class="t2-st"><span class="t2-fl">97</span><span class="t2-fl">19%</span></span></span></td></tr>
+    <tr class="t2-row" role="row" tabindex="-1" data-k="runner" data-v="61" data-rank="3"><th class="t2-lab" role="rowheader" scope="row">Linen runner</th><td class="t2-fig" role="cell"><span class="sr-only">61 orders, 12%</span><span class="t2-bar" aria-hidden="true"></span><span class="t2-fw" aria-hidden="true"><span class="t2-st"><span class="t2-fl">61</span><span class="t2-fl">12%</span></span></span></td></tr>
+    <tr class="t2-row" role="row" tabindex="-1" data-k="dish" data-v="38" data-rank="4"><th class="t2-lab" role="rowheader" scope="row">Stone dish</th><td class="t2-fig" role="cell"><span class="sr-only">38 orders, 8%</span><span class="t2-bar" aria-hidden="true"></span><span class="t2-fw" aria-hidden="true"><span class="t2-st"><span class="t2-fl">38</span><span class="t2-fl">8%</span></span></span></td></tr>
+   </tbody>
+  </table>
+  <div class="t2-axis" id="t2-axis" aria-hidden="true">
+   <i class="t2-axl"></i><i class="t2-tk" style="left:10px"></i><i class="t2-tk" style="left:250px"></i><i class="t2-tk" style="left:490px"></i>
+   <b class="t2-tl" style="left:10.500px">0</b><b class="t2-tl" style="left:250.500px">100</b><b class="t2-tl" style="left:490.500px">200</b>
+  </div>
+  <p class="sr-only" id="t2-msg" role="status" aria-live="polite"></p>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Switch Table, Chart, Bars and Share (arrow keys work), tap Orders to sort, hover a row or segment, or arrow through the rows</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Table to chart. The table's five rows are the only elements: Table, Bars and Share are three sets of targets for the same cells.
+   Every cell has its own critically damped spring on each thing that moves (the row's y and height, the label's x and y, the figure's x, y and roll,
+   the bar's x, y, width and height, the divider's cover), started from the value and velocity on screen, so any change can be reversed mid-way.
+   Positions are in the card's own px (the card may be drawn scaled); a cell's transform is its target minus its row's current y. */
+const T2C = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById('t2-' + id);
+  const card = $('card'), body = $('body'), msg = $('msg'), sortB = $('sort'), oh = $('oh'), ob = $('ob'), chev = $('chev'), ph = $('ph'), axis = $('axis'), sub = $('sub');
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const om = (r) => (2 * Math.PI) / r;                                      // response in seconds to ω
+  // geometry: content from x 28, 544 wide; rows from y 138, 50 apart; a bar is 2.4 px per order (200 at 480); the share strip and its legend
+  const X0 = 28, CW = 544, Y0 = 138, P = 50, K = 2.4, TOTAL = 506, GAP = 2, SY = 148, SH = 30, LY = 192, LP = 44, FH = 40;                  // FH: the figure's two lines are 40 px apart in a 24 px window, so a rolling figure shows one value at a time
+  const HEIGHT = { table: 404, bars: 434, share: 428 };
+
+  /* a spring: critically damped, closed form, always from the x and v on screen; a retarget may wait (delay, ms) while it keeps going to its old target */
+  const S = [];
+  let freeze = false, sc = 1;
+  function mk(x = 0, r = 0.4, e = 0.02) { const s = { x, v: 0, T: x, w: om(r), e, pend: null, on: false }; S.push(s); return s; }
+  function aim(s, T, delay = 0) {
+    if (reduced || freeze) { s.x = s.T = T; s.v = 0; s.pend = null; s.on = false; return; }
+    if (delay > 0) s.pend = { T, d: delay }; else { s.T = T; s.pend = null; }
+    s.on = true;
+  }
+  function step(s, dt) {
+    if (!s.on) return false;
+    if (s.pend) { s.pend.d -= dt * 1000; if (s.pend.d <= 0) { s.T = s.pend.T; s.pend = null; } }
+    const A = s.x - s.T, B = s.v + s.w * A, e = Math.exp(-s.w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - s.w * (A + B * dt)) * e;
+    if (!s.pend && Math.abs(s.x - s.T) < s.e && Math.abs(s.v) < s.e * 20) { s.x = s.T; s.v = 0; s.on = false; }
+    return true;
+  }
+
+  /* the rows */
+  const rows = Array.from(body.children).map((tr, i) => {
+    const th = tr.querySelector('th'), td = tr.querySelector('td'), v = +tr.dataset.v;
+    return {
+      tr, th, v, i, k: tr.dataset.k, top: i === 0, name: th.textContent.trim(), pct: Math.round((v * 100) / TOTAL),
+      bar: td.querySelector('.t2-bar'), fw: td.querySelector('.t2-fw'), st: td.querySelector('.t2-st'), fl: Array.from(td.querySelectorAll('.t2-fl')), wo: 30, wp: 36,
+      y: mk(Y0 + i * P, 0.34), h: mk(P, 0.34), lx: mk(X0, 0.34), ly: mk(0, 0.2), fx: mk(0, 0.4), fy: mk(0, 0.4), rl: mk(0, 0.14, 0.0005),
+      bx: mk(0, 0.4), by: mk(0, 0.3), bw: mk(0, 0.4), bh: mk(0, 0.3), dv: mk(1, 0.34, 0.0005),
+      lv: mk(1, 0.07, 0.0005), fv: mk(1, 0.07, 0.0005),                    // label and figure: how much is uncovered (a clip, never a fade)
+      lw: 100, lcls: 'plain', fcls: 'plain', lwait: false, fwait: false, barL: null, barPend: false, sd: 0,
+    };
+  });
+  const byTr = new Map(rows.map((r) => [r.tr, r]));
+  let order = rows.slice(), desc = true, view = 'table', kind = 'bars', cur = 'table';
+  const HS = mk(HEIGHT.table, 0.42), AX = mk(0, 0.5, 0.0005), CH = mk(0, 0.4, 0.0005), SHR = mk(0, 0.36, 0.0005), ROT = mk(0, 0.3, 0.0005);
+  // the whole total is checked once: the percentages add to 100
+  console.assert(rows.reduce((a, r) => a + r.pct, 0) === 100, 'percentages must sum to 100');
+
+  /* segmented controls: radios underneath, one thumb that stretches with its velocity */
+  function Seg(root, pick) {
+    const ins = Array.from(root.querySelectorAll('input')), labs = ins.map((i) => i.parentElement), th = root.querySelector('.t2-th');
+    const x = mk(0, 0.34, 0.02);
+    let w0 = 0;
+    const idx = () => ins.findIndex((i) => i.checked);
+    const seg = {
+      root, ins, labs, x,
+      measure() { w0 = labs[0].offsetWidth; x.x = x.T = labs[idx()].offsetLeft; x.v = 0; x.on = false; },
+      sync() { aim(x, labs[idx()].offsetLeft); },
+      select(i) { ins[i].checked = true; seg.sync(); },
+      paint() { const st = clamp(Math.abs(x.v) * 0.018, 0, 12), left = x.x - (x.v < 0 ? st : 0); th.style.width = (w0 + st).toFixed(2) + 'px'; th.style.transform = `translate3d(${left.toFixed(2)}px,0,0)`; },
+    };
+    ins.forEach((i) => i.addEventListener('change', () => { seg.sync(); pick(i.value); }));
+    return seg;
+  }
+  const mainSeg = Seg($('seg'), (v) => { view = v; changed(); });
+  const subSeg = Seg(sub, (v) => { kind = v; changed(); });
+
+  /* measuring: the figure's two lines at rest and at the focus weight (width compensation), and the reserved width of the figure window */
+  const probe = document.createElement('span');
+  probe.className = 't2-probe'; probe.setAttribute('aria-hidden', 'true'); card.appendChild(probe);
+  const width = (t, hi) => { probe.textContent = t; probe.classList.toggle('hi', hi); return probe.getBoundingClientRect().width / sc; };
+  function measure() {
+    sc = card.getBoundingClientRect().width / 600 || 1;
+    for (const r of rows) {
+      const t = [String(r.v), r.pct + '%'], w = t.map((s) => width(s, false));
+      r.fl.forEach((el, j) => el.style.setProperty('--ls', ((w[j] - width(t[j], true)) / t[j].length).toFixed(4) + 'px'));
+      r.wo = w[0]; r.wp = w[1]; r.lw = r.th.getBoundingClientRect().width / sc;
+      r.fw.style.width = Math.ceil(Math.max(w[0], w[1])) + 2 + 'px';
+    }
+    mainSeg.measure(); subSeg.measure();
+  }
+
+  /* the three layouts: for each row, where each cell goes. Share edges are rounded cumulatively so the gaps are exactly 2 px */
+  function edges() {
+    const avail = CW - GAP * (rows.length - 1);
+    let cum = 0;
+    return order.map((r, s) => { const a = Math.round(X0 + (avail * cum) / TOTAL + GAP * s); cum += r.v; return { a, b: Math.round(X0 + (avail * cum) / TOTAL + GAP * s) }; });
+  }
+  function target(L, r, s, e) {
+    const right = Math.round(X0 + CW - 0);
+    if (L === 'table') {
+      const top = Y0 + s * P, fx = right - Math.round(r.wo);
+      return { y: top, h: P, lx: X0, ly: top + 16, fx, fy: top + 13, rl: 0, dv: 1,
+        bx: r.top ? fx - 14 : fx - 2, by: r.top ? top + 22 : top + 14, bw: r.top ? 6 : 0, bh: r.top ? 6 : 22 };
+    }
+    if (L === 'bars') {
+      const top = Y0 + s * P, bw = Math.round(r.v * K);
+      return { y: top, h: P, lx: X0, ly: top + 3, fx: X0 + bw + 8, fy: top + 23, rl: 0, dv: 0, bx: X0, by: top + 24, bw, bh: 22 };
+    }
+    const top = LY + s * LP;
+    return { y: top, h: LP, lx: X0, ly: top + 13, fx: right - Math.round(r.wp), fy: top + 10, rl: 1, dv: 0, bx: e.a, by: SY, bw: e.b - e.a, bh: SH };
+  }
+  /* Aiming. The cells of a row never cross each other's paths. Between Table and Bars a label rises above its bar while the bar's tail waits
+     at the label's right edge, and comes down only once the bar's tail has left it (plan() below gates both, every frame, so a reversal
+     halfway keeps the rule). Into and out of Share a label or figure is covered by a clip where it is, moved while hidden and uncovered
+     at its new place once every bar has come to rest; the bars leave only after a row's label and figure are hidden. */
+  const park = (s, T) => { s.x = s.T = T; s.v = 0; s.on = false; s.pend = null; };
+  function retarget(s, T) {                                                  // a new target, keeping a wait that is still running
+    if (reduced || freeze) { if (s.T === T && s.x === T) return false; park(s, T); return true; }
+    if (s.pend) { if (s.pend.T === T) return false; s.pend.T = T; return true; }
+    if (s.T === T) return false;
+    s.T = T; s.on = true; return true;
+  }
+  const BARS = ['bx', 'bw', 'by', 'bh'];
+  function barT(L, r, t) {                                                   // in Bars, while the label is still beside or over the bar's tail, the tail waits at the label's right edge
+    if (L !== 'bars' || r.lv.x < 0.02 || r.by.x >= r.ly.x + 19.5) return t;
+    const head = t.bx + t.bw, tail = Math.min(head, Math.round(X0 + r.lw + 8));
+    return Object.assign({}, t, { bx: tail, bw: head - tail });
+  }
+  function aimBar(L, r, t, d) {
+    const b = barT(L, r, t), toS = L === 'share' && r.barL !== 'share', fromS = L !== 'share' && r.barL === 'share';
+    const dX = fromS ? d + 110 : d, dY = toS ? d + 80 : d;                   // into Share the bars take their segment's x first and rise after; out of it they come down first and widen after
+    aim(r.bx, b.bx, dX); aim(r.bw, b.bw, dX); aim(r.by, b.by, dY); aim(r.bh, b.bh, dY);
+    r.barL = L;
+  }
+  function go(L, stag = 0) {
+    const eg = edges(), dc = L === 'share' ? 'share' : 'plain';
+    order.forEach((r, s) => {
+      const t = target(L, r, s, eg[s]), d = stag * s;
+      r.sd = d;
+      for (const k of ['y', 'h', 'dv']) aim(r[k], t[k], d);
+      if (r.lcls === dc) { aim(r.lx, t.lx, d); aim(r.ly, L === 'table' ? t.y + 3 : t.ly, d); }
+      if (r.fcls === dc) { aim(r.fx, t.fx, d); aim(r.fy, t.fy, d); }
+      if ((L === 'share') !== (r.barL === 'share')) r.barPend = true; else { r.barPend = false; aimBar(L, r, t, d); }
+    });
+    aim(HS, HEIGHT[L]);
+    aim(AX, L === 'bars' ? 1 : 0, L === 'bars' ? 140 : 0);
+    aim(CH, L === 'table' ? 0 : 1);
+    aim(SHR, L === 'share' ? 1 : 0);
+    card.classList.toggle('is-share', L === 'share');
+    settle();
+  }
+  /* the per-frame rules: covers, parking, gates. True when it changed anything. */
+  function plan() {
+    const L = cur, dc = L === 'share' ? 'share' : 'plain', eg = edges();
+    const rest = rows.every((r) => !r.barPend && BARS.every((k) => !r[k].pend && Math.abs(r[k].x - r[k].T) < 1.2));
+    const high = rows.every((r) => r.by.x + r.bh.x <= LY - 4);               // every bar is up in the strip: nothing can cross the legend any more
+    const free = dc === 'share' ? high && rest || (high && rows.every((r) => !r.barPend)) : rest;
+    let ch = false;
+    order.forEach((r, s) => {
+      const t = target(L, r, s, eg[s]);
+      // the label
+      if (r.lcls !== dc) {
+        ch = retarget(r.lv, 0) || ch;
+        if (r.lv.x < 0.02) { r.lcls = dc; r.lwait = true; park(r.lx, t.lx); park(r.ly, t.ly); retarget(r.lv, 0); ch = true; }
+      } else {
+        if (L === 'table') ch = retarget(r.ly, r.bx.x >= X0 + r.lw + 8 ? t.ly : t.y + 3) || ch;   // down to the row's middle only once the bar's tail has left
+        if (!r.lwait || free) { r.lwait = false; ch = retarget(r.lv, 1) || ch; }
+      }
+      // the figure: into Share it rolls to the percentage where it is, then is covered; out of Share it is covered, and rolls back once it is uncovered at the bar's head
+      const rolled = r.rl.x > 0.95;
+      if (r.fcls !== dc) {
+        if (dc === 'share') ch = retarget(r.rl, 1) || ch;
+        if (dc !== 'share' || rolled) ch = retarget(r.fv, 0) || ch;
+        if (r.fv.x < 0.02 && (dc !== 'share' || rolled)) { r.fcls = dc; r.fwait = true; park(r.fx, t.fx); park(r.fy, t.fy); retarget(r.fv, 0); ch = true; }
+      } else {
+        if (!r.fwait || free) { r.fwait = false; ch = retarget(r.fv, 1) || ch; }
+        if (dc === 'share') ch = retarget(r.rl, 1) || ch;
+        else if (!r.fwait && r.fv.x > 0.98) ch = retarget(r.rl, 0) || ch;
+      }
+      // the bar
+      if (r.barPend) {
+        if (r.lcls === dc && r.fcls === dc) aimBar(L, r, t, r.sd), r.barPend = false, ch = true;
+      } else if (L === 'bars') {
+        const b = barT(L, r, t);
+        ch = retarget(r.bx, b.bx) || ch; ch = retarget(r.bw, b.bw) || ch;
+      }
+    });
+    return ch;
+  }
+  const settle = () => { if (reduced || freeze) { for (let i = 0; i < 12 && plan(); i++); paint(); } };
+  const layoutName = () => (view === 'table' ? 'table' : kind);
+  function changed() {
+    const L = layoutName(), prev = cur;
+    if (L === prev) return;
+    cur = L;
+    go(L, prev === 'table' || L === 'table' ? 40 : 24);
+    say(L === 'table' ? `Table. ${rows.length} products, ${TOTAL} orders.`
+      : L === 'bars' ? `Chart, bars. ${order[0].name} ${order[0].v}, ${order[order.length - 1].name} ${order[order.length - 1].v}.`
+      : 'Chart, share. ' + order.map((r) => `${r.name} ${r.pct}%`).join(', ') + '.');
+    kick();
+  }
+  const say = (t) => { msg.textContent = t; };
+
+  /* painting: everything from the springs */
+  function paint() {
+    for (const r of rows) {
+      const ty = r.y.x, bw = r.bw.x, bh = r.bh.x;
+      r.tr.style.top = ty.toFixed(2) + 'px';
+      r.tr.style.height = r.h.x.toFixed(2) + 'px';
+      r.tr.style.setProperty('--dv', clamp(r.dv.x, 0, 1).toFixed(3));
+      r.th.style.transform = `translate3d(${r.lx.x.toFixed(2)}px,${(r.ly.x - ty).toFixed(2)}px,0)`;
+      r.fw.style.transform = `translate3d(${r.fx.x.toFixed(2)}px,${(r.fy.x - ty).toFixed(2)}px,0)`;
+      r.st.style.transform = `translate3d(0,${(-8 - r.rl.x * FH).toFixed(2)}px,0)`;
+      const lv = clamp(r.lv.x, 0, 1), fv = clamp(r.fv.x, 0, 1);
+      r.th.style.clipPath = lv >= 0.999 ? 'none' : lv < 0.02 ? 'inset(0 100% 0 0)' : `inset(0 ${((1 - lv) * 100).toFixed(1)}% 0 0)`;
+      r.fw.style.clipPath = fv >= 0.999 ? 'none' : fv < 0.02 ? 'inset(0 100% 0 0)' : `inset(0 ${((1 - fv) * 100).toFixed(1)}% 0 0)`;
+      r.bar.style.transform = `translate3d(${r.bx.x.toFixed(2)}px,${(r.by.x - ty).toFixed(2)}px,0)`;
+      r.bar.style.width = Math.max(0, bw).toFixed(2) + 'px';
+      r.bar.style.height = Math.max(0, bh).toFixed(2) + 'px';
+      r.bar.style.borderRadius = Math.min(Math.max(bh, 0) / 2, 6).toFixed(2) + 'px';
+      r.bar.style.visibility = bw < 0.4 || bh < 0.4 ? 'hidden' : 'visible';
+    }
+    card.style.height = HS.x.toFixed(2) + 'px';
+    const c = CH.x;
+    ph.style.clipPath = `inset(0 0 0 ${(clamp(c * 2, 0, 1) * 100).toFixed(1)}%)`;
+    sub.style.clipPath = `inset(0 ${((1 - clamp(c * 2 - 1, 0, 1)) * 100).toFixed(1)}% 0 0)`;
+    sub.style.visibility = c > 0.5 ? 'visible' : 'hidden';
+    axis.style.clipPath = `inset(0 ${((1 - clamp(AX.x, 0, 1)) * 100).toFixed(1)}% 0 0)`;
+    ob.style.transform = `translate3d(0,${(-SHR.x * 18).toFixed(2)}px,0)`;
+    chev.style.transform = `rotate(${(ROT.x * 180).toFixed(1)}deg)`;
+    mainSeg.paint(); subSeg.paint();
+  }
+  const paintIfStill = () => { if (reduced || freeze) paint(); };
+
+  /* the loop: runs only while something moves; paused while held (the thumbnail's key frame) */
+  let raf = 0, last = 0, held = false;
+  function update(dt) { plan(); for (const s of S) step(s, dt); plan(); paint(); return S.some((s) => s.on); }
+  function tick(now) { raf = 0; if (held) return; const on = update(clamp((now - last) / 1000, 0.001, 0.04)); last = now; if (on) raf = requestAnimationFrame(tick); }
+  function kick() { if (!raf && !held && !reduced) { last = performance.now(); raf = requestAnimationFrame(tick); } }
+  const ff = (secs) => { for (let t = 0; t < secs; t += 1 / 60) update(1 / 60); };
+
+  /* focus: a row (or its segment) comes to #1d1d1f, the others step down; from the pointer, a tap or the arrow keys */
+  let fr = null, fsrc = '';
+  function setFocus(r, src = '') {
+    if (r === fr) { if (r) fsrc = src; return; }
+    fr = r; fsrc = r ? src : '';
+    card.classList.toggle('has-f', !!r);
+    for (const x of rows) x.tr.classList.toggle('is-f', x === r);
+  }
+  const rowAt = (t) => (t && t.closest ? byTr.get(t.closest('tr.t2-row')) || null : null);
+  // a hand's moves are trusted events; a scripted pointer (the ghost) sends the same events untrusted and owns its own focus, so a hand never loses it to the script
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
+    const r = rowAt(e.target), src = e.isTrusted ? 'ptr' : 'ghost';
+    if (r) setFocus(r, src); else if (fsrc === src || fsrc === 'pose') setFocus(null);
+  }, { passive: true });
+  card.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;                                  // a mouse has hovered already; a finger focuses on press, and a second tap lets go
+    const r = rowAt(e.target);
+    setFocus(r && r !== fr ? r : null, 'tap');
+  });
+  function rove(r) { for (const x of rows) x.tr.tabIndex = x === r ? 0 : -1; }
+  card.addEventListener('focusin', (e) => {
+    const r = rowAt(e.target);
+    if (!r || e.target !== r.tr) return;
+    rove(r);
+    if (r.tr.matches(':focus-visible')) { setFocus(r, 'key'); say(`${r.name}, ${r.v} orders, ${r.pct}%`); }
+  });
+  card.addEventListener('focusout', (e) => { if (fsrc === 'key' && !(e.relatedTarget && rowAt(e.relatedTarget))) setFocus(null); });
+  card.addEventListener('keydown', (e) => {
+    const r = rowAt(e.target);
+    if (!r || e.metaKey || e.ctrlKey || e.altKey) return;
+    const i = order.indexOf(r), k = e.key;
+    let n = -1;
+    if (k === 'ArrowDown' || k === 'ArrowRight') n = i + 1; else if (k === 'ArrowUp' || k === 'ArrowLeft') n = i - 1; else if (k === 'Home') n = 0; else if (k === 'End') n = order.length - 1;
+    else if (k === 'Escape') { setFocus(null); r.tr.blur(); return; }
+    if (n < 0) return;
+    e.preventDefault();
+    const t = order[clamp(n, 0, order.length - 1)];
+    rove(t); t.tr.focus({ preventScroll: true });
+  });
+
+  /* sort: Orders flips the order; the rows travel on their springs in Table, Bars and Share alike */
+  function sort() {
+    desc = !desc;
+    order = rows.slice().sort((a, b) => (desc ? b.v - a.v : a.v - b.v));
+    oh.setAttribute('aria-sort', desc ? 'descending' : 'ascending');
+    sortB.setAttribute('aria-label', desc ? 'Sort by orders, fewest first' : 'Sort by orders, most first');
+    aim(ROT, desc ? 0 : 1);
+    go(cur, 0);
+    say(desc ? 'Sorted by orders, most first.' : 'Sorted by orders, fewest first.');
+    kick();
+  }
+  sortB.addEventListener('click', sort);
+
+  /* the key frame: played, not drawn. Table, then Chart, the world stepped until the bars have settled, then one row in focus (as a hand over it would). */
+  function pose(secs = 1.6, focusKey = 'loop') {
+    cancelAnimationFrame(raf); raf = 0;
+    card.classList.add('is-still');                                         // the key frame is not a change: nothing transitions into it
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('is-still')));
+    setFocus(null);
+    desc = true; order = rows.slice(); oh.setAttribute('aria-sort', 'descending'); aim(ROT, 0);
+    view = 'table'; kind = 'bars'; cur = 'table';
+    mainSeg.ins[0].checked = true; subSeg.ins[0].checked = true;
+    for (const r of rows) { r.lcls = r.fcls = 'plain'; r.lwait = r.fwait = false; r.barL = null; r.barPend = false; park(r.lv, 1); park(r.fv, 1); park(r.rl, 0); }
+    freeze = true; go('table'); mainSeg.measure(); subSeg.measure(); mainSeg.x.x = mainSeg.x.T = mainSeg.labs[0].offsetLeft; subSeg.x.x = subSeg.x.T = subSeg.labs[0].offsetLeft; freeze = false;
+    paint();
+    if (reduced) { freeze = true; view = 'chart'; cur = 'bars'; mainSeg.ins[1].checked = true; go('bars'); mainSeg.sync(); mainSeg.x.x = mainSeg.x.T; freeze = false; paint(); return; }
+    mainSeg.select(1); view = 'chart'; changed();
+    ff(secs);
+    paint();
+    if (focusKey) setFocus(rows.find((r) => r.k === focusKey), 'pose');
+    kick();
+  }
+  /* a font that arrives late or a new scale changes the measures: the key frame is played again if nothing has happened yet, otherwise the cells snap to their layout */
+  let fresh = true, sig = '';
+  function resize() {
+    measure();
+    const now = sc.toFixed(3) + rows.map((r) => r.wo.toFixed(2) + r.wp.toFixed(2)).join();
+    if (now === sig) return;
+    sig = now;
+    if (fresh) { pose(); return; }
+    const was = freeze; freeze = true;
+    go(cur); mainSeg.x.x = mainSeg.x.T = mainSeg.labs[mainSeg.ins.findIndex((i) => i.checked)].offsetLeft; subSeg.x.x = subSeg.x.T = subSeg.labs[subSeg.ins.findIndex((i) => i.checked)].offsetLeft;
+    freeze = was; paint();
+  }
+  measure();
+  pose();
+  return {
+    card, rows, mainSeg, subSeg, sortB, pose, resize, kick, setFocus, sort,
+    ff, hold(v) { held = v; if (!v) kick(); },
+    letGo() { if (fsrc === 'ghost') setFocus(null); },
+    begin(hold = 0) { setTimeout(() => { fresh = false; }, hold + 800); if (hold) { held = true; setTimeout(() => { held = false; kick(); }, hold); } else kick(); },
+    get layout() { return cur; }, get desc() { return desc; }, get focus() { return fr; }, get order() { return order.map((r) => r.k); },
+    get settled() { return !S.some((s) => s.on); },
+    snap() { return rows.map((r) => ({ k: r.k, y: +r.y.x.toFixed(1), lx: +r.lx.x.toFixed(1), ly: +r.ly.x.toFixed(1), fx: +r.fx.x.toFixed(1), fy: +r.fy.x.toFixed(1), bx: +r.bx.x.toFixed(1), bw: +r.bw.x.toFixed(1), rl: +r.rl.x.toFixed(2), lv: +r.lv.x.toFixed(2), fv: +r.fv.x.toFixed(2) })); },
+    H: () => HS.x,
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('t2-fit');
+  // the card is drawn 600 px wide and up to 434 tall, and scaled to the room it is given
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    let s = Math.max(0.5, Math.min((0.82 * W) / 600, (H - 2 * pad - ui) / 434, 1.5));
+    s = Math.round(s * 100) / 100;
+    fit.style.setProperty('--s', s.toFixed(2));
+    T2C.resize();
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(size);
+
+  /* the ghost: it moves a pointer and clicks the controls a hand does (the same events on the same handlers) */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const fire = (type, x, y, Ctor = PointerEvent) => {
+    const t = document.elementFromPoint(x, y) || document.body;
+    t.dispatchEvent(new Ctor(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerType: 'mouse', pointerId: 75, isPrimary: true, button: 0, view: window }));
+    return t;
+  };
+  async function glide(my, to, ms = 760) {
+    const from = pos || { x: innerWidth * 0.82, y: innerHeight * 0.88 }, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = mv(p);
+      const x = from.x + (to.x - from.x) * k, y = from.y + (to.y - from.y) * k;
+      QM.ghostAt(x, y); pos = { x, y }; fire('pointermove', x, y);
+      if (p >= 1) break;
+    }
+  }
+  const mid = (el, fx = 0.5, fy = 0.5) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width * fx, y: r.top + r.height * fy }; };
+  async function tap(my) {
+    const { x, y } = pos, el = fire('pointerdown', x, y), press = el.closest && el.closest('.t2-so, .t2-sort');
+    if (press) press.classList.add('is-press');
+    await gap(my, 110);
+    fire('pointerup', x, y);
+    if (press) press.classList.remove('is-press');
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y, view: window }));
+  }
+  const pick = async (my, seg, i, ms = 760) => { if (seg.ins[i].checked) return false; await glide(my, mid(seg.labs[i]), ms); await gap(my, 200); await tap(my); return true; };
+  const hoverBar = async (my, k, ms = 760) => { const r = T2C.rows.find((x) => x.k === k); await glide(my, mid(r.bar), ms); };
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      await gap(my, first ? (QM.tile ? 5000 : 3000) : 700);
+      QM.ghostShow();
+      for (;;) {
+        if (!T2C.desc) { await glide(my, mid(T2C.sortB), 760); await gap(my, 200); await tap(my); await gap(my, 900); }
+        await pick(my, T2C.mainSeg, 0); await gap(my, 1500);                  // Table
+        if (T2C.subSeg.ins[1].checked) T2C.subSeg.select(0);                  // a hand left Share chosen: Chart comes back as Bars
+        await pick(my, T2C.mainSeg, 1); await gap(my, 1700);                  // Chart
+        await pick(my, T2C.subSeg, 1); await gap(my, 1200);                   // Share
+        await hoverBar(my, 'loop'); await gap(my, 1300);                      // a segment comes to ink
+        await hoverBar(my, 'runner', 900); await gap(my, 1100);
+        await pick(my, T2C.subSeg, 0); await gap(my, 1500);                   // Bars
+        await glide(my, mid(T2C.sortB), 760); await gap(my, 200); await tap(my); await gap(my, 1700);   // sort, in Bars
+        await pick(my, T2C.mainSeg, 0); await gap(my, 1500);                  // Table, in the new order
+        await glide(my, mid(T2C.sortB), 760); await gap(my, 200); await tap(my); await gap(my, 1800);   // sort back, in Table
+        await glide(my, { x: mid(T2C.card).x, y: mid(T2C.card).y - T2C.card.getBoundingClientRect().height * 0.62 }, 760);   // out of the card: the focus lets go
+        await gap(my, 500);
+      }
+    } catch (e) { if (e !== 0) console.error(e); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); pos = null; T2C.letGo(); }
+  if (!QM.tile && !reduced) {
+    const busyHand = () => T2C.card.matches(':hover') || (T2C.card.contains(document.activeElement) && document.activeElement !== document.body);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;                                // the ghost's own events do not count
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!busyHand()) script(false); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); T2C.pose(); T2C.begin(QM.tile ? 1100 : 0); if (!reduced) script(true); } });
+  T2C.begin(QM.tile || QM.live ? 1100 : 0);
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => script(true), 300));
+})();
+</script>
+</body>
+</html>

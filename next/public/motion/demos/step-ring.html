@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step ring · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "step-ring", "title": "Step ring", "group": "studio", "added": "2026-11-25", "cat": "loading", "order": 20,
+  "kind": "loop", "preview": {"secs": 9, "skip": 1500}, "tone": "paper", "shot": 500,
+  "line": "5 arcs drawn to each step's usual time · 14 px stroke, 6° gaps · lift to 18 px · one lime fill · Live in 11.6 s",
+  "summary": "Forma's site is going live and the wait is five named steps. One 200 px ring is cut into five arcs, each as long as its step usually takes (Build 2.6 s, Optimise images 3.4 s, Run checks 1.8 s, Deploy 2.4 s, Go live 1.2 s), so the ring is honest about where the time goes; the real run varies each step by a few percent. The step in work fills along its arc in lime: from the count where one is known (38 of 96 images, rolling), otherwise from elapsed over usual time, easing into the last 8% so it never sits full while still working. When a step ends its fill closes, the arc steps from lime to ink in 200 ms and the next fill is born at its start. The step number rolls in the middle and the name rolls under the ring. Hover, focus or tap an arc or its label and it lifts from 14 to 18 px on a spring while the ring's own words roll to that step's name and time, or Up next; the run never stops. At the end the gaps close one after another round the ring until it is one unbroken ink ring, a tick is drawn in a lime disc, the name rolls to Live at forma.studio and the total rolls in.",
+  "spec": [
+    ["Ring", "200 px centre line (radius 96 in a 220 box), 14 px stroke, round caps, five arcs from 12 o'clock clockwise with 6° gaps: the 330° left over is shared out by usual time (75.3°, 98.4°, 52.1°, 69.5°, 34.7°). The caps eat into each gap, so every arc is shortened at both ends by half the stroke (4.2° at 14 px, 5.4° at 18 px) and the tip to tip gap stays 6°"],
+    ["Fill", "a lime arc from the segment's start, a critically damped spring (response 0.2 s) on the step's progress: the count's share where counted (Optimise images, 96 images in batches of 5 to 9), otherwise elapsed over usual time, linear to 92% and then easing towards 99% (never full while working); at the step's last 0.2 s it closes to 100% (response 0.18 s)"],
+    ["Hand-off", "a step ends: the arc steps from lime #B8FF00 to ink #1d1d1f in 200 ms (smoothstep, no flash), the number and the name roll up 50 ms later, and the next fill is born at its start 100 ms in: its width springs from 0 to 14 px (response 0.26 s, no overshoot)"],
+    ["Steps", "Build 2.71 s, Optimise images 3.52 s (96 images), Run checks 1.88 s, Deploy 2.31 s, Go live 1.18 s: 11.6 s, against 11.4 s usual. The step's time reads as its slot, to a tenth"],
+    ["Rolling", "the number, the name and the detail line are three clipped windows (76, 28 and 20 px). A new line is added beside the old and the column rolls one line on a spring (response 0.34 s); it can be aimed again mid-roll, and at rest the column is collapsed to one line at a whole pixel. The count and the total are digit columns of their own, tabular, 0.2 s and 0.5 s"],
+    ["Lift", "hover, keyboard focus or a tap on an arc or on its legend label lifts that arc: stroke 14 to 18 px (response 0.26 s) on the same radius, so it grows both ways; the number, name and detail roll to that step (Done in 2.7 s, or Up next · usually 2.4 s, or its live state) and roll back when it lets go. Pointer, focus and tap share one rule: the latest wins. A tap lets go after 3.2 s or on a tap elsewhere"],
+    ["Keys", "the five arcs are real buttons laid over the ring (each one's hit area is clipped to its arc, with the gaps shared out), one tab stop, Arrow keys and Home and End move round the ring, Escape lets go; the focused arc gets a white-then-ink outline"],
+    ["End", "the last fill closes, then the gaps close one after another clockwise 70 ms apart (each arc's end grows to meet the next, spring 0.22 s) until the ring is one unbroken ink ring; the number rolls away, a lime disc springs in and a tick is drawn in one stroke (0.3 s), the name rolls to Live at forma.studio and the total rolls into Done in 11.6 s; a quiet Run again pill (#e8e8ed) is uncovered 1.45 s in"],
+    ["Restart", "in a tile (3 s after the end, 6 s in the detail view) the gaps part again from the last to the first, 40 ms apart, and each arc empties counter-clockwise, last arc first, 55 ms apart, then Build begins; Run again does the same"],
+    ["Loop", "the page loads on a pose that is played, not drawn: the run is stepped at 60 Hz to Run checks, two thirds filled, and held 1.3 s before it goes on"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A Qbix deploy, a launch page's go-live checklist or any long job with named stages: the wait that tells you which step, how far, and where the time goes.",
+  "rules": [
+    "One lime in any frame: the fill of the step in work, and at the end the disc behind the tick. Finished arcs are ink, pending arcs #e8e8ed, the pill and the legend are neutrals.",
+    "An arc's length is its step's usual time, never an equal fifth. Round caps are always compensated by half the stroke, so a gap is 6° whatever the stroke is.",
+    "Progress inside a step is shown only where it is known (a count). Everywhere else the fill follows elapsed over usual time and eases into the last 8%, so it never reads full while the step is still working.",
+    "Touching an arc never stops the run and never moves the live step: it only changes what the ring's own words say, and letting go brings the live step back.",
+    "The ring is role progressbar with aria-valuetext (Step 3 of 5, Run checks), the arcs are real buttons in ring order, the steps are a real ordered list with aria-current on the live one, and a polite status line says each change.",
+    "Under reduced motion the card rests on step 3 with the third arc two thirds full, springs are instant, and after 8 s the steps change in place and it stays on Live."
+  ],
+  "tags": ["loading", "steps", "ring", "segments", "progress", "tick", "spring", "hover", "keyboard", "agent", "deploy", "Forma", "stepper"]
+}
+</script>
+<style data-code>
+/* Step ring. A multi-step loader in the system face with Apple's neutrals, on a white card.
+   One SVG ring in five arcs drawn in script (render()): every arc's path comes from its own springs, so a lift, a gap closing and a fill never fight.
+   The number, the name and the detail line are clipped windows whose column rolls one line. The one lime is the fill of the step in work (the disc at the end). */
+.sr-card { --sr-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  --sr-out: cubic-bezier(.16, 1, .3, 1); --sr-ui: cubic-bezier(.4, 0, .2, 1);
+  position: absolute; left: 0; top: 0; width: 520px; height: 440px; overflow: hidden; border-radius: 24px; background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .08), 0 1px 3px rgba(0, 0, 0, .04);
+  color: #1d1d1f; font: 400 16px/20px var(--sr-f); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.sr-card :where(h2, p, ol) { margin: 0; padding: 0; }
+.sr-card :where(button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+/* the header: whose site, and what is happening to it */
+.sr-ttl { position: absolute; left: 24px; top: 20px; font: 600 16px/20px var(--sr-f); letter-spacing: -.01em; }
+.sr-sub { position: absolute; left: 24px; top: 41px; font: 400 13px/18px var(--sr-f); letter-spacing: -.006em; color: #6e6e73; }
+
+/* the ring: an SVG for the picture, five buttons over it for the hand */
+.sr-box { position: absolute; left: 150px; top: 32px; width: 220px; height: 220px; }
+.sr-svg { position: absolute; inset: 0; width: 220px; height: 220px; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sr-tr { stroke: #e8e8ed; }
+.sr-hl { stroke: #fff; }
+.sr-hk { stroke: #1d1d1f; }
+.sr-disc { fill: #B8FF00; stroke: none; transform-box: fill-box; transform-origin: 50% 50%; }
+.sr-tk { stroke: #1d1d1f; stroke-width: 3.6; }
+.sr-hit { position: absolute; inset: 0; width: 220px; height: 220px; outline: none; cursor: pointer; }
+.sr-hit:focus-visible { outline: none; }
+
+/* rolling windows: a clip, a column, one line per item */
+.sr-win { position: absolute; overflow: hidden; text-align: center; white-space: nowrap; pointer-events: none; }
+.sr-col { display: block; will-change: transform; }
+.sr-it { display: block; }
+.sr-num { left: 180px; top: 104px; width: 160px; height: 76px; }
+.sr-num .sr-it { height: 76px; font: 600 60px/76px var(--sr-f); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.sr-num .sr-it small { font: 500 16px/20px var(--sr-f); letter-spacing: -.01em; color: #6e6e73; margin-left: 8px; }
+.sr-name { left: 40px; top: 264px; width: 440px; height: 28px; }
+.sr-name .sr-it { height: 28px; font: 600 22px/28px var(--sr-f); letter-spacing: -.02em; }
+.sr-det { left: 40px; top: 298px; width: 440px; height: 20px; color: #6e6e73; font-variant-numeric: tabular-nums; }
+.sr-det .sr-it { height: 20px; }
+/* digit columns: each digit rolls by itself inside a one character clip */
+.sr-dg { display: inline-block; width: 1ch; height: 20px; overflow: hidden; vertical-align: top; text-align: center; }
+.sr-dc { display: block; will-change: transform; }
+.sr-dc > i { display: block; height: 20px; font-style: normal; }
+.sr-dc.c-t { transform: translateY(calc(var(--ct, 0) * -20px)); }
+.sr-dc.c-o { transform: translateY(calc(var(--co, 0) * -20px)); }
+.sr-dc.t-t { transform: translateY(calc(var(--tt, 0) * -20px)); }
+.sr-dc.t-o { transform: translateY(calc(var(--to, 0) * -20px)); }
+.sr-dc.t-d { transform: translateY(calc(var(--td, 0) * -20px)); }
+
+/* the legend: five labels, a tick before each finished one */
+.sr-leg { position: absolute; left: 0; right: 0; top: 378px; display: flex; justify-content: center; gap: 2px; }
+.sr-li { display: flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 999px; font: 500 13px/28px var(--sr-f); letter-spacing: -.006em; color: #aeaeb2; white-space: nowrap; cursor: pointer;
+  transition: color 200ms var(--sr-ui), background-color 150ms var(--sr-ui); }
+.sr-li.is-live { color: #1d1d1f; }
+.sr-li.is-done { color: #6e6e73; }
+.sr-li.is-hot { background: rgba(0, 0, 0, .05); }
+.sr-li svg { width: 10px; height: 10px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.sr-li path { stroke-dasharray: 1 3; stroke-dashoffset: 1; transition: stroke-dashoffset 300ms var(--sr-out); }
+.sr-li.is-done path { stroke-dashoffset: 0; }
+/* Run again: a quiet pill, uncovered from its top under the detail line */
+.sr-again { position: absolute; left: 0; right: 0; top: 330px; margin: 0 auto; width: fit-content; display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 17px 0 14px; border-radius: 999px; background: #e8e8ed; color: #1d1d1f;
+  font: 500 15px/36px var(--sr-f); letter-spacing: -.01em; white-space: nowrap; clip-path: inset(0 0 100% 0 round 18px);
+  transition: background-color 200ms var(--sr-ui), box-shadow 100ms var(--sr-ui); }
+.sr-again:hover { background: #dfdfe5; }
+.sr-again:active { box-shadow: inset 0 0 0 40px rgba(0, 0, 0, .04); }
+.sr-again:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+.sr-again svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) {
+  .sr-card *, .sr-card *::before, .sr-card *::after { transition: none !important; }
+}
+</style>
+<style>
+  /* the stage: a quiet #f5f5f7 ground; the card is drawn 520 px wide and scaled to the room it has */
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  .sr-fit { position: relative; }
+  .sr-world { position: absolute; left: 0; top: 0; width: 520px; height: 440px; transform-origin: 0 0; transform: scale(var(--s, 1)); }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+  <div class="sr-fit" id="sr-fit"><div class="sr-world" id="sr-world">
+<!-- code -->
+<section class="sr-card" id="sr-card" aria-labelledby="sr-ttl">
+  <h2 class="sr-ttl" id="sr-ttl">Forma</h2>
+  <p class="sr-sub" aria-hidden="true">Going live</p>
+  <div class="sr-box" id="sr-box">
+    <svg class="sr-svg" id="sr-svg" viewBox="0 0 220 220" role="progressbar" aria-label="Forma going live" aria-valuemin="1" aria-valuemax="5" aria-valuenow="3" aria-valuetext="Step 3 of 5, Run checks" focusable="false">
+      <g id="sr-halo"></g><g id="sr-track"></g><g id="sr-fill"></g>
+      <circle class="sr-disc" cx="110" cy="110" r="36" style="visibility:hidden"/>
+      <path class="sr-tk" d="M95.5 111.5l10.2 10.2 19.3-23.2" pathLength="1" style="visibility:hidden"/>
+    </svg>
+    <div id="sr-hits" role="group" aria-label="Steps. Arrow keys move round the ring"></div>
+  </div>
+  <div class="sr-win sr-num" id="sr-num" aria-hidden="true"></div>
+  <div class="sr-win sr-name" id="sr-name" aria-hidden="true"></div>
+  <div class="sr-win sr-det" id="sr-det" aria-hidden="true"></div>
+  <button class="sr-again" id="sr-again" type="button" inert><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M13 6.6A5.2 5.2 0 1 0 13.4 9.6M13.2 2.8v3.8H9.4"/></svg>Run again</button>
+  <div class="sr-leg" id="sr-leg" aria-hidden="true"></div>
+  <ol class="sr-only" id="sr-ol"></ol>
+  <p class="sr-only" id="sr-live" role="status" aria-live="polite"></p>
+</section>
+<!-- /code -->
+  </div></div>
+  <div class="qm-ui"><span>Hover, focus or tap an arc or a label. Arrow keys move round the ring</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Step ring. The run is a clock (S.rt); the picture is springs. Every arc has four: its fill (f), its width when born (b), its lift (lf) and the gap after it (cl).
+   render() draws the arcs from them: the caps are round, so each arc is pulled in by half the stroke at both ends and the gap stays 6 degrees at any width.
+   The page loads on a pose that is played, not drawn: the run is stepped, with the same code, to Run checks two thirds full. */
+const SR = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TILE = new URLSearchParams(location.search).has('tile');
+  const TAU = Math.PI * 2, RAD = 180 / Math.PI;
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const smooth = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+  const NS = 'http://www.w3.org/2000/svg';
+  const C = 110, R = 96, GAP = 6, W0 = 14, W1 = 18, FIN = 0.2, LIME = [184, 255, 0], INK = [29, 29, 31];
+  const RESP = { fill: 0.2, close: 0.18, born: 0.26, lift: 0.26, roll: 0.34, gap: 0.22, count: 0.2, disc: 0.3, tick: 0.3, pill: 0.4, cover: 0.22 };
+
+  /* a spring: the critically damped closed form; it always starts from the x and v on screen */
+  const mk = (x = 0, resp = 0.3, eps = 0.002) => ({ x, v: 0, T: x, w: TAU / resp, on: false, eps });
+  function step(s, dt) {
+    if (!s.on) return;
+    const A = s.x - s.T, w = s.w, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.T + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.T) < s.eps && Math.abs(s.v) < s.eps * 12) { s.x = s.T; s.v = 0; s.on = false; }
+  }
+  function aim(s, T, resp) {
+    if (resp) s.w = TAU / resp;
+    s.T = T;
+    if (reduced) { s.x = T; s.v = 0; s.on = false; } else s.on = true;
+  }
+  const snap = (s, x) => { s.x = s.T = x; s.v = 0; s.on = false; };
+
+  /* the steps: usual is what the ring is drawn to, slot is what this run took (11.6 s in all) */
+  const STEPS = [
+    { t: 'Build', usual: 2.6, slot: 2.71 },
+    { t: 'Optimise images', usual: 3.4, slot: 3.52, n: 96, unit: 'images', m: [[0, 0], [0.06, 5], [0.13, 12], [0.2, 18], [0.27, 26], [0.34, 31], [0.41, 38], [0.49, 46], [0.56, 53], [0.63, 60], [0.7, 68], [0.77, 75], [0.84, 83], [0.91, 90], [0.96, 94]] },
+    { t: 'Run checks', usual: 1.8, slot: 1.88 },
+    { t: 'Deploy', usual: 2.4, slot: 2.31 },
+    { t: 'Go live', usual: 1.2, slot: 1.18 }
+  ];
+  const N = STEPS.length, LAST = N - 1;
+  const USUAL = STEPS.reduce((a, s) => a + s.usual, 0);
+  let acc = 0, ang = 0;
+  STEPS.forEach((s) => {
+    s.T = acc; acc += s.slot;
+    s.a0 = ang; s.a1 = ang + (s.usual * (360 - GAP * N)) / USUAL; ang = s.a1 + GAP;     // visual ends of the arc: where the round caps end
+  });
+  const TOTAL = acc, TOTS = TOTAL.toFixed(1);
+  const POSE_RT = STEPS[2].T + (2 / 3) * STEPS[2].usual;                                 // Run checks, two thirds filled
+  const countAt = (s, p) => { let c = 0; for (const [q, v] of s.m) if (p >= q) c = v; return c; };
+  const prog = (x) => (x <= 0.92 ? x : Math.min(0.99, 0.92 + 0.07 * (1 - Math.exp(-(x - 0.92) / 0.1))));   // linear, then eases into the last 8%
+
+  const $ = (id) => document.getElementById(id);
+  const card = $('sr-card'), svg = $('sr-svg'), live = $('sr-live'), ol = $('sr-ol'), again = $('sr-again'), hits = $('sr-hits'), legEl = $('sr-leg');
+  const disc = svg.querySelector('.sr-disc'), tickP = svg.querySelector('.sr-tk');
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const sv = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+
+  /* geometry: angles in degrees from 12 o'clock, clockwise */
+  const pt = (a, rad) => [C + rad * Math.sin(a / RAD), C - rad * Math.cos(a / RAD)];
+  const arc = (a0, a1) => { const p = pt(a0, R), q = pt(a1, R); return `M${p[0].toFixed(2)} ${p[1].toFixed(2)}A${R} ${R} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${q[0].toFixed(2)} ${q[1].toFixed(2)}`; };
+  const hex = ([r, g, b]) => `rgb(${r},${g},${b})`;
+  const mix = (k) => hex(LIME.map((v, j) => Math.round(v + (INK[j] - v) * k)));
+
+  /* the arcs: a track, a fill, a focus outline, a button over it, a legend label */
+  const segs = STEPS.map((st, i) => {
+    const r = { i, st, state: 'pending', f: mk(0, RESP.fill), b: mk(0, RESP.born), lf: mk(0, RESP.lift), cl: mk(0, RESP.gap), ck0: 0, ck1: 0, ckT: -9, cnT: 0, focus: false };
+    r.hk = sv('path', { class: 'sr-hk' }); r.hl = sv('path', { class: 'sr-hl' }); r.tr = sv('path', { class: 'sr-tr' }); r.fl = sv('path', {});
+    r.hk.style.display = r.hl.style.display = 'none';
+    $('sr-halo').append(r.hk, r.hl); $('sr-track').append(r.tr); $('sr-fill').append(r.fl);
+    // the button: its hit area is the arc's band, clipped to a polygon, the gaps shared out between neighbours
+    const a = r.st.a0 - GAP / 2, b = r.st.a1 + GAP / 2, o = [], n = [];
+    for (let k = 0, m = Math.ceil((b - a) / 3); k <= m; k++) { o.push(pt(a + ((b - a) * k) / m, 108)); n.unshift(pt(a + ((b - a) * k) / m, 82)); }
+    r.btn = el('button', 'sr-hit'); r.btn.type = 'button';
+    r.btn.style.clipPath = 'polygon(' + o.concat(n).map((p) => p[0].toFixed(1) + 'px ' + p[1].toFixed(1) + 'px').join(',') + ')';
+    r.btn.tabIndex = i === 2 ? 0 : -1;
+    hits.append(r.btn);
+    r.li = el('span', 'sr-li', '<svg viewBox="0 0 10 10" focusable="false"><path d="M1.6 5.4l2.3 2.3 4.5-5.4" pathLength="1"/></svg>' + st.t);
+    legEl.append(r.li);
+    r.oli = el('li'); ol.append(r.oli);
+    return r;
+  });
+
+  /* rolling windows: a new line is added beside the old one and the column rolls a line on a spring; it can be aimed again mid-roll */
+  function roller(win, H) {
+    const col = el('div', 'sr-col'); win.append(col);
+    const o = { key: null, items: [], P: mk(0, RESP.roll, 0.0006), shown: '' };
+    const wrap = (node) => { const w = el('div', 'sr-it'); w.append(node); return w; };
+    o.set = (key, make, dir) => {
+      if (key === o.key) return;
+      o.key = key;
+      const w = wrap(make());
+      if (reduced) { col.replaceChildren(w); o.items = [w]; snap(o.P, 0); col.style.transform = ''; return; }
+      if (dir >= 0) { col.append(w); o.items.push(w); aim(o.P, o.items.length - 1); }
+      else { col.prepend(w); o.items.unshift(w); o.P.x += 1; aim(o.P, 0); }
+    };
+    o.tick = (dt) => {
+      step(o.P, dt);
+      if (!o.P.on && o.items.length > 1) { const keep = o.items[Math.round(o.P.T)]; col.replaceChildren(keep); o.items = [keep]; o.P.x = o.P.T = 0; }
+    };
+    o.render = () => { const t = o.P.x === 0 ? '' : `translateY(${(-o.P.x * H).toFixed(2)}px)`; if (t !== o.t) { col.style.transform = t; o.t = t; } };
+    o.rest = () => !o.P.on && o.items.length < 2;
+    o.reset = (key, make) => { o.key = key; const w = wrap(make()); col.replaceChildren(w); o.items = [w]; snap(o.P, 0); col.style.transform = ''; o.t = ''; };
+    return o;
+  }
+  const NUM = roller($('sr-num'), 76), NAME = roller($('sr-name'), 28), DET = roller($('sr-det'), 20);
+  const numNode = (i) => el('span', '', `${i + 1}<small>of ${N}</small>`);
+  const txt = (s) => el('span', '', s);
+  const dg = (cls, cells) => `<span class="sr-dg"><span class="sr-dc ${cls}">${cells.map((c) => `<i>${c}</i>`).join('')}</span></span>`;
+  const seq = (n) => Array.from({ length: n }, (_, k) => k);
+  const countNode = () => el('span', '', dg('c-t', [''].concat(seq(10).slice(1))) + dg('c-o', seq(10).concat(0)) + ` of ${STEPS[1].n} ${STEPS[1].unit}`);
+  const totalNode = () => el('span', '', 'Done in ' + dg('t-t', ['', 1]) + dg('t-o', seq(10)) + '.' + dg('t-d', seq(10)) + ' s');
+  const sec = (x) => x.toFixed(1) + ' s';
+
+  const S = { t: 0, rt: 0, state: 'run', L: 0, hold: 0, endT: 0, rwT: 0, epoch: 0, posing: false, say: 0, manual: false, endText: false, tickOn: false, cDirty: false };
+  const CN = mk(0, RESP.count), DISC = mk(0, RESP.disc), TICK = mk(0, RESP.tick), PL = mk(0, RESP.pill);
+  const TT = { t: mk(0, 0.5), o: mk(0, 0.5), d: mk(0, 0.6) };
+  const H = { ptr: null, foc: null, tap: null, lift: -1 };
+  let Q = [], last = 0, raf = 0;
+
+  /* the clock of the choreography: later(s, fn) runs on the same clock as the springs, so it stops with them and never races them */
+  function later(s, fn) { Q.push({ at: S.t + s, fn, ep: S.epoch }); Q.sort((a, b) => a.at - b.at); }
+  function pump() { while (Q.length && Q[0].at <= S.t) { const e = Q.shift(); if (e.ep === S.epoch) e.fn(); } }
+
+  const say = (m) => { if (S.posing) return; live.textContent = ''; clearTimeout(S.say); S.say = setTimeout(() => { live.textContent = m; }, 40); };
+  function setState(r, state) {
+    r.state = state;
+    r.li.classList.toggle('is-live', state === 'live'); r.li.classList.toggle('is-done', state === 'done');
+    const t = r.st.t + ', ' + (state === 'done' ? 'done in ' + r.st.slot.toFixed(1) + ' seconds' : state === 'live' ? 'in progress' : 'pending');
+    r.oli.textContent = t; r.btn.setAttribute('aria-label', t);
+    if (state === 'live') r.oli.setAttribute('aria-current', 'step'); else r.oli.removeAttribute('aria-current');
+  }
+  function setAria(text, now) {
+    svg.setAttribute('aria-valuenow', now); svg.setAttribute('aria-valuetext', text);
+  }
+
+  /* what the words say: the live step, or the step a hand is on, or the end */
+  const kindOf = (i) => { const r = segs[i]; return r.state === 'done' ? 'done' : r.state === 'live' || (S.state === 'rewind' && i === 0) ? 'live' : 'next'; };
+  const detailFor = (i) => {
+    const r = segs[i], st = r.st, k = kindOf(i);
+    if (k === 'done') return { key: i + ':done', make: () => txt('Done in ' + sec(st.slot)) };
+    if (k === 'live') return st.n ? { key: i + ':count', make: countNode } : { key: i + ':work', make: () => txt('Working · usually ' + sec(st.usual)) };
+    return { key: i + ':next', make: () => txt('Up next · usually ' + sec(st.usual)) };
+  };
+  const order = (i) => (i < 0 ? N : i);
+  let shownNum = 0, shownTx = 0, shownDt = 0;
+  function centre() {
+    S.cDirty = false;
+    const hov = H.lift, ending = S.state === 'end' && hov < 0;
+    const ni = hov >= 0 ? hov : ending ? -1 : S.L;
+    // the number: it never shares the middle with the tick, so one leaves before the other arrives
+    if (ni >= 0) {
+      if (DISC.x > 0.04 || DISC.T > 0 || TICK.T > 0 || TICK.x > 0.04) { aim(DISC, 0, RESP.cover); aim(TICK, 0, 0.14); S.cDirty = true; }
+      else { NUM.set('#' + ni, () => numNode(ni), order(ni) >= order(shownNum) ? 1 : -1); shownNum = ni; }
+    } else { NUM.set('', () => txt(''), 1); shownNum = -1; }
+    if (ending && NUM.key === '' && NUM.rest() && S.tickOn) {
+      if (DISC.T !== 1) { aim(DISC, 1, RESP.disc); later(0.1, () => { if (DISC.T === 1) aim(TICK, 1, RESP.tick); }); }
+    } else if (ending && S.tickOn) S.cDirty = true;
+    // the name and the detail line: frozen between the last step ending and the end line arriving
+    if (!(ending && !S.endText)) {
+      const ti = ending ? -1 : ni, dir = order(ti) >= order(shownTx) ? 1 : -1, nk = ti < 0 ? 'end' : 'n' + ti;
+      const moved = NAME.key !== nk;
+      NAME.set(nk, () => txt(ti < 0 ? 'Live at forma.studio' : STEPS[ti].t), dir);
+      shownTx = ti;
+      // the detail line follows the name by 60 ms, so the two never roll over each other
+      if (moved && !reduced) later(0.06, detail); else detail();
+    }
+  }
+  function detail() {
+    const ending = S.state === 'end' && H.lift < 0, ti = H.lift >= 0 ? H.lift : ending ? -1 : S.L, dir = order(ti) >= order(shownDt) ? 1 : -1;
+    if (ending && !S.endText) return;
+    if (ti < 0) DET.set('end', totalNode, dir); else { const d = detailFor(ti); DET.set(d.key, d.make, dir); }
+    shownDt = ti;
+  }
+
+  /* the agent */
+  function activate(i) {
+    const r = segs[i], st = r.st;
+    setState(r, 'live');
+    snap(r.f, 0); snap(r.b, 0); snap(r.cl, 0); r.ck0 = r.ck1 = 0; r.ckT = -9; r.cnT = 0; r.dr = false;
+    if (st.n) snap(CN, 0);
+    later(0.1, () => { if (r.state === 'live') aim(r.b, 1, RESP.born); });
+    if (reduced) snap(r.b, 1);
+    if (!rov()) for (const o of segs) o.btn.tabIndex = o === r ? 0 : -1;
+    setAria(`Step ${i + 1} of ${N}, ${st.t}`, i + 1);
+    say(`Step ${i + 1} of ${N}, ${st.t}`);
+    centre();
+  }
+  const ckNow = (r) => r.ck0 + (r.ck1 - r.ck0) * smooth((S.t - r.ckT) / 0.2);
+  function work(i, local) {
+    const r = segs[i], st = r.st;
+    if (st.n) {
+      const c = countAt(st, local / (st.slot - FIN));
+      if (c !== r.cnT) { r.cnT = c; aim(CN, c, RESP.count); aim(r.f, Math.max(0.03, c / st.n), RESP.fill); }
+    } else aim(r.f, reduced ? 2 / 3 : prog(local / st.usual), RESP.fill);
+  }
+  function finish(i) {
+    const r = segs[i];
+    r.fin = true;
+    aim(r.f, 1, RESP.close);
+    if (r.st.n) aim(CN, r.st.n, RESP.close);
+  }
+  function next() {
+    const r = segs[S.L];
+    setState(r, 'done'); r.fin = false;
+    r.ck0 = ckNow(r); r.ck1 = 1; r.ckT = reduced ? -9 : S.t;
+    if (S.L < LAST) { S.L++; activate(S.L); } else conclude();
+  }
+  /* the end: the last arc is ink, the gaps close one after another round the ring, then the tick, the line, the total, Run again */
+  function conclude() {
+    S.state = 'end'; S.endT = 0; S.endText = false; S.tickOn = false;
+    setAria('Live at forma.studio', N);
+    for (let k = 0; k < N; k++) later(0.16 + 0.07 * k, () => aim(segs[k].cl, 1, RESP.gap));
+    later(0.05, centre);
+    later(0.6, () => { S.endText = true; S.tickOn = true; centre(); aim(TT.t, 1, 0.5); later(0.08, () => aim(TT.o, 1, 0.5)); later(0.16, () => aim(TT.d, 6, 0.6)); });
+    later(1.45, () => aim(PL, 1, RESP.pill));
+    say(`Live at forma.studio. Done in ${TOTS} seconds. Run again is available.`);
+    centre();
+  }
+  function begin() {
+    S.state = 'run'; S.rt = 0; S.L = 0;
+    segs.forEach((r) => { r.fin = false; });
+    activate(0);
+  }
+  function restart() {
+    S.epoch++; Q.length = 0;
+    S.state = 'rewind'; S.rwT = 0; S.L = 0; S.endText = false; S.tickOn = false; S.hold = 0;
+    for (const r of segs) setState(r, 'pending');
+    aim(PL, 0, RESP.cover);
+    for (let k = N - 1; k >= 0; k--) {
+      const r = segs[k], n = N - 1 - k;
+      later(0.04 * n, () => aim(r.cl, 0, RESP.gap));                 // the gaps part again, last first
+      later(0.1 + 0.055 * n, () => { r.dr = true; aim(r.f, 0, RESP.gap); });                                   // and each arc empties counter-clockwise
+    }
+    snap(TT.t, 0); snap(TT.o, 0); snap(TT.d, 0);
+    setAria('Step 1 of 5, Build', 1);
+    centre();
+  }
+  /* the pose: step the world, with the same code as the run, to Run checks two thirds full, let the springs rest, hold, then the run goes on */
+  function pose() {
+    S.epoch++; Q.length = 0; S.posing = true; S.hold = 0; S.t = 0; S.endText = false; S.tickOn = false;
+    for (const r of segs) { setState(r, 'pending'); snap(r.f, 0); snap(r.b, 0); snap(r.lf, 0); snap(r.cl, 0); r.ck0 = r.ck1 = 0; r.ckT = -9; r.fin = false; r.dr = false; }
+    snap(CN, 0); snap(DISC, 0); snap(TICK, 0); snap(PL, 0); snap(TT.t, 0); snap(TT.o, 0); snap(TT.d, 0);
+    H.ptr = H.foc = H.tap = null; H.lift = -1;
+    NUM.reset('#0', () => numNode(0)); NAME.reset('n0', () => txt(STEPS[0].t)); DET.reset('0:work', () => txt('Working · usually ' + sec(STEPS[0].usual)));
+    shownNum = shownTx = shownDt = 0;
+    begin();
+    while (S.rt < POSE_RT) tick(1 / 60);
+    S.hold = 99; for (let k = 0; k < 60; k++) tick(1 / 60);
+    S.hold = reduced ? 8 : 1.3;
+    S.posing = false;
+    say(`Step 3 of ${N}, ${STEPS[2].t}`);
+    render();
+  }
+
+  /* one tick of the world */
+  function tick(dt) {
+    S.t += dt; pump();
+    if (S.hold > 0) S.hold -= dt;
+    else if (S.state === 'run') {
+      S.rt += dt;
+      const st = STEPS[S.L], r = segs[S.L], local = S.rt - st.T;
+      if (local >= st.slot) next();
+      else if (!r.fin && local >= st.slot - FIN) finish(S.L);
+      else if (!r.fin) work(S.L, local);
+    } else if (S.state === 'end') {
+      S.endT += dt;
+      if (S.endT >= (TILE ? 4.3 : 7) && !reduced && H.lift < 0 && !again.matches(':hover, :focus-visible')) restart();
+    } else if (S.state === 'rewind') {
+      S.rwT += dt;
+      if (S.rwT >= 0.78) begin();
+    }
+    for (const r of segs) { step(r.f, dt); step(r.b, dt); step(r.lf, dt); step(r.cl, dt); }
+    step(CN, dt); step(DISC, dt); step(TICK, dt); step(PL, dt); step(TT.t, dt); step(TT.o, dt); step(TT.d, dt);
+    NUM.tick(dt); NAME.tick(dt); DET.tick(dt);
+    if (S.cDirty) centre();
+  }
+
+  /* the picture, from the springs */
+  const put = (e, k, v) => { if (e['_' + k] !== v) { e.setAttribute(k, v); e['_' + k] = v; } };
+  const sty = (e, k, v) => { if (e['_' + k] !== v) { e.style[k] = v; e['_' + k] = v; } };
+  function render() {
+    const cap = (r) => ((W0 + (W1 - W0) * r.lf.x) / 2 / R) * RAD;            // the cap's share of the angle at this width
+    for (const r of segs) {
+      const w = W0 + (W1 - W0) * r.lf.x, d = cap(r), dn = cap(segs[(r.i + 1) % N]);
+      // closing a gap grows the end to the next arc's start: body onto body, so the joint has no notch where two round caps meet
+      const a0 = r.st.a0 + d, a1 = Math.max(a0 + 0.02, r.st.a1 - d + r.cl.x * (GAP + d + dn));
+      const full = r.f.x >= 0.999 && r.b.x >= 0.999, f = clamp(r.f.x, 0, 1), dA = arc(a0, a1);
+      put(r.tr, 'd', dA); put(r.tr, 'stroke-width', w.toFixed(2)); sty(r.tr, 'visibility', full ? 'hidden' : 'visible');
+      const fw = w * clamp(r.b.x, 0, 1) * (r.dr ? clamp(f / 0.1, 0, 1) : 1);          // an arc being emptied takes its round start with it
+      if (fw < 0.4 || (f < 0.001 && r.b.x < 0.02)) sty(r.fl, 'visibility', 'hidden');
+      else { sty(r.fl, 'visibility', 'visible'); put(r.fl, 'd', arc(a0, a0 + Math.max(0.02, f * (a1 - a0)))); put(r.fl, 'stroke-width', fw.toFixed(2)); sty(r.fl, 'stroke', mix(clamp(ckNow(r), 0, 1))); }
+      if (r.focus) { put(r.hk, 'd', dA); put(r.hk, 'stroke-width', (w + 8).toFixed(2)); put(r.hl, 'd', dA); put(r.hl, 'stroke-width', (w + 4).toFixed(2)); }
+    }
+    NUM.render(); NAME.render(); DET.render();
+    // digit columns are set on the card: every counter on screen follows
+    const o = ((CN.x % 10) + 10) % 10, setv = (k, v) => { v = v.toFixed(3); if (card['_' + k] !== v) { card.style.setProperty('--' + k, v); card['_' + k] = v; } };
+    setv('ct', Math.floor(CN.x / 10) + clamp(o - 9, 0, 1)); setv('co', o); setv('tt', TT.t.x); setv('to', TT.o.x); setv('td', TT.d.x);
+    // the tick: a lime disc and a tick drawn in one stroke
+    const df = DISC.x, tk = TICK.x;
+    if (df < 0.01) sty(disc, 'visibility', 'hidden'); else { sty(disc, 'visibility', 'visible'); sty(disc, 'transform', `scale(${df.toFixed(4)})`); }
+    if (tk < 0.01) sty(tickP, 'visibility', 'hidden'); else { sty(tickP, 'visibility', 'visible'); sty(tickP, 'strokeDasharray', tk.toFixed(4) + ' 3'); }
+    const shown = PL.x > 0.002;
+    sty(again, 'visibility', shown ? 'visible' : 'hidden');
+    if (shown) sty(again, 'clipPath', PL.x >= 0.999 ? 'none' : `inset(0 0 ${((1 - clamp(PL.x, 0, 1)) * 100).toFixed(2)}% 0 round 18px)`);
+    const can = PL.T === 1 && S.state === 'end';
+    if (can === again.inert) again.inert = !can;
+  }
+
+  /* by hand: pointer, focus and a tap all lift an arc; the latest wins, and the run never notices */
+  const rov = () => hits.contains(document.activeElement);
+  function resolve() {
+    let best = null;
+    for (const c of [H.ptr, H.foc, H.tap]) if (c && (!best || c.ts > best.ts)) best = c;
+    const i = best ? best.i : -1;
+    if (i === H.lift) return;
+    H.lift = i;
+    segs.forEach((r, k) => { aim(r.lf, k === i ? 1 : 0, RESP.lift); r.li.classList.toggle('is-hot', k === i); });
+    centre();
+  }
+  const stamp = () => performance.now();
+  function over(i, e) { if (e.pointerType === 'touch') return; H.ptr = { i, ts: stamp() }; resolve(); }
+  function out(i, e) { if (e.pointerType === 'touch') return; if (H.ptr && H.ptr.i === i) H.ptr = null; resolve(); }
+  function tap(i, e) {
+    if (e.pointerType !== 'touch') return;
+    const ts = stamp();
+    H.tap = H.tap && H.tap.i === i ? null : { i, ts };
+    resolve();
+    if (H.tap) setTimeout(() => { if (H.tap && H.tap.ts === ts) { H.tap = null; resolve(); } }, 3200);
+  }
+  segs.forEach((r, i) => {
+    for (const t of [r.btn, r.li]) {
+      t.addEventListener('pointerenter', (e) => over(i, e));
+      t.addEventListener('pointerleave', (e) => out(i, e));
+      t.addEventListener('pointerdown', (e) => tap(i, e));
+    }
+    r.btn.addEventListener('focus', () => {
+      for (const o of segs) o.btn.tabIndex = o === r ? 0 : -1;
+      if (r.btn.matches(':focus-visible')) { r.focus = true; r.hk.style.display = r.hl.style.display = ''; H.foc = { i, ts: stamp() }; resolve(); }
+    });
+    r.btn.addEventListener('blur', () => {
+      r.focus = false; r.hk.style.display = r.hl.style.display = 'none';
+      if (H.foc && H.foc.i === i) H.foc = null;
+      resolve();
+    });
+    r.btn.addEventListener('keydown', (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key; let t = -1;
+      if (k === 'ArrowRight' || k === 'ArrowDown') t = (i + 1) % N;
+      else if (k === 'ArrowLeft' || k === 'ArrowUp') t = (i + N - 1) % N;
+      else if (k === 'Home') t = 0;
+      else if (k === 'End') t = LAST;
+      else if (k === 'Escape') { H.tap = H.ptr = H.foc = null; resolve(); return; }          // lets go; the focus stays where it is
+      else return;
+      e.preventDefault();
+      segs[t].btn.focus();
+    });
+  });
+  document.addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch' && H.tap && !e.target.closest('.sr-hit, .sr-li')) { H.tap = null; resolve(); } });
+  again.addEventListener('click', () => { if (S.state === 'end') restart(); });
+
+  function frame(now) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
+    last = now;
+    if (S.manual) return;
+    tick(dt); render();
+  }
+  document.addEventListener('visibilitychange', () => { last = performance.now(); });
+  pose();
+  last = performance.now();
+  raf = requestAnimationFrame(frame);
+  return { S, H, segs, STEPS, TOTAL, tick, render, pose, restart, resolve, again, card, svg, NUM, NAME, DET, DISC, TICK, PL };
+})();
+</script>
+<script>
+(() => {
+  const fit = document.getElementById('sr-fit'), world = document.getElementById('sr-world');
+  // the card is drawn 520 px wide and 440 px tall and scaled to the room it is given
+  function size() {
+    const W = innerWidth, H = innerHeight, pad = Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = document.documentElement.classList.contains('qm-tile') ? 0 : 46;
+    let s = Math.max(0.5, Math.min(0.9 * W / 520, (H - 2 * pad - ui) / 440, 1.5));
+    s = Math.floor(s * 16) / 16;
+    fit.style.width = (520 * s).toFixed(2) + 'px'; fit.style.height = (440 * s).toFixed(2) + 'px';
+    world.style.setProperty('--s', s.toFixed(4));
+  }
+  size();
+  addEventListener('resize', size);
+  if (document.fonts) document.fonts.ready.then(size);
+  QM.demo({ kind: 'loop', restart() { SR.pose(); } });
+})();
+</script>
+</body>
+</html>

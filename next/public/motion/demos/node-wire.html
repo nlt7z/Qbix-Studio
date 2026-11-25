@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Node wire · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "node-wire", "title": "Node wire", "group": "studio", "added": "2026-11-24", "cat": "cursor", "order": 20,
+  "kind": "loop", "preview": {"secs": 9, "skip": 4500}, "tone": "paper", "shot": 800,
+  "line": "cubic redrawn every frame · slack lags on a spring · magnet 36 px · retract keeps the release speed",
+  "summary": "A small Qbix workflow on a #f5f5f7 board: New enquiry, Draft reply, Book a call, Send to Slack, white cards with a drawn glyph, a title and a status line. Press an output port and a wire leaves it and follows the hand exactly; its handles lengthen with the distance and its middle lags on a spring, so a fast move bends it and it catches up. Within 36 px of an open input the end lets go of the hand and seats on the port on a spring, the ring opens and the node lifts; moving off lets go by the same path. Release there and the wire tightens, one pulse runs source to target and the target's status rolls to Runs after Draft reply. Release on empty board and the wire pulls itself back into its port along its own curve, starting at the speed of the release.",
+  "spec": [
+    ["Wire", "one SVG cubic per wire, rebuilt every frame from the output port to the end point: handles h = min(190, 26 + 0.34 × distance) × (0.55 + 0.45 × dx / distance) px along x, so a steep wire stays an S; 2 px #1d1d1f while held, #86868b at rest, #1d1d1f 3 px when selected"],
+    ["Hand", "pointerdown on an output answers at once (port 0.9 in 100 ms) and the wire's end is the pointer, 1:1 in board pixels, pointer captured; no slop, no easing"],
+    ["Slack", "the middle of the curve is a point on its own spring (response 0.26 s, damping 0.72) chasing the ideal midpoint; the gap moves the handles by 0.75 and 1.92 of itself (so the middle moves by exactly the gap, the port end keeps its direction and the hand end carries the bend), at most 80 px and never across a port; a held wire also hangs 0.14 × its width plus 0.03 × its height (30 px at most, a quarter of that where a port holds it), and that droop springs to 0 on release (0.26 s)"],
+    ["Magnet", "an open input within 36 px (let go at 46 px) takes the end on a spring (response 0.16 s, the hand's velocity at the moment); the port's ring draws on clockwise in 0.3 s and the node lifts 1.02 and 2 px; ports that could take the wire show a #e8e8ed halo; an output never attracts its own node, a taken input or a loop"],
+    ["Connect", "release on a magnet: the droop tightens, 140 ms later one pulse (a 40 px ink-edged lime segment, dashoffset, 520 ms, move curve) runs the path, and on arrival the target's status rolls up (300 ms, expo out) from Not connected to Runs after the source"],
+    ["Miss", "release on empty board: the wire's end retracts along the curve itself, a de Casteljau split at u, one spring from 1 to 0 (response 0.36 s) that starts at the hand's release velocity along the curve's tangent, so a flick overshoots a little before it comes home"],
+    ["Nodes", "dragged 1:1 from the grab after 6 px; release projects v × 0.099 s (d 0.99), over 420 px/s is a throw (damping 0.8), edges rubber-band (x·D·0.55)/(D + 0.55·|x|), D = 90 px; every wire is rebuilt each frame and lags a little behind its node"],
+    ["Remove", "click a wire (18 px hit area) and it steps up to #1d1d1f 3 px with a × at its middle; Delete or the × retracts it into its source and the target's status rolls back"],
+    ["Lime", "exactly one lime per frame: the pulse while it runs, otherwise the live dot on New enquiry, which steps down to #d2d2d7 while a pulse travels; wires are never lime at rest"],
+    ["Keys", "ports are buttons: Enter on an output starts a wire, arrows walk the open inputs (the wire seats on each and says so), Enter connects, Escape cancels; Enter on a connected input selects its wire, Delete removes it; arrows nudge a focused node 8 px (Shift 32)"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-24"],
+  "where": "The Forma enquiry flow a client sees in a Qbix handover: a place where a form submission is routed through an agent, a calendar and a team channel, and the client can rewire it.",
+  "rules": [
+    "The wire is the hand's: its end is the pointer, 1:1, until a port takes it. Everything the wire does besides that (slack, seat, tighten, retract) is a spring started from the value and velocity on screen.",
+    "A magnet only takes what can connect: an open input on another node that does not close a loop. Moving away lets go by the same path it came in by.",
+    "A miss keeps the release speed: the wire retracts along its own curve, not along a straight line to the port.",
+    "One lime per frame: the travelling pulse, or the live dot when nothing is running. A wire at rest is #86868b, a held or selected wire #1d1d1f.",
+    "Ports are real buttons with a 44 px hit area; Enter, arrows, Enter and Escape do everything the pointer does, and a status line announces each step.",
+    "Under reduced motion the board rests on its start state with the wires drawn; the wire still follows the pointer, but seat, tighten, retract and the status roll change in place."
+  ],
+  "tags": ["workflow", "node editor", "wire", "connector", "magnet", "slack", "spring", "agent", "drag", "keyboard", "cursor"]
+}
+</script>
+<style data-code>
+/* Node wire. A workflow board on #f5f5f7: four white node cards, wires between their ports. Lime is the travelling pulse, or the live dot when nothing runs; wires are #86868b at rest.
+   Positions, wires, ports and the status line are set from script (render()): they are springs. Easing for small UI feedback: ui (.4, 0, .2, 1); the status roll: expo out (.16, 1, .3, 1). */
+.nw-fit { position: relative; width: calc(760px * var(--s, 1)); height: calc(476px * var(--s, 1)); }
+.nw-board { --nw-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif;
+  position: absolute; left: 0; top: 0; width: 760px; height: 476px; transform: scale(var(--s, 1)); transform-origin: 0 0; overflow: hidden; border-radius: 26px;
+  background: #f5f5f7 radial-gradient(circle, #dcdce1 1.3px, transparent 1.6px) 11px 11px / 22px 22px;
+  font: 400 12px/16px var(--nw-f); letter-spacing: -.005em; color: #1d1d1f; cursor: default; touch-action: pan-y;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-font-smoothing: antialiased; }
+.nw-board p { margin: 0; }
+:where(.nw-board button) { font: inherit; letter-spacing: inherit; color: inherit; border: 0; background: none; padding: 0; margin: 0; }
+.nw-board.is-wire, .nw-board.is-wire .nw-port, .nw-board.is-node, .nw-board.is-node .nw-node { cursor: grabbing; }
+.nw-title { position: absolute; left: 24px; top: 20px; font-weight: 500; color: #6e6e73; pointer-events: none; }
+.nw-cap { position: absolute; left: 24px; bottom: 20px; color: #6e6e73; pointer-events: none; }
+
+/* the wires: two SVG layers, resting wires under the nodes, a wire in the hand above them */
+.nw-wires, .nw-top { position: absolute; left: 0; top: 0; width: 760px; height: 476px; overflow: visible; pointer-events: none; }
+.nw-wires { z-index: 1; }
+.nw-top { z-index: 4; }
+.nw-vis, .nw-hit, .nw-bead, .nw-pulse { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.nw-vis { stroke: #86868b; stroke-width: 2; }
+.nw-hit { stroke: transparent; stroke-width: 18; pointer-events: stroke; cursor: pointer; touch-action: none; }
+.nw-bead { stroke: #1d1d1f; stroke-width: 7; display: none; pointer-events: none; }
+.nw-pulse { stroke: #B8FF00; stroke-width: 3.5; display: none; pointer-events: none; }
+
+/* a node: white, no ring, a shadow that deepens with --l (0 at rest, 1 lifted, set from script) */
+.nw-node { position: absolute; left: 0; top: 0; z-index: 2; width: 200px; height: 76px; border-radius: 18px; background: #fff; outline: none; will-change: transform; touch-action: none; cursor: grab; --l: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 calc(6px + 12px * var(--l)) calc(18px + 14px * var(--l)) calc(-8px - 2px * var(--l)) rgba(0, 0, 0, calc(.1 + .1 * var(--l))); }
+.nw-node:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 6px; }
+.nw-in { position: absolute; inset: 0; padding: 15px 28px 0 24px; pointer-events: none; }   /* the text clears an open port ring (15 px in from the edge) by 9 px, the live dot by 13 px */
+.nw-head { display: flex; align-items: center; gap: 8px; height: 24px; }
+.nw-ic { flex: none; width: 24px; height: 24px; fill: none; stroke: #1d1d1f; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nw-t { font: 600 15px/20px var(--nw-f); letter-spacing: -.01em; white-space: nowrap; }
+.nw-live { flex: none; margin-left: auto; width: 10px; height: 10px; border-radius: 50%; background: #B8FF00; box-shadow: inset 0 0 0 1px rgba(12, 19, 0, .28); transition: background-color 120ms cubic-bezier(.4, 0, .2, 1), box-shadow 120ms cubic-bezier(.4, 0, .2, 1); }
+.nw-live.is-dim { background: #d2d2d7; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); }
+/* the status line rolls: the old line is covered upwards, the new one uncovered from below */
+.nw-board .nw-sub { position: relative; height: 18px; margin: 5px 0 0; overflow: hidden; font-size: 12px; line-height: 18px; color: #6e6e73; }
+.nw-sub span { position: absolute; left: 0; top: 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.nw-sub span.is-off { color: #86868b; }
+
+/* a port: a 14 px dot on the node's edge in a 44 px button. The halo says "this one can take the wire", the ring opens when it does. */
+.nw-port { position: absolute; top: 16px; z-index: 3; width: 44px; height: 44px; border-radius: 50%; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.nw-port.is-in { left: -22px; }
+.nw-port.is-out { right: -22px; }
+.nw-port:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -3px; }
+.nw-halo, .nw-dot, .nw-ring { position: absolute; left: 50%; top: 50%; pointer-events: none; }
+.nw-halo { width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; background: #e8e8ed; transform: scale(0); }
+.nw-dot { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px #86868b; transition: background-color 160ms cubic-bezier(.4, 0, .2, 1), box-shadow 160ms cubic-bezier(.4, 0, .2, 1); }
+.nw-port.is-wired .nw-dot { background: #86868b; }
+.nw-port:hover .nw-dot, .nw-port.is-hot .nw-dot { box-shadow: inset 0 0 0 2px #1d1d1f; }
+.nw-port.is-wired:hover .nw-dot { background: #1d1d1f; box-shadow: inset 0 0 0 2px #1d1d1f; }
+.nw-ring { width: 32px; height: 32px; margin: -16px 0 0 -16px; overflow: visible; transform: scale(.85); }
+.nw-ring circle { fill: none; stroke: #1d1d1f; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+
+/* the × on a selected wire: a 44 px button, a 24 px white disc */
+.nw-x { position: absolute; left: 0; top: 0; z-index: 5; width: 44px; height: 44px; margin: -22px 0 0 -22px; cursor: pointer; visibility: hidden; touch-action: none; will-change: transform; border-radius: 50%; }
+.nw-x i { position: absolute; left: 10px; top: 10px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 2px 8px rgba(0, 0, 0, .18); transition: background-color 160ms cubic-bezier(.4, 0, .2, 1), transform 100ms cubic-bezier(.4, 0, .2, 1); }
+.nw-x svg { position: absolute; left: 10px; top: 10px; width: 24px; height: 24px; fill: none; stroke: #1d1d1f; stroke-width: 1.7; stroke-linecap: round; }
+.nw-x:hover i, .nw-x.is-hot i { background: #e8e8ed; }
+.nw-x:active i, .nw-x.is-press i { transform: scale(.92); }
+.nw-x:focus-visible { outline: 2px solid #1d1d1f; outline-offset: -3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nw-live, .nw-dot, .nw-x i { transition-duration: 1ms !important; }
+}
+</style>
+<style>
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; letter-spacing: -.006em; }
+  /* the board is drawn to fill the tile: no stage padding there */
+  html.qm-tile .qm-stage { padding: 0; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="nw-fit" id="nw-fit">
+ <section class="nw-board" id="nw-board" aria-label="Forma enquiry flow" aria-describedby="nw-help">
+  <p class="nw-title" aria-hidden="true">Forma · Enquiry flow</p>
+  <svg class="nw-wires" id="nw-wires" aria-hidden="true"></svg>
+  <div class="nw-nodes" id="nw-nodes">
+   <div class="nw-node" role="group" aria-label="New enquiry, trigger" tabindex="0" data-id="enquiry" data-x="16" data-y="168">
+    <div class="nw-in"><div class="nw-head">
+      <svg class="nw-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="3.2"/><path d="M4.5 8.2l7.5 5.2 7.5-5.2"/></svg>
+      <span class="nw-t">New enquiry</span><i class="nw-live" aria-hidden="true"></i></div>
+     <p class="nw-sub"><span>From forma.studio</span></p></div>
+    <button type="button" class="nw-port is-out" aria-label="New enquiry output"><i class="nw-halo"></i><svg class="nw-ring" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" pathLength="1" transform="rotate(-90 16 16)"/></svg><i class="nw-dot"></i></button>
+   </div>
+   <div class="nw-node" role="group" aria-label="Draft reply, agent" tabindex="0" data-id="draft" data-x="268" data-y="228">
+    <div class="nw-in"><div class="nw-head">
+      <svg class="nw-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 7.5l1.6 4.4 4.4 1.6-4.4 1.6-1.6 4.4-1.6-4.4-4.4-1.6 4.4-1.6z"/><path d="M18 3.5v5M15.5 6h5"/></svg>
+      <span class="nw-t">Draft reply</span></div>
+     <p class="nw-sub"><span>Runs after New enquiry</span></p></div>
+    <button type="button" class="nw-port is-in" aria-label="Draft reply input"><i class="nw-halo"></i><svg class="nw-ring" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" pathLength="1" transform="rotate(-90 16 16)"/></svg><i class="nw-dot"></i></button>
+    <button type="button" class="nw-port is-out" aria-label="Draft reply output"><i class="nw-halo"></i><svg class="nw-ring" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" pathLength="1" transform="rotate(-90 16 16)"/></svg><i class="nw-dot"></i></button>
+   </div>
+   <div class="nw-node" role="group" aria-label="Book a call" tabindex="0" data-id="book" data-x="544" data-y="52">
+    <div class="nw-in"><div class="nw-head">
+      <svg class="nw-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="3.4"/><path d="M4 10.2h16M8.5 3.5v4M15.5 3.5v4"/></svg>
+      <span class="nw-t">Book a call</span></div>
+     <p class="nw-sub"><span>Not connected</span></p></div>
+    <button type="button" class="nw-port is-in" aria-label="Book a call input"><i class="nw-halo"></i><svg class="nw-ring" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" pathLength="1" transform="rotate(-90 16 16)"/></svg><i class="nw-dot"></i></button>
+   </div>
+   <div class="nw-node" role="group" aria-label="Send to Slack" tabindex="0" data-id="slack" data-x="544" data-y="344">
+    <div class="nw-in"><div class="nw-head">
+      <svg class="nw-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 4.5l-1.6 15M16 4.5l-1.6 15M4.5 9.3h15.2M4 14.7h15.2"/></svg>
+      <span class="nw-t">Send to Slack</span></div>
+     <p class="nw-sub"><span>Runs after Draft reply</span></p></div>
+    <button type="button" class="nw-port is-in" aria-label="Send to Slack input"><i class="nw-halo"></i><svg class="nw-ring" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" pathLength="1" transform="rotate(-90 16 16)"/></svg><i class="nw-dot"></i></button>
+   </div>
+  </div>
+  <svg class="nw-top" id="nw-top" aria-hidden="true"></svg>
+  <button type="button" class="nw-x" id="nw-x" aria-label="Remove wire" tabindex="-1"><i></i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg></button>
+  <p class="nw-cap" id="nw-cap" aria-hidden="true">Drag from a port to connect two steps.</p>
+ </section>
+ <p class="sr-only" id="nw-help">Drag from an output port to an open input port to connect two steps. With the keyboard, press Enter on an output port, use the arrow keys to pick an input, then Enter to connect or Escape to cancel. Click a wire and press Delete to remove it.</p>
+ <p class="sr-only" id="nw-say" role="status" aria-live="polite"></p>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag from an output port to an open input, release elsewhere and the wire retracts. Click a wire, then Delete or ×. Drag a node. Keys: Enter on a port, arrows, Enter, Escape</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Node wire. Every node has springs for x, y, lift and press; every port for its halo, ring and press; every wire for its end, its lag, its droop, its colour, its selection and its retraction.
+   The wire is one cubic, rebuilt each frame. Its end is the hand, 1:1, until a port takes it. Everything is in board pixels (the board may be drawn scaled: the pointer is divided by the scale).
+   A release projects a throw with d = 0.99. */
+const NW = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = 2 * Math.PI, R = (s) => TAU / s;                                // a response in seconds as an angular frequency
+  const OMC = R(0.32), OML = R(0.3), OMO = R(0.2), OMP = R(0.1), OMS = R(0.16), OMH = R(0.14), OMG = R(0.26), OMT = R(0.26), OMR = R(0.36), OMX = R(0.26), OMN = R(0.22);
+  const LOOK = 0.99 / (1 - 0.99) / 1000;                                      // 0.099 s: where a release coasts to (d = 0.99)
+  const W = 760, H = 476, PX = 14, PT = 44, PB = 44, DB = 90;                 // the board, the room kept round a node (clear of the title above and the status line below), rubber-band dimension
+  const SLOP = 6, MAG = 36, MAGOUT = 46, FLICK = 140, THROW = 420;            // px before a node drag; px to take the end, to let go of it; px/s that is projected, that is a throw
+  const PDELAY = 140, PDUR = 520;                                             // ms before the pulse leaves, how long it runs
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const lerp = (a, b, t) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+  const $ = (id) => document.getElementById('nw-' + id);
+  const board = $('board'), fit = $('fit'), under = $('wires'), top = $('top'), xb = $('x'), capEl = $('cap'), sayEl = $('say');
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const IDLE = 'Drag from a port to connect two steps.';
+  const MOVE = QM.bezier(0.65, 0, 0.35, 1);                                    // the move curve, for the pulse
+
+  /* a spring: x(t) = T + (A + B·t)·e^(−ωt) when critically damped, the damped cosine below 1. It always starts from the x and v on screen. */
+  const mk = (x = 0) => ({ x, v: 0, T: x, w: OMC, z: 1, on: false });
+  function step(s, dt, eps, veps) {
+    if (!s.on) return false;
+    const A = s.x - s.T, w = s.w, z = s.z;
+    let x, v;
+    if (z >= 0.999) { const B = s.v + w * A, e = Math.exp(-w * dt); x = s.T + (A + B * dt) * e; v = (B - w * (A + B * dt)) * e; }
+    else {
+      const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt), c = Math.cos(wd * dt), sn = Math.sin(wd * dt), C = (s.v + z * w * A) / wd;
+      x = s.T + e * (A * c + C * sn); v = e * (s.v * c - ((z * w * s.v + w * w * A) / wd) * sn);
+    }
+    s.x = x; s.v = v;
+    if (Math.abs(x - s.T) < eps && Math.abs(v) < veps) { s.x = s.T; s.v = 0; s.on = false; }
+    return s.on;
+  }
+  const aim = (s, T, v, w, z) => { s.T = T; s.v = v; s.w = w; s.z = z; s.on = true; };
+  const to = (s, T, v, w, z, now) => { if (reduced || now) { s.x = s.T = T; s.v = 0; s.on = false; } else aim(s, T, v, w, z); kick(); };   // no springs under reduced motion
+  const rb = (x, D) => (x * D * 0.55) / (D + 0.55 * x);                      // rubber band, Apple's, constant 0.55
+  const band = (v, lo, hi, D) => (v < lo ? lo - rb(lo - v, D) : v > hi ? hi + rb(v - hi, D) : v);
+
+  /* the nodes and their ports */
+  const byId = {}, ports = [], portByEl = new Map(), nodeByEl = new Map();
+  const mkPort = (b, kind, n) => {
+    if (!b) return null;
+    const p = { el: b, node: n, kind, halo: b.querySelector('.nw-halo'), ring: b.querySelector('.nw-ring'), circle: b.querySelector('circle'), cand: mk(0), mag: mk(0), pr: mk(0), cv: NaN, mv: NaN, pv: NaN, wired: null };
+    ports.push(p); portByEl.set(b, p);
+    return p;
+  };
+  const N = Array.from($('nodes').children).map((el) => {
+    const n = { el, id: el.dataset.id, title: el.querySelector('.nw-t').textContent, w: 200, h: 76, hx: +el.dataset.x, hy: +el.dataset.y,
+      x: mk(+el.dataset.x), y: mk(+el.dataset.y), l: mk(0), pr: mk(0), tf: '', lv: NaN, wireIn: null,
+      sub: el.querySelector('.nw-sub'), subText: el.querySelector('.nw-sub span').textContent, live: el.querySelector('.nw-live'), base: el.querySelector('.nw-sub span').textContent };
+    n.inp = mkPort(el.querySelector('.nw-port.is-in'), 'in', n);
+    n.out = mkPort(el.querySelector('.nw-port.is-out'), 'out', n);
+    byId[n.id] = n; nodeByEl.set(el, n);
+    return n;
+  });
+  const inPorts = ports.filter((p) => p.kind === 'in');
+  const DEFAULT = [['enquiry', 'draft'], ['draft', 'slack']];                 // the two wires the board starts with
+
+  /* where a port is on screen right now: the node's edge, through its lift and press */
+  const portPos = (p) => { const n = p.node, s = 1 + 0.02 * n.l.x - 0.03 * n.pr.x; return { x: n.x.x + n.w / 2 + (p.kind === 'out' ? 1 : -1) * (n.w / 2) * s, y: n.y.x + n.h / 2 - 2 * n.l.x }; };
+
+  const W_ = [];                                                              // the wires
+  const hitMap = new WeakMap();
+  let held = null, ptr = null, raf = 0, last = 0, OX = 0, OY = 0, sc = 1, sel = null, kb = null, dimN = 0, dimT = 0, capT = 0, WID = 0, xv = mk(0), cur = N[0];
+  const say = (t) => { sayEl.textContent = t; cap(t, 2600); };
+  function cap(t, hold) {
+    capEl.textContent = t;
+    clearTimeout(capT);
+    if (hold) capT = setTimeout(() => { if (!held && !kb) capEl.textContent = IDLE; }, hold);
+  }
+
+  /* wires: reachable, valid, made */
+  const live = () => W_.filter((w) => !w.gone);
+  const reaches = (a, b, seen = new Set()) => { if (a === b) return true; if (seen.has(a)) return false; seen.add(a); return live().some((w) => w.from === a && w.to && reaches(w.to, b, seen)); };
+  const validIn = (src, p) => p.kind === 'in' && p.node !== src && !p.node.wireIn && !reaches(p.node, src);
+  const mkEl = (cls) => { const p = document.createElementNS(svgNS, 'path'); p.setAttribute('class', cls); return p; };
+  function mkWire(from, dest) {
+    const g = document.createElementNS(svgNS, 'g');
+    const hit = mkEl('nw-hit'), vis = mkEl('nw-vis'), bead = mkEl('nw-bead'), pls = mkEl('nw-pulse');
+    g.append(hit, vis, bead, pls);
+    const w = { id: ++WID, from, to: dest, mode: 'live', g, hit, vis, bead, pls, ex: mk(0), ey: mk(0), lx: mk(0), ly: mk(0), dr: mk(0), sel: mk(0), hv: mk(0), lv: mk(0), u: mk(1),
+      free: true, hand: { x: 0, y: 0 }, hvel: { x: 0, y: 0 }, mag: null, gone: false, pulse: null, lay: '', fresh: true, d: '', st: '', sw: NaN, mid: { x: 0, y: 0 } };
+    hitMap.set(hit, w);
+    hit.addEventListener('pointerenter', () => { if (w.mode === 'rest' && !held) to(w.hv, 1, w.hv.v, OMO, 1); });
+    hit.addEventListener('pointerleave', () => to(w.hv, 0, w.hv.v, OMO, 1));
+    W_.push(w);
+    return w;
+  }
+  const layer = (w, l) => { if (w.lay !== l) { w.lay = l; (l === 'top' ? top : under).appendChild(w.g); } };
+  const between = (a, b) => `${a.title} to ${b.title}`;
+
+  /* the curve: handles lengthen with the distance; the middle is displaced by its lag and its droop (the handles move by 0.75 and 1.92 of the gap, so the middle moves by the gap) */
+  const handle = (dist, dx) => Math.min(190, 26 + 0.34 * dist) * (0.55 + 0.45 * clamp(dx / (dist || 1), 0, 1));   // a steep wire gets shorter handles, so it stays an S and never kinks
+  function sub(a, b, c, d, u) { const p = lerp(a, b, u), q = lerp(b, c, u), r = lerp(c, d, u), pq = lerp(p, q, u), qr = lerp(q, r, u); return [a, p, pq, lerp(pq, qr, u)]; }
+  const f2 = (n) => n.toFixed(2);
+  const dOf = (c) => `M${f2(c[0].x)} ${f2(c[0].y)}C${f2(c[1].x)} ${f2(c[1].y)} ${f2(c[2].x)} ${f2(c[2].y)} ${f2(c[3].x)} ${f2(c[3].y)}`;
+  function geom(w, dt) {
+    let lv = false;
+    const p0 = portPos(w.from.out);
+    let p3;
+    if (w.mode === 'rest' && !(w.ex.on || w.ey.on)) { p3 = portPos(w.to.inp); w.ex.x = w.ex.T = p3.x; w.ey.x = w.ey.T = p3.y; }
+    else p3 = { x: w.ex.x, y: w.ey.x };
+    const dist = Math.hypot(p3.x - p0.x, p3.y - p0.y), h = handle(dist, p3.x - p0.x);
+    let c1 = { x: p0.x + h, y: p0.y }, c2 = { x: p3.x - h, y: p3.y };
+    const mx = (p0.x + 3 * c1.x + 3 * c2.x + p3.x) / 8, my = (p0.y + 3 * c1.y + 3 * c2.y + p3.y) / 8;
+    if (w.fresh) { w.lx.x = w.lx.T = mx; w.ly.x = w.ly.T = my; w.fresh = false; }
+    let ox = 0, oy = 0;
+    if (!reduced) {
+      if (Math.abs(w.lx.T - mx) > 0.01) aim(w.lx, mx, w.lx.v, OMG, 0.72);
+      if (Math.abs(w.ly.T - my) > 0.01) aim(w.ly, my, w.ly.v, OMG, 0.72);
+      lv = step(w.lx, dt, 0.05, 4) || lv; lv = step(w.ly, dt, 0.05, 4) || lv;
+      ox = w.lx.x - mx; oy = w.ly.x - my;
+      const m = Math.hypot(ox, oy);
+      if (m > 80) { ox *= 80 / m; oy *= 80 / m; }
+      const room = Math.max(0, (h - 10) / 1.92);                           // the handles never cross their ports, so a bent wire never cusps
+      ox = clamp(ox, -room, room);
+      oy += Math.min(30, 0.14 * Math.abs(p3.x - p0.x) + 0.03 * Math.abs(p3.y - p0.y)) * clamp(w.dr.x, 0, 1.2) * (1 - 0.75 * (w.mag ? clamp(w.mag.mag.x, 0, 1) : 0));   // pulled taut where a port holds it                // a held wire hangs; it tightens when it connects
+    }
+    // the gap moves the middle by itself when the handles move by 0.75 and 1.92 of it (3·(0.75 + 1.92)/8 = 1): the port end keeps most of its direction, the hand end carries the bend
+    c1 = { x: c1.x + 0.75 * ox, y: c1.y + 0.75 * oy }; c2 = { x: c2.x + 1.92 * ox, y: c2.y + 1.92 * oy };
+    w.mid = { x: mx + ox, y: my + oy };
+    w.tan = { x: p3.x - c2.x, y: p3.y - c2.y };                               // the curve's direction at its end, for the retraction's first speed
+    const u = clamp(w.u.x, 0, 1.2);
+    const c = Math.abs(u - 1) < 0.0005 ? [p0, c1, c2, p3] : sub(p0, c1, c2, p3, u);
+    const d = dOf(c);
+    if (d !== w.d) { w.d = d; w.vis.setAttribute('d', d); }
+    if (w.mode === 'rest' && w.hd !== d) { w.hd = d; w.hit.setAttribute('d', d); }
+    return lv;
+  }
+
+  /* the colour: #86868b at rest, #1d1d1f held or selected (and a little darker under the pointer); width 2, selected 3 */
+  const rgb = (k) => { const a = [0x86, 0x86, 0x8b], b = [0x1d, 0x1d, 0x1f]; return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',')})`; };
+  function paint(w) {
+    const ink = clamp(Math.max(w.sel.x, w.lv.x, 0.6 * w.hv.x), 0, 1);
+    const st = rgb(ink), sw = +(2 + clamp(w.sel.x, 0, 1)).toFixed(2);
+    if (st !== w.st) { w.st = st; w.vis.style.stroke = st; }
+    if (sw !== w.sw) { w.sw = sw; w.vis.style.strokeWidth = sw; }
+  }
+
+  /* the pulse: one short ink-edged lime segment runs the path by its dash offset */
+  function pulseFrame(w, now) {
+    const q = w.pulse, p = (now - q.t0) / PDUR;
+    if (p >= 1) { endPulse(w); return false; }
+    if (p <= 0) return true;
+    const len = w.vis.getTotalLength(), seg = Math.min(40, len * 0.5), e = clamp(MOVE(p), 0, 1);
+    const arr = `${seg.toFixed(1)} ${(len + seg + 10).toFixed(1)}`, off = (seg - e * (len + seg)).toFixed(1);
+    for (const el of [w.bead, w.pls]) { el.setAttribute('d', w.d); el.style.strokeDasharray = arr; el.style.strokeDashoffset = off; el.style.display = 'block'; }
+    return true;
+  }
+  function startPulse(w, now) {
+    w.pulse = { t0: now + PDELAY };
+    dimN++; n_dim(true);
+  }
+  function endPulse(w, silent) {
+    if (!w.pulse) return;
+    w.pulse = null;
+    w.bead.style.display = w.pls.style.display = 'none';
+    dimN = Math.max(0, dimN - 1);
+    if (!dimN) { clearTimeout(dimT); dimT = setTimeout(() => { if (!dimN) n_dim(false); }, 30); }
+    if (!silent && w.to && w.to.wireIn === w) syncStatus(w.to);
+  }
+  const n_dim = (on) => { clearTimeout(dimT); N.forEach((n) => n.live && n.live.classList.toggle('is-dim', on)); };
+
+  /* the status line rolls: the old text is covered upwards, the new one uncovered from below */
+  function syncStatus(n, now) {
+    const text = n.inp ? (n.wireIn ? `Runs after ${n.wireIn.from.title}` : 'Not connected') : n.base;
+    if (text === n.subText) return;
+    n.subText = text;
+    const box = n.sub;
+    box.getAnimations({ subtree: true }).forEach((a) => a.finish());
+    box.querySelectorAll('span.old').forEach((s) => s.remove());
+    const curS = box.querySelector('span');
+    const nx = document.createElement('span');
+    nx.textContent = text; nx.className = n.wireIn || !n.inp ? '' : 'is-off';
+    if (reduced || now || !nx.animate) { curS.textContent = text; curS.className = nx.className; return; }
+    box.appendChild(nx); curS.classList.add('old');
+    const o = { duration: 300, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'both' };
+    nx.animate([{ transform: 'translateY(100%)' }, { transform: 'translateY(0)' }], o);
+    curS.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], o).onfinish = () => curS.remove();
+  }
+
+  /* ports: classes and labels follow the wires */
+  function syncPorts() {
+    for (const p of ports) {
+      const n = p.node;
+      const wired = p.kind === 'in' ? !!n.wireIn : live().some((w) => w.from === n);
+      p.el.classList.toggle('is-wired', wired);
+      p.el.setAttribute('aria-label', p.kind === 'in'
+        ? `${n.title} input, ${n.wireIn ? `connected to ${n.wireIn.from.title}. Enter selects the wire, Delete removes it` : 'open'}`
+        : `${n.title} output. Enter starts a wire`);
+    }
+  }
+  const liftOf = (n) => ((held && held.kind === 'node' && held.node === n && held.mode === 'drag') || live().some((w) => w.mode === 'live' && w.mag && w.mag.node === n) ? 1 : 0);
+  const lift = (n) => to(n.l, liftOf(n), n.l.v, OML, 1);
+
+  /* magnet: the end leaves the hand and seats on the port; moving off hands it back */
+  function setMag(w, p) {
+    if (w.mag === p) return;
+    const old = w.mag;
+    w.mag = p; w.free = false;
+    if (old) { to(old.mag, 0, old.mag.v, OMO, 1); lift(old.node); }
+    if (p) { to(p.mag, 1, p.mag.v, OML, 1); lift(p.node); w.ex.v = w.hvel.x; w.ey.v = w.hvel.y; }
+  }
+  function magnet(w, p) {
+    let best = null, bd = 1e9;
+    for (const q of inPorts) {
+      if (!validIn(w.from, q)) continue;
+      const c = portPos(q), d = Math.hypot(c.x - p.x, c.y - p.y);
+      if (d < (q === w.mag ? MAGOUT : MAG) && d < bd) { best = q; bd = d; }
+    }
+    setMag(w, best);
+  }
+  const cands = (src) => { for (const q of inPorts) to(q.cand, src && validIn(src, q) ? 1 : 0, q.cand.v, OML, 1); };
+
+  /* the three ends of a wire */
+  function connect(w, p, now) {
+    const n = p.node;
+    w.mode = 'rest'; w.to = n; n.wireIn = w; w.mag = null; w.free = false;
+    to(p.mag, 0, p.mag.v, OMO, 1); to(w.dr, 0, w.dr.v, OMT, 1); to(w.lv, 0, w.lv.v, R(0.3), 1);
+    lift(n); cands(null); syncPorts();
+    if (reduced) syncStatus(n, true); else startPulse(w, now);
+    say(`Connected ${between(w.from, n)}.`);
+  }
+  function retract(w, vx, vy, quiet) {                                        // the end goes back into the port along the curve itself
+    if (w.gone) return;
+    w.gone = true;
+    if (sel === w) select(null);
+    if (w.mag) { const o = w.mag; w.mag = null; to(o.mag, 0, o.mag.v, OMO, 1); lift(o.node); }
+    if (w.pulse) endPulse(w, true);
+    const n = w.to;
+    if (n && n.wireIn === w) { n.wireIn = null; syncStatus(n); }
+    if (w.mode === 'rest') { const p = portPos(n.inp); w.ex.x = w.ex.T = p.x; w.ey.x = w.ey.T = p.y; }
+    w.mode = 'retract'; w.ex.on = w.ey.on = false; w.ex.v = w.ey.v = 0;
+    to(w.lv, 0, w.lv.v, R(0.2), 1); to(w.sel, 0, w.sel.v, R(0.2), 1); to(w.hv, 0, 0, R(0.2), 1);
+    layer(w, 'top'); syncPorts();
+    if (reduced) { finish(w); return; }
+    const t = w.tan || { x: 1, y: 0 }, len2 = t.x * t.x + t.y * t.y || 1;
+    const vu = clamp(((vx || 0) * t.x + (vy || 0) * t.y) / (3 * len2), -0.85 * OMR, 4);   // the hand's speed along the curve's direction at its end, as a rate of u
+    aim(w.u, 0, vu, OMR, 1); kick();
+    if (!quiet) cap(IDLE);
+  }
+  function finish(w) { w.g.remove(); const i = W_.indexOf(w); if (i >= 0) W_.splice(i, 1); }
+  function addRest(a, b, animate) {
+    const w = mkWire(a, b);
+    w.mode = 'rest'; w.free = false; b.wireIn = w; layer(w, 'under');
+    if (animate && !reduced) { w.u.x = 0; aim(w.u, 1, 0, OMR, 1); kick(); }
+    syncPorts();
+    return w;
+  }
+
+  /* selection: a click on a wire; the × rides its middle */
+  function select(w) {
+    if (sel === w) return;
+    if (sel) to(sel.sel, 0, sel.sel.v, R(0.2), 1);
+    sel = w;
+    if (w) { xw = w; to(w.sel, 1, w.sel.v, R(0.2), 1); }
+    to(xv, w ? 1 : 0, xv.v, w ? OMX : R(0.18), 1);
+    xb.tabIndex = w ? 0 : -1;
+    xb.setAttribute('aria-label', w ? `Remove wire ${between(w.from, w.to)}` : 'Remove wire');
+    if (w) say(`Wire ${between(w.from, w.to)} selected. Delete removes it.`);
+  }
+  function removeWire(w) {
+    if (!w || w.gone || w.mode !== 'rest') return;
+    const t = w.to.title;
+    retract(w, 0, 0, true);
+    say(`Removed the wire to ${t}.`);
+  }
+  const removeSelected = () => removeWire(sel);
+
+  /* draw everything from the springs */
+  function renderNode(n) {
+    const s = 1 + 0.02 * n.l.x - 0.03 * n.pr.x;
+    const tf = `translate3d(${n.x.x.toFixed(2)}px, ${(n.y.x - 2 * n.l.x).toFixed(2)}px, 0) scale(${s.toFixed(4)})`;
+    if (tf !== n.tf) { n.el.style.transform = tf; n.tf = tf; }
+    const l = +clamp(n.l.x, 0, 1.4).toFixed(3);
+    if (l !== n.lv) { n.el.style.setProperty('--l', l); n.lv = l; }
+  }
+  function renderPort(p) {
+    const c = +clamp(p.cand.x, 0, 1).toFixed(3), m = +clamp(p.mag.x, 0, 1).toFixed(3), pr = +clamp(p.pr.x, 0, 1).toFixed(3);
+    if (c !== p.cv) { p.cv = c; p.halo.style.transform = `scale(${c})`; }
+    if (m !== p.mv) {
+      p.mv = m;
+      p.circle.style.strokeDashoffset = reduced ? 0 : (1 - m).toFixed(3);
+      p.ring.style.transform = `scale(${(0.85 + 0.15 * m).toFixed(3)})`;
+      p.ring.style.opacity = reduced ? m : m < 0.003 ? 0 : 1;
+    }
+    if (pr !== p.pv) { p.pv = pr; p.dotEl = p.dotEl || p.el.querySelector('.nw-dot'); p.dotEl.style.transform = `scale(${(1 - 0.1 * pr).toFixed(3)})`; }
+  }
+  let xs = { v: NaN, x: NaN, y: NaN }, xw = null;
+  function renderX() {
+    const v = +clamp(xv.x, 0, 1).toFixed(3);
+    if (xw) { const x = xw.mid.x.toFixed(2), y = xw.mid.y.toFixed(2); if (x !== xs.x || y !== xs.y || v !== xs.v) { xs = { v, x, y }; xb.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${(0.5 + 0.5 * v).toFixed(3)})`; } }
+    xb.style.visibility = v > 0.003 ? 'visible' : 'hidden';
+  }
+
+  /* motion */
+  function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } }
+  function tick(now) {
+    raf = 0;
+    const dt = clamp((now - last) / 1000, 0.001, 0.04);
+    last = now;
+    let lv = false;
+    const hand = held && held.kind === 'node' && held.mode === 'drag' ? held : null;
+    for (const n of N) {
+      if (!(hand && n === hand.node)) { lv = step(n.x, dt, 0.05, 3) || lv; lv = step(n.y, dt, 0.05, 3) || lv; }
+      lv = step(n.l, dt, 0.002, 0.05) || lv; lv = step(n.pr, dt, 0.002, 0.05) || lv;
+    }
+    for (const p of ports) { lv = step(p.cand, dt, 0.002, 0.05) || lv; lv = step(p.mag, dt, 0.002, 0.05) || lv; lv = step(p.pr, dt, 0.002, 0.05) || lv; }
+    lv = step(xv, dt, 0.002, 0.05) || lv;
+    for (const w of W_.slice()) {
+      // the end: the hand, or a port that has taken it
+      if (w.mode === 'live') {
+        if (w.mag) { const p = portPos(w.mag); if (Math.abs(w.ex.T - p.x) > 0.02 || Math.abs(w.ey.T - p.y) > 0.02) { aim(w.ex, p.x, w.ex.v, OMS, 1); aim(w.ey, p.y, w.ey.v, OMS, 1); } }
+        else if (!w.free) {
+          aim(w.ex, w.hand.x, w.ex.v, OMH, 1); aim(w.ey, w.hand.y, w.ey.v, OMH, 1);
+          if (Math.abs(w.ex.x - w.hand.x) < 0.4 && Math.abs(w.ey.x - w.hand.y) < 0.4 && Math.abs(w.ex.v) + Math.abs(w.ey.v) < 60) w.free = true;
+        }
+        if (w.free && !w.mag) { w.ex.x = w.ex.T = w.hand.x; w.ey.x = w.ey.T = w.hand.y; w.ex.on = w.ey.on = false; w.ex.v = w.ey.v = 0; }
+      } else if (w.mode === 'rest' && (w.ex.on || w.ey.on)) {
+        const p = portPos(w.to.inp); aim(w.ex, p.x, w.ex.v, OMS, 1); aim(w.ey, p.y, w.ey.v, OMS, 1);
+      }
+      lv = step(w.ex, dt, 0.05, 3) || lv; lv = step(w.ey, dt, 0.05, 3) || lv;
+      lv = step(w.dr, dt, 0.002, 0.05) || lv; lv = step(w.sel, dt, 0.002, 0.05) || lv; lv = step(w.hv, dt, 0.002, 0.05) || lv; lv = step(w.lv, dt, 0.002, 0.05) || lv;
+      lv = step(w.u, dt, 0.002, 0.05) || lv;
+      lv = geom(w, dt) || lv;
+      paint(w);
+      if (w.pulse) { pulseFrame(w, now); lv = true; }
+      if (w.mode === 'rest' && w.lay === 'top' && !(w.ex.on || w.ey.on)) layer(w, 'under');
+      if (w.mode === 'retract' && w.u.x < 0.004 && !w.u.on) finish(w);
+    }
+    N.forEach(renderNode); ports.forEach(renderPort); renderX();
+    if (lv || hand) kick();                                                  // runs only while something moves or is held
+  }
+
+  /* velocity over the last 80 ms of moves: rows are [t, x, y]; 0 if the hand rested */
+  function vel(rows, t, j) {
+    const b = rows[rows.length - 1];
+    if (!b || t - b[0] > 80) return 0;
+    let a = rows[0];
+    for (const q of rows) if (b[0] - q[0] <= 80) { a = q; break; }
+    const dt = b[0] - a[0];
+    return dt < 8 ? 0 : ((b[j] - a[j]) / dt) * 1000;
+  }
+
+  /* one hand: a pointer or the ghost, both through down / move / up. x and y are client px, t is ms. */
+  function measure() { const r = board.getBoundingClientRect(); OX = r.left; OY = r.top; sc = r.width / W || 1; }
+  const local = (x, y) => ({ x: clamp((x - OX) / sc, 0, W), y: clamp((y - OY) / sc, 0, H) });
+  const client = (x, y) => { measure(); return { x: OX + x * sc, y: OY + y * sc }; };
+  const setMode = (k) => { board.classList.toggle('is-wire', k === 'wire'); board.classList.toggle('is-node', k === 'node'); };
+
+  function startWire(pt, p, t, ghost, type) {
+    select(null);
+    const w = mkWire(pt.node, null);
+    w.hand = { x: p.x, y: p.y }; w.ex.x = w.ex.T = p.x; w.ey.x = w.ey.T = p.y; w.dr.x = w.dr.T = reduced ? 0 : 1; w.lv.x = w.lv.T = 1;
+    layer(w, 'top');
+    held = { kind: 'wire', mode: 'drag', wire: w, port: pt, ghost, type, x0: p.x, y0: p.y, rows: [[t, p.x, p.y]], far: 0 };
+    to(pt.pr, 1, pt.pr.v, OMP, 1);
+    cands(pt.node); setMode('wire'); syncPorts();
+    cap('Drop on an open port.');
+    kick();
+  }
+  function wireMove(h, p, t) {
+    const w = h.wire;
+    w.hand = { x: p.x, y: p.y };
+    h.rows.push([t, p.x, p.y]);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    w.hvel = { x: vel(h.rows, t, 1), y: vel(h.rows, t, 2) };
+    h.far = Math.max(h.far, Math.hypot(p.x - h.x0, p.y - h.y0));
+    const was = w.mag;
+    magnet(w, p);
+    if (w.mag !== was) cap(w.mag ? `Release to connect to ${w.mag.node.title}.` : 'Drop on an open port.');
+    kick();
+  }
+  function wireUp(h, t, cancel) {
+    const w = h.wire;
+    to(h.port.pr, 0, h.port.pr.v, OMP, 1);
+    cands(null); setMode('');
+    if (!cancel && w.mag) { connect(w, w.mag, t); return; }
+    const vx = cancel ? 0 : vel(h.rows, t, 1), vy = cancel ? 0 : vel(h.rows, t, 2);
+    retract(w, vx, vy, true);
+    if (!cancel && h.far > SLOP) say('No port there. The wire went back.'); else cap(IDLE);
+  }
+
+  function commitDrag(h, p) {                                                // the press becomes a drag: 1:1 from here, so nothing jumps by the slop
+    h.mode = 'drag'; h.ax = p.x; h.ay = p.y; h.rdx = 0; h.rdy = 0;
+    const n = h.node;
+    h.sx = n.x.x; h.sy = n.y.x;
+    h.lox = PX - h.sx; h.hix = W - PX - n.w - h.sx; h.loy = PT - h.sy; h.hiy = H - PB - n.h - h.sy;
+    h.rows = [[performance.now(), 0, 0, 0, 0]];
+    n.x.on = false; n.x.v = 0; n.y.on = false; n.y.v = 0;
+    n.el.style.zIndex = 3;
+    to(n.pr, 0, n.pr.v, OMP, 1); lift(n);
+    setMode('node'); kick();
+  }
+  function dragMove(h, p, t) {
+    const n = h.node;
+    h.rdx = p.x - h.ax; h.rdy = p.y - h.ay;
+    const dx = reduced ? clamp(h.rdx, h.lox, h.hix) : band(h.rdx, h.lox, h.hix, DB);
+    const dy = reduced ? clamp(h.rdy, h.loy, h.hiy) : band(h.rdy, h.loy, h.hiy, DB);
+    n.x.x = n.x.T = h.sx + dx; n.y.x = n.y.T = h.sy + dy;                     // the grabbed node is exact
+    h.rows.push([t, dx, h.rdx, dy, h.rdy]);
+    while (h.rows.length > 2 && t - h.rows[0][0] > 100) h.rows.shift();
+    kick();
+  }
+  function nodeUp(h, t, cancel) {
+    const n = h.node;
+    const vdx = cancel ? 0 : vel(h.rows, t, 1), vdy = cancel ? 0 : vel(h.rows, t, 3);   // as drawn (the spring starts here)
+    const vrx = cancel ? 0 : vel(h.rows, t, 2), vry = cancel ? 0 : vel(h.rows, t, 4);   // and the hand's (what is projected)
+    const sp = Math.hypot(vrx, vry), thr = sp > THROW;
+    const px = h.rdx + (sp > FLICK ? vrx * LOOK : 0), py = h.rdy + (sp > FLICK ? vry * LOOK : 0);
+    const dx = clamp(px, h.lox, h.hix), dy = clamp(py, h.loy, h.hiy);
+    const Tx = h.sx + dx, Ty = h.sy + dy;
+    const pick = (s, T, v) => { let w = OMC; if (thr) { const D = T - s.x; if (v * D > 0) w = Math.min(40, Math.max(OMC, (1.5 * v) / D)); } return w; };
+    to(n.x, Tx, vdx, pick(n.x, Tx, vdx), thr ? 0.8 : 1); to(n.y, Ty, vdy, pick(n.y, Ty, vdy), thr ? 0.8 : 1);
+    n.el.style.zIndex = '';
+    held = null; lift(n); setMode('');
+    say(`${n.title} moved.`);
+  }
+
+  function down(x, y, t, ghost = false, target = null, type = 'mouse') {
+    if (held) up(t, true);
+    if (kb) kbEnd(false);
+    measure();
+    const p = local(x, y);
+    const el = target && target.closest ? target : null;
+    const pe = el && el.closest('.nw-port'), pt = pe ? portByEl.get(pe) : null;
+    const he = el && el.closest('.nw-hit'), hw = he ? hitMap.get(he) : null;
+    const ne = el && el.closest('.nw-node'), nd = ne ? nodeByEl.get(ne) : null;
+    if (pt && pt.kind === 'out') { startWire(pt, p, t, ghost, type); return; }
+    if (hw && hw.mode === 'rest') { select(hw); held = { kind: 'wirehit', mode: 'off', ghost, type }; return; }
+    if (nd) {
+      cur = nd;
+      held = { kind: 'node', mode: 'wait', node: nd, port: pt, ghost, type, x0: p.x, y0: p.y, rows: [], rest: { x: nd.x.T, y: nd.y.T }, flying: nd.x.on || nd.y.on };
+      nd.x.on = nd.y.on = false; nd.x.v = nd.y.v = 0;                           // a press catches a node in flight, where it is
+      to(nd.pr, 1, nd.pr.v, OMP, 1);
+      return;
+    }
+    select(null);
+    held = { kind: 'board', mode: 'off', ghost, type };
+  }
+  function move(x, y, t) {
+    const h = held;
+    if (!h || h.mode === 'off') return;
+    const p = local(x, y);
+    if (h.kind === 'wire') { wireMove(h, p, t); return; }
+    if (h.mode === 'wait') { if (Math.hypot(p.x - h.x0, p.y - h.y0) < SLOP) return; commitDrag(h, p); }
+    if (h.mode === 'drag') dragMove(h, p, t);
+  }
+  function up(t, cancel = false) {
+    const h = held;
+    if (!h) return;
+    if (h.kind === 'wire') { held = null; wireUp(h, t, cancel); return; }
+    if (h.kind === 'node') {
+      if (h.mode === 'drag') { nodeUp(h, t, cancel); return; }
+      held = null;
+      to(h.node.pr, 0, h.node.pr.v, OMP, 1);
+      if (h.flying) { to(h.node.x, h.rest.x, 0, OMC, 1); to(h.node.y, h.rest.y, 0, OMC, 1); }   // a tap lets it finish where it was heading
+      if (!cancel && h.port && h.port.kind === 'in' && h.node.wireIn) select(h.node.wireIn);   // a tap on a connected input picks its wire
+      return;
+    }
+    held = null; setMode('');
+  }
+  const letgo = () => { if (held && held.ghost) up(performance.now(), true); };
+
+  board.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || ptr !== null) return;
+    if (e.target.closest('.nw-x')) return;
+    ptr = e.pointerId;
+    try { board.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+    down(e.clientX, e.clientY, e.timeStamp, false, e.target, e.pointerType);
+  });
+  board.addEventListener('pointermove', (e) => { if (e.pointerId === ptr) move(e.clientX, e.clientY, e.timeStamp); });
+  const pend = (cancel) => (e) => { if (e.pointerId !== ptr) return; ptr = null; up(e.timeStamp, cancel); };
+  board.addEventListener('pointerup', pend(false));
+  board.addEventListener('pointercancel', pend(true));
+  board.addEventListener('touchmove', (e) => { if (held && held.mode === 'drag' && e.cancelable) e.preventDefault(); }, { passive: false });
+  board.addEventListener('dragstart', (e) => e.preventDefault());
+  xb.addEventListener('click', () => removeSelected());
+
+  /* keys: Enter on an output starts a wire, arrows walk the open inputs, Enter connects, Escape cancels; Delete removes the selected wire; arrows nudge a node */
+  function kbStart(pt) {
+    const list = inPorts.filter((q) => validIn(pt.node, q)).sort((a, b) => { const p = portPos(a), q = portPos(b); return p.y - q.y || p.x - q.x; });
+    if (!list.length) { say(`${pt.node.title} has no open input to connect to.`); return; }
+    select(null);
+    const o = portPos(pt), w = mkWire(pt.node, null);
+    w.hand = o; w.ex.x = w.ex.T = o.x; w.ey.x = w.ey.T = o.y; w.dr.x = w.dr.T = reduced ? 0 : 1; w.lv.x = w.lv.T = 1; w.free = false;
+    layer(w, 'top');
+    kb = { w, pt, list, i: 0 };
+    cands(pt.node); syncPorts();
+    setMag(w, list[0]);
+    kbSay();
+  }
+  function kbSay() {
+    const { w, list, i } = kb;
+    say(`Wiring from ${w.from.title}. ${list[i].node.title}, input ${i + 1} of ${list.length}. Enter connects, Escape cancels.`);
+  }
+  function kbStep(d) { kb.i = (kb.i + d + kb.list.length) % kb.list.length; setMag(kb.w, kb.list[kb.i]); kbSay(); }
+  function kbEnd(ok) {
+    const { w } = kb;
+    kb = null;
+    cands(null);
+    if (ok && w.mag) connect(w, w.mag, performance.now());
+    else { retract(w, 0, 0, true); say('Wire cancelled.'); }
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (kb) {
+      if (k === 'Enter' || k === ' ') { e.preventDefault(); kbEnd(true); return; }
+      if (k === 'Escape') { e.preventDefault(); kbEnd(false); return; }
+      if (k === 'ArrowRight' || k === 'ArrowDown') { e.preventDefault(); kbStep(1); return; }
+      if (k === 'ArrowLeft' || k === 'ArrowUp') { e.preventDefault(); kbStep(-1); return; }
+      if (k === 'Tab') kbEnd(false);
+      return;
+    }
+    const inBoard = e.target.closest && board.contains(e.target);
+    const pe = inBoard ? e.target.closest('.nw-port') : null, pt = pe ? portByEl.get(pe) : null;
+    if (pt && (k === 'Enter' || k === ' ')) {
+      e.preventDefault();
+      if (pt.kind === 'out') kbStart(pt); else if (pt.node.wireIn) select(pt.node.wireIn); else say(`${pt.node.title} input is open.`);
+      return;
+    }
+    if (k === 'Delete' || k === 'Backspace') {
+      const w = sel || (pt && pt.kind === 'in' ? pt.node.wireIn : null);
+      if (w) { e.preventDefault(); removeWire(w); }
+      return;
+    }
+    if (k === 'Escape') { if (held) up(performance.now(), true); select(null); return; }
+    const nd = inBoard && !pe ? nodeByEl.get(e.target.closest('.nw-node')) : null;
+    const dx = k === 'ArrowRight' ? 1 : k === 'ArrowLeft' ? -1 : 0, dy = k === 'ArrowDown' ? 1 : k === 'ArrowUp' ? -1 : 0;
+    if (nd && (dx || dy)) {
+      e.preventDefault();
+      const s = e.shiftKey ? 32 : 8;
+      to(nd.x, clamp(nd.x.T + dx * s, PX, W - PX - nd.w), nd.x.v, OMN, 1); to(nd.y, clamp(nd.y.T + dy * s, PT, H - PB - nd.h), nd.y.v, OMN, 1);
+      kick();
+    }
+  });
+  board.addEventListener('focusout', (e) => { if (kb && !board.contains(e.relatedTarget)) kbEnd(false); });
+
+  /* everything back to the start: by springs, or at once */
+  function home(now) {
+    if (held) { held = null; }
+    ptr = null; setMode(''); if (kb) kb = null;
+    select(null);
+    cands(null);
+    for (const w of W_.slice()) {
+      const keep = w.mode === 'rest' && !w.gone && DEFAULT.some(([a, b]) => byId[a] === w.from && byId[b] === w.to);
+      if (keep) continue;
+      if (now) { if (w.pulse) endPulse(w, true); if (w.to && w.to.wireIn === w) w.to.wireIn = null; w.gone = true; finish(w); }
+      else if (!w.gone) retract(w, 0, 0, true);
+    }
+    for (const [a, b] of DEFAULT) if (!byId[b].wireIn) { const w = addRest(byId[a], byId[b], !now); if (now) { w.u.x = w.u.T = 1; } }
+    for (const n of N) {
+      to(n.x, n.hx, n.x.v, OMC, 1, now); to(n.y, n.hy, n.y.v, OMC, 1, now); to(n.l, 0, n.l.v, OML, 1, now); to(n.pr, 0, n.pr.v, OMP, 1, now);
+      n.el.style.zIndex = '';
+    }
+    for (const p of ports) { to(p.mag, 0, p.mag.v, OMO, 1, now); to(p.pr, 0, p.pr.v, OMP, 1, now); }
+    dimN = 0; n_dim(false);
+    syncPorts(); N.forEach((n) => syncStatus(n, now));
+    cap(IDLE);
+    kick();
+  }
+  function settle() {                                                        // every spring to its target at once
+    W_.forEach((w) => { if (w.mode === 'live' && w.mag) { const p = portPos(w.mag); w.ex.T = p.x; w.ey.T = p.y; } });   // a held wire's end is seated on its port
+    const all = [xv];
+    N.forEach((n) => all.push(n.x, n.y, n.l, n.pr)); ports.forEach((p) => all.push(p.cand, p.mag, p.pr));
+    W_.forEach((w) => all.push(w.ex, w.ey, w.dr, w.sel, w.hv, w.lv, w.u, w.lx, w.ly));
+    for (const s of all) { s.x = s.T; s.v = 0; s.on = false; }
+    W_.forEach((w) => { w.fresh = true; geom(w, 0.016); paint(w); });
+    N.forEach(renderNode); ports.forEach(renderPort); renderX();
+  }
+  /* the thumbnail's frame: a wire held from Draft reply, seated on Book a call's open port, the two wires in place. Made through the same down and move a hand uses. */
+  function pose() {
+    home(true);
+    const o = byId.draft.out, i = byId.book.inp, po = portPos(o), pi = portPos(i);
+    const a = client(po.x, po.y), b = client(pi.x, pi.y), t = performance.now(), off = 11 * sc;   // the hand sits 11 px down and right of the port, so the cursor never hides the ring or the wire's end
+    down(a.x, a.y, t, true, o.el, 'mouse');
+    held.pose = true;
+    move(b.x + off, b.y + off, t + 40);
+    settle();
+  }
+
+  const ro = new ResizeObserver(() => measure());
+  ro.observe(fit);
+  addEventListener('scroll', measure, { passive: true });
+  measure();
+  DEFAULT.forEach(([a, b]) => addRest(byId[a], byId[b], false));
+  N.forEach(renderNode); ports.forEach(renderPort);
+  pose();
+  return {
+    board, down, move, up, letgo, measure, pose, home, client, removeSelected, select, settled: () => !raf && !W_.some((w) => w.mode === 'retract'),
+    get held() { return held; }, get posed() { return !!(held && held.pose); }, get scale() { return sc; }, get kb() { return kb; },
+    get hand() { return held && held.wire ? held.wire.hand : null; },
+    port(id, kind) { return portPos(byId[id][kind === 'in' ? 'inp' : 'out']); },
+    portEl(id, kind) { return byId[id][kind === 'in' ? 'inp' : 'out'].el; },
+    node(id) { const n = byId[id]; return { x: n.x.x + n.w / 2, y: n.y.x + n.h / 2, el: n.el }; },
+    wire(a, b) { const w = live().find((q) => q.from === byId[a] && q.to === byId[b]); return w ? { mid: w.mid, el: w.hit } : null; },
+    state() { return { wires: live().map((w) => ({ from: w.from.id, to: w.to && w.to.id, mode: w.mode, mag: w.mag && w.mag.node.id })), status: Object.fromEntries(N.map((n) => [n.id, n.subText])), selected: !!sel, dim: dimN, nodes: Object.fromEntries(N.map((n) => [n.id, [n.x.x, n.y.x]])) }; },
+    xRect() { return xb.getBoundingClientRect(); },
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('nw-fit');
+  // the board is drawn at 760 × 476 and scaled to the room it is given (the whole tile there, 1.5× at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 14 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min((W - 2 * pad) / 760, (H - 2 * pad - ui) / 476, 1.5));
+    fit.style.setProperty('--s', s.toFixed(4));
+    NW.measure();
+  }
+  size();
+  addEventListener('resize', size);
+
+  let epoch = 0, resumeT = 0, gp = { x: 0, y: 0 };                           // gp: where the ghost's hand is, in board px
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1);
+  const put = () => { const c = NW.client(gp.x, gp.y); QM.ghostAt(c.x, c.y); return c; };
+
+  // the ghost's hand glides to a board point over ms; with the button down it calls NW.move on every frame, as a hand does
+  async function glide(my, bx, by, ms, down = false, ease = mv) {
+    const x0 = gp.x, y0 = gp.y, t0 = performance.now();
+    for (;;) {
+      await raf();
+      if (my !== epoch) throw 0;
+      const now = performance.now(), p = Math.min(1, (now - t0) / ms), e = ease(p);
+      gp = { x: x0 + (bx - x0) * e, y: y0 + (by - y0) * e };
+      const c = put();
+      if (down) NW.move(c.x, c.y, now);
+      if (p >= 1) break;
+    }
+  }
+  const press = (el) => { const k = NW.client(gp.x, gp.y); NW.down(k.x, k.y, performance.now(), true, el, 'mouse'); };
+  const calm = async (my, ms = 4000) => { const t0 = performance.now(); await gap(my, 160); while (!NW.settled() && performance.now() - t0 < ms) await gap(my, 80); };
+
+  async function script() {
+    const my = ++epoch;
+    try {
+      await gap(my, QM.tile ? 5200 : 1800);
+      QM.ghostShow();
+      for (let round = 0; ; round++) {
+        if (NW.posed) { const h = NW.hand; gp = { x: h.x, y: h.y }; put(); await gap(my, 600); }
+        else {                                                                // from rest: take Draft reply's output to Book a call's open input and hold it there
+          NW.home(); await calm(my);
+          const o = NW.port('draft', 'out'), i = NW.port('book', 'in');
+          if (round === 0 && gp.x === 0) gp = { x: 640, y: 430 };
+          await glide(my, o.x, o.y, 800);
+          await gap(my, 140);
+          press(NW.portEl('draft', 'out'));
+          await gap(my, 120);
+          await glide(my, 506, 150, 640, true);
+          await glide(my, i.x, i.y, 560, true);
+          await gap(my, 800);
+        }
+        // a miss: flick off the magnet and let go over empty board; the wire goes home along its own curve
+        await glide(my, 356, 176, 420, true, (p) => p);
+        NW.up(performance.now());
+        await gap(my, 1300);
+
+        // a proper connection: Draft reply to Book a call, the wire tightens, the pulse runs, the status rolls
+        { const o = NW.port('draft', 'out');
+          await glide(my, o.x, o.y, 800);
+          await gap(my, 140);
+          press(NW.portEl('draft', 'out'));
+          await gap(my, 120);
+          await glide(my, 500, 168, 560, true);
+          const i = NW.port('book', 'in');
+          await glide(my, i.x, i.y, 560, true);
+          await gap(my, 520);
+          NW.up(performance.now());
+          await gap(my, 1900); }
+
+        // a node moved: Draft reply is flicked up and all three wires follow, a little behind
+        { const c = NW.node('draft');
+          await glide(my, c.x, c.y + 10, 800);
+          await gap(my, 140);
+          press(c.el);
+          await gap(my, 100);
+          await glide(my, c.x + 14, c.y - 68, 380, true, (p) => p);
+          NW.up(performance.now());
+          await calm(my);
+          await gap(my, 1000); }
+
+        // a wire removed: click it, then the ×
+        { const m = NW.wire('draft', 'book');
+          await glide(my, m.mid.x, m.mid.y, 800);
+          await gap(my, 160);
+          press(m.el); await gap(my, 90); NW.up(performance.now());
+          await gap(my, 800);
+          const x = document.getElementById('nw-x');
+          x.classList.add('is-hot'); await gap(my, 220);
+          x.classList.add('is-press'); await gap(my, 110);
+          x.classList.remove('is-press', 'is-hot');
+          NW.removeSelected();
+          await gap(my, 1500); }
+
+        // reset: the node floats home
+        NW.home();
+        await calm(my);
+        await gap(my, 700);
+      }
+    } catch (e) { /* cancelled */ } finally { if (my !== epoch) NW.letgo(); }
+  }
+  function stopScript() { epoch++; QM.ghostHide(); NW.letgo(); }
+  if (!QM.tile && !reduced) {
+    const idle = () => NW.held || NW.kb || NW.board.matches(':hover');
+    const touch = () => {
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) script(); else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', () => touch());
+  }
+  // park the ghost where the hand is: on Book a call's open port, holding the wire
+  const park = () => { if (reduced || !NW.posed) return; const h = NW.hand; gp = { x: h.x, y: h.y }; put(); QM.ghostShow(); };
+  // reduced motion rests on the start state, wires drawn, nothing held
+  if (reduced) NW.home(true);
+  QM.demo({ kind: 'loop', restart() { stopScript(); if (reduced) { NW.home(true); return; } NW.pose(); park(); script(); } });
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { park(); script(); }, 300));
+})();
+</script>
+</body>
+</html>

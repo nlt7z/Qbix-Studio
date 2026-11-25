@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en" data-tone="paper">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brush zoom · Qbix Motion</title>
+<link rel="stylesheet" href="../kit/qbix.css">
+<script type="application/json" id="qm-meta">
+{
+  "id": "brush-zoom", "title": "Brush zoom", "group": "studio", "added": "2026-11-25", "cat": "data", "order": 40,
+  "kind": "loop", "tone": "paper", "shot": 1200, "preview": { "secs": 9, "skip": 5000 },
+  "line": "one x-scale · two domain springs 0.5 s · y range 20, 40, 60, 80 · brush snaps to days · overview thumb throws at d = 0.99 · one lime",
+  "summary": "Forma's orders per day for twelve weeks, with a brush that makes the zoom one continuous move. Press on the plot and drag: a band grows from the press point, its edges snapping to whole days, everything outside it steps down to a pale wash and a grey line, a label rides above it with its dates and length, and Orders, Average a day and Change roll to the brushed range as it is dragged. Let go and the visible domain, two critically damped springs, travels to the band: the line, the gridlines, the day ticks, the hover point and the band itself are all placed through that one scale, so the band's edges become the plot's edges while the wash is pushed off the sides, and the same pixels you brushed are the chart. The y-range follows the visible days on its own spring to 20, 40, 60 or 80, its ticks covered and uncovered at round values. Below the chart the whole twelve weeks sit in an overview strip with the visible window as a thumb you drag to pan 1:1, resize by its ends, or throw and it coasts and rubber-bands. Double-click, Escape or the Reset pill zoom back out by the same path. The one lime is the point on the line under the pointer, or the latest visible day when there is none.",
+  "spec": [
+    ["Card", "780 × 480 px, white, radius 24, drawn at its own size on #f5f5f7 and scaled to the room (1.0× in the 800 × 500 tile, up to 1.6×). Header 13 px #6e6e73 and a Reset pill; three figures (labels 13 px, values 28 px weight 600, tabular, 34 px tall); the plot is 692 × 236 px with a 30 px label gutter, the overview strip 692 × 44 px; the system face and Apple's neutrals"],
+    ["Data", "Forma's orders per day, 84 days from Tue 30 Dec to Mon 23 Mar, generated once from a mulberry32 seed (20260323): a base that grows from 19 to 34 a day, a weekly rhythm (Tue .98, Wed 1.02, Thu 1.04, Fri .96, Sat .68, Sun .60, Mon 1.12), ±13% noise, and a launch on Wed 25 Feb (day 57) that adds 40 and decays with a 2.1 day time constant; integers 13 to 69, a total of 2,149 and an average of 25.6. The line is a monotone cubic, so it never overshoots a value"],
+    ["Figures", "always computed from the data for the range in view (the brush while it is dragged, otherwise the visible window): Orders = the sum, Average a day = the sum / the days to one decimal, Change = the sum against the same number of days just before, as a signed percentage, and a dash with its digits closed when there is no earlier period (at the full view, or when the range starts in the first weeks). Each digit is a strip of 0 to 9 on its own critically damped spring (response 0.28 s) taking the shortest way round; leading places, the comma, the percent sign and the dash close and open by width (260 ms expo out). A roll can be retargeted mid-way and always rests on a whole digit"],
+    ["X-scale", "the visible domain [d0, d1] in days is two springs, critically damped, response 0.5 s, started from the value and velocity on screen; x(day) = 60 + (day − d0) / (d1 − d0) × 692. The line, the weekly and daily gridlines, the tick labels, the day dots, the lime point, the band's edges and the wash all read it every frame. Full view [0, 83]; a brush a to b zooms to [a, b], so the brushed edges become the plot's edges"],
+    ["Brush", "pointerdown on the plot answers at once (pointer capture, touch-action none): the band is a zero-width band at the pressed day and the wash steps in over 0.16 s. Dragging sets both edges to whole days (clamped to the visible days); the displayed edges are springs of 0.07 s so snapping never jumps. The wash is #f5f5f7 outside the band, the line #c7c7cc outside and #1d1d1f inside, two 1 px #1d1d1f edges, a white 8 × 24 handle on each with a 1 px ink outline. The label (12 px 500, translucent white, 24 px tall, \"3 Mar – 16 Mar · 14 days\") rides above the band centred on it and is clamped inside the card; it is uncovered from its middle. Under 3 days on release the band is covered (edges retract, wash steps out) and nothing changes"],
+    ["Zoom", "on release the domain springs retarget to the band; the band stays in its own days and travels with the scale. When it is within 3% of the plot's width of the edges the wash and edges are covered in 0.16 s. Zooming again inside a zoom works. Reset, Escape and a double click send both springs to [0, 83] by the same path; the Reset pill is uncovered from its left in 0.3 s while anything is zoomed"],
+    ["Ticks", "weekly ticks sit on Mondays (5 Jan to 23 Mar) with \"d Mon\" labels at every zoom; a day tick has a plain day number that is uncovered from the bottom as the spacing grows from 30.5 to 34 px a day (21 days or fewer in view fill it), and the day dots and day gridlines grow in with it. A label is a DOM box placed from the scale every frame, inside a strip that fades the last 10 px at each end; day labels are hidden under 30.5 px a day, so no two labels ever touch (checked on every frame of a zoom, a reset, a pan and a throw: a gap of at least 3 px)"],
+    ["Y-range", "the target is the smallest of 20, 40, 60, 80 that holds the highest visible day plus 5%, from the domain's target; its own spring, response 0.3 s when it widens and 0.45 s when it narrows, so a zoom out never clips the peak. Tick slots at every 10 (up to 40) or 20 (above): each has a cover spring of 0.3 s, the line wipes from the left and the number closes from its middle, so a tick is uncovered or covered at its value, never cross-faded; the number is the value of its own line"],
+    ["Overview", "the whole 84 days as a 1.4 px grey line (#aeaeb2 outside the window, #1d1d1f inside) on a #f5f5f7 strip, 44 px tall; the window is a white thumb with a 1 px #1d1d1f outline, its ends are 18 px grips. Dragging the thumb sets the domain directly, 1:1 under the pointer, so the main chart is placed by the same scale; dragging an end resizes (3 days at least); pressing outside the thumb centres it there on the springs and then drags 1:1. Past the ends the thumb rubber-bands (x · 44 · 0.55) / (44 + 0.55 x). On release the velocity of the last 80 ms is projected by v × 0.099 s (d = 0.99), the target is rounded to a whole day and clamped to the ends, and the springs start at the release velocity (capped at 20 days/s when let go past an end, so the band returns without a fling). At the full view the thumb covers the strip"],
+    ["Hover", "the pointer on the plot (not pressed) sets the nearest visible day; the lime point is one spring in days (0.09 s), so it glides along the line and always sits on it (the monotone cubic is evaluated at the fractional day), and a 104 × 46 px translucent tag (date, orders) follows on its own spring. With no pointer the point rides the plot's right edge, the latest visible day. While a band is held the point sits on the dragging edge and the tag stays away so it cannot meet the band's label"],
+    ["Keyboard", "the plot is focusable (role application, aria-label, a real table of the 84 days and a polite status line for screen readers): Left and Right move a cursor a day (at the edge of the view the window slides a day), Shift with them extends a brush from the cursor, Enter zooms to it, Escape clears a brush and then resets, Home and End go to the first and last visible day"],
+    ["Pose", "the page loads on a key frame that is played through the real input path, not drawn: a pointerdown at Sat 21 Feb and moves to Fri 6 Mar (days 53 to 66, 14 days), the band held, the world stepped 1.6 s at 60 Hz; the figures read 492 orders, 35.1 a day and +41% (the 14 days before total 348), the label \"21 Feb – 6 Mar · 14 days\" is out, the ghost's cursor stands at the band's right edge, just under its handle. A tile holds it about 5 s (shot at 1.2 s); then the ghost lets go (the zoom), throws the overview thumb to the left, brushes again inside the zoom, presses Reset, and repeats with the first brush held for a second. The ghost sends the same pointer events as a hand, owns only its own drag, and yields to a real mouse, touch or key, returning after 4.5 s"],
+    ["Reduced motion", "a complete still with the brush over the launch weeks held; zoom, reset, pan and the figures change in place, the springs, the throw and the rubber band are off and the ghost does not run"]
+  ],
+  "source": ["Qbix Motion · Studio · 2026-11-25"],
+  "where": "A Forma case study's results section, or any Qbix client's analytics page: orders, visits or sign-ups over weeks, where the reader should be able to pick a stretch and have the whole chart, its ticks and its figures follow it in one move.",
+  "rules": [
+    "One x-scale places everything. The line, ticks, gridlines, the hover point, the band and the wash are all functions of the same two springs, so they travel together; nothing has its own animation of position.",
+    "Every spring is critically damped and starts from the value and velocity on screen, so a zoom can be retargeted by a new brush, a reset or a pan with no jump. Nothing overshoots; the throw is projected with d = 0.99 and the thumb rubber-bands at the ends.",
+    "Respond on press: the band and the wash answer on pointerdown and track the pointer 1:1 (snapped to whole days). A band under 3 days is covered and nothing changes.",
+    "In no frame may two tick labels, or a tick label and the band's label, touch: day labels are covered under 28 px a day and uncovered above, and the band's label lives in its own strip above the plot.",
+    "Figures are computed from the data for the range in view, never typed; a roll is never seen half-cut at rest, and the change is a dash when there is no earlier period of the same length.",
+    "The y-range is 20, 40, 60 or 80, always holding the visible days; its ticks are covered and uncovered at round values and a gridline always matches its number.",
+    "Exactly one lime per frame: the point on the line under the pointer (or the latest visible day). The brush, handles and thumb are ink and white, never lime. System face, Apple neutrals, tabular figures.",
+    "Everything works with the keyboard and from a real table of the data. Under reduced motion draw a complete still with a brush over the launch weeks and change everything in place."
+  ],
+  "tags": ["brush", "zoom", "time series", "line chart", "overview", "pan", "throw", "rubber band", "spring", "scale", "figures", "keyboard", "data", "orders", "Forma"]
+}
+</script>
+<style data-code>
+/* Brush zoom. One white card in the system face with Apple's neutrals; the line #1d1d1f (#c7c7cc outside a brush), a #f5f5f7 wash outside the band,
+   gridlines #e8e8ed, axis numbers #86868b. The one accent is the lime point on the line. The plot and the overview strip are canvases drawn from
+   one x-scale (two springs); the tick labels, the figures, the band's label and the tag are DOM boxes placed from the same scale every frame.
+   The only CSS transitions are small feedback ones and a digit slot's width opening or closing (expo out .16, 1, .3, 1). The card is drawn at 780 x 480 and scaled by --s. */
+.bz-fit { position: relative; width: calc(780px * var(--s, 1)); height: calc(480px * var(--s, 1)); }
+.bz-card { --bz-f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; --bz-ui: cubic-bezier(.4, 0, .2, 1);
+  position: absolute; left: 0; top: 0; width: 780px; height: 480px; overflow: hidden; border-radius: 24px; background: #fff; color: #1d1d1f;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .06), 0 1px 3px rgba(0, 0, 0, .04); transform: scale(var(--s, 1)); transform-origin: 0 0;
+  font: 400 13px/18px var(--bz-f); letter-spacing: -.006em; -webkit-font-smoothing: antialiased; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.bz-card p { margin: 0; }
+
+.bz-cap { position: absolute; left: 28px; top: 24px; font: 500 13px/18px var(--bz-f); color: #6e6e73; white-space: nowrap; }
+.bz-reset { all: unset; box-sizing: border-box; position: absolute; right: 28px; top: 20px; height: 26px; padding: 0 14px; border-radius: 999px; background: #e8e8ed; color: #1d1d1f;
+  font: 500 13px/26px var(--bz-f); letter-spacing: -.006em; cursor: pointer; white-space: nowrap; visibility: hidden; clip-path: inset(0 100% 0 0);
+  transition: transform 100ms var(--bz-ui), background-color 160ms var(--bz-ui); }
+.bz-reset:hover { background: #dedee3; }
+.bz-reset:active, .bz-reset.is-press { transform: scale(.97); }
+.bz-reset:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 2px; }
+
+/* the three figures: a caption and a value whose digits are strips on springs */
+.bz-fg { position: absolute; top: 54px; }
+.bz-fl { height: 16px; font: 400 13px/16px var(--bz-f); color: #6e6e73; white-space: nowrap; }
+.bz-fv { --lh: 34px; display: flex; height: 34px; margin-top: 2px; font: 600 28px/34px var(--bz-f); letter-spacing: -.022em; font-variant-numeric: tabular-nums; white-space: pre; }
+.bz-s { display: block; flex: none; height: var(--lh); overflow: hidden; transition: width 260ms cubic-bezier(.16, 1, .3, 1); }
+.bz-sd { width: 1ch; }
+.bz-sg { width: .65em; text-align: center; }
+.bz-sl { width: var(--w, .224em); line-height: var(--lh); }
+.bz-s.is-off { width: 0; }
+.bz-st { display: block; will-change: transform; }
+.bz-st > i { display: block; height: var(--lh); font-style: normal; line-height: var(--lh); }
+
+/* the plot: a canvas under a hit area (a real focus stop); y labels, x labels, the band's label and the tag are boxes above it */
+.bz-cv { position: absolute; display: block; pointer-events: none; }
+.bz-plot { position: absolute; left: 56px; top: 108px; width: 702px; height: 274px; z-index: 2; cursor: crosshair; touch-action: none; outline: none; border-radius: 12px; }
+.bz-plot:focus-visible { outline: 2px solid #1d1d1f; outline-offset: 0; }
+.bz-ylab { position: absolute; left: 18px; top: 128px; width: 32px; height: 256px; overflow: hidden; pointer-events: none; }
+.bz-yl { position: absolute; right: 0; top: 0; height: 16px; font: 400 12px/16px var(--bz-f); color: #86868b; text-align: right; font-variant-numeric: tabular-nums; will-change: transform; visibility: hidden; }
+.bz-xlab { position: absolute; left: 30px; top: 384px; width: 752px; height: 18px; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent); mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent); }
+.bz-xl { position: absolute; left: 0; top: 1px; width: 44px; text-align: center; font: 400 12px/16px var(--bz-f); color: #86868b; font-variant-numeric: tabular-nums; white-space: nowrap; will-change: transform; visibility: hidden; }
+.bz-xl.is-wk { color: #6e6e73; }
+.bz-bl { position: absolute; left: 0; top: 110px; height: 24px; padding: 0 11px; border-radius: 12px; font: 500 12px/22px var(--bz-f); letter-spacing: -.006em; font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 3;
+  border: 1px solid rgba(0, 0, 0, .1); background: rgba(255, 255, 255, .8); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  visibility: hidden; clip-path: inset(0 50%); pointer-events: none; will-change: transform; }
+.bz-tag { position: absolute; left: 0; top: 0; width: 104px; height: 46px; padding: 6px 12px 0; border-radius: 12px; opacity: 0; visibility: hidden; pointer-events: none; z-index: 3; will-change: transform, opacity;
+  background: rgba(255, 255, 255, .78); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); box-shadow: 0 0 0 1px rgba(0, 0, 0, .08), 0 10px 30px rgba(0, 0, 0, .12); }
+.bz-tag b { display: block; font: 600 15px/20px var(--bz-f); letter-spacing: -.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bz-tag i { display: block; font-style: normal; font-size: 12px; line-height: 16px; color: #6e6e73; white-space: nowrap; }
+
+/* the overview strip: one canvas, the thumb is drawn with the strip */
+.bz-strip { position: absolute; left: 34px; top: 405px; width: 744px; height: 54px; touch-action: none; cursor: pointer; z-index: 2; }
+.bz-strip canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.bz-card.is-still *, .bz-card.is-still *::before { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .bz-s { transition-duration: 1ms; } }
+</style>
+<style>
+  html[data-tone='paper'], body { background: #f5f5f7; }
+  .qm-stage { overflow: hidden; }
+  html.qm-tile .qm-stage { padding: 10px; }
+  .qm-ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Geist, system-ui, sans-serif; color: #6e6e73; letter-spacing: -.006em; background: #f5f5f7; }
+</style>
+</head>
+<body>
+<main class="qm-stage">
+<!-- code -->
+<div class="bz-fit" id="bz-fit">
+ <section class="bz-card is-still" id="bz-card" aria-labelledby="bz-cap">
+  <h2 class="bz-cap" id="bz-cap" style="margin:0">Forma · Orders per day, 12 weeks to 23 March</h2>
+  <button class="bz-reset" id="bz-reset" type="button" tabindex="-1" aria-hidden="true">Reset</button>
+  <div class="bz-fg" style="left:28px"><p class="bz-fl">Orders</p><div class="bz-fv" id="bz-f1" aria-hidden="true"></div></div>
+  <div class="bz-fg" style="left:262px"><p class="bz-fl">Average a day</p><div class="bz-fv" id="bz-f2" aria-hidden="true"></div></div>
+  <div class="bz-fg" style="left:496px"><p class="bz-fl">Change on the period before</p><div class="bz-fv" id="bz-f3" aria-hidden="true"></div></div>
+  <canvas class="bz-cv" id="bz-cv" aria-hidden="true"></canvas>
+  <div class="bz-ylab" id="bz-ylab" aria-hidden="true"></div>
+  <div class="bz-xlab" id="bz-xlab" aria-hidden="true"></div>
+  <div class="bz-plot" id="bz-plot" tabindex="0" role="application"
+       aria-label="Orders per day, 84 days. Left and Right arrows move a cursor, Shift with them brushes a range, Enter zooms to it, Escape resets, Home and End jump to the ends of the view."></div>
+  <div class="bz-bl" id="bz-bl" aria-hidden="true"></div>
+  <div class="bz-tag" id="bz-tag" aria-hidden="true"><b></b><i></i></div>
+  <div class="bz-strip" id="bz-strip" role="group" aria-label="Overview of all 84 days. Drag the window to pan, drag its ends to resize."><canvas id="bz-sv" aria-hidden="true"></canvas></div>
+  <p class="sr-only" id="bz-msg" role="status" aria-live="polite"></p>
+  <table class="sr-only" id="bz-table"><caption>Forma orders per day, 30 December to 23 March</caption><thead><tr><th>Date</th><th>Orders</th></tr></thead><tbody></tbody></table>
+ </section>
+</div>
+<!-- /code -->
+  <div class="qm-ui"><span>Drag across the chart to brush a range and let go to zoom. Drag the window below to pan, or throw it. Double-click or Esc to reset</span></div>
+</main>
+<script src="../kit/stage.js"></script>
+<script data-code>
+/* Brush zoom. The visible domain [d0, d1] (in days) is two critically damped springs; every x in the card is a function of them. The y-range (top) is a spring too,
+   to the smallest of 20, 40, 60, 80 that holds the visible days; each y tick has its own cover spring. A brush is a band in days (edges snapped to whole days, shown on springs
+   of 0.07 s); releasing it retargets the domain to it. The overview thumb sets the domain directly while it is dragged and, on release, projects the throw (d = 0.99). */
+const BZ = (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = (id) => document.getElementById(id);
+  const card = $('bz-card'), plot = $('bz-plot'), cv = $('bz-cv'), strip = $('bz-strip'), sv = $('bz-sv'), ylab = $('bz-ylab'), xlab = $('bz-xlab'), blab = $('bz-bl'),
+    tag = $('bz-tag'), msg = $('bz-msg'), rbtn = $('bz-reset');
+  const cx = cv.getContext('2d'), sx = sv.getContext('2d');
+  /* geometry, card px: the plot box (L to R across, PT to PB down), the label gutter to its left; the strip under it */
+  const CWD = 780, L = 60, R = 752, W = R - L, PT = 138, PB = 374, H = PB - PT, SY = 410, SH = 44;
+  const CX0 = L - 14, CY0 = PT - 8, CVW = W + 28, CVH = H + 16;               // the plot canvas: room for the end dot and the handles
+  const TX0 = L - 26, TY0 = SY - 5, TVW = W + 52, TVH = SH + 10;               // the strip canvas
+  const N = 84, LAST = N - 1, MINSPAN = 2, RB = 44, LOOK = 0.99 / (1 - 0.99) / 1000;   // days, the smallest window (3 days), the rubber band's dimension (strip px), where d = 0.99 coasts to (s per unit velocity)
+  const TAU = 2 * Math.PI, wr = (s) => TAU / s;
+  const W_DOM = wr(0.5), W_BR = wr(0.07), W_P = wr(0.16), W_YU = wr(0.3), W_Y = wr(0.45), W_SLOT = wr(0.3), W_DOT = wr(0.09), W_TAG = wr(0.14), W_TAGA = wr(0.16), W_RST = wr(0.3), W_LAB = wr(0.16), W_DIG = wr(0.28);
+  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+  const clamp01 = (x) => clamp(x, 0, 1);
+
+  /* a critically damped spring: the closed form, always from the x and v on screen */
+  const mk = (x = 0) => ({ x, v: 0, t: x });
+  const put = (s, x) => { s.x = s.t = x; s.v = 0; };
+  const rest = (s) => s.x === s.t && s.v === 0;
+  function spring(s, dt, w, eps = 1e-3) {
+    if (reduced) { s.x = s.t; s.v = 0; return; }
+    const A = s.x - s.t, B = s.v + w * A, e = Math.exp(-w * dt);
+    s.x = s.t + (A + B * dt) * e; s.v = (B - w * (A + B * dt)) * e;
+    if (Math.abs(s.x - s.t) < eps && Math.abs(s.v) < eps * 10) { s.x = s.t; s.v = 0; }
+  }
+
+  /* the data: generated once from a seed, so every load is the same */
+  function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const V = [], PS = [0], WF = [0.98, 1.02, 1.04, 0.96, 0.68, 0.6, 1.12];            // day 0 is a Tuesday; Saturday and Sunday are the low days
+  { const r = rng(20260323);
+    for (let i = 0; i < N; i++) {
+      const k = i - 57, spike = k >= 0 ? 40 * Math.exp(-k / 2.1) : k === -1 ? 3 : 0;   // the launch: Wed 25 Feb, week 9, decays over a week
+      V.push(clamp(Math.round((19 + 15 * Math.pow(i / LAST, 0.9)) * WF[i % 7] * (1 + 0.13 * (r() * 2 - 1)) + spike), 8, 70));
+      PS.push(PS[i] + V[i]);
+    } }
+  /* a monotone cubic through the days (Fritsch-Carlson): the line never overshoots a value */
+  const M = new Array(N), dlt = [];
+  for (let i = 0; i < N - 1; i++) dlt[i] = V[i + 1] - V[i];
+  M[0] = dlt[0]; M[N - 1] = dlt[N - 2];
+  for (let i = 1; i < N - 1; i++) M[i] = dlt[i - 1] * dlt[i] <= 0 ? 0 : (dlt[i - 1] + dlt[i]) / 2;
+  for (let i = 0; i < N - 1; i++) {
+    if (dlt[i] === 0) { M[i] = M[i + 1] = 0; continue; }
+    const p = M[i] / dlt[i], q = M[i + 1] / dlt[i], s2 = p * p + q * q;
+    if (s2 > 9) { const tt = 3 / Math.sqrt(s2); M[i] = tt * p * dlt[i]; M[i + 1] = tt * q * dlt[i]; }
+  }
+  const fv = (d) => { d = clamp(d, 0, LAST); const i = Math.min(LAST - 1, Math.floor(d)), t = d - i, t2 = t * t, t3 = t2 * t;
+    return (2 * t3 - 3 * t2 + 1) * V[i] + (t3 - 2 * t2 + t) * M[i] + (-2 * t3 + 3 * t2) * V[i + 1] + (t3 - t2) * M[i + 1]; };
+  const D0 = Date.UTC(2025, 11, 30), MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dd = (i) => new Date(D0 + i * 864e5), dm = (i) => dd(i).getUTCDate() + ' ' + MON[dd(i).getUTCMonth()], wd = (i) => WD[dd(i).getUTCDay()];
+  const isMon = (i) => i % 7 === 6;
+  const rangeText = (a, b) => (a === b ? dm(a) + ' · 1 day' : dm(a) + ' – ' + dm(b) + ' · ' + (b - a + 1) + ' days');
+  const fmt = (n) => n.toLocaleString('en-US');
+
+  /* the three figures, always computed from the data: the sum, the sum over the days, and the sum against the same number of days before */
+  function stats(a, b) {
+    const len = b - a + 1, sum = PS[b + 1] - PS[a];
+    let chg = null;
+    if (a - len >= 0) { const prev = PS[a] - PS[a - len]; chg = Math.round((sum / prev - 1) * 100); }
+    return { a, b, len, sum, avg10: Math.round((sum * 10) / len), chg };
+  }
+
+  /* a figure: slots of digits (a strip of 0 to 9 on a spring, shortest way round), literals and a sign; places that are not needed close by width */
+  function roller(el, slots) {
+    const strip = Array.from({ length: 30 }, (_, i) => `<i>${i % 10}</i>`).join('');
+    el.innerHTML = slots.map((s) => s.k === 'd' ? `<span class="bz-s bz-sd"><span class="bz-st">${strip}</span></span>`
+      : s.k === 'sign' ? '<span class="bz-s bz-sg"><span class="bz-st"><i>+</i><i>−</i><i>–</i></span></span>'
+      : `<span class="bz-s bz-sl" style="--w:${s.w}">${s.ch}</span>`).join('');
+    const lh = 34, os = slots.map((s, i) => ({ s, el: el.children[i], st: el.children[i].firstChild, dg: 0, pos: 10, tgt: 10, vel: 0, off: false, sg: 0 }));
+    const draw = (o) => { o.st.style.transform = `translateY(${(-o.pos * lh).toFixed(2)}px)`; };
+    return {
+      set(n, instant) {                                            // n: a number (signed for the sign slot), or null for a dash
+        for (const o of os) {
+          const s = o.s, a = n === null ? null : Math.abs(n);
+          if (s.k === 'd') {
+            const dg = a === null ? o.dg : Math.floor(a / s.p) % 10;
+            if (instant || reduced) { o.dg = dg; o.pos = o.tgt = 10 + dg; o.vel = 0; draw(o); } else if (dg !== o.dg) { o.tgt += ((dg - o.dg + 15) % 10) - 5; o.dg = dg; }
+          } else if (s.k === 'sign') {
+            const g = n === null ? 2 : n < 0 ? 1 : 0;
+            if (instant || reduced) { o.pos = o.tgt = g; o.vel = 0; draw(o); } else o.tgt = g;
+          }
+          const off = s.k === 'sign' ? false : a === null ? !s.keep : a < (s.min || 0);
+          if (off !== o.off) { o.off = off; o.el.classList.toggle('is-off', off); }
+        }
+      },
+      step(dt) {
+        let busy = false;
+        for (const o of os) {
+          if (o.s.k === 'd') { if (o.tgt >= 20) { o.tgt -= 10; o.pos -= 10; } else if (o.tgt < 10) { o.tgt += 10; o.pos += 10; } }
+          if (o.s.k === 'lit' || (o.pos === o.tgt && !o.vel)) continue;
+          const A = o.pos - o.tgt, B = o.vel + W_DIG * A, e = Math.exp(-W_DIG * dt);
+          let x = o.tgt + (A + B * dt) * e, v = (B - W_DIG * (A + B * dt)) * e;
+          if (Math.abs(x - o.tgt) < 0.003 && Math.abs(v) < 0.03) { x = o.tgt; v = 0; }
+          o.pos = x; o.vel = v; draw(o); if (x !== o.tgt) busy = true;
+        }
+        return busy;
+      },
+      busy() { return os.some((o) => o.s.k !== 'lit' && (o.pos !== o.tgt || o.vel)); },
+    };
+  }
+  const f1 = roller($('bz-f1'), [{ k: 'd', p: 1000, min: 1000 }, { k: 'lit', ch: ',', w: '.224em', min: 1000 }, { k: 'd', p: 100, min: 100 }, { k: 'd', p: 10, min: 10 }, { k: 'd', p: 1 }]);
+  const f2 = roller($('bz-f2'), [{ k: 'd', p: 100, min: 100 }, { k: 'd', p: 10 }, { k: 'lit', ch: '.', w: '.224em', keep: true }, { k: 'd', p: 1 }]);
+  const f3 = roller($('bz-f3'), [{ k: 'sign' }, { k: 'd', p: 100, min: 100 }, { k: 'd', p: 10, min: 10 }, { k: 'd', p: 1 }, { k: 'lit', ch: '%', w: '.86em' }]);
+  /* a real table of the data for screen readers */
+  { const tb = $('bz-table').tBodies[0]; for (let i = 0; i < N; i++) { const tr = tb.insertRow(); tr.insertCell().textContent = wd(i) + ' ' + dm(i); tr.insertCell().textContent = V[i]; } }
+
+  /* state: the domain, the y-range, the band, the pointer, the lime point, the tag */
+  const dom = { a: mk(0), b: mk(LAST) }, topS = mk(80), rst = mk(0), lab = mk(0);
+  const brush = { on: false, phase: '', anchor: 0, ta: 0, tb: 0, a: mk(0), b: mk(0), p: mk(0), cur: 0 };      // phase: drag, kb (held), zoom, cover
+  const dot = mk(LAST), tagS = { a: mk(0), x: mk(0), y: mk(0) };
+  let ptr = null, kb = { on: false, day: LAST, anchor: null }, drag = null, lastTap = null, dotMode = 'latest', tagDay = -1, topT = 80, figKey = '', labKey = '', msgT = 0;
+  const slots = [];
+  for (let k = 0; k <= 8; k++) { const el = document.createElement('span'); el.className = 'bz-yl'; ylab.appendChild(el); slots.push({ v: k * 10, s: mk(1), el, on: false, txt: '' }); }
+  const ticks = [];
+  for (let i = 0; i < N; i++) { const el = document.createElement('span'); el.className = 'bz-xl' + (isMon(i) ? ' is-wk' : ''); el.textContent = isMon(i) ? dm(i) : String(dd(i).getUTCDate()); xlab.appendChild(el); ticks.push({ i, el, on: false, c: -1 }); }
+
+  /* the one x-scale and the y scale */
+  const sc = () => W / (dom.b.x - dom.a.x);
+  const X = (d) => L + (d - dom.a.x) * sc();
+  const Y = (v) => PB - (v / topS.x) * H;
+  const dayAt = (x) => dom.a.x + ((x - L) / W) * (dom.b.x - dom.a.x);
+  const vis0 = () => Math.max(0, Math.ceil(dom.a.x - 1e-6)), vis1 = () => Math.min(LAST, Math.floor(dom.b.x + 1e-6));
+  const visDay = (x) => { const lo = vis0(), hi = Math.max(lo, vis1()); return clamp(Math.round(dayAt(x)), lo, hi); };
+  const tvis0 = () => Math.max(0, Math.ceil(dom.a.t - 1e-6)), tvis1 = () => Math.min(LAST, Math.floor(dom.b.t + 1e-6));
+  const isFull = () => dom.b.t - dom.a.t >= LAST - 0.5;
+  const niceTop = (m) => { for (const c of [20, 40, 60, 80]) if (m * 1.05 <= c) return c; return 80; };
+
+  function figRange() {
+    if (brush.on && (brush.phase === 'drag' || brush.phase === 'kb')) return [brush.ta, brush.tb];
+    return [clamp(Math.round(dom.a.t), 0, LAST), clamp(Math.round(dom.b.t), 0, LAST)];
+  }
+  /* the figures roll to the range in view: set when a target changes, never per frame */
+  function syncFig(instant) {
+    const [a, b] = figRange(), key = a + ',' + b;
+    if (key === figKey && !instant) return;
+    figKey = key;
+    const st = stats(a, b);
+    f1.set(st.sum, instant); f2.set(st.avg10, instant); f3.set(st.chg, instant);
+    st.text = fmt(st.sum) + ' orders, ' + (st.avg10 / 10).toFixed(1) + ' a day, ' + (st.chg === null ? 'no earlier period to compare' : (st.chg >= 0 ? '+' : '−') + Math.abs(st.chg) + '% on the period before');
+    lastStats = st;
+  }
+  let lastStats = null;
+  function say(t) { clearTimeout(msgT); msgT = setTimeout(() => { msg.textContent = t; }, 260); }
+
+  /* ----- the band ----- */
+  function brushTo(a, b) { brush.ta = a; brush.tb = b; brush.a.t = a; brush.b.t = b; syncFig(); }
+  function beginBrush(day, phase) {
+    if (!brush.on || brush.p.x < 0.01) { put(brush.a, day); put(brush.b, day); put(brush.p, 0); }
+    brush.on = true; brush.phase = phase; brush.anchor = day; brush.cur = day; brush.p.t = 1; brushTo(day, day);
+  }
+  function dropBrush() {                                           // cover the band, nothing changes
+    if (!brush.on) return;
+    brush.phase = 'cover'; brush.p.t = 0; syncFig();
+  }
+  function zoomTo(a, b) {
+    dom.a.t = a; dom.b.t = b; syncFig();
+    say('Zoomed to ' + rangeText(a, b) + '. ' + lastStats.text + '.');
+  }
+  function commitBrush() {
+    const a = brush.ta, b = brush.tb;
+    if (b - a + 1 < 3) { dropBrush(); say('Range under 3 days, nothing changed.'); return false; }
+    brush.phase = 'zoom'; zoomTo(a, b); return true;
+  }
+  function resetZoom() {
+    const was = !isFull() || brush.on;
+    dom.a.t = 0; dom.b.t = LAST; kb.anchor = null;
+    if (brush.on && brush.phase !== 'cover') { brush.phase = 'cover'; brush.p.t = 0; }
+    drag && drag.kind === 'brush' && (drag = null);
+    syncFig();
+    if (was) say('Back to all 84 days. ' + lastStats.text + '.');
+    kick();
+  }
+
+  /* ----- the frame ----- */
+  function update(dt) {
+    if (drag && drag.soft && Math.abs(dom.a.x - dom.a.t) < 0.05 && Math.abs(dom.b.x - dom.b.t) < 0.05) drag.soft = false;
+    spring(dom.a, dt, W_DOM, 5e-4); spring(dom.b, dt, W_DOM, 5e-4);
+    if (brush.on) {
+      spring(brush.a, dt, W_BR, 2e-3); spring(brush.b, dt, W_BR, 2e-3); spring(brush.p, dt, W_P, 4e-3);
+      if (brush.phase === 'zoom' && Math.abs(dom.a.x - brush.ta) + Math.abs(dom.b.x - brush.tb) < 0.03 * (dom.b.x - dom.a.x)) { brush.phase = 'cover'; brush.p.t = 0; }
+      if (brush.phase === 'cover' && brush.p.x < 0.004 && brush.p.t === 0) { brush.on = false; brush.phase = ''; put(brush.p, 0); }
+    }
+    rst.t = isFull() ? 0 : 1; spring(rst, dt, W_RST, 4e-3);
+    // the y range: the smallest of 20, 40, 60, 80 that holds the visible days; ticks at 10 (up to 40) or 20
+    let m = 0; for (let i = Math.max(0, Math.floor(dom.a.t)); i <= Math.min(LAST, Math.ceil(dom.b.t)); i++) m = Math.max(m, V[i]);
+    topT = niceTop(m); topS.t = topT; spring(topS, dt, topT > topS.x ? W_YU : W_Y, 5e-3);
+    const stp = topT <= 40 ? 10 : 20;
+    for (const o of slots) { o.s.t = o.v <= topT && o.v % stp === 0 ? 1 : 0; spring(o.s, dt, W_SLOT, 4e-3); }
+    aimHover();
+    spring(dot, dt, W_DOT, 2e-3); spring(tagS.a, dt, W_TAGA, 4e-3); spring(tagS.x, dt, W_TAG, 0.05); spring(tagS.y, dt, W_TAG, 0.05);
+    lab.t = brush.on && (brush.phase === 'drag' || brush.phase === 'kb') ? 1 : 0; spring(lab, dt, W_LAB, 4e-3);
+    f1.step(dt); f2.step(dt); f3.step(dt);
+  }
+  function busy() {
+    return !!drag || !rest(dom.a) || !rest(dom.b) || !rest(topS) || !rest(rst) || !rest(dot) || !rest(lab) || !rest(tagS.a) || !rest(tagS.x) || !rest(tagS.y) || slots.some((o) => !rest(o.s))
+      || (brush.on && (!rest(brush.a) || !rest(brush.b) || !rest(brush.p) || brush.phase === 'cover' || brush.phase === 'zoom')) || f1.busy() || f2.busy() || f3.busy();
+  }
+
+  /* the lime point and the tag: one spring in days; it follows the pointer's day, the keyboard cursor, or rides the right edge */
+  function aimHover() {
+    let mode = 'latest', day = 0;
+    if (drag && drag.kind === 'brush') { mode = 'ptr'; day = brush.cur; }
+    else if (ptr && ptr.inside) { mode = 'ptr'; day = visDay(ptr.x); }
+    else if (kb.on && document.activeElement === plot) { mode = 'kb'; day = clamp(kb.day, tvis0(), Math.max(tvis0(), tvis1())); }
+    dot.t = mode === 'latest' ? Math.min(LAST, dom.b.x) : day;
+    if (mode === 'latest' && dotMode === 'latest') { dot.x = dot.t; dot.v = 0; }
+    dotMode = mode;
+    const held = brush.on && (brush.phase === 'drag' || brush.phase === 'kb');
+    tagS.a.t = mode !== 'latest' && !held ? 1 : 0;
+    if (mode !== 'latest') tagDay = day;
+    const px = X(dot.x), py = Y(fv(dot.x));
+    let tx = px, ty = py - 14 - 46;
+    if (ty < PT - 4) { tx = px + (px > L + W / 2 ? -1 : 1) * (52 + 16); ty = py - 23; }
+    tx = clamp(tx, L + 52, R + 8 - 52); ty = clamp(ty, PT - 4, PB - 46);
+    if (tagS.a.x < 0.02 || reduced) { put(tagS.x, tx); put(tagS.y, ty); } else { tagS.x.t = tx; tagS.y.t = ty; }
+  }
+
+  /* ----- drawing ----- */
+  let K = 1, dpr = 1, kx = 1, ky = 1, tkx = 1, tky = 1;
+  function resize() {
+    const w = card.getBoundingClientRect().width;
+    dpr = window.devicePixelRatio || 1; K = dpr * ((w / CWD) || 1);
+    cv.style.cssText = `left:${CX0}px;top:${CY0}px;width:${CVW}px;height:${CVH}px`;
+    cv.width = Math.max(1, Math.round(CVW * K)); cv.height = Math.max(1, Math.round(CVH * K)); kx = cv.width / CVW; ky = cv.height / CVH;
+    sv.width = Math.max(1, Math.round(TVW * K)); sv.height = Math.max(1, Math.round(TVH * K)); tkx = sv.width / TVW; tky = sv.height / TVH;
+    strip.style.cssText = `left:${TX0}px;top:${TY0}px;width:${TVW}px;height:${TVH}px`;
+  }
+  function draw() {
+    const hw = Math.max(1, Math.round(dpr)), hair = hw / K, snapY = (y) => (Math.floor(y * K) + hw / 2) / K, snapX = (x) => (Math.floor(x * K) + hw / 2) / K, sn = (x) => Math.round(x * K) / K;
+    const s = sc(), bp = brush.on ? clamp01(brush.p.x) : 0;
+    const bxa = X(brush.a.x), bxb = X(brush.b.x);
+    cx.setTransform(kx, 0, 0, ky, -CX0 * kx, -CY0 * ky); cx.clearRect(CX0, CY0, CVW, CVH);
+
+    // the wash outside the band
+    if (bp > 0.003) {
+      const wa = clamp(sn(bxa), L, R), wb = clamp(sn(bxb), L, R);
+      cx.globalAlpha = bp; cx.fillStyle = '#f5f5f7';
+      if (wa > L) cx.fillRect(L, PT, wa - L, H);
+      if (wb < R) cx.fillRect(wb, PT, R - wb, H);
+      cx.globalAlpha = 1;
+    }
+    // y gridlines wipe in from the left; the baseline is darker
+    cx.lineWidth = hair;
+    for (const o of slots) {
+      const y = Y(o.v), a = o.s.x;
+      if (a < 0.004 || y < PT - 0.6 || y > PB + 0.6) { if (o.on) { o.on = false; o.el.style.visibility = 'hidden'; } continue; }
+      const yy = snapY(y);
+      cx.strokeStyle = o.v === 0 ? '#d2d2d7' : '#e8e8ed';
+      cx.beginPath(); cx.moveTo(L, yy); cx.lineTo(L + a * W, yy); cx.stroke();
+      const t = String(o.v);
+      if (t !== o.txt) { o.txt = t; o.el.textContent = t; }
+      if (!o.on) { o.on = true; o.el.style.visibility = 'visible'; }
+      o.el.style.transform = `translateY(${(Math.round(y * K) / K - 8 - 128).toFixed(2)}px)`;
+      o.el.style.clipPath = a >= 0.999 ? 'none' : `inset(${(50 * (1 - a)).toFixed(1)}% 0)`;
+    }
+    // vertical gridlines: every Monday, and every day once the spacing allows; day ticks wipe up from the baseline
+    const dayC = clamp01((s - 30.5) / 3.5), i0 = Math.max(0, Math.floor(dom.a.x) - 1), i1 = Math.min(LAST, Math.ceil(dom.b.x) + 1);
+    for (let i = i0; i <= i1; i++) {
+      const x = X(i);
+      if (x < L - 0.5 || x > R + 0.5) continue;
+      const wk = isMon(i);
+      if (!wk && dayC < 0.004) continue;
+      const h = wk ? H : dayC * H;
+      cx.strokeStyle = wk ? '#e8e8ed' : '#f0f0f3';
+      const xx = snapX(x); cx.beginPath(); cx.moveTo(xx, PB); cx.lineTo(xx, PB - h); cx.stroke();
+    }
+    // the line: grey outside the band, ink inside; clipped to the plot
+    cx.save(); cx.beginPath(); cx.rect(L - 1.5, PT - 4, W + 3, H + 8); cx.clip();
+    const p0 = Math.max(0, Math.floor(dom.a.x) - 1), p1 = Math.min(LAST, Math.ceil(dom.b.x) + 1);
+    const trace = () => { cx.beginPath(); cx.moveTo(X(p0), Y(V[p0])); for (let i = p0; i < p1; i++) cx.bezierCurveTo(X(i + 1 / 3), Y(V[i] + M[i] / 3), X(i + 2 / 3), Y(V[i + 1] - M[i + 1] / 3), X(i + 1), Y(V[i + 1])); };
+    cx.lineWidth = 2; cx.lineJoin = 'round'; cx.lineCap = 'round';
+    if (bp > 0.003) {
+      const ba = clamp(bxa, L - 2, R + 2), bb = clamp(bxb, L - 2, R + 2);
+      const o = Math.round(29 + (199 - 29) * bp), og = Math.round(29 + (199 - 29) * bp), ob = Math.round(31 + (204 - 31) * bp);
+      cx.strokeStyle = `rgb(${o},${og},${ob})`;
+      cx.save(); cx.beginPath(); cx.rect(L - 2, PT - 4, Math.max(0, ba - (L - 2)), H + 8); cx.rect(bb, PT - 4, Math.max(0, R + 2 - bb), H + 8); cx.clip(); trace(); cx.stroke(); cx.restore();
+      cx.save(); cx.beginPath(); cx.rect(ba, PT - 4, Math.max(0, bb - ba), H + 8); cx.clip(); cx.strokeStyle = '#1d1d1f'; trace(); cx.stroke(); cx.restore();
+    } else { cx.strokeStyle = '#1d1d1f'; trace(); cx.stroke(); }
+    cx.restore();
+    // the days as dots, once the spacing allows (they grow in with the day ticks)
+    if (dayC > 0.004) {
+      for (let i = Math.max(0, Math.ceil(dom.a.x)); i <= Math.min(LAST, Math.floor(dom.b.x)); i++) {
+        const inb = bp < 0.003 || (i >= brush.a.x - 1e-6 && i <= brush.b.x + 1e-6);
+        cx.fillStyle = inb ? '#1d1d1f' : '#c7c7cc';
+        cx.beginPath(); cx.arc(X(i), Y(V[i]), 2.6 * dayC, 0, TAU); cx.fill();
+      }
+    }
+    // the band: two 1 px ink edges with a handle each; they retract down when covered
+    if (bp > 0.003) {
+      const top = PB - bp * H;
+      for (const bx of [bxa, bxb]) {
+        if (bx < L - 1 || bx > R + 1) continue;
+        const xx = snapX(bx);
+        cx.strokeStyle = '#1d1d1f'; cx.lineWidth = hair; cx.beginPath(); cx.moveTo(xx, PB); cx.lineTo(xx, top); cx.stroke();
+        const hw2 = 4 * bp, hh = 12 * bp, cy = (PT + PB) / 2 + (1 - bp) * H * 0.25;
+        cx.beginPath(); cx.roundRect(xx - hw2, cy - hh, hw2 * 2, hh * 2, hw2); cx.fillStyle = '#fff'; cx.fill(); cx.strokeStyle = '#1d1d1f'; cx.lineWidth = hair; cx.stroke();
+        if (bp > 0.6) { cx.strokeStyle = '#86868b'; cx.beginPath(); cx.moveTo(xx - 1, cy - 4); cx.lineTo(xx - 1, cy + 4); cx.moveTo(xx + 1, cy - 4); cx.lineTo(xx + 1, cy + 4); cx.stroke(); }
+      }
+    }
+    // the one lime: the point on the line at the pointer's day, or the latest visible day
+    { const px = X(dot.x);
+      if (px >= L - 1 && px <= R + 1) {
+        cx.beginPath(); cx.arc(px, Y(fv(dot.x)), 5.5, 0, TAU); cx.fillStyle = '#B8FF00'; cx.fill(); cx.lineWidth = 1.5; cx.strokeStyle = '#1d1d1f'; cx.stroke();
+      } }
+    drawStrip();
+    layoutDom(s);
+  }
+
+  /* the overview strip: the whole 84 days as a small grey line, the visible window a white thumb with 1 px ink edges */
+  const SL = L - TX0, SR = R - TX0, SW = W, STOP = SY - TY0;
+  const stX = (d) => SL + (d / LAST) * SW, stY = (v) => STOP + SH - 6 - (v / 80) * (SH - 12);
+  function drawStrip() {
+    const hw = Math.max(1, Math.round(dpr)), hair = hw / K, a = dom.a.x, b = dom.b.x;
+    sx.setTransform(tkx, 0, 0, tky, 0, 0); sx.clearRect(0, 0, TVW, TVH);
+    sx.beginPath(); sx.roundRect(SL, STOP, SW, SH, 10); sx.fillStyle = '#f5f5f7'; sx.fill();
+    const line = () => { sx.beginPath(); sx.moveTo(stX(0), stY(V[0])); for (let i = 0; i < N - 1; i++) sx.bezierCurveTo(stX(i + 1 / 3), stY(V[i] + M[i] / 3), stX(i + 2 / 3), stY(V[i + 1] - M[i + 1] / 3), stX(i + 1), stY(V[i + 1])); };
+    sx.lineWidth = 1.4; sx.lineJoin = 'round'; sx.lineCap = 'round';
+    sx.save(); sx.beginPath(); sx.roundRect(SL, STOP, SW, SH, 10); sx.clip(); sx.strokeStyle = '#aeaeb2'; line(); sx.stroke(); sx.restore();
+    const tl = stX(a), tr = stX(b), tw = Math.max(2, tr - tl), r = Math.min(10, tw / 2);
+    sx.beginPath(); sx.roundRect(tl + hair / 2, STOP + hair / 2, tw - hair, SH - hair, r); sx.fillStyle = '#fff'; sx.fill();
+    sx.save(); sx.beginPath(); sx.roundRect(tl, STOP, tw, SH, r); sx.clip(); sx.strokeStyle = '#1d1d1f'; line(); sx.stroke(); sx.restore();
+    sx.beginPath(); sx.roundRect(tl + hair / 2, STOP + hair / 2, tw - hair, SH - hair, r); sx.lineWidth = hair; sx.strokeStyle = '#1d1d1f'; sx.stroke();
+    if (tw > 36) { sx.strokeStyle = '#86868b'; sx.lineWidth = 1.5; sx.lineCap = 'round'; for (const gx of [tl + 8, tr - 8]) { sx.beginPath(); sx.moveTo(gx, STOP + SH / 2 - 6); sx.lineTo(gx, STOP + SH / 2 + 6); sx.stroke(); } }
+  }
+
+  /* the boxes: tick labels from the scale, the Reset pill, the figures' neighbours, the band's label, the tag */
+  function layoutDom(s) {
+    const dayC = clamp01((s - 30.5) / 3.5);
+    for (const t of ticks) {
+      const x = X(t.i), wk = isMon(t.i), c = wk ? 1 : dayC;
+      const on = c > 0.02 && x > L - 34 && x < R + 34 && t.i >= Math.floor(dom.a.x) - 2 && t.i <= Math.ceil(dom.b.x) + 2;
+      if (!on) { if (t.on) { t.on = false; t.el.style.visibility = 'hidden'; } continue; }
+      if (!t.on) { t.on = true; t.el.style.visibility = 'visible'; }
+      t.el.style.transform = `translateX(${(Math.round(x * K) / K - 30 - 22).toFixed(2)}px)`;
+      if (c !== t.c) { t.c = c; t.el.style.clipPath = c >= 0.999 ? 'none' : `inset(${((1 - c) * 100).toFixed(1)}% 0 0 0)`; }
+    }
+    const rc = clamp01(rst.x), rv = rc > 0.01;
+    rbtn.style.visibility = rv ? 'visible' : 'hidden'; rbtn.style.clipPath = rc >= 0.999 ? 'none' : `inset(0 ${((1 - rc) * 100).toFixed(1)}% 0 0)`;
+    rbtn.tabIndex = rc > 0.5 ? 0 : -1; rbtn.setAttribute('aria-hidden', rc > 0.5 ? 'false' : 'true');
+    // the band's label: dates and length, centred on the band, kept inside the card
+    const lc = clamp01(lab.x);
+    if (lc > 0.01 && brush.on) {
+      const key = rangeText(brush.ta, brush.tb);
+      if (key !== labKey) { labKey = key; blab.textContent = key; blab.dataset.w = '0'; }
+      if (blab.style.visibility !== 'visible') blab.style.visibility = 'visible';
+      const w = +blab.dataset.w || (blab.dataset.w = blab.offsetWidth);
+      const mid = (X(brush.a.x) + X(brush.b.x)) / 2;
+      const x = clamp(mid - w / 2, 14, CWD - 14 - w);
+      blab.style.transform = `translateX(${(Math.round(x * K) / K).toFixed(2)}px)`;
+      blab.style.clipPath = lc >= 0.999 ? 'none' : `inset(0 ${((1 - lc) * 50).toFixed(1)}%)`;
+    } else if (blab.style.visibility !== 'hidden') blab.style.visibility = 'hidden';
+    // the tag: the date and the value of the day the point is on
+    const ta = clamp01(tagS.a.x);
+    if (ta > 0.01 && tagDay >= 0) {
+      const key = tagDay + '';
+      if (key !== tag.dataset.k) { tag.dataset.k = key; tag.firstChild.textContent = V[tagDay] + ' orders'; tag.lastChild.textContent = wd(tagDay) + ' ' + dm(tagDay); }
+      if (tag.style.visibility !== 'visible') tag.style.visibility = 'visible';
+      tag.style.opacity = ta.toFixed(3); tag.style.transform = `translate3d(${(tagS.x.x - 52).toFixed(1)}px, ${tagS.y.x.toFixed(1)}px, 0)`;
+    } else if (tag.style.visibility !== 'hidden') { tag.style.visibility = 'hidden'; tag.style.opacity = '0'; }
+  }
+
+  /* the loop: pauses off screen and in a hidden tab, and continues from the same state */
+  let raf = 0, last = 0, started = false, vis = true;
+  const live = () => started && vis && !document.hidden;
+  function loop(now) { raf = 0; if (!live()) return; const dt = clamp((now - last) / 1000, 0.001, 0.05); last = now; update(dt); draw(); if (busy()) raf = requestAnimationFrame(loop); }
+  function kick() { if (!raf && live()) { last = performance.now(); raf = requestAnimationFrame(loop); } }
+  new IntersectionObserver((es) => { vis = es[es.length - 1].isIntersecting; kick(); }).observe(card);
+  document.addEventListener('visibilitychange', kick);
+  const ff = (sec) => { for (let k = 0; k < Math.round(sec * 60); k++) update(1 / 60); draw(); };
+  const refresh = () => { if (reduced) update(1 / 60); draw(); if (!reduced) kick(); };
+
+  /* ----- input: a hand or the ghost, both through the same pointer events ----- */
+  const local = (e) => { const r = card.getBoundingClientRect(), k = r.width / CWD || 1; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; };
+  const client = (x, y) => { const r = card.getBoundingClientRect(), k = r.width / CWD || 1; return { x: r.left + x * k, y: r.top + y * k }; };
+  const now = () => performance.now();
+  function abortGhost() {
+    if (!drag || !drag.ghost) return false;
+    const d = drag; drag = null;
+    if (d.kind === 'brush') dropBrush(); else finishPan(d, true);
+    ptr = null; kick(); return true;
+  }
+  /* the plot: press to brush, hover to read */
+  plot.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (e.isTrusted && drag && drag.ghost) abortGhost();
+    if (drag) return;
+    const p = local(e), day = visDay(p.x), ghost = e.isTrusted === false;
+    drag = { kind: 'brush', id: e.pointerId, ghost, type: e.pointerType, x0: p.x, y0: p.y, t0: now() };
+    ptr = { x: p.x, y: p.y, inside: true, type: e.pointerType, ghost };
+    kb.on = false; kb.anchor = null;
+    beginBrush(day, 'drag');
+    if (!ghost) { try { plot.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is gone */ } }
+    kick();
+  });
+  plot.addEventListener('pointermove', (e) => {
+    const p = local(e);
+    if (drag && drag.kind === 'brush' && drag.id === e.pointerId) {
+      const day = visDay(p.x); brush.cur = day; ptr = { x: p.x, y: p.y, inside: true, type: e.pointerType, ghost: drag.ghost };
+      brushTo(Math.min(brush.anchor, day), Math.max(brush.anchor, day));
+    } else if (!drag && e.pointerType !== 'touch') {
+      if (e.isTrusted && ptr && ptr.ghost) { /* a hand takes over */ }
+      ptr = { x: p.x, y: p.y, inside: true, type: e.pointerType, ghost: e.isTrusted === false }; kb.on = false;
+    } else return;
+    kick();
+  });
+  plot.addEventListener('pointerleave', (e) => { if (!drag && e.pointerType !== 'touch') { ptr = null; kick(); } });
+  function endBrushGesture(e, cancel) {
+    if (!drag || drag.kind !== 'brush' || drag.id !== e.pointerId) return;
+    const d = drag; drag = null;
+    try { plot.releasePointerCapture(e.pointerId); } catch (err) { /* released */ }
+    const ok = !cancel && commitBrush();
+    if (cancel) dropBrush();
+    if (d.type === 'touch') ptr = null;
+    // two quick taps with no band between them: zoom out (the double click, for a mouse and for a finger)
+    const t = now(), small = !ok && !cancel;
+    if (small && lastTap && t - lastTap.t < 380 && Math.abs(lastTap.x - d.x0) < 30) { lastTap = null; resetZoom(); }
+    else if (small) lastTap = { t, x: d.x0 }; else lastTap = null;
+    kick();
+  }
+  plot.addEventListener('pointerup', (e) => endBrushGesture(e, false));
+  plot.addEventListener('pointercancel', (e) => endBrushGesture(e, true));
+  plot.addEventListener('dblclick', () => { if (!isFull() || brush.on) resetZoom(); });
+
+  /* the keyboard: a cursor a day at a time, Shift extends a band from it, Enter zooms, Escape clears the band and then resets */
+  plot.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (drag && drag.ghost) abortGhost();
+    if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'Home' || k === 'End') {
+      e.preventDefault();
+      const lo = tvis0(), hi = Math.max(lo, tvis1());
+      if (!kb.on) { kb.on = true; kb.day = ptr && ptr.inside ? visDay(ptr.x) : hi; }
+      kb.day = clamp(kb.day, lo, hi);
+      let nd = kb.day;
+      if (k === 'Home') nd = lo; else if (k === 'End') nd = hi; else nd += k === 'ArrowLeft' ? -1 : 1;
+      if (nd < lo || nd > hi) {                                    // past the edge of the view: the window slides a day
+        const sh = nd < lo ? Math.max(-1, -dom.a.t) : Math.min(1, LAST - dom.b.t);
+        if (sh) { dom.a.t += sh; dom.b.t += sh; syncFig(); }
+        nd = clamp(nd, tvis0(), tvis1());
+      }
+      ptr = null;
+      if (e.shiftKey) {
+        if (kb.anchor === null) kb.anchor = kb.day;
+        if (!brush.on || brush.phase !== 'kb') beginBrush(kb.anchor, 'kb');
+        brush.cur = nd; brushTo(Math.min(kb.anchor, nd), Math.max(kb.anchor, nd));
+        say(rangeText(brush.ta, brush.tb) + '. ' + lastStats.text + '. Enter zooms to it.');
+      } else {
+        kb.anchor = null;
+        if (brush.on && brush.phase === 'kb') dropBrush();
+        say(wd(nd) + ' ' + dm(nd) + ': ' + V[nd] + ' orders.');
+      }
+      kb.day = nd; kick();
+    } else if (k === 'Enter') {
+      e.preventDefault();
+      if (brush.on && brush.phase === 'kb') { kb.anchor = null; commitBrush(); kick(); } else say('Hold Shift and use the arrow keys to select 3 days or more first.');
+    } else if (k === 'Escape') {
+      e.preventDefault();
+      if (brush.on && (brush.phase === 'kb' || brush.phase === 'drag')) { kb.anchor = null; dropBrush(); say('Range cleared.'); kick(); } else resetZoom();
+    }
+  });
+  plot.addEventListener('focus', () => { kick(); });
+  plot.addEventListener('blur', () => { kb.on = false; kb.anchor = null; if (brush.on && brush.phase === 'kb') dropBrush(); kick(); });
+  rbtn.addEventListener('pointerdown', () => { rbtn.classList.add('is-press'); });
+  addEventListener('pointerup', () => rbtn.classList.remove('is-press'));
+  rbtn.addEventListener('click', () => { rbtn.classList.remove('is-press'); resetZoom(); });
+
+  /* the overview: press the thumb to pan 1:1, an end to resize, outside it to centre it there. Release projects the throw (d = 0.99) */
+  const stDay = (x) => ((x - SL) / SW) * LAST;                      // x in strip px
+  const rbd = (over) => { const px = (over * SW) / LAST, r = (px * RB * 0.55) / (RB + 0.55 * px); return (r * LAST) / SW; };   // a rubber band, in days
+  function stripX(e) { const p = local(e); return p.x - TX0; }
+  function hitStrip(x) {
+    const tl = stX(dom.a.x), tr = stX(dom.b.x), g = Math.min(9, (tr - tl) / 3);
+    if (Math.abs(x - tl) <= g) return 'l';
+    if (Math.abs(x - tr) <= g) return 'r';
+    if (x > tl && x < tr) return 'pan';
+    return 'out';
+  }
+  strip.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (e.isTrusted && drag && drag.ghost) abortGhost();
+    if (drag) return;
+    const x = stripX(e), ghost = e.isTrusted === false, w = dom.b.t - dom.a.t;
+    let kind = hitStrip(x), soft = false, grab = 0;
+    if (kind === 'out') { kind = 'pan'; grab = w / 2; soft = true; }
+    else if (kind === 'pan') grab = stDay(x) - dom.a.x;
+    else if (kind === 'l') grab = stDay(x) - dom.a.x; else grab = stDay(x) - dom.b.x;
+    ptr = null; kb.on = false; dropBrushIfAny();
+    drag = { kind, id: e.pointerId, ghost, type: e.pointerType, grab, w, soft, hist: [], fixA: dom.a.t, fixB: dom.b.t };
+    if (!ghost) { try { strip.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is gone */ } }
+    strip.style.cursor = 'grabbing';
+    stripMove(e);
+  });
+  function dropBrushIfAny() { if (brush.on && brush.phase !== 'zoom' && brush.phase !== 'cover') dropBrush(); }
+  function stripMove(e) {
+    const d = drag, x = stripX(e);
+    if (kindOf(d) === 'pan') {
+      const lo = 0, hi = LAST - d.w, raw = stDay(x) - d.grab;
+      const disp = raw < lo ? lo - rbd(lo - raw) : raw > hi ? hi + rbd(raw - hi) : raw;
+      if (d.soft) { dom.a.t = clamp(Math.round(raw), lo, hi); dom.b.t = dom.a.t + d.w; }
+      else { put(dom.a, disp); put(dom.b, disp + d.w); }
+      d.hist.push({ t: now(), p: d.soft ? dom.a.x : disp }); if (d.hist.length > 12) d.hist.shift();
+    } else if (d.kind === 'l') {
+      const v = clamp(stDay(x) - d.grab, 0, d.fixB - MINSPAN); put(dom.a, v); put(dom.b, d.fixB);
+    } else if (d.kind === 'r') {
+      const v = clamp(stDay(x) - d.grab, d.fixA + MINSPAN, LAST); put(dom.b, v); put(dom.a, d.fixA);
+    }
+    syncFig(); kick();
+  }
+  const kindOf = (d) => d.kind;
+  function finishPan(d, cancel) {
+    strip.style.cursor = 'pointer';
+    if (d.kind === 'pan') {
+      const w = d.w, lo = 0, hi = LAST - w, h = d.hist, t = now();
+      let v = 0;
+      if (!cancel && !d.soft && h.length > 1) { const last = h[h.length - 1]; let f = h[0]; for (const q of h) if (last.t - q.t <= 80) { f = q; break; } if (last.t > f.t && t - last.t < 120) v = ((last.p - f.p) / (last.t - f.t)) * 1000; }
+      const p = d.soft ? dom.a.t : dom.a.x, proj = p + v * LOOK;
+      if (p < lo || p > hi) v = clamp(v, -20, 20);          // let go past an end: the rubber band returns it, it does not fling
+      const tgt = p < lo || p > hi ? (p < lo ? lo : hi) : clamp(Math.round(Math.abs(v) < 2 ? p : proj), lo, hi);
+      dom.a.t = tgt; dom.b.t = tgt + w; dom.a.v = dom.b.v = reduced ? 0 : v;
+    } else {
+      dom.a.t = Math.round(dom.a.x); dom.b.t = Math.round(dom.b.x);
+      if (dom.b.t - dom.a.t < MINSPAN) { if (d.kind === 'l') dom.a.t = dom.b.t - MINSPAN; else dom.b.t = dom.a.t + MINSPAN; }
+    }
+    syncFig(); const z = !isFull(); if (z) say('Showing ' + rangeText(clamp(Math.round(dom.a.t), 0, LAST), clamp(Math.round(dom.b.t), 0, LAST)) + '. ' + lastStats.text + '.'); kick();
+  }
+  strip.addEventListener('pointermove', (e) => {
+    if (drag && drag.id === e.pointerId && drag.kind !== 'brush') { stripMove(e); return; }
+    if (!drag) { const k = hitStrip(stripX(e)); strip.style.cursor = k === 'l' || k === 'r' ? 'ew-resize' : k === 'pan' ? 'grab' : 'pointer'; }
+  });
+  const stripUp = (cancel) => (e) => { if (!drag || drag.kind === 'brush' || drag.id !== e.pointerId) return; const d = drag; drag = null; try { strip.releasePointerCapture(e.pointerId); } catch (err) { /* released */ } finishPan(d, cancel); };
+  strip.addEventListener('pointerup', stripUp(false));
+  strip.addEventListener('pointercancel', stripUp(true));
+
+  /* the page: the pose, loaded through the same events a hand makes */
+  function hardReset() {
+    drag = null; ptr = null; kb = { on: false, day: LAST, anchor: null }; lastTap = null; dotMode = 'latest'; tagDay = -1;
+    put(dom.a, 0); put(dom.b, LAST); put(rst, 0); put(lab, 0); put(brush.p, 0); put(brush.a, 0); put(brush.b, 0); brush.on = false; brush.phase = '';
+    put(tagS.a, 0); put(tagS.x, 0); put(tagS.y, 0); topT = 80; put(topS, 80); put(dot, LAST);
+    slots.forEach((o) => put(o.s, o.v <= 80 && o.v % 20 === 0 ? 1 : 0)); figKey = ''; syncFig(true); labKey = '';
+  }
+  function emit(type, el, x, y, down) {
+    const c = client(x, y);
+    el.dispatchEvent(new PointerEvent(type, { bubbles: type !== 'pointerleave', cancelable: true, pointerId: 77, pointerType: 'mouse', isPrimary: true, clientX: c.x, clientY: c.y, button: type === 'pointermove' || type === 'pointerleave' ? -1 : 0, buttons: down ? 1 : 0 }));
+  }
+  const PA = 53, PB2 = 66;                                          // the launch weeks: Sat 21 Feb to Fri 6 Mar, 14 days
+  function pose() {
+    hardReset();
+    const yy = PT + H * 0.8;
+    emit('pointerdown', plot, X(PA), yy, true);
+    for (let k = 1; k <= 8; k++) emit('pointermove', plot, X(PA + (PB2 - PA) * (k / 8)), yy, true);
+    ff(1.6);
+    card.classList.add('is-still'); requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('is-still')));
+  }
+  new ResizeObserver(() => { resize(); draw(); }).observe(card.parentElement);
+  resize(); hardReset(); refresh();
+
+  return {
+    card, plot, strip, rbtn, pose, emit, client, resetZoom, abortGhost, kick, ff, draw, update, hardReset,
+    begin() { started = true; kick(); },
+    get held() { return !!(drag && drag.ghost); }, get full() { return isFull(); }, get zooming() { return !!(brush.on && brush.phase === 'zoom'); },
+    dayX(d) { return X(d); }, plotY(f = 0.5) { return PT + H * f; }, stripGeom() { return { l: stX(dom.a.x) + TX0, r: stX(dom.b.x) + TX0, y: STOP + TY0 + SH / 2 }; }, resetPos() { const r = card.getBoundingClientRect(), b = rbtn.getBoundingClientRect(), k = r.width / CWD; return { x: (b.left + b.width / 2 - r.left) / k, y: (b.top + b.height / 2 - r.top) / k }; },
+    get state() { return { a: dom.a.x, b: dom.b.x, ta: dom.a.t, tb: dom.b.t, top: topS.x, topT, brush: brush.on ? { phase: brush.phase, a: brush.ta, b: brush.tb, p: brush.p.x } : null, fig: lastStats, rst: rst.x, dot: dot.x, dotMode, drag: drag && drag.kind, figKey, tag: tagS.a.x, lab: lab.x }; },
+    V, stats, X, Y, W, L, R, PT, PB, N, LAST,
+  };
+})();
+</script>
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fit = document.getElementById('bz-fit');
+  // the card is drawn at 780 x 480 and scaled to the room it is given (1.0x in the 800 x 500 tile, 1.6x at most)
+  function size() {
+    const W = innerWidth, H = innerHeight, tile = document.documentElement.classList.contains('qm-tile');
+    const pad = tile ? 10 : Math.min(72, Math.max(24, 0.06 * Math.min(W, H))), ui = tile ? 0 : 46;
+    const s = Math.max(0.4, Math.min((W - 2 * pad) / 780, (H - 2 * pad - ui) / 480, 1.6));
+    fit.style.setProperty('--s', s.toFixed(4));
+  }
+  size();
+  addEventListener('resize', size);
+
+  /* the ghost: it sends the same pointer events a hand does (down, move, up on the plot or the strip), so the tile shows the real brush, zoom and throw */
+  let epoch = 0, resumeT = 0, pos = null;
+  const w = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gap = async (my, ms) => { await w(ms); if (my !== epoch) throw 0; };
+  const raf = () => new Promise((r) => requestAnimationFrame(r));
+  const mv = QM.bezier(0.65, 0, 0.35, 1), inE = (p) => p * p * p, outE = (p) => 1 - Math.pow(1 - p, 3);
+  const put = (x, y) => { pos = { x, y }; const c = BZ.client(x, y); QM.ghostAt(c.x, c.y); };
+  // glide the hand to (x, y) in card px; el gets pointermove each frame (down: the button is held)
+  async function glide(my, x, y, ms, el, down = false, ease = mv) {
+    const f = pos || { x, y }, t0 = performance.now();
+    for (;;) {
+      await raf(); if (my !== epoch) throw 0;
+      const p = Math.min(1, (performance.now() - t0) / ms), k = ease(p);
+      put(f.x + (x - f.x) * k, f.y + (y - f.y) * k);
+      if (el) BZ.emit('pointermove', el, pos.x, pos.y, down);
+      if (p >= 1) break;
+    }
+  }
+  const away = () => { BZ.emit('pointerleave', BZ.plot, pos.x, pos.y, false); };
+  const plotY = (f) => BZ.plotY(f);
+  async function brushLaunch(my) {                                  // press on the plot at Sat 21 Feb, drag to Fri 6 Mar
+    await glide(my, BZ.dayX(53) + 60, plotY(0.8), 700, BZ.plot);
+    await glide(my, BZ.dayX(53), plotY(0.8), 500, BZ.plot);
+    await gap(my, 200);
+    BZ.emit('pointerdown', BZ.plot, BZ.dayX(53), plotY(0.8), true);
+    await glide(my, BZ.dayX(66), plotY(0.8), 900, BZ.plot, true);
+    await gap(my, 1100);
+  }
+  async function resetBy(my) {                                      // the Reset pill, pressed and released like a button
+    const p = BZ.resetPos();
+    away(); await glide(my, p.x, p.y, 600, null);
+    BZ.rbtn.classList.add('is-press'); await gap(my, 130); BZ.rbtn.classList.remove('is-press'); BZ.rbtn.click();
+    await gap(my, 1400);
+  }
+  async function script(first) {
+    const my = ++epoch;
+    try {
+      if (first) await gap(my, QM.tile ? 5000 : 3000);
+      QM.ghostShow();
+      for (;;) {
+        if (BZ.held) { const c = pos || { x: BZ.dayX(66), y: plotY(0.8) }; BZ.emit('pointerup', BZ.plot, c.x, c.y, false); }   // let go of the posed band: the zoom
+        else {
+          if (!BZ.full) await resetBy(my);
+          await brushLaunch(my);
+          BZ.emit('pointerup', BZ.plot, pos.x, pos.y, false);
+        }
+        await gap(my, 1300);
+        // throw the overview thumb to the left, and let it coast
+        away();
+        let g = BZ.stripGeom();
+        await glide(my, (g.l + g.r) / 2, g.y, 650, BZ.strip);
+        await gap(my, 160);
+        BZ.emit('pointerdown', BZ.strip, pos.x, pos.y, true);
+        await gap(my, 120);
+        await glide(my, pos.x - 128, pos.y, 470, BZ.strip, true, inE);
+        BZ.emit('pointerup', BZ.strip, pos.x, pos.y, false);
+        await gap(my, 1100);
+        // brush again inside the zoom
+        const a0 = Math.ceil(BZ.state.ta) + 3;
+        await glide(my, BZ.dayX(a0), plotY(0.55), 650, BZ.plot);
+        await gap(my, 150);
+        BZ.emit('pointerdown', BZ.plot, BZ.dayX(a0), plotY(0.55), true);
+        await glide(my, BZ.dayX(a0 + 6), plotY(0.55), 750, BZ.plot, true);
+        await gap(my, 450);
+        BZ.emit('pointerup', BZ.plot, pos.x, pos.y, false);
+        await gap(my, 1350);
+        await resetBy(my);
+        away(); await glide(my, BZ.dayX(40), plotY(0.45), 900, BZ.plot);   // a look at the chart before the next round
+        await gap(my, 700);
+        away();
+      }
+    } catch (e) { /* cancelled */ }
+  }
+  function stopScript() { epoch++; BZ.abortGhost(); QM.ghostHide(); pos = null; }
+  const park = () => { if (reduced) return; put(BZ.dayX(66), plotY(0.8)); QM.ghostShow(); };
+  if (!QM.tile && !reduced) {
+    const idle = () => BZ.plot.matches(':hover') || BZ.strip.matches(':hover') || BZ.held || BZ.plot.contains(document.activeElement);
+    const touch = (e) => {
+      if (e && e.isTrusted === false) return;
+      stopScript();
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function again() { if (!idle()) { script(false); } else resumeT = setTimeout(again, 1500); }, 4500);
+    };
+    addEventListener('pointermove', touch, { passive: true });
+    addEventListener('pointerdown', touch, { passive: true });
+    addEventListener('keydown', touch);
+  }
+  QM.demo({ kind: 'loop', restart() { stopScript(); BZ.pose(); if (!reduced) { park(); script(true); } } });
+  BZ.begin();
+  BZ.pose();
+  if (!reduced) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => { park(); script(true); }, 300));
+})();
+</script>
+</body>
+</html>
